@@ -17,6 +17,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { FileText, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
+import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 
 interface EstimateSummary {
   id: string;
@@ -41,6 +42,7 @@ interface EstimateDetail {
   clientName: string | null;
   clientAddress: string | null;
   status: string;
+  createdBy: string;
   marginType: "global" | "section";
   marginPercent: number;
   wastePercent: number;
@@ -65,11 +67,12 @@ function ErrorNote({ message }: { message: string }) {
 }
 
 export default function Budgets() {
+  const [reloadToken, setReloadToken] = useState(0);
   const { data: summaries, loading: summariesLoading, error: summariesError } =
-    useApi<EstimateSummary[]>("/api/estimates");
+    useApi<EstimateSummary[]>(`/api/estimates?_r=${reloadToken}`);
   const draftId = summaries && summaries.length > 0 ? summaries[0].id : null;
   const { data: draft, loading: draftLoading, error: draftError } =
-    useApi<EstimateDetail>(draftId ? `/api/estimates/${draftId}` : null);
+    useApi<EstimateDetail>(draftId ? `/api/estimates/${draftId}?_r=${reloadToken}` : null);
   const { data: assemblyTemplates, loading: templatesLoading, error: templatesError } =
     useApi<AssemblyTemplate[]>("/api/assembly-templates");
 
@@ -258,6 +261,16 @@ export default function Budgets() {
                   </Button>
                   <Button variant="outline" className="flex-1">Guardar borrador</Button>
                 </div>
+              </div>
+
+              <div className="lg:col-span-3">
+                <WorkProjectionPanel
+                  estimateId={draft.id}
+                  status={draft.status}
+                  createdBy={draft.createdBy}
+                  clientName={draft.clientName}
+                  onChanged={() => setReloadToken((t) => t + 1)}
+                />
               </div>
             </div>
           )}

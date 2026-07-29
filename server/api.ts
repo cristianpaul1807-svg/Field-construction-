@@ -85,7 +85,7 @@ apiRouter.get(
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("estimates")
-      .select("id, client_id, status, total, created_at, clients(name)")
+      .select("id, client_id, project_id, status, created_by, total, created_at, clients(name)")
       .eq("business_id", DEMO_BUSINESS_ID)
       .order("created_at", { ascending: false });
 
@@ -96,7 +96,9 @@ apiRouter.get(
         id: e.id,
         clientId: e.client_id,
         clientName: e.clients?.name ?? null,
+        projectId: e.project_id,
         status: e.status,
+        createdBy: e.created_by,
         total: Number(e.total),
         createdAt: e.created_at,
       }))
@@ -112,7 +114,7 @@ apiRouter.get(
     const [estimate, lines] = await Promise.all([
       supabase
         .from("estimates")
-        .select("id, client_id, project_id, status, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address)")
+        .select("id, client_id, project_id, status, created_by, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address)")
         .eq("business_id", DEMO_BUSINESS_ID)
         .eq("id", req.params.id)
         .single(),
@@ -136,6 +138,7 @@ apiRouter.get(
       clientAddress: client?.address ?? null,
       projectId: estimate.data.project_id,
       status: estimate.data.status,
+      createdBy: estimate.data.created_by,
       marginType: estimate.data.margin_type,
       marginPercent: Number(estimate.data.margin_percent),
       wastePercent: Number(estimate.data.waste_percent),
@@ -151,6 +154,280 @@ apiRouter.get(
         total: Number(l.total),
         visibleToClient: l.visible_to_client,
       })),
+    });
+  })
+);
+
+// Admin approves (or rejects) a bot-drafted estimate before it reaches
+// the client — moves 'pendiente_aprobacion' -> 'enviado' (or 'rechazado').
+// Kept generic (not restricted to that one transition) since the admin
+// can also manually move a draft forward without ever involving the bot.
+apiRouter.patch(
+  "/estimates/:id/status",
+  route(async (req, res) => {
+    const allowed = ["borrador", "pendiente_aprobacion", "enviado", "aceptado", "rechazado"];
+    const status = req.body?.status;
+    if (!allowed.includes(status)) {
+      res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("estimates")
+      .update({ status })
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- Estimate work projection ----------
+// Staged plan ("who works when, for how long") for an estimate that
+// isn't a real project yet. Accepting the estimate (below) turns every
+// pending item into a real schedule_events row.
+
+apiRouter.get(
+  "/estimates/:id/projection",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("estimate_projection_items")
+      .select(
+        "id, title, zone, planned_start, duration_minutes, notes, status, employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
+      )
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("estimate_id", req.params.id)
+      .order("planned_start");
+
+    if (error) throw error;
+
+    res.json(
+      data.map((i: any) => ({
+        id: i.id,
+        title: i.title,
+        zone: i.zone,
+        plannedStart: i.planned_start,
+        durationMinutes: i.duration_minutes,
+        notes: i.notes,
+        status: i.status,
+        assignedWorkerId: i.employees?.id ?? i.subcontractors?.id ?? null,
+        assignedWorkerName: i.employees?.name ?? i.subcontractors?.name ?? null,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/estimates/:id/projection",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const body = req.body ?? {};
+
+    if (!body.title || !body.plannedStart) {
+      res.status(400).json({ error: "title and plannedStart are required" });
+      return;
+    }
+    if (body.assignedEmployeeId && body.assignedSubcontractorId) {
+      res.status(400).json({ error: "Assign to only one worker, not both" });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("estimate_projection_items")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        estimate_id: req.params.id,
+        title: body.title,
+        zone: body.zone ?? null,
+        planned_start: body.plannedStart,
+        duration_minutes: body.durationMinutes ?? 60,
+        notes: body.notes ?? null,
+        assigned_employee_id: body.assignedEmployeeId ?? null,
+        assigned_subcontractor_id: body.assignedSubcontractorId ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.delete(
+  "/estimates/:id/projection/:itemId",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("estimate_projection_items")
+      .delete()
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("estimate_id", req.params.id)
+      .eq("id", req.params.itemId);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// Accept an estimate: creates its project (if it doesn't have one yet)
+// and materializes every pending projection item into a real,
+// worker-anchored schedule_events row — this is the automatic
+// "presupuesto aceptado -> calendario poblado" step the future AI
+// integration (and the admin, manually, today) relies on.
+apiRouter.post(
+  "/estimates/:id/accept",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const estimateId = req.params.id;
+
+    const { data: estimate, error: estimateError } = await supabase
+      .from("estimates")
+      .select("id, client_id, project_id, status")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", estimateId)
+      .single();
+    if (estimateError) throw estimateError;
+
+    let projectId = estimate.project_id as string | null;
+    if (!projectId) {
+      const { data: project, error: projectError } = await supabase
+        .from("projects")
+        .insert({
+          business_id: DEMO_BUSINESS_ID,
+          client_id: estimate.client_id,
+          estimate_id: estimateId,
+          name: req.body?.projectName || "Nuevo proyecto",
+          type: req.body?.projectType ?? null,
+          status: "planificacion",
+        })
+        .select("id")
+        .single();
+      if (projectError) throw projectError;
+      projectId = project.id;
+
+      const { error: linkError } = await supabase
+        .from("estimates")
+        .update({ project_id: projectId })
+        .eq("id", estimateId);
+      if (linkError) throw linkError;
+    }
+
+    const { error: statusError } = await supabase
+      .from("estimates")
+      .update({ status: "aceptado" })
+      .eq("id", estimateId);
+    if (statusError) throw statusError;
+
+    const { data: pendingItems, error: itemsError } = await supabase
+      .from("estimate_projection_items")
+      .select("id, title, zone, assigned_employee_id, assigned_subcontractor_id, planned_start, duration_minutes, notes")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("estimate_id", estimateId)
+      .eq("status", "pendiente");
+    if (itemsError) throw itemsError;
+
+    for (const item of pendingItems) {
+      const start = new Date(item.planned_start);
+      const end = new Date(start.getTime() + item.duration_minutes * 60000);
+      const { error: insertError } = await supabase.from("schedule_events").insert({
+        business_id: DEMO_BUSINESS_ID,
+        project_id: projectId,
+        estimate_id: estimateId,
+        title: item.zone ? `${item.title} (${item.zone})` : item.title,
+        type: "inicio",
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+        notes: item.notes,
+        assigned_employee_id: item.assigned_employee_id,
+        assigned_subcontractor_id: item.assigned_subcontractor_id,
+        source: "proyeccion",
+      });
+      if (insertError) throw insertError;
+    }
+
+    if (pendingItems.length > 0) {
+      const { error: markAppliedError } = await supabase
+        .from("estimate_projection_items")
+        .update({ status: "aplicado" })
+        .eq("estimate_id", estimateId)
+        .eq("status", "pendiente");
+      if (markAppliedError) throw markAppliedError;
+    }
+
+    res.json({ projectId, scheduledCount: pendingItems.length });
+  })
+);
+
+// ---------- Admin AI assistant (internal chat, separate from the
+// client-facing WhatsApp bot) ----------
+// No model is called here yet — this only stores the thread so the UI
+// and data flow are ready the moment Fase D wires in the real Claude
+// API call. The canned reply below is a clearly-labeled placeholder.
+
+apiRouter.get(
+  "/admin-assistant/messages",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("admin_assistant_messages")
+      .select("id, role, content, actions_taken, created_at")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("created_at");
+
+    if (error) throw error;
+
+    res.json(
+      data.map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        actionsTaken: m.actions_taken,
+        createdAt: m.created_at,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/admin-assistant/messages",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const content = req.body?.content?.trim();
+    if (!content) {
+      res.status(400).json({ error: "content is required" });
+      return;
+    }
+
+    const { error: insertUserError } = await supabase.from("admin_assistant_messages").insert({
+      business_id: DEMO_BUSINESS_ID,
+      role: "admin",
+      content,
+    });
+    if (insertUserError) throw insertUserError;
+
+    const { data: reply, error: replyError } = await supabase
+      .from("admin_assistant_messages")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        role: "assistant",
+        content:
+          "Todavía no estoy conectada a un modelo de IA real (eso es Fase D — hace falta configurar la Claude API key). " +
+          "Por ahora solo guardo esta conversación para que, en cuanto se conecte, pueda leer todo el historial y actuar " +
+          "sobre presupuestos, proyecciones y el calendario de cada proyecto.",
+      })
+      .select("id, role, content, actions_taken, created_at")
+      .single();
+    if (replyError) throw replyError;
+
+    res.status(201).json({
+      id: reply.id,
+      role: reply.role,
+      content: reply.content,
+      actionsTaken: reply.actions_taken,
+      createdAt: reply.created_at,
     });
   })
 );

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
 import { business } from "@/lib/mockData";
 import { ProjectSwitcher } from "@/components/ProjectSwitcher";
+import { AdminAssistantBar } from "@/components/AdminAssistantBar";
 
 interface NavItem {
   id: string;
@@ -221,6 +222,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="flex-1 overflow-auto w-full">{children}</div>
+        <AdminAssistantBar />
       </div>
     </div>
   );
