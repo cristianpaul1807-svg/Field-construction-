@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+import { apiApp } from "./server/api";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -203,7 +204,28 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()];
+// Mounts the same Express API router used in production (server/api.ts)
+// into the Vite dev server, so `pnpm dev` serves /api/* without needing a
+// second process. Kept separate from the production server bootstrap in
+// server/index.ts, which mounts the identical router for the built app.
+function vitePluginApiRouter(): Plugin {
+  return {
+    name: "fsm-api-router",
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use("/api", apiApp);
+    },
+  };
+}
+
+const plugins = [
+  react(),
+  tailwindcss(),
+  jsxLocPlugin(),
+  vitePluginManusRuntime(),
+  vitePluginManusDebugCollector(),
+  vitePluginStorageProxy(),
+  vitePluginApiRouter(),
+];
 
 export default defineConfig({
   plugins,
