@@ -40,10 +40,19 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-fg: var(--status-success-fg);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-fg: var(--status-warning-fg);
+  --color-status-error-bg: var(--status-error-bg);
+  --color-status-error-fg: var(--status-error-fg);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-fg: var(--status-info-fg);
 }
 
 :root {
-  /* Professional ChatGPT-style palette */
+  /* ChatGPT/Claude.ai-inspired palette: light gray canvas, white floating cards,
+     one accent color, soft desaturated status colors */
   --primary: oklch(0.47 0.22 264);
   --primary-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(0.47 0.22 264);
@@ -53,30 +62,39 @@
   --chart-3: oklch(0.50 0.21 262);
   --chart-4: oklch(0.45 0.23 266);
   --chart-5: oklch(0.40 0.24 270);
-  --radius: 0.5rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.15 0.01 65);
-  --card: oklch(0.98 0.001 286);
-  --card-foreground: oklch(0.15 0.01 65);
+  --radius: 0.75rem;
+  --background: oklch(0.97 0.002 286);
+  --foreground: oklch(0.18 0.01 65);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.01 65);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 65);
-  --secondary: oklch(0.96 0.001 286);
+  --popover-foreground: oklch(0.18 0.01 65);
+  --secondary: oklch(0.955 0.002 286);
   --secondary-foreground: oklch(0.35 0.01 65);
-  --muted: oklch(0.93 0.001 286);
+  --muted: oklch(0.94 0.002 286);
   --muted-foreground: oklch(0.55 0.01 65);
   --accent: oklch(0.47 0.22 264);
   --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.65 0.22 25);
+  --destructive: oklch(0.62 0.16 25);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.90 0.001 286);
-  --input: oklch(0.95 0.001 286);
+  --border: oklch(0.90 0.002 286);
+  --input: oklch(0.94 0.002 286);
   --ring: oklch(0.47 0.22 264);
-  --sidebar: oklch(0.98 0.001 286);
-  --sidebar-foreground: oklch(0.15 0.01 65);
+  --sidebar: oklch(0.955 0.003 286);
+  --sidebar-foreground: oklch(0.18 0.01 65);
   --sidebar-accent: oklch(0.47 0.22 264);
   --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.90 0.001 286);
+  --sidebar-border: oklch(0.90 0.002 286);
   --sidebar-ring: oklch(0.47 0.22 264);
+  /* Soft, desaturated status colors — never bright/aggressive */
+  --status-success-bg: oklch(0.94 0.045 155);
+  --status-success-fg: oklch(0.42 0.1 155);
+  --status-warning-bg: oklch(0.95 0.05 85);
+  --status-warning-fg: oklch(0.48 0.11 70);
+  --status-error-bg: oklch(0.95 0.03 20);
+  --status-error-fg: oklch(0.5 0.13 25);
+  --status-info-bg: oklch(0.94 0.03 260);
+  --status-info-fg: oklch(0.47 0.16 264);
 }
 
 .dark {
@@ -113,6 +131,14 @@
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(0.25 0.01 286);
   --sidebar-ring: oklch(0.60 0.20 264);
+  --status-success-bg: oklch(0.28 0.05 155);
+  --status-success-fg: oklch(0.78 0.1 155);
+  --status-warning-bg: oklch(0.30 0.05 85);
+  --status-warning-fg: oklch(0.8 0.1 85);
+  --status-error-bg: oklch(0.30 0.05 20);
+  --status-error-fg: oklch(0.78 0.1 20);
+  --status-info-bg: oklch(0.28 0.05 260);
+  --status-info-fg: oklch(0.78 0.1 264);
 }
 
 @layer base {
