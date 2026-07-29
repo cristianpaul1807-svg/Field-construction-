@@ -3,9 +3,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Search, Upload, FileText } from "lucide-react";
-import { documents, findProject } from "@/lib/mockData";
+import { useApi } from "@/lib/api";
 
 const tagTone: Record<string, "info" | "warning" | "neutral" | "success"> = {
   contrato: "success",
@@ -14,9 +15,18 @@ const tagTone: Record<string, "info" | "warning" | "neutral" | "success"> = {
   garantia: "warning",
 };
 
+interface Document {
+  id: string;
+  name: string;
+  tag: string;
+  uploadedAt: string;
+  projectName: string | null;
+}
+
 export default function Contracts() {
+  const { data: documents, loading, error } = useApi<Document[]>("/api/documents");
   const [query, setQuery] = useState("");
-  const filtered = documents.filter((d) => d.name.toLowerCase().includes(query.toLowerCase()));
+  const filtered = (documents ?? []).filter((d) => d.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
@@ -35,30 +45,43 @@ export default function Contracts() {
           <Search size={16} className="text-muted-foreground" />
           <Input placeholder="Buscar documento..." value={query} onChange={(e) => setQuery(e.target.value)} className="max-w-xs" />
         </div>
-        <div className="space-y-2">
-          {filtered.map((doc) => {
-            const project = findProject(doc.projectId);
-            return (
+
+        {loading && (
+          <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+            <Spinner className="size-4" /> Cargando documentos...
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
+            No se pudo cargar desde Supabase: {error}
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="space-y-2">
+            {filtered.map((doc) => (
               <div key={doc.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <FileText size={18} className="text-muted-foreground flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm text-foreground truncate">{doc.name}</p>
-                    <p className="text-xs text-muted-foreground">{project?.name} · {doc.uploadedAt} · {doc.sizeKb} KB</p>
+                    <p className="text-xs text-muted-foreground">{doc.projectName} · {doc.uploadedAt?.slice(0, 10)}</p>
                   </div>
                 </div>
                 <StatusBadge tone={tagTone[doc.tag]} className="capitalize flex-shrink-0">{doc.tag}</StatusBadge>
               </div>
-            );
-          })}
-          {filtered.length === 0 && (
-            <p className="text-sm text-muted-foreground py-6 text-center">No se encontraron documentos.</p>
-          )}
-        </div>
+            ))}
+            {filtered.length === 0 && (
+              <p className="text-sm text-muted-foreground py-6 text-center">No se encontraron documentos.</p>
+            )}
+          </div>
+        )}
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        Almacenamiento en la nube (S3 / Google Cloud Storage) se conecta en Fase B junto con Supabase.
+        Los registros ya viven en Supabase; falta conectar el almacenamiento en la nube
+        (S3 / Google Cloud Storage) para los archivos en sí — no es parte de esta fase.
       </p>
     </div>
   );

@@ -2,11 +2,27 @@ import { Link } from "wouter";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { Plus } from "lucide-react";
-import { projects, findClient, projectStatusLabel, formatCurrency } from "@/lib/mockData";
+import { projectStatusLabel, formatCurrency, type ProjectStatus } from "@/lib/mockData";
+import { useApi } from "@/lib/api";
+
+interface Project {
+  id: string;
+  clientName: string | null;
+  name: string;
+  type: string;
+  status: ProjectStatus;
+  progressPercent: number;
+  budgetTotal: number;
+  budgetUsed: number;
+  team: string[];
+}
 
 export default function Projects() {
+  const { data: projects, loading, error } = useApi<Project[]>("/api/projects");
+
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
@@ -19,17 +35,28 @@ export default function Projects() {
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map((project) => {
-          const client = findClient(project.clientId);
-          return (
+      {loading && (
+        <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+          <Spinner className="size-4" /> Cargando proyectos...
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
+          No se pudo cargar desde Supabase: {error}
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects?.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`}>
               <Card className="p-5 hover:border-primary/40 transition-colors cursor-pointer h-full">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-xs text-muted-foreground">{project.type}</p>
                     <h3 className="font-semibold text-foreground mt-0.5 truncate">{project.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{client?.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{project.clientName}</p>
                   </div>
                   <StatusBadge tone={projectStatusTone[project.status]}>
                     {projectStatusLabel[project.status]}
@@ -69,9 +96,14 @@ export default function Projects() {
                 </div>
               </Card>
             </Link>
-          );
-        })}
-      </div>
+          ))}
+          {projects?.length === 0 && (
+            <p className="col-span-full text-sm text-muted-foreground text-center py-8">
+              Este negocio todavía no tiene proyectos.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,40 +1,68 @@
 import { useParams, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { ArrowLeft, FileText, MessageCircle, MapPin } from "lucide-react";
-import {
-  projects,
-  findClient,
-  estimates,
-  expensesByProject,
-  documents,
-  photos,
-  scheduleEvents,
-  formatCurrency,
-  projectStatusLabel,
-} from "@/lib/mockData";
+import { formatCurrency, projectStatusLabel, type ProjectStatus } from "@/lib/mockData";
+import { useApi } from "@/lib/api";
+
+interface ProjectDetailResponse {
+  id: string;
+  clientName: string | null;
+  name: string;
+  type: string;
+  status: ProjectStatus;
+  progressPercent: number;
+  startDate: string;
+  endDate: string;
+  team: string[];
+  estimateLines: { id: string; zone: string; category: string; item: string; total: number }[];
+  expenses: { id: string; category: string; description: string; amount: number; date: string }[];
+  documents: { id: string; name: string; tag: string; uploadedAt: string }[];
+  photos: { id: string; zone: string; visibleToClient: boolean; timestamp: string }[];
+  scheduleEvents: { id: string; title: string; type: string; startTime: string }[];
+}
+
+// Deterministic placeholder color per photo id — no image storage wired up yet.
+function colorForId(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return `oklch(0.74 0.07 ${hash % 360})`;
+}
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
-  const project = projects.find((p) => p.id === id);
+  const { data: project, loading, error } = useApi<ProjectDetailResponse>(id ? `/api/projects/${id}` : null);
 
-  if (!project) {
+  if (loading) {
+    return (
+      <div className="p-8 max-w-3xl mx-auto flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Spinner className="size-4" /> Cargando proyecto...
+      </div>
+    );
+  }
+
+  if (error || !project) {
     return (
       <div className="p-8 max-w-3xl mx-auto text-center text-muted-foreground">
-        Proyecto no encontrado.{" "}
+        {error ? `No se pudo cargar desde Supabase: ${error}` : "Proyecto no encontrado."}{" "}
         <Link href="/projects" className="text-primary hover:underline">Volver a Projects</Link>
       </div>
     );
   }
 
-  const client = findClient(project.clientId);
-  const estimate = estimates.find((e) => e.id === project.estimateId);
-  const expenses = expensesByProject.filter((e) => e.projectId === project.id);
-  const projectDocuments = documents.filter((d) => d.projectId === project.id);
-  const projectPhotos = photos.filter((p) => p.projectId === project.id);
-  const projectSchedule = scheduleEvents.filter((s) => s.projectId === project.id);
+  const budgetTotal = project.estimateLines.reduce((sum, l) => sum + l.total, 0);
+  const budgetUsed = project.expenses.reduce((sum, e) => sum + e.amount, 0);
+
+  const expensesByCategory = ["Materiales", "Mano de obra", "Subcontratistas"]
+    .map((category) => ({
+      category,
+      budgeted: project.estimateLines.filter((l) => l.category === category).reduce((s, l) => s + l.total, 0),
+      actual: project.expenses.filter((e) => e.category === category).reduce((s, e) => s + e.amount, 0),
+    }))
+    .filter((row) => row.budgeted > 0 || row.actual > 0);
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
@@ -45,7 +73,7 @@ export default function ProjectDetailPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{project.name}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{client?.name} · {project.type}</p>
+          <p className="text-sm text-muted-foreground mt-1">{project.clientName} · {project.type}</p>
         </div>
         <StatusBadge tone={projectStatusTone[project.status]}>
           {projectStatusLabel[project.status]}
@@ -83,6 +111,9 @@ export default function ProjectDetailPage() {
                       <span>{member}</span>
                     </div>
                   ))}
+                  {project.team.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Sin equipo asignado todavía.</p>
+                  )}
                 </div>
               </Card>
             </div>
@@ -90,7 +121,7 @@ export default function ProjectDetailPage() {
               <Card className="p-4">
                 <p className="text-xs text-muted-foreground">Presupuesto</p>
                 <p className="text-lg font-semibold text-foreground">
-                  {formatCurrency(project.budgetUsed)} / {formatCurrency(project.budgetTotal)}
+                  {formatCurrency(budgetUsed)} / {formatCurrency(budgetTotal)}
                 </p>
               </Card>
               <Card className="p-4">
@@ -109,10 +140,10 @@ export default function ProjectDetailPage() {
 
         <TabsContent value="budget" className="mt-4">
           <Card className="p-6">
-            {estimate ? (
+            {project.estimateLines.length > 0 ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground text-sm">Presupuesto #{estimate.id.toUpperCase()}</h3>
+                  <h3 className="font-semibold text-foreground text-sm">Presupuesto vinculado</h3>
                   <Button size="sm" variant="outline" className="gap-2">
                     <FileText size={14} /> Ver PDF
                   </Button>
@@ -128,12 +159,12 @@ export default function ProjectDetailPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {estimate.lines.map((line, idx) => (
-                        <tr key={idx} className="border-b border-border last:border-0">
+                      {project.estimateLines.map((line) => (
+                        <tr key={line.id} className="border-b border-border last:border-0">
                           <td className="py-2 text-foreground">{line.zone}</td>
                           <td className="py-2 text-muted-foreground">{line.category}</td>
                           <td className="py-2 text-muted-foreground">{line.item}</td>
-                          <td className="py-2 text-right text-foreground">{formatCurrency(line.quantity * line.unitCost)}</td>
+                          <td className="py-2 text-right text-foreground">{formatCurrency(line.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -158,20 +189,20 @@ export default function ProjectDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {expenses.map((row) => {
-                  const variance = ((row.actual - row.budgeted) / row.budgeted) * 100;
+                {expensesByCategory.map((row) => {
+                  const variance = row.budgeted > 0 ? ((row.actual - row.budgeted) / row.budgeted) * 100 : null;
                   return (
                     <tr key={row.category} className="border-b border-border last:border-0">
                       <td className="py-3 text-foreground font-medium">{row.category}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(row.budgeted)}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(row.actual)}</td>
-                      <td className={`py-3 text-right font-medium ${variance > 0 ? "text-status-error-fg" : "text-status-success-fg"}`}>
-                        {variance > 0 ? "+" : ""}{variance.toFixed(1)}%
+                      <td className={`py-3 text-right font-medium ${variance === null ? "text-muted-foreground" : variance > 0 ? "text-status-error-fg" : "text-status-success-fg"}`}>
+                        {variance === null ? "—" : `${variance > 0 ? "+" : ""}${variance.toFixed(1)}%`}
                       </td>
                     </tr>
                   );
                 })}
-                {expenses.length === 0 && (
+                {expensesByCategory.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-6 text-center text-muted-foreground">
                       Sin gastos registrados todavía.
@@ -186,19 +217,19 @@ export default function ProjectDetailPage() {
         <TabsContent value="documents" className="mt-4">
           <Card className="p-6">
             <div className="space-y-2">
-              {projectDocuments.map((doc) => (
+              {project.documents.map((doc) => (
                 <div key={doc.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                   <div className="flex items-center gap-3 min-w-0">
                     <FileText size={16} className="text-muted-foreground flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm text-foreground truncate">{doc.name}</p>
-                      <p className="text-xs text-muted-foreground">{doc.uploadedAt} · {doc.sizeKb} KB</p>
+                      <p className="text-xs text-muted-foreground">{doc.uploadedAt?.slice(0, 10)}</p>
                     </div>
                   </div>
                   <StatusBadge tone="neutral" className="capitalize flex-shrink-0">{doc.tag}</StatusBadge>
                 </div>
               ))}
-              {projectDocuments.length === 0 && (
+              {project.documents.length === 0 && (
                 <p className="text-sm text-muted-foreground">Sin documentos todavía.</p>
               )}
             </div>
@@ -208,16 +239,16 @@ export default function ProjectDetailPage() {
         <TabsContent value="photos" className="mt-4">
           <Card className="p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {projectPhotos.map((photo) => (
+              {project.photos.map((photo) => (
                 <div key={photo.id} className="space-y-1.5">
-                  <div className="aspect-square rounded-lg border border-border" style={{ background: photo.color }} />
+                  <div className="aspect-square rounded-lg border border-border" style={{ background: colorForId(photo.id) }} />
                   <p className="text-xs text-muted-foreground truncate">{photo.zone}</p>
                   <StatusBadge tone={photo.visibleToClient ? "success" : "neutral"}>
                     {photo.visibleToClient ? "Visible al cliente" : "Interno"}
                   </StatusBadge>
                 </div>
               ))}
-              {projectPhotos.length === 0 && (
+              {project.photos.length === 0 && (
                 <p className="col-span-full text-sm text-muted-foreground">Sin fotos todavía.</p>
               )}
             </div>
@@ -227,16 +258,16 @@ export default function ProjectDetailPage() {
         <TabsContent value="schedule" className="mt-4">
           <Card className="p-6">
             <div className="space-y-3">
-              {projectSchedule.map((event) => (
+              {project.scheduleEvents.map((event) => (
                 <div key={event.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                   <div>
                     <p className="text-sm text-foreground">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">{event.date} · {event.time}</p>
+                    <p className="text-xs text-muted-foreground">{event.startTime}</p>
                   </div>
                   <StatusBadge tone="neutral" className="capitalize">{event.type}</StatusBadge>
                 </div>
               ))}
-              {projectSchedule.length === 0 && (
+              {project.scheduleEvents.length === 0 && (
                 <p className="text-sm text-muted-foreground">Sin eventos programados para este proyecto.</p>
               )}
             </div>

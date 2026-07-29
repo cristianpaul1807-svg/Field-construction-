@@ -364,6 +364,226 @@ apiRouter.get(
   })
 );
 
+// ---------- Projects ----------
+
+apiRouter.get(
+  "/projects",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+
+    const [projects, expenses, assignments] = await Promise.all([
+      supabase
+        .from("projects")
+        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .order("name"),
+      supabase.from("expenses").select("project_id, amount").eq("business_id", DEMO_BUSINESS_ID),
+      supabase
+        .from("assignments")
+        .select("project_id, employees(name), subcontractors(name)")
+        .eq("business_id", DEMO_BUSINESS_ID),
+    ]);
+
+    if (projects.error) throw projects.error;
+    if (expenses.error) throw expenses.error;
+    if (assignments.error) throw assignments.error;
+
+    // budget_total isn't a stored column — it's the project's linked
+    // estimate total, fetched separately since not every project has one.
+    const estimateIds = projects.data.map((p) => p.estimate_id).filter((id): id is string => Boolean(id));
+    let estimateTotals = new Map<string, number>();
+    if (estimateIds.length > 0) {
+      const { data, error } = await supabase
+        .from("estimates")
+        .select("id, total")
+        .in("id", estimateIds);
+      if (error) throw error;
+      estimateTotals = new Map(data.map((e) => [e.id, Number(e.total)]));
+    }
+
+    res.json(
+      projects.data.map((p: any) => ({
+        id: p.id,
+        clientId: p.client_id,
+        clientName: p.clients?.name ?? null,
+        name: p.name,
+        type: p.type,
+        status: p.status,
+        progressPercent: Number(p.progress_percent),
+        startDate: p.start_date,
+        endDate: p.end_date,
+        budgetTotal: p.estimate_id ? (estimateTotals.get(p.estimate_id) ?? 0) : 0,
+        budgetUsed: expenses.data
+          .filter((e) => e.project_id === p.id)
+          .reduce((sum, e) => sum + Number(e.amount), 0),
+        team: assignments.data
+          .filter((a: any) => a.project_id === p.id)
+          .map((a: any) => a.employees?.name ?? a.subcontractors?.name)
+          .filter(Boolean),
+      }))
+    );
+  })
+);
+
+apiRouter.get(
+  "/projects/:id",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const projectId = req.params.id;
+
+    const [project, estimateLines, expenses, documents, photos, scheduleEvents, assignments] = await Promise.all([
+      supabase
+        .from("projects")
+        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("id", projectId)
+        .single(),
+      supabase
+        .from("estimate_lines")
+        .select("id, zone, category, item_name, quantity, unit_cost, total, estimates!inner(id, project_id)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("estimates.project_id", projectId),
+      supabase
+        .from("expenses")
+        .select("id, category, description, amount, date")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("project_id", projectId),
+      supabase
+        .from("documents")
+        .select("id, name, tag, uploaded_at")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("project_id", projectId),
+      supabase
+        .from("photos")
+        .select("id, zone, visible_to_client, timestamp")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("project_id", projectId),
+      supabase
+        .from("schedule_events")
+        .select("id, title, type, start_time")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("project_id", projectId),
+      supabase
+        .from("assignments")
+        .select("employees(name), subcontractors(name)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("project_id", projectId),
+    ]);
+
+    if (project.error) throw project.error;
+    if (estimateLines.error) throw estimateLines.error;
+    if (expenses.error) throw expenses.error;
+    if (documents.error) throw documents.error;
+    if (photos.error) throw photos.error;
+    if (scheduleEvents.error) throw scheduleEvents.error;
+    if (assignments.error) throw assignments.error;
+
+    const client = (project.data as any).clients as { name: string } | null;
+
+    res.json({
+      id: project.data.id,
+      clientName: client?.name ?? null,
+      name: project.data.name,
+      type: project.data.type,
+      status: project.data.status,
+      progressPercent: Number(project.data.progress_percent),
+      startDate: project.data.start_date,
+      endDate: project.data.end_date,
+      team: (assignments.data as any[])
+        .map((a) => a.employees?.name ?? a.subcontractors?.name)
+        .filter(Boolean),
+      estimateLines: estimateLines.data.map((l: any) => ({
+        id: l.id,
+        zone: l.zone,
+        category: l.category,
+        item: l.item_name,
+        total: Number(l.total),
+      })),
+      expenses: expenses.data.map((e) => ({
+        id: e.id,
+        category: e.category,
+        description: e.description,
+        amount: Number(e.amount),
+        date: e.date,
+      })),
+      documents: documents.data.map((d) => ({
+        id: d.id,
+        name: d.name,
+        tag: d.tag,
+        uploadedAt: d.uploaded_at,
+      })),
+      photos: photos.data.map((p) => ({
+        id: p.id,
+        zone: p.zone,
+        visibleToClient: p.visible_to_client,
+        timestamp: p.timestamp,
+      })),
+      scheduleEvents: scheduleEvents.data.map((s) => ({
+        id: s.id,
+        title: s.title,
+        type: s.type,
+        startTime: s.start_time,
+      })),
+    });
+  })
+);
+
+// ---------- Contracts & Documents ----------
+
+apiRouter.get(
+  "/documents",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("documents")
+      .select("id, name, tag, uploaded_at, projects(name)")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("uploaded_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(
+      data.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        tag: d.tag,
+        uploadedAt: d.uploaded_at,
+        projectName: d.projects?.name ?? null,
+      }))
+    );
+  })
+);
+
+// ---------- Photo Gallery ----------
+
+apiRouter.get(
+  "/photos",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("photos")
+      .select(
+        "id, zone, timestamp, visible_to_client, project_id, projects(name), employees:uploaded_by_employee_id(name), subcontractors:uploaded_by_subcontractor_id(name)"
+      )
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("timestamp", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(
+      data.map((p: any) => ({
+        id: p.id,
+        projectId: p.project_id,
+        projectName: p.projects?.name ?? null,
+        zone: p.zone,
+        timestamp: p.timestamp,
+        visibleToClient: p.visible_to_client,
+        uploadedBy: p.employees?.name ?? p.subcontractors?.name ?? null,
+      }))
+    );
+  })
+);
+
 // A bare `Router()` mounted directly into a raw connect/http middleware
 // stack (as Vite's dev server uses) never gets Express's response-object
 // patching (res.status/res.json come from `express()` app dispatch, not
