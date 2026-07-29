@@ -822,6 +822,124 @@ apiRouter.get(
   })
 );
 
+// ---------- Invoicing & Payments ----------
+
+apiRouter.get(
+  "/invoices",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("id, type, amount, status, due_date, projects(name), clients(name)")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("due_date");
+
+    if (error) throw error;
+
+    res.json(
+      data.map((i: any) => ({
+        id: i.id,
+        type: i.type,
+        amount: Number(i.amount),
+        status: i.status,
+        dueDate: i.due_date,
+        projectName: i.projects?.name ?? null,
+        clientName: i.clients?.name ?? null,
+      }))
+    );
+  })
+);
+
+// ---------- Reports & Analytics ----------
+// The month-by-month revenue/expense series is grouped from real payment
+// and expense dates (not a stored aggregate, and not a fabricated series
+// like the Fase A mock's hardcoded 6 months).
+apiRouter.get(
+  "/reports",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+
+    const [payments, expenses, projects, employees, timeEntries, materialLines] = await Promise.all([
+      supabase.from("payments").select("amount, paid_at").eq("business_id", DEMO_BUSINESS_ID),
+      supabase.from("expenses").select("amount, date").eq("business_id", DEMO_BUSINESS_ID),
+      supabase.from("projects").select("status").eq("business_id", DEMO_BUSINESS_ID),
+      supabase.from("employees").select("id, name").eq("business_id", DEMO_BUSINESS_ID),
+      supabase
+        .from("time_entries")
+        .select("employee_id, check_in_time, check_out_time")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .not("check_out_time", "is", null),
+      // "Materiales más usados" = counted from real estimate_lines references,
+      // not a fabricated ranking.
+      supabase
+        .from("estimate_lines")
+        .select("item_name, quantity, materials_catalog(unit)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .not("material_id", "is", null),
+    ]);
+
+    if (payments.error) throw payments.error;
+    if (expenses.error) throw expenses.error;
+    if (projects.error) throw projects.error;
+    if (employees.error) throw employees.error;
+    if (timeEntries.error) throw timeEntries.error;
+    if (materialLines.error) throw materialLines.error;
+
+    const monthKey = (iso: string) => iso.slice(0, 7); // "YYYY-MM"
+    const months = new Set<string>();
+    for (const p of payments.data) if (p.paid_at) months.add(monthKey(p.paid_at));
+    for (const e of expenses.data) months.add(monthKey(e.date));
+
+    const revenueByMonth = Array.from(months)
+      .sort()
+      .map((month) => ({
+        month,
+        ingresos: payments.data
+          .filter((p) => p.paid_at && monthKey(p.paid_at) === month)
+          .reduce((sum, p) => sum + Number(p.amount), 0),
+        gastos: expenses.data
+          .filter((e) => monthKey(e.date) === month)
+          .reduce((sum, e) => sum + Number(e.amount), 0),
+      }));
+
+    const totalRevenue = payments.data.reduce((sum, p) => sum + Number(p.amount), 0);
+    const totalExpense = expenses.data.reduce((sum, e) => sum + Number(e.amount), 0);
+
+    const hoursByEmployee = employees.data.map((e) => ({
+      name: e.name.split(" ")[0],
+      horas: Math.round(
+        timeEntries.data
+          .filter((t) => t.employee_id === e.id)
+          .reduce((sum, t) => sum + (new Date(t.check_out_time!).getTime() - new Date(t.check_in_time).getTime()) / 3600000, 0)
+      ),
+    }));
+
+    const usageByMaterial = new Map<string, { unit: string; timesUsed: number; totalQuantity: number }>();
+    for (const line of materialLines.data as any[]) {
+      const key = line.item_name;
+      const existing = usageByMaterial.get(key) ?? { unit: line.materials_catalog?.unit ?? "", timesUsed: 0, totalQuantity: 0 };
+      existing.timesUsed += 1;
+      existing.totalQuantity += Number(line.quantity);
+      usageByMaterial.set(key, existing);
+    }
+    const topMaterials = Array.from(usageByMaterial.entries())
+      .sort((a, b) => b[1].timesUsed - a[1].timesUsed)
+      .slice(0, 5)
+      .map(([name, info]) => ({ name, unit: info.unit, totalQuantity: info.totalQuantity }));
+
+    res.json({
+      revenueByMonth,
+      totalRevenue,
+      totalExpense,
+      profit: totalRevenue - totalExpense,
+      activeProjects: projects.data.filter((p) => p.status === "en_progreso").length,
+      completedProjects: projects.data.filter((p) => p.status === "completado").length,
+      hoursByEmployee,
+      topMaterials,
+    });
+  })
+);
+
 // A bare `Router()` mounted directly into a raw connect/http middleware
 // stack (as Vite's dev server uses) never gets Express's response-object
 // patching (res.status/res.json come from `express()` app dispatch, not
