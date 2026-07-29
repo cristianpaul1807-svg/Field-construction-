@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
 import { business } from "@/lib/mockData";
+import { ProjectSwitcher } from "@/components/ProjectSwitcher";
 
 interface NavItem {
   id: string;
@@ -209,6 +210,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </Button>
           <div className="flex items-center gap-3">
+            <ProjectSwitcher />
             <button className="w-8 h-8 rounded-full bg-secondary hover:bg-muted transition-colors flex items-center justify-center">
               <Bell size={15} className="text-foreground" />
             </button>

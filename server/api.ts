@@ -536,7 +536,7 @@ apiRouter.get(
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("documents")
-      .select("id, name, tag, uploaded_at, projects(name)")
+      .select("id, name, tag, uploaded_at, project_id, projects(name)")
       .eq("business_id", DEMO_BUSINESS_ID)
       .order("uploaded_at", { ascending: false });
 
@@ -548,6 +548,7 @@ apiRouter.get(
         name: d.name,
         tag: d.tag,
         uploadedAt: d.uploaded_at,
+        projectId: d.project_id,
         projectName: d.projects?.name ?? null,
       }))
     );
@@ -804,7 +805,7 @@ apiRouter.get(
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("schedule_events")
-      .select("id, title, type, start_time, projects(name)")
+      .select("id, title, type, start_time, project_id, projects(name)")
       .eq("business_id", DEMO_BUSINESS_ID)
       .order("start_time");
 
@@ -816,6 +817,7 @@ apiRouter.get(
         title: s.title,
         type: s.type,
         startTime: s.start_time,
+        projectId: s.project_id,
         projectName: s.projects?.name ?? null,
       }))
     );

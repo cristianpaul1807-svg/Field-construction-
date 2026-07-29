@@ -29,6 +29,7 @@ import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { SelectedProjectProvider } from "./contexts/SelectedProjectContext";
 
 function Router() {
   return (
@@ -80,7 +81,9 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <SelectedProjectProvider>
+            <Router />
+          </SelectedProjectProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
