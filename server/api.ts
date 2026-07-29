@@ -584,6 +584,244 @@ apiRouter.get(
   })
 );
 
+// ---------- Technicians & Crew ----------
+
+apiRouter.get(
+  "/employees",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+
+    const [employees, assignments, timeEntries] = await Promise.all([
+      supabase
+        .from("employees")
+        .select("id, name, role, phone, status")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .order("name"),
+      supabase
+        .from("assignments")
+        .select("employee_id, projects(name)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .not("employee_id", "is", null),
+      supabase
+        .from("time_entries")
+        .select("employee_id, check_in_time, check_out_time")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .not("employee_id", "is", null),
+    ]);
+
+    if (employees.error) throw employees.error;
+    if (assignments.error) throw assignments.error;
+    if (timeEntries.error) throw timeEntries.error;
+
+    res.json(
+      employees.data.map((e) => {
+        const currentProject = (assignments.data as any[]).find((a) => a.employee_id === e.id)?.projects?.name ?? null;
+        const hoursThisPeriod = (timeEntries.data as any[])
+          .filter((t) => t.employee_id === e.id && t.check_out_time)
+          .reduce((sum, t) => {
+            const ms = new Date(t.check_out_time).getTime() - new Date(t.check_in_time).getTime();
+            return sum + ms / 3600000;
+          }, 0);
+        return {
+          id: e.id,
+          name: e.name,
+          role: e.role,
+          phone: e.phone,
+          status: e.status,
+          currentProject,
+          hoursThisPeriod: Math.round(hoursThisPeriod),
+        };
+      })
+    );
+  })
+);
+
+// ---------- Subcontractors ----------
+
+apiRouter.get(
+  "/subcontractors",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+
+    const [subcontractors, assignments] = await Promise.all([
+      supabase
+        .from("subcontractors")
+        .select("id, name, trade, phone, rating, telegram_chat_id")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .order("name"),
+      supabase
+        .from("assignments")
+        .select("subcontractor_id, projects(name)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .not("subcontractor_id", "is", null),
+    ]);
+
+    if (subcontractors.error) throw subcontractors.error;
+    if (assignments.error) throw assignments.error;
+
+    res.json(
+      subcontractors.data.map((s) => ({
+        id: s.id,
+        name: s.name,
+        trade: s.trade,
+        phone: s.phone,
+        rating: s.rating,
+        telegramLinked: Boolean(s.telegram_chat_id),
+        assignedProjects: (assignments.data as any[])
+          .filter((a) => a.subcontractor_id === s.id)
+          .map((a) => a.projects?.name)
+          .filter(Boolean),
+      }))
+    );
+  })
+);
+
+// ---------- GPS & Routing ----------
+
+apiRouter.get(
+  "/gps",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+
+    const [employees, subcontractors, assignments] = await Promise.all([
+      supabase
+        .from("employees")
+        .select("id, name, status")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("status", "en_proyecto"),
+      supabase
+        .from("subcontractors")
+        .select("id, name")
+        .eq("business_id", DEMO_BUSINESS_ID),
+      supabase
+        .from("assignments")
+        .select("employee_id, subcontractor_id, projects(name)")
+        .eq("business_id", DEMO_BUSINESS_ID),
+    ]);
+
+    if (employees.error) throw employees.error;
+    if (subcontractors.error) throw subcontractors.error;
+    if (assignments.error) throw assignments.error;
+
+    const activeEmployees = employees.data.map((e) => ({
+      id: e.id,
+      name: e.name,
+      kind: "employee" as const,
+      currentProject: (assignments.data as any[]).find((a) => a.employee_id === e.id)?.projects?.name ?? null,
+    }));
+
+    const assignedSubIds = new Set((assignments.data as any[]).filter((a) => a.subcontractor_id).map((a) => a.subcontractor_id));
+    const activeSubcontractors = subcontractors.data
+      .filter((s) => assignedSubIds.has(s.id))
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        kind: "subcontractor" as const,
+        currentProject: (assignments.data as any[]).find((a) => a.subcontractor_id === s.id)?.projects?.name ?? null,
+      }));
+
+    res.json([...activeEmployees, ...activeSubcontractors]);
+  })
+);
+
+// ---------- Check-in / Check-out ----------
+
+apiRouter.get(
+  "/time-entries",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("time_entries")
+      .select(
+        "id, check_in_time, check_in_location, check_out_time, approved, projects(name), employees(name), subcontractors(name)"
+      )
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("check_in_time", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(
+      data.map((t: any) => ({
+        id: t.id,
+        projectName: t.projects?.name ?? null,
+        workerName: t.employees?.name ?? t.subcontractors?.name ?? null,
+        checkInTime: t.check_in_time,
+        checkInLocation: t.check_in_location,
+        checkOutTime: t.check_out_time,
+        approved: t.approved,
+      }))
+    );
+  })
+);
+
+apiRouter.patch(
+  "/time-entries/:id/approve",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("time_entries")
+      .update({ approved: true })
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- Work Orders ----------
+
+apiRouter.get(
+  "/work-orders",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("work_orders")
+      .select("id, title, description, priority, status, projects(name), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+      .eq("business_id", DEMO_BUSINESS_ID);
+
+    if (error) throw error;
+
+    res.json(
+      data.map((w: any) => ({
+        id: w.id,
+        title: w.title,
+        description: w.description,
+        priority: w.priority,
+        status: w.status,
+        projectName: w.projects?.name ?? null,
+        assignedTo: w.employees?.name ?? w.subcontractors?.name ?? null,
+      }))
+    );
+  })
+);
+
+// ---------- Scheduling ----------
+
+apiRouter.get(
+  "/schedule-events",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("schedule_events")
+      .select("id, title, type, start_time, projects(name)")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("start_time");
+
+    if (error) throw error;
+
+    res.json(
+      data.map((s: any) => ({
+        id: s.id,
+        title: s.title,
+        type: s.type,
+        startTime: s.start_time,
+        projectName: s.projects?.name ?? null,
+      }))
+    );
+  })
+);
+
 // A bare `Router()` mounted directly into a raw connect/http middleware
 // stack (as Vite's dev server uses) never gets Express's response-object
 // patching (res.status/res.json come from `express()` app dispatch, not

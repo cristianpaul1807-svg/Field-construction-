@@ -1,9 +1,10 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Plus } from "lucide-react";
-import { employees } from "@/lib/mockData";
+import { useApi } from "@/lib/api";
 
 const statusTone = {
   disponible: "success",
@@ -17,7 +18,18 @@ const statusLabel = {
   descanso: "Descanso",
 };
 
+interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  status: keyof typeof statusTone;
+  currentProject: string | null;
+  hoursThisPeriod: number;
+}
+
 export default function Technicians() {
+  const { data: employees, loading, error } = useApi<Employee[]>("/api/employees");
+
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <PageHeader
@@ -31,39 +43,51 @@ export default function Technicians() {
       />
 
       <Card className="p-6">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-2 text-muted-foreground font-medium">Nombre</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Rol</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Estado</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Proyecto actual</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Horas (período)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((emp) => (
-                <tr key={emp.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
-                  <td className="py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-                        {emp.name.charAt(0)}
-                      </div>
-                      <span className="text-foreground font-medium">{emp.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 text-muted-foreground">{emp.role}</td>
-                  <td className="py-3">
-                    <StatusBadge tone={statusTone[emp.status]}>{statusLabel[emp.status]}</StatusBadge>
-                  </td>
-                  <td className="py-3 text-muted-foreground">{emp.currentProject ?? "—"}</td>
-                  <td className="py-3 text-right text-foreground">{emp.hoursThisPeriod} hrs</td>
+        {loading && (
+          <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+            <Spinner className="size-4" /> Cargando empleados...
+          </div>
+        )}
+        {error && (
+          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
+            No se pudo cargar desde Supabase: {error}
+          </div>
+        )}
+        {!loading && !error && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 text-muted-foreground font-medium">Nombre</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">Rol</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">Estado</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">Proyecto actual</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Horas (período)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {employees?.map((emp) => (
+                  <tr key={emp.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
+                    <td className="py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
+                          {emp.name.charAt(0)}
+                        </div>
+                        <span className="text-foreground font-medium">{emp.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 text-muted-foreground">{emp.role}</td>
+                    <td className="py-3">
+                      <StatusBadge tone={statusTone[emp.status]}>{statusLabel[emp.status]}</StatusBadge>
+                    </td>
+                    <td className="py-3 text-muted-foreground">{emp.currentProject ?? "—"}</td>
+                    <td className="py-3 text-right text-foreground">{emp.hoursThisPeriod} hrs</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </div>
   );

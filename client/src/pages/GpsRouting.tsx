@@ -1,11 +1,19 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { MapPin } from "lucide-react";
-import { employees, subcontractors } from "@/lib/mockData";
+import { useApi } from "@/lib/api";
+
+interface ActiveWorker {
+  id: string;
+  name: string;
+  kind: "employee" | "subcontractor";
+  currentProject: string | null;
+}
 
 export default function GpsRouting() {
-  const activeCrew = employees.filter((e) => e.status === "en_proyecto");
+  const { data: active, loading, error } = useApi<ActiveWorker[]>("/api/gps");
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
@@ -28,32 +36,43 @@ export default function GpsRouting() {
 
         <Card className="p-4">
           <h3 className="font-semibold text-foreground mb-3 text-sm">Activos ahora</h3>
-          <div className="space-y-3">
-            {activeCrew.map((emp) => (
-              <div key={emp.id} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                  {emp.name.charAt(0)}
+
+          {loading && (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+              <Spinner className="size-4" /> Cargando...
+            </div>
+          )}
+          {error && (
+            <div className="rounded-lg border border-border bg-status-error-bg/40 p-3 text-xs text-status-error-fg">
+              No se pudo cargar: {error}
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="space-y-3">
+              {active?.map((worker) => (
+                <div key={worker.id} className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
+                      worker.kind === "employee" ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                    }`}
+                  >
+                    {worker.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-foreground truncate">{worker.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{worker.currentProject ?? "—"}</p>
+                  </div>
+                  <StatusBadge tone={worker.kind === "employee" ? "success" : "info"}>
+                    {worker.kind === "employee" ? "En ruta" : "Subcontratista"}
+                  </StatusBadge>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground truncate">{emp.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{emp.currentProject}</p>
-                </div>
-                <StatusBadge tone="success">En ruta</StatusBadge>
-              </div>
-            ))}
-            {subcontractors.filter((s) => s.assignedProjects.length > 0).map((sub) => (
-              <div key={sub.id} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-secondary text-foreground flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                  {sub.name.charAt(0)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground truncate">{sub.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{sub.assignedProjects[0]}</p>
-                </div>
-                <StatusBadge tone="info">Subcontratista</StatusBadge>
-              </div>
-            ))}
-          </div>
+              ))}
+              {active?.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nadie activo en este momento.</p>
+              )}
+            </div>
+          )}
         </Card>
       </div>
     </div>
