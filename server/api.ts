@@ -805,7 +805,9 @@ apiRouter.get(
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("schedule_events")
-      .select("id, title, type, start_time, project_id, projects(name)")
+      .select(
+        "id, title, type, start_time, end_time, notes, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
+      )
       .eq("business_id", DEMO_BUSINESS_ID)
       .order("start_time");
 
@@ -817,10 +819,50 @@ apiRouter.get(
         title: s.title,
         type: s.type,
         startTime: s.start_time,
+        endTime: s.end_time,
+        notes: s.notes,
         projectId: s.project_id,
         projectName: s.projects?.name ?? null,
+        assignedWorkerId: s.employees?.id ?? s.subcontractors?.id ?? null,
+        assignedWorkerName: s.employees?.name ?? s.subcontractors?.name ?? null,
       }))
     );
+  })
+);
+
+apiRouter.post(
+  "/schedule-events",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const body = req.body ?? {};
+
+    if (!body.projectId || !body.title || !body.startTime || !body.endTime) {
+      res.status(400).json({ error: "projectId, title, startTime and endTime are required" });
+      return;
+    }
+    if (body.assignedEmployeeId && body.assignedSubcontractorId) {
+      res.status(400).json({ error: "Assign to only one worker, not both" });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("schedule_events")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        project_id: body.projectId,
+        title: body.title,
+        type: body.type ?? "reunion",
+        start_time: body.startTime,
+        end_time: body.endTime,
+        notes: body.notes ?? null,
+        assigned_employee_id: body.assignedEmployeeId ?? null,
+        assigned_subcontractor_id: body.assignedSubcontractorId ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
   })
 );
 

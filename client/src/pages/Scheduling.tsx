@@ -1,41 +1,97 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { StatusBadge } from "@/components/StatusBadge";
 import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
-import { Plus, Calendar as CalendarIcon } from "lucide-react";
+import { ScheduleEventDialog } from "@/components/ScheduleEventDialog";
+import { ChevronLeft, ChevronRight, Plus, StickyNote } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { hashColor, cn } from "@/lib/utils";
 
-const typeTone = {
-  visita: "info",
-  llamada: "neutral",
-  reunion: "warning",
-  inicio: "success",
-  fin: "error",
-} as const;
-
-const typeLabel = { visita: "Visita", llamada: "Llamada", reunion: "Reunión", inicio: "Inicio de obra", fin: "Entrega" };
-
-const views = ["Día", "Semana", "Mes"] as const;
+const typeLabel: Record<string, string> = {
+  visita: "Visita",
+  llamada: "Llamada",
+  reunion: "Reunión",
+  inicio: "Inicio de obra",
+  fin: "Entrega",
+};
 
 interface ScheduleEvent {
   id: string;
   title: string;
-  type: keyof typeof typeLabel;
+  type: string;
   startTime: string;
+  endTime: string | null;
+  notes: string | null;
   projectId: string | null;
-  projectName: string | null;
+  assignedWorkerId: string | null;
+  assignedWorkerName: string | null;
+}
+
+const HOUR_HEIGHT = 64; // px per hour — grid cells sized by appointment duration, same mechanic as Trimm's calendar
+
+function isSameDay(iso: string, date: Date) {
+  const d = new Date(iso);
+  return d.toDateString() === date.toDateString();
+}
+
+// Greedy interval layout: events that overlap in time share the row side
+// by side in lanes, instead of stacking in separate per-worker columns.
+function layoutEvents(events: ScheduleEvent[]) {
+  const sorted = [...events].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  const laneEnds: number[] = [];
+  const placed = sorted.map((event) => {
+    const start = new Date(event.startTime).getTime();
+    const end = new Date(event.endTime ?? event.startTime).getTime() || start + 30 * 60000;
+    let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(end);
+    } else {
+      laneEnds[lane] = end;
+    }
+    return { event, lane };
+  });
+  const laneCount = Math.max(laneEnds.length, 1);
+  return placed.map((p) => ({ ...p, laneCount }));
+}
+
+function blockDetail(heightPx: number) {
+  if (heightPx < 28) return { padding: "px-1.5 py-0.5", text: "text-[9px]", showSubtitle: false };
+  if (heightPx < 46) return { padding: "px-2 py-1", text: "text-[10px]", showSubtitle: true };
+  return { padding: "px-2.5 py-1.5", text: "text-xs", showSubtitle: true };
 }
 
 export default function Scheduling() {
   const { selectedProjectId, selectedProject } = useSelectedProject();
-  const { data: events, loading, error } = useApi<ScheduleEvent[]>("/api/schedule-events");
-  const [view, setView] = useState<(typeof views)[number]>("Semana");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [reloadToken, setReloadToken] = useState(0);
+  const { data: events, loading, error } = useApi<ScheduleEvent[]>(
+    `/api/schedule-events?_r=${reloadToken}`
+  );
 
-  const filtered = (events ?? []).filter((e) => e.projectId === selectedProjectId);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogInitialDate, setDialogInitialDate] = useState(new Date());
+
+  const dayEvents = useMemo(
+    () =>
+      (events ?? []).filter((e) => e.projectId === selectedProjectId && isSameDay(e.startTime, currentDate)),
+    [events, selectedProjectId, currentDate]
+  );
+
+  const positioned = useMemo(() => layoutEvents(dayEvents), [dayEvents]);
+
+  const now = new Date();
+  const isToday = currentDate.toDateString() === now.toDateString();
+  const currentTimeTop = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
+
+  const openDialogAt = (hour: number) => {
+    const d = new Date(currentDate);
+    d.setHours(hour, 0, 0, 0);
+    setDialogInitialDate(d);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
@@ -43,13 +99,8 @@ export default function Scheduling() {
         title="Scheduling"
         description={
           selectedProject
-            ? `Agenda de ${selectedProject.name}`
+            ? `Agenda de ${selectedProject.name} — trabajos anclados por trabajador y notas`
             : "Visitas, citas, inicios de obra y fechas de entrega"
-        }
-        action={
-          <Button className="gap-2 w-full sm:w-auto">
-            <Plus size={16} /> New Event
-          </Button>
         }
       />
 
@@ -57,54 +108,145 @@ export default function Scheduling() {
 
       {selectedProjectId && (
         <>
-          <div className="flex items-center gap-2">
-            {views.map((v) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`text-sm px-3 py-1.5 rounded-md border transition-colors ${view === v ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-foreground hover:bg-secondary"}`}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentDate((d) => new Date(d.getTime() - 86400000))}
               >
-                {v}
-              </button>
-            ))}
-            <span className="text-xs text-muted-foreground ml-2">
-              Sincronización bidireccional con Google Calendar en Fase B/C
-            </span>
+                <ChevronLeft size={16} />
+              </Button>
+              <div className="text-sm font-medium text-foreground min-w-[9rem] text-center">
+                {currentDate.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentDate((d) => new Date(d.getTime() + 86400000))}
+              >
+                <ChevronRight size={16} />
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
+                Hoy
+              </Button>
+            </div>
+            <Button
+              className="gap-2"
+              onClick={() => {
+                setDialogInitialDate(new Date(currentDate));
+                setDialogOpen(true);
+              }}
+            >
+              <Plus size={16} /> Agregar
+            </Button>
           </div>
 
-          <Card className="p-6">
-            {loading && (
-              <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-                <Spinner className="size-4" /> Cargando agenda...
-              </div>
-            )}
-            {error && (
-              <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-                No se pudo cargar desde Supabase: {error}
-              </div>
-            )}
+          {loading && (
+            <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+              <Spinner className="size-4" /> Cargando agenda...
+            </div>
+          )}
+          {error && (
+            <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
+              No se pudo cargar desde Supabase: {error}
+            </div>
+          )}
 
-            {!loading && !error && (
-              <div className="space-y-3">
-                {filtered.map((event) => (
-                  <div key={event.id} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
-                    <div className="w-24 text-center flex-shrink-0">
-                      <p className="text-xs text-muted-foreground">{event.startTime?.slice(5, 10)}</p>
-                      <p className="text-sm font-semibold text-foreground">{event.startTime?.slice(11, 16)}</p>
+          {!loading && !error && (
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <div className="flex max-h-[70vh] overflow-y-auto">
+                {/* Hour rail */}
+                <div className="w-14 flex-shrink-0 border-r border-border bg-secondary/40">
+                  {Array.from({ length: 24 }, (_, hour) => (
+                    <div key={hour} style={{ height: HOUR_HEIGHT }} className="relative text-right pr-2">
+                      <span className="text-[10px] text-muted-foreground absolute -top-2 right-2">
+                        {String(hour).padStart(2, "0")}:00
+                      </span>
                     </div>
-                    <CalendarIcon size={16} className="text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">{event.title}</p>
+                  ))}
+                </div>
+
+                {/* Single day column — one shared view, not split per worker */}
+                <div className="flex-1 relative">
+                  {Array.from({ length: 24 }, (_, hour) => (
+                    <div
+                      key={hour}
+                      style={{ height: HOUR_HEIGHT }}
+                      onClick={() => openDialogAt(hour)}
+                      className="border-b border-border/60 hover:bg-secondary/40 transition-colors cursor-pointer"
+                    />
+                  ))}
+
+                  {isToday && currentTimeTop > 0 && (
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-status-error-fg z-20 pointer-events-none"
+                      style={{ top: currentTimeTop }}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-status-error-fg -mt-1 -ml-1" />
                     </div>
-                    <StatusBadge tone={typeTone[event.type]}>{typeLabel[event.type]}</StatusBadge>
-                  </div>
-                ))}
-                {filtered.length === 0 && (
-                  <p className="text-sm text-muted-foreground py-6 text-center">Sin eventos para este proyecto.</p>
-                )}
+                  )}
+
+                  {positioned.map(({ event, lane, laneCount }) => {
+                    const start = new Date(event.startTime);
+                    const top = start.getHours() * HOUR_HEIGHT + (start.getMinutes() / 60) * HOUR_HEIGHT;
+                    const durationMinutes = event.endTime
+                      ? (new Date(event.endTime).getTime() - start.getTime()) / 60000
+                      : 30;
+                    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 20);
+                    const detail = blockDetail(height);
+                    const widthPct = 100 / laneCount;
+                    const isNote = !event.assignedWorkerId;
+
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "absolute rounded-lg overflow-hidden z-10 border-l-4",
+                          detail.padding,
+                          isNote
+                            ? "bg-secondary border-dashed border border-muted-foreground/30 border-l-muted-foreground/40"
+                            : "shadow-sm"
+                        )}
+                        style={{
+                          top,
+                          height,
+                          left: `${lane * widthPct}%`,
+                          width: `calc(${widthPct}% - 4px)`,
+                          ...(isNote
+                            ? {}
+                            : {
+                                backgroundColor: hashColor(event.assignedWorkerId!),
+                                borderLeftColor: hashColor(event.assignedWorkerId!),
+                              }),
+                        }}
+                        title={event.notes ?? undefined}
+                      >
+                        <div className={cn("font-semibold truncate leading-tight flex items-center gap-1", detail.text, isNote ? "text-foreground" : "text-foreground")}>
+                          {isNote && <StickyNote size={10} className="flex-shrink-0" />}
+                          {event.title}
+                        </div>
+                        {detail.showSubtitle && (
+                          <div className={cn("truncate opacity-80", detail.text)}>
+                            {isNote ? typeLabel[event.type] ?? event.type : event.assignedWorkerName}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            )}
-          </Card>
+            </div>
+          )}
+
+          <ScheduleEventDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            projectId={selectedProjectId}
+            initialDate={dialogInitialDate}
+            onCreated={() => setReloadToken((t) => t + 1)}
+          />
         </>
       )}
     </div>
