@@ -1,16 +1,11 @@
 import { useParams, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
 import { ArrowLeft, Phone, MessageCircle, StickyNote, FileText } from "lucide-react";
-import {
-  clients,
-  activities,
-  estimates,
-  projects,
-  leadStatusLabel,
-  formatCurrency,
-} from "@/lib/mockData";
+import { leadStatusLabel, formatCurrency, type LeadStatus } from "@/lib/mockData";
+import { useApi } from "@/lib/api";
 
 const activityIcon = {
   call: Phone,
@@ -19,22 +14,46 @@ const activityIcon = {
   estimate_sent: FileText,
 };
 
+interface ClientDetailResponse {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  leadStatus: LeadStatus;
+  source: string;
+  createdAt: string;
+  activities: {
+    id: string;
+    type: keyof typeof activityIcon;
+    content: string;
+    createdBy: string;
+    createdAt: string;
+  }[];
+  estimates: { id: string; status: string; total: number; createdAt: string }[];
+  projects: { id: string; name: string }[];
+}
+
 export default function ClientDetail() {
   const { id } = useParams();
-  const client = clients.find((c) => c.id === id);
+  const { data: client, loading, error } = useApi<ClientDetailResponse>(id ? `/api/clients/${id}` : null);
 
-  if (!client) {
+  if (loading) {
     return (
-      <div className="p-8 max-w-3xl mx-auto text-center text-muted-foreground">
-        Cliente no encontrado.{" "}
-        <Link href="/crm" className="text-primary hover:underline">Volver al CRM</Link>
+      <div className="p-8 max-w-3xl mx-auto flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Spinner className="size-4" /> Cargando cliente...
       </div>
     );
   }
 
-  const clientActivities = activities.filter((a) => a.clientId === client.id);
-  const clientEstimates = estimates.filter((e) => e.clientId === client.id);
-  const clientProjects = projects.filter((p) => p.clientId === client.id);
+  if (error || !client) {
+    return (
+      <div className="p-8 max-w-3xl mx-auto text-center text-muted-foreground">
+        {error ? `No se pudo cargar desde Supabase: ${error}` : "Cliente no encontrado."}{" "}
+        <Link href="/crm" className="text-primary hover:underline">Volver al CRM</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
@@ -62,7 +81,7 @@ export default function ClientDetail() {
           <Card className="p-6">
             <h2 className="text-base font-semibold text-foreground mb-4">Timeline de actividad</h2>
             <div className="space-y-4">
-              {clientActivities.map((activity) => {
+              {client.activities.map((activity) => {
                 const Icon = activityIcon[activity.type];
                 return (
                   <div key={activity.id} className="flex gap-3 pb-4 border-b border-border last:border-0">
@@ -78,7 +97,7 @@ export default function ClientDetail() {
                   </div>
                 );
               })}
-              {clientActivities.length === 0 && (
+              {client.activities.length === 0 && (
                 <p className="text-sm text-muted-foreground">Sin actividad registrada todavía.</p>
               )}
             </div>
@@ -87,22 +106,19 @@ export default function ClientDetail() {
           <Card className="p-6">
             <h2 className="text-base font-semibold text-foreground mb-4">Presupuestos enviados</h2>
             <div className="space-y-3">
-              {clientEstimates.map((estimate) => {
-                const total = estimate.lines.reduce((sum, l) => sum + l.quantity * l.unitCost, 0);
-                return (
-                  <div key={estimate.id} className="flex items-center justify-between pb-3 border-b border-border last:border-0">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">#{estimate.id.toUpperCase()}</p>
-                      <p className="text-xs text-muted-foreground">{estimate.createdAt}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-foreground">{formatCurrency(total)}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{estimate.status}</p>
-                    </div>
+              {client.estimates.map((estimate) => (
+                <div key={estimate.id} className="flex items-center justify-between pb-3 border-b border-border last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">#{estimate.id.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-xs text-muted-foreground">{estimate.createdAt}</p>
                   </div>
-                );
-              })}
-              {clientEstimates.length === 0 && (
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-foreground">{formatCurrency(estimate.total)}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{estimate.status}</p>
+                  </div>
+                </div>
+              ))}
+              {client.estimates.length === 0 && (
                 <p className="text-sm text-muted-foreground">Sin presupuestos todavía.</p>
               )}
             </div>
@@ -123,7 +139,7 @@ export default function ClientDetail() {
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Cliente desde</dt>
-                <dd className="text-foreground">{client.createdAt}</dd>
+                <dd className="text-foreground">{client.createdAt?.slice(0, 10)}</dd>
               </div>
             </dl>
           </Card>
@@ -131,7 +147,7 @@ export default function ClientDetail() {
           <Card className="p-4">
             <h3 className="font-semibold text-foreground mb-3 text-sm">Proyectos</h3>
             <div className="space-y-2">
-              {clientProjects.map((project) => (
+              {client.projects.map((project) => (
                 <Link
                   key={project.id}
                   href={`/projects/${project.id}`}
@@ -140,7 +156,7 @@ export default function ClientDetail() {
                   {project.name}
                 </Link>
               ))}
-              {clientProjects.length === 0 && (
+              {client.projects.length === 0 && (
                 <p className="text-xs text-muted-foreground">Aún sin proyectos vinculados.</p>
               )}
             </div>

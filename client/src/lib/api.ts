@@ -8,10 +8,16 @@ export interface ApiState<T> {
 
 // Small fetch hook — no data library in this project yet, and the app's
 // data needs (a handful of read endpoints per screen) don't warrant adding one.
-export function useApi<T>(path: string): ApiState<T> {
-  const [state, setState] = useState<ApiState<T>>({ data: null, loading: true, error: null });
+// Pass `null` as the path to skip fetching (e.g. while waiting on a prerequisite id).
+export function useApi<T>(path: string | null): ApiState<T> {
+  const [state, setState] = useState<ApiState<T>>({ data: null, loading: path !== null, error: null });
 
   useEffect(() => {
+    if (path === null) {
+      setState({ data: null, loading: false, error: null });
+      return;
+    }
+
     let cancelled = false;
     setState({ data: null, loading: true, error: null });
 
