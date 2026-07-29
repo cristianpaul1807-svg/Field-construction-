@@ -19,17 +19,24 @@ export class SupabaseNotConfiguredError extends Error {
   }
 }
 
+// supabase-js appends /rest/v1 itself — normalize away a trailing
+// /rest/v1(/) in case the configured env var already includes it, which
+// would otherwise double up into an invalid path (PostgREST PGRST125).
+function normalizeProjectUrl(url: string): string {
+  return url.trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
+}
+
 export function getSupabaseAdmin(): SupabaseClient {
   if (client) return client;
 
-  const url = process.env.SUPABASE_URL;
+  const rawUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !serviceRoleKey) {
+  if (!rawUrl || !serviceRoleKey) {
     throw new SupabaseNotConfiguredError();
   }
 
-  client = createClient(url, serviceRoleKey, {
+  client = createClient(normalizeProjectUrl(rawUrl), serviceRoleKey, {
     auth: { persistSession: false },
   });
   return client;
