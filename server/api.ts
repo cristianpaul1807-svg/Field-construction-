@@ -940,6 +940,221 @@ apiRouter.get(
   })
 );
 
+// ---------- Client Portal ----------
+
+apiRouter.get(
+  "/client-portal/:clientId",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const clientId = req.params.clientId;
+
+    const [client, project, estimate] = await Promise.all([
+      supabase
+        .from("clients")
+        .select("id, name")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("id", clientId)
+        .single(),
+      supabase
+        .from("projects")
+        .select("id, name, progress_percent")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("client_id", clientId)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("estimates")
+        .select("id, status, total")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (client.error) throw client.error;
+    if (project.error) throw project.error;
+    if (estimate.error) throw estimate.error;
+
+    let visiblePhotos: { id: string }[] = [];
+    if (project.data) {
+      const { data, error } = await supabase
+        .from("photos")
+        .select("id")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("project_id", project.data.id)
+        .eq("visible_to_client", true);
+      if (error) throw error;
+      visiblePhotos = data;
+    }
+
+    res.json({
+      client: { id: client.data.id, name: client.data.name },
+      project: project.data
+        ? { id: project.data.id, name: project.data.name, progressPercent: Number(project.data.progress_percent) }
+        : null,
+      estimate: estimate.data
+        ? { id: estimate.data.id, status: estimate.data.status, total: Number(estimate.data.total) }
+        : null,
+      visiblePhotos,
+    });
+  })
+);
+
+// ---------- Communication ----------
+
+apiRouter.get(
+  "/conversations",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+
+    const [conversations, messages] = await Promise.all([
+      supabase
+        .from("conversations")
+        .select("id, client_id, control_mode, clients(name, phone)")
+        .eq("business_id", DEMO_BUSINESS_ID),
+      supabase
+        .from("conversation_messages")
+        .select("conversation_id, content, timestamp")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .order("timestamp", { ascending: false }),
+    ]);
+
+    if (conversations.error) throw conversations.error;
+    if (messages.error) throw messages.error;
+
+    res.json(
+      conversations.data.map((c: any) => ({
+        id: c.id,
+        clientId: c.client_id,
+        clientName: c.clients?.name ?? null,
+        clientPhone: c.clients?.phone ?? null,
+        controlMode: c.control_mode,
+        lastMessage: (messages.data as any[]).find((m) => m.conversation_id === c.id)?.content ?? null,
+      }))
+    );
+  })
+);
+
+apiRouter.get(
+  "/conversations/:id/messages",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("conversation_messages")
+      .select("id, direction, content, sent_by, timestamp")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("conversation_id", req.params.id)
+      .order("timestamp");
+
+    if (error) throw error;
+
+    res.json(
+      data.map((m) => ({
+        id: m.id,
+        direction: m.direction,
+        content: m.content,
+        sentBy: m.sent_by,
+        timestamp: m.timestamp,
+      }))
+    );
+  })
+);
+
+apiRouter.patch(
+  "/conversations/:id",
+  route(async (req, res) => {
+    const controlMode = req.body?.controlMode;
+    if (controlMode !== "bot" && controlMode !== "human") {
+      res.status(400).json({ error: "controlMode must be 'bot' or 'human'" });
+      return;
+    }
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("conversations")
+      .update({ control_mode: controlMode })
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- Configuración ----------
+
+apiRouter.get(
+  "/settings/company",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("id, name, license_number, tax_config")
+      .eq("id", DEMO_BUSINESS_ID)
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      id: data.id,
+      name: data.name,
+      licenseNumber: data.license_number,
+      taxConfig: data.tax_config,
+    });
+  })
+);
+
+apiRouter.get(
+  "/settings/margins",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("business_settings")
+      .select("default_margin_type, default_waste_percent")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      defaultMarginType: data.default_margin_type,
+      defaultWastePercent: Number(data.default_waste_percent),
+    });
+  })
+);
+
+apiRouter.get(
+  "/settings/users",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const [users, roles] = await Promise.all([
+      supabase
+        .from("users")
+        .select("id, name, email, status, roles(name, permissions)")
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .order("name"),
+      supabase
+        .from("roles")
+        .select("name, permissions")
+        .eq("business_id", DEMO_BUSINESS_ID),
+    ]);
+
+    if (users.error) throw users.error;
+    if (roles.error) throw roles.error;
+
+    res.json({
+      users: users.data.map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        status: u.status,
+        role: u.roles?.name ?? null,
+      })),
+      roles: roles.data.map((r) => ({ name: r.name, permissions: r.permissions })),
+    });
+  })
+);
+
 // A bare `Router()` mounted directly into a raw connect/http middleware
 // stack (as Vite's dev server uses) never gets Express's response-object
 // patching (res.status/res.json come from `express()` app dispatch, not
