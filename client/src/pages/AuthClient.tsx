@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { ArrowLeft, UserRound } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { apiFetch } from "@/lib/api";
@@ -17,11 +18,12 @@ export default function AuthClient() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [needsCode, setNeedsCode] = useState(false);
+  const [code, setCode] = useState("");
+  const [resent, setResent] = useState(false);
 
-  // Reached after clicking the confirmation link in the signup email: Supabase
-  // already produced a session, but claim-client was never called back
-  // when signUp() first ran (no session existed yet at that point).
+  // Safety net: if a session ever appears (e.g. an old confirmation link from
+  // before this code-based flow existed) without claim-client having run.
   useEffect(() => {
     if (!session || persona !== "none") return;
     (async () => {
@@ -45,15 +47,11 @@ export default function AuthClient() {
     setBusy(true);
     try {
       if (mode === "register") {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/cliente/acceso` },
-        });
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          setNeedsConfirmation(true);
+          setNeedsCode(true);
           return;
         }
 
@@ -75,6 +73,38 @@ export default function AuthClient() {
     }
   };
 
+  const verifyCode = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
+      if (verifyError) throw verifyError;
+      if (!data.session) throw new Error("Código inválido");
+
+      const res = await apiFetch("/api/auth/claim-client", { method: "POST" });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error || "No se pudo vincular tu cuenta");
+      await refreshPersona();
+      setLocation("/portal");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Código inválido o expirado");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resendCode = async () => {
+    setError(null);
+    setResent(false);
+    try {
+      const { error: resendError } = await supabase.auth.resend({ type: "signup", email });
+      if (resendError) throw resendError;
+      setResent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo reenviar el código");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
@@ -85,20 +115,46 @@ export default function AuthClient() {
         <div className="text-center space-y-2">
           <UserRound className="mx-auto text-primary" size={28} />
           <h1 className="text-xl font-semibold text-foreground">
-            {mode === "register" ? "Accede a tu Client Portal" : "Inicia sesión — Cliente"}
+            {needsCode ? "Verifica tu correo" : mode === "register" ? "Accede a tu Client Portal" : "Inicia sesión — Cliente"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {mode === "register"
-              ? "Usa el mismo correo o teléfono que le diste a tu contratista."
-              : "Ingresa con el correo y contraseña de tu cuenta."}
+            {needsCode
+              ? `Enviamos un código de 6 dígitos a ${email}. Ingrésalo para continuar.`
+              : mode === "register"
+                ? "Usa el mismo correo o teléfono que le diste a tu contratista."
+                : "Ingresa con el correo y contraseña de tu cuenta."}
           </p>
         </div>
 
         <Card className="p-6 space-y-4">
-          {needsConfirmation ? (
-            <p className="text-sm text-status-success-fg text-center">
-              Revisa tu correo <strong>{email}</strong> y confirma tu cuenta para continuar.
-            </p>
+          {needsCode ? (
+            <>
+              <div className="flex justify-center">
+                <InputOTP maxLength={6} value={code} onChange={setCode}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
+              {resent && !error && <p className="text-sm text-status-success-fg text-center">Código reenviado.</p>}
+
+              <Button className="w-full" onClick={verifyCode} disabled={code.length !== 6 || busy}>
+                Verificar código
+              </Button>
+              <button
+                onClick={resendCode}
+                className="text-xs text-muted-foreground hover:text-foreground block text-center w-full"
+              >
+                Reenviar código
+              </button>
+            </>
           ) : (
             <>
               <div className="space-y-1.5">
@@ -131,7 +187,7 @@ export default function AuthClient() {
           )}
         </Card>
 
-        {!needsConfirmation && (
+        {!needsCode && (
           <p className="text-sm text-center text-muted-foreground">
             {mode === "register" ? "¿Ya tienes cuenta?" : "¿Todavía no tienes cuenta?"}{" "}
             <button
