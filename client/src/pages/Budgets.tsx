@@ -3,6 +3,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -15,11 +17,12 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Trash2, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
+import { NewEstimateDialog } from "@/components/NewEstimateDialog";
 
 interface EstimateSummary {
   id: string;
@@ -75,16 +78,28 @@ function ErrorNote({ message }: { message: string }) {
   );
 }
 
+const emptyLineForm: { zone: string; category: EstimateLine["category"]; item: string; quantity: number; unitCost: number } = {
+  zone: "",
+  category: "Materiales",
+  item: "",
+  quantity: 1,
+  unitCost: 0,
+};
+
 export default function Budgets() {
   const [reloadToken, setReloadToken] = useState(0);
+  const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
+  const [newBudgetOpen, setNewBudgetOpen] = useState(false);
   const { data: summaries, loading: summariesLoading, error: summariesError } =
     useApi<EstimateSummary[]>(`/api/estimates?_r=${reloadToken}`);
-  const draftId = summaries && summaries.length > 0 ? summaries[0].id : null;
+  const draftId = activeEstimateId ?? (summaries && summaries.length > 0 ? summaries[0].id : null);
   const { data: draft, loading: draftLoading, error: draftError } =
     useApi<EstimateDetail>(draftId ? `/api/estimates/${draftId}?_r=${reloadToken}` : null);
   const { data: assemblyTemplates, loading: templatesLoading, error: templatesError } =
     useApi<AssemblyTemplate[]>("/api/assembly-templates");
   const { data: categories } = useApi<BudgetCategory[]>(`/api/budget-categories?_r=${reloadToken}`);
+
+  const refresh = () => setReloadToken((t) => t + 1);
 
   const setCategory = async (categoryId: string) => {
     if (!draftId) return;
@@ -93,7 +108,7 @@ export default function Budgets() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ categoryId }),
     });
-    setReloadToken((t) => t + 1);
+    refresh();
   };
 
   const [marginType, setMarginType] = useState<"global" | "section">("global");
@@ -101,6 +116,14 @@ export default function Budgets() {
   const [wastePercent, setWastePercent] = useState(0);
   const [visibility, setVisibility] = useState<boolean[]>([]);
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [lineEdits, setLineEdits] = useState<Record<string, { item: string; quantity: number; unitCost: number }>>({});
+  const [lineForm, setLineForm] = useState(emptyLineForm);
+  const [addingLine, setAddingLine] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const [templateZonePrompt, setTemplateZonePrompt] = useState<{ id: string; name: string } | null>(null);
+  const [templateZone, setTemplateZone] = useState("");
+  const [insertingTemplate, setInsertingTemplate] = useState(false);
 
   // Sync locally-editable state whenever a new draft loads.
   useEffect(() => {
@@ -109,6 +132,9 @@ export default function Budgets() {
     setMarginPercent(draft.marginPercent);
     setWastePercent(draft.wastePercent);
     setVisibility(draft.lines.map((l) => l.visibleToClient));
+    setLineEdits(
+      Object.fromEntries(draft.lines.map((l) => [l.id, { item: l.item, quantity: l.quantity, unitCost: l.unitCost }]))
+    );
   }, [draft]);
 
   const loading = summariesLoading || draftLoading;
@@ -121,16 +147,107 @@ export default function Budgets() {
   const total = subtotal + wasteAmount + marginAmount;
   const zones = Array.from(new Set(lines.map((l) => l.zone)));
 
+  const saveLineEdit = async (lineId: string) => {
+    const edit = lineEdits[lineId];
+    if (!edit) return;
+    await fetch(`/api/estimates/${draftId}/lines/${lineId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemName: edit.item, quantity: edit.quantity, unitCost: edit.unitCost }),
+    });
+    refresh();
+  };
+
+  const toggleLineVisibility = async (lineId: string, idx: number, checked: boolean) => {
+    setVisibility((prev) => prev.map((v, i) => (i === idx ? checked : v)));
+    await fetch(`/api/estimates/${draftId}/lines/${lineId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visibleToClient: checked }),
+    });
+  };
+
+  const removeLine = async (lineId: string) => {
+    if (!draftId) return;
+    await fetch(`/api/estimates/${draftId}/lines/${lineId}`, { method: "DELETE" });
+    refresh();
+  };
+
+  const addLine = async () => {
+    if (!draftId || !lineForm.zone.trim() || !lineForm.item.trim()) return;
+    setAddingLine(true);
+    try {
+      await fetch(`/api/estimates/${draftId}/lines`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          zone: lineForm.zone.trim(),
+          category: lineForm.category,
+          itemName: lineForm.item.trim(),
+          quantity: lineForm.quantity,
+          unitCost: lineForm.unitCost,
+        }),
+      });
+      setLineForm(emptyLineForm);
+      refresh();
+    } finally {
+      setAddingLine(false);
+    }
+  };
+
+  const saveDraft = async () => {
+    if (!draftId) return;
+    setSavingDraft(true);
+    try {
+      await fetch(`/api/estimates/${draftId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marginType, marginPercent, wastePercent }),
+      });
+      refresh();
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 2000);
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  const insertTemplate = async () => {
+    if (!draftId || !templateZonePrompt || !templateZone.trim()) return;
+    setInsertingTemplate(true);
+    try {
+      await fetch(`/api/estimates/${draftId}/lines/from-template`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateId: templateZonePrompt.id, zone: templateZone.trim() }),
+      });
+      setTemplateZonePrompt(null);
+      setTemplateZone("");
+      refresh();
+    } finally {
+      setInsertingTemplate(false);
+    }
+  };
+
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
         title="Budgets & Estimates"
         description="Constructor de presupuestos con jerarquía Zona → Categoría → Ítem"
         action={
-          <Button className="gap-2 w-full sm:w-auto">
+          <Button className="gap-2 w-full sm:w-auto" onClick={() => setNewBudgetOpen(true)}>
             <Plus size={16} /> New Budget
           </Button>
         }
+      />
+
+      <NewEstimateDialog
+        open={newBudgetOpen}
+        onOpenChange={setNewBudgetOpen}
+        onCreated={(id) => {
+          setActiveEstimateId(id);
+          refresh();
+        }}
       />
 
       <Tabs defaultValue="builder">
@@ -191,29 +308,123 @@ export default function Budgets() {
                           <div key={category} className="mb-3 pl-4 border-l-2 border-primary/40 last:mb-0">
                             <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">{category}</h4>
                             <div className="space-y-2">
-                              {zoneLines.map(({ line, idx }) => (
-                                <div key={line.id} className="flex items-center justify-between gap-3 text-sm">
-                                  <label className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
+                              {zoneLines.map(({ line, idx }) => {
+                                const edit = lineEdits[line.id] ?? { item: line.item, quantity: line.quantity, unitCost: line.unitCost };
+                                return (
+                                  <div key={line.id} className="flex items-center gap-2 text-sm">
                                     <Checkbox
                                       checked={visibility[idx]}
-                                      onCheckedChange={(checked) =>
-                                        setVisibility((prev) => prev.map((v, i) => (i === idx ? checked === true : v)))
-                                      }
+                                      onCheckedChange={(checked) => toggleLineVisibility(line.id, idx, checked === true)}
                                     />
-                                    <span className="text-muted-foreground truncate">{line.item}</span>
-                                  </label>
-                                  <span className="text-foreground flex-shrink-0">{formatCurrency(line.quantity * line.unitCost)}</span>
-                                </div>
-                              ))}
+                                    <Input
+                                      value={edit.item}
+                                      onChange={(e) =>
+                                        setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, item: e.target.value } }))
+                                      }
+                                      onBlur={() => saveLineEdit(line.id)}
+                                      className="h-8 flex-1 min-w-0"
+                                    />
+                                    <Input
+                                      type="number"
+                                      value={edit.quantity}
+                                      onChange={(e) =>
+                                        setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, quantity: Number(e.target.value) } }))
+                                      }
+                                      onBlur={() => saveLineEdit(line.id)}
+                                      className="h-8 w-20 flex-shrink-0"
+                                    />
+                                    <Input
+                                      type="number"
+                                      value={edit.unitCost}
+                                      onChange={(e) =>
+                                        setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, unitCost: Number(e.target.value) } }))
+                                      }
+                                      onBlur={() => saveLineEdit(line.id)}
+                                      className="h-8 w-24 flex-shrink-0"
+                                    />
+                                    <span className="text-foreground flex-shrink-0 w-20 text-right">
+                                      {formatCurrency(edit.quantity * edit.unitCost)}
+                                    </span>
+                                    <button
+                                      onClick={() => removeLine(line.id)}
+                                      className="text-muted-foreground hover:text-status-error-fg flex-shrink-0"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         );
                       })}
                     </div>
                   ))}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    El check junto a cada línea controla su visibilidad en el Client Portal (visible_to_client).
+                  <p className="text-xs text-muted-foreground mt-2 mb-4">
+                    El check junto a cada línea controla su visibilidad en el Client Portal (visible_to_client). Los
+                    cambios se guardan al salir del campo.
                   </p>
+
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Agregar línea</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
+                      <div className="space-y-1 col-span-2 sm:col-span-1">
+                        <Label className="text-xs">Zona</Label>
+                        <Input
+                          value={lineForm.zone}
+                          onChange={(e) => setLineForm((f) => ({ ...f, zone: e.target.value }))}
+                          placeholder="Ej. Cocina"
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Categoría</Label>
+                        <Select
+                          value={lineForm.category}
+                          onValueChange={(v) => setLineForm((f) => ({ ...f, category: v as EstimateLine["category"] }))}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Materiales">Materiales</SelectItem>
+                            <SelectItem value="Mano de obra">Mano de obra</SelectItem>
+                            <SelectItem value="Subcontratistas">Subcontratistas</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1 col-span-2 sm:col-span-1">
+                        <Label className="text-xs">Ítem</Label>
+                        <Input
+                          value={lineForm.item}
+                          onChange={(e) => setLineForm((f) => ({ ...f, item: e.target.value }))}
+                          placeholder="Ej. Grifería"
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Cantidad</Label>
+                        <Input
+                          type="number"
+                          value={lineForm.quantity}
+                          onChange={(e) => setLineForm((f) => ({ ...f, quantity: Number(e.target.value) }))}
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Costo unitario</Label>
+                        <Input
+                          type="number"
+                          value={lineForm.unitCost}
+                          onChange={(e) => setLineForm((f) => ({ ...f, unitCost: Number(e.target.value) }))}
+                          className="h-8"
+                        />
+                      </div>
+                    </div>
+                    <Button size="sm" className="gap-2 mt-3" onClick={addLine} disabled={addingLine}>
+                      <Plus size={14} /> Agregar línea
+                    </Button>
+                  </div>
                 </Card>
               </div>
 
@@ -292,7 +503,10 @@ export default function Budgets() {
                   <Button className="flex-1 gap-2" onClick={() => setPdfOpen(true)}>
                     <FileText size={16} /> Generar PDF
                   </Button>
-                  <Button variant="outline" className="flex-1">Guardar borrador</Button>
+                  <Button variant="outline" className="flex-1 gap-2" onClick={saveDraft} disabled={savingDraft}>
+                    {savedFlash ? <Check size={16} /> : null}
+                    {savedFlash ? "Guardado" : "Guardar borrador"}
+                  </Button>
                 </div>
               </div>
 
@@ -338,7 +552,14 @@ export default function Budgets() {
                       {template.itemCount} ítems · {template.laborHours} hrs de mano de obra
                     </p>
                     <div className="flex gap-2 mt-3">
-                      <Button size="sm" className="flex-1">Insertar en presupuesto</Button>
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        disabled={!draftId}
+                        onClick={() => setTemplateZonePrompt({ id: template.id, name: template.name })}
+                      >
+                        Insertar en presupuesto
+                      </Button>
                       <Button size="sm" variant="outline">Editar</Button>
                     </div>
                   </Card>
@@ -390,6 +611,28 @@ export default function Budgets() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={!!templateZonePrompt} onOpenChange={(open) => !open && setTemplateZonePrompt(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Insertar "{templateZonePrompt?.name}"</DialogTitle>
+            <DialogDescription>¿A qué zona del presupuesto pertenece esta plantilla?</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label>Zona</Label>
+            <Input
+              value={templateZone}
+              onChange={(e) => setTemplateZone(e.target.value)}
+              placeholder="Ej. Baño 2"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTemplateZonePrompt(null)}>Cancelar</Button>
+            <Button onClick={insertTemplate} disabled={!templateZone.trim() || insertingTemplate}>Insertar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

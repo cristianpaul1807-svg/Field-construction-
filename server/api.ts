@@ -171,6 +171,234 @@ apiRouter.get(
   })
 );
 
+// Recomputes and persists estimates.total from its current lines + margin/waste,
+// mirroring the client-side preview formula exactly. Called after every line
+// mutation and every margin/waste save so the stored total never goes stale.
+async function recalcEstimateTotal(supabase: ReturnType<typeof getSupabaseAdmin>, estimateId: string) {
+  const [estimate, lines] = await Promise.all([
+    supabase.from("estimates").select("margin_percent, waste_percent").eq("id", estimateId).single(),
+    supabase.from("estimate_lines").select("total").eq("estimate_id", estimateId),
+  ]);
+  if (estimate.error) throw estimate.error;
+  if (lines.error) throw lines.error;
+
+  const subtotal = lines.data.reduce((sum, l) => sum + Number(l.total), 0);
+  const wasteAmount = subtotal * (Number(estimate.data.waste_percent) / 100);
+  const marginAmount = (subtotal + wasteAmount) * (Number(estimate.data.margin_percent) / 100);
+  const total = subtotal + wasteAmount + marginAmount;
+
+  const { error } = await supabase.from("estimates").update({ total }).eq("id", estimateId);
+  if (error) throw error;
+}
+
+// Creates a brand-new empty estimate (not one of the seeded ones) so
+// "New Budget" has something real to open the builder on.
+apiRouter.post(
+  "/estimates",
+  route(async (req, res) => {
+    const clientId = req.body?.clientId;
+    if (!clientId) {
+      res.status(400).json({ error: "clientId is required" });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: settings } = await supabase
+      .from("business_settings")
+      .select("default_margin_type, default_waste_percent")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .single();
+
+    const { data, error } = await supabase
+      .from("estimates")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        client_id: clientId,
+        project_id: req.body?.projectId ?? null,
+        category_id: req.body?.categoryId ?? null,
+        margin_type: settings?.default_margin_type ?? "global",
+        waste_percent: settings?.default_waste_percent ?? 0,
+        margin_percent: 0,
+        status: "borrador",
+        created_by: "human",
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    res.json({ id: data.id });
+  })
+);
+
+// Persists the margin/waste settings the admin edited locally in the
+// builder (line and visibility edits already save immediately below).
+apiRouter.patch(
+  "/estimates/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.marginType !== undefined) update.margin_type = body.marginType;
+    if (body.marginPercent !== undefined) update.margin_percent = body.marginPercent;
+    if (body.wastePercent !== undefined) update.waste_percent = body.wastePercent;
+
+    const supabase = getSupabaseAdmin();
+    if (Object.keys(update).length > 0) {
+      const { error } = await supabase
+        .from("estimates")
+        .update(update)
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("id", req.params.id);
+      if (error) throw error;
+    }
+
+    await recalcEstimateTotal(supabase, req.params.id);
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.post(
+  "/estimates/:id/lines",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    if (!body.zone || !body.category || !body.itemName) {
+      res.status(400).json({ error: "zone, category and itemName are required" });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("estimate_lines")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        estimate_id: req.params.id,
+        zone: body.zone,
+        category: body.category,
+        item_name: body.itemName,
+        quantity: body.quantity ?? 1,
+        unit_cost: body.unitCost ?? 0,
+        visible_to_client: body.visibleToClient ?? false,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    await recalcEstimateTotal(supabase, req.params.id);
+    res.json({ id: data.id });
+  })
+);
+
+apiRouter.patch(
+  "/estimates/:id/lines/:lineId",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.zone !== undefined) update.zone = body.zone;
+    if (body.category !== undefined) update.category = body.category;
+    if (body.itemName !== undefined) update.item_name = body.itemName;
+    if (body.quantity !== undefined) update.quantity = body.quantity;
+    if (body.unitCost !== undefined) update.unit_cost = body.unitCost;
+    if (body.visibleToClient !== undefined) update.visible_to_client = body.visibleToClient;
+
+    const supabase = getSupabaseAdmin();
+    if (Object.keys(update).length > 0) {
+      const { error } = await supabase
+        .from("estimate_lines")
+        .update(update)
+        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("id", req.params.lineId);
+      if (error) throw error;
+    }
+
+    await recalcEstimateTotal(supabase, req.params.id);
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/estimates/:id/lines/:lineId",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("estimate_lines")
+      .delete()
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.lineId);
+    if (error) throw error;
+
+    await recalcEstimateTotal(supabase, req.params.id);
+    res.json({ ok: true });
+  })
+);
+
+// Bulk-inserts an Assembly Template's items as real lines under the given
+// zone. Subcontractor items have no catalog cost (schema has none), so
+// unit_cost lands on 0 and the admin adjusts it inline afterward.
+apiRouter.post(
+  "/estimates/:id/lines/from-template",
+  route(async (req, res) => {
+    const { templateId, zone } = req.body ?? {};
+    if (!templateId || !zone) {
+      res.status(400).json({ error: "templateId and zone are required" });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: items, error: itemsError } = await supabase
+      .from("assembly_items")
+      .select(
+        "quantity_default, materials_catalog(name, price), labor_rates(name, hourly_rate), subcontractors(name)"
+      )
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("assembly_template_id", templateId);
+
+    if (itemsError) throw itemsError;
+    if (items.length === 0) {
+      res.json({ inserted: 0 });
+      return;
+    }
+
+    const rows = items.map((i: any) => {
+      if (i.materials_catalog) {
+        return {
+          business_id: DEMO_BUSINESS_ID,
+          estimate_id: req.params.id,
+          zone,
+          category: "Materiales",
+          item_name: i.materials_catalog.name,
+          quantity: Number(i.quantity_default),
+          unit_cost: Number(i.materials_catalog.price ?? 0),
+        };
+      }
+      if (i.labor_rates) {
+        return {
+          business_id: DEMO_BUSINESS_ID,
+          estimate_id: req.params.id,
+          zone,
+          category: "Mano de obra",
+          item_name: i.labor_rates.name,
+          quantity: Number(i.quantity_default),
+          unit_cost: Number(i.labor_rates.hourly_rate ?? 0),
+        };
+      }
+      return {
+        business_id: DEMO_BUSINESS_ID,
+        estimate_id: req.params.id,
+        zone,
+        category: "Subcontratistas",
+        item_name: i.subcontractors?.name ?? "Subcontratista",
+        quantity: Number(i.quantity_default),
+        unit_cost: 0,
+      };
+    });
+
+    const { error: insertError } = await supabase.from("estimate_lines").insert(rows);
+    if (insertError) throw insertError;
+
+    await recalcEstimateTotal(supabase, req.params.id);
+    res.json({ inserted: rows.length });
+  })
+);
+
 // Admin approves (or rejects) a bot-drafted estimate before it reaches
 // the client — moves 'pendiente_aprobacion' -> 'enviado' (or 'rechazado').
 // Kept generic (not restricted to that one transition) since the admin
@@ -1340,6 +1568,140 @@ apiRouter.post(
 
     if (error) throw error;
     res.status(201).json({ id: data.id });
+  })
+);
+
+// ---------- Appointment requests (hybrid chat, scoped free text) ----------
+// A client's "Agendar cita" bubble opens two scoped free-text questions
+// (when + why), never a real slot pick — this is the pending request that
+// results in. Confirming here is the only thing that ever writes a real
+// schedule_events row for it; rejecting just closes the request. The
+// public chat UI that creates these doesn't exist yet (Fase D) — this is
+// the admin-side half plus the data model, buildable and testable now.
+
+apiRouter.get(
+  "/appointment-requests",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("appointment_requests")
+      .select("id, client_id, requested_datetime_text, reason_text, status, schedule_event_id, created_at, clients(name)")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(
+      data.map((r: any) => ({
+        id: r.id,
+        clientId: r.client_id,
+        clientName: r.clients?.name ?? null,
+        requestedDatetimeText: r.requested_datetime_text,
+        reasonText: r.reason_text,
+        status: r.status,
+        scheduleEventId: r.schedule_event_id,
+        createdAt: r.created_at,
+      }))
+    );
+  })
+);
+
+// Exposed for the future public chat to call once it exists (Fase D) —
+// exercised today via direct API calls / tests, not yet from any UI.
+apiRouter.post(
+  "/appointment-requests",
+  route(async (req, res) => {
+    const { clientId, requestedDatetimeText, reasonText } = req.body ?? {};
+    if (!clientId || !requestedDatetimeText) {
+      res.status(400).json({ error: "clientId and requestedDatetimeText are required" });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("appointment_requests")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        client_id: clientId,
+        requested_datetime_text: requestedDatetimeText,
+        reason_text: reasonText ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+// Admin picks the real slot — this is the only path that ever creates a
+// schedule_events row for a client-requested appointment.
+apiRouter.patch(
+  "/appointment-requests/:id/confirm",
+  route(async (req, res) => {
+    const { startTime, durationMinutes, assignedEmployeeId, assignedSubcontractorId } = req.body ?? {};
+    if (!startTime || !durationMinutes) {
+      res.status(400).json({ error: "startTime and durationMinutes are required" });
+      return;
+    }
+    if (assignedEmployeeId && assignedSubcontractorId) {
+      res.status(400).json({ error: "Assign to only one worker, not both" });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: reqRow, error: reqError } = await supabase
+      .from("appointment_requests")
+      .select("client_id, reason_text, clients(name)")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id)
+      .single();
+    if (reqError) throw reqError;
+
+    const endTime = new Date(new Date(startTime).getTime() + durationMinutes * 60000).toISOString();
+    const clientName = (reqRow.clients as any)?.name ?? "Cliente";
+
+    const { data: event, error: eventError } = await supabase
+      .from("schedule_events")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        project_id: null,
+        title: `Cita con ${clientName}`,
+        type: "reunion",
+        start_time: startTime,
+        end_time: endTime,
+        notes: reqRow.reason_text,
+        assigned_employee_id: assignedEmployeeId ?? null,
+        assigned_subcontractor_id: assignedSubcontractorId ?? null,
+        source: "chat_cliente",
+      })
+      .select("id")
+      .single();
+    if (eventError) throw eventError;
+
+    const { error: updateError } = await supabase
+      .from("appointment_requests")
+      .update({ status: "confirmada", schedule_event_id: event.id })
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+    if (updateError) throw updateError;
+
+    res.json({ ok: true, scheduleEventId: event.id });
+  })
+);
+
+apiRouter.patch(
+  "/appointment-requests/:id/reject",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("appointment_requests")
+      .update({ status: "rechazada" })
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
   })
 );
 

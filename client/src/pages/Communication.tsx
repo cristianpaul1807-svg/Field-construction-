@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Send, Bot, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApi } from "@/lib/api";
+import { AppointmentRequestsPanel } from "@/components/AppointmentRequestsPanel";
 
 interface Conversation {
   id: string;
@@ -185,6 +186,8 @@ export default function Communication() {
         Conectado vía WhatsApp Cloud API directa de Meta (sin BSP). El bot usa el motor de
         presupuestos + assembly templates del negocio para responder automáticamente.
       </p>
+
+      <AppointmentRequestsPanel />
     </div>
   );
 }
