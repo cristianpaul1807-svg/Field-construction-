@@ -128,7 +128,7 @@ export default function AuthBusiness() {
           {needsCode ? (
             <>
               <div className="flex justify-center">
-                <InputOTP maxLength={6} value={code} onChange={setCode}>
+                <InputOTP maxLength={8} value={code} onChange={setCode}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -136,6 +136,8 @@ export default function AuthBusiness() {
                     <InputOTPSlot index={3} />
                     <InputOTPSlot index={4} />
                     <InputOTPSlot index={5} />
+                    <InputOTPSlot index={6} />
+                    <InputOTPSlot index={7} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
@@ -143,7 +145,7 @@ export default function AuthBusiness() {
               {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
               {resent && !error && <p className="text-sm text-status-success-fg text-center">Código reenviado.</p>}
 
-              <Button className="w-full" onClick={verifyCode} disabled={code.length !== 6 || busy}>
+              <Button className="w-full" onClick={verifyCode} disabled={code.length !== 8 || busy}>
                 Verificar código
               </Button>
               <button
