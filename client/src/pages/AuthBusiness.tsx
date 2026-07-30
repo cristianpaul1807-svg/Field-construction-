@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthBusiness() {
   const [, setLocation] = useLocation();
-  const { refreshPersona } = useAuth();
+  const { session, persona, refreshPersona } = useAuth();
   const [mode, setMode] = useState<"register" | "login">("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,12 +19,36 @@ export default function AuthBusiness() {
   const [error, setError] = useState<string | null>(null);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
+  // Reached after clicking the confirmation link in the signup email: Supabase
+  // already produced a session, but register-business was never called back
+  // when signUp() first ran (no session existed yet at that point).
+  useEffect(() => {
+    if (!session || persona !== "none") return;
+    (async () => {
+      setBusy(true);
+      try {
+        const res = await apiFetch("/api/auth/register-business", { method: "POST" });
+        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "No se pudo crear el negocio");
+        await refreshPersona();
+        setLocation("/");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Algo salió mal");
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }, [session, persona]);
+
   const submit = async () => {
     setError(null);
     setBusy(true);
     try {
       if (mode === "register") {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/negocio/acceso` },
+        });
         if (signUpError) throw signUpError;
 
         if (!data.session) {
