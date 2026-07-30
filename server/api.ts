@@ -1,8 +1,14 @@
 import express, { Router, type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
-import { randomUUID, randomBytes, createHash } from "crypto";
+import { randomUUID, randomBytes } from "crypto";
 import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
-import { requireAuthenticatedUser, requireBusinessAuth, requireClientAuth } from "./supabaseAuth";
+import {
+  requireAuthenticatedUser,
+  requireBusinessAuth,
+  requireClientAuth,
+  requireWorkerAuth,
+  hashToken,
+} from "./supabaseAuth";
 
 export const apiRouter = Router();
 
@@ -23,10 +29,6 @@ function route(handler: Handler) {
       next(err);
     });
   };
-}
-
-function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
 }
 
 // ---------- Auth: registration/provisioning + persona detection ----------
@@ -190,6 +192,231 @@ apiRouter.post(
       businessId: worker.business_id,
       kind: employee.data ? "employee" : "subcontractor",
     });
+  })
+);
+
+// Everything below is scoped to the calling worker (employee or
+// subcontractor) via requireWorkerAuth, which resolves req.workerId /
+// req.workerKind / req.workerBusinessId from the raw token — there's no
+// auth.uid() in this flow, so every query filters manually instead of
+// relying on RLS.
+function workerColumn(req: Request): "assigned_employee_id" | "assigned_subcontractor_id" {
+  return req.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
+}
+
+apiRouter.get(
+  "/worker/schedule",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const column = workerColumn(req);
+
+    const [events, workOrders] = await Promise.all([
+      admin
+        .from("schedule_events")
+        .select("id, title, type, start_time, end_time, notes, project_id, projects(name)")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(column, req.workerId!)
+        .order("start_time"),
+      admin
+        .from("work_orders")
+        .select("id, title, description, priority, status, project_id, projects(name)")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(column, req.workerId!)
+        .neq("status", "completada"),
+    ]);
+
+    if (events.error) throw events.error;
+    if (workOrders.error) throw workOrders.error;
+
+    res.json({
+      events: events.data.map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        type: e.type,
+        startTime: e.start_time,
+        endTime: e.end_time,
+        notes: e.notes,
+        projectId: e.project_id,
+        projectName: e.projects?.name ?? null,
+      })),
+      workOrders: workOrders.data.map((w: any) => ({
+        id: w.id,
+        title: w.title,
+        description: w.description,
+        priority: w.priority,
+        status: w.status,
+        projectId: w.project_id,
+        projectName: w.projects?.name ?? null,
+      })),
+    });
+  })
+);
+
+apiRouter.get(
+  "/worker/projects",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+
+    const { data, error } = await admin
+      .from("assignments")
+      .select("projects(id, name)")
+      .eq("business_id", req.workerBusinessId!)
+      .eq(column, req.workerId!);
+    if (error) throw error;
+
+    const seen = new Set<string>();
+    const projects = [];
+    for (const row of data as any[]) {
+      if (row.projects && !seen.has(row.projects.id)) {
+        seen.add(row.projects.id);
+        projects.push({ id: row.projects.id, name: row.projects.name });
+      }
+    }
+    res.json(projects);
+  })
+);
+
+apiRouter.get(
+  "/worker/time-entries/active",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+
+    const { data, error } = await admin
+      .from("time_entries")
+      .select("id, project_id, projects(name), check_in_time, billable, service_type")
+      .eq("business_id", req.workerBusinessId!)
+      .eq(column, req.workerId!)
+      .is("check_out_time", null)
+      .order("check_in_time", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+
+    res.json(
+      data
+        ? {
+            id: data.id,
+            projectId: data.project_id,
+            projectName: (data as any).projects?.name ?? null,
+            checkInTime: data.check_in_time,
+            billable: data.billable,
+            serviceType: data.service_type,
+          }
+        : null
+    );
+  })
+);
+
+apiRouter.post(
+  "/worker/time-entries/check-in",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const { projectId, billable, serviceType, latitude, longitude } = req.body ?? {};
+    if (!projectId || latitude === undefined || longitude === undefined) {
+      res.status(400).json({ error: "projectId, latitude and longitude are required" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+
+    const { data, error } = await admin
+      .from("time_entries")
+      .insert({
+        business_id: req.workerBusinessId!,
+        project_id: projectId,
+        [column]: req.workerId!,
+        billable: billable ?? true,
+        service_type: serviceType ?? null,
+        check_in_location: `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`,
+        check_in_lat: latitude,
+        check_in_lng: longitude,
+      })
+      .select("id, check_in_time")
+      .single();
+    if (error) throw error;
+
+    res.status(201).json({ id: data.id, checkInTime: data.check_in_time });
+  })
+);
+
+apiRouter.post(
+  "/worker/time-entries/:id/check-out",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const { latitude, longitude } = req.body ?? {};
+    if (latitude === undefined || longitude === undefined) {
+      res.status(400).json({ error: "latitude and longitude are required" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const { error } = await admin
+      .from("time_entries")
+      .update({
+        check_out_time: new Date().toISOString(),
+        check_out_location: `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`,
+        check_out_lat: latitude,
+        check_out_lng: longitude,
+      })
+      .eq("business_id", req.workerBusinessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+
+    res.json({ ok: true });
+  })
+);
+
+// Closes the active entry and opens a new one against a different project
+// in a single action, so the worker doesn't have to check out then in again.
+apiRouter.post(
+  "/worker/time-entries/switch-project",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const { activeEntryId, projectId, billable, serviceType, latitude, longitude } = req.body ?? {};
+    if (!activeEntryId || !projectId || latitude === undefined || longitude === undefined) {
+      res.status(400).json({ error: "activeEntryId, projectId, latitude and longitude are required" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+    const locationStr = `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`;
+
+    const { error: closeError } = await admin
+      .from("time_entries")
+      .update({
+        check_out_time: new Date().toISOString(),
+        check_out_location: locationStr,
+        check_out_lat: latitude,
+        check_out_lng: longitude,
+      })
+      .eq("business_id", req.workerBusinessId!)
+      .eq("id", activeEntryId);
+    if (closeError) throw closeError;
+
+    const { data, error: openError } = await admin
+      .from("time_entries")
+      .insert({
+        business_id: req.workerBusinessId!,
+        project_id: projectId,
+        [column]: req.workerId!,
+        billable: billable ?? true,
+        service_type: serviceType ?? null,
+        check_in_location: locationStr,
+        check_in_lat: latitude,
+        check_in_lng: longitude,
+      })
+      .select("id, check_in_time")
+      .single();
+    if (openError) throw openError;
+
+    res.status(201).json({ id: data.id, checkInTime: data.check_in_time });
   })
 );
 

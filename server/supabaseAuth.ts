@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Request, Response, NextFunction } from "express";
+import { createHash } from "crypto";
 import WebSocket from "ws";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 
@@ -31,8 +32,15 @@ declare global {
       authUserId?: string;
       businessId?: string;
       clientId?: string;
+      workerId?: string;
+      workerKind?: "employee" | "subcontractor";
+      workerBusinessId?: string;
     }
   }
+}
+
+export function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 function bearerToken(req: Request): string | null {
@@ -120,5 +128,38 @@ export async function requireClientAuth(req: Request, res: Response, next: NextF
   req.authUserId = userData.user.id;
   req.clientId = clientRow.id;
   req.supabase = scoped;
+  next();
+}
+
+// Worker PWA (/campo): a completely separate flow, deliberately not built
+// on Supabase Auth. The bearer value is the raw token issued once via
+// POST /employees|subcontractors/:id/access-token, hashed and compared
+// against access_token_hash. Since there's no auth.uid() here, RLS can't
+// apply — every worker endpoint uses the service-role client and filters
+// by employee_id/subcontractor_id + business_id explicitly in application
+// code instead.
+export async function requireWorkerAuth(req: Request, res: Response, next: NextFunction) {
+  const token = bearerToken(req);
+  if (!token) {
+    res.status(401).json({ error: "Missing worker token" });
+    return;
+  }
+
+  const hash = hashToken(token);
+  const admin = getSupabaseAdmin();
+  const [employee, subcontractor] = await Promise.all([
+    admin.from("employees").select("id, business_id").eq("access_token_hash", hash).maybeSingle(),
+    admin.from("subcontractors").select("id, business_id").eq("access_token_hash", hash).maybeSingle(),
+  ]);
+
+  const worker = employee.data ?? subcontractor.data;
+  if (!worker) {
+    res.status(401).json({ error: "Invalid worker token" });
+    return;
+  }
+
+  req.workerId = worker.id;
+  req.workerKind = employee.data ? "employee" : "subcontractor";
+  req.workerBusinessId = worker.business_id;
   next();
 }
