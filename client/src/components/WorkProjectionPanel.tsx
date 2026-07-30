@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, CheckCircle2, ArrowRight } from "lucide-react";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 
 interface ProjectionItem {
   id: string;
@@ -66,7 +66,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
     try {
       const [kind, id] = workerId ? workerId.split(":") : [null, null];
       const plannedStart = new Date(`${date}T${time}:00`).toISOString();
-      const res = await fetch(`/api/estimates/${estimateId}/projection`, {
+      const res = await apiFetch(`/api/estimates/${estimateId}/projection`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,14 +89,14 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
   };
 
   const removeItem = async (itemId: string) => {
-    await fetch(`/api/estimates/${estimateId}/projection/${itemId}`, { method: "DELETE" });
+    await apiFetch(`/api/estimates/${estimateId}/projection/${itemId}`, { method: "DELETE" });
     refresh();
   };
 
   const approveDraft = async () => {
     setBusy(true);
     try {
-      await fetch(`/api/estimates/${estimateId}/status`, {
+      await apiFetch(`/api/estimates/${estimateId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "enviado" }),
@@ -110,7 +110,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
   const acceptEstimate = async () => {
     setBusy(true);
     try {
-      const res = await fetch(`/api/estimates/${estimateId}/accept`, {
+      const res = await apiFetch(`/api/estimates/${estimateId}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectName: clientName ? `${clientName} — Proyecto` : undefined }),

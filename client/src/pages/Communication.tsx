@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Send, Bot, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 import { AppointmentRequestsPanel } from "@/components/AppointmentRequestsPanel";
 
 interface Conversation {
@@ -49,7 +49,7 @@ export default function Communication() {
     const next = mode === "bot" ? "human" : "bot";
     setModeOverride((prev) => ({ ...prev, [activeId]: next }));
     try {
-      const res = await fetch(`/api/conversations/${activeId}`, {
+      const res = await apiFetch(`/api/conversations/${activeId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ controlMode: next }),

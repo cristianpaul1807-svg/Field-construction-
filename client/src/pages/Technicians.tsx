@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Plus } from "lucide-react";
-import { useApi } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Plus, KeyRound } from "lucide-react";
+import { useApi, apiFetch } from "@/lib/api";
 
 const statusTone = {
   disponible: "success",
@@ -29,6 +31,13 @@ interface Employee {
 
 export default function Technicians() {
   const { data: employees, loading, error } = useApi<Employee[]>("/api/employees");
+  const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
+
+  const generateToken = async (emp: Employee) => {
+    const res = await apiFetch(`/api/employees/${emp.id}/access-token`, { method: "POST" });
+    const body = await res.json();
+    if (res.ok) setNewToken({ name: emp.name, token: body.token });
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
@@ -63,6 +72,7 @@ export default function Technicians() {
                   <th className="text-left py-2 text-muted-foreground font-medium">Estado</th>
                   <th className="text-left py-2 text-muted-foreground font-medium">Proyecto actual</th>
                   <th className="text-right py-2 text-muted-foreground font-medium">Horas (período)</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">Acceso PWA</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,6 +92,11 @@ export default function Technicians() {
                     </td>
                     <td className="py-3 text-muted-foreground">{emp.currentProject ?? "—"}</td>
                     <td className="py-3 text-right text-foreground">{emp.hoursThisPeriod} hrs</td>
+                    <td className="py-3 text-right">
+                      <Button size="sm" variant="outline" className="gap-1.5" onClick={() => generateToken(emp)}>
+                        <KeyRound size={12} /> Generar código
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -89,6 +104,23 @@ export default function Technicians() {
           </div>
         )}
       </Card>
+
+      <Dialog open={!!newToken} onOpenChange={(open) => !open && setNewToken(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Código de acceso para {newToken?.name}</DialogTitle>
+            <DialogDescription>
+              Compártelo con {newToken?.name} para que entre en <code>/campo</code>. No se volverá a mostrar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-border bg-secondary p-4 text-center font-mono text-lg tracking-wider">
+            {newToken?.token}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setNewToken(null)}>Listo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, Upload, FileText } from "lucide-react";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 
 interface Category {
   id: string;
@@ -50,7 +50,7 @@ export function BudgetCategoriesPanel() {
     if (!name) return;
     setBusy(true);
     try {
-      await fetch("/api/budget-categories", {
+      await apiFetch("/api/budget-categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
@@ -63,12 +63,12 @@ export function BudgetCategoriesPanel() {
   };
 
   const removeCategory = async (id: string) => {
-    await fetch(`/api/budget-categories/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/budget-categories/${id}`, { method: "DELETE" });
     refresh();
   };
 
   const removeDocument = async (id: string) => {
-    await fetch(`/api/estimate-reference-documents/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/estimate-reference-documents/${id}`, { method: "DELETE" });
     refresh();
   };
 
@@ -79,7 +79,7 @@ export function BudgetCategoriesPanel() {
       const form = new FormData();
       form.append("categoryId", categoryId);
       form.append("file", file);
-      const res = await fetch("/api/estimate-reference-documents", { method: "POST", body: form });
+      const res = await apiFetch("/api/estimate-reference-documents", { method: "POST", body: form });
       const body = await res.json();
       if (!res.ok) throw new Error(body?.error || "No se pudo subir el archivo");
       refresh();

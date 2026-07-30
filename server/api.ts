@@ -1,7 +1,8 @@
 import express, { Router, type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
-import { randomUUID } from "crypto";
-import { DEMO_BUSINESS_ID, getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
+import { randomUUID, randomBytes, createHash } from "crypto";
+import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
+import { requireAuthenticatedUser, requireBusinessAuth, requireClientAuth } from "./supabaseAuth";
 
 export const apiRouter = Router();
 
@@ -24,30 +25,259 @@ function route(handler: Handler) {
   };
 }
 
+function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+// ---------- Auth: registration/provisioning + persona detection ----------
+// These run BEFORE requireBusinessAuth is mounted below, since a brand-new
+// authenticated user has no users/clients row yet — that's exactly what
+// register-business and claim-client create. Fase C intentionally keeps
+// registration to email/phone + password only; business name, address,
+// license etc. are filled in afterwards in Settings -> Company Data.
+
+// Bootstraps a brand-new Supabase Auth user into a business: creates the
+// businesses/business_settings/roles/users rows for them. Service-role is
+// the deliberate, narrow exception here — RLS can't self-bootstrap the very
+// users row its own current_business_id() policy depends on.
+apiRouter.post(
+  "/auth/register-business",
+  requireAuthenticatedUser,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+
+    const { data: existing } = await admin
+      .from("users")
+      .select("business_id")
+      .eq("auth_user_id", req.authUserId!)
+      .maybeSingle();
+    if (existing) {
+      res.json({ businessId: existing.business_id });
+      return;
+    }
+
+    const { data: authUser } = await admin.auth.admin.getUserById(req.authUserId!);
+    const email = authUser.user?.email ?? null;
+    const phone = authUser.user?.phone ?? null;
+    const label = email ? email.split("@")[0] : phone ?? "nuevo";
+
+    const { data: business, error: businessError } = await admin
+      .from("businesses")
+      .insert({ name: `Negocio de ${label}` })
+      .select("id")
+      .single();
+    if (businessError) throw businessError;
+
+    const [, roleResult] = await Promise.all([
+      admin.from("business_settings").insert({ business_id: business.id }),
+      admin.from("roles").insert({ business_id: business.id, name: "admin" }).select("id").single(),
+    ]);
+    if (roleResult.error) throw roleResult.error;
+
+    const { error: userError } = await admin.from("users").insert({
+      business_id: business.id,
+      auth_user_id: req.authUserId!,
+      name: label,
+      email,
+      phone,
+      role_id: roleResult.data.id,
+    });
+    if (userError) throw userError;
+
+    res.status(201).json({ businessId: business.id });
+  })
+);
+
+// Links a brand-new Supabase Auth user to an existing clients row (created
+// by a business through CRM) by matching email or phone. The client never
+// creates new data at signup — their project/estimate already exists,
+// they're just claiming access to view it.
+apiRouter.post(
+  "/auth/claim-client",
+  requireAuthenticatedUser,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+
+    const { data: existing } = await admin
+      .from("clients")
+      .select("id")
+      .eq("auth_user_id", req.authUserId!)
+      .maybeSingle();
+    if (existing) {
+      res.json({ clientId: existing.id });
+      return;
+    }
+
+    const { data: authUser } = await admin.auth.admin.getUserById(req.authUserId!);
+    const email = authUser.user?.email ?? null;
+    const phone = authUser.user?.phone ?? null;
+    if (!email && !phone) {
+      res.status(400).json({ error: "No email or phone on this account" });
+      return;
+    }
+
+    let query = admin.from("clients").select("id").is("auth_user_id", null);
+    query = email && phone ? query.or(`email.eq.${email},phone.eq.${phone}`) : query.eq(email ? "email" : "phone", email ?? phone!);
+    const { data: matches, error: matchError } = await query.order("created_at", { ascending: true }).limit(1);
+    if (matchError) throw matchError;
+
+    if (!matches || matches.length === 0) {
+      res.status(404).json({
+        error: "No encontramos ningún cliente con ese correo o teléfono. Pídele a tu contratista que te dé de alta primero.",
+      });
+      return;
+    }
+
+    const { error: updateError } = await admin
+      .from("clients")
+      .update({ auth_user_id: req.authUserId! })
+      .eq("id", matches[0].id);
+    if (updateError) throw updateError;
+
+    res.status(201).json({ clientId: matches[0].id });
+  })
+);
+
+// Called right after any login to decide where to redirect: business panel,
+// client portal, or "finish setting up your account".
+apiRouter.get(
+  "/auth/me",
+  requireAuthenticatedUser,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const [userRow, clientRow] = await Promise.all([
+      admin.from("users").select("business_id").eq("auth_user_id", req.authUserId!).maybeSingle(),
+      admin.from("clients").select("id").eq("auth_user_id", req.authUserId!).maybeSingle(),
+    ]);
+
+    if (userRow.data) {
+      res.json({ persona: "business", businessId: userRow.data.business_id });
+    } else if (clientRow.data) {
+      res.json({ persona: "client", clientId: clientRow.data.id });
+    } else {
+      res.json({ persona: "none" });
+    }
+  })
+);
+
+// ---------- Worker PWA access (token-based, no Supabase Auth at all) ----------
+
+apiRouter.post(
+  "/worker-auth/login",
+  route(async (req, res) => {
+    const token = (req.body?.token ?? "").trim();
+    if (!token) {
+      res.status(400).json({ error: "token is required" });
+      return;
+    }
+    const hash = hashToken(token);
+    const admin = getSupabaseAdmin();
+
+    const [employee, subcontractor] = await Promise.all([
+      admin.from("employees").select("id, name, business_id").eq("access_token_hash", hash).maybeSingle(),
+      admin.from("subcontractors").select("id, name, business_id").eq("access_token_hash", hash).maybeSingle(),
+    ]);
+
+    const worker = employee.data ?? subcontractor.data;
+    if (!worker) {
+      res.status(401).json({ error: "Código inválido" });
+      return;
+    }
+
+    res.json({
+      id: worker.id,
+      name: worker.name,
+      businessId: worker.business_id,
+      kind: employee.data ? "employee" : "subcontractor",
+    });
+  })
+);
+
+// ---------- Client Portal (self-service, client-authenticated) ----------
+
+apiRouter.get(
+  "/client-portal/me",
+  requireClientAuth,
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const clientId = req.clientId!;
+
+    const [client, project, estimate] = await Promise.all([
+      supabase.from("clients").select("id, name").eq("id", clientId).single(),
+      supabase
+        .from("projects")
+        .select("id, name, progress_percent")
+        .eq("client_id", clientId)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("estimates")
+        .select("id, status, total")
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (client.error) throw client.error;
+    if (project.error) throw project.error;
+    if (estimate.error) throw estimate.error;
+
+    let visiblePhotos: { id: string }[] = [];
+    if (project.data) {
+      const { data, error } = await supabase
+        .from("photos")
+        .select("id")
+        .eq("project_id", project.data.id)
+        .eq("visible_to_client", true);
+      if (error) throw error;
+      visiblePhotos = data;
+    }
+
+    res.json({
+      client: { id: client.data.id, name: client.data.name },
+      project: project.data
+        ? { id: project.data.id, name: project.data.name, progressPercent: Number(project.data.progress_percent) }
+        : null,
+      estimate: estimate.data
+        ? { id: estimate.data.id, status: estimate.data.status, total: Number(estimate.data.total) }
+        : null,
+      visiblePhotos,
+    });
+  })
+);
+
+// Everything below this line is the business panel — every route resolves
+// its business_id from the caller's own Supabase Auth session (never a
+// hardcoded constant), and every query below runs through req.supabase,
+// a client carrying that same session, so Postgres RLS is what actually
+// enforces one business never sees another's rows.
+apiRouter.use(requireBusinessAuth);
+
 // ---------- Materials & Costs ----------
 // Materials, labor rates and subcontractor trades live in three separate
 // tables (per the Fase B schema) but the screen displays them as one
 // combined catalog grouped by category, matching the Fase A mock UI.
 apiRouter.get(
   "/materials",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [materials, laborRates, subcontractors] = await Promise.all([
       supabase
         .from("materials_catalog")
         .select("id, name, unit, price, category, supplier, is_reference_only")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("labor_rates")
         .select("id, name, hourly_rate")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("subcontractors")
         .select("id, name, trade, phone, rating, telegram_chat_id")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
     ]);
 
@@ -86,14 +316,14 @@ apiRouter.get(
 
 apiRouter.get(
   "/estimates",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("estimates")
       .select(
         "id, client_id, project_id, status, created_by, category_id, total, created_at, clients(name), budget_categories(name)"
       )
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -118,7 +348,7 @@ apiRouter.get(
 apiRouter.get(
   "/estimates/:id",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
 
     const [estimate, lines] = await Promise.all([
       supabase
@@ -126,13 +356,13 @@ apiRouter.get(
         .select(
           "id, client_id, project_id, status, created_by, category_id, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address), budget_categories(name)"
         )
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("id", req.params.id)
         .single(),
       supabase
         .from("estimate_lines")
         .select("id, zone, category, item_name, quantity, unit_cost, total, visible_to_client")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("estimate_id", req.params.id)
         .order("zone"),
     ]);
@@ -202,17 +432,17 @@ apiRouter.post(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data: settings } = await supabase
       .from("business_settings")
       .select("default_margin_type, default_waste_percent")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .single();
 
     const { data, error } = await supabase
       .from("estimates")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         client_id: clientId,
         project_id: req.body?.projectId ?? null,
         category_id: req.body?.categoryId ?? null,
@@ -241,12 +471,12 @@ apiRouter.patch(
     if (body.marginPercent !== undefined) update.margin_percent = body.marginPercent;
     if (body.wastePercent !== undefined) update.waste_percent = body.wastePercent;
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     if (Object.keys(update).length > 0) {
       const { error } = await supabase
         .from("estimates")
         .update(update)
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("id", req.params.id);
       if (error) throw error;
     }
@@ -265,11 +495,11 @@ apiRouter.post(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("estimate_lines")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         estimate_id: req.params.id,
         zone: body.zone,
         category: body.category,
@@ -299,12 +529,12 @@ apiRouter.patch(
     if (body.unitCost !== undefined) update.unit_cost = body.unitCost;
     if (body.visibleToClient !== undefined) update.visible_to_client = body.visibleToClient;
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     if (Object.keys(update).length > 0) {
       const { error } = await supabase
         .from("estimate_lines")
         .update(update)
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("id", req.params.lineId);
       if (error) throw error;
     }
@@ -317,11 +547,11 @@ apiRouter.patch(
 apiRouter.delete(
   "/estimates/:id/lines/:lineId",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("estimate_lines")
       .delete()
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.lineId);
     if (error) throw error;
 
@@ -342,13 +572,13 @@ apiRouter.post(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data: items, error: itemsError } = await supabase
       .from("assembly_items")
       .select(
         "quantity_default, materials_catalog(name, price), labor_rates(name, hourly_rate), subcontractors(name)"
       )
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("assembly_template_id", templateId);
 
     if (itemsError) throw itemsError;
@@ -360,7 +590,7 @@ apiRouter.post(
     const rows = items.map((i: any) => {
       if (i.materials_catalog) {
         return {
-          business_id: DEMO_BUSINESS_ID,
+          business_id: req.businessId!,
           estimate_id: req.params.id,
           zone,
           category: "Materiales",
@@ -371,7 +601,7 @@ apiRouter.post(
       }
       if (i.labor_rates) {
         return {
-          business_id: DEMO_BUSINESS_ID,
+          business_id: req.businessId!,
           estimate_id: req.params.id,
           zone,
           category: "Mano de obra",
@@ -381,7 +611,7 @@ apiRouter.post(
         };
       }
       return {
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         estimate_id: req.params.id,
         zone,
         category: "Subcontratistas",
@@ -413,11 +643,11 @@ apiRouter.patch(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("estimates")
       .update({ status })
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -431,11 +661,11 @@ apiRouter.patch(
 apiRouter.patch(
   "/estimates/:id/category",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("estimates")
       .update({ category_id: req.body?.categoryId ?? null })
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -451,13 +681,13 @@ apiRouter.patch(
 apiRouter.get(
   "/estimates/:id/projection",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("estimate_projection_items")
       .select(
         "id, title, zone, planned_start, duration_minutes, notes, status, employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
       )
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("estimate_id", req.params.id)
       .order("planned_start");
 
@@ -482,7 +712,7 @@ apiRouter.get(
 apiRouter.post(
   "/estimates/:id/projection",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const body = req.body ?? {};
 
     if (!body.title || !body.plannedStart) {
@@ -497,7 +727,7 @@ apiRouter.post(
     const { data, error } = await supabase
       .from("estimate_projection_items")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         estimate_id: req.params.id,
         title: body.title,
         zone: body.zone ?? null,
@@ -518,11 +748,11 @@ apiRouter.post(
 apiRouter.delete(
   "/estimates/:id/projection/:itemId",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("estimate_projection_items")
       .delete()
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("estimate_id", req.params.id)
       .eq("id", req.params.itemId);
 
@@ -539,13 +769,13 @@ apiRouter.delete(
 apiRouter.post(
   "/estimates/:id/accept",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const estimateId = req.params.id;
 
     const { data: estimate, error: estimateError } = await supabase
       .from("estimates")
       .select("id, client_id, project_id, status")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", estimateId)
       .single();
     if (estimateError) throw estimateError;
@@ -555,7 +785,7 @@ apiRouter.post(
       const { data: project, error: projectError } = await supabase
         .from("projects")
         .insert({
-          business_id: DEMO_BUSINESS_ID,
+          business_id: req.businessId!,
           client_id: estimate.client_id,
           estimate_id: estimateId,
           name: req.body?.projectName || "Nuevo proyecto",
@@ -583,7 +813,7 @@ apiRouter.post(
     const { data: pendingItems, error: itemsError } = await supabase
       .from("estimate_projection_items")
       .select("id, title, zone, assigned_employee_id, assigned_subcontractor_id, planned_start, duration_minutes, notes")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("estimate_id", estimateId)
       .eq("status", "pendiente");
     if (itemsError) throw itemsError;
@@ -592,7 +822,7 @@ apiRouter.post(
       const start = new Date(item.planned_start);
       const end = new Date(start.getTime() + item.duration_minutes * 60000);
       const { error: insertError } = await supabase.from("schedule_events").insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         project_id: projectId,
         estimate_id: estimateId,
         title: item.zone ? `${item.title} (${item.zone})` : item.title,
@@ -629,12 +859,12 @@ apiRouter.post(
 
 apiRouter.get(
   "/budget-categories",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("budget_categories")
       .select("id, name, created_at")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("name");
 
     if (error) throw error;
@@ -651,10 +881,10 @@ apiRouter.post(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("budget_categories")
-      .insert({ business_id: DEMO_BUSINESS_ID, name })
+      .insert({ business_id: req.businessId!, name })
       .select("id, name, created_at")
       .single();
 
@@ -666,11 +896,11 @@ apiRouter.post(
 apiRouter.delete(
   "/budget-categories/:id",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("budget_categories")
       .delete()
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -681,11 +911,11 @@ apiRouter.delete(
 apiRouter.get(
   "/estimate-reference-documents",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     let query = supabase
       .from("estimate_reference_documents")
       .select("id, category_id, file_name, storage_path, file_size, uploaded_at, budget_categories(name)")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("uploaded_at", { ascending: false });
 
     if (req.query.categoryId) {
@@ -719,12 +949,12 @@ apiRouter.post(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
 
     const { count, error: countError } = await supabase
       .from("estimate_reference_documents")
       .select("id", { count: "exact", head: true })
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("category_id", categoryId);
 
     if (countError) throw countError;
@@ -735,7 +965,7 @@ apiRouter.post(
       return;
     }
 
-    const storagePath = `${DEMO_BUSINESS_ID}/${categoryId}/${randomUUID()}-${file.originalname}`;
+    const storagePath = `${req.businessId}/${categoryId}/${randomUUID()}-${file.originalname}`;
     const { error: uploadError } = await supabase.storage
       .from("estimate-references")
       .upload(storagePath, file.buffer, { contentType: file.mimetype });
@@ -745,7 +975,7 @@ apiRouter.post(
     const { data, error } = await supabase
       .from("estimate_reference_documents")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         category_id: categoryId,
         file_name: file.originalname,
         storage_path: storagePath,
@@ -762,12 +992,12 @@ apiRouter.post(
 apiRouter.delete(
   "/estimate-reference-documents/:id",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
 
     const { data: doc, error: fetchError } = await supabase
       .from("estimate_reference_documents")
       .select("storage_path")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id)
       .single();
 
@@ -776,7 +1006,7 @@ apiRouter.delete(
     const { error: deleteError } = await supabase
       .from("estimate_reference_documents")
       .delete()
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
     if (deleteError) throw deleteError;
@@ -797,12 +1027,12 @@ apiRouter.delete(
 
 apiRouter.get(
   "/admin-assistant/messages",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("admin_assistant_messages")
       .select("id, role, content, actions_taken, created_at")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("created_at");
 
     if (error) throw error;
@@ -822,7 +1052,7 @@ apiRouter.get(
 apiRouter.post(
   "/admin-assistant/messages",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const content = req.body?.content?.trim();
     if (!content) {
       res.status(400).json({ error: "content is required" });
@@ -830,7 +1060,7 @@ apiRouter.post(
     }
 
     const { error: insertUserError } = await supabase.from("admin_assistant_messages").insert({
-      business_id: DEMO_BUSINESS_ID,
+      business_id: req.businessId!,
       role: "admin",
       content,
     });
@@ -839,7 +1069,7 @@ apiRouter.post(
     const { data: reply, error: replyError } = await supabase
       .from("admin_assistant_messages")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         role: "assistant",
         content:
           "Todavía no estoy conectada a un modelo de IA real (eso es Fase D — hace falta configurar la Claude API key). " +
@@ -865,19 +1095,19 @@ apiRouter.post(
 // list always reflects the current composition of each recipe.
 apiRouter.get(
   "/assembly-templates",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [templates, items] = await Promise.all([
       supabase
         .from("assembly_templates")
         .select("id, name, description")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("assembly_items")
         .select("assembly_template_id, labor_rate_id, quantity_default")
-        .eq("business_id", DEMO_BUSINESS_ID),
+        .eq("business_id", req.businessId!),
     ]);
 
     if (templates.error) throw templates.error;
@@ -905,12 +1135,12 @@ apiRouter.get(
 
 apiRouter.get(
   "/clients",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("clients")
       .select("id, name, phone, email, address, lead_status, source, created_at")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("name");
 
     if (error) throw error;
@@ -920,7 +1150,7 @@ apiRouter.get(
     const { data: activities, error: activitiesError } = await supabase
       .from("activities")
       .select("client_id, created_at")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
     if (activitiesError) throw activitiesError;
 
@@ -950,32 +1180,32 @@ apiRouter.get(
 apiRouter.get(
   "/clients/:id",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const clientId = req.params.id;
 
     const [client, activities, estimates, projects] = await Promise.all([
       supabase
         .from("clients")
         .select("id, name, phone, email, address, lead_status, source, created_at")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("id", clientId)
         .single(),
       supabase
         .from("activities")
         .select("id, type, content, created_by, created_at")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .order("created_at", { ascending: false }),
       supabase
         .from("estimates")
         .select("id, status, total, created_at")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .order("created_at", { ascending: false }),
       supabase
         .from("projects")
         .select("id, name")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .order("name"),
     ]);
@@ -1018,19 +1248,19 @@ apiRouter.get(
 // per project — nothing here is a stored/precomputed aggregate.
 apiRouter.get(
   "/cost-tracking",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [projects, expenses] = await Promise.all([
       supabase
         .from("projects")
         .select("id, name, estimate_id")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("expenses")
         .select("project_id, category, amount")
-        .eq("business_id", DEMO_BUSINESS_ID),
+        .eq("business_id", req.businessId!),
     ]);
 
     if (projects.error) throw projects.error;
@@ -1042,7 +1272,7 @@ apiRouter.get(
       const { data, error } = await supabase
         .from("estimate_lines")
         .select("estimate_id, category, total")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .in("estimate_id", estimateIds);
       if (error) throw error;
       lines = data;
@@ -1073,20 +1303,20 @@ apiRouter.get(
 
 apiRouter.get(
   "/projects",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [projects, expenses, assignments] = await Promise.all([
       supabase
         .from("projects")
         .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
-      supabase.from("expenses").select("project_id, amount").eq("business_id", DEMO_BUSINESS_ID),
+      supabase.from("expenses").select("project_id, amount").eq("business_id", req.businessId!),
       supabase
         .from("assignments")
         .select("project_id, employees(name), subcontractors(name)")
-        .eq("business_id", DEMO_BUSINESS_ID),
+        .eq("business_id", req.businessId!),
     ]);
 
     if (projects.error) throw projects.error;
@@ -1133,45 +1363,45 @@ apiRouter.get(
 apiRouter.get(
   "/projects/:id",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const projectId = req.params.id;
 
     const [project, estimateLines, expenses, documents, photos, scheduleEvents, assignments] = await Promise.all([
       supabase
         .from("projects")
         .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("id", projectId)
         .single(),
       supabase
         .from("estimate_lines")
         .select("id, zone, category, item_name, quantity, unit_cost, total, estimates!inner(id, project_id)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("estimates.project_id", projectId),
       supabase
         .from("expenses")
         .select("id, category, description, amount, date")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("project_id", projectId),
       supabase
         .from("documents")
         .select("id, name, tag, uploaded_at")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("project_id", projectId),
       supabase
         .from("photos")
         .select("id, zone, visible_to_client, timestamp")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("project_id", projectId),
       supabase
         .from("schedule_events")
         .select("id, title, type, start_time")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("project_id", projectId),
       supabase
         .from("assignments")
         .select("employees(name), subcontractors(name)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("project_id", projectId),
     ]);
 
@@ -1237,12 +1467,12 @@ apiRouter.get(
 
 apiRouter.get(
   "/documents",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("documents")
       .select("id, name, tag, uploaded_at, project_id, projects(name)")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("uploaded_at", { ascending: false });
 
     if (error) throw error;
@@ -1264,14 +1494,14 @@ apiRouter.get(
 
 apiRouter.get(
   "/photos",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("photos")
       .select(
         "id, zone, timestamp, visible_to_client, project_id, projects(name), employees:uploaded_by_employee_id(name), subcontractors:uploaded_by_subcontractor_id(name)"
       )
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("timestamp", { ascending: false });
 
     if (error) throw error;
@@ -1294,24 +1524,24 @@ apiRouter.get(
 
 apiRouter.get(
   "/employees",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [employees, assignments, timeEntries] = await Promise.all([
       supabase
         .from("employees")
         .select("id, name, role, phone, status")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("assignments")
         .select("employee_id, projects(name)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .not("employee_id", "is", null),
       supabase
         .from("time_entries")
         .select("employee_id, check_in_time, check_out_time")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .not("employee_id", "is", null),
     ]);
 
@@ -1342,23 +1572,40 @@ apiRouter.get(
   })
 );
 
+// Issues a fresh access token for the worker PWA (/campo) login — only the
+// hash is stored, so the raw token is shown to the admin exactly once here.
+apiRouter.post(
+  "/employees/:id/access-token",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const token = randomBytes(9).toString("base64url");
+    const { error } = await supabase
+      .from("employees")
+      .update({ access_token_hash: hashToken(token) })
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ token });
+  })
+);
+
 // ---------- Subcontractors ----------
 
 apiRouter.get(
   "/subcontractors",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [subcontractors, assignments] = await Promise.all([
       supabase
         .from("subcontractors")
         .select("id, name, trade, phone, rating, telegram_chat_id")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("assignments")
         .select("subcontractor_id, projects(name)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .not("subcontractor_id", "is", null),
     ]);
 
@@ -1382,27 +1629,42 @@ apiRouter.get(
   })
 );
 
+apiRouter.post(
+  "/subcontractors/:id/access-token",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const token = randomBytes(9).toString("base64url");
+    const { error } = await supabase
+      .from("subcontractors")
+      .update({ access_token_hash: hashToken(token) })
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ token });
+  })
+);
+
 // ---------- GPS & Routing ----------
 
 apiRouter.get(
   "/gps",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [employees, subcontractors, assignments] = await Promise.all([
       supabase
         .from("employees")
         .select("id, name, status")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("status", "en_proyecto"),
       supabase
         .from("subcontractors")
         .select("id, name")
-        .eq("business_id", DEMO_BUSINESS_ID),
+        .eq("business_id", req.businessId!),
       supabase
         .from("assignments")
         .select("employee_id, subcontractor_id, projects(name)")
-        .eq("business_id", DEMO_BUSINESS_ID),
+        .eq("business_id", req.businessId!),
     ]);
 
     if (employees.error) throw employees.error;
@@ -1434,14 +1696,14 @@ apiRouter.get(
 
 apiRouter.get(
   "/time-entries",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("time_entries")
       .select(
         "id, check_in_time, check_in_location, check_out_time, approved, projects(name), employees(name), subcontractors(name)"
       )
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
 
     if (error) throw error;
@@ -1463,11 +1725,11 @@ apiRouter.get(
 apiRouter.patch(
   "/time-entries/:id/approve",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("time_entries")
       .update({ approved: true })
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -1479,12 +1741,12 @@ apiRouter.patch(
 
 apiRouter.get(
   "/work-orders",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("work_orders")
       .select("id, title, description, priority, status, projects(name), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
-      .eq("business_id", DEMO_BUSINESS_ID);
+      .eq("business_id", req.businessId!);
 
     if (error) throw error;
 
@@ -1506,14 +1768,14 @@ apiRouter.get(
 
 apiRouter.get(
   "/schedule-events",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("schedule_events")
       .select(
         "id, title, type, start_time, end_time, notes, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
       )
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("start_time");
 
     if (error) throw error;
@@ -1538,7 +1800,7 @@ apiRouter.get(
 apiRouter.post(
   "/schedule-events",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const body = req.body ?? {};
 
     if (!body.projectId || !body.title || !body.startTime || !body.endTime) {
@@ -1553,7 +1815,7 @@ apiRouter.post(
     const { data, error } = await supabase
       .from("schedule_events")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         project_id: body.projectId,
         title: body.title,
         type: body.type ?? "reunion",
@@ -1581,12 +1843,12 @@ apiRouter.post(
 
 apiRouter.get(
   "/appointment-requests",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("appointment_requests")
       .select("id, client_id, requested_datetime_text, reason_text, status, schedule_event_id, created_at, clients(name)")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -1617,11 +1879,11 @@ apiRouter.post(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("appointment_requests")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         client_id: clientId,
         requested_datetime_text: requestedDatetimeText,
         reason_text: reasonText ?? null,
@@ -1649,11 +1911,11 @@ apiRouter.patch(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data: reqRow, error: reqError } = await supabase
       .from("appointment_requests")
       .select("client_id, reason_text, clients(name)")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id)
       .single();
     if (reqError) throw reqError;
@@ -1664,7 +1926,7 @@ apiRouter.patch(
     const { data: event, error: eventError } = await supabase
       .from("schedule_events")
       .insert({
-        business_id: DEMO_BUSINESS_ID,
+        business_id: req.businessId!,
         project_id: null,
         title: `Cita con ${clientName}`,
         type: "reunion",
@@ -1682,7 +1944,7 @@ apiRouter.patch(
     const { error: updateError } = await supabase
       .from("appointment_requests")
       .update({ status: "confirmada", schedule_event_id: event.id })
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
     if (updateError) throw updateError;
 
@@ -1693,11 +1955,11 @@ apiRouter.patch(
 apiRouter.patch(
   "/appointment-requests/:id/reject",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("appointment_requests")
       .update({ status: "rechazada" })
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -1709,12 +1971,12 @@ apiRouter.patch(
 
 apiRouter.get(
   "/invoices",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("invoices")
       .select("id, type, amount, status, due_date, projects(name), clients(name)")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .order("due_date");
 
     if (error) throw error;
@@ -1739,25 +2001,25 @@ apiRouter.get(
 // like the Fase A mock's hardcoded 6 months).
 apiRouter.get(
   "/reports",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [payments, expenses, projects, employees, timeEntries, materialLines] = await Promise.all([
-      supabase.from("payments").select("amount, paid_at").eq("business_id", DEMO_BUSINESS_ID),
-      supabase.from("expenses").select("amount, date").eq("business_id", DEMO_BUSINESS_ID),
-      supabase.from("projects").select("status").eq("business_id", DEMO_BUSINESS_ID),
-      supabase.from("employees").select("id, name").eq("business_id", DEMO_BUSINESS_ID),
+      supabase.from("payments").select("amount, paid_at").eq("business_id", req.businessId!),
+      supabase.from("expenses").select("amount, date").eq("business_id", req.businessId!),
+      supabase.from("projects").select("status").eq("business_id", req.businessId!),
+      supabase.from("employees").select("id, name").eq("business_id", req.businessId!),
       supabase
         .from("time_entries")
         .select("employee_id, check_in_time, check_out_time")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .not("check_out_time", "is", null),
       // "Materiales más usados" = counted from real estimate_lines references,
       // not a fabricated ranking.
       supabase
         .from("estimate_lines")
         .select("item_name, quantity, materials_catalog(unit)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .not("material_id", "is", null),
     ]);
 
@@ -1828,27 +2090,27 @@ apiRouter.get(
 apiRouter.get(
   "/client-portal/:clientId",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const clientId = req.params.clientId;
 
     const [client, project, estimate] = await Promise.all([
       supabase
         .from("clients")
         .select("id, name")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("id", clientId)
         .single(),
       supabase
         .from("projects")
         .select("id, name, progress_percent")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .limit(1)
         .maybeSingle(),
       supabase
         .from("estimates")
         .select("id, status, total")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -1864,7 +2126,7 @@ apiRouter.get(
       const { data, error } = await supabase
         .from("photos")
         .select("id")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .eq("project_id", project.data.id)
         .eq("visible_to_client", true);
       if (error) throw error;
@@ -1888,18 +2150,18 @@ apiRouter.get(
 
 apiRouter.get(
   "/conversations",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
 
     const [conversations, messages] = await Promise.all([
       supabase
         .from("conversations")
         .select("id, client_id, control_mode, clients(name, phone)")
-        .eq("business_id", DEMO_BUSINESS_ID),
+        .eq("business_id", req.businessId!),
       supabase
         .from("conversation_messages")
         .select("conversation_id, content, timestamp")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("timestamp", { ascending: false }),
     ]);
 
@@ -1922,11 +2184,11 @@ apiRouter.get(
 apiRouter.get(
   "/conversations/:id/messages",
   route(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("conversation_messages")
       .select("id, direction, content, sent_by, timestamp")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("conversation_id", req.params.id)
       .order("timestamp");
 
@@ -1952,11 +2214,11 @@ apiRouter.patch(
       res.status(400).json({ error: "controlMode must be 'bot' or 'human'" });
       return;
     }
-    const supabase = getSupabaseAdmin();
+    const supabase = req.supabase!;
     const { error } = await supabase
       .from("conversations")
       .update({ control_mode: controlMode })
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -1968,12 +2230,12 @@ apiRouter.patch(
 
 apiRouter.get(
   "/settings/company",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("businesses")
       .select("id, name, license_number, tax_config")
-      .eq("id", DEMO_BUSINESS_ID)
+      .eq("id", req.businessId!)
       .single();
 
     if (error) throw error;
@@ -1987,14 +2249,33 @@ apiRouter.get(
   })
 );
 
+// Where a brand-new business fills in everything registration deliberately
+// didn't ask for (name, license, tax region/rate) — registration only ever
+// collects email/phone + password.
+apiRouter.patch(
+  "/settings/company",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = body.name;
+    if (body.licenseNumber !== undefined) update.license_number = body.licenseNumber;
+    if (body.taxConfig !== undefined) update.tax_config = body.taxConfig;
+
+    const { error } = await supabase.from("businesses").update(update).eq("id", req.businessId!);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 apiRouter.get(
   "/settings/margins",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("business_settings")
       .select("default_margin_type, default_waste_percent")
-      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("business_id", req.businessId!)
       .single();
 
     if (error) throw error;
@@ -2008,18 +2289,18 @@ apiRouter.get(
 
 apiRouter.get(
   "/settings/users",
-  route(async (_req, res) => {
-    const supabase = getSupabaseAdmin();
+  route(async (req, res) => {
+    const supabase = req.supabase!;
     const [users, roles] = await Promise.all([
       supabase
         .from("users")
         .select("id, name, email, status, roles(name, permissions)")
-        .eq("business_id", DEMO_BUSINESS_ID)
+        .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("roles")
         .select("name, permissions")
-        .eq("business_id", DEMO_BUSINESS_ID),
+        .eq("business_id", req.businessId!),
     ]);
 
     if (users.error) throw users.error;

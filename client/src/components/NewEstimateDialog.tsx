@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 
 interface Client {
   id: string;
@@ -53,7 +53,7 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
     if (!clientId) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/estimates", {
+      const res = await apiFetch("/api/estimates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

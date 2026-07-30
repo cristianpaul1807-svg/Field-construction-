@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { Menu, X, ChevronDown, Bell } from "lucide-react";
+import { Menu, X, ChevronDown, Bell, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
-import { business } from "@/lib/mockData";
 import { ProjectSwitcher } from "@/components/ProjectSwitcher";
 import { AdminAssistantBar } from "@/components/AdminAssistantBar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useApi } from "@/lib/api";
 
 interface NavItem {
   id: string;
@@ -98,6 +100,8 @@ function sectionContainsActive(section: NavSection, current: string) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
+  const { signOut } = useAuth();
+  const { data: company } = useApi<{ name: string }>("/api/settings/company");
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() =>
@@ -157,7 +161,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex flex-col min-w-0">
               <h1 className="font-semibold text-sidebar-foreground truncate text-sm">
-                {business.name}
+                {company?.name ?? "Cargando..."}
               </h1>
               <p className="text-xs text-muted-foreground">FSM &amp; Construction Hub</p>
             </div>
@@ -215,9 +219,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button className="w-8 h-8 rounded-full bg-secondary hover:bg-muted transition-colors flex items-center justify-center">
               <Bell size={15} className="text-foreground" />
             </button>
-            <button className="w-8 h-8 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center text-xs font-semibold">
-              AT
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-8 h-8 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center text-xs font-semibold">
+                  AT
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={signOut} className="gap-2 text-status-error-fg">
+                  <LogOut size={14} /> Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

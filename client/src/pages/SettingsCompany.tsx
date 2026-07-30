@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { useApi } from "@/lib/api";
+import { Check } from "lucide-react";
+import { useApi, apiFetch } from "@/lib/api";
 
 interface CompanyData {
   id: string;
@@ -15,15 +16,42 @@ interface CompanyData {
 }
 
 export default function SettingsCompany() {
-  const { data, loading, error } = useApi<CompanyData>("/api/settings/company");
+  const [reloadToken, setReloadToken] = useState(0);
+  const { data, loading, error } = useApi<CompanyData>(`/api/settings/company?_r=${reloadToken}`);
   const [name, setName] = useState("");
   const [license, setLicense] = useState("");
+  const [region, setRegion] = useState("");
+  const [rate, setRate] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!data) return;
     setName(data.name);
-    setLicense(data.licenseNumber);
+    setLicense(data.licenseNumber ?? "");
+    setRegion(data.taxConfig?.region ?? "");
+    setRate(data.taxConfig?.rate ? String(data.taxConfig.rate * 100) : "");
   }, [data]);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await apiFetch("/api/settings/company", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          licenseNumber: license,
+          taxConfig: { region, rate: rate ? Number(rate) / 100 : undefined },
+        }),
+      });
+      setReloadToken((t) => t + 1);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
@@ -60,16 +88,19 @@ export default function SettingsCompany() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="region">Provincia / Estado</Label>
-              <Input id="region" defaultValue={data.taxConfig?.region ?? ""} />
+              <Input id="region" value={region} onChange={(e) => setRegion(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="rate">Tasa de impuesto</Label>
-              <Input id="rate" defaultValue={data.taxConfig?.rate ? `${(data.taxConfig.rate * 100).toFixed(0)}%` : ""} />
+              <Label htmlFor="rate">Tasa de impuesto (%)</Label>
+              <Input id="rate" type="number" value={rate} onChange={(e) => setRate(e.target.value)} />
             </div>
           </div>
 
           <div className="flex justify-end">
-            <Button>Guardar cambios</Button>
+            <Button className="gap-2" onClick={save} disabled={saving}>
+              {saved && <Check size={16} />}
+              {saved ? "Guardado" : "Guardar cambios"}
+            </Button>
           </div>
         </Card>
       )}

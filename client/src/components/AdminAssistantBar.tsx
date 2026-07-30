@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Send, ChevronDown, Bot, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface AssistantMessage {
@@ -36,7 +36,7 @@ export function AdminAssistantBar() {
     setDraft("");
     setExpanded(true);
     try {
-      const res = await fetch("/api/admin-assistant/messages", {
+      const res = await apiFetch("/api/admin-assistant/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),

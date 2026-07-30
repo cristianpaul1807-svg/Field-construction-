@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 
 const typeOptions = [
   { value: "visita", label: "Visita" },
@@ -85,7 +85,7 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
       const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
       const [kind, id] = workerId ? workerId.split(":") : [null, null];
 
-      const res = await fetch("/api/schedule-events", {
+      const res = await apiFetch("/api/schedule-events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

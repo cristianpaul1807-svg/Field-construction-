@@ -1,6 +1,15 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import DashboardLayout from "@/components/DashboardLayout";
+import { RequireBusinessAuth } from "@/components/RequireBusinessAuth";
+import { RequireClientAuth } from "@/components/RequireClientAuth";
+import Landing from "@/pages/Landing";
+import AuthBusiness from "@/pages/AuthBusiness";
+import AuthClient from "@/pages/AuthClient";
+import AuthLogin from "@/pages/AuthLogin";
+import AuthForgotPassword from "@/pages/AuthForgotPassword";
+import WorkerAccess from "@/pages/WorkerAccess";
+import ClientPortalMe from "@/pages/ClientPortalMe";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/pages/Dashboard";
 import Crm from "@/pages/Crm";
@@ -30,11 +39,14 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SelectedProjectProvider } from "./contexts/SelectedProjectContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Spinner } from "@/components/ui/spinner";
 
-function Router() {
+function BusinessPanel() {
   return (
-    <DashboardLayout>
-      <Switch>
+    <RequireBusinessAuth>
+      <DashboardLayout>
+        <Switch>
         <Route path={"/"} component={Dashboard} />
         <Route path={"/crm"} component={Crm} />
         <Route path={"/crm/:id"} component={ClientDetail} />
@@ -62,8 +74,50 @@ function Router() {
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
+        </Switch>
+      </DashboardLayout>
+    </RequireBusinessAuth>
+  );
+}
+
+function ClientPortalRoute() {
+  return (
+    <RequireClientAuth>
+      <ClientPortalMe />
+    </RequireClientAuth>
+  );
+}
+
+// "/" is ambiguous on purpose: it's the public landing page for a visitor,
+// and the business dashboard's home once logged in — this decides which.
+function RootRoute() {
+  const { session, loading, persona } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Spinner className="size-4" /> Cargando...
+      </div>
+    );
+  }
+  if (!session) return <Landing />;
+  if (persona === "client") return <ClientPortalRoute />;
+  return <BusinessPanel />;
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path={"/"} component={RootRoute} />
+      <Route path={"/negocio/acceso"} component={AuthBusiness} />
+      <Route path={"/cliente/acceso"} component={AuthClient} />
+      <Route path={"/iniciar-sesion"} component={AuthLogin} />
+      <Route path={"/recuperar-password"} component={AuthForgotPassword} />
+      <Route path={"/campo"} component={WorkerAccess} />
+      <Route path={"/portal"} component={ClientPortalRoute} />
+      {/* Everything else is the authenticated business panel */}
+      <Route component={BusinessPanel} />
+    </Switch>
   );
 }
 
@@ -81,9 +135,11 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <SelectedProjectProvider>
-            <Router />
-          </SelectedProjectProvider>
+          <AuthProvider>
+            <SelectedProjectProvider>
+              <Router />
+            </SelectedProjectProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

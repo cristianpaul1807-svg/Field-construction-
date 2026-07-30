@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Plus, Star, Send } from "lucide-react";
-import { useApi } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Plus, Star, Send, KeyRound } from "lucide-react";
+import { useApi, apiFetch } from "@/lib/api";
 
 interface Subcontractor {
   id: string;
@@ -18,6 +20,13 @@ interface Subcontractor {
 
 export default function Subcontractors() {
   const { data: subcontractors, loading, error } = useApi<Subcontractor[]>("/api/subcontractors");
+  const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
+
+  const generateToken = async (sub: Subcontractor) => {
+    const res = await apiFetch(`/api/subcontractors/${sub.id}/access-token`, { method: "POST" });
+    const body = await res.json();
+    if (res.ok) setNewToken({ name: sub.name, token: body.token });
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
@@ -65,15 +74,37 @@ export default function Subcontractors() {
                   {sub.telegramLinked ? "Telegram vinculado" : "Sin vincular"}
                 </StatusBadge>
               </div>
-              {!sub.telegramLinked && (
-                <Button size="sm" variant="outline" className="w-full mt-3 gap-2">
-                  <Send size={14} /> Invitar por Telegram
+              <div className="flex gap-2 mt-3">
+                {!sub.telegramLinked && (
+                  <Button size="sm" variant="outline" className="flex-1 gap-2">
+                    <Send size={14} /> Invitar por Telegram
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => generateToken(sub)}>
+                  <KeyRound size={14} /> Código PWA
                 </Button>
-              )}
+              </div>
             </Card>
           ))}
         </div>
       )}
+
+      <Dialog open={!!newToken} onOpenChange={(open) => !open && setNewToken(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Código de acceso para {newToken?.name}</DialogTitle>
+            <DialogDescription>
+              Compártelo con {newToken?.name} para que entre en <code>/campo</code>. No se volverá a mostrar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-border bg-secondary p-4 text-center font-mono text-lg tracking-wider">
+            {newToken?.token}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setNewToken(null)}>Listo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

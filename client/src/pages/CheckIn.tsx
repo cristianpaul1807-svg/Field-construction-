@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { MapPin, Check } from "lucide-react";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 
 interface TimeEntry {
   id: string;
@@ -24,7 +24,7 @@ export default function CheckIn() {
   const approve = async (id: string) => {
     setLocallyApproved((prev) => new Set(prev).add(id));
     try {
-      const res = await fetch(`/api/time-entries/${id}/approve`, { method: "PATCH" });
+      const res = await apiFetch(`/api/time-entries/${id}/approve`, { method: "PATCH" });
       if (!res.ok) throw new Error();
     } catch {
       setLocallyApproved((prev) => {

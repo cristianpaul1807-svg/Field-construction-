@@ -19,7 +19,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Plus, Trash2, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
@@ -103,7 +103,7 @@ export default function Budgets() {
 
   const setCategory = async (categoryId: string) => {
     if (!draftId) return;
-    await fetch(`/api/estimates/${draftId}/category`, {
+    await apiFetch(`/api/estimates/${draftId}/category`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ categoryId }),
@@ -150,7 +150,7 @@ export default function Budgets() {
   const saveLineEdit = async (lineId: string) => {
     const edit = lineEdits[lineId];
     if (!edit) return;
-    await fetch(`/api/estimates/${draftId}/lines/${lineId}`, {
+    await apiFetch(`/api/estimates/${draftId}/lines/${lineId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ itemName: edit.item, quantity: edit.quantity, unitCost: edit.unitCost }),
@@ -160,7 +160,7 @@ export default function Budgets() {
 
   const toggleLineVisibility = async (lineId: string, idx: number, checked: boolean) => {
     setVisibility((prev) => prev.map((v, i) => (i === idx ? checked : v)));
-    await fetch(`/api/estimates/${draftId}/lines/${lineId}`, {
+    await apiFetch(`/api/estimates/${draftId}/lines/${lineId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visibleToClient: checked }),
@@ -169,7 +169,7 @@ export default function Budgets() {
 
   const removeLine = async (lineId: string) => {
     if (!draftId) return;
-    await fetch(`/api/estimates/${draftId}/lines/${lineId}`, { method: "DELETE" });
+    await apiFetch(`/api/estimates/${draftId}/lines/${lineId}`, { method: "DELETE" });
     refresh();
   };
 
@@ -177,7 +177,7 @@ export default function Budgets() {
     if (!draftId || !lineForm.zone.trim() || !lineForm.item.trim()) return;
     setAddingLine(true);
     try {
-      await fetch(`/api/estimates/${draftId}/lines`, {
+      await apiFetch(`/api/estimates/${draftId}/lines`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -199,7 +199,7 @@ export default function Budgets() {
     if (!draftId) return;
     setSavingDraft(true);
     try {
-      await fetch(`/api/estimates/${draftId}`, {
+      await apiFetch(`/api/estimates/${draftId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ marginType, marginPercent, wastePercent }),
@@ -216,7 +216,7 @@ export default function Budgets() {
     if (!draftId || !templateZonePrompt || !templateZone.trim()) return;
     setInsertingTemplate(true);
     try {
-      await fetch(`/api/estimates/${draftId}/lines/from-template`, {
+      await apiFetch(`/api/estimates/${draftId}/lines/from-template`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ templateId: templateZonePrompt.id, zone: templateZone.trim() }),
