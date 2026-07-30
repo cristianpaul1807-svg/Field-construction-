@@ -1,7 +1,12 @@
 import express, { Router, type Request, type Response, type NextFunction } from "express";
+import multer from "multer";
+import { randomUUID } from "crypto";
 import { DEMO_BUSINESS_ID, getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
 
 export const apiRouter = Router();
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+const MAX_REFERENCE_DOCS_PER_CATEGORY = 5;
 
 type Handler = (req: Request, res: Response) => Promise<void>;
 
@@ -85,7 +90,9 @@ apiRouter.get(
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("estimates")
-      .select("id, client_id, project_id, status, created_by, total, created_at, clients(name)")
+      .select(
+        "id, client_id, project_id, status, created_by, category_id, total, created_at, clients(name), budget_categories(name)"
+      )
       .eq("business_id", DEMO_BUSINESS_ID)
       .order("created_at", { ascending: false });
 
@@ -99,6 +106,8 @@ apiRouter.get(
         projectId: e.project_id,
         status: e.status,
         createdBy: e.created_by,
+        categoryId: e.category_id,
+        categoryName: e.budget_categories?.name ?? null,
         total: Number(e.total),
         createdAt: e.created_at,
       }))
@@ -114,7 +123,9 @@ apiRouter.get(
     const [estimate, lines] = await Promise.all([
       supabase
         .from("estimates")
-        .select("id, client_id, project_id, status, created_by, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address)")
+        .select(
+          "id, client_id, project_id, status, created_by, category_id, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address), budget_categories(name)"
+        )
         .eq("business_id", DEMO_BUSINESS_ID)
         .eq("id", req.params.id)
         .single(),
@@ -139,6 +150,8 @@ apiRouter.get(
       projectId: estimate.data.project_id,
       status: estimate.data.status,
       createdBy: estimate.data.created_by,
+      categoryId: estimate.data.category_id,
+      categoryName: (estimate.data.budget_categories as any)?.name ?? null,
       marginType: estimate.data.margin_type,
       marginPercent: Number(estimate.data.margin_percent),
       wastePercent: Number(estimate.data.waste_percent),
@@ -176,6 +189,24 @@ apiRouter.patch(
     const { error } = await supabase
       .from("estimates")
       .update({ status })
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// Tags an estimate with a business-defined category (cocina, reforma...) so
+// the future estimate-drafting AI can study same-category history for
+// margins/structure. Every manually-created estimate should set this on save.
+apiRouter.patch(
+  "/estimates/:id/category",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("estimates")
+      .update({ category_id: req.body?.categoryId ?? null })
       .eq("business_id", DEMO_BUSINESS_ID)
       .eq("id", req.params.id);
 
@@ -358,6 +389,175 @@ apiRouter.post(
     }
 
     res.json({ projectId, scheduledCount: pendingItems.length });
+  })
+);
+
+// ---------- Budget categories & reference documents ----------
+// Admin-defined categories (cocina, reforma, construcción...) used to tag
+// estimates, plus up to MAX_REFERENCE_DOCS_PER_CATEGORY old approved-budget
+// files per category the admin can upload as grounding material for
+// categories with no real in-system history yet. No AI reads these yet —
+// this only stores real data + real files so Fase D has something to study.
+
+apiRouter.get(
+  "/budget-categories",
+  route(async (_req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("budget_categories")
+      .select("id, name, created_at")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("name");
+
+    if (error) throw error;
+    res.json(data.map((c) => ({ id: c.id, name: c.name, createdAt: c.created_at })));
+  })
+);
+
+apiRouter.post(
+  "/budget-categories",
+  route(async (req, res) => {
+    const name = (req.body?.name ?? "").trim();
+    if (!name) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("budget_categories")
+      .insert({ business_id: DEMO_BUSINESS_ID, name })
+      .select("id, name, created_at")
+      .single();
+
+    if (error) throw error;
+    res.json({ id: data.id, name: data.name, createdAt: data.created_at });
+  })
+);
+
+apiRouter.delete(
+  "/budget-categories/:id",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from("budget_categories")
+      .delete()
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.get(
+  "/estimate-reference-documents",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+    let query = supabase
+      .from("estimate_reference_documents")
+      .select("id, category_id, file_name, storage_path, file_size, uploaded_at, budget_categories(name)")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .order("uploaded_at", { ascending: false });
+
+    if (req.query.categoryId) {
+      query = query.eq("category_id", req.query.categoryId as string);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    res.json(
+      data.map((d: any) => ({
+        id: d.id,
+        categoryId: d.category_id,
+        categoryName: d.budget_categories?.name ?? null,
+        fileName: d.file_name,
+        fileSize: d.file_size,
+        uploadedAt: d.uploaded_at,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/estimate-reference-documents",
+  upload.single("file"),
+  route(async (req, res) => {
+    const categoryId = req.body?.categoryId;
+    const file = req.file;
+    if (!categoryId || !file) {
+      res.status(400).json({ error: "categoryId and file are required" });
+      return;
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    const { count, error: countError } = await supabase
+      .from("estimate_reference_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("category_id", categoryId);
+
+    if (countError) throw countError;
+    if ((count ?? 0) >= MAX_REFERENCE_DOCS_PER_CATEGORY) {
+      res.status(400).json({
+        error: `Esta categoría ya tiene ${MAX_REFERENCE_DOCS_PER_CATEGORY} presupuestos de referencia. Elimina uno antes de subir otro.`,
+      });
+      return;
+    }
+
+    const storagePath = `${DEMO_BUSINESS_ID}/${categoryId}/${randomUUID()}-${file.originalname}`;
+    const { error: uploadError } = await supabase.storage
+      .from("estimate-references")
+      .upload(storagePath, file.buffer, { contentType: file.mimetype });
+
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await supabase
+      .from("estimate_reference_documents")
+      .insert({
+        business_id: DEMO_BUSINESS_ID,
+        category_id: categoryId,
+        file_name: file.originalname,
+        storage_path: storagePath,
+        file_size: file.size,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    res.json({ id: data.id });
+  })
+);
+
+apiRouter.delete(
+  "/estimate-reference-documents/:id",
+  route(async (req, res) => {
+    const supabase = getSupabaseAdmin();
+
+    const { data: doc, error: fetchError } = await supabase
+      .from("estimate_reference_documents")
+      .select("storage_path")
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const { error: deleteError } = await supabase
+      .from("estimate_reference_documents")
+      .delete()
+      .eq("business_id", DEMO_BUSINESS_ID)
+      .eq("id", req.params.id);
+
+    if (deleteError) throw deleteError;
+
+    if (doc?.storage_path) {
+      await supabase.storage.from("estimate-references").remove([doc.storage_path]);
+    }
+
+    res.json({ ok: true });
   })
 );
 

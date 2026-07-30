@@ -14,10 +14,12 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
+import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 
 interface EstimateSummary {
   id: string;
@@ -25,6 +27,11 @@ interface EstimateSummary {
   status: string;
   total: number;
   createdAt: string;
+}
+
+interface BudgetCategory {
+  id: string;
+  name: string;
 }
 
 interface EstimateLine {
@@ -43,6 +50,8 @@ interface EstimateDetail {
   clientAddress: string | null;
   status: string;
   createdBy: string;
+  categoryId: string | null;
+  categoryName: string | null;
   marginType: "global" | "section";
   marginPercent: number;
   wastePercent: number;
@@ -75,6 +84,17 @@ export default function Budgets() {
     useApi<EstimateDetail>(draftId ? `/api/estimates/${draftId}?_r=${reloadToken}` : null);
   const { data: assemblyTemplates, loading: templatesLoading, error: templatesError } =
     useApi<AssemblyTemplate[]>("/api/assembly-templates");
+  const { data: categories } = useApi<BudgetCategory[]>(`/api/budget-categories?_r=${reloadToken}`);
+
+  const setCategory = async (categoryId: string) => {
+    if (!draftId) return;
+    await fetch(`/api/estimates/${draftId}/category`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categoryId }),
+    });
+    setReloadToken((t) => t + 1);
+  };
 
   const [marginType, setMarginType] = useState<"global" | "section">("global");
   const [marginPercent, setMarginPercent] = useState(0);
@@ -117,6 +137,7 @@ export default function Budgets() {
         <TabsList>
           <TabsTrigger value="builder">Presupuesto</TabsTrigger>
           <TabsTrigger value="templates">Assembly Templates</TabsTrigger>
+          <TabsTrigger value="categorias">Categorías y referencias</TabsTrigger>
         </TabsList>
 
         <TabsContent value="builder" className="mt-4">
@@ -143,7 +164,19 @@ export default function Budgets() {
                       </h2>
                       <p className="text-xs text-muted-foreground">{draft.clientName} · borrador en curso</p>
                     </div>
-                    <StatusBadge tone="info">{draft.status}</StatusBadge>
+                    <div className="flex items-center gap-2">
+                      <Select value={draft.categoryId ?? undefined} onValueChange={setCategory}>
+                        <SelectTrigger className="w-40 h-8 text-xs">
+                          <SelectValue placeholder="Sin categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(categories ?? []).map((c) => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <StatusBadge tone="info">{draft.status}</StatusBadge>
+                    </div>
                   </div>
 
                   {zones.map((zone) => (
@@ -313,6 +346,10 @@ export default function Budgets() {
               </div>
             )}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="categorias" className="mt-4">
+          <BudgetCategoriesPanel />
         </TabsContent>
       </Tabs>
 
