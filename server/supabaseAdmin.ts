@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 
 // Server-only client using the service role key — bypasses RLS by design.
 // It is never sent to the browser; every route below scopes its own
@@ -38,6 +39,13 @@ export function getSupabaseAdmin(): SupabaseClient {
 
   client = createClient(normalizeProjectUrl(rawUrl), serviceRoleKey, {
     auth: { persistSession: false },
+    // supabase-js always spins up a realtime client on construction (even
+    // though this app never subscribes to anything) and it looks for a
+    // native `WebSocket` global. That only exists on Node 22+, so on older
+    // Node runtimes (e.g. some container base images) it throws
+    // synchronously and takes down every request. Passing the `ws` package
+    // explicitly makes this work regardless of the host's Node version.
+    realtime: { transport: WebSocket as unknown as typeof globalThis.WebSocket },
   });
   return client;
 }
