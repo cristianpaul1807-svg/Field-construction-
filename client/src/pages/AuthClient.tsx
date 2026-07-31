@@ -125,7 +125,7 @@ export default function AuthClient() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {needsCode
-              ? `Enviamos un código de 6 dígitos a ${email}. Ingrésalo para continuar.`
+              ? `Enviamos un código de 8 dígitos a ${email}. Ingrésalo para continuar.`
               : mode === "register"
                 ? "Usa el mismo correo o teléfono que le diste a tu contratista."
                 : "Ingresa con el correo y contraseña de tu cuenta."}

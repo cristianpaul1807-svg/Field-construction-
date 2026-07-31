@@ -16,6 +16,7 @@ export default function AuthForgotPassword() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -49,6 +50,10 @@ export default function AuthForgotPassword() {
 
   const confirmReset = async () => {
     setError(null);
+    if (newPassword !== confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
     setBusy(true);
     try {
       const { data, error: verifyError } = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
@@ -83,7 +88,7 @@ export default function AuthForgotPassword() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {sent
-              ? `Enviamos un código de 6 dígitos a ${email}.`
+              ? `Enviamos un código de 8 dígitos a ${email}.`
               : "Te mandamos un código para crear una contraseña nueva."}
           </p>
         </div>
@@ -116,11 +121,25 @@ export default function AuthForgotPassword() {
                   onKeyDown={(e) => e.key === "Enter" && confirmReset()}
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && confirmReset()}
+                />
+              </div>
 
               {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
               {resent && !error && <p className="text-sm text-status-success-fg text-center">Código reenviado.</p>}
 
-              <Button className="w-full" onClick={confirmReset} disabled={code.length !== 8 || !newPassword || busy}>
+              <Button
+                className="w-full"
+                onClick={confirmReset}
+                disabled={code.length !== 8 || !newPassword || !confirmPassword || busy}
+              >
                 Cambiar contraseña
               </Button>
               <button

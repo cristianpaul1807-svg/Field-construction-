@@ -123,7 +123,7 @@ export default function AuthBusiness() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {needsCode
-              ? `Enviamos un código de 6 dígitos a ${email}. Ingrésalo para continuar.`
+              ? `Enviamos un código de 8 dígitos a ${email}. Ingrésalo para continuar.`
               : mode === "register"
                 ? "Solo necesitas correo y contraseña. Los datos de tu empresa se completan después, en Configuración."
                 : "Ingresa con el correo y contraseña de tu negocio."}
