@@ -50,39 +50,48 @@ export default function AuthLogin() {
           <p className="text-sm text-muted-foreground">Funciona para cuentas de negocio o de cliente.</p>
         </div>
 
-        <Card className="p-6 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Correo electrónico</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submit()}
-            />
-          </div>
+        <Card className="p-6">
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Correo electrónico</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Contraseña</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
 
-          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+            {error && <p className="text-sm text-status-error-fg">{error}</p>}
 
-          <Button className="w-full" onClick={submit} disabled={!email || !password || busy}>
-            Iniciar sesión
-          </Button>
+            <Button type="submit" className="w-full" disabled={!email || !password || busy}>
+              Iniciar sesión
+            </Button>
 
-          <Link href="/recuperar-password" className="text-xs text-muted-foreground hover:text-foreground block text-center">
-            ¿Olvidaste tu contraseña?
-          </Link>
+            <Link href="/recuperar-password" className="text-xs text-muted-foreground hover:text-foreground block text-center">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </form>
         </Card>
 
         <p className="text-sm text-center text-muted-foreground">

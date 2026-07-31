@@ -132,9 +132,15 @@ export default function AuthClient() {
           </p>
         </div>
 
-        <Card className="p-6 space-y-4">
+        <Card className="p-6">
           {needsCode ? (
-            <>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                verifyCode();
+              }}
+            >
               <div className="flex justify-center">
                 <InputOTP maxLength={8} value={code} onChange={setCode}>
                   <InputOTPGroup>
@@ -153,22 +159,30 @@ export default function AuthClient() {
               {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
               {resent && !error && <p className="text-sm text-status-success-fg text-center">Código reenviado.</p>}
 
-              <Button className="w-full" onClick={verifyCode} disabled={code.length !== 8 || busy}>
+              <Button type="submit" className="w-full" disabled={code.length !== 8 || busy}>
                 Verificar código
               </Button>
               <button
+                type="button"
                 onClick={resendCode}
                 className="text-xs text-muted-foreground hover:text-foreground block text-center w-full"
               >
                 Reenviar código
               </button>
-            </>
+            </form>
           ) : (
-            <>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit();
+              }}
+            >
               <div className="space-y-1.5">
                 <Label htmlFor="email">Correo electrónico</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   autoComplete="email"
                   value={email}
@@ -180,17 +194,17 @@ export default function AuthClient() {
                 <Label htmlFor="password">Contraseña</Label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
                   autoComplete={mode === "register" ? "new-password" : "current-password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && submit()}
                 />
               </div>
 
               {error && <p className="text-sm text-status-error-fg">{error}</p>}
 
-              <Button className="w-full" onClick={submit} disabled={!email || !password || busy}>
+              <Button type="submit" className="w-full" disabled={!email || !password || busy}>
                 {mode === "register" ? "Crear cuenta" : "Iniciar sesión"}
               </Button>
 
@@ -199,7 +213,7 @@ export default function AuthClient() {
                   ¿Olvidaste tu contraseña?
                 </Link>
               )}
-            </>
+            </form>
           )}
         </Card>
 

@@ -92,9 +92,15 @@ export default function AuthForgotPassword() {
           </p>
         </div>
 
-        <Card className="p-6 space-y-4">
+        <Card className="p-6">
           {sent ? (
-            <>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                confirmReset();
+              }}
+            >
               <div className="flex justify-center">
                 <InputOTP maxLength={8} value={code} onChange={setCode}>
                   <InputOTPGroup>
@@ -114,22 +120,22 @@ export default function AuthForgotPassword() {
                 <Label htmlFor="newPassword">Nueva contraseña</Label>
                 <Input
                   id="newPassword"
+                  name="new-password"
                   type="password"
                   autoComplete="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && confirmReset()}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
                 <Input
                   id="confirmPassword"
+                  name="confirm-password"
                   type="password"
                   autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && confirmReset()}
                 />
               </div>
 
@@ -137,38 +143,45 @@ export default function AuthForgotPassword() {
               {resent && !error && <p className="text-sm text-status-success-fg text-center">Código reenviado.</p>}
 
               <Button
+                type="submit"
                 className="w-full"
-                onClick={confirmReset}
                 disabled={code.length !== 8 || !newPassword || !confirmPassword || busy}
               >
                 Cambiar contraseña
               </Button>
               <button
+                type="button"
                 onClick={resendCode}
                 className="text-xs text-muted-foreground hover:text-foreground block text-center w-full"
               >
                 Reenviar código
               </button>
-            </>
+            </form>
           ) : (
-            <>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                requestCode();
+              }}
+            >
               <div className="space-y-1.5">
                 <Label htmlFor="email">Correo electrónico</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && requestCode()}
                   autoFocus
                 />
               </div>
               {error && <p className="text-sm text-status-error-fg">{error}</p>}
-              <Button className="w-full" onClick={requestCode} disabled={!email || busy}>
+              <Button type="submit" className="w-full" disabled={!email || busy}>
                 Enviar código
               </Button>
-            </>
+            </form>
           )}
         </Card>
       </div>
