@@ -35,8 +35,7 @@ import SettingsCompany from "@/pages/SettingsCompany";
 import SettingsMargins from "@/pages/SettingsMargins";
 import SettingsUsers from "@/pages/SettingsUsers";
 import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
-import { useEffect, useState } from "react";
-import { Route, Switch } from "wouter";
+import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SelectedProjectProvider } from "./contexts/SelectedProjectContext";
@@ -92,29 +91,23 @@ function ClientPortalRoute() {
 // "/" is ambiguous on purpose: it's the public landing page for a visitor,
 // and the business dashboard's home once logged in — this decides which.
 function RootRoute() {
-  const { session, loading, persona, signOut } = useAuth();
-  const [cleaningUp, setCleaningUp] = useState(false);
+  const { session, loading, persona } = useAuth();
 
-  // An orphaned session (authenticated, but never finished linking a
-  // business/client — e.g. an interrupted signup) has no page of its own
-  // to land on. Without this, "/" would forward it into BusinessPanel,
-  // which just bounces it back to the auth page, trapping the visitor in a
-  // loop with no way back to the landing/role picker.
-  useEffect(() => {
-    if (!loading && session && persona === "none") {
-      setCleaningUp(true);
-      signOut().finally(() => setCleaningUp(false));
-    }
-  }, [loading, session, persona]);
-
-  if (loading || cleaningUp) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center gap-2 text-sm text-muted-foreground">
         <Spinner className="size-4" /> Cargando...
       </div>
     );
   }
-  if (!session || persona === "none") return <Landing />;
+  if (!session) return <Landing />;
+  // An orphaned session (confirmed and authenticated, but never finished
+  // linking a business — e.g. the old link-based confirmation email opened
+  // to an unreachable localhost redirect) still has a perfectly valid,
+  // already-confirmed account. Send it to /negocio/acceso, whose own effect
+  // finishes provisioning with the existing session — no new email/code
+  // needed. Deliberately leaving via "Volver" is what signs the user out.
+  if (persona === "none") return <Redirect to="/negocio/acceso" />;
   if (persona === "client") return <ClientPortalRoute />;
   return <BusinessPanel />;
 }

@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthClient() {
   const [, setLocation] = useLocation();
-  const { session, persona, refreshPersona } = useAuth();
+  const { session, persona, refreshPersona, signOut } = useAuth();
   const [mode, setMode] = useState<"register" | "login">("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -108,9 +108,15 @@ export default function AuthClient() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
-        <Link href="/" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
+        <button
+          onClick={async () => {
+            if (session) await signOut();
+            setLocation("/");
+          }}
+          className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+        >
           <ArrowLeft size={13} /> Volver
-        </Link>
+        </button>
 
         <div className="text-center space-y-2">
           <UserRound className="mx-auto text-primary" size={28} />
