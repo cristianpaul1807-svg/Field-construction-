@@ -7,12 +7,9 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { apiFetch } from "@/lib/api";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthForgotPassword() {
   const [, setLocation] = useLocation();
-  const { refreshPersona } = useAuth();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -63,10 +60,12 @@ export default function AuthForgotPassword() {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
 
-      await refreshPersona();
-      const res = await apiFetch("/api/auth/me");
-      const body = await res.json().catch(() => null);
-      setLocation(body?.persona === "client" ? "/portal" : "/");
+      // Sign back out and send them to a normal login — verifyOtp() leaves a
+      // session behind, but jumping straight into the app from here bypassed
+      // /iniciar-sesion entirely and could land on the business-setup screen
+      // for accounts with no business yet, which read as "reset is broken".
+      await supabase.auth.signOut();
+      setLocation("/iniciar-sesion");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Código inválido o expirado");
     } finally {

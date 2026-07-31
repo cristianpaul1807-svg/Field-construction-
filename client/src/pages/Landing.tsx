@@ -19,6 +19,14 @@ export default function Landing() {
             </p>
           </div>
 
+          <div className="flex flex-col items-center gap-2 pt-1">
+            <Link href="/iniciar-sesion">
+              <Button className="gap-2" size="lg">
+                <LogIn size={16} /> Ya tengo cuenta — Iniciar sesión
+              </Button>
+            </Link>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link href="/negocio/acceso">
               <Card className="p-6 hover:border-primary/50 transition-colors cursor-pointer h-full">
@@ -40,20 +48,14 @@ export default function Landing() {
               </Card>
             </Link>
           </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link href="/iniciar-sesion">
-              <Button variant="outline" className="gap-2">
-                <LogIn size={16} /> Ya tengo cuenta — Iniciar sesión
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
 
-      <div className="border-t border-border py-4 text-center">
-        <Link href="/campo" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
-          <HardHat size={13} /> Acceso de trabajador de campo
+      <div className="border-t border-border py-6 text-center bg-secondary/40">
+        <Link href="/campo">
+          <Button variant="outline" size="lg" className="gap-2">
+            <HardHat size={18} /> Acceso de trabajador de campo
+          </Button>
         </Link>
       </div>
     </div>
