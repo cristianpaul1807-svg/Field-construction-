@@ -17,6 +17,10 @@ if (!url || !anonKey) {
 // Browser client — uses the publishable/anon key only (safe to expose).
 // Every actual data query still goes through our Express API; this client
 // exists solely to run Supabase Auth (sign up / sign in / session refresh).
+// detectSessionInUrl is off because every auth flow here goes through
+// verifyOtp() with a typed code, never a link — leaving it on means every
+// page load tries to parse the current URL for a token, which can throw on
+// leftover query/hash junk from the old link-based flow.
 export const supabase = createClient(url, anonKey, {
-  auth: { persistSession: true, autoRefreshToken: true },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
 });
