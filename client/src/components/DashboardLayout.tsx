@@ -85,6 +85,7 @@ const navSections: NavSection[] = [
       { id: "margins-rules", label: "Margins & Rules", icon: "⚖️", path: "/settings/margins" },
       { id: "users-roles", label: "Users & Roles", icon: "👨‍💼", path: "/settings/users" },
       { id: "whatsapp-connection", label: "WhatsApp Connection", icon: "📱", path: "/settings/whatsapp" },
+      { id: "automations", label: "Automatizaciones", icon: "🔗", path: "/settings/automations" },
     ],
   },
 ];

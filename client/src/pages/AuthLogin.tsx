@@ -95,10 +95,8 @@ export default function AuthLogin() {
         </Card>
 
         <p className="text-sm text-center text-muted-foreground">
-          ¿No tienes cuenta?{" "}
-          <Link href="/negocio/acceso" className="text-primary hover:underline">Negocio</Link>
-          {" · "}
-          <Link href="/cliente/acceso" className="text-primary hover:underline">Cliente</Link>
+          ¿No tienes cuenta de negocio?{" "}
+          <Link href="/negocio/acceso" className="text-primary hover:underline">Regístrate</Link>
         </p>
       </div>
     </div>

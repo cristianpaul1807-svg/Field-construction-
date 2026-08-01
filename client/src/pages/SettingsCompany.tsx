@@ -11,6 +11,7 @@ import { useApi, apiFetch } from "@/lib/api";
 interface CompanyData {
   id: string;
   name: string;
+  slug: string;
   licenseNumber: string;
   taxConfig: { region?: string; rate?: number };
 }
@@ -19,15 +20,18 @@ export default function SettingsCompany() {
   const [reloadToken, setReloadToken] = useState(0);
   const { data, loading, error } = useApi<CompanyData>(`/api/settings/company?_r=${reloadToken}`);
   const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
   const [license, setLicense] = useState("");
   const [region, setRegion] = useState("");
   const [rate, setRate] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!data) return;
     setName(data.name);
+    setSlug(data.slug ?? "");
     setLicense(data.licenseNumber ?? "");
     setRegion(data.taxConfig?.region ?? "");
     setRate(data.taxConfig?.rate ? String(data.taxConfig.rate * 100) : "");
@@ -35,19 +39,27 @@ export default function SettingsCompany() {
 
   const save = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
-      await apiFetch("/api/settings/company", {
+      const res = await apiFetch("/api/settings/company", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          slug,
           licenseNumber: license,
           taxConfig: { region, rate: rate ? Number(rate) / 100 : undefined },
         }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "No se pudo guardar");
+      }
       setReloadToken((t) => t + 1);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "No se pudo guardar");
     } finally {
       setSaving(false);
     }
@@ -86,6 +98,14 @@ export default function SettingsCompany() {
               <Label htmlFor="license">Número de licencia</Label>
               <Input id="license" value={license} onChange={(e) => setLicense(e.target.value)} />
             </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="slug">Link público (Automatizaciones)</Label>
+              <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
+              <p className="text-xs text-status-warning-fg">
+                Cambiar esto rompe cualquier link que ya hayas compartido — los que tengan el link viejo dejarán
+                de poder usarlo.
+              </p>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="region">Provincia / Estado</Label>
               <Input id="region" value={region} onChange={(e) => setRegion(e.target.value)} />
@@ -96,7 +116,8 @@ export default function SettingsCompany() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-3">
+            {saveError && <p className="text-sm text-status-error-fg">{saveError}</p>}
             <Button className="gap-2" onClick={save} disabled={saving}>
               {saved && <Check size={16} />}
               {saved ? "Guardado" : "Guardar cambios"}

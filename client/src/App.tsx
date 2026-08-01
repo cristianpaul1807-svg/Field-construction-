@@ -9,6 +9,7 @@ import AuthClient from "@/pages/AuthClient";
 import AuthLogin from "@/pages/AuthLogin";
 import AuthForgotPassword from "@/pages/AuthForgotPassword";
 import WorkerAccess from "@/pages/WorkerAccess";
+import PublicBusinessChat from "@/pages/PublicBusinessChat";
 import ClientPortalMe from "@/pages/ClientPortalMe";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/pages/Dashboard";
@@ -35,6 +36,7 @@ import SettingsCompany from "@/pages/SettingsCompany";
 import SettingsMargins from "@/pages/SettingsMargins";
 import SettingsUsers from "@/pages/SettingsUsers";
 import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
+import SettingsAutomations from "@/pages/SettingsAutomations";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -71,6 +73,7 @@ function BusinessPanel() {
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
         <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
+        <Route path={"/settings/automations"} component={SettingsAutomations} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -121,6 +124,7 @@ function Router() {
       <Route path={"/iniciar-sesion"} component={AuthLogin} />
       <Route path={"/recuperar-password"} component={AuthForgotPassword} />
       <Route path={"/campo"} component={WorkerAccess} />
+      <Route path={"/c/:slug"} component={PublicBusinessChat} />
       <Route path={"/portal"} component={ClientPortalRoute} />
       {/* Everything else is the authenticated business panel */}
       <Route component={BusinessPanel} />

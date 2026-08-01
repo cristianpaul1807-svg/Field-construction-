@@ -17,6 +17,102 @@ const MAX_REFERENCE_DOCS_PER_CATEGORY = 5;
 
 type Handler = (req: Request, res: Response) => Promise<void>;
 
+// Base slug from a business name — ASCII, lowercase, dash-separated.
+function slugify(name: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+  return base || "negocio";
+}
+
+// Appends -2, -3, ... on collision. Only ever called at business-creation
+// time (one row), so the read-then-write race window is not worth locking.
+async function generateUniqueSlug(admin: ReturnType<typeof getSupabaseAdmin>, name: string): Promise<string> {
+  const base = slugify(name);
+  let candidate = base;
+  let suffix = 2;
+  for (;;) {
+    const { data } = await admin.from("businesses").select("id").eq("slug", candidate).maybeSingle();
+    if (!data) return candidate;
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
+  }
+}
+
+// Fires the moment an estimate first reaches the client (status -> 'enviado'):
+// provisions real portal access, since only now is there something real to
+// show them (a 'pendiente_aprobacion' estimate can still change or be
+// rejected). No-ops if the client already has an account. Reuses an
+// existing auth account by email (e.g. a repeat client across businesses)
+// instead of creating a duplicate.
+async function ensureClientAccount(businessId: string, clientId: string) {
+  const admin = getSupabaseAdmin();
+  const { data: client, error: clientError } = await admin
+    .from("clients")
+    .select("id, email, auth_user_id")
+    .eq("id", clientId)
+    .eq("business_id", businessId)
+    .maybeSingle();
+  if (clientError || !client || client.auth_user_id || !client.email) return;
+
+  const { data: reusable } = await admin
+    .from("clients")
+    .select("auth_user_id")
+    .eq("email", client.email)
+    .not("auth_user_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+
+  let authUserId: string | null = reusable?.auth_user_id ?? null;
+
+  if (!authUserId) {
+    const randomPassword = randomBytes(24).toString("base64url");
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email: client.email,
+      password: randomPassword,
+      email_confirm: true,
+    });
+    if (createError || !created.user) return;
+    authUserId = created.user.id;
+  }
+
+  await admin.from("clients").update({ auth_user_id: authUserId }).eq("id", clientId);
+
+  const { data: existingConversation } = await admin
+    .from("conversations")
+    .select("id")
+    .eq("business_id", businessId)
+    .eq("client_id", clientId)
+    .limit(1)
+    .maybeSingle();
+
+  const conversationId = existingConversation
+    ? existingConversation.id
+    : (
+        await admin
+          .from("conversations")
+          .insert({ business_id: businessId, client_id: clientId, channel: "web", control_mode: "human" })
+          .select("id")
+          .single()
+      ).data?.id;
+
+  if (conversationId) {
+    await admin.from("conversation_messages").insert({
+      business_id: businessId,
+      client_id: clientId,
+      conversation_id: conversationId,
+      channel: "web",
+      direction: "out",
+      sent_by: "bot",
+      content: `¡Tu presupuesto está listo! Ya puedes seguir todo desde la app: inicia sesión como Cliente con ${client.email}, y usa "¿Olvidaste tu contraseña?" para crear la tuya propia.`,
+    });
+  }
+}
+
 // Wraps a handler so any thrown error (including a missing service-role key)
 // becomes a clean JSON response instead of crashing the dev/prod server.
 function route(handler: Handler) {
@@ -62,10 +158,12 @@ apiRouter.post(
     const email = authUser.user?.email ?? null;
     const phone = authUser.user?.phone ?? null;
     const label = email ? email.split("@")[0] : phone ?? "nuevo";
+    const businessName = `Negocio de ${label}`;
+    const slug = await generateUniqueSlug(admin, businessName);
 
     const { data: business, error: businessError } = await admin
       .from("businesses")
-      .insert({ name: `Negocio de ${label}` })
+      .insert({ name: businessName, slug })
       .select("id")
       .single();
     if (businessError) throw businessError;
@@ -474,6 +572,192 @@ apiRouter.get(
   })
 );
 
+// ---------- Public business chat (/c/[slug]) ----------
+// No authentication of any kind — accessible by anyone with the link.
+// Uses the service-role client throughout since there's no auth.uid() to
+// let RLS scope anything; every query filters manually by business_id
+// (resolved from the slug) or conversation_id, same pattern as the
+// worker-auth routes above.
+
+apiRouter.get(
+  "/public/businesses/:slug",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("businesses")
+      .select("id, name")
+      .eq("slug", req.params.slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ error: "No encontramos ese negocio" });
+      return;
+    }
+    res.json({ id: data.id, name: data.name });
+  })
+);
+
+// A visitor's first submission: creates the clients row (lead_status
+// 'nuevo', still no Supabase Auth account — see the estimate-approval
+// trigger below for when that account gets created) plus the conversation
+// they'll chat in.
+apiRouter.post(
+  "/public/businesses/:slug/leads",
+  route(async (req, res) => {
+    const { name, phone, email } = req.body ?? {};
+    if (!name || !phone || !email) {
+      res.status(400).json({ error: "name, phone and email are required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: business, error: businessError } = await admin
+      .from("businesses")
+      .select("id")
+      .eq("slug", req.params.slug)
+      .maybeSingle();
+    if (businessError) throw businessError;
+    if (!business) {
+      res.status(404).json({ error: "No encontramos ese negocio" });
+      return;
+    }
+
+    const { data: client, error: clientError } = await admin
+      .from("clients")
+      .insert({ business_id: business.id, name, phone, email, lead_status: "nuevo", source: "link_publico" })
+      .select("id")
+      .single();
+    if (clientError) throw clientError;
+
+    const { data: conversation, error: conversationError } = await admin
+      .from("conversations")
+      .insert({ business_id: business.id, client_id: client.id, channel: "web", control_mode: "bot" })
+      .select("id")
+      .single();
+    if (conversationError) throw conversationError;
+
+    res.status(201).json({ businessId: business.id, clientId: client.id, conversationId: conversation.id });
+  })
+);
+
+// Below: possessing the conversation id is the credential (nobody but the
+// visitor who just created it knows it), the same trust model as any
+// share link. Every query still scopes explicitly by conversation_id.
+apiRouter.get(
+  "/public/conversations/:id/messages",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("conversation_messages")
+      .select("id, direction, content, sent_by, timestamp")
+      .eq("conversation_id", req.params.id)
+      .order("timestamp");
+    if (error) throw error;
+    res.json(
+      data.map((m) => ({
+        id: m.id,
+        direction: m.direction,
+        content: m.content,
+        sentBy: m.sent_by,
+        timestamp: m.timestamp,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/public/conversations/:id/messages",
+  route(async (req, res) => {
+    const content = String(req.body?.content ?? "").trim();
+    if (!content) {
+      res.status(400).json({ error: "content is required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: conversation, error: conversationError } = await admin
+      .from("conversations")
+      .select("id, business_id, client_id")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (conversationError) throw conversationError;
+    if (!conversation) {
+      res.status(404).json({ error: "Conversación no encontrada" });
+      return;
+    }
+
+    const { data, error } = await admin
+      .from("conversation_messages")
+      .insert({
+        business_id: conversation.business_id,
+        client_id: conversation.client_id,
+        conversation_id: conversation.id,
+        channel: "web",
+        direction: "in",
+        sent_by: "human",
+        content,
+      })
+      .select("id, direction, content, sent_by, timestamp")
+      .single();
+    if (error) throw error;
+    res.status(201).json({
+      id: data.id,
+      direction: data.direction,
+      content: data.content,
+      sentBy: data.sent_by,
+      timestamp: data.timestamp,
+    });
+  })
+);
+
+// "Agendar cita" bubble: writes the same pending appointment_requests row
+// the admin-side panel already manages, plus a short summary message so
+// it shows up inline in the transcript.
+apiRouter.post(
+  "/public/conversations/:id/appointment-requests",
+  route(async (req, res) => {
+    const requestedDatetimeText = String(req.body?.requestedDatetimeText ?? "").trim();
+    const reasonText = req.body?.reasonText ? String(req.body.reasonText).trim() : null;
+    if (!requestedDatetimeText) {
+      res.status(400).json({ error: "requestedDatetimeText is required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: conversation, error: conversationError } = await admin
+      .from("conversations")
+      .select("id, business_id, client_id")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (conversationError) throw conversationError;
+    if (!conversation) {
+      res.status(404).json({ error: "Conversación no encontrada" });
+      return;
+    }
+
+    const { data: appointment, error: appointmentError } = await admin
+      .from("appointment_requests")
+      .insert({
+        business_id: conversation.business_id,
+        client_id: conversation.client_id,
+        requested_datetime_text: requestedDatetimeText,
+        reason_text: reasonText,
+      })
+      .select("id")
+      .single();
+    if (appointmentError) throw appointmentError;
+
+    await admin.from("conversation_messages").insert({
+      business_id: conversation.business_id,
+      client_id: conversation.client_id,
+      conversation_id: conversation.id,
+      channel: "web",
+      direction: "in",
+      sent_by: "human",
+      content: `Solicitó una cita — ${requestedDatetimeText}${reasonText ? `: ${reasonText}` : ""}`,
+    });
+
+    res.status(201).json({ id: appointment.id });
+  })
+);
+
 // Everything below this line is the business panel — every route resolves
 // its business_id from the caller's own Supabase Auth session (never a
 // hardcoded constant), and every query below runs through req.supabase,
@@ -871,13 +1155,25 @@ apiRouter.patch(
     }
 
     const supabase = req.supabase!;
-    const { error } = await supabase
+    const { data: estimate, error } = await supabase
       .from("estimates")
       .update({ status })
       .eq("business_id", req.businessId!)
-      .eq("id", req.params.id);
+      .eq("id", req.params.id)
+      .select("client_id")
+      .single();
 
     if (error) throw error;
+
+    if (status === "enviado" && estimate.client_id) {
+      // Never let account provisioning fail the estimate update itself.
+      try {
+        await ensureClientAccount(req.businessId!, estimate.client_id);
+      } catch (err) {
+        console.error("ensureClientAccount failed", err);
+      }
+    }
+
     res.json({ ok: true });
   })
 );
@@ -2461,7 +2757,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("businesses")
-      .select("id, name, license_number, tax_config")
+      .select("id, name, slug, license_number, tax_config")
       .eq("id", req.businessId!)
       .single();
 
@@ -2470,6 +2766,7 @@ apiRouter.get(
     res.json({
       id: data.id,
       name: data.name,
+      slug: data.slug,
       licenseNumber: data.license_number,
       taxConfig: data.tax_config,
     });
@@ -2488,6 +2785,25 @@ apiRouter.patch(
     if (body.name !== undefined) update.name = body.name;
     if (body.licenseNumber !== undefined) update.license_number = body.licenseNumber;
     if (body.taxConfig !== undefined) update.tax_config = body.taxConfig;
+
+    // Slug uniqueness spans every business, not just this one's own RLS-visible
+    // row, so checking it needs the admin client — the update itself still
+    // goes through req.supabase so RLS keeps enforcing "only your own row".
+    if (body.slug !== undefined) {
+      const normalized = slugify(String(body.slug));
+      const admin = getSupabaseAdmin();
+      const { data: collision } = await admin
+        .from("businesses")
+        .select("id")
+        .eq("slug", normalized)
+        .neq("id", req.businessId!)
+        .maybeSingle();
+      if (collision) {
+        res.status(409).json({ error: "Ese link ya está en uso por otro negocio, elige otro." });
+        return;
+      }
+      update.slug = normalized;
+    }
 
     const { error } = await supabase.from("businesses").update(update).eq("id", req.businessId!);
     if (error) throw error;
