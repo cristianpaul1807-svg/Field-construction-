@@ -39,9 +39,9 @@ interface ScheduleEvent {
   startTime: string;
 }
 
-interface Conversation {
+interface ChatChannel {
   id: string;
-  clientName: string | null;
+  participantName: string | null;
   controlMode: "bot" | "human";
   lastMessage: string | null;
 }
@@ -55,7 +55,7 @@ export default function Dashboard() {
   const { data: invoices, loading: invoicesLoading } = useApi<Invoice[]>("/api/invoices");
   const { data: estimates, loading: estimatesLoading } = useApi<EstimateSummary[]>("/api/estimates");
   const { data: scheduleEvents, loading: scheduleLoading } = useApi<ScheduleEvent[]>("/api/schedule-events");
-  const { data: conversations, loading: conversationsLoading } = useApi<Conversation[]>("/api/conversations");
+  const { data: chatChannels, loading: conversationsLoading } = useApi<ChatChannel[]>("/api/chat/channels?system=publico");
   const { data: reports, loading: reportsLoading } = useApi<ReportsData>("/api/reports");
 
   const loading =
@@ -69,7 +69,7 @@ export default function Dashboard() {
   const pendingInvoices = (invoices ?? []).filter((i) => i.status !== "pagado");
   const pendingInvoicesTotal = pendingInvoices.reduce((sum, i) => sum + i.amount, 0);
   const pendingEstimates = (estimates ?? []).filter((e) => e.status === "enviado");
-  const botConversations = (conversations ?? []).filter((c) => c.controlMode === "bot");
+  const botConversations = (chatChannels ?? []).filter((c) => c.controlMode === "bot");
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto">
@@ -199,7 +199,7 @@ export default function Dashboard() {
                       W
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">{conv.clientName}</p>
+                      <p className="text-sm font-medium text-foreground">{conv.participantName}</p>
                       <p className="text-xs text-muted-foreground truncate">{conv.lastMessage}</p>
                     </div>
                     <StatusBadge tone="info">Bot</StatusBadge>

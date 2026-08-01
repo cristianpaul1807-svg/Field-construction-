@@ -1,0 +1,195 @@
+import { useEffect, useRef, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatusBadge } from "@/components/StatusBadge";
+import { Send, Settings, Bot, UserRound } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
+
+function initials(name: string | null | undefined) {
+  return (name ?? "?").trim().charAt(0).toUpperCase() || "?";
+}
+
+interface ChatThreadProps {
+  channel: ChatChannel | null;
+  messages: ChatMessage[] | null;
+  ownSenderTypes: string[];
+  onSend: (content: string) => void | Promise<void>;
+  onUpdateSettings?: (patch: { disappearingDuration: "24h" | "72h" | "nunca" }) => void | Promise<void>;
+  onToggleControlMode?: () => void | Promise<void>;
+  showAcceptInvite?: boolean;
+  onAccept?: () => void | Promise<void>;
+  disabled?: boolean;
+}
+
+export function ChatThread({
+  channel,
+  messages,
+  ownSenderTypes,
+  onSend,
+  onUpdateSettings,
+  onToggleControlMode,
+  showAcceptInvite,
+  onAccept,
+  disabled,
+}: ChatThreadProps) {
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  if (!channel) {
+    return <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">Selecciona un chat</div>;
+  }
+
+  const submit = async () => {
+    if (!text.trim()) return;
+    const content = text;
+    setText("");
+    setSending(true);
+    try {
+      await onSend(content);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const blocked = disabled || channel.status === "invitado";
+
+  return (
+    <div className="flex flex-col min-w-0 flex-1">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Avatar>
+            {channel.participantAvatarUrl && <AvatarImage src={channel.participantAvatarUrl} />}
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+              {initials(channel.participantName)}
+            </AvatarFallback>
+          </Avatar>
+          <p className="text-sm font-medium text-foreground truncate">{channel.participantName ?? "Chat"}</p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {onToggleControlMode && channel.label === "cliente" && (
+            <>
+              <StatusBadge tone={channel.controlMode === "bot" ? "info" : "success"}>
+                {channel.controlMode === "bot" ? "Bot" : "Humano"}
+              </StatusBadge>
+              <Button size="sm" variant={channel.controlMode === "bot" ? "default" : "outline"} onClick={onToggleControlMode}>
+                {channel.controlMode === "bot" ? "Tomar control" : "Devolver al bot"}
+              </Button>
+            </>
+          )}
+
+          {onUpdateSettings && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="icon" variant="ghost">
+                  <Settings size={16} />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Configuración del chat</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-1.5 py-2">
+                  <p className="text-sm text-foreground">Auto-borrado de mensajes</p>
+                  <Select
+                    value={channel.disappearingDuration}
+                    onValueChange={(v) => onUpdateSettings({ disappearingDuration: v as "24h" | "72h" | "nunca" })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nunca">Nunca</SelectItem>
+                      <SelectItem value="24h">24 horas</SelectItem>
+                      <SelectItem value="72h">72 horas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Los mensajes de este chat se borran solos para ambos al cumplirse el tiempo.
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-secondary/40">
+        {messages === null && (
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+            <Spinner className="size-4" /> Cargando...
+          </div>
+        )}
+        {messages?.map((message) => {
+          const isOwn = ownSenderTypes.includes(message.senderType);
+          return (
+            <div key={message.id} className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
+              <div
+                className={cn(
+                  "max-w-[75%] rounded-2xl px-4 py-2 text-sm",
+                  isOwn
+                    ? "bg-primary text-primary-foreground rounded-br-sm"
+                    : "bg-card border border-border text-foreground rounded-bl-sm"
+                )}
+              >
+                <p className="whitespace-pre-wrap">{message.content}</p>
+                <div className="flex items-center gap-1 mt-1 opacity-70">
+                  <span className="text-[10px]">{message.timestamp?.slice(0, 16).replace("T", " ")}</span>
+                  {message.senderType === "bot" && (
+                    <span className="text-[10px] inline-flex items-center gap-0.5">
+                      <Bot size={10} /> Bot
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {showAcceptInvite ? (
+        <div className="p-4 border-t border-border flex items-center justify-between gap-3 bg-card">
+          <p className="text-sm text-muted-foreground">Tienes una invitación para chatear aquí.</p>
+          <Button onClick={onAccept} className="gap-2">
+            <UserRound size={14} /> Aceptar
+          </Button>
+        </div>
+      ) : (
+        <form
+          className="p-3 border-t border-border flex items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
+          <Input
+            placeholder={blocked ? "Acepta la invitación para escribir..." : "Escribe un mensaje..."}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            disabled={blocked}
+          />
+          <Button type="submit" size="icon" disabled={blocked || sending || !text.trim()}>
+            <Send size={16} />
+          </Button>
+        </form>
+      )}
+    </div>
+  );
+}

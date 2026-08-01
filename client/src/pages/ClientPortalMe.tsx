@@ -2,10 +2,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { FileSignature, CreditCard, Image as ImageIcon, LogOut } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileSignature, CreditCard, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { ClientChat } from "@/components/ClientChat";
 
 interface ClientPortalData {
   client: { id: string; name: string };
@@ -39,19 +41,30 @@ export default function ClientPortalMe() {
       </div>
 
       <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-6">
-        {loading && (
-          <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-            <Spinner className="size-4" /> Cargando portal...
-          </div>
-        )}
-        {error && (
-          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-            No se pudo cargar: {error}
-          </div>
-        )}
+        <Tabs defaultValue="resumen">
+          <TabsList className="w-full">
+            <TabsTrigger value="resumen" className="flex-1 gap-1.5">
+              <LayoutDashboard size={14} /> Resumen
+            </TabsTrigger>
+            <TabsTrigger value="mensajes" className="flex-1 gap-1.5">
+              <MessageCircle size={14} /> Mensajes
+            </TabsTrigger>
+          </TabsList>
 
-        {!loading && !error && data && (
-          <Card className="p-0 overflow-hidden border-2">
+          <TabsContent value="resumen" className="mt-4 space-y-6">
+            {loading && (
+              <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+                <Spinner className="size-4" /> Cargando portal...
+              </div>
+            )}
+            {error && (
+              <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
+                No se pudo cargar: {error}
+              </div>
+            )}
+
+            {!loading && !error && data && (
+              <Card className="p-0 overflow-hidden border-2">
             <div className="bg-secondary px-6 py-4 border-b border-border">
               <p className="text-xs text-muted-foreground">Solo lectura</p>
               <h2 className="text-lg font-semibold text-foreground mt-0.5">Hola, {data.client.name.split(" ")[0]}</h2>
@@ -116,12 +129,18 @@ export default function ClientPortalMe() {
                 </div>
               </div>
             </div>
-          </Card>
-        )}
+              </Card>
+            )}
 
-        <p className="text-xs text-muted-foreground text-center">
-          La firma electrónica y el pago se conectarán en Fase E (SignWell / Stripe).
-        </p>
+            <p className="text-xs text-muted-foreground text-center">
+              La firma electrónica y el pago se conectarán en Fase E (SignWell / Stripe).
+            </p>
+          </TabsContent>
+
+          <TabsContent value="mensajes" className="mt-4">
+            <ClientChat />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, HardHat, LogOut, CalendarDays, Clock } from "lucide-react";
+import { ArrowLeft, HardHat, LogOut, CalendarDays, Clock, MessageCircle } from "lucide-react";
 import { getWorkerSession, setWorkerSession, clearWorkerSession, type WorkerSession } from "@/lib/workerSession";
 import { WorkerScheduleView } from "@/components/WorkerScheduleView";
 import { WorkerClock } from "@/components/WorkerClock";
+import { WorkerChat } from "@/components/WorkerChat";
 
 function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) => void }) {
   const [token, setToken] = useState("");
@@ -102,6 +103,9 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
             <TabsTrigger value="timbrado" className="flex-1 gap-1.5">
               <Clock size={14} /> Timbrado
             </TabsTrigger>
+            <TabsTrigger value="mensajes" className="flex-1 gap-1.5">
+              <MessageCircle size={14} /> Mensajes
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="agenda" className="mt-4">
@@ -110,6 +114,10 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
 
           <TabsContent value="timbrado" className="mt-4">
             <WorkerClock />
+          </TabsContent>
+
+          <TabsContent value="mensajes" className="mt-4">
+            <WorkerChat />
           </TabsContent>
         </Tabs>
       </div>

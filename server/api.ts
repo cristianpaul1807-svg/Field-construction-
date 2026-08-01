@@ -82,35 +82,58 @@ async function ensureClientAccount(businessId: string, clientId: string) {
 
   await admin.from("clients").update({ auth_user_id: authUserId }).eq("id", clientId);
 
-  const { data: existingConversation } = await admin
-    .from("conversations")
+  // The client's public chat_channel (created the moment they first messaged
+  // via /c/[slug]) flips to 'interno' in place — same row, same history —
+  // rather than a new channel being created. Only a manually-added client
+  // with no prior public chat gets a fresh one here.
+  const { data: existingChannel } = await admin
+    .from("chat_channels")
     .select("id")
     .eq("business_id", businessId)
-    .eq("client_id", clientId)
-    .limit(1)
+    .eq("participant_type", "client")
+    .eq("participant_id", clientId)
     .maybeSingle();
 
-  const conversationId = existingConversation
-    ? existingConversation.id
-    : (
-        await admin
-          .from("conversations")
-          .insert({ business_id: businessId, client_id: clientId, channel: "web", control_mode: "human" })
-          .select("id")
-          .single()
-      ).data?.id;
+  let channelId: string | undefined;
+  if (existingChannel) {
+    channelId = existingChannel.id;
+    await admin.from("chat_channels").update({ system: "interno" }).eq("id", existingChannel.id);
+  } else {
+    const { data: created } = await admin
+      .from("chat_channels")
+      .insert({
+        business_id: businessId,
+        system: "interno",
+        label: "cliente",
+        participant_type: "client",
+        participant_id: clientId,
+        status: "activo",
+      })
+      .select("id")
+      .single();
+    channelId = created?.id;
+  }
 
-  if (conversationId) {
-    await admin.from("conversation_messages").insert({
+  if (channelId) {
+    await admin.from("chat_messages").insert({
+      channel_id: channelId,
       business_id: businessId,
-      client_id: clientId,
-      conversation_id: conversationId,
-      channel: "web",
-      direction: "out",
-      sent_by: "bot",
+      sender_type: "bot",
       content: `¡Tu presupuesto está listo! Ya puedes seguir todo desde la app: inicia sesión como Cliente con ${client.email}, y usa "¿Olvidaste tu contraseña?" para crear la tuya propia.`,
     });
   }
+}
+
+function computeExpiresAt(disappearingDuration: string): string | null {
+  const ms = disappearingDuration === "24h" ? 24 * 3600000 : disappearingDuration === "72h" ? 72 * 3600000 : null;
+  return ms ? new Date(Date.now() + ms).toISOString() : null;
+}
+
+// Lazily hard-deletes a channel's own expired messages the next time anyone
+// reads it — no cron job needed, and a message is never shown to either
+// side past its expiry regardless of when this runs.
+async function purgeExpiredMessages(supabase: ReturnType<typeof getSupabaseAdmin>, channelId: string) {
+  await supabase.from("chat_messages").delete().eq("channel_id", channelId).lt("expires_at", new Date().toISOString());
 }
 
 // Wraps a handler so any thrown error (including a missing service-role key)
@@ -518,6 +541,144 @@ apiRouter.post(
   })
 );
 
+// ---------- Worker chat (unified system, worker side) ----------
+// Uses the service-role client throughout, same as the rest of the worker
+// routes above — there's no auth.uid() in this flow, so every query filters
+// manually by req.workerId/req.workerKind instead of relying on RLS.
+
+apiRouter.get(
+  "/worker/chat/channels",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const [{ data, error }, { data: business }] = await Promise.all([
+      admin
+        .from("chat_channels")
+        .select("id, label, status, disappearing_duration, pinned, archived, created_at")
+        .eq("business_id", req.workerBusinessId!)
+        .eq("participant_type", req.workerKind!)
+        .eq("participant_id", req.workerId!)
+        .order("created_at", { ascending: false }),
+      admin.from("businesses").select("name").eq("id", req.workerBusinessId!).maybeSingle(),
+    ]);
+    if (error) throw error;
+
+    const channelIds = data.map((c) => c.id);
+    const { data: lastMessages, error: lastMessagesError } = channelIds.length
+      ? await admin
+          .from("chat_messages")
+          .select("channel_id, content, created_at")
+          .in("channel_id", channelIds)
+          .order("created_at", { ascending: false })
+      : { data: [] as any[], error: null };
+    if (lastMessagesError) throw lastMessagesError;
+
+    res.json(
+      data.map((c) => ({
+        id: c.id,
+        label: c.label,
+        status: c.status,
+        disappearingDuration: c.disappearing_duration,
+        pinned: c.pinned,
+        archived: c.archived,
+        participantName: business?.name ?? "Negocio",
+        lastMessage: (lastMessages as any[]).find((m) => m.channel_id === c.id)?.content ?? null,
+      }))
+    );
+  })
+);
+
+// Flips an invitation to active — required before the worker can send or
+// receive anything on that channel.
+apiRouter.post(
+  "/worker/chat/channels/:id/accept",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { error } = await admin
+      .from("chat_channels")
+      .update({ status: "activo" })
+      .eq("business_id", req.workerBusinessId!)
+      .eq("participant_type", req.workerKind!)
+      .eq("participant_id", req.workerId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.get(
+  "/worker/chat/channels/:id/messages",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: channel } = await admin
+      .from("chat_channels")
+      .select("id")
+      .eq("business_id", req.workerBusinessId!)
+      .eq("participant_type", req.workerKind!)
+      .eq("participant_id", req.workerId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!channel) {
+      res.status(404).json({ error: "Chat no encontrado" });
+      return;
+    }
+    await purgeExpiredMessages(admin, channel.id);
+    const { data, error } = await admin
+      .from("chat_messages")
+      .select("id, sender_type, content, created_at")
+      .eq("channel_id", channel.id)
+      .order("created_at");
+    if (error) throw error;
+    res.json(data.map((m) => ({ id: m.id, senderType: m.sender_type, content: m.content, timestamp: m.created_at })));
+  })
+);
+
+apiRouter.post(
+  "/worker/chat/channels/:id/messages",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const content = String(req.body?.content ?? "").trim();
+    if (!content) {
+      res.status(400).json({ error: "content is required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: channel } = await admin
+      .from("chat_channels")
+      .select("id, status, disappearing_duration")
+      .eq("business_id", req.workerBusinessId!)
+      .eq("participant_type", req.workerKind!)
+      .eq("participant_id", req.workerId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!channel) {
+      res.status(404).json({ error: "Chat no encontrado" });
+      return;
+    }
+    if (channel.status !== "activo") {
+      res.status(403).json({ error: "Acepta la invitación antes de escribir" });
+      return;
+    }
+
+    const { data, error } = await admin
+      .from("chat_messages")
+      .insert({
+        channel_id: channel.id,
+        business_id: req.workerBusinessId!,
+        sender_type: req.workerKind!,
+        sender_id: req.workerId!,
+        content,
+        expires_at: computeExpiresAt(channel.disappearing_duration),
+      })
+      .select("id, sender_type, content, created_at")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id, senderType: data.sender_type, content: data.content, timestamp: data.created_at });
+  })
+);
+
 // ---------- Client Portal (self-service, client-authenticated) ----------
 
 apiRouter.get(
@@ -572,6 +733,97 @@ apiRouter.get(
   })
 );
 
+// ---------- Client chat (unified system, client side) ----------
+// Unlike the worker routes, clients do have auth.uid() — req.supabase is
+// their own RLS-scoped client, backed by the client_own_channels /
+// client_own_messages / client_insert_own_messages policies added
+// alongside chat_channels/chat_messages. Only ever the 'interno' system:
+// a client who hasn't been approved yet has no account to authenticate
+// with in the first place (see ensureClientAccount above).
+
+apiRouter.get(
+  "/client/chat/channels",
+  requireClientAuth,
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("chat_channels")
+      .select("id, business_id, status, control_mode, disappearing_duration, created_at")
+      .eq("participant_type", "client")
+      .eq("participant_id", req.clientId!)
+      .eq("system", "interno")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    // Clients have no RLS visibility into `businesses` (only staff do), so the
+    // business's display name is looked up separately via the service role.
+    const businessIds = Array.from(new Set(data.map((c) => c.business_id)));
+    const { data: businesses } = businessIds.length
+      ? await getSupabaseAdmin().from("businesses").select("id, name").in("id", businessIds)
+      : { data: [] as { id: string; name: string }[] };
+
+    res.json(
+      data.map((c) => ({
+        id: c.id,
+        status: c.status,
+        controlMode: c.control_mode,
+        disappearingDuration: c.disappearing_duration,
+        participantName: businesses?.find((b) => b.id === c.business_id)?.name ?? "Negocio",
+      }))
+    );
+  })
+);
+
+apiRouter.get(
+  "/client/chat/channels/:id/messages",
+  requireClientAuth,
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    await purgeExpiredMessages(supabase, req.params.id);
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("id, sender_type, content, created_at")
+      .eq("channel_id", req.params.id)
+      .order("created_at");
+    if (error) throw error;
+    res.json(data.map((m) => ({ id: m.id, senderType: m.sender_type, content: m.content, timestamp: m.created_at })));
+  })
+);
+
+apiRouter.post(
+  "/client/chat/channels/:id/messages",
+  requireClientAuth,
+  route(async (req, res) => {
+    const content = String(req.body?.content ?? "").trim();
+    if (!content) {
+      res.status(400).json({ error: "content is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data: channel, error: channelError } = await supabase
+      .from("chat_channels")
+      .select("id, business_id, disappearing_duration")
+      .eq("id", req.params.id)
+      .single();
+    if (channelError) throw channelError;
+
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert({
+        channel_id: channel.id,
+        business_id: channel.business_id,
+        sender_type: "client",
+        sender_id: req.clientId!,
+        content,
+        expires_at: computeExpiresAt(channel.disappearing_duration),
+      })
+      .select("id, sender_type, content, created_at")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id, senderType: data.sender_type, content: data.content, timestamp: data.created_at });
+  })
+);
+
 // ---------- Public business chat (/c/[slug]) ----------
 // No authentication of any kind — accessible by anyone with the link.
 // Uses the service-role client throughout since there's no auth.uid() to
@@ -598,9 +850,11 @@ apiRouter.get(
 );
 
 // A visitor's first submission: creates the clients row (lead_status
-// 'nuevo', still no Supabase Auth account — see the estimate-approval
-// trigger below for when that account gets created) plus the conversation
-// they'll chat in.
+// 'nuevo', still no Supabase Auth account — see ensureClientAccount above
+// for when that account gets created) plus the chat_channel (system
+// 'publico') they'll chat in. The "conversationId" the frontend gets back
+// is really this channel's id — kept under the old field name so the
+// already-shipped public chat page didn't need to change.
 apiRouter.post(
   "/public/businesses/:slug/leads",
   route(async (req, res) => {
@@ -628,37 +882,46 @@ apiRouter.post(
       .single();
     if (clientError) throw clientError;
 
-    const { data: conversation, error: conversationError } = await admin
-      .from("conversations")
-      .insert({ business_id: business.id, client_id: client.id, channel: "web", control_mode: "bot" })
+    const { data: channel, error: channelError } = await admin
+      .from("chat_channels")
+      .insert({
+        business_id: business.id,
+        system: "publico",
+        label: "cliente",
+        participant_type: "client",
+        participant_id: client.id,
+        status: "activo",
+        control_mode: "bot",
+      })
       .select("id")
       .single();
-    if (conversationError) throw conversationError;
+    if (channelError) throw channelError;
 
-    res.status(201).json({ businessId: business.id, clientId: client.id, conversationId: conversation.id });
+    res.status(201).json({ businessId: business.id, clientId: client.id, conversationId: channel.id });
   })
 );
 
-// Below: possessing the conversation id is the credential (nobody but the
-// visitor who just created it knows it), the same trust model as any
-// share link. Every query still scopes explicitly by conversation_id.
+// Below: possessing the channel id is the credential (nobody but the
+// visitor who just created it knows it), the same trust model as any share
+// link. Every query still scopes explicitly by channel id.
 apiRouter.get(
   "/public/conversations/:id/messages",
   route(async (req, res) => {
     const admin = getSupabaseAdmin();
+    await purgeExpiredMessages(admin, req.params.id);
     const { data, error } = await admin
-      .from("conversation_messages")
-      .select("id, direction, content, sent_by, timestamp")
-      .eq("conversation_id", req.params.id)
-      .order("timestamp");
+      .from("chat_messages")
+      .select("id, sender_type, content, created_at")
+      .eq("channel_id", req.params.id)
+      .order("created_at");
     if (error) throw error;
     res.json(
       data.map((m) => ({
         id: m.id,
-        direction: m.direction,
+        direction: m.sender_type === "client" ? "in" : "out",
         content: m.content,
-        sentBy: m.sent_by,
-        timestamp: m.timestamp,
+        sentBy: m.sender_type === "bot" ? "bot" : "human",
+        timestamp: m.created_at,
       }))
     );
   })
@@ -673,37 +936,35 @@ apiRouter.post(
       return;
     }
     const admin = getSupabaseAdmin();
-    const { data: conversation, error: conversationError } = await admin
-      .from("conversations")
-      .select("id, business_id, client_id")
+    const { data: channel, error: channelError } = await admin
+      .from("chat_channels")
+      .select("id, business_id, disappearing_duration")
       .eq("id", req.params.id)
       .maybeSingle();
-    if (conversationError) throw conversationError;
-    if (!conversation) {
+    if (channelError) throw channelError;
+    if (!channel) {
       res.status(404).json({ error: "Conversación no encontrada" });
       return;
     }
 
     const { data, error } = await admin
-      .from("conversation_messages")
+      .from("chat_messages")
       .insert({
-        business_id: conversation.business_id,
-        client_id: conversation.client_id,
-        conversation_id: conversation.id,
-        channel: "web",
-        direction: "in",
-        sent_by: "human",
+        channel_id: channel.id,
+        business_id: channel.business_id,
+        sender_type: "client",
         content,
+        expires_at: computeExpiresAt(channel.disappearing_duration),
       })
-      .select("id, direction, content, sent_by, timestamp")
+      .select("id, sender_type, content, created_at")
       .single();
     if (error) throw error;
     res.status(201).json({
       id: data.id,
-      direction: data.direction,
+      direction: "in",
       content: data.content,
-      sentBy: data.sent_by,
-      timestamp: data.timestamp,
+      sentBy: "human",
+      timestamp: data.created_at,
     });
   })
 );
@@ -721,13 +982,13 @@ apiRouter.post(
       return;
     }
     const admin = getSupabaseAdmin();
-    const { data: conversation, error: conversationError } = await admin
-      .from("conversations")
-      .select("id, business_id, client_id")
+    const { data: channel, error: channelError } = await admin
+      .from("chat_channels")
+      .select("id, business_id, participant_id, disappearing_duration")
       .eq("id", req.params.id)
       .maybeSingle();
-    if (conversationError) throw conversationError;
-    if (!conversation) {
+    if (channelError) throw channelError;
+    if (!channel) {
       res.status(404).json({ error: "Conversación no encontrada" });
       return;
     }
@@ -735,8 +996,8 @@ apiRouter.post(
     const { data: appointment, error: appointmentError } = await admin
       .from("appointment_requests")
       .insert({
-        business_id: conversation.business_id,
-        client_id: conversation.client_id,
+        business_id: channel.business_id,
+        client_id: channel.participant_id,
         requested_datetime_text: requestedDatetimeText,
         reason_text: reasonText,
       })
@@ -744,14 +1005,12 @@ apiRouter.post(
       .single();
     if (appointmentError) throw appointmentError;
 
-    await admin.from("conversation_messages").insert({
-      business_id: conversation.business_id,
-      client_id: conversation.client_id,
-      conversation_id: conversation.id,
-      channel: "web",
-      direction: "in",
-      sent_by: "human",
+    await admin.from("chat_messages").insert({
+      channel_id: channel.id,
+      business_id: channel.business_id,
+      sender_type: "client",
       content: `Solicitó una cita — ${requestedDatetimeText}${reasonText ? `: ${reasonText}` : ""}`,
+      expires_at: computeExpiresAt(channel.disappearing_duration),
     });
 
     res.status(201).json({ id: appointment.id });
@@ -2095,6 +2354,37 @@ apiRouter.get(
   })
 );
 
+// Creating an employee also opens their chat_channel invitation — they see
+// and accept it from /campo before they can send or receive anything there.
+apiRouter.post(
+  "/employees",
+  route(async (req, res) => {
+    const { name, role, phone } = req.body ?? {};
+    if (!name) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("employees")
+      .insert({ business_id: req.businessId!, name, role: role ?? null, phone: phone ?? null, status: "disponible" })
+      .select("id")
+      .single();
+    if (error) throw error;
+
+    await supabase.from("chat_channels").insert({
+      business_id: req.businessId!,
+      system: "interno",
+      label: "trabajador",
+      participant_type: "employee",
+      participant_id: data.id,
+      status: "invitado",
+    });
+
+    res.status(201).json({ id: data.id });
+  })
+);
+
 // Issues a fresh access token for the worker PWA (/campo) login — only the
 // hash is stored, so the raw token is shown to the admin exactly once here.
 apiRouter.post(
@@ -2149,6 +2439,36 @@ apiRouter.get(
           .filter(Boolean),
       }))
     );
+  })
+);
+
+// Same invitation pattern as employees above.
+apiRouter.post(
+  "/subcontractors",
+  route(async (req, res) => {
+    const { name, trade, phone } = req.body ?? {};
+    if (!name) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("subcontractors")
+      .insert({ business_id: req.businessId!, name, trade: trade ?? null, phone: phone ?? null })
+      .select("id")
+      .single();
+    if (error) throw error;
+
+    await supabase.from("chat_channels").insert({
+      business_id: req.businessId!,
+      system: "interno",
+      label: "subcontrato",
+      participant_type: "subcontractor",
+      participant_id: data.id,
+      status: "invitado",
+    });
+
+    res.status(201).json({ id: data.id });
   })
 );
 
@@ -2744,6 +3064,280 @@ apiRouter.patch(
       .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
 
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- Unified chat (chat_channels / chat_messages) ----------
+// Replaces/formalizes the client-only Communication above for all
+// human<->human threads (admin<->worker, admin<->subcontractor,
+// admin<->client). The old conversations/conversation_messages tables and
+// routes above are left in place, unused going forward, not dropped.
+
+function labelForParticipantType(participantType: string): string {
+  return participantType === "employee" ? "trabajador" : participantType === "subcontractor" ? "subcontrato" : "cliente";
+}
+
+apiRouter.get(
+  "/chat/channels",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const system = typeof req.query.system === "string" ? req.query.system : undefined;
+    const label = typeof req.query.label === "string" ? req.query.label : undefined;
+
+    let query = supabase
+      .from("chat_channels")
+      .select(
+        "id, system, label, participant_type, participant_id, status, control_mode, disappearing_duration, pinned, archived, created_at"
+      )
+      .eq("business_id", req.businessId!);
+    if (system) query = query.eq("system", system);
+    if (label) query = query.eq("label", label);
+
+    const { data: channels, error } = await query
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    const employeeIds = channels.filter((c) => c.participant_type === "employee").map((c) => c.participant_id);
+    const subcontractorIds = channels.filter((c) => c.participant_type === "subcontractor").map((c) => c.participant_id);
+    const clientIds = channels.filter((c) => c.participant_type === "client").map((c) => c.participant_id);
+    const channelIds = channels.map((c) => c.id);
+
+    const [employees, subcontractors, clients, lastMessages] = await Promise.all([
+      employeeIds.length
+        ? supabase.from("employees").select("id, name, avatar_url").in("id", employeeIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      subcontractorIds.length
+        ? supabase.from("subcontractors").select("id, name, avatar_url").in("id", subcontractorIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      clientIds.length
+        ? supabase.from("clients").select("id, name, avatar_url").in("id", clientIds)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      channelIds.length
+        ? supabase
+            .from("chat_messages")
+            .select("channel_id, content, created_at")
+            .in("channel_id", channelIds)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[], error: null }),
+    ]);
+    if (employees.error) throw employees.error;
+    if (subcontractors.error) throw subcontractors.error;
+    if (clients.error) throw clients.error;
+    if (lastMessages.error) throw lastMessages.error;
+
+    const participantOf = (c: (typeof channels)[number]) => {
+      const pool = c.participant_type === "employee" ? employees.data : c.participant_type === "subcontractor" ? subcontractors.data : clients.data;
+      return (pool as any[]).find((p) => p.id === c.participant_id);
+    };
+
+    res.json(
+      channels.map((c) => {
+        const participant = participantOf(c);
+        const lastMessage = (lastMessages.data as any[]).find((m) => m.channel_id === c.id);
+        return {
+          id: c.id,
+          system: c.system,
+          label: c.label,
+          participantType: c.participant_type,
+          participantId: c.participant_id,
+          participantName: participant?.name ?? null,
+          participantAvatarUrl: participant?.avatar_url ?? null,
+          status: c.status,
+          controlMode: c.control_mode,
+          disappearingDuration: c.disappearing_duration,
+          pinned: c.pinned,
+          archived: c.archived,
+          lastMessage: lastMessage?.content ?? null,
+          lastMessageAt: lastMessage?.created_at ?? null,
+        };
+      })
+    );
+  })
+);
+
+// Contacts (employees/subcontractors/clients) with no chat_channel yet — the
+// pool "Nueva conversación" picks from. In practice mostly clients added
+// manually via CRM, since employees/subcontractors already get one at
+// creation and most clients arrive via the public chat.
+apiRouter.get(
+  "/chat/directory",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const [employees, subcontractors, clients, channels] = await Promise.all([
+      supabase.from("employees").select("id, name, avatar_url").eq("business_id", req.businessId!),
+      supabase.from("subcontractors").select("id, name, avatar_url").eq("business_id", req.businessId!),
+      supabase.from("clients").select("id, name, avatar_url").eq("business_id", req.businessId!),
+      supabase.from("chat_channels").select("participant_type, participant_id").eq("business_id", req.businessId!),
+    ]);
+    if (employees.error) throw employees.error;
+    if (subcontractors.error) throw subcontractors.error;
+    if (clients.error) throw clients.error;
+    if (channels.error) throw channels.error;
+
+    const hasChannel = (participantType: string, id: string) =>
+      (channels.data as any[]).some((c) => c.participant_type === participantType && c.participant_id === id);
+
+    res.json([
+      ...employees.data
+        .filter((e) => !hasChannel("employee", e.id))
+        .map((e) => ({ participantType: "employee", participantId: e.id, name: e.name, avatarUrl: e.avatar_url })),
+      ...subcontractors.data
+        .filter((s) => !hasChannel("subcontractor", s.id))
+        .map((s) => ({ participantType: "subcontractor", participantId: s.id, name: s.name, avatarUrl: s.avatar_url })),
+      ...clients.data
+        .filter((c) => !hasChannel("client", c.id))
+        .map((c) => ({ participantType: "client", participantId: c.id, name: c.name, avatarUrl: c.avatar_url })),
+    ]);
+  })
+);
+
+// Only the business panel can start a new channel — workers/clients only
+// ever see channels the admin already opened with them.
+apiRouter.post(
+  "/chat/channels",
+  route(async (req, res) => {
+    const { participantType, participantId } = req.body ?? {};
+    if (!["employee", "subcontractor", "client"].includes(participantType) || !participantId) {
+      res.status(400).json({ error: "participantType and participantId are required" });
+      return;
+    }
+    const supabase = req.supabase!;
+
+    const { data: existing } = await supabase
+      .from("chat_channels")
+      .select("id")
+      .eq("business_id", req.businessId!)
+      .eq("participant_type", participantType)
+      .eq("participant_id", participantId)
+      .maybeSingle();
+    if (existing) {
+      res.json({ id: existing.id });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("chat_channels")
+      .insert({
+        business_id: req.businessId!,
+        system: "interno",
+        label: labelForParticipantType(participantType),
+        participant_type: participantType,
+        participant_id: participantId,
+        status: participantType === "client" ? "activo" : "invitado",
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.get(
+  "/chat/channels/:id/messages",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    await purgeExpiredMessages(supabase, req.params.id);
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("id, sender_type, sender_id, content, created_at")
+      .eq("business_id", req.businessId!)
+      .eq("channel_id", req.params.id)
+      .order("created_at");
+    if (error) throw error;
+    res.json(
+      data.map((m) => ({
+        id: m.id,
+        senderType: m.sender_type,
+        senderId: m.sender_id,
+        content: m.content,
+        timestamp: m.created_at,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/chat/channels/:id/messages",
+  route(async (req, res) => {
+    const content = String(req.body?.content ?? "").trim();
+    if (!content) {
+      res.status(400).json({ error: "content is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data: channel, error: channelError } = await supabase
+      .from("chat_channels")
+      .select("id, disappearing_duration")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .single();
+    if (channelError) throw channelError;
+
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert({
+        channel_id: channel.id,
+        business_id: req.businessId!,
+        sender_type: "admin",
+        sender_id: req.authUserId ?? null,
+        content,
+        expires_at: computeExpiresAt(channel.disappearing_duration),
+      })
+      .select("id, sender_type, sender_id, content, created_at")
+      .single();
+    if (error) throw error;
+    res.status(201).json({
+      id: data.id,
+      senderType: data.sender_type,
+      senderId: data.sender_id,
+      content: data.content,
+      timestamp: data.created_at,
+    });
+  })
+);
+
+apiRouter.patch(
+  "/chat/channels/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.pinned !== undefined) update.pinned = !!body.pinned;
+    if (body.archived !== undefined) update.archived = !!body.archived;
+    if (body.disappearingDuration !== undefined) {
+      if (!["24h", "72h", "nunca"].includes(body.disappearingDuration)) {
+        res.status(400).json({ error: "disappearingDuration must be 24h, 72h or nunca" });
+        return;
+      }
+      update.disappearing_duration = body.disappearingDuration;
+    }
+    if (body.controlMode !== undefined) {
+      if (body.controlMode !== "bot" && body.controlMode !== "human") {
+        res.status(400).json({ error: "controlMode must be 'bot' or 'human'" });
+        return;
+      }
+      update.control_mode = body.controlMode;
+    }
+    const { error } = await supabase.from("chat_channels").update(update).eq("business_id", req.businessId!).eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// Bulk delete, capped at 5 — matches the "hold to select, max 5" UI.
+apiRouter.post(
+  "/chat/channels/bulk-delete",
+  route(async (req, res) => {
+    const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
+    if (ids.length === 0 || ids.length > 5) {
+      res.status(400).json({ error: "Selecciona entre 1 y 5 chats" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase.from("chat_channels").delete().eq("business_id", req.businessId!).in("id", ids);
     if (error) throw error;
     res.json({ ok: true });
   })
