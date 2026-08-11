@@ -136,6 +136,152 @@ async function purgeExpiredMessages(supabase: ReturnType<typeof getSupabaseAdmin
   await supabase.from("chat_messages").delete().eq("channel_id", channelId).lt("expires_at", new Date().toISOString());
 }
 
+// ---------- Public chat: deterministic button-flow (no AI) ----------
+// The public chat bubble has always just been a raw message store — there
+// was never an LLM behind it. This gives it an actual brain: a fixed,
+// business-agnostic question tree (buttons + short text inputs) that reads
+// the business's own services (budget_categories) and, once complete, files
+// a real bot-drafted estimate the admin finds waiting in Budgets & Estimates.
+// State lives on chat_channels.flow_state so a page reload just resumes it.
+
+type FlowStepId =
+  | "welcome"
+  | "select_service"
+  | "describe_project"
+  | "address"
+  | "name"
+  | "phone"
+  | "email"
+  | "summary"
+  | "done";
+
+const FLOW_FIELD: Partial<Record<FlowStepId, string>> = {
+  select_service: "categoryId",
+  describe_project: "description",
+  address: "address",
+  name: "name",
+  phone: "phone",
+  email: "email",
+};
+
+// "select_service" is skipped for businesses with no configured services —
+// there's nothing to choose between, so it falls straight to the free-text
+// description instead of showing an empty button list.
+function flowOrder(hasCategories: boolean): FlowStepId[] {
+  const base: FlowStepId[] = ["welcome", "select_service", "describe_project", "address", "name", "phone", "email", "summary", "done"];
+  return hasCategories ? base : base.filter((s) => s !== "select_service");
+}
+
+function nextFlowStep(current: FlowStepId, hasCategories: boolean): FlowStepId {
+  const order = flowOrder(hasCategories);
+  const idx = order.indexOf(current);
+  return order[Math.min(idx + 1, order.length - 1)];
+}
+
+interface FlowCategory {
+  id: string;
+  name: string;
+}
+
+// What the frontend renders for the CURRENT step — the corresponding bot
+// message is a separate chat_messages row (posted once, when the step is
+// entered), this only describes the input control to show underneath it.
+function flowStepView(step: FlowStepId, categories: FlowCategory[]) {
+  switch (step) {
+    case "welcome":
+      return { step, kind: "button" as const, options: [{ value: "empezar", label: "Empezar" }] };
+    case "select_service":
+      return {
+        step,
+        kind: "buttons" as const,
+        options: [...categories.map((c) => ({ value: c.id, label: c.name })), { value: "otro", label: "Otro / no estoy seguro" }],
+      };
+    case "describe_project":
+      return { step, kind: "text" as const, placeholder: "Escribe aquí una descripción breve del proyecto..." };
+    case "address":
+      return { step, kind: "text" as const, placeholder: "Escribe aquí la dirección del proyecto..." };
+    case "name":
+      return { step, kind: "text" as const, placeholder: "Escribe aquí tu nombre..." };
+    case "phone":
+      return { step, kind: "text" as const, placeholder: "Escribe aquí tu teléfono..." };
+    case "email":
+      return { step, kind: "text" as const, placeholder: "Escribe aquí tu correo electrónico..." };
+    case "summary":
+      return { step, kind: "button" as const, options: [{ value: "enviar", label: "Enviar solicitud" }] };
+    case "done":
+      return { step, kind: "terminal" as const, options: [] };
+  }
+}
+
+function flowBotMessage(
+  step: FlowStepId,
+  businessName: string,
+  categories: FlowCategory[],
+  answers: Record<string, string>
+): string {
+  switch (step) {
+    case "welcome":
+      return `¡Hola! Soy el asistente de ${businessName}. Te haré unas preguntas rápidas para preparar tu solicitud de presupuesto.`;
+    case "select_service":
+      return "¿Qué tipo de servicio necesitas?";
+    case "describe_project":
+      return "Cuéntanos brevemente qué te gustaría hacer.";
+    case "address":
+      return "¿Cuál es la dirección del proyecto?";
+    case "name":
+      return "¿Cómo te llamas?";
+    case "phone":
+      return "¿Cuál es tu número de teléfono?";
+    case "email":
+      return "¿Cuál es tu correo electrónico?";
+    case "summary": {
+      const categoryName = categories.find((c) => c.id === answers.categoryId)?.name ?? "Otro";
+      return [
+        "Revisemos tu solicitud:",
+        `• Servicio: ${categoryName}`,
+        `• Proyecto: ${answers.description ?? "-"}`,
+        `• Dirección: ${answers.address ?? "-"}`,
+        `• Nombre: ${answers.name ?? "-"}`,
+        `• Teléfono: ${answers.phone ?? "-"}`,
+        `• Correo: ${answers.email ?? "-"}`,
+        "¿Confirmas que la enviemos?",
+      ].join("\n");
+    }
+    case "done":
+      return `¡Listo, ${answers.name ?? ""}! Recibimos tu solicitud. ${businessName} la revisará y te enviará un presupuesto pronto.`;
+  }
+}
+
+// Files the bot-collected answers as a real draft the admin finds waiting
+// in Budgets & Estimates — same 'pendiente_aprobacion' + created_by:'bot'
+// state a human-drafted estimate reaches on its way to being sent.
+async function createBotEstimate(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  clientId: string,
+  answers: Record<string, string>
+) {
+  const { data: settings } = await admin
+    .from("business_settings")
+    .select("default_margin_type, default_waste_percent")
+    .eq("business_id", businessId)
+    .maybeSingle();
+
+  await admin
+    .from("estimates")
+    .insert({
+      business_id: businessId,
+      client_id: clientId,
+      category_id: answers.categoryId && answers.categoryId !== "otro" ? answers.categoryId : null,
+      margin_type: settings?.default_margin_type ?? "global",
+      waste_percent: settings?.default_waste_percent ?? 0,
+      margin_percent: 0,
+      status: "pendiente_aprobacion",
+      created_by: "bot",
+      description: answers.description ?? null,
+    });
+}
+
 // Wraps a handler so any thrown error (including a missing service-role key)
 // becomes a clean JSON response instead of crashing the dev/prod server.
 function route(handler: Handler) {
@@ -849,24 +995,21 @@ apiRouter.get(
   })
 );
 
-// A visitor's first submission: creates the clients row (lead_status
-// 'nuevo', still no Supabase Auth account — see ensureClientAccount above
-// for when that account gets created) plus the chat_channel (system
-// 'publico') they'll chat in. The "conversationId" the frontend gets back
-// is really this channel's id — kept under the old field name so the
-// already-shipped public chat page didn't need to change.
+// A visitor landing on /c/[slug]: creates a placeholder clients row (name
+// filled in later by the button flow itself, lead_status 'nuevo', no
+// Supabase Auth account yet — see ensureClientAccount above for when that
+// account gets created) plus the chat_channel (system 'publico') they'll
+// chat in, and immediately posts the flow's welcome message so there's
+// something to show the moment the page opens. The "conversationId" the
+// frontend gets back is really this channel's id — kept under the old
+// field name so the already-shipped public chat page didn't need to change.
 apiRouter.post(
   "/public/businesses/:slug/leads",
   route(async (req, res) => {
-    const { name, phone, email } = req.body ?? {};
-    if (!name || !phone || !email) {
-      res.status(400).json({ error: "name, phone and email are required" });
-      return;
-    }
     const admin = getSupabaseAdmin();
     const { data: business, error: businessError } = await admin
       .from("businesses")
-      .select("id")
+      .select("id, name")
       .eq("slug", req.params.slug)
       .maybeSingle();
     if (businessError) throw businessError;
@@ -877,7 +1020,7 @@ apiRouter.post(
 
     const { data: client, error: clientError } = await admin
       .from("clients")
-      .insert({ business_id: business.id, name, phone, email, lead_status: "nuevo", source: "link_publico" })
+      .insert({ business_id: business.id, name: "Visitante", lead_status: "nuevo", source: "link_publico" })
       .select("id")
       .single();
     if (clientError) throw clientError;
@@ -897,7 +1040,128 @@ apiRouter.post(
       .single();
     if (channelError) throw channelError;
 
+    await admin.from("chat_messages").insert({
+      channel_id: channel.id,
+      business_id: business.id,
+      sender_type: "bot",
+      content: flowBotMessage("welcome", business.name, [], {}),
+    });
+
     res.status(201).json({ businessId: business.id, clientId: client.id, conversationId: channel.id });
+  })
+);
+
+// Current step of the button flow for this conversation — the frontend
+// calls this on load/reload to know which control to render underneath the
+// (already-posted) latest bot message.
+apiRouter.get(
+  "/public/conversations/:id/flow",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: channel, error } = await admin
+      .from("chat_channels")
+      .select("business_id, control_mode, flow_state")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!channel) {
+      res.status(404).json({ error: "Conversación no encontrada" });
+      return;
+    }
+
+    const { data: categories } = await admin
+      .from("budget_categories")
+      .select("id, name")
+      .eq("business_id", channel.business_id)
+      .order("name");
+
+    const step = (channel.flow_state as any)?.step ?? "welcome";
+    res.json({ controlMode: channel.control_mode, ...flowStepView(step, categories ?? []) });
+  })
+);
+
+// Records the answer for the current step, advances to the next one, and
+// posts both the visitor's echoed answer and the next bot prompt into the
+// same transcript everyone already reads. On the last step, files the
+// collected answers as a real bot-drafted estimate.
+apiRouter.post(
+  "/public/conversations/:id/flow/answer",
+  route(async (req, res) => {
+    const value = String(req.body?.value ?? "").trim();
+    if (!value) {
+      res.status(400).json({ error: "value is required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: channel, error } = await admin
+      .from("chat_channels")
+      .select("id, business_id, participant_id, flow_state, disappearing_duration, businesses(name)")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!channel) {
+      res.status(404).json({ error: "Conversación no encontrada" });
+      return;
+    }
+
+    const businessName = (channel.businesses as any)?.name ?? "el negocio";
+    const { data: categories } = await admin
+      .from("budget_categories")
+      .select("id, name")
+      .eq("business_id", channel.business_id)
+      .order("name");
+    const categoryList: FlowCategory[] = categories ?? [];
+
+    const currentStep = ((channel.flow_state as any)?.step ?? "welcome") as FlowStepId;
+    const answers = { ...((channel.flow_state as any)?.answers ?? {}) } as Record<string, string>;
+
+    if (currentStep === "done") {
+      res.json({ controlMode: null, ...flowStepView("done", categoryList) });
+      return;
+    }
+
+    // Echo what the visitor picked/typed as their own chat bubble — for a
+    // button step this is the option's label, not its raw id/value.
+    const view = flowStepView(currentStep, categoryList);
+    const echoLabel =
+      view.kind === "buttons" || view.kind === "button"
+        ? view.options.find((o) => o.value === value)?.label ?? value
+        : value;
+    await admin.from("chat_messages").insert({
+      channel_id: channel.id,
+      business_id: channel.business_id,
+      sender_type: "client",
+      content: echoLabel,
+      expires_at: computeExpiresAt(channel.disappearing_duration),
+    });
+
+    const field = FLOW_FIELD[currentStep];
+    if (field) answers[field] = value;
+
+    const newStep = nextFlowStep(currentStep, categoryList.length > 0);
+
+    if (newStep === "done") {
+      await createBotEstimate(admin, channel.business_id, channel.participant_id!, answers);
+      const clientUpdate: Record<string, string> = {};
+      if (answers.name) clientUpdate.name = answers.name;
+      if (answers.phone) clientUpdate.phone = answers.phone;
+      if (answers.email) clientUpdate.email = answers.email;
+      if (answers.address) clientUpdate.address = answers.address;
+      if (Object.keys(clientUpdate).length > 0) {
+        await admin.from("clients").update(clientUpdate).eq("id", channel.participant_id!);
+      }
+    }
+
+    await admin.from("chat_channels").update({ flow_state: { step: newStep, answers } }).eq("id", channel.id);
+    await admin.from("chat_messages").insert({
+      channel_id: channel.id,
+      business_id: channel.business_id,
+      sender_type: "bot",
+      content: flowBotMessage(newStep, businessName, categoryList, answers),
+      expires_at: computeExpiresAt(channel.disappearing_duration),
+    });
+
+    res.json({ controlMode: null, ...flowStepView(newStep, categoryList) });
   })
 );
 
@@ -1091,7 +1355,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("estimates")
       .select(
-        "id, client_id, project_id, status, created_by, category_id, total, created_at, clients(name), budget_categories(name)"
+        "id, client_id, project_id, status, created_by, category_id, description, total, created_at, clients(name), budget_categories(name)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -1108,6 +1372,7 @@ apiRouter.get(
         createdBy: e.created_by,
         categoryId: e.category_id,
         categoryName: e.budget_categories?.name ?? null,
+        description: e.description,
         total: Number(e.total),
         createdAt: e.created_at,
       }))
@@ -1124,7 +1389,7 @@ apiRouter.get(
       supabase
         .from("estimates")
         .select(
-          "id, client_id, project_id, status, created_by, category_id, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address), budget_categories(name)"
+          "id, client_id, project_id, status, created_by, category_id, description, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address, phone, email), budget_categories(name)"
         )
         .eq("business_id", req.businessId!)
         .eq("id", req.params.id)
@@ -1140,18 +1405,21 @@ apiRouter.get(
     if (estimate.error) throw estimate.error;
     if (lines.error) throw lines.error;
 
-    const client = estimate.data.clients as unknown as { name: string; address: string } | null;
+    const client = estimate.data.clients as unknown as { name: string; address: string; phone: string; email: string } | null;
 
     res.json({
       id: estimate.data.id,
       clientId: estimate.data.client_id,
       clientName: client?.name ?? null,
       clientAddress: client?.address ?? null,
+      clientPhone: client?.phone ?? null,
+      clientEmail: client?.email ?? null,
       projectId: estimate.data.project_id,
       status: estimate.data.status,
       createdBy: estimate.data.created_by,
       categoryId: estimate.data.category_id,
       categoryName: (estimate.data.budget_categories as any)?.name ?? null,
+      description: estimate.data.description,
       marginType: estimate.data.margin_type,
       marginPercent: Number(estimate.data.margin_percent),
       wastePercent: Number(estimate.data.waste_percent),

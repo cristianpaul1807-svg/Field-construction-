@@ -28,9 +28,20 @@ interface EstimateSummary {
   id: string;
   clientName: string | null;
   status: string;
+  createdBy: "bot" | "human";
+  categoryName: string | null;
+  description: string | null;
   total: number;
   createdAt: string;
 }
+
+const estimateStatusLabel: Record<string, string> = {
+  borrador: "Borrador",
+  pendiente_aprobacion: "Pendiente de aprobación",
+  enviado: "Enviado",
+  aceptado: "Aceptado",
+  rechazado: "Rechazado",
+};
 
 interface BudgetCategory {
   id: string;
@@ -51,10 +62,13 @@ interface EstimateDetail {
   id: string;
   clientName: string | null;
   clientAddress: string | null;
+  clientPhone: string | null;
+  clientEmail: string | null;
   status: string;
   createdBy: string;
   categoryId: string | null;
   categoryName: string | null;
+  description: string | null;
   marginType: "global" | "section";
   marginPercent: number;
   wastePercent: number;
@@ -250,6 +264,52 @@ export default function Budgets() {
         }}
       />
 
+      {!summariesLoading && !summariesError && (summaries?.length ?? 0) > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold text-foreground">Solicitudes y presupuestos</h2>
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {[...(summaries ?? [])]
+              .sort((a, b) => {
+                const aPending = a.createdBy === "bot" && a.status === "pendiente_aprobacion" ? 0 : 1;
+                const bPending = b.createdBy === "bot" && b.status === "pendiente_aprobacion" ? 0 : 1;
+                return aPending - bPending;
+              })
+              .map((summary) => {
+                const isNewFromChat = summary.createdBy === "bot" && summary.status === "pendiente_aprobacion";
+                const isActive = (activeEstimateId ?? summaries?.[0]?.id) === summary.id;
+                return (
+                  <button
+                    key={summary.id}
+                    onClick={() => setActiveEstimateId(summary.id)}
+                    className={`text-left flex-shrink-0 w-64 rounded-lg border p-3 transition-colors ${
+                      isActive ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-secondary"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <p className="text-sm font-medium text-foreground truncate">{summary.clientName ?? "Sin cliente"}</p>
+                      {isNewFromChat && (
+                        <span className="text-[10px] font-semibold text-status-warning-fg bg-status-warning-bg/60 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                          Nueva del chat
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{summary.categoryName ?? "Sin categoría"}</p>
+                    {summary.description && (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{summary.description}</p>
+                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-[11px] text-muted-foreground">
+                        {estimateStatusLabel[summary.status] ?? summary.status}
+                      </span>
+                      <span className="text-xs font-medium text-foreground">{formatCurrency(summary.total)}</span>
+                    </div>
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
       <Tabs defaultValue="builder">
         <TabsList>
           <TabsTrigger value="builder">Presupuesto</TabsTrigger>
@@ -279,7 +339,16 @@ export default function Budgets() {
                       <h2 className="text-base font-semibold text-foreground">
                         Presupuesto #{draft.id.slice(0, 8).toUpperCase()}
                       </h2>
-                      <p className="text-xs text-muted-foreground">{draft.clientName} · borrador en curso</p>
+                      <p className="text-xs text-muted-foreground">
+                        {draft.clientName}
+                        {draft.clientPhone && ` · ${draft.clientPhone}`}
+                        {draft.clientEmail && ` · ${draft.clientEmail}`}
+                      </p>
+                      {draft.createdBy === "bot" && draft.description && (
+                        <p className="text-xs text-foreground bg-secondary/60 rounded-md px-2 py-1 mt-1.5 max-w-md">
+                          "{draft.description}"
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Select value={draft.categoryId ?? undefined} onValueChange={setCategory}>

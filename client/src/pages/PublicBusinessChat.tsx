@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Send, ClipboardList, CalendarDays, MessageCircle } from "lucide-react";
+import { Send, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LeadSession {
@@ -20,6 +20,19 @@ interface Message {
   content: string;
   sentBy: "bot" | "human";
   timestamp: string;
+}
+
+interface FlowOption {
+  value: string;
+  label: string;
+}
+
+interface FlowView {
+  controlMode: "bot" | "human" | null;
+  step: string;
+  kind: "button" | "buttons" | "text" | "terminal";
+  options?: FlowOption[];
+  placeholder?: string;
 }
 
 function storageKey(slug: string) {
@@ -40,15 +53,14 @@ export default function PublicBusinessChat() {
   const { slug } = useParams<{ slug: string }>();
   const [business, setBusiness] = useState<{ id: string; name: string } | null | undefined>(undefined);
   const [lead, setLead] = useState<LeadSession | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[] | null>(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [flow, setFlow] = useState<FlowView | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeBubble, setActiveBubble] = useState<"presupuesto" | "cita" | null>(null);
+  const [textValue, setTextValue] = useState("");
   const [freeText, setFreeText] = useState("");
-  const [budgetText, setBudgetText] = useState("");
+  const [activeBubble, setActiveBubble] = useState<"cita" | null>(null);
   const [appointmentWhen, setAppointmentWhen] = useState("");
   const [appointmentWhy, setAppointmentWhy] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -61,6 +73,25 @@ export default function PublicBusinessChat() {
     setLead(loadLeadSession(slug));
   }, [slug]);
 
+  // No upfront form — the conversation (and its welcome message) starts the
+  // moment the page loads, matching the button-flow's "no me hagas escribir
+  // nada hasta que haga falta" design.
+  useEffect(() => {
+    if (!slug || business === undefined || business === null || lead) return;
+    setStarting(true);
+    setStartError(null);
+    fetch(`/api/public/businesses/${slug}/leads`, { method: "POST" })
+      .then(async (res) => {
+        const body = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(body?.error || "No se pudo iniciar la conversación");
+        const session: LeadSession = { businessId: body.businessId, clientId: body.clientId, conversationId: body.conversationId };
+        localStorage.setItem(storageKey(slug), JSON.stringify(session));
+        setLead(session);
+      })
+      .catch((err) => setStartError(err instanceof Error ? err.message : "No se pudo iniciar la conversación"))
+      .finally(() => setStarting(false));
+  }, [slug, business, lead]);
+
   const loadMessages = () => {
     if (!lead) return;
     fetch(`/api/public/conversations/${lead.conversationId}/messages`)
@@ -68,35 +99,44 @@ export default function PublicBusinessChat() {
       .then(setMessages);
   };
 
-  useEffect(loadMessages, [lead]);
+  const loadFlow = () => {
+    if (!lead) return;
+    fetch(`/api/public/conversations/${lead.conversationId}/flow`)
+      .then((res) => res.json())
+      .then(setFlow);
+  };
+
+  useEffect(() => {
+    loadMessages();
+    loadFlow();
+  }, [lead]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const startConversation = async () => {
-    setError(null);
+  const submitAnswer = async (value: string) => {
+    if (!lead || !value.trim() || busy) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/public/businesses/${slug}/leads`, {
+      const res = await fetch(`/api/public/conversations/${lead.conversationId}/flow/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email }),
+        body: JSON.stringify({ value }),
       });
-      const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || "No se pudo iniciar la conversación");
-      const session: LeadSession = { businessId: body.businessId, clientId: body.clientId, conversationId: body.conversationId };
-      localStorage.setItem(storageKey(slug!), JSON.stringify(session));
-      setLead(session);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo iniciar la conversación");
+      const body = await res.json();
+      setFlow(body);
+      setTextValue("");
+      loadMessages();
     } finally {
       setBusy(false);
     }
   };
 
-  const sendMessage = async (content: string) => {
-    if (!lead || !content.trim()) return;
+  const sendFreeText = async () => {
+    if (!lead || !freeText.trim() || busy) return;
+    const content = freeText;
+    setFreeText("");
     setBusy(true);
     try {
       await fetch(`/api/public/conversations/${lead.conversationId}/messages`, {
@@ -108,19 +148,6 @@ export default function PublicBusinessChat() {
     } finally {
       setBusy(false);
     }
-  };
-
-  const submitFreeText = async () => {
-    const text = freeText;
-    setFreeText("");
-    await sendMessage(text);
-  };
-
-  const submitBudgetRequest = async () => {
-    const text = budgetText;
-    setBudgetText("");
-    setActiveBubble(null);
-    await sendMessage(`Pidió un presupuesto: ${text}`);
   };
 
   const submitAppointmentRequest = async () => {
@@ -160,6 +187,10 @@ export default function PublicBusinessChat() {
     );
   }
 
+  // Once an admin has taken manual control, or the flow has run its course,
+  // fall back to a plain free-text box instead of the guided controls.
+  const showFreeTextOnly = !flow || flow.controlMode === "human" || flow.kind === "terminal";
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="border-b border-border bg-card px-4 py-3 flex items-center gap-2.5">
@@ -172,135 +203,119 @@ export default function PublicBusinessChat() {
         </div>
       </div>
 
-      {!lead ? (
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm space-y-6">
-            <div className="text-center space-y-2">
-              <MessageCircle className="mx-auto text-primary" size={28} />
-              <h1 className="text-xl font-semibold text-foreground">Empecemos</h1>
-              <p className="text-sm text-muted-foreground">
-                Déjanos tus datos para que {business.name} pueda darte seguimiento.
-              </p>
+      <div className="flex-1 flex flex-col max-w-2xl w-full mx-auto">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {(starting || messages === null) && (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+              <Spinner className="size-4" /> Cargando...
             </div>
-            <Card className="p-6">
+          )}
+          {startError && <p className="text-center text-sm text-status-error-fg py-8">{startError}</p>}
+          {messages?.map((message) => (
+            <div key={message.id} className={cn("flex", message.direction === "in" ? "justify-end" : "justify-start")}>
+              <div
+                className={cn(
+                  "max-w-[80%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap",
+                  message.direction === "in"
+                    ? "bg-primary text-primary-foreground rounded-br-sm"
+                    : "bg-card border border-border text-foreground rounded-bl-sm"
+                )}
+              >
+                {message.content}
+              </div>
+            </div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
+
+        {lead && (
+          <div className="border-t border-border bg-card p-3 space-y-3">
+            {!showFreeTextOnly && flow && (flow.kind === "button" || flow.kind === "buttons") && (
+              <div className="flex flex-wrap gap-2">
+                {flow.options?.map((option) => (
+                  <Button
+                    key={option.value}
+                    size="sm"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() => submitAnswer(option.value)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {!showFreeTextOnly && flow && flow.kind === "text" && (
               <form
-                className="space-y-4"
+                className="flex items-center gap-2"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  startConversation();
+                  submitAnswer(textValue);
                 }}
               >
-                <div className="space-y-1.5">
-                  <Label htmlFor="name">Nombre</Label>
-                  <Input id="name" name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone">Teléfono</Label>
-                  <Input id="phone" name="phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Correo electrónico</Label>
-                  <Input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                {error && <p className="text-sm text-status-error-fg">{error}</p>}
-                <Button type="submit" className="w-full" disabled={!name || !phone || !email || busy}>
-                  Empezar conversación
+                <Input
+                  placeholder={flow.placeholder}
+                  value={textValue}
+                  onChange={(e) => setTextValue(e.target.value)}
+                  autoFocus
+                />
+                <Button type="submit" size="icon" disabled={!textValue.trim() || busy}>
+                  <Send size={16} />
                 </Button>
               </form>
-            </Card>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col max-w-2xl w-full mx-auto">
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages === null && (
-              <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-                <Spinner className="size-4" /> Cargando...
-              </div>
             )}
-            {messages?.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">
-                Escribe tu mensaje, o usa las opciones de abajo.
-              </p>
-            )}
-            {messages?.map((message) => (
-              <div key={message.id} className={cn("flex", message.direction === "in" ? "justify-end" : "justify-start")}>
-                <div
-                  className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-2 text-sm",
-                    message.direction === "in"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-card border border-border text-foreground rounded-bl-sm"
-                  )}
+
+            {showFreeTextOnly && (
+              <>
+                {activeBubble === "cita" && (
+                  <div className="rounded-lg border border-border p-3 space-y-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="appt-when" className="text-xs">¿Cuándo te gustaría?</Label>
+                      <Input id="appt-when" value={appointmentWhen} onChange={(e) => setAppointmentWhen(e.target.value)} autoFocus />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="appt-why" className="text-xs">Motivo (opcional)</Label>
+                      <Input id="appt-why" value={appointmentWhy} onChange={(e) => setAppointmentWhy(e.target.value)} />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={submitAppointmentRequest} disabled={!appointmentWhen.trim() || busy}>
+                        Enviar solicitud
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveBubble(null)}>Cancelar</Button>
+                    </div>
+                  </div>
+                )}
+
+                {!activeBubble && (
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setActiveBubble("cita")}>
+                      <CalendarDays size={14} /> Agendar cita
+                    </Button>
+                  </div>
+                )}
+
+                <form
+                  className="flex items-center gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendFreeText();
+                  }}
                 >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
-                </div>
-              </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          <div className="border-t border-border bg-card p-3 space-y-3">
-            {activeBubble === "presupuesto" && (
-              <div className="rounded-lg border border-border p-3 space-y-2">
-                <Label htmlFor="budget-text" className="text-xs">Cuéntanos qué necesitas</Label>
-                <Input id="budget-text" value={budgetText} onChange={(e) => setBudgetText(e.target.value)} autoFocus />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={submitBudgetRequest} disabled={!budgetText.trim() || busy}>Enviar</Button>
-                  <Button size="sm" variant="outline" onClick={() => setActiveBubble(null)}>Cancelar</Button>
-                </div>
-              </div>
-            )}
-
-            {activeBubble === "cita" && (
-              <div className="rounded-lg border border-border p-3 space-y-2">
-                <div className="space-y-1">
-                  <Label htmlFor="appt-when" className="text-xs">¿Cuándo te gustaría?</Label>
-                  <Input id="appt-when" value={appointmentWhen} onChange={(e) => setAppointmentWhen(e.target.value)} autoFocus />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="appt-why" className="text-xs">Motivo (opcional)</Label>
-                  <Input id="appt-why" value={appointmentWhy} onChange={(e) => setAppointmentWhy(e.target.value)} />
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={submitAppointmentRequest} disabled={!appointmentWhen.trim() || busy}>
-                    Enviar solicitud
+                  <Input
+                    placeholder="Escribe un mensaje..."
+                    value={freeText}
+                    onChange={(e) => setFreeText(e.target.value)}
+                  />
+                  <Button type="submit" size="icon" disabled={!freeText.trim() || busy}>
+                    <Send size={16} />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setActiveBubble(null)}>Cancelar</Button>
-                </div>
-              </div>
+                </form>
+              </>
             )}
-
-            {!activeBubble && (
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setActiveBubble("presupuesto")}>
-                  <ClipboardList size={14} /> Pedir presupuesto
-                </Button>
-                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setActiveBubble("cita")}>
-                  <CalendarDays size={14} /> Agendar cita
-                </Button>
-              </div>
-            )}
-
-            <form
-              className="flex items-center gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                submitFreeText();
-              }}
-            >
-              <Input
-                placeholder="Escribe un mensaje..."
-                value={freeText}
-                onChange={(e) => setFreeText(e.target.value)}
-              />
-              <Button type="submit" size="icon" disabled={!freeText.trim() || busy}>
-                <Send size={16} />
-              </Button>
-            </form>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
