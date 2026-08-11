@@ -1,36 +1,195 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, invoiceStatusTone } from "@/components/StatusBadge";
-import { Send } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Send, Plus, Copy, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 
 const typeLabel = { deposito: "Depósito", parcial: "Parcial", final: "Final" };
-const statusLabel = { pendiente: "Pendiente", pagado: "Pagado", vencido: "Vencido" };
+const statusLabel = { pendiente: "Pendiente", pagado: "Pagado", vencido: "Vencido", cancelado: "Cancelado" };
 
 interface Invoice {
   id: string;
   type: keyof typeof typeLabel;
   amount: number;
+  subtotal: number;
+  taxAmount: number;
   status: keyof typeof statusLabel;
-  dueDate: string;
+  dueDate: string | null;
+  description: string | null;
   projectName: string | null;
   clientName: string | null;
 }
 
-export default function Invoicing() {
-  const { data: invoices, loading, error } = useApi<Invoice[]>("/api/invoices");
+interface ClientOption {
+  id: string;
+  name: string;
+}
 
-  const totalPending = (invoices ?? []).filter((i) => i.status !== "pagado").reduce((s, i) => s + i.amount, 0);
+interface TaxRate {
+  province: string;
+  isHst: boolean;
+  gstRate: number;
+  pstRate: number;
+  hstRate: number;
+}
+
+function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [clientId, setClientId] = useState("");
+  const [type, setType] = useState<"deposito" | "parcial" | "final">("deposito");
+  const [subtotal, setSubtotal] = useState("");
+  const [description, setDescription] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: clients } = useApi<ClientOption[]>(open ? "/api/clients" : null);
+  const { data: rates } = useApi<TaxRate[]>(open ? "/api/canada-tax-rates" : null);
+  const { data: company } = useApi<{ province: string }>(open ? "/api/settings/company" : null);
+
+  const rate = rates?.find((r) => r.province === company?.province);
+  const subtotalNum = Number(subtotal) || 0;
+  const taxRate = rate ? (rate.isHst ? rate.hstRate : rate.gstRate + rate.pstRate) : 0;
+  const taxAmount = subtotalNum * taxRate;
+  const total = subtotalNum + taxAmount;
+
+  const reset = () => {
+    setClientId("");
+    setType("deposito");
+    setSubtotal("");
+    setDescription("");
+    setError(null);
+  };
+
+  const create = async () => {
+    if (!clientId || subtotalNum <= 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId, type, subtotal: subtotalNum, description: description || undefined }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error || "No se pudo crear la factura");
+      setOpen(false);
+      reset();
+      onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo crear la factura");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 w-full sm:w-auto">
+          <Plus size={16} /> Nueva factura
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nueva factura</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Cliente</Label>
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
+              <SelectContent>
+                {(clients ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Tipo</Label>
+            <Select value={type} onValueChange={(v) => setType(v as typeof type)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="deposito">Depósito</SelectItem>
+                <SelectItem value="parcial">Pago parcial</SelectItem>
+                <SelectItem value="final">Pago final</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Monto (antes de impuestos)</Label>
+            <Input type="number" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} placeholder="0.00" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Descripción (opcional)</Label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ej. Depósito inicial cocina" />
+          </div>
+          {subtotalNum > 0 && (
+            <div className="rounded-lg bg-secondary/60 p-3 text-sm space-y-1">
+              <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{formatCurrency(subtotalNum)}</span></div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Impuesto ({(taxRate * 100).toFixed(3)}%)</span><span>{formatCurrency(taxAmount)}</span>
+              </div>
+              <div className="flex justify-between font-medium text-foreground pt-1 border-t border-border"><span>Total</span><span>{formatCurrency(total)}</span></div>
+            </div>
+          )}
+          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+          <Button className="w-full" onClick={create} disabled={!clientId || subtotalNum <= 0 || saving}>
+            {saving ? "Creando..." : "Crear factura"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function Invoicing() {
+  const [reloadToken, setReloadToken] = useState(0);
+  const { data: invoices, loading, error } = useApi<Invoice[]>(`/api/invoices?_r=${reloadToken}`);
+  const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  const totalPending = (invoices ?? []).filter((i) => i.status === "pendiente" || i.status === "vencido").reduce((s, i) => s + i.amount, 0);
   const totalPaid = (invoices ?? []).filter((i) => i.status === "pagado").reduce((s, i) => s + i.amount, 0);
+
+  const copyLink = async (invoiceId: string) => {
+    setLinkBusyId(invoiceId);
+    setLinkError(null);
+    try {
+      const res = await apiFetch(`/api/invoices/${invoiceId}/checkout-link`, { method: "POST" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error || "No se pudo generar el link de pago");
+      await navigator.clipboard.writeText(body.url);
+      setCopiedId(invoiceId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : "No se pudo generar el link de pago");
+    } finally {
+      setLinkBusyId(null);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
         title="Invoicing & Payments"
         description="Depósito, pagos parciales y pago final por proyecto"
+        action={<NewInvoiceDialog onCreated={() => setReloadToken((t) => t + 1)} />}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -48,6 +207,10 @@ export default function Invoicing() {
         </Card>
       </div>
 
+      {linkError && (
+        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">{linkError}</div>
+      )}
+
       <Card className="p-6 overflow-x-auto">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
@@ -64,11 +227,10 @@ export default function Invoicing() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-2 text-muted-foreground font-medium">Proyecto</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">Cliente</th>
+                <th className="text-left py-2 text-muted-foreground font-medium">Descripción</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">Tipo</th>
                 <th className="text-right py-2 text-muted-foreground font-medium">Monto</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Vencimiento</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">Estado</th>
                 <th className="py-2" />
               </tr>
@@ -76,31 +238,47 @@ export default function Invoicing() {
             <tbody>
               {invoices?.map((invoice) => (
                 <tr key={invoice.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
-                  <td className="py-3 text-foreground font-medium">{invoice.projectName}</td>
-                  <td className="py-3 text-muted-foreground">{invoice.clientName}</td>
+                  <td className="py-3 text-foreground font-medium">{invoice.clientName ?? invoice.projectName}</td>
+                  <td className="py-3 text-muted-foreground">{invoice.description ?? "-"}</td>
                   <td className="py-3 text-muted-foreground">{typeLabel[invoice.type]}</td>
                   <td className="py-3 text-right text-foreground">{formatCurrency(invoice.amount)}</td>
-                  <td className="py-3 text-muted-foreground">{invoice.dueDate}</td>
                   <td className="py-3">
-                    <StatusBadge tone={invoiceStatusTone[invoice.status]}>{statusLabel[invoice.status]}</StatusBadge>
+                    <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{statusLabel[invoice.status]}</StatusBadge>
                   </td>
                   <td className="py-3 text-right">
                     {invoice.status !== "pagado" && (
-                      <Button size="sm" variant="outline" className="gap-1.5">
-                        <Send size={13} /> Reenviar link
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => copyLink(invoice.id)}
+                        disabled={linkBusyId === invoice.id}
+                      >
+                        {linkBusyId === invoice.id ? (
+                          <Spinner className="size-3.5" />
+                        ) : copiedId === invoice.id ? (
+                          <Check size={13} />
+                        ) : (
+                          <Copy size={13} />
+                        )}
+                        {copiedId === invoice.id ? "Copiado" : "Copiar link de pago"}
                       </Button>
                     )}
                   </td>
                 </tr>
               ))}
+              {invoices?.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-muted-foreground">Sin facturas todavía.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         )}
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        Procesado con Stripe (Payment Intents + Connect) — cada negocio recibirá su propia cuenta
-        conectada en Fase E.
+      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+        <Send size={12} /> Procesado con Stripe Connect — cada pago va directo a la cuenta conectada del negocio.
       </p>
     </div>
   );

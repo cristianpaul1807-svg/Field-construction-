@@ -13,10 +13,13 @@ interface ClientOption {
   name: string;
 }
 
+const invoiceTypeLabel: Record<string, string> = { deposito: "depósito", parcial: "pago parcial", final: "pago final" };
+
 interface ClientPortalData {
   client: { id: string; name: string };
   project: { id: string; name: string; progressPercent: number } | null;
   estimate: { id: string; status: string; total: number } | null;
+  pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
 }
 
@@ -95,11 +98,14 @@ export default function ClientPortal() {
                   <StatusBadge tone="info">{data.estimate.status}</StatusBadge>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                  <Button className="gap-2 flex-1">
+                  <Button className="gap-2 flex-1" disabled title="Vista previa — no interactivo aquí">
                     <FileSignature size={16} /> Firmar presupuesto
                   </Button>
-                  <Button variant="outline" className="gap-2 flex-1">
-                    <CreditCard size={16} /> Pagar depósito
+                  <Button variant="outline" className="gap-2 flex-1" disabled title="Vista previa — no interactivo aquí">
+                    <CreditCard size={16} />
+                    {data.pendingInvoice
+                      ? `Pagar ${invoiceTypeLabel[data.pendingInvoice.type] ?? "factura"} (${formatCurrency(data.pendingInvoice.amount)})`
+                      : "Pagar depósito"}
                   </Button>
                 </div>
               </Card>
@@ -130,8 +136,9 @@ export default function ClientPortal() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Solo se muestran fotos y presupuestos marcados como "visible_to_client". La firma
-        electrónica y el pago se conectarán en Fase E (SignWell / Stripe).
+        Solo se muestran fotos y presupuestos marcados como "visible_to_client". Esta es una vista
+        previa de solo lectura — el cliente paga desde su propio portal, no desde aquí. La firma
+        electrónica se conectará más adelante (SignWell).
       </p>
     </div>
   );

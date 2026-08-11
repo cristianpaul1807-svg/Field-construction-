@@ -2,11 +2,85 @@ import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, KeyRound } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
+
+function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reset = () => {
+    setName("");
+    setRole("");
+    setPhone("");
+    setError(null);
+  };
+
+  const create = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), role: role.trim() || undefined, phone: phone.trim() || undefined }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error || "No se pudo crear el empleado");
+      setOpen(false);
+      reset();
+      onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo crear el empleado");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 w-full sm:w-auto">
+          <Plus size={16} /> New Employee
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nuevo empleado</DialogTitle>
+          <DialogDescription>Se le abrirá automáticamente una invitación de chat que debe aceptar desde /campo.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Nombre</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre completo" autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Rol (opcional)</Label>
+            <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Ej. Ayudante, Electricista" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Teléfono (opcional)</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+          <Button className="w-full" onClick={create} disabled={!name.trim() || saving}>
+            {saving ? "Creando..." : "Crear empleado"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const statusTone = {
   disponible: "success",
@@ -30,7 +104,8 @@ interface Employee {
 }
 
 export default function Technicians() {
-  const { data: employees, loading, error } = useApi<Employee[]>("/api/employees");
+  const [reloadToken, setReloadToken] = useState(0);
+  const { data: employees, loading, error } = useApi<Employee[]>(`/api/employees?_r=${reloadToken}`);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
 
   const generateToken = async (emp: Employee) => {
@@ -44,11 +119,7 @@ export default function Technicians() {
       <PageHeader
         title="Technicians & Crew"
         description="Empleados internos, disponibilidad y horas trabajadas"
-        action={
-          <Button className="gap-2 w-full sm:w-auto">
-            <Plus size={16} /> New Employee
-          </Button>
-        }
+        action={<NewEmployeeDialog onCreated={() => setReloadToken((t) => t + 1)} />}
       />
 
       <Card className="p-6">

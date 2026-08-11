@@ -2,9 +2,11 @@ import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Star, Send, KeyRound } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
 
@@ -18,8 +20,81 @@ interface Subcontractor {
   assignedProjects: string[];
 }
 
+function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [trade, setTrade] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reset = () => {
+    setName("");
+    setTrade("");
+    setPhone("");
+    setError(null);
+  };
+
+  const create = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/subcontractors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), trade: trade.trim() || undefined, phone: phone.trim() || undefined }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error || "No se pudo crear el subcontratista");
+      setOpen(false);
+      reset();
+      onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo crear el subcontratista");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 w-full sm:w-auto">
+          <Plus size={16} /> New Subcontractor
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nuevo subcontratista</DialogTitle>
+          <DialogDescription>Se le abrirá automáticamente una invitación de chat que debe aceptar desde /campo.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Nombre</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre completo o empresa" autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Oficio (opcional)</Label>
+            <Input value={trade} onChange={(e) => setTrade(e.target.value)} placeholder="Ej. Plomería, Electricidad" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Teléfono (opcional)</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+          <Button className="w-full" onClick={create} disabled={!name.trim() || saving}>
+            {saving ? "Creando..." : "Crear subcontratista"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Subcontractors() {
-  const { data: subcontractors, loading, error } = useApi<Subcontractor[]>("/api/subcontractors");
+  const [reloadToken, setReloadToken] = useState(0);
+  const { data: subcontractors, loading, error } = useApi<Subcontractor[]>(`/api/subcontractors?_r=${reloadToken}`);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
 
   const generateToken = async (sub: Subcontractor) => {
@@ -33,11 +108,7 @@ export default function Subcontractors() {
       <PageHeader
         title="Subcontractors"
         description="Acceso limitado propio vía Telegram para cada subcontratista"
-        action={
-          <Button className="gap-2 w-full sm:w-auto">
-            <Plus size={16} /> New Subcontractor
-          </Button>
-        }
+        action={<NewSubcontractorDialog onCreated={() => setReloadToken((t) => t + 1)} />}
       />
 
       {loading && (

@@ -33,6 +33,7 @@ import Scheduling from "@/pages/Scheduling";
 import Invoicing from "@/pages/Invoicing";
 import Reports from "@/pages/Reports";
 import SettingsCompany from "@/pages/SettingsCompany";
+import SettingsPayments from "@/pages/SettingsPayments";
 import SettingsMargins from "@/pages/SettingsMargins";
 import SettingsUsers from "@/pages/SettingsUsers";
 import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
@@ -70,6 +71,7 @@ function BusinessPanel() {
         <Route path={"/invoicing"} component={Invoicing} />
         <Route path={"/reports"} component={Reports} />
         <Route path={"/settings/company"} component={SettingsCompany} />
+        <Route path={"/settings/payments"} component={SettingsPayments} />
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
         <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />

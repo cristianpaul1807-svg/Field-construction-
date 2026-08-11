@@ -82,6 +82,7 @@ const navSections: NavSection[] = [
     icon: "⚙️",
     items: [
       { id: "company-data", label: "Company Data", icon: "🏢", path: "/settings/company" },
+      { id: "payments", label: "Pagos (Stripe)", icon: "💳", path: "/settings/payments" },
       { id: "margins-rules", label: "Margins & Rules", icon: "⚖️", path: "/settings/margins" },
       { id: "users-roles", label: "Users & Roles", icon: "👨‍💼", path: "/settings/users" },
       { id: "whatsapp-connection", label: "WhatsApp Connection", icon: "📱", path: "/settings/whatsapp" },

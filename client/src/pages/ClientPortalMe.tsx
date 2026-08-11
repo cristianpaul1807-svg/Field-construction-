@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -5,14 +6,17 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileSignature, CreditCard, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
+
+const invoiceTypeLabel: Record<string, string> = { deposito: "depósito", parcial: "pago parcial", final: "pago final" };
 
 interface ClientPortalData {
   client: { id: string; name: string };
   project: { id: string; name: string; progressPercent: number } | null;
   estimate: { id: string; status: string; total: number } | null;
+  pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
 }
 
@@ -25,6 +29,22 @@ function colorForId(id: string) {
 export default function ClientPortalMe() {
   const { signOut } = useAuth();
   const { data, loading, error } = useApi<ClientPortalData>("/api/client-portal/me");
+  const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
+  const [payError, setPayError] = useState<string | null>(null);
+
+  const pay = async (invoiceId: string) => {
+    setPayingInvoiceId(invoiceId);
+    setPayError(null);
+    try {
+      const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error || "No se pudo iniciar el pago");
+      window.location.href = body.url;
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : "No se pudo iniciar el pago");
+      setPayingInvoiceId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,10 +121,23 @@ export default function ClientPortalMe() {
                     <Button className="gap-2 flex-1">
                       <FileSignature size={16} /> Firmar presupuesto
                     </Button>
-                    <Button variant="outline" className="gap-2 flex-1">
-                      <CreditCard size={16} /> Pagar depósito
-                    </Button>
+                    {data.pendingInvoice && (
+                      <Button
+                        variant="outline"
+                        className="gap-2 flex-1"
+                        onClick={() => pay(data.pendingInvoice!.id)}
+                        disabled={payingInvoiceId === data.pendingInvoice.id}
+                      >
+                        {payingInvoiceId === data.pendingInvoice.id ? (
+                          <Spinner className="size-4" />
+                        ) : (
+                          <CreditCard size={16} />
+                        )}
+                        Pagar {invoiceTypeLabel[data.pendingInvoice.type] ?? "factura"} ({formatCurrency(data.pendingInvoice.amount)})
+                      </Button>
+                    )}
                   </div>
+                  {payError && <p className="text-sm text-status-error-fg mt-2">{payError}</p>}
                 </Card>
               )}
 
@@ -133,7 +166,7 @@ export default function ClientPortalMe() {
             )}
 
             <p className="text-xs text-muted-foreground text-center">
-              La firma electrónica y el pago se conectarán en Fase E (SignWell / Stripe).
+              La firma electrónica se conectará más adelante (SignWell). Los pagos ya se procesan con Stripe.
             </p>
           </TabsContent>
 

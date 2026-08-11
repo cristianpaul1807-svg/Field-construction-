@@ -2,6 +2,7 @@ import express, { Router, type Request, type Response, type NextFunction } from 
 import multer from "multer";
 import { randomUUID, randomBytes } from "crypto";
 import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
+import { getStripe, getStripeWebhookSecret, StripeNotConfiguredError } from "./stripe";
 import {
   requireAuthenticatedUser,
   requireBusinessAuth,
@@ -282,12 +283,152 @@ async function createBotEstimate(
     });
 }
 
+// ---------- Stripe Connect: payments, invoicing, Canadian sales tax ----------
+// Each business connects its OWN Stripe Express account (below) — every
+// charge is a "direct charge" made with the `stripeAccount` request option,
+// so the money, Stripe fees, disputes and payouts all belong to that
+// account, never to this platform's own Stripe balance.
+
+const INVOICE_TYPE_LABEL: Record<string, string> = { deposito: "Depósito", parcial: "Pago parcial", final: "Pago final" };
+
+async function computeInvoiceTax(admin: ReturnType<typeof getSupabaseAdmin>, businessId: string, subtotal: number) {
+  const { data: business, error: businessError } = await admin
+    .from("businesses")
+    .select("province")
+    .eq("id", businessId)
+    .single();
+  if (businessError) throw businessError;
+
+  const { data: rate, error: rateError } = await admin
+    .from("canada_tax_rates")
+    .select("province, label, is_hst, gst_rate, pst_rate, hst_rate")
+    .eq("province", business.province)
+    .single();
+  if (rateError) throw rateError;
+
+  if (rate.is_hst) {
+    const hst = Math.round(subtotal * Number(rate.hst_rate) * 100) / 100;
+    return { taxAmount: hst, breakdown: { province: rate.province, hst } };
+  }
+  const gst = Math.round(subtotal * Number(rate.gst_rate) * 100) / 100;
+  const pst = Math.round(subtotal * Number(rate.pst_rate) * 100) / 100;
+  return { taxAmount: gst + pst, breakdown: { province: rate.province, gst, pst } };
+}
+
+// Creates (or reuses) the Stripe Checkout Session for an invoice, on the
+// business's own connected account. Used by both the business panel
+// ("reenviar link") and the client portal ("pagar depósito") — same
+// invoice, same session, whoever opens the link pays the same thing.
+async function createInvoiceCheckoutSession(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  invoiceId: string,
+  baseUrl: string
+): Promise<string> {
+  const { data: invoice, error: invoiceError } = await admin
+    .from("invoices")
+    .select("id, type, amount, description, status, clients(name, email)")
+    .eq("business_id", businessId)
+    .eq("id", invoiceId)
+    .maybeSingle();
+  if (invoiceError) throw invoiceError;
+  if (!invoice) throw new Error("Factura no encontrada");
+  if (invoice.status === "pagado") throw new Error("Esta factura ya está pagada");
+
+  const { data: account, error: accountError } = await admin
+    .from("stripe_connected_accounts")
+    .select("stripe_account_id, charges_enabled")
+    .eq("business_id", businessId)
+    .maybeSingle();
+  if (accountError) throw accountError;
+  if (!account?.stripe_account_id || !account.charges_enabled) {
+    throw new Error("El negocio todavía no tiene Stripe conectado y activo");
+  }
+
+  const stripe = getStripe();
+  const client = invoice.clients as unknown as { name: string; email: string | null } | null;
+  const session = await stripe.checkout.sessions.create(
+    {
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "cad",
+            unit_amount: Math.round(Number(invoice.amount) * 100),
+            product_data: {
+              name: `${INVOICE_TYPE_LABEL[invoice.type] ?? "Factura"}${client?.name ? ` — ${client.name}` : ""}`,
+              description: invoice.description ?? undefined,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      customer_email: client?.email ?? undefined,
+      success_url: `${baseUrl}/portal?pago=exitoso`,
+      cancel_url: `${baseUrl}/portal?pago=cancelado`,
+      metadata: { invoiceId: invoice.id, businessId },
+    },
+    { stripeAccount: account.stripe_account_id }
+  );
+
+  await admin.from("invoices").update({ stripe_checkout_session_id: session.id }).eq("id", invoiceId);
+  if (!session.url) throw new Error("Stripe no devolvió una URL de pago");
+  return session.url;
+}
+
+// Stripe fires this on the CONNECTED account's events (since these are
+// direct charges) — the webhook endpoint itself still lives on the
+// platform, Stripe just tags each event with the originating account id.
+// Mounted with express.raw() in `apiApp` below, before the JSON body
+// parser, since signature verification needs the exact raw request body.
+async function stripeWebhookHandler(req: Request, res: Response) {
+  let event;
+  try {
+    const stripe = getStripe();
+    const signature = req.header("stripe-signature");
+    if (!signature) throw new Error("Missing stripe-signature header");
+    event = stripe.webhooks.constructEvent(req.body, signature, getStripeWebhookSecret());
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "Invalid signature" });
+    return;
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as { id: string; metadata?: { invoiceId?: string; businessId?: string }; payment_intent?: string | null; amount_total?: number | null };
+    const invoiceId = session.metadata?.invoiceId;
+    const businessId = session.metadata?.businessId;
+    if (invoiceId && businessId) {
+      const admin = getSupabaseAdmin();
+      const { data: invoice } = await admin
+        .from("invoices")
+        .select("id, amount, status")
+        .eq("id", invoiceId)
+        .eq("business_id", businessId)
+        .maybeSingle();
+      if (invoice && invoice.status !== "pagado") {
+        await admin.from("invoices").update({ status: "pagado", paid_at: new Date().toISOString() }).eq("id", invoiceId);
+        await admin.from("payments").insert({
+          business_id: businessId,
+          invoice_id: invoiceId,
+          stripe_payment_id: typeof session.payment_intent === "string" ? session.payment_intent : session.id,
+          stripe_event_id: event.id,
+          amount: Number(invoice.amount),
+          status: "succeeded",
+          paid_at: new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  res.json({ received: true });
+}
+
 // Wraps a handler so any thrown error (including a missing service-role key)
 // becomes a clean JSON response instead of crashing the dev/prod server.
 function route(handler: Handler) {
   return (req: Request, res: Response, next: NextFunction) => {
     handler(req, res).catch((err) => {
-      if (err instanceof SupabaseNotConfiguredError) {
+      if (err instanceof SupabaseNotConfiguredError || err instanceof StripeNotConfiguredError) {
         res.status(503).json({ error: err.message });
         return;
       }
@@ -834,7 +975,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const clientId = req.clientId!;
 
-    const [client, project, estimate] = await Promise.all([
+    const [client, project, estimate, pendingInvoice] = await Promise.all([
       supabase.from("clients").select("id, name").eq("id", clientId).single(),
       supabase
         .from("projects")
@@ -849,11 +990,20 @@ apiRouter.get(
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase
+        .from("invoices")
+        .select("id, type, amount, status")
+        .eq("client_id", clientId)
+        .neq("status", "pagado")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     if (client.error) throw client.error;
     if (project.error) throw project.error;
     if (estimate.error) throw estimate.error;
+    if (pendingInvoice.error) throw pendingInvoice.error;
 
     let visiblePhotos: { id: string }[] = [];
     if (project.data) {
@@ -874,8 +1024,44 @@ apiRouter.get(
       estimate: estimate.data
         ? { id: estimate.data.id, status: estimate.data.status, total: Number(estimate.data.total) }
         : null,
+      pendingInvoice: pendingInvoice.data
+        ? { id: pendingInvoice.data.id, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
+        : null,
       visiblePhotos,
     });
+  })
+);
+
+// Client-side payment: the invoice already exists (the admin created it
+// from Invoicing.tsx) — this only ever creates the Stripe Checkout Session
+// for it, on the business's own connected account. RLS on the initial read
+// is what proves this invoice really belongs to the calling client before
+// the admin client is trusted to act on it.
+apiRouter.post(
+  "/client/invoices/:id/checkout",
+  requireClientAuth,
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: invoice, error } = await supabase
+      .from("invoices")
+      .select("id, business_id")
+      .eq("id", req.params.id)
+      .eq("client_id", req.clientId!)
+      .maybeSingle();
+    if (error) throw error;
+    if (!invoice) {
+      res.status(404).json({ error: "Factura no encontrada" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    try {
+      const url = await createInvoiceCheckoutSession(admin, invoice.business_id, invoice.id, baseUrl);
+      res.json({ url });
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : "No se pudo crear el link de pago" });
+    }
   })
 );
 
@@ -3078,6 +3264,116 @@ apiRouter.patch(
   })
 );
 
+// ---------- Stripe Connect ----------
+// Each business owns and manages its own Stripe account — this only ever
+// orchestrates the Express onboarding handshake and reads back its status;
+// it never touches the connected account's balance or payout schedule.
+
+apiRouter.get(
+  "/stripe/connect/status",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("stripe_connected_accounts")
+      .select("stripe_account_id, status, charges_enabled, payouts_enabled, details_submitted")
+      .eq("business_id", req.businessId!)
+      .maybeSingle();
+    if (error) throw error;
+    res.json({
+      connected: !!data?.stripe_account_id,
+      status: data?.status ?? "pending",
+      chargesEnabled: data?.charges_enabled ?? false,
+      payoutsEnabled: data?.payouts_enabled ?? false,
+      detailsSubmitted: data?.details_submitted ?? false,
+    });
+  })
+);
+
+// Creates the Express account on first call (idempotent afterward) and
+// always returns a fresh onboarding link — Stripe's account links expire
+// quickly and are meant to be requested right before redirecting the user.
+apiRouter.post(
+  "/stripe/connect/onboarding-link",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const stripe = getStripe();
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    let { data: account } = await admin
+      .from("stripe_connected_accounts")
+      .select("stripe_account_id")
+      .eq("business_id", req.businessId!)
+      .maybeSingle();
+
+    if (!account?.stripe_account_id) {
+      const { data: business } = await admin.from("businesses").select("name").eq("id", req.businessId!).single();
+      const created = await stripe.accounts.create({
+        type: "express",
+        business_type: "company",
+        company: { name: business?.name },
+        business_profile: { name: business?.name, mcc: "1520" },
+      });
+      const { data: inserted, error: insertError } = await admin
+        .from("stripe_connected_accounts")
+        .upsert({ business_id: req.businessId!, stripe_account_id: created.id, status: "pending" }, { onConflict: "business_id" })
+        .select("stripe_account_id")
+        .single();
+      if (insertError) throw insertError;
+      account = inserted;
+    }
+
+    const link = await stripe.accountLinks.create({
+      account: account.stripe_account_id!,
+      refresh_url: `${baseUrl}/settings/pagos`,
+      return_url: `${baseUrl}/settings/pagos?onboarding=completo`,
+      type: "account_onboarding",
+    });
+
+    res.json({ url: link.url });
+  })
+);
+
+// Called when the business lands back from Stripe's onboarding flow, to
+// pull the account's real charges/payouts capability instead of guessing.
+apiRouter.post(
+  "/stripe/connect/refresh",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: account } = await admin
+      .from("stripe_connected_accounts")
+      .select("stripe_account_id")
+      .eq("business_id", req.businessId!)
+      .maybeSingle();
+    if (!account?.stripe_account_id) {
+      res.status(404).json({ error: "No hay una cuenta de Stripe para este negocio" });
+      return;
+    }
+
+    const stripe = getStripe();
+    const remote = await stripe.accounts.retrieve(account.stripe_account_id);
+    const status = remote.charges_enabled ? "active" : remote.requirements?.disabled_reason ? "restricted" : "pending";
+
+    await admin
+      .from("stripe_connected_accounts")
+      .update({
+        charges_enabled: !!remote.charges_enabled,
+        payouts_enabled: !!remote.payouts_enabled,
+        details_submitted: !!remote.details_submitted,
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("business_id", req.businessId!);
+
+    res.json({
+      connected: true,
+      status,
+      chargesEnabled: !!remote.charges_enabled,
+      payoutsEnabled: !!remote.payouts_enabled,
+      detailsSubmitted: !!remote.details_submitted,
+    });
+  })
+);
+
 // ---------- Invoicing & Payments ----------
 
 apiRouter.get(
@@ -3086,9 +3382,11 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("invoices")
-      .select("id, type, amount, status, due_date, projects(name), clients(name)")
+      .select(
+        "id, type, amount, subtotal, tax_amount, tax_breakdown, status, due_date, description, created_at, paid_at, projects(name), clients(name)"
+      )
       .eq("business_id", req.businessId!)
-      .order("due_date");
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -3097,12 +3395,75 @@ apiRouter.get(
         id: i.id,
         type: i.type,
         amount: Number(i.amount),
+        subtotal: Number(i.subtotal),
+        taxAmount: Number(i.tax_amount),
+        taxBreakdown: i.tax_breakdown,
         status: i.status,
         dueDate: i.due_date,
+        description: i.description,
+        createdAt: i.created_at,
+        paidAt: i.paid_at,
         projectName: i.projects?.name ?? null,
         clientName: i.clients?.name ?? null,
       }))
     );
+  })
+);
+
+// Subtotal comes in pre-tax; tax is computed here from the business's own
+// province so nobody has to remember GST/QST/HST math by hand.
+apiRouter.post(
+  "/invoices",
+  route(async (req, res) => {
+    const { clientId, projectId, estimateId, type, subtotal, dueDate, description } = req.body ?? {};
+    if (!clientId || !type || !subtotal || Number(subtotal) <= 0) {
+      res.status(400).json({ error: "clientId, type and a positive subtotal are required" });
+      return;
+    }
+    if (!["deposito", "parcial", "final"].includes(type)) {
+      res.status(400).json({ error: "type must be deposito, parcial or final" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const { taxAmount, breakdown } = await computeInvoiceTax(admin, req.businessId!, Number(subtotal));
+
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("invoices")
+      .insert({
+        business_id: req.businessId!,
+        client_id: clientId,
+        project_id: projectId ?? null,
+        estimate_id: estimateId ?? null,
+        type,
+        description: description ?? null,
+        subtotal: Number(subtotal),
+        tax_amount: taxAmount,
+        tax_breakdown: breakdown,
+        amount: Number(subtotal) + taxAmount,
+        status: "pendiente",
+        due_date: dueDate ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.post(
+  "/invoices/:id/checkout-link",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    try {
+      const url = await createInvoiceCheckoutSession(admin, req.businessId!, req.params.id, baseUrl);
+      res.json({ url });
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : "No se pudo crear el link de pago" });
+    }
   })
 );
 
@@ -3204,7 +3565,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const clientId = req.params.clientId;
 
-    const [client, project, estimate] = await Promise.all([
+    const [client, project, estimate, pendingInvoice] = await Promise.all([
       supabase
         .from("clients")
         .select("id, name")
@@ -3226,11 +3587,21 @@ apiRouter.get(
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase
+        .from("invoices")
+        .select("id, type, amount, status")
+        .eq("business_id", req.businessId!)
+        .eq("client_id", clientId)
+        .neq("status", "pagado")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     if (client.error) throw client.error;
     if (project.error) throw project.error;
     if (estimate.error) throw estimate.error;
+    if (pendingInvoice.error) throw pendingInvoice.error;
 
     let visiblePhotos: { id: string }[] = [];
     if (project.data) {
@@ -3251,6 +3622,9 @@ apiRouter.get(
         : null,
       estimate: estimate.data
         ? { id: estimate.data.id, status: estimate.data.status, total: Number(estimate.data.total) }
+        : null,
+      pendingInvoice: pendingInvoice.data
+        ? { id: pendingInvoice.data.id, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
         : null,
       visiblePhotos,
     });
@@ -3619,7 +3993,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("businesses")
-      .select("id, name, slug, license_number, tax_config")
+      .select("id, name, slug, license_number, tax_config, province")
       .eq("id", req.businessId!)
       .single();
 
@@ -3631,7 +4005,32 @@ apiRouter.get(
       slug: data.slug,
       licenseNumber: data.license_number,
       taxConfig: data.tax_config,
+      province: data.province,
     });
+  })
+);
+
+// The fixed reference list of Canadian provinces/territories + their
+// GST/HST/PST/QST rates, for the province picker in Settings > Pagos.
+apiRouter.get(
+  "/canada-tax-rates",
+  route(async (_req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("canada_tax_rates")
+      .select("province, label, is_hst, gst_rate, pst_rate, hst_rate")
+      .order("label");
+    if (error) throw error;
+    res.json(
+      data.map((r) => ({
+        province: r.province,
+        label: r.label,
+        isHst: r.is_hst,
+        gstRate: Number(r.gst_rate),
+        pstRate: Number(r.pst_rate),
+        hstRate: Number(r.hst_rate),
+      }))
+    );
   })
 );
 
@@ -3647,6 +4046,7 @@ apiRouter.patch(
     if (body.name !== undefined) update.name = body.name;
     if (body.licenseNumber !== undefined) update.license_number = body.licenseNumber;
     if (body.taxConfig !== undefined) update.tax_config = body.taxConfig;
+    if (body.province !== undefined) update.province = body.province;
 
     // Slug uniqueness spans every business, not just this one's own RLS-visible
     // row, so checking it needs the admin client — the update itself still
@@ -3731,5 +4131,11 @@ apiRouter.get(
 // *that* both in the Vite dev plugin and the production server, instead
 // of mounting the router directly in either place.
 export const apiApp = express();
+// Stripe signature verification needs the exact raw bytes of the request
+// body, so this one route is mounted with express.raw() ahead of the
+// JSON parser below — every other route gets a parsed req.body as usual.
+apiApp.post("/public/stripe/webhook", express.raw({ type: "application/json" }), (req, res, next) => {
+  stripeWebhookHandler(req, res).catch(next);
+});
 apiApp.use(express.json());
 apiApp.use(apiRouter);
