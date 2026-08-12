@@ -4688,13 +4688,27 @@ apiRouter.patch(
 // client-visible lines, the invoice from the amounts already computed and
 // stored when it was issued.
 
+// Fetched here rather than passed as a URL because pdfkit needs the bytes,
+// and a document that fails to render because an image host was slow is
+// worse than one printed without its logo.
+async function fetchLogo(url: string | null | undefined): Promise<Buffer | null> {
+  if (!url) return null;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return null;
+    return Buffer.from(await res.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
 async function loadBusinessIdentity(
   admin: ReturnType<typeof getSupabaseAdmin>,
   businessId: string
 ): Promise<{ identity: BusinessIdentity; depositPercent: number; holdbackPercent: number; terms: string | null }> {
   const { data, error } = await admin
     .from("businesses")
-    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, holdback_percent, estimate_terms")
+    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, holdback_percent, estimate_terms, logo_url")
     .eq("id", businessId)
     .single();
   if (error) throw error;
@@ -4708,6 +4722,7 @@ async function loadBusinessIdentity(
       gstNumber: data.gst_number ?? null,
       qstNumber: data.qst_number ?? null,
       province: data.province ?? null,
+      logo: await fetchLogo(data.logo_url),
     },
     depositPercent: Number(data.deposit_percent ?? 0),
     holdbackPercent: Number(data.holdback_percent ?? 0),
@@ -5006,6 +5021,97 @@ apiRouter.delete(
       .eq("id", req.params.id);
     if (error) throw error;
     res.json({ ok: true });
+  })
+);
+
+// The bell in the header. Everything here is something a person has to act
+// on, derived from live rows rather than a notifications table: a stored
+// feed would need writing at every mutation site and would drift out of
+// sync the first time one was missed.
+apiRouter.get(
+  "/notifications",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const [estimates, invoices, appointments, changeOrders] = await Promise.all([
+      supabase
+        .from("estimates")
+        .select("id, created_at, clients(name)")
+        .eq("business_id", req.businessId!)
+        .eq("status", "pendiente_aprobacion")
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("invoices")
+        .select("id, amount, due_date, clients(name)")
+        .eq("business_id", req.businessId!)
+        .eq("status", "pendiente")
+        .not("due_date", "is", null)
+        .lt("due_date", today)
+        .order("due_date")
+        .limit(10),
+      supabase
+        .from("appointment_requests")
+        .select("id, requested_datetime_text, created_at")
+        .eq("business_id", req.businessId!)
+        .eq("status", "pendiente")
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("change_orders")
+        .select("id, title, amount, created_at, projects(name)")
+        .eq("business_id", req.businessId!)
+        .eq("status", "enviado")
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
+
+    if (estimates.error) throw estimates.error;
+    if (invoices.error) throw invoices.error;
+    if (changeOrders.error) throw changeOrders.error;
+    // Appointment requests came later than the rest; a deployment without the
+    // table should still get a working bell rather than a 500.
+    const appointmentRows = appointments.error ? [] : appointments.data;
+
+    const items = [
+      ...estimates.data.map((e: any) => ({
+        id: `estimate-${e.id}`,
+        kind: "estimateToApprove" as const,
+        href: "/budgets",
+        name: e.clients?.name ?? null,
+        amount: null as number | null,
+        at: e.created_at,
+      })),
+      ...invoices.data.map((i: any) => ({
+        id: `invoice-${i.id}`,
+        kind: "invoiceOverdue" as const,
+        href: "/invoicing",
+        name: i.clients?.name ?? null,
+        amount: Number(i.amount),
+        at: i.due_date,
+      })),
+      ...appointmentRows.map((a: any) => ({
+        id: `appointment-${a.id}`,
+        kind: "appointmentRequest" as const,
+        href: "/communication",
+        // The visitor typed when they'd like to come in free text, so it is
+        // the name to show — there is no parsed date to format.
+        name: a.requested_datetime_text ?? null,
+        amount: null,
+        at: a.created_at,
+      })),
+      ...changeOrders.data.map((c: any) => ({
+        id: `change-order-${c.id}`,
+        kind: "changeOrderAwaiting" as const,
+        href: "/projects",
+        name: c.projects?.name ?? c.title,
+        amount: Number(c.amount),
+        at: c.created_at,
+      })),
+    ].sort((a, b) => String(b.at ?? "").localeCompare(String(a.at ?? "")));
+
+    res.json({ count: items.length, items: items.slice(0, 20) });
   })
 );
 
@@ -5536,7 +5642,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, holdback_percent, estimate_terms"
+        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, holdback_percent, estimate_terms, logo_url"
       )
       .eq("id", req.businessId!)
       .single();
@@ -5560,7 +5666,63 @@ apiRouter.get(
       depositPercent: Number(data.deposit_percent ?? 0),
       holdbackPercent: Number(data.holdback_percent ?? 0),
       estimateTerms: data.estimate_terms,
+      logoUrl: data.logo_url ?? null,
     });
+  })
+);
+
+// The logo is the first thing on every estimate and invoice, so it is worth
+// a real upload rather than a placeholder initial. Stored in a public bucket
+// on purpose: the PDF generator reads it back months later, and a signed URL
+// that expires would leave an archived document without its own letterhead.
+apiRouter.post(
+  "/settings/logo",
+  upload.single("file"),
+  route(async (req, res) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "file is required" });
+      return;
+    }
+    if (!/^image\/(png|jpeg|jpg|webp|svg\+xml)$/.test(file.mimetype)) {
+      res.status(400).json({ error: "the logo must be a PNG, JPEG, WebP or SVG image" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const extension = file.originalname.includes(".") ? file.originalname.split(".").pop() : "png";
+    // The path carries a fresh id every time so a replaced logo is never
+    // served from a stale cache under the old URL.
+    const storagePath = `${req.businessId}/${randomUUID()}.${extension}`;
+
+    const { error: uploadError } = await admin.storage
+      .from("business-logos")
+      .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrl } = admin.storage.from("business-logos").getPublicUrl(storagePath);
+
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("businesses")
+      .update({ logo_url: publicUrl.publicUrl })
+      .eq("id", req.businessId!);
+    if (error) throw error;
+
+    res.status(201).json({ logoUrl: publicUrl.publicUrl });
+  })
+);
+
+apiRouter.delete(
+  "/settings/logo",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("businesses")
+      .update({ logo_url: null })
+      .eq("id", req.businessId!);
+    if (error) throw error;
+    res.json({ ok: true });
   })
 );
 

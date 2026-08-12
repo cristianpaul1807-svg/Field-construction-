@@ -588,7 +588,8 @@
     "suggestedWelcomeText": "Bonjour ! 👋 Merci d'avoir contacté {{business}}. Dites-nous ce dont vous avez besoin ici, ou lancez directement votre demande de soumission via ce lien : {{link}}",
     "pasteInWhatsapp": "Collez-le dans WhatsApp Business → Outils d'entreprise → Message d'accueil.",
     "holdbackPercent": "Retenue par défaut (%)",
-    "holdbackPercentHint": "Retenue sur chaque paiement partiel jusqu'à la fin des travaux — 10 % est la norme au Québec. Laissez 0 si vous ne l'appliquez pas."
+    "holdbackPercentHint": "Retenue sur chaque paiement partiel jusqu'à la fin des travaux — 10 % est la norme au Québec. Laissez 0 si vous ne l'appliquez pas.",
+    "logoHint": "Imprimé en en-tête de chaque soumission et facture. PNG, JPG, WebP ou SVG."
   },
   "reports": {
     "title": "Rapports",
@@ -852,5 +853,15 @@
     },
     "approve": "Approuver",
     "reject": "Refuser"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Rien en attente pour le moment.",
+    "kinds": {
+      "estimateToApprove": "Soumission à approuver",
+      "invoiceOverdue": "Facture en retard",
+      "appointmentRequest": "Demande de rendez-vous",
+      "changeOrderAwaiting": "Avenant en attente du client"
+    }
   }
 }

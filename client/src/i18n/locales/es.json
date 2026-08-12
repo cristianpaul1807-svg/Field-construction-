@@ -588,7 +588,8 @@
     "suggestedWelcomeText": "¡Hola! 👋 Gracias por escribir a {{business}}. Cuéntanos qué necesitas por aquí, o empieza directamente tu solicitud de presupuesto en este link: {{link}}",
     "pasteInWhatsapp": "Pégalo en WhatsApp Business → Herramientas para la empresa → Mensaje de bienvenida.",
     "holdbackPercent": "Retención por defecto (%)",
-    "holdbackPercentHint": "Se retiene de cada pago parcial hasta terminar la obra — en Quebec suele ser 10%. Deja 0 si no la aplicas."
+    "holdbackPercentHint": "Se retiene de cada pago parcial hasta terminar la obra — en Quebec suele ser 10%. Deja 0 si no la aplicas.",
+    "logoHint": "Se imprime en la cabecera de cada presupuesto y factura. PNG, JPG, WebP o SVG."
   },
   "reports": {
     "title": "Informes",
@@ -852,5 +853,15 @@
     },
     "approve": "Aprobar",
     "reject": "Rechazar"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "Nada pendiente por ahora.",
+    "kinds": {
+      "estimateToApprove": "Presupuesto por aprobar",
+      "invoiceOverdue": "Factura vencida",
+      "appointmentRequest": "Solicitud de cita",
+      "changeOrderAwaiting": "Orden de cambio esperando al cliente"
+    }
   }
 }

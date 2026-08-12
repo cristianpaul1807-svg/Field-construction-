@@ -588,7 +588,8 @@
     "suggestedWelcomeText": "Hi! 👋 Thanks for reaching out to {{business}}. Tell us what you need here, or start your estimate request straight away at this link: {{link}}",
     "pasteInWhatsapp": "Paste it in WhatsApp Business → Business tools → Greeting message.",
     "holdbackPercent": "Default holdback (%)",
-    "holdbackPercentHint": "Held back from each progress payment until the job is finished — 10% is standard in Quebec. Leave 0 if you don't use it."
+    "holdbackPercentHint": "Held back from each progress payment until the job is finished — 10% is standard in Quebec. Leave 0 if you don't use it.",
+    "logoHint": "Printed at the top of every estimate and invoice. PNG, JPG, WebP or SVG."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -852,5 +853,15 @@
     },
     "approve": "Approve",
     "reject": "Reject"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Nothing pending right now.",
+    "kinds": {
+      "estimateToApprove": "Estimate to approve",
+      "invoiceOverdue": "Overdue invoice",
+      "appointmentRequest": "Appointment request",
+      "changeOrderAwaiting": "Change order awaiting the client"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Check } from "lucide-react";
+import { Check, Upload, Trash2 } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -24,6 +24,7 @@ interface CompanyData {
   depositPercent: number;
   holdbackPercent: number;
   estimateTerms: string | null;
+  logoUrl: string | null;
 }
 
 export default function SettingsCompany() {
@@ -45,6 +46,36 @@ export default function SettingsCompany() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const logoInput = useRef<HTMLInputElement>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+
+  const uploadLogo = async (file: File) => {
+    setLogoBusy(true);
+    setSaveError(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      // No Content-Type header: the browser has to set the multipart boundary
+      // itself, and naming the type by hand is what breaks these uploads.
+      const res = await apiFetch("/api/settings/logo", { method: "POST", body });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setLogoBusy(false);
+    }
+  };
+
+  const removeLogo = async () => {
+    setLogoBusy(true);
+    try {
+      const res = await apiFetch("/api/settings/logo", { method: "DELETE" });
+      if (res.ok) reload();
+    } finally {
+      setLogoBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!data) return;
@@ -118,10 +149,42 @@ export default function SettingsCompany() {
         <>
           <Card className="p-6 space-y-5">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-xl font-semibold">
-                {data.name.charAt(0)}
+              {data.logoUrl ? (
+                <img
+                  src={data.logoUrl}
+                  alt={data.name}
+                  className="w-16 h-16 rounded-xl object-contain border border-border bg-card"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-xl font-semibold">
+                  {data.name.charAt(0)}
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={logoInput}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadLogo(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button variant="outline" size="sm" className="gap-2" disabled={logoBusy} onClick={() => logoInput.current?.click()}>
+                    {logoBusy ? <Spinner className="size-3.5" /> : <Upload size={14} strokeWidth={1.75} />}
+                    {t("settings.changeLogo")}
+                  </Button>
+                  {data.logoUrl && (
+                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" disabled={logoBusy} onClick={removeLogo}>
+                      <Trash2 size={14} strokeWidth={1.75} /> {t("common.delete")}
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">{t("settings.logoHint")}</p>
               </div>
-              <Button variant="outline" size="sm">{t("settings.changeLogo")}</Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

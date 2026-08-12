@@ -172,3 +172,40 @@ La unicidad del slug se comprueba contra **todos** los negocios, no solo los
 que RLS deja ver, así que esa comprobación usa el cliente administrador. La
 escritura sigue pasando por `req.supabase`, para que RLS siga garantizando que
 solo tocas tu propia fila.
+
+---
+
+## El logo
+
+Se sube en **Configuración → Datos de la empresa**, en la tarjeta de arriba.
+
+1. **Cambiar logo** → elige el archivo (PNG, JPG, WebP o SVG).
+2. Aparece al momento, y desde ese instante encabeza cada presupuesto y cada
+   factura que generes.
+3. **Eliminar** vuelve a la inicial del nombre.
+
+El nombre del negocio sigue apareciendo debajo del logo, siempre. Un logo cuyo
+texto no se lee a tamaño pequeño dejaría el documento sin identificar, y un
+presupuesto sin nombre de empresa no vale como oferta.
+
+Los logos se guardan en un bucket **público**, a diferencia de las fotos y los
+contratos. Es deliberado: el generador de PDF lo vuelve a leer meses después,
+y un enlace firmado que caduca dejaría un presupuesto archivado sin su propia
+cabecera.
+
+---
+
+## La campana de notificaciones
+
+En la barra superior, a la derecha. Reúne lo que espera una decisión tuya:
+
+| Aviso | Lleva a |
+|---|---|
+| Presupuesto por aprobar | Presupuestos |
+| Factura vencida | Facturación |
+| Solicitud de cita | Comunicación |
+| Orden de cambio esperando al cliente | Proyectos |
+
+No hay una tabla de notificaciones: la lista se calcula de las filas reales
+en cada consulta. Una tabla habría que escribirla en cada punto donde algo
+cambia, y se desincronizaría la primera vez que se olvidara uno.

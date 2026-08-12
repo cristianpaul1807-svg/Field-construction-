@@ -15,6 +15,9 @@ export type DocLang = "es" | "en" | "fr" | "it";
 
 export interface BusinessIdentity {
   name: string;
+  /** Raw image bytes, already fetched. Absent when the business has no logo. */
+  logo?: Buffer | null;
+  logoUrl?: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -315,7 +318,21 @@ type Doc = PDFKit.PDFDocument;
 function header(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocLang) {
   const b = data.business;
 
-  doc.font("Helvetica-Bold").fontSize(16).fillColor("#111111").text(b.name, MARGIN, MARGIN, { width: 300 });
+  // A logo replaces the name in the letterhead when there is one, but the
+  // name still has to appear somewhere legible — a logo whose wordmark is
+  // unreadable at 40 points would otherwise leave the document unattributed.
+  let nameY = MARGIN;
+  if (b.logo) {
+    try {
+      doc.image(b.logo, MARGIN, MARGIN, { fit: [150, 45] });
+      nameY = MARGIN + 52;
+    } catch {
+      // A corrupt or unsupported image must not take the whole document down;
+      // falling through leaves the plain text letterhead.
+    }
+  }
+
+  doc.font("Helvetica-Bold").fontSize(16).fillColor("#111111").text(b.name, MARGIN, nameY, { width: 300 });
 
   const identity = [
     b.address,

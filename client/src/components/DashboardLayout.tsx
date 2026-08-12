@@ -42,6 +42,7 @@ import { ProjectSwitcher } from "@/components/ProjectSwitcher";
 import { AdminAssistantBar } from "@/components/AdminAssistantBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/lib/api";
+import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
@@ -140,11 +141,24 @@ function sectionContainsActive(section: NavSection, current: string) {
   return section.items.some((item) => isActivePath(current, item.path));
 }
 
+interface NotificationFeed {
+  count: number;
+  items: {
+    id: string;
+    kind: "estimateToApprove" | "invoiceOverdue" | "appointmentRequest" | "changeOrderAwaiting";
+    href: string;
+    name: string | null;
+    amount: number | null;
+    at: string | null;
+  }[];
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
   const { signOut } = useAuth();
   const { data: company } = useApi<{ name: string }>("/api/settings/company");
+  const { data: notifications } = useApi<NotificationFeed>("/api/notifications");
   const [location] = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -235,12 +249,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
             {!isMobile && <ProjectSwitcher />}
             <LanguageSwitcher />
-            <button
-              className="w-8 h-8 rounded-md hover:bg-secondary transition-colors flex items-center justify-center text-muted-foreground hover:text-foreground"
-              aria-label="Notifications"
-            >
-              <Bell size={16} strokeWidth={1.75} />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="relative w-8 h-8 rounded-md hover:bg-secondary transition-colors flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  aria-label={t("notifications.title")}
+                >
+                  <Bell size={16} strokeWidth={1.75} />
+                  {(notifications?.count ?? 0) > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[1rem] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
+                      {notifications!.count > 9 ? "9+" : notifications!.count}
+                    </span>
+                  )}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                  {t("notifications.title")}
+                </div>
+                {(notifications?.items ?? []).length === 0 ? (
+                  <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+                    {t("notifications.empty")}
+                  </div>
+                ) : (
+                  (notifications?.items ?? []).map((item) => (
+                    <DropdownMenuItem key={item.id} asChild>
+                      <Link href={item.href} className="flex flex-col items-start gap-0.5 cursor-pointer">
+                        <span className="text-sm text-foreground">{t(`notifications.kinds.${item.kind}`)}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {[item.name, item.amount !== null ? formatCurrency(item.amount) : null]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-8 h-8 rounded-full border border-border hover:bg-secondary transition-colors flex items-center justify-center text-xs font-medium text-foreground">
