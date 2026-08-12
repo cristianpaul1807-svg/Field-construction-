@@ -115,7 +115,7 @@ export default function AuthBusiness() {
           }}
           className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
         >
-          <ArrowLeft size={13} /> Volver
+          <ArrowLeft size={13} /> {t("common.back")}
         </button>
 
         <div className="text-center space-y-2">
@@ -125,9 +125,9 @@ export default function AuthBusiness() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {needsCode
-              ? `Enviamos un código de 8 dígitos a ${email}. Ingrésalo para continuar.`
+              ? t("auth.codeSentTo", { email })
               : mode === "register"
-                ? "Solo necesitas correo y contraseña. Los datos de tu empresa se completan después, en Configuración."
+                ? t("auth.registerHint")
                 : t("auth.signInBusinessHint")}
           </p>
         </div>
@@ -160,14 +160,14 @@ export default function AuthBusiness() {
               {resent && !error && <p className="text-sm text-status-success-fg text-center">{t("auth.codeResent")}</p>}
 
               <Button type="submit" className="w-full" disabled={code.length !== 8 || busy}>
-                Verificar código
+                {t("auth.verifyCode")}
               </Button>
               <button
                 type="button"
                 onClick={resendCode}
                 className="text-xs text-muted-foreground hover:text-foreground block text-center w-full"
               >
-                Reenviar código
+                {t("auth.resendCode")}
               </button>
             </form>
           ) : (
@@ -205,12 +205,12 @@ export default function AuthBusiness() {
               {error && <p className="text-sm text-status-error-fg">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={!email || !password || busy}>
-                {mode === "register" ? t("auth.createAccount") : "Iniciar sesión"}
+                {mode === "register" ? t("auth.createAccount") : t("auth.loginTitle")}
               </Button>
 
               {mode === "login" && (
                 <Link href="/recuperar-password" className="text-xs text-muted-foreground hover:text-foreground block text-center">
-                  ¿Olvidaste tu contraseña?
+                  {t("auth.forgotPassword")}
                 </Link>
               )}
             </form>
@@ -219,12 +219,12 @@ export default function AuthBusiness() {
 
         {!needsCode && (
           <p className="text-sm text-center text-muted-foreground">
-            {mode === "register" ? "¿Ya tienes cuenta?" : "¿Todavía no tienes cuenta?"}{" "}
+            {mode === "register" ? t("auth.alreadyHaveAccount") : t("auth.notYetAccount")}{" "}
             <button
               onClick={() => setMode(mode === "register" ? "login" : "register")}
               className="text-primary hover:underline"
             >
-              {mode === "register" ? "Inicia sesión" : "Regístrate"}
+              {mode === "register" ? t("auth.signIn") : t("auth.signUpLink")}
             </button>
           </p>
         )}

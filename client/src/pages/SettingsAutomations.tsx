@@ -42,7 +42,7 @@ export default function SettingsAutomations() {
 
   const publicLink = data ? `${window.location.origin}/c/${data.slug}` : "";
   const welcomeMessage = data
-    ? `¡Hola! 👋 Gracias por escribirle a ${data.name}. Cuéntanos qué necesitas y te ayudamos por aquí, o empieza directamente en nuestra app: ${publicLink}`
+    ? t("settings.suggestedWelcomeText", { business: data.name, link: publicLink })
     : "";
 
   return (
@@ -54,12 +54,12 @@ export default function SettingsAutomations() {
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-          <Spinner className="size-4" /> Cargando...
+          <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
       {error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          No se pudo cargar desde Supabase: {error}
+          {t("common.loadError", { message: error })}
         </div>
       )}
 
@@ -87,7 +87,7 @@ export default function SettingsAutomations() {
             <div>
               <p className="font-medium text-foreground">{t("settings.suggestedWelcome")}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Pégalo en WhatsApp Business → Herramientas para la empresa → Mensaje de bienvenida.
+                {t("settings.pasteInWhatsapp")}
               </p>
             </div>
             <CopyField label="Mensaje sugerido" value={welcomeMessage} multiline />

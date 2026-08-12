@@ -135,7 +135,7 @@ export function ChatThread({
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-secondary/40">
         {messages === null && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Spinner className="size-4" /> Cargando...
+            <Spinner className="size-4" /> {t("common.loading")}
           </div>
         )}
         {messages?.map((message) => {

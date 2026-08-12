@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -97,12 +98,13 @@ function ClientPortalRoute() {
 // "/" is ambiguous on purpose: it's the public landing page for a visitor,
 // and the business dashboard's home once logged in — this decides which.
 function RootRoute() {
+  const { t } = useTranslation();
   const { session, loading, persona, personaError } = useAuth();
 
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Spinner className="size-4" /> Cargando...
+        <Spinner className="size-4" /> {t("common.loading")}
       </div>
     );
   }

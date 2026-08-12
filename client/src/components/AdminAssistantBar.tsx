@@ -63,7 +63,7 @@ export function AdminAssistantBar() {
             </button>
           </div>
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-            {loading && <p className="text-xs text-muted-foreground">Cargando...</p>}
+            {loading && <p className="text-xs text-muted-foreground">{t("common.loading")}</p>}
             {messages?.length === 0 && (
               <p className="text-xs text-muted-foreground">
                 {t("nav.assistantHint")}

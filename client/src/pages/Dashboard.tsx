@@ -79,7 +79,7 @@ export default function Dashboard() {
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-          <Spinner className="size-4" /> Cargando resumen...
+          <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
 
@@ -135,13 +135,13 @@ export default function Dashboard() {
                           fontSize: 12,
                         }}
                       />
-                      <Line type="monotone" dataKey="ingresos" stroke="var(--chart-1)" strokeWidth={2} dot={false} name="Ingresos" />
-                      <Line type="monotone" dataKey="gastos" stroke="var(--muted-foreground)" strokeWidth={2} dot={false} name="Gastos" />
+                      <Line type="monotone" dataKey="ingresos" stroke="var(--chart-1)" strokeWidth={2} dot={false} name={t("dashboard.income")} />
+                      <Line type="monotone" dataKey="gastos" stroke="var(--muted-foreground)" strokeWidth={2} dot={false} name={t("dashboard.expenses")} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
                   <p className="text-sm text-muted-foreground flex items-center justify-center h-full">
-                    Sin pagos o gastos registrados todavía.
+                    {t("dashboard.noPaymentsOrExpenses")}
                   </p>
                 )}
               </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-semibold text-foreground">{t("dashboard.activeProjects")}</h2>
                 <Link href="/projects" className="text-xs text-primary hover:underline flex items-center gap-1">
-                  Ver todos <ArrowRight size={12} />
+                  {t("common.all")} <ArrowRight size={12} />
                 </Link>
               </div>
               <div className="space-y-3">

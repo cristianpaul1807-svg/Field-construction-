@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         setPersona(null);
-        setPersonaError(body?.error || `El servidor respondió ${res.status}`);
+        setPersonaError(body?.error || `HTTP ${res.status}`);
         return;
       }
       const body = await res.json();

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ function formatSize(bytes: number | null) {
 }
 
 export function BudgetCategoriesPanel() {
+  const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: categories, loading: categoriesLoading } = useApi<Category[]>(
     `/api/budget-categories?_r=${reloadToken}`
@@ -81,10 +83,10 @@ export function BudgetCategoriesPanel() {
       form.append("file", file);
       const res = await apiFetch("/api/estimate-reference-documents", { method: "POST", body: form });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "No se pudo subir el archivo");
+      if (!res.ok) throw new Error(body?.error || t("budgets.uploadError"));
       refresh();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "No se pudo subir el archivo");
+      setUploadError(err instanceof Error ? err.message : t("budgets.uploadError"));
     } finally {
       setBusy(false);
     }
@@ -95,22 +97,20 @@ export function BudgetCategoriesPanel() {
   return (
     <div className="space-y-4">
       <Card className="p-6">
-        <h2 className="text-base font-semibold text-foreground mb-1">Categorías de presupuesto</h2>
+        <h2 className="text-base font-semibold text-foreground mb-1">{t("budgets.categoriesTitle")}</h2>
         <p className="text-xs text-muted-foreground mb-4">
-          Define las categorías del negocio (cocina, reforma, construcción...). Cada presupuesto se etiqueta con una,
-          y por cada categoría puedes subir hasta {MAX_PER_CATEGORY} presupuestos antiguos aprobados como referencia
-          de márgenes y estructura — esto es lo que la futura IA especializada estudiará antes de redactar uno nuevo.
+          {t("budgets.categoriesHint", { max: MAX_PER_CATEGORY })}
         </p>
 
         <div className="flex gap-2 mb-4">
           <Input
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
-            placeholder="Nueva categoría, ej. Techos"
+            placeholder={t("budgets.newCategoryPlaceholder")}
             onKeyDown={(e) => e.key === "Enter" && addCategory()}
           />
           <Button className="gap-2 flex-shrink-0" onClick={addCategory} disabled={busy}>
-            <Plus size={14} /> Crear
+            <Plus size={14} /> {t("common.create")}
           </Button>
         </div>
 
@@ -122,12 +122,12 @@ export function BudgetCategoriesPanel() {
 
         {loading && (
           <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Spinner className="size-4" /> Cargando categorías...
+            <Spinner className="size-4" /> {t("common.loading")}
           </div>
         )}
 
         {!loading && (categories ?? []).length === 0 && (
-          <p className="text-sm text-muted-foreground py-4 text-center">Todavía no hay categorías creadas.</p>
+          <p className="text-sm text-muted-foreground py-4 text-center">{t("budgets.noCategories")}</p>
         )}
 
         {!loading && (
@@ -154,8 +154,7 @@ export function BudgetCategoriesPanel() {
 
                   {docs.length === 0 && (
                     <p className="text-xs text-muted-foreground mb-2">
-                      Sin historial todavía — se usará como Assembly Template hasta que se acepte un presupuesto en
-                      esta categoría.
+                        {t("budgets.noReferences")}
                     </p>
                   )}
 
@@ -197,7 +196,7 @@ export function BudgetCategoriesPanel() {
                     disabled={atLimit || busy}
                     onClick={() => fileInputRefs.current[cat.id]?.click()}
                   >
-                    <Upload size={14} /> {atLimit ? "Límite alcanzado" : "Subir presupuesto antiguo"}
+                    <Upload size={14} /> {atLimit ? t("budgets.uploadLimitReached") : t("budgets.uploadReference")}
                   </Button>
                 </div>
               );

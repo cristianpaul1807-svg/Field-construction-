@@ -132,8 +132,8 @@ export default function Contracts() {
         title={t("contracts.title")}
         description={
           selectedProject
-            ? `Archivos de ${selectedProject.name} — contratos, permisos, planos, garantías`
-            : "Repositorio de archivos por proyecto — contratos, permisos, planos, garantías"
+            ? t("contracts.descriptionForProject", { project: selectedProject.name })
+            : t("contracts.descriptionAll")
         }
         action={
           selectedProjectId ? (
@@ -153,13 +153,13 @@ export default function Contracts() {
 
           {loading && (
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-              <Spinner className="size-4" /> Cargando documentos...
+              <Spinner className="size-4" /> {t("common.loading")}
             </div>
           )}
 
           {error && (
             <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-              No se pudo cargar desde Supabase: {error}
+              {t("common.loadError", { message: error })}
             </div>
           )}
 

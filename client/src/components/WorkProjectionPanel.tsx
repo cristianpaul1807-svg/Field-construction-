@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,7 @@ interface WorkProjectionPanelProps {
 }
 
 export function WorkProjectionPanel({ estimateId, status, createdBy, clientName, onChanged }: WorkProjectionPanelProps) {
+  const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: items, loading } = useApi<ProjectionItem[]>(
     `/api/estimates/${estimateId}/projection?_r=${reloadToken}`
@@ -113,10 +115,10 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
       const res = await apiFetch(`/api/estimates/${estimateId}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectName: clientName ? `${clientName} — Proyecto` : undefined }),
+        body: JSON.stringify({ projectName: clientName ? t("budgets.projectNameFromClient", { client: clientName }) : undefined }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "No se pudo aceptar");
+      if (!res.ok) throw new Error(body?.error || t("budgets.acceptError"));
       setResult(body);
       onChanged();
     } finally {
@@ -130,9 +132,9 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
     <Card className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Proyección de trabajo</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("budgets.projectionTitle")}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Ancla trabajadores a momentos específicos. Al aceptar el presupuesto, esto se aplica solo al calendario del proyecto.
+            {t("budgets.projectionHint")}
           </p>
         </div>
         {createdBy === "bot" && <StatusBadge tone="info">Generado por IA</StatusBadge>}
@@ -144,10 +146,10 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
             <CheckCircle2 size={16} /> Presupuesto aceptado
           </div>
           <p className="text-xs text-muted-foreground">
-            {result.scheduledCount} elemento(s) de la proyección se aplicaron al calendario del proyecto.
+            {t("budgets.projectionApplied", { count: result.scheduledCount })}
           </p>
           <Link href={`/projects/${result.projectId}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
-            Ver proyecto <ArrowRight size={12} />
+            {t("budgets.viewProject")} <ArrowRight size={12} />
           </Link>
         </div>
       ) : (
@@ -173,25 +175,25 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
                 </div>
               ))}
               {pendingItems.length === 0 && (
-                <p className="text-xs text-muted-foreground py-2">Sin elementos en la proyección todavía.</p>
+                <p className="text-xs text-muted-foreground py-2">{t("budgets.noProjectionItems")}</p>
               )}
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="proj-title">Título</Label>
+              <Label htmlFor="proj-title">{t("common.title")}</Label>
               <Input id="proj-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej. Instalar piso de cocina" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="proj-zone">Zona (opcional)</Label>
+              <Label htmlFor="proj-zone">{t("budgets.zone")} ({t("common.optional")})</Label>
               <Input id="proj-zone" value={zone} onChange={(e) => setZone(e.target.value)} placeholder="Ej. Cocina" />
             </div>
             <div className="space-y-1.5">
-              <Label>Trabajador (opcional)</Label>
+              <Label>{t("budgets.worker")} ({t("common.optional")})</Label>
               <Select value={workerId} onValueChange={setWorkerId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sin asignar" />
+                  <SelectValue placeholder={t("common.unassigned")} />
                 </SelectTrigger>
                 <SelectContent>
                   {workers.map((w) => (
@@ -201,26 +203,26 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="proj-date">Fecha</Label>
+              <Label htmlFor="proj-date">{t("common.date")}</Label>
               <Input id="proj-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="proj-time">Hora</Label>
+              <Label htmlFor="proj-time">{t("scheduling.time")}</Label>
               <Input id="proj-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="proj-duration">Duración aproximada (minutos)</Label>
+              <Label htmlFor="proj-duration">{t("common.duration")}</Label>
               <Input id="proj-duration" type="number" min={15} step={15} value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
             </div>
           </div>
           <Button variant="outline" size="sm" className="gap-2" onClick={addItem} disabled={busy}>
-            <Plus size={14} /> Agregar a la proyección
+            <Plus size={14} /> {t("budgets.addToProjection")}
           </Button>
 
           <div className="flex gap-2 pt-2 border-t border-border">
             {status === "pendiente_aprobacion" && (
               <Button className="flex-1" onClick={approveDraft} disabled={busy}>
-                Aprobar y marcar como enviado
+                {t("budgets.approveAndSend")}
               </Button>
             )}
             {status === "enviado" && (
@@ -230,7 +232,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
             )}
             {status !== "pendiente_aprobacion" && status !== "enviado" && (
               <p className="text-xs text-muted-foreground">
-                {status === "aceptado" ? "Este presupuesto ya fue aceptado." : "Envía el presupuesto para poder aceptarlo."}
+                {status === "aceptado" ? t("budgets.alreadyAccepted") : t("budgets.sendBeforeAccept")}
               </p>
             )}
           </div>

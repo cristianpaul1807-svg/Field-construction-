@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -14,13 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApi, apiFetch } from "@/lib/api";
 
-const typeOptions = [
-  { value: "visita", label: "Visita" },
-  { value: "llamada", label: "Llamada" },
-  { value: "reunion", label: "Reunión" },
-  { value: "inicio", label: "Inicio de obra" },
-  { value: "fin", label: "Entrega" },
-];
+const TYPE_OPTIONS = ["visita", "llamada", "reunion", "inicio", "fin"] as const;
 
 interface WorkerOption {
   id: string;
@@ -36,6 +31,7 @@ interface ScheduleEventDialogProps {
 }
 
 export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate, onCreated }: ScheduleEventDialogProps) {
+  const { t } = useTranslation();
   const { data: employees } = useApi<WorkerOption[]>(open ? "/api/employees" : null);
   const { data: subcontractors } = useApi<WorkerOption[]>(open ? "/api/subcontractors" : null);
 
@@ -70,11 +66,11 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      setError("Escribe un título.");
+      setError(t("scheduling.titleRequired"));
       return;
     }
     if (mode === "trabajo" && !workerId) {
-      setError("Selecciona un trabajador, o cambia a Nota manual.");
+      setError(t("scheduling.workerRequired"));
       return;
     }
 
@@ -101,7 +97,7 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error || "No se pudo guardar");
+        throw new Error(body?.error || t("common.saveError"));
       }
       onCreated();
       onOpenChange(false);
@@ -116,9 +112,9 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Agregar a la agenda</DialogTitle>
+          <DialogTitle>{t("scheduling.addToSchedule")}</DialogTitle>
           <DialogDescription>
-            Ancla un trabajo a un trabajador para la proyección del proyecto, o guarda una nota manual.
+            {t("scheduling.addToScheduleHint")}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,32 +124,32 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
               onClick={() => setMode("trabajo")}
               className={`flex-1 py-1.5 transition-colors ${mode === "trabajo" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"}`}
             >
-              Trabajo asignado
+              {t("scheduling.assignedWork")}
             </button>
             <button
               onClick={() => setMode("nota")}
               className={`flex-1 py-1.5 transition-colors ${mode === "nota" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"}`}
             >
-              Nota manual
+              {t("scheduling.manualNote")}
             </button>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="event-title">Título</Label>
+            <Label htmlFor="event-title">{t("common.title")}</Label>
             <Input
               id="event-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={mode === "trabajo" ? "Ej. Instalar drywall planta 2" : "Ej. Visitar proyecto"}
+              placeholder={mode === "trabajo" ? t("scheduling.titlePlaceholderWork") : t("scheduling.titlePlaceholderNote")}
             />
           </div>
 
           {mode === "trabajo" && (
             <div className="space-y-1.5">
-              <Label>Trabajador</Label>
+              <Label>{t("budgets.worker")}</Label>
               <Select value={workerId} onValueChange={setWorkerId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona un empleado o subcontratista" />
+                  <SelectValue placeholder={t("scheduling.selectWorker")} />
                 </SelectTrigger>
                 <SelectContent>
                   {workers.map((w) => (
@@ -166,30 +162,30 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5 col-span-1">
-              <Label htmlFor="event-type">Tipo</Label>
+              <Label htmlFor="event-type">{t("common.type")}</Label>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="w-full" id="event-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {typeOptions.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  {TYPE_OPTIONS.map((o) => (
+                    <SelectItem key={o} value={o}>{t(`scheduling.types.${o}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5 col-span-1">
-              <Label htmlFor="event-date">Fecha</Label>
+              <Label htmlFor="event-date">{t("common.date")}</Label>
               <Input id="event-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div className="space-y-1.5 col-span-1">
-              <Label htmlFor="event-time">Hora</Label>
+              <Label htmlFor="event-time">{t("scheduling.time")}</Label>
               <Input id="event-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="event-duration">Duración aproximada (minutos)</Label>
+            <Label htmlFor="event-duration">{t("common.duration")}</Label>
             <Input
               id="event-duration"
               type="number"
@@ -201,12 +197,12 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="event-notes">Notas</Label>
+            <Label htmlFor="event-notes">{t("scheduling.notes")}</Label>
             <Textarea
               id="event-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Información de la cita, recordatorios, detalles..."
+              placeholder={t("scheduling.notesPlaceholder")}
               rows={3}
             />
           </div>
@@ -215,9 +211,9 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Guardando..." : "Guardar"}
+            {saving ? t("common.saving") : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

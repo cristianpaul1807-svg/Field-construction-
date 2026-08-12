@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ChevronDown, FolderKanban } from "lucide-react";
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { cn } from "@/lib/utils";
 
 export function ProjectSwitcher() {
+  const { t } = useTranslation();
   const { projects, projectsLoading, selectedProjectId, selectedProject, setSelectedProjectId } =
     useSelectedProject();
 
@@ -30,7 +32,7 @@ export function ProjectSwitcher() {
         <DropdownMenuSeparator />
         {projectsLoading && <div className="px-2 py-1.5 text-xs text-muted-foreground">Cargando...</div>}
         {!projectsLoading && projects.length === 0 && (
-          <div className="px-2 py-1.5 text-xs text-muted-foreground">Sin proyectos todavía.</div>
+          <div className="px-2 py-1.5 text-xs text-muted-foreground">{t("worker.noProjects")}</div>
         )}
         {projects.map((project) => (
           <DropdownMenuItem

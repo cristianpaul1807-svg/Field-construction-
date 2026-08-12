@@ -37,14 +37,6 @@ interface EstimateSummary {
   createdAt: string;
 }
 
-const estimateStatusLabel: Record<string, string> = {
-  borrador: "Borrador",
-  pendiente_aprobacion: "Pendiente de aprobación",
-  enviado: "Enviado",
-  aceptado: "Aceptado",
-  rechazado: "Rechazado",
-};
-
 interface BudgetCategory {
   id: string;
   name: string;
@@ -87,9 +79,10 @@ interface AssemblyTemplate {
 }
 
 function ErrorNote({ message }: { message: string }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-      No se pudo cargar desde Supabase: {message}
+      {t("common.loadError", { message })}
     </div>
   );
 }
@@ -312,7 +305,7 @@ export default function Budgets() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <p className="text-sm font-medium text-foreground truncate">{summary.clientName ?? "Sin cliente"}</p>
+                      <p className="text-sm font-medium text-foreground truncate">{summary.clientName ?? t("budgets.noClient")}</p>
                       {isNewFromChat && (
                         <span className="text-[10px] font-semibold text-status-warning-fg bg-status-warning-bg/60 px-1.5 py-0.5 rounded-full flex-shrink-0">
                           {t("budgets.newFromChat")}
@@ -325,7 +318,7 @@ export default function Budgets() {
                     )}
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-[11px] text-muted-foreground">
-                        {estimateStatusLabel[summary.status] ?? summary.status}
+                        {t(`budgets.estimateStatus.${summary.status}`, { defaultValue: summary.status }) ?? summary.status}
                       </span>
                       <span className="text-xs font-medium text-foreground">{formatCurrency(summary.total)}</span>
                     </div>
@@ -346,7 +339,7 @@ export default function Budgets() {
         <TabsContent value="builder" className="mt-4">
           {loading && (
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-              <Spinner className="size-4" /> Cargando presupuesto...
+              <Spinner className="size-4" /> {t("common.loading")}
             </div>
           )}
           {error && <ErrorNote message={error} />}
@@ -379,7 +372,7 @@ export default function Budgets() {
                     <div className="flex items-center gap-2">
                       <Select value={draft.categoryId ?? undefined} onValueChange={setCategory}>
                         <SelectTrigger className="w-40 h-8 text-xs">
-                          <SelectValue placeholder="Sin categoría" />
+                          <SelectValue placeholder={t("budgets.noCategory")} />
                         </SelectTrigger>
                         <SelectContent>
                           {(categories ?? []).map((c) => (
@@ -393,7 +386,7 @@ export default function Budgets() {
 
                   {zones.map((zone) => (
                     <div key={zone} className="border border-border rounded-lg p-4 mb-4 last:mb-0">
-                      <h3 className="font-medium text-foreground mb-3">Zona: {zone}</h3>
+                      <h3 className="font-medium text-foreground mb-3">{t("budgets.zoneLabel", { zone })}</h3>
                       {["Materiales", "Mano de obra", "Subcontratistas"].map((category) => {
                         const zoneLines = lines
                           .map((line, idx) => ({ line, idx }))
@@ -401,7 +394,7 @@ export default function Budgets() {
                         if (zoneLines.length === 0) return null;
                         return (
                           <div key={category} className="mb-3 pl-4 border-l-2 border-primary/40 last:mb-0">
-                            <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">{category}</h4>
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">{t(`budgets.lineCategories.${category}`, { defaultValue: category })}</h4>
                             <div className="space-y-2">
                               {zoneLines.map(({ line, idx }) => {
                                 const edit = lineEdits[line.id] ?? { item: line.item, quantity: line.quantity, unitCost: line.unitCost };
@@ -456,19 +449,18 @@ export default function Budgets() {
                     </div>
                   ))}
                   <p className="text-xs text-muted-foreground mt-2 mb-4">
-                    El check junto a cada línea controla su visibilidad en el Client Portal (visible_to_client). Los
-                    cambios se guardan al salir del campo.
+                    {t("budgets.visibilityNote")}
                   </p>
 
                   <div className="border-t border-border pt-4">
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">{t("budgets.addLine")}</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
                       <div className="space-y-1 col-span-2 sm:col-span-1">
-                        <Label className="text-xs">Zona</Label>
+                        <Label className="text-xs">{t("budgets.zone")}</Label>
                         <Input
                           value={lineForm.zone}
                           onChange={(e) => setLineForm((f) => ({ ...f, zone: e.target.value }))}
-                          placeholder="Ej. Cocina"
+                          placeholder={t("budgets.zoneNamePlaceholder")}
                           className="h-8"
                         />
                       </div>
@@ -482,9 +474,9 @@ export default function Budgets() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Materiales">Materiales</SelectItem>
+                            <SelectItem value="Materiales">{t("budgets.materials")}</SelectItem>
                             <SelectItem value="Mano de obra">{t("budgets.labor")}</SelectItem>
-                            <SelectItem value="Subcontratistas">Subcontratistas</SelectItem>
+                            <SelectItem value="Subcontratistas">{t("budgets.subcontractors")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -493,7 +485,7 @@ export default function Budgets() {
                         <Input
                           value={lineForm.item}
                           onChange={(e) => setLineForm((f) => ({ ...f, item: e.target.value }))}
-                          placeholder="Ej. Grifería"
+                          placeholder={t("budgets.itemPlaceholder")}
                           className="h-8"
                         />
                       </div>
@@ -517,7 +509,7 @@ export default function Budgets() {
                       </div>
                     </div>
                     <Button size="sm" className="gap-2 mt-3" onClick={addLine} disabled={addingLine}>
-                      <Plus size={14} /> Agregar línea
+                      <Plus size={14} /> {t("budgets.addLine")}
                     </Button>
                   </div>
                 </Card>
@@ -528,19 +520,19 @@ export default function Budgets() {
                   <h3 className="font-semibold text-foreground mb-3 text-sm">{t("budgets.marginAndWaste")}</h3>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1.5">Tipo de margen</p>
+                      <p className="text-xs text-muted-foreground mb-1.5">{t("budgets.marginTypeLabel")}</p>
                       <div className="flex rounded-lg border border-border overflow-hidden text-sm">
                         <button
                           onClick={() => setMarginType("global")}
                           className={`flex-1 py-1.5 transition-colors ${marginType === "global" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"}`}
                         >
-                          Global
+                          {t("budgets.marginGlobal")}
                         </button>
                         <button
                           onClick={() => setMarginType("section")}
                           className={`flex-1 py-1.5 transition-colors ${marginType === "section" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"}`}
                         >
-                          Por sección
+                          {t("budgets.marginSection")}
                         </button>
                       </div>
                     </div>

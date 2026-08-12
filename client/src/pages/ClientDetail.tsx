@@ -43,7 +43,7 @@ export default function ClientDetail() {
   if (loading) {
     return (
       <div className="p-8 max-w-3xl mx-auto flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Spinner className="size-4" /> Cargando cliente...
+        <Spinner className="size-4" /> {t("common.loading")}
       </div>
     );
   }
@@ -51,7 +51,7 @@ export default function ClientDetail() {
   if (error || !client) {
     return (
       <div className="p-8 max-w-3xl mx-auto text-center text-muted-foreground">
-        {error ? `No se pudo cargar desde Supabase: ${error}` : "Cliente no encontrado."}{" "}
+        {error ? t("common.loadError", { message: error }) : t("clientDetail.notFound")}{" "}
         <Link href="/crm" className="text-primary hover:underline">{t("clientDetail.backToCrm")}</Link>
       </div>
     );
@@ -60,7 +60,7 @@ export default function ClientDetail() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <Link href="/crm" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft size={14} /> Volver al CRM
+        <ArrowLeft size={14} /> {t("clientDetail.backToCrm")}
       </Link>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -166,7 +166,7 @@ export default function ClientDetail() {
 
           <Button variant="outline" className="w-full gap-2" asChild>
             <Link href="/communication">
-              <MessageCircle size={14} /> Ver conversación de WhatsApp
+              <MessageCircle size={14} /> {t("clientDetail.viewConversation")}
             </Link>
           </Button>
         </div>

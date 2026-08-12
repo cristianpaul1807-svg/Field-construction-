@@ -35,12 +35,12 @@ export default function Reports() {
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-          <Spinner className="size-4" /> Cargando reportes...
+          <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
       {error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          No se pudo cargar desde Supabase: {error}
+          {t("common.loadError", { message: error })}
         </div>
       )}
 

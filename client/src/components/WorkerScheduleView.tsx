@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -67,6 +68,7 @@ const priorityTone: Record<string, string> = {
 };
 
 export function WorkerScheduleView() {
+  const { t } = useTranslation();
   const [events, setEvents] = useState<ScheduleEvent[] | null>(null);
   const [workOrders, setWorkOrders] = useState<WorkOrder[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,7 +104,7 @@ export function WorkerScheduleView() {
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-        <Spinner className="size-4" /> Cargando tu agenda...
+        <Spinner className="size-4" /> {t("common.loading")}
       </div>
     );
   }
@@ -200,7 +202,7 @@ export function WorkerScheduleView() {
                 <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                   {day.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "short" })}
                 </p>
-                {items.length === 0 && <p className="text-xs text-muted-foreground">Sin trabajos asignados.</p>}
+                {items.length === 0 && <p className="text-xs text-muted-foreground">{t("worker.noJobsAssigned")}</p>}
                 <div className="space-y-1.5">
                   {items.map((e) => (
                     <div key={e.id} className="flex items-center gap-2 text-sm">

@@ -37,7 +37,17 @@
     "genericError": "Si è verificato un errore imprevisto",
     "logout": "Esci",
     "language": "Lingua",
-    "copy": "Copia"
+    "copy": "Copia",
+    "saving": "Salvataggio...",
+    "title": "Titolo",
+    "unassigned": "Non assegnato",
+    "saveError": "Impossibile salvare",
+    "duration": "Durata approssimativa (minuti)",
+    "yes": "Sì",
+    "no": "No",
+    "add": "Aggiungi",
+    "selectProjectHint": "Usa il selettore \"Progetti\" nella barra in alto per scegliere di quale progetto vedere queste informazioni.",
+    "selectProject": "Seleziona un progetto"
   },
   "nav": {
     "home": "HOME",
@@ -94,7 +104,10 @@
     "seeAll": "Vedi tutto",
     "recentNotifications": "Notifiche recenti",
     "seeInbox": "Apri la posta",
-    "noNotifications": "Nessuna nuova notifica."
+    "noNotifications": "Nessuna nuova notifica.",
+    "noPaymentsOrExpenses": "Nessun pagamento o spesa registrato finora.",
+    "income": "Ricavi",
+    "expenses": "Spese"
   },
   "crm": {
     "title": "CRM",
@@ -124,7 +137,7 @@
     "newBudget": "Nuovo preventivo",
     "requestsAndBudgets": "Richieste e preventivi",
     "newFromChat": "Nuova dalla chat",
-    "noCategory": "Senza categoria",
+    "noCategory": "Nessuna categoria",
     "noBudgets": "Questa impresa non ha ancora preventivi.",
     "budgetNumber": "Preventivo n. {{id}}",
     "tabBuilder": "Preventivo",
@@ -175,7 +188,43 @@
     "insertIntoEstimate": "Inserisci nel preventivo",
     "insertTemplate": "Inserisci \"{{name}}\"",
     "templateZoneQuestion": "A quale zona del preventivo appartiene questo modello?",
-    "zonePlaceholder": "Es. Bagno 2"
+    "zonePlaceholder": "Es. Bagno 2",
+    "newEstimate": "Nuovo preventivo",
+    "newEstimateHint": "Crea un preventivo vuoto e inizia ad aggiungere le voci.",
+    "createEstimate": "Crea preventivo",
+    "createEstimateError": "Impossibile creare il preventivo",
+    "noProject": "Nessun progetto",
+    "noClient": "Nessun cliente",
+    "category": "Categoria",
+    "categoriesTitle": "Categorie di preventivo",
+    "categoriesHint": "Definisci le categorie della tua impresa (cucina, ristrutturazione, nuova costruzione...). Ogni preventivo viene etichettato con una, e per ciascuna puoi caricare fino a {{max}} vecchi preventivi approvati come riferimento di margini e struttura.",
+    "newCategoryPlaceholder": "Nuova categoria, es. Coperture",
+    "noCategories": "Nessuna categoria creata finora.",
+    "noReferences": "Nessuno storico — carica un preventivo approvato per tenerlo come riferimento in questa categoria.",
+    "uploadReference": "Carica un vecchio preventivo",
+    "uploadLimitReached": "Limite raggiunto",
+    "uploadError": "Impossibile caricare il file",
+    "projectionTitle": "Proiezione dei lavori",
+    "projectionHint": "Aggancia i lavoratori a momenti precisi. All'accettazione del preventivo, tutto passa nel calendario del progetto.",
+    "projectionApplied": "{{count}} elementi della proiezione sono stati applicati al calendario del progetto.",
+    "viewProject": "Vedi progetto",
+    "noProjectionItems": "Nessun elemento nella proiezione finora.",
+    "worker": "Lavoratore",
+    "addToProjection": "Aggiungi alla proiezione",
+    "approveAndSend": "Approva e segna come inviato",
+    "alreadyAccepted": "Questo preventivo è già stato accettato.",
+    "sendBeforeAccept": "Invia il preventivo prima di poterlo accettare.",
+    "acceptError": "Impossibile accettare",
+    "projectNameFromClient": "{{client}} — Progetto",
+    "visibilityNote": "La casella accanto a ogni voce determina se il cliente la vede nel suo portale. Le modifiche si salvano uscendo dal campo.",
+    "itemPlaceholder": "Es. Rubinetteria",
+    "zoneNamePlaceholder": "Es. Cucina",
+    "lineCategories": {
+      "Materiales": "Materiali",
+      "Mano de obra": "Manodopera",
+      "Subcontratistas": "Subappaltatori"
+    },
+    "marginTypeLabel": "Tipo di margine"
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -361,7 +410,21 @@
     "weekOf": "Settimana del {{date}}",
     "noJobsAssigned": "Nessun lavoro assegnato.",
     "pendingWorkOrders": "Ordini di lavoro in sospeso",
-    "business": "Impresa"
+    "business": "Impresa",
+    "serviceTypes": {
+      "instalacion": "Installazione",
+      "mantenimiento": "Manutenzione",
+      "reparacion": "Riparazione",
+      "inspeccion": "Ispezione",
+      "otro": "Altro"
+    },
+    "noGeolocation": "Questo dispositivo non supporta la geolocalizzazione",
+    "locationNeeded": "La tua posizione serve per timbrare entrata o uscita.",
+    "locationError": "Impossibile ottenere la tua posizione",
+    "noActiveEntry": "Nessuna timbratura attiva",
+    "billable": "Fatturabile",
+    "serviceType": "Tipo di servizio",
+    "noProjects": "Nessun progetto finora."
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",
@@ -419,7 +482,18 @@
     "clientAccessDescription": "Inserisci il codice che ti ha dato il tuo appaltatore — non servono email né password.",
     "serverUnreachable": "Non siamo riusciti a caricare il tuo account",
     "serverUnreachableHint": "La tua sessione è valida, ma il server non ha risposto. Il tuo account e i tuoi dati sono intatti.",
-    "retry": "Riprova"
+    "retry": "Riprova",
+    "codeSentTo": "Abbiamo inviato un codice di 8 cifre a {{email}}. Inseriscilo per continuare.",
+    "codeSentShort": "Abbiamo inviato un codice di 8 cifre a {{email}}.",
+    "registerHint": "Ti bastano email e password. I dati della tua impresa si compilano dopo, in Impostazioni.",
+    "verifyCode": "Verifica codice",
+    "resendCode": "Reinvia codice",
+    "sendCode": "Invia codice",
+    "changePassword": "Cambia password",
+    "backToSignIn": "Torna all'accesso",
+    "noBusinessAccount": "Non hai un account aziendale?",
+    "notYetAccount": "Non hai ancora un account?",
+    "serverResponded": "Il server ha risposto {{status}}"
   },
   "landing": {
     "tagline": "Il sistema tutto-in-uno per la tua impresa edile",
@@ -509,7 +583,9 @@
     "directWhatsappBody": "L'API di WhatsApp Business non si può attivare da qui: Meta richiede che l'impresa completi la propria verifica. Una volta soddisfatti i tre requisiti seguenti, questa schermata potrà collegarla.",
     "directWhatsappReq1": "Un account Meta Business Manager verificato a nome dell'impresa.",
     "directWhatsappReq2": "Un'app WhatsApp Business creata nella Meta Developer Console.",
-    "directWhatsappReq3": "Un numero di telefono dedicato, non già in uso nell'app WhatsApp normale."
+    "directWhatsappReq3": "Un numero di telefono dedicato, non già in uso nell'app WhatsApp normale.",
+    "suggestedWelcomeText": "Ciao! 👋 Grazie per aver contattato {{business}}. Raccontaci qui cosa ti serve, oppure avvia subito la tua richiesta di preventivo a questo link: {{link}}",
+    "pasteInWhatsapp": "Incollalo in WhatsApp Business → Strumenti per l'impresa → Messaggio di benvenuto."
   },
   "reports": {
     "title": "Report",
@@ -617,7 +693,9 @@
     "noProjects": "Ancora nessun progetto collegato.",
     "noEstimates": "Ancora nessun preventivo.",
     "activityTimeline": "Cronologia attività",
-    "noActivity": "Ancora nessuna attività registrata."
+    "noActivity": "Ancora nessuna attività registrata.",
+    "viewConversation": "Vedi conversazione",
+    "notFound": "Cliente non trovato."
   },
   "contracts": {
     "title": "Contratti e documenti",
@@ -638,7 +716,9 @@
       "plano": "Disegno",
       "garantia": "Garanzia"
     },
-    "storageNote": "I file sono archiviati su Supabase Storage, isolati per impresa. I download usano link temporanei che scadono dopo 5 minuti."
+    "storageNote": "I file sono archiviati su Supabase Storage, isolati per impresa. I download usano link temporanei che scadono dopo 5 minuti.",
+    "descriptionForProject": "File di {{project}} — contratti, permessi, disegni e garanzie",
+    "descriptionAll": "Archivio di file per progetto — contratti, permessi, disegni e garanzie"
   },
   "costTracking": {
     "title": "Controllo costi e redditività",
@@ -692,12 +772,38 @@
     "noWorkOrders": "Non hai ancora ordini di lavoro."
   },
   "scheduling": {
-    "title": "Calendario"
+    "title": "Calendario",
+    "description": "Visite, appuntamenti, avvii di cantiere e date di consegna",
+    "descriptionForProject": "Agenda di {{project}}",
+    "addToSchedule": "Aggiungi all'agenda",
+    "addToScheduleHint": "Aggancia un lavoro a un lavoratore per la proiezione del progetto, o salva solo una nota.",
+    "assignedWork": "Lavoro assegnato",
+    "manualNote": "Nota manuale",
+    "titleRequired": "Inserisci un titolo.",
+    "workerRequired": "Scegli un lavoratore, o passa a Nota manuale.",
+    "selectWorker": "Scegli un dipendente o un subappaltatore",
+    "titlePlaceholderWork": "Es. Installare cartongesso al 2° piano",
+    "titlePlaceholderNote": "Es. Visitare il cantiere",
+    "notesPlaceholder": "Dettagli dell'appuntamento, promemoria, note...",
+    "types": {
+      "visita": "Visita",
+      "llamada": "Chiamata",
+      "reunion": "Riunione",
+      "inicio": "Avvio lavori",
+      "fin": "Consegna"
+    },
+    "time": "Ora",
+    "notes": "Note"
   },
   "checkIn": {
     "title": "Timbratura (entrata / uscita)",
     "description": "Registro di entrata/uscita con ora e posizione GPS, per progetto",
-    "approved": "Approvato"
+    "approved": "Approvato",
+    "in": "Entrata",
+    "out": "Uscita",
+    "inProgress": "In corso",
+    "approveHours": "Approva ore",
+    "noEntries": "Nessuna timbratura registrata finora."
   },
   "gps": {
     "title": "GPS e percorsi",
@@ -721,6 +827,7 @@
     "visibleToClient": "Visibile al cliente",
     "upload": "Carica",
     "uploading": "Caricamento...",
-    "uploadError": "Impossibile caricare la foto"
+    "uploadError": "Impossibile caricare la foto",
+    "uploadedBy": "Caricata da {{name}}"
   }
 }

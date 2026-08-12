@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import {
   Dialog,
@@ -34,6 +35,7 @@ interface NewEstimateDialogProps {
 }
 
 export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimateDialogProps) {
+  const { t } = useTranslation();
   const { data: clients } = useApi<Client[]>(open ? "/api/clients" : null);
   const { data: projects } = useApi<ProjectOption[]>(open ? "/api/projects" : null);
   const { data: categories } = useApi<Category[]>(open ? "/api/budget-categories" : null);
@@ -63,7 +65,7 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
         }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "No se pudo crear el presupuesto");
+      if (!res.ok) throw new Error(body?.error || t("budgets.createEstimateError"));
       reset();
       onOpenChange(false);
       onCreated(body.id);
@@ -76,13 +78,13 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nuevo presupuesto</DialogTitle>
-          <DialogDescription>Crea un presupuesto vacío para empezar a agregar líneas.</DialogDescription>
+          <DialogTitle>{t("budgets.newEstimate")}</DialogTitle>
+          <DialogDescription>{t("budgets.newEstimateHint")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Cliente</Label>
+            <Label>{t("common.client")}</Label>
             <Select value={clientId} onValueChange={setClientId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecciona un cliente" />
@@ -96,10 +98,10 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
           </div>
 
           <div className="space-y-1.5">
-            <Label>Proyecto (opcional)</Label>
+            <Label>{t("common.project")} ({t("common.optional")})</Label>
             <Select value={projectId} onValueChange={setProjectId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sin proyecto" />
+                <SelectValue placeholder={t("budgets.noProject")} />
               </SelectTrigger>
               <SelectContent>
                 {(projects ?? []).map((p) => (
@@ -110,10 +112,10 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
           </div>
 
           <div className="space-y-1.5">
-            <Label>Categoría (opcional)</Label>
+            <Label>{t("common.category")} ({t("common.optional")})</Label>
             <Select value={categoryId} onValueChange={setCategoryId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sin categoría" />
+                <SelectValue placeholder={t("budgets.noCategory")} />
               </SelectTrigger>
               <SelectContent>
                 {(categories ?? []).map((c) => (
@@ -125,8 +127,8 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={create} disabled={!clientId || busy}>Crear presupuesto</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
+          <Button onClick={create} disabled={!clientId || busy}>{t("budgets.createEstimate")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

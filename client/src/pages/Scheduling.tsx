@@ -10,14 +10,6 @@ import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { hashColor, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
-const typeLabel: Record<string, string> = {
-  visita: "Visita",
-  llamada: "Llamada",
-  reunion: "Reunión",
-  inicio: "Inicio de obra",
-  fin: "Entrega",
-};
-
 interface ScheduleEvent {
   id: string;
   title: string;
@@ -65,7 +57,7 @@ function blockDetail(heightPx: number) {
 }
 
 export default function Scheduling() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [reloadToken, setReloadToken] = useState(0);
@@ -101,8 +93,8 @@ export default function Scheduling() {
         title={t("scheduling.title")}
         description={
           selectedProject
-            ? `Agenda de ${selectedProject.name} — trabajos anclados por trabajador y notas`
-            : "Visitas, citas, inicios de obra y fechas de entrega"
+            ? t("scheduling.descriptionForProject", { project: selectedProject.name })
+            : t("scheduling.description")
         }
       />
 
@@ -120,7 +112,7 @@ export default function Scheduling() {
                 <ChevronLeft size={16} />
               </Button>
               <div className="text-sm font-medium text-foreground min-w-[9rem] text-center">
-                {currentDate.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
+                {currentDate.toLocaleDateString(i18n.language, { day: "numeric", month: "long", year: "numeric" })}
               </div>
               <Button
                 variant="outline"
@@ -130,7 +122,7 @@ export default function Scheduling() {
                 <ChevronRight size={16} />
               </Button>
               <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
-                Hoy
+                {t("worker.today")}
               </Button>
             </div>
             <Button
@@ -140,18 +132,18 @@ export default function Scheduling() {
                 setDialogOpen(true);
               }}
             >
-              <Plus size={16} /> Agregar
+              <Plus size={16} /> {t("common.add")}
             </Button>
           </div>
 
           {loading && (
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-              <Spinner className="size-4" /> Cargando agenda...
+              <Spinner className="size-4" /> {t("common.loading")}
             </div>
           )}
           {error && (
             <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-              No se pudo cargar desde Supabase: {error}
+              {t("common.loadError", { message: error })}
             </div>
           )}
 
@@ -231,7 +223,7 @@ export default function Scheduling() {
                         </div>
                         {detail.showSubtitle && (
                           <div className={cn("truncate opacity-80", detail.text)}>
-                            {isNote ? typeLabel[event.type] ?? event.type : event.assignedWorkerName}
+                            {isNote ? t(`scheduling.types.${event.type}`, { defaultValue: event.type }) : event.assignedWorkerName}
                           </div>
                         )}
                       </div>

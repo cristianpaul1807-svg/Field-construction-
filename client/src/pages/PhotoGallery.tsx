@@ -143,7 +143,7 @@ export default function PhotoGallery() {
 
       {selectedProjectId && error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          No se pudo cargar desde Supabase: {error}
+          {t("common.loadError", { message: error })}
         </div>
       )}
 
@@ -154,10 +154,10 @@ export default function PhotoGallery() {
               <PhotoThumb id={photo.id} />
               <div>
                 <p className="text-xs text-muted-foreground">{photo.zone} · {photo.timestamp?.slice(0, 10)}</p>
-                <p className="text-xs text-muted-foreground">Subida por {photo.uploadedBy ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">{t("photoGallery.uploadedBy", { name: photo.uploadedBy ?? "—" })}</p>
               </div>
               <StatusBadge tone={photo.visibleToClient ? "success" : "neutral"}>
-                {photo.visibleToClient ? "Visible al cliente" : "Interno"}
+                {photo.visibleToClient ? t("projects.visibleToClient") : t("projects.internalPhoto")}
               </StatusBadge>
             </Card>
           ))}

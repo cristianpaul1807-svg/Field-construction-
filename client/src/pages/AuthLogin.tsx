@@ -43,7 +43,7 @@ export default function AuthLogin() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <Link href="/" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
-          <ArrowLeft size={13} /> Volver
+          <ArrowLeft size={13} /> {t("common.back")}
         </Link>
 
         <div className="text-center space-y-2">
@@ -87,17 +87,17 @@ export default function AuthLogin() {
             {error && <p className="text-sm text-status-error-fg">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={!email || !password || busy}>
-              Iniciar sesión
+              {t("auth.loginTitle")}
             </Button>
 
             <Link href="/recuperar-password" className="text-xs text-muted-foreground hover:text-foreground block text-center">
-              ¿Olvidaste tu contraseña?
+              {t("auth.forgotPassword")}
             </Link>
           </form>
         </Card>
 
         <p className="text-sm text-center text-muted-foreground">
-          ¿No tienes cuenta de negocio?{" "}
+          {t("auth.noBusinessAccount")}{" "}
           <Link href="/negocio/acceso" className="text-primary hover:underline">{t("auth.signUpLink")}</Link>
         </p>
       </div>

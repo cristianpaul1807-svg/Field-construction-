@@ -37,7 +37,17 @@
     "genericError": "Ocurrió un error inesperado",
     "logout": "Cerrar sesión",
     "language": "Idioma",
-    "copy": "Copiar"
+    "copy": "Copiar",
+    "saving": "Guardando...",
+    "title": "Título",
+    "unassigned": "Sin asignar",
+    "saveError": "No se pudo guardar",
+    "duration": "Duración aproximada (minutos)",
+    "yes": "Sí",
+    "no": "No",
+    "add": "Agregar",
+    "selectProjectHint": "Usa el selector \"Proyectos\" de la barra superior para elegir de qué proyecto quieres ver esta información.",
+    "selectProject": "Selecciona un proyecto"
   },
   "nav": {
     "home": "INICIO",
@@ -94,7 +104,10 @@
     "seeAll": "Ver todas",
     "recentNotifications": "Notificaciones recientes",
     "seeInbox": "Ver bandeja",
-    "noNotifications": "Sin notificaciones nuevas."
+    "noNotifications": "Sin notificaciones nuevas.",
+    "noPaymentsOrExpenses": "Sin pagos o gastos registrados todavía.",
+    "income": "Ingresos",
+    "expenses": "Gastos"
   },
   "crm": {
     "title": "CRM",
@@ -175,7 +188,43 @@
     "insertIntoEstimate": "Insertar en presupuesto",
     "insertTemplate": "Insertar \"{{name}}\"",
     "templateZoneQuestion": "¿A qué zona del presupuesto pertenece esta plantilla?",
-    "zonePlaceholder": "Ej. Baño 2"
+    "zonePlaceholder": "Ej. Baño 2",
+    "newEstimate": "Nuevo presupuesto",
+    "newEstimateHint": "Crea un presupuesto vacío para empezar a agregar líneas.",
+    "createEstimate": "Crear presupuesto",
+    "createEstimateError": "No se pudo crear el presupuesto",
+    "noProject": "Sin proyecto",
+    "noClient": "Sin cliente",
+    "category": "Categoría",
+    "categoriesTitle": "Categorías de presupuesto",
+    "categoriesHint": "Define las categorías de tu negocio (cocina, reforma, construcción...). Cada presupuesto se etiqueta con una, y por cada categoría puedes subir hasta {{max}} presupuestos antiguos aprobados como referencia de márgenes y estructura.",
+    "newCategoryPlaceholder": "Nueva categoría, ej. Techos",
+    "noCategories": "Todavía no hay categorías creadas.",
+    "noReferences": "Sin historial todavía — sube un presupuesto aprobado para tenerlo como referencia en esta categoría.",
+    "uploadReference": "Subir presupuesto antiguo",
+    "uploadLimitReached": "Límite alcanzado",
+    "uploadError": "No se pudo subir el archivo",
+    "projectionTitle": "Proyección de trabajo",
+    "projectionHint": "Ancla trabajadores a momentos concretos. Al aceptar el presupuesto, esto se vuelca en el calendario del proyecto.",
+    "projectionApplied": "Se aplicaron {{count}} elementos de la proyección al calendario del proyecto.",
+    "viewProject": "Ver proyecto",
+    "noProjectionItems": "Sin elementos en la proyección todavía.",
+    "worker": "Trabajador",
+    "addToProjection": "Agregar a la proyección",
+    "approveAndSend": "Aprobar y marcar como enviado",
+    "alreadyAccepted": "Este presupuesto ya fue aceptado.",
+    "sendBeforeAccept": "Envía el presupuesto para poder aceptarlo.",
+    "acceptError": "No se pudo aceptar",
+    "projectNameFromClient": "{{client}} — Proyecto",
+    "visibilityNote": "El check junto a cada línea controla si el cliente la ve en su portal. Los cambios se guardan al salir del campo.",
+    "itemPlaceholder": "Ej. Grifería",
+    "zoneNamePlaceholder": "Ej. Cocina",
+    "lineCategories": {
+      "Materiales": "Materiales",
+      "Mano de obra": "Mano de obra",
+      "Subcontratistas": "Subcontratistas"
+    },
+    "marginTypeLabel": "Tipo de margen"
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -361,7 +410,21 @@
     "weekOf": "Semana del {{date}}",
     "noJobsAssigned": "Sin trabajos asignados.",
     "pendingWorkOrders": "Órdenes de trabajo pendientes",
-    "business": "Negocio"
+    "business": "Negocio",
+    "serviceTypes": {
+      "instalacion": "Instalación",
+      "mantenimiento": "Mantenimiento",
+      "reparacion": "Reparación",
+      "inspeccion": "Inspección",
+      "otro": "Otro"
+    },
+    "noGeolocation": "Este dispositivo no soporta geolocalización",
+    "locationNeeded": "Se necesita tu ubicación para registrar la entrada o la salida.",
+    "locationError": "No se pudo obtener tu ubicación",
+    "noActiveEntry": "Sin entrada activa",
+    "billable": "Facturable",
+    "serviceType": "Tipo de servicio",
+    "noProjects": "Sin proyectos todavía."
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",
@@ -419,7 +482,18 @@
     "clientAccessDescription": "Ingresa el código que te dio tu contratista — no necesitas correo ni contraseña.",
     "serverUnreachable": "No pudimos cargar tu cuenta",
     "serverUnreachableHint": "Tu sesión es válida, pero el servidor no respondió. Tu cuenta y tus datos están intactos.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "codeSentTo": "Enviamos un código de 8 dígitos a {{email}}. Ingrésalo para continuar.",
+    "codeSentShort": "Enviamos un código de 8 dígitos a {{email}}.",
+    "registerHint": "Solo necesitas correo y contraseña. Los datos de tu empresa se completan después, en Configuración.",
+    "verifyCode": "Verificar código",
+    "resendCode": "Reenviar código",
+    "sendCode": "Enviar código",
+    "changePassword": "Cambiar contraseña",
+    "backToSignIn": "Volver a iniciar sesión",
+    "noBusinessAccount": "¿No tienes cuenta de negocio?",
+    "notYetAccount": "¿Todavía no tienes cuenta?",
+    "serverResponded": "El servidor respondió {{status}}"
   },
   "landing": {
     "tagline": "El sistema todo-en-uno para tu empresa de construcción",
@@ -509,7 +583,9 @@
     "directWhatsappBody": "La API de WhatsApp Business no se puede activar desde aquí: Meta exige que la empresa complete su propia verificación. Cuando tengas los tres requisitos siguientes, esta pantalla podrá conectarla.",
     "directWhatsappReq1": "Una cuenta de Meta Business Manager verificada a nombre del negocio.",
     "directWhatsappReq2": "Una app de WhatsApp Business creada en el Meta Developer Console.",
-    "directWhatsappReq3": "Un número de teléfono dedicado, que no esté ya en la app normal de WhatsApp."
+    "directWhatsappReq3": "Un número de teléfono dedicado, que no esté ya en la app normal de WhatsApp.",
+    "suggestedWelcomeText": "¡Hola! 👋 Gracias por escribir a {{business}}. Cuéntanos qué necesitas por aquí, o empieza directamente tu solicitud de presupuesto en este link: {{link}}",
+    "pasteInWhatsapp": "Pégalo en WhatsApp Business → Herramientas para la empresa → Mensaje de bienvenida."
   },
   "reports": {
     "title": "Informes",
@@ -617,7 +693,9 @@
     "noProjects": "Aún sin proyectos vinculados.",
     "noEstimates": "Sin presupuestos todavía.",
     "activityTimeline": "Timeline de actividad",
-    "noActivity": "Sin actividad registrada todavía."
+    "noActivity": "Sin actividad registrada todavía.",
+    "viewConversation": "Ver conversación",
+    "notFound": "Cliente no encontrado."
   },
   "contracts": {
     "title": "Contratos y documentos",
@@ -638,7 +716,9 @@
       "plano": "Plano",
       "garantia": "Garantía"
     },
-    "storageNote": "Los archivos se guardan cifrados en Supabase Storage, aislados por negocio. Las descargas usan enlaces temporales que caducan a los 5 minutos."
+    "storageNote": "Los archivos se guardan cifrados en Supabase Storage, aislados por negocio. Las descargas usan enlaces temporales que caducan a los 5 minutos.",
+    "descriptionForProject": "Archivos de {{project}} — contratos, permisos, planos y garantías",
+    "descriptionAll": "Repositorio de archivos por proyecto — contratos, permisos, planos y garantías"
   },
   "costTracking": {
     "title": "Control de costos y rentabilidad",
@@ -692,12 +772,38 @@
     "noWorkOrders": "Todavía no tienes órdenes de trabajo."
   },
   "scheduling": {
-    "title": "Agenda"
+    "title": "Agenda",
+    "description": "Visitas, citas, inicios de obra y fechas de entrega",
+    "descriptionForProject": "Agenda de {{project}}",
+    "addToSchedule": "Agregar a la agenda",
+    "addToScheduleHint": "Ancla un trabajo a un trabajador para la proyección del proyecto, o guarda una nota manual.",
+    "assignedWork": "Trabajo asignado",
+    "manualNote": "Nota manual",
+    "titleRequired": "Escribe un título.",
+    "workerRequired": "Selecciona un trabajador, o cambia a Nota manual.",
+    "selectWorker": "Selecciona un empleado o subcontratista",
+    "titlePlaceholderWork": "Ej. Instalar drywall planta 2",
+    "titlePlaceholderNote": "Ej. Visitar la obra",
+    "notesPlaceholder": "Información de la cita, recordatorios, detalles...",
+    "types": {
+      "visita": "Visita",
+      "llamada": "Llamada",
+      "reunion": "Reunión",
+      "inicio": "Inicio de obra",
+      "fin": "Entrega"
+    },
+    "time": "Hora",
+    "notes": "Notas"
   },
   "checkIn": {
     "title": "Fichaje (entrada / salida)",
     "description": "Registro de entrada/salida con hora y ubicación GPS, por proyecto",
-    "approved": "Aprobado"
+    "approved": "Aprobado",
+    "in": "Entrada",
+    "out": "Salida",
+    "inProgress": "En curso",
+    "approveHours": "Aprobar horas",
+    "noEntries": "Todavía no hay fichajes registrados."
   },
   "gps": {
     "title": "GPS y rutas",
@@ -721,6 +827,7 @@
     "visibleToClient": "Visible para el cliente",
     "upload": "Subir",
     "uploading": "Subiendo...",
-    "uploadError": "No se pudo subir la foto"
+    "uploadError": "No se pudo subir la foto",
+    "uploadedBy": "Subida por {{name}}"
   }
 }

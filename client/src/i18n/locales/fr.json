@@ -37,7 +37,17 @@
     "genericError": "Une erreur inattendue s'est produite",
     "logout": "Se déconnecter",
     "language": "Langue",
-    "copy": "Copier"
+    "copy": "Copier",
+    "saving": "Enregistrement...",
+    "title": "Titre",
+    "unassigned": "Non assigné",
+    "saveError": "Impossible d'enregistrer",
+    "duration": "Durée approximative (minutes)",
+    "yes": "Oui",
+    "no": "Non",
+    "add": "Ajouter",
+    "selectProjectHint": "Utilisez le sélecteur « Projets » de la barre du haut pour choisir le projet à afficher.",
+    "selectProject": "Sélectionnez un projet"
   },
   "nav": {
     "home": "ACCUEIL",
@@ -94,7 +104,10 @@
     "seeAll": "Voir tout",
     "recentNotifications": "Notifications récentes",
     "seeInbox": "Ouvrir la boîte",
-    "noNotifications": "Aucune nouvelle notification."
+    "noNotifications": "Aucune nouvelle notification.",
+    "noPaymentsOrExpenses": "Aucun paiement ni dépense enregistré pour l'instant.",
+    "income": "Revenus",
+    "expenses": "Dépenses"
   },
   "crm": {
     "title": "CRM",
@@ -124,7 +137,7 @@
     "newBudget": "Nouvelle soumission",
     "requestsAndBudgets": "Demandes et soumissions",
     "newFromChat": "Nouvelle du clavardage",
-    "noCategory": "Sans catégorie",
+    "noCategory": "Aucune catégorie",
     "noBudgets": "Cette entreprise n'a pas encore de soumissions.",
     "budgetNumber": "Soumission n° {{id}}",
     "tabBuilder": "Soumission",
@@ -175,7 +188,43 @@
     "insertIntoEstimate": "Insérer dans la soumission",
     "insertTemplate": "Insérer « {{name}} »",
     "templateZoneQuestion": "À quelle zone de la soumission ce modèle appartient-il ?",
-    "zonePlaceholder": "Ex. Salle de bain 2"
+    "zonePlaceholder": "Ex. Salle de bain 2",
+    "newEstimate": "Nouvelle soumission",
+    "newEstimateHint": "Créez une soumission vide et commencez à ajouter des postes.",
+    "createEstimate": "Créer la soumission",
+    "createEstimateError": "Impossible de créer la soumission",
+    "noProject": "Aucun projet",
+    "noClient": "Aucun client",
+    "category": "Catégorie",
+    "categoriesTitle": "Catégories de soumission",
+    "categoriesHint": "Définissez les catégories de votre entreprise (cuisine, rénovation, construction neuve...). Chaque soumission est associée à une catégorie, et pour chacune vous pouvez téléverser jusqu'à {{max}} anciennes soumissions approuvées comme référence de marges et de structure.",
+    "newCategoryPlaceholder": "Nouvelle catégorie, ex. Toiture",
+    "noCategories": "Aucune catégorie créée pour l'instant.",
+    "noReferences": "Aucun historique — téléversez une soumission approuvée pour la garder comme référence dans cette catégorie.",
+    "uploadReference": "Téléverser une ancienne soumission",
+    "uploadLimitReached": "Limite atteinte",
+    "uploadError": "Impossible de téléverser le fichier",
+    "projectionTitle": "Projection des travaux",
+    "projectionHint": "Rattachez les travailleurs à des moments précis. À l'acceptation de la soumission, tout bascule dans le calendrier du projet.",
+    "projectionApplied": "{{count}} éléments de la projection ont été appliqués au calendrier du projet.",
+    "viewProject": "Voir le projet",
+    "noProjectionItems": "Aucun élément dans la projection pour l'instant.",
+    "worker": "Travailleur",
+    "addToProjection": "Ajouter à la projection",
+    "approveAndSend": "Approuver et marquer comme envoyée",
+    "alreadyAccepted": "Cette soumission a déjà été acceptée.",
+    "sendBeforeAccept": "Envoyez la soumission avant de pouvoir l'accepter.",
+    "acceptError": "Impossible d'accepter",
+    "projectNameFromClient": "{{client}} — Projet",
+    "visibilityNote": "La case à côté de chaque poste détermine si le client le voit dans son portail. Les modifications s'enregistrent en quittant le champ.",
+    "itemPlaceholder": "Ex. Robinetterie",
+    "zoneNamePlaceholder": "Ex. Cuisine",
+    "lineCategories": {
+      "Materiales": "Matériaux",
+      "Mano de obra": "Main-d'œuvre",
+      "Subcontratistas": "Sous-traitants"
+    },
+    "marginTypeLabel": "Type de marge"
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -361,7 +410,21 @@
     "weekOf": "Semaine du {{date}}",
     "noJobsAssigned": "Aucun travail assigné.",
     "pendingWorkOrders": "Bons de travail en attente",
-    "business": "Entreprise"
+    "business": "Entreprise",
+    "serviceTypes": {
+      "instalacion": "Installation",
+      "mantenimiento": "Entretien",
+      "reparacion": "Réparation",
+      "inspeccion": "Inspection",
+      "otro": "Autre"
+    },
+    "noGeolocation": "Cet appareil ne prend pas en charge la géolocalisation",
+    "locationNeeded": "Votre position est nécessaire pour pointer l'entrée ou la sortie.",
+    "locationError": "Impossible d'obtenir votre position",
+    "noActiveEntry": "Aucun pointage actif",
+    "billable": "Facturable",
+    "serviceType": "Type de service",
+    "noProjects": "Aucun projet pour l'instant."
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",
@@ -419,7 +482,18 @@
     "clientAccessDescription": "Entrez le code que votre entrepreneur vous a donné — ni courriel ni mot de passe requis.",
     "serverUnreachable": "Impossible de charger votre compte",
     "serverUnreachableHint": "Votre session est valide, mais le serveur n'a pas répondu. Votre compte et vos données sont intacts.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "codeSentTo": "Nous avons envoyé un code à 8 chiffres à {{email}}. Saisissez-le pour continuer.",
+    "codeSentShort": "Nous avons envoyé un code à 8 chiffres à {{email}}.",
+    "registerHint": "Il vous suffit d'un courriel et d'un mot de passe. Les coordonnées de votre entreprise se remplissent plus tard, dans Paramètres.",
+    "verifyCode": "Vérifier le code",
+    "resendCode": "Renvoyer le code",
+    "sendCode": "Envoyer le code",
+    "changePassword": "Changer le mot de passe",
+    "backToSignIn": "Retour à la connexion",
+    "noBusinessAccount": "Vous n'avez pas de compte entreprise ?",
+    "notYetAccount": "Vous n'avez pas encore de compte ?",
+    "serverResponded": "Le serveur a répondu {{status}}"
   },
   "landing": {
     "tagline": "Le système tout-en-un pour votre entreprise de construction",
@@ -509,7 +583,9 @@
     "directWhatsappBody": "L'API WhatsApp Business ne peut pas être activée d'ici : Meta exige que l'entreprise complète sa propre vérification. Une fois les trois exigences ci-dessous remplies, cet écran pourra la connecter.",
     "directWhatsappReq1": "Un compte Meta Business Manager vérifié au nom de l'entreprise.",
     "directWhatsappReq2": "Une application WhatsApp Business créée dans la console développeur de Meta.",
-    "directWhatsappReq3": "Un numéro de téléphone dédié, non déjà utilisé dans l'application WhatsApp normale."
+    "directWhatsappReq3": "Un numéro de téléphone dédié, non déjà utilisé dans l'application WhatsApp normale.",
+    "suggestedWelcomeText": "Bonjour ! 👋 Merci d'avoir contacté {{business}}. Dites-nous ce dont vous avez besoin ici, ou lancez directement votre demande de soumission via ce lien : {{link}}",
+    "pasteInWhatsapp": "Collez-le dans WhatsApp Business → Outils d'entreprise → Message d'accueil."
   },
   "reports": {
     "title": "Rapports",
@@ -617,7 +693,9 @@
     "noProjects": "Aucun projet lié pour l'instant.",
     "noEstimates": "Aucune soumission pour l'instant.",
     "activityTimeline": "Historique d'activité",
-    "noActivity": "Aucune activité enregistrée pour l'instant."
+    "noActivity": "Aucune activité enregistrée pour l'instant.",
+    "viewConversation": "Voir la conversation",
+    "notFound": "Client introuvable."
   },
   "contracts": {
     "title": "Contrats et documents",
@@ -638,7 +716,9 @@
       "plano": "Plan",
       "garantia": "Garantie"
     },
-    "storageNote": "Les fichiers sont stockés dans Supabase Storage, isolés par entreprise. Les téléchargements utilisent des liens temporaires qui expirent après 5 minutes."
+    "storageNote": "Les fichiers sont stockés dans Supabase Storage, isolés par entreprise. Les téléchargements utilisent des liens temporaires qui expirent après 5 minutes.",
+    "descriptionForProject": "Fichiers de {{project}} — contrats, permis, plans et garanties",
+    "descriptionAll": "Répertoire de fichiers par projet — contrats, permis, plans et garanties"
   },
   "costTracking": {
     "title": "Suivi des coûts et rentabilité",
@@ -692,12 +772,38 @@
     "noWorkOrders": "Vous n'avez encore aucun bon de travail."
   },
   "scheduling": {
-    "title": "Calendrier"
+    "title": "Calendrier",
+    "description": "Visites, rendez-vous, démarrages de chantier et dates de livraison",
+    "descriptionForProject": "Calendrier de {{project}}",
+    "addToSchedule": "Ajouter au calendrier",
+    "addToScheduleHint": "Rattachez un travail à un travailleur pour la projection du projet, ou enregistrez simplement une note.",
+    "assignedWork": "Travail assigné",
+    "manualNote": "Note manuelle",
+    "titleRequired": "Saisissez un titre.",
+    "workerRequired": "Choisissez un travailleur, ou passez à Note manuelle.",
+    "selectWorker": "Choisissez un employé ou un sous-traitant",
+    "titlePlaceholderWork": "Ex. Poser le gypse au 2e étage",
+    "titlePlaceholderNote": "Ex. Visiter le chantier",
+    "notesPlaceholder": "Détails du rendez-vous, rappels, notes...",
+    "types": {
+      "visita": "Visite",
+      "llamada": "Appel",
+      "reunion": "Réunion",
+      "inicio": "Début des travaux",
+      "fin": "Livraison"
+    },
+    "time": "Heure",
+    "notes": "Notes"
   },
   "checkIn": {
     "title": "Pointage (entrée / sortie)",
     "description": "Pointage avec heure et position GPS, par projet",
-    "approved": "Approuvé"
+    "approved": "Approuvé",
+    "in": "Entrée",
+    "out": "Sortie",
+    "inProgress": "En cours",
+    "approveHours": "Approuver les heures",
+    "noEntries": "Aucun pointage enregistré pour l'instant."
   },
   "gps": {
     "title": "GPS et itinéraires",
@@ -721,6 +827,7 @@
     "visibleToClient": "Visible pour le client",
     "upload": "Téléverser",
     "uploading": "Téléversement...",
-    "uploadError": "Impossible de téléverser la photo"
+    "uploadError": "Impossible de téléverser la photo",
+    "uploadedBy": "Téléversée par {{name}}"
   }
 }

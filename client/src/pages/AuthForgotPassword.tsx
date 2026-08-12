@@ -79,7 +79,7 @@ export default function AuthForgotPassword() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
         <Link href="/iniciar-sesion" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
-          <ArrowLeft size={13} /> Volver a iniciar sesión
+          <ArrowLeft size={13} /> {t("auth.backToSignIn")}
         </Link>
 
         <div className="text-center space-y-2">
@@ -89,7 +89,7 @@ export default function AuthForgotPassword() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {sent
-              ? `Enviamos un código de 8 dígitos a ${email}.`
+              ? t("auth.codeSentShort", { email })
               : t("auth.recoverPasswordHint")}
           </p>
         </div>
@@ -149,14 +149,14 @@ export default function AuthForgotPassword() {
                 className="w-full"
                 disabled={code.length !== 8 || !newPassword || !confirmPassword || busy}
               >
-                Cambiar contraseña
+                {t("auth.changePassword")}
               </Button>
               <button
                 type="button"
                 onClick={resendCode}
                 className="text-xs text-muted-foreground hover:text-foreground block text-center w-full"
               >
-                Reenviar código
+                {t("auth.resendCode")}
               </button>
             </form>
           ) : (
@@ -181,7 +181,7 @@ export default function AuthForgotPassword() {
               </div>
               {error && <p className="text-sm text-status-error-fg">{error}</p>}
               <Button type="submit" className="w-full" disabled={!email || busy}>
-                Enviar código
+                {t("auth.sendCode")}
               </Button>
             </form>
           )}

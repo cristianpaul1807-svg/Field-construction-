@@ -124,15 +124,15 @@ export function AppointmentRequestsPanel() {
               <div className="mt-3 space-y-2 border-t border-border pt-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">Fecha</Label>
+                    <Label className="text-xs">{t("common.date")}</Label>
                     <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-8" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Hora</Label>
+                    <Label className="text-xs">{t("scheduling.time")}</Label>
                     <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-8" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Duración (min)</Label>
+                    <Label className="text-xs">{t("common.duration")}</Label>
                     <Input
                       type="number"
                       min={15}
@@ -143,10 +143,10 @@ export function AppointmentRequestsPanel() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Asignar a (opcional)</Label>
+                    <Label className="text-xs">{t("workOrders.assignTo")} ({t("common.optional")})</Label>
                     <Select value={workerId} onValueChange={setWorkerId}>
                       <SelectTrigger className="h-8">
-                        <SelectValue placeholder="Sin asignar" />
+                        <SelectValue placeholder={t("common.unassigned")} />
                       </SelectTrigger>
                       <SelectContent>
                         {workers.map((w) => (
@@ -160,7 +160,7 @@ export function AppointmentRequestsPanel() {
                   <Button size="sm" className="gap-1" onClick={confirm} disabled={!date || busy}>
                     <Check size={14} /> Confirmar cita
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setConfirmingId(null)}>Cancelar</Button>
+                  <Button size="sm" variant="outline" onClick={() => setConfirmingId(null)}>{t("common.cancel")}</Button>
                 </div>
               </div>
             ) : (

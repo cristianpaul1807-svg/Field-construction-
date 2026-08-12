@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,13 +21,7 @@ interface Project {
   name: string;
 }
 
-const serviceTypes = [
-  { value: "instalacion", label: "Instalación" },
-  { value: "mantenimiento", label: "Mantenimiento" },
-  { value: "reparacion", label: "Reparación" },
-  { value: "inspeccion", label: "Inspección" },
-  { value: "otro", label: "Otro" },
-];
+const SERVICE_TYPES = ["instalacion", "mantenimiento", "reparacion", "inspeccion", "otro"] as const;
 
 function formatElapsed(ms: number) {
   const totalSeconds = Math.floor(ms / 1000);
@@ -39,7 +34,7 @@ function formatElapsed(ms: number) {
 function getLocation(): Promise<{ latitude: number; longitude: number }> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(new Error("Este dispositivo no soporta geolocalización"));
+      reject(new Error("NO_GEOLOCATION"));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -51,6 +46,7 @@ function getLocation(): Promise<{ latitude: number; longitude: number }> {
 }
 
 export function WorkerClock() {
+  const { t } = useTranslation();
   const [active, setActive] = useState<ActiveEntry | null | undefined>(undefined);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState("");
@@ -88,9 +84,9 @@ export function WorkerClock() {
       await action(loc);
     } catch (err) {
       if (err instanceof Error && err.message === "locationDenied") {
-        setLocationError("Se necesita tu ubicación para registrar la entrada/salida.");
+        setLocationError(t("worker.locationNeeded"));
       } else {
-        setLocationError(err instanceof Error ? err.message : "No se pudo obtener tu ubicación");
+        setLocationError(err instanceof Error ? err.message : t("worker.locationError"));
       }
     } finally {
       setBusy(false);
@@ -137,7 +133,7 @@ export function WorkerClock() {
   if (active === undefined) {
     return (
       <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-        <Spinner className="size-4" /> Cargando...
+        <Spinner className="size-4" /> {t("common.loading")}
       </div>
     );
   }
@@ -155,7 +151,7 @@ export function WorkerClock() {
             {new Date(active.checkInTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
           </p>
         ) : (
-          <p className="text-sm text-muted-foreground">Sin entrada activa</p>
+          <p className="text-sm text-muted-foreground">{t("worker.noActiveEntry")}</p>
         )}
       </div>
 
@@ -168,7 +164,7 @@ export function WorkerClock() {
       {!active || switching ? (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Proyecto</Label>
+            <Label className="text-xs">{t("common.project")}</Label>
             <Select value={projectId} onValueChange={setProjectId}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecciona un proyecto" />
@@ -188,20 +184,20 @@ export function WorkerClock() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="si">Sí</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
+                  <SelectItem value="si">{t("common.yes")}</SelectItem>
+                  <SelectItem value="no">{t("common.no")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Tipo de servicio</Label>
+              <Label className="text-xs">{t("worker.serviceType")}</Label>
               <Select value={serviceType} onValueChange={setServiceType}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona" />
                 </SelectTrigger>
                 <SelectContent>
-                  {serviceTypes.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  {SERVICE_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>{t(`worker.serviceTypes.${type}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -213,7 +209,7 @@ export function WorkerClock() {
               <Button className="flex-1" size="lg" onClick={confirmSwitch} disabled={!projectId || busy}>
                 Confirmar cambio
               </Button>
-              <Button variant="outline" size="lg" onClick={() => setSwitching(false)}>Cancelar</Button>
+              <Button variant="outline" size="lg" onClick={() => setSwitching(false)}>{t("common.cancel")}</Button>
             </div>
           ) : (
             <Button className="w-full gap-2" size="lg" onClick={checkIn} disabled={!projectId || busy}>
