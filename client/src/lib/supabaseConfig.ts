@@ -36,7 +36,7 @@ export async function loadSupabaseConfig(): Promise<SupabaseConfig> {
   const body = (await res.json()) as { supabaseUrl?: string; supabaseAnonKey?: string };
   if (!body.supabaseUrl || !body.supabaseAnonKey) {
     throw new SupabaseConfigError(
-      "El servidor no tiene configurados SUPABASE_URL y VITE_SUPABASE_ANON_KEY."
+      "SUPABASE_URL / SUPABASE_ANON_KEY are not configured on the server. Open /api/health to see exactly which one is missing."
     );
   }
 

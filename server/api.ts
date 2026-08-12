@@ -473,7 +473,7 @@ apiRouter.get(
       .trim()
       .replace(/\/rest\/v1\/?$/, "")
       .replace(/\/+$/, "");
-    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY ?? "").replace(/\s+/g, "");
+    const supabaseAnonKey = readAnonKey();
     res.json({ supabaseUrl, supabaseAnonKey });
   })
 );
@@ -481,13 +481,27 @@ apiRouter.get(
 // Unauthenticated config check. Deliberately reports only whether each piece
 // is configured and reachable — never a key, or any part of one — so it is
 // safe to open in a browser when a deployment misbehaves.
+// The browser's Supabase key has travelled under three names: VITE_ prefixed
+// (from when it was compiled into the bundle), SUPABASE_ANON_KEY, and
+// SUPABASE_PUBLISHABLE_KEY (what Supabase's dashboard calls it today).
+// Accepting all three is what stops a correct key in the wrong variable from
+// taking the whole app down.
+function readAnonKey(): string {
+  const raw =
+    process.env.SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    "";
+  return raw.replace(/\s+/g, "");
+}
+
 apiRouter.get(
   "/health",
   route(async (_req, res) => {
     const report: Record<string, unknown> = {
       supabaseUrlConfigured: Boolean(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL),
       supabaseServiceRoleKeyConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-      supabaseAnonKeyConfigured: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
+      supabaseAnonKeyConfigured: Boolean(readAnonKey()),
       stripeSecretKeyConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
       stripeWebhookSecretConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
     };
@@ -531,6 +545,31 @@ apiRouter.get(
         cause: err instanceof Error && err.cause ? String(err.cause) : null,
       };
     }
+
+    // Plain-language conclusions, because the raw flags above only help
+    // somebody who already knows which variable feeds which behaviour.
+    const problems: string[] = [];
+    if (!report.supabaseUrlConfigured) problems.push("SUPABASE_URL is not set — the API has no project to talk to.");
+    if (!report.supabaseAnonKeyConfigured) {
+      problems.push(
+        "SUPABASE_ANON_KEY is not set. The browser gets its Supabase config from this server at boot, so without it the app cannot start and shows a configuration error. Set SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY, or SUPABASE_PUBLISHABLE_KEY) to the project's publishable key — the one that starts with sb_publishable_. It is safe to expose; it is designed to ship inside the browser bundle."
+      );
+    }
+    if (!report.supabaseServiceRoleKeyConfigured) {
+      problems.push("SUPABASE_SERVICE_ROLE_KEY is not set — every API route that needs admin access will fail.");
+    } else if (!report.serviceRoleKeyLooksLikeJwt && !report.serviceRoleKeyLooksLikeSecret) {
+      problems.push(
+        `SUPABASE_SERVICE_ROLE_KEY does not look like a service role key (${report.serviceRoleKeyLength} characters, and it neither starts with sb_secret_ nor has the three dot-separated parts of a JWT). It looks like the wrong value was pasted. Copy the secret key from Supabase → Project Settings → API keys.`
+      );
+    }
+    if (report.serviceRoleKeyHasWhitespace) {
+      problems.push("SUPABASE_SERVICE_ROLE_KEY contains whitespace — it was probably pasted with a line break.");
+    }
+    if (!report.supabaseReachable && problems.length === 0) {
+      problems.push("Supabase is configured but did not answer. The credentials may be revoked, or the project paused.");
+    }
+    report.problems = problems;
+    report.ok = problems.length === 0 && report.supabaseReachable === true;
 
     res.json(report);
   })
