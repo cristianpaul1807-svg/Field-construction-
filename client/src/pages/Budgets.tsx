@@ -17,9 +17,9 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Trash2, Check } from "lucide-react";
+import { FileText, Plus, Trash2, Check, Download } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
@@ -102,7 +102,7 @@ const emptyLineForm: { zone: string; category: EstimateLine["category"]; item: s
 };
 
 export default function Budgets() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
   const [newBudgetOpen, setNewBudgetOpen] = useState(false);
@@ -116,6 +116,26 @@ export default function Budgets() {
   const { data: categories } = useApi<BudgetCategory[]>(`/api/budget-categories?_r=${reloadToken}`);
 
   const refresh = () => setReloadToken((t) => t + 1);
+
+  // The document is rendered server-side so the customer's copy carries the
+  // business's own letterhead, licence and GST/QST numbers — none of which
+  // the browser has — and comes out in whatever language the panel is in.
+  const downloadEstimate = async () => {
+    if (!draftId) return;
+    setDownloading(true);
+    setPdfError(null);
+    try {
+      await downloadFile(
+        `/api/estimates/${draftId}/pdf?download=1&lang=${i18n.language.slice(0, 2)}`,
+        `${t("budgets.estimateFilePrefix")}-${draftId.slice(0, 8).toUpperCase()}.pdf`
+      );
+      setPdfOpen(false);
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const setCategory = async (categoryId: string) => {
     if (!draftId) return;
@@ -132,6 +152,8 @@ export default function Budgets() {
   const [wastePercent, setWastePercent] = useState(0);
   const [visibility, setVisibility] = useState<boolean[]>([]);
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [lineEdits, setLineEdits] = useState<Record<string, { item: string; quantity: number; unitCost: number }>>({});
   const [lineForm, setLineForm] = useState(emptyLineForm);
   const [addingLine, setAddingLine] = useState(false);
@@ -572,7 +594,7 @@ export default function Budgets() {
 
                 <div className="flex gap-2">
                   <Button className="flex-1 gap-2" onClick={() => setPdfOpen(true)}>
-                    <FileText size={16} /> Generar PDF
+                    <FileText size={16} /> {t("budgets.generatePdf")}
                   </Button>
                   <Button variant="outline" className="flex-1 gap-2" onClick={saveDraft} disabled={savingDraft}>
                     {savedFlash ? <Check size={16} /> : null}
@@ -649,7 +671,7 @@ export default function Budgets() {
         <Dialog open={pdfOpen} onOpenChange={setPdfOpen}>
           <DialogContent className="sm:max-w-xl">
             <DialogHeader>
-              <DialogTitle>Vista previa del PDF</DialogTitle>
+              <DialogTitle>{t("budgets.pdfPreview")}</DialogTitle>
               <DialogDescription>
                 Presupuesto #{draft.id.slice(0, 8).toUpperCase()} para {draft.clientName}
               </DialogDescription>
@@ -675,9 +697,13 @@ export default function Budgets() {
                 <span>{formatCurrency(total)}</span>
               </div>
             </div>
+            {pdfError && <p className="text-sm text-status-error-fg">{pdfError}</p>}
             <DialogFooter>
               <Button variant="outline" onClick={() => setPdfOpen(false)}>{t("common.close")}</Button>
-              <Button>{t("budgets.downloadPdf")}</Button>
+              <Button onClick={downloadEstimate} disabled={downloading} className="gap-2">
+                <Download size={15} strokeWidth={1.75} />
+                {downloading ? t("common.loading") : t("budgets.downloadPdf")}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

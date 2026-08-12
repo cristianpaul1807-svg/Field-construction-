@@ -157,7 +157,9 @@
       "rechazado": "Rechazado"
     },
     "insert": "Insertar",
-    "templates": "Assembly Templates"
+    "templates": "Assembly Templates",
+    "pdfPreview": "Vista previa del PDF",
+    "estimateFilePrefix": "Presupuesto"
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -192,7 +194,9 @@
       "pagado": "Pagado",
       "vencido": "Vencido",
       "cancelado": "Cancelado"
-    }
+    },
+    "downloadPdf": "Descargar factura",
+    "invoiceFilePrefix": "Factura"
   },
   "payments": {
     "title": "Pagos (Stripe)",
@@ -314,7 +318,10 @@
     "previewDisabled": "Vista previa — no interactivo aquí",
     "generateAccessCode": "Generar código de acceso",
     "accessCodeFor": "Código de acceso para {{name}}",
-    "accessCodeNote": "Compártelo con {{name}} para que entre en el portal del cliente. No necesita correo ni contraseña, y no se volverá a mostrar."
+    "accessCodeNote": "Compártelo con {{name}} para que entre en el portal del cliente. No necesita correo ni contraseña, y no se volverá a mostrar.",
+    "downloadEstimate": "Descargar presupuesto",
+    "acceptEstimate": "Aceptar presupuesto",
+    "notSentYet": "Tu contratista todavía no te ha enviado este presupuesto."
   },
   "worker": {
     "accessTitle": "Acceso de trabajador",
@@ -460,7 +467,17 @@
       "oficina": "Oficina",
       "tecnico": "Técnico",
       "subcontratista": "Subcontratista"
-    }
+    },
+    "slugWarning": "Cambiar esto rompe cualquier link que ya hayas compartido — quien tenga el link viejo dejará de poder usarlo.",
+    "billingIdentity": "Datos para presupuestos y facturas",
+    "billingIdentityHint": "Esto se imprime en la cabecera de cada documento que envías. En Quebec, los números de TPS y TVQ son obligatorios en una factura.",
+    "addressPlaceholder": "Calle, ciudad, provincia, código postal",
+    "gstNumber": "Número de TPS/GST",
+    "qstNumber": "Número de TVQ/QST",
+    "depositPercent": "Depósito por defecto (%)",
+    "depositPercentHint": "Aparece en cada presupuesto como el importe necesario para iniciar los trabajos.",
+    "estimateTerms": "Condiciones del presupuesto",
+    "estimateTermsPlaceholder": "Ej. Los precios son válidos 30 días. Todo cambio de alcance se documentará por escrito."
   },
   "reports": {
     "title": "Informes",

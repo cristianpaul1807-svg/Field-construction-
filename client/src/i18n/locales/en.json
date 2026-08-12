@@ -157,7 +157,9 @@
       "rechazado": "Rejected"
     },
     "insert": "Insert",
-    "templates": "Assembly Templates"
+    "templates": "Assembly Templates",
+    "pdfPreview": "PDF preview",
+    "estimateFilePrefix": "Estimate"
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -192,7 +194,9 @@
       "pagado": "Paid",
       "vencido": "Overdue",
       "cancelado": "Cancelled"
-    }
+    },
+    "downloadPdf": "Download invoice",
+    "invoiceFilePrefix": "Invoice"
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -314,7 +318,10 @@
     "previewDisabled": "Preview — not interactive here",
     "generateAccessCode": "Generate access code",
     "accessCodeFor": "Access code for {{name}}",
-    "accessCodeNote": "Share it with {{name}} so they can open the client portal. No email or password needed, and it won't be shown again."
+    "accessCodeNote": "Share it with {{name}} so they can open the client portal. No email or password needed, and it won't be shown again.",
+    "downloadEstimate": "Download estimate",
+    "acceptEstimate": "Accept estimate",
+    "notSentYet": "Your contractor hasn't sent you this estimate yet."
   },
   "worker": {
     "accessTitle": "Worker access",
@@ -460,7 +467,17 @@
       "oficina": "Office",
       "tecnico": "Technician",
       "subcontratista": "Subcontractor"
-    }
+    },
+    "slugWarning": "Changing this breaks every link you've already shared — anyone with the old link will no longer be able to use it.",
+    "billingIdentity": "Estimate and invoice details",
+    "billingIdentityHint": "This prints in the header of every document you send. In Quebec the GST and QST numbers are mandatory on an invoice.",
+    "addressPlaceholder": "Street, city, province, postal code",
+    "gstNumber": "GST number",
+    "qstNumber": "QST number",
+    "depositPercent": "Default deposit (%)",
+    "depositPercentHint": "Shown on every estimate as the amount needed to start the work.",
+    "estimateTerms": "Estimate terms",
+    "estimateTermsPlaceholder": "e.g. Prices are valid for 30 days. Any change of scope will be documented in writing."
   },
   "reports": {
     "title": "Reports & Analytics",

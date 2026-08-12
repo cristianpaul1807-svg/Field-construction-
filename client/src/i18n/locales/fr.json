@@ -157,7 +157,9 @@
       "rechazado": "Refusée"
     },
     "insert": "Insérer",
-    "templates": "Modèles d'assemblage"
+    "templates": "Modèles d'assemblage",
+    "pdfPreview": "Aperçu du PDF",
+    "estimateFilePrefix": "Soumission"
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -192,7 +194,9 @@
       "pagado": "Payée",
       "vencido": "En retard",
       "cancelado": "Annulée"
-    }
+    },
+    "downloadPdf": "Télécharger la facture",
+    "invoiceFilePrefix": "Facture"
   },
   "payments": {
     "title": "Paiements (Stripe)",
@@ -314,7 +318,10 @@
     "previewDisabled": "Aperçu — non interactif ici",
     "generateAccessCode": "Générer un code d'accès",
     "accessCodeFor": "Code d'accès pour {{name}}",
-    "accessCodeNote": "Partagez-le avec {{name}} pour qu'il accède au portail client. Ni courriel ni mot de passe requis, et il ne sera plus affiché."
+    "accessCodeNote": "Partagez-le avec {{name}} pour qu'il accède au portail client. Ni courriel ni mot de passe requis, et il ne sera plus affiché.",
+    "downloadEstimate": "Télécharger la soumission",
+    "acceptEstimate": "Accepter la soumission",
+    "notSentYet": "Votre entrepreneur ne vous a pas encore envoyé cette soumission."
   },
   "worker": {
     "accessTitle": "Accès travailleur",
@@ -460,7 +467,17 @@
       "oficina": "Bureau",
       "tecnico": "Technicien",
       "subcontratista": "Sous-traitant"
-    }
+    },
+    "slugWarning": "Changer ceci brise tous les liens déjà partagés — quiconque a l'ancien lien ne pourra plus l'utiliser.",
+    "billingIdentity": "Coordonnées pour soumissions et factures",
+    "billingIdentityHint": "Ceci s'imprime dans l'en-tête de chaque document que vous envoyez. Au Québec, les numéros de TPS et de TVQ sont obligatoires sur une facture.",
+    "addressPlaceholder": "Rue, ville, province, code postal",
+    "gstNumber": "Numéro de TPS",
+    "qstNumber": "Numéro de TVQ",
+    "depositPercent": "Dépôt par défaut (%)",
+    "depositPercentHint": "Affiché sur chaque soumission comme le montant requis pour démarrer les travaux.",
+    "estimateTerms": "Conditions de la soumission",
+    "estimateTermsPlaceholder": "Ex. Les prix sont valides 30 jours. Tout changement de portée fera l'objet d'un avenant écrit."
   },
   "reports": {
     "title": "Rapports",

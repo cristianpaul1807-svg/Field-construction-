@@ -157,7 +157,9 @@
       "rechazado": "Rifiutato"
     },
     "insert": "Inserisci",
-    "templates": "Modelli"
+    "templates": "Modelli",
+    "pdfPreview": "Anteprima PDF",
+    "estimateFilePrefix": "Preventivo"
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -192,7 +194,9 @@
       "pagado": "Pagata",
       "vencido": "Scaduta",
       "cancelado": "Annullata"
-    }
+    },
+    "downloadPdf": "Scarica fattura",
+    "invoiceFilePrefix": "Fattura"
   },
   "payments": {
     "title": "Pagamenti (Stripe)",
@@ -314,7 +318,10 @@
     "previewDisabled": "Anteprima — non interattivo qui",
     "generateAccessCode": "Genera codice di accesso",
     "accessCodeFor": "Codice di accesso per {{name}}",
-    "accessCodeNote": "Condividilo con {{name}} per farlo entrare nel portale cliente. Non servono email né password, e non verrà più mostrato."
+    "accessCodeNote": "Condividilo con {{name}} per farlo entrare nel portale cliente. Non servono email né password, e non verrà più mostrato.",
+    "downloadEstimate": "Scarica preventivo",
+    "acceptEstimate": "Accetta preventivo",
+    "notSentYet": "Il tuo appaltatore non ti ha ancora inviato questo preventivo."
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",
@@ -460,7 +467,17 @@
       "oficina": "Ufficio",
       "tecnico": "Tecnico",
       "subcontratista": "Subappaltatore"
-    }
+    },
+    "slugWarning": "Cambiare questo rompe ogni link già condiviso — chi ha il vecchio link non potrà più usarlo.",
+    "billingIdentity": "Dati per preventivi e fatture",
+    "billingIdentityHint": "Questo viene stampato nell'intestazione di ogni documento che invii. In Quebec i numeri GST e QST sono obbligatori su una fattura.",
+    "addressPlaceholder": "Via, città, provincia, codice postale",
+    "gstNumber": "Numero GST",
+    "qstNumber": "Numero QST",
+    "depositPercent": "Acconto predefinito (%)",
+    "depositPercentHint": "Mostrato su ogni preventivo come l'importo necessario per avviare i lavori.",
+    "estimateTerms": "Condizioni del preventivo",
+    "estimateTermsPlaceholder": "Es. I prezzi sono validi 30 giorni. Ogni variazione dell'ambito sarà documentata per iscritto."
   },
   "reports": {
     "title": "Report",

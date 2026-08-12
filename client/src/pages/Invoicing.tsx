@@ -14,9 +14,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Plus, Copy, Check } from "lucide-react";
+import { Send, Plus, Copy, Check, Download } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 const INVOICE_TYPES = ["deposito", "parcial", "final"] as const;
@@ -160,15 +160,30 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 }
 
 export default function Invoicing() {
-  const { t } = useTranslation();
-  const [reloadToken, setReloadToken] = useState(0);
-  const { data: invoices, loading, error } = useApi<Invoice[]>(`/api/invoices?_r=${reloadToken}`);
+  const { t, i18n } = useTranslation();
+  const { data: invoices, loading, error, reload } = useApi<Invoice[]>("/api/invoices");
+  const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
   const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   const totalPending = (invoices ?? []).filter((i) => i.status === "pendiente" || i.status === "vencido").reduce((s, i) => s + i.amount, 0);
   const totalPaid = (invoices ?? []).filter((i) => i.status === "pagado").reduce((s, i) => s + i.amount, 0);
+
+  const downloadInvoice = async (invoiceId: string) => {
+    setPdfBusyId(invoiceId);
+    setLinkError(null);
+    try {
+      await downloadFile(
+        `/api/invoices/${invoiceId}/pdf?download=1&lang=${i18n.language.slice(0, 2)}`,
+        `${t("invoicing.invoiceFilePrefix")}-${invoiceId.slice(0, 8).toUpperCase()}.pdf`
+      );
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setPdfBusyId(null);
+    }
+  };
 
   const copyLink = async (invoiceId: string) => {
     setLinkBusyId(invoiceId);
@@ -192,7 +207,7 @@ export default function Invoicing() {
       <PageHeader
         title={t("invoicing.title")}
         description={t("invoicing.description")}
-        action={<NewInvoiceDialog onCreated={() => setReloadToken((t) => t + 1)} />}
+        action={<NewInvoiceDialog onCreated={reload} />}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -249,6 +264,17 @@ export default function Invoicing() {
                     <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{t(`invoicing.status.${invoice.status}`)}</StatusBadge>
                   </td>
                   <td className="py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => downloadInvoice(invoice.id)}
+                      disabled={pdfBusyId === invoice.id}
+                    >
+                      {pdfBusyId === invoice.id ? <Spinner className="size-3.5" /> : <Download size={13} strokeWidth={1.75} />}
+                      {t("invoicing.downloadPdf")}
+                    </Button>
                     {invoice.status !== "pagado" && (
                       <Button
                         size="sm"
@@ -267,6 +293,7 @@ export default function Invoicing() {
                         {copiedId === invoice.id ? t("invoicing.copied") : t("invoicing.copyPaymentLink")}
                       </Button>
                     )}
+                    </div>
                   </td>
                 </tr>
               ))}

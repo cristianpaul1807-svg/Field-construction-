@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileSignature, CreditCard, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
+import { FileSignature, CreditCard, Download, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
 import { useTranslation } from "react-i18next";
@@ -28,7 +28,7 @@ function colorForId(id: string) {
 }
 
 export default function ClientPortalMe() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { signOut } = useAuth();
 
   // The portal serves two kinds of session (access code and Supabase login),
@@ -38,9 +38,40 @@ export default function ClientPortalMe() {
     await signOut();
     window.location.href = "/cliente/acceso";
   };
-  const { data, loading, error } = useApi<ClientPortalData>("/api/client-portal/me");
+  const { data, loading, error, reload } = useApi<ClientPortalData>("/api/client-portal/me");
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+
+  const downloadEstimate = async (estimateId: string) => {
+    setDownloading(true);
+    setPayError(null);
+    try {
+      await downloadFile(
+        `/api/client-portal/estimates/${estimateId}/pdf?lang=${i18n.language.slice(0, 2)}`,
+        `${t("budgets.estimateFilePrefix")}-${estimateId.slice(0, 8).toUpperCase()}.pdf`
+      );
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const acceptEstimate = async (estimateId: string) => {
+    setAccepting(true);
+    setPayError(null);
+    try {
+      const res = await apiFetch(`/api/client-portal/estimates/${estimateId}/accept`, { method: "POST" });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      reload();
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setAccepting(false);
+    }
+  };
 
   const pay = async (invoiceId: string) => {
     setPayingInvoiceId(invoiceId);
@@ -131,8 +162,25 @@ export default function ClientPortalMe() {
                     <StatusBadge tone="info">{data.estimate.status}</StatusBadge>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                    <Button className="gap-2 flex-1">
-                      <FileSignature size={16} /> {t("clientPortal.signEstimate")}
+                    {data.estimate.status !== "aceptado" && (
+                      <Button
+                        className="gap-2 flex-1"
+                        onClick={() => acceptEstimate(data.estimate!.id)}
+                        disabled={accepting || data.estimate.status !== "enviado"}
+                        title={data.estimate.status !== "enviado" ? t("clientPortal.notSentYet") : undefined}
+                      >
+                        {accepting ? <Spinner className="size-4" /> : <FileSignature size={16} />}
+                        {t("clientPortal.acceptEstimate")}
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      className="gap-2 flex-1"
+                      onClick={() => downloadEstimate(data.estimate!.id)}
+                      disabled={downloading}
+                    >
+                      {downloading ? <Spinner className="size-4" /> : <Download size={16} />}
+                      {t("clientPortal.downloadEstimate")}
                     </Button>
                     {data.pendingInvoice && (
                       <Button

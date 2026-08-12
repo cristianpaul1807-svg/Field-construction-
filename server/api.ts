@@ -5,6 +5,16 @@ import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
 import { getStripe, getStripeWebhookSecret, StripeNotConfiguredError } from "./stripe";
 import { flowCopy, normalizeFlowLang, type FlowLang } from "./flowMessages";
 import {
+  renderEstimatePdf,
+  renderInvoicePdf,
+  documentNumber,
+  normalizeDocLang,
+  type BusinessIdentity,
+  type DocLang,
+  type DocLine,
+  type TaxBreakdown,
+} from "./documents";
+import {
   requireAuthenticatedUser,
   requireBusinessAuth,
   requireClientAuth,
@@ -1606,6 +1616,90 @@ apiRouter.post(
     });
 
     res.status(201).json({ id: appointment.id });
+  })
+);
+
+// The customer accepting their own estimate — the moment a lead becomes a
+// job. Only an estimate that was actually sent to them can be accepted, so a
+// draft the contractor is still pricing can't be locked in behind their back.
+apiRouter.post(
+  "/client-portal/estimates/:id/accept",
+  requireClientAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: estimate } = await admin
+      .from("estimates")
+      .select("id, status, business_id")
+      .eq("id", req.params.id)
+      .eq("client_id", req.clientId!)
+      .maybeSingle();
+    if (!estimate) {
+      res.status(404).json({ error: "estimate not found" });
+      return;
+    }
+    if (estimate.status === "aceptado") {
+      res.json({ ok: true, status: "aceptado" });
+      return;
+    }
+    if (estimate.status !== "enviado") {
+      res.status(409).json({ error: "estimate is not awaiting acceptance" });
+      return;
+    }
+    const { error } = await admin.from("estimates").update({ status: "aceptado" }).eq("id", estimate.id);
+    if (error) throw error;
+    res.json({ ok: true, status: "aceptado" });
+  })
+);
+
+apiRouter.get(
+  "/client-portal/estimates/:id/pdf",
+  requireClientAuth,
+  route(async (req, res) => {
+    // The customer is the other half of these documents, so they get the
+    // same file the contractor does — but only for an estimate that is
+    // actually theirs, checked here rather than left to RLS because a client
+    // who entered with an access code has no auth.uid() to check against.
+    const admin = getSupabaseAdmin();
+    const { data: owned } = await admin
+      .from("estimates")
+      .select("id, business_id")
+      .eq("id", req.params.id)
+      .eq("client_id", req.clientId!)
+      .maybeSingle();
+    if (!owned) {
+      res.status(404).json({ error: "estimate not found" });
+      return;
+    }
+    const pdf = await buildEstimatePdf(owned.business_id, owned.id, normalizeDocLang(req.query.lang));
+    if (!pdf) {
+      res.status(404).json({ error: "estimate not found" });
+      return;
+    }
+    sendPdf(res, pdf, `${documentNumber("estimate", owned.id)}.pdf`, "attachment");
+  })
+);
+
+apiRouter.get(
+  "/client-portal/invoices/:id/pdf",
+  requireClientAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: owned } = await admin
+      .from("invoices")
+      .select("id, business_id")
+      .eq("id", req.params.id)
+      .eq("client_id", req.clientId!)
+      .maybeSingle();
+    if (!owned) {
+      res.status(404).json({ error: "invoice not found" });
+      return;
+    }
+    const pdf = await buildInvoicePdf(owned.business_id, owned.id, normalizeDocLang(req.query.lang));
+    if (!pdf) {
+      res.status(404).json({ error: "invoice not found" });
+      return;
+    }
+    sendPdf(res, pdf, `${documentNumber("invoice", owned.id)}.pdf`, "attachment");
   })
 );
 
@@ -4212,6 +4306,220 @@ apiRouter.patch(
   })
 );
 
+// ---------- Printable documents (estimate / invoice PDFs) ----------
+// The estimate and the invoice are the two artefacts a construction business
+// actually hands to a customer, so both are generated as real PDF bytes.
+// Both routes stream the same helper: the estimate prices from its own
+// client-visible lines, the invoice from the amounts already computed and
+// stored when it was issued.
+
+async function loadBusinessIdentity(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string
+): Promise<{ identity: BusinessIdentity; depositPercent: number; terms: string | null }> {
+  const { data, error } = await admin
+    .from("businesses")
+    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, estimate_terms")
+    .eq("id", businessId)
+    .single();
+  if (error) throw error;
+  return {
+    identity: {
+      name: data.name,
+      address: data.address ?? null,
+      phone: data.phone ?? null,
+      email: data.email ?? null,
+      licenseNumber: data.license_number ?? null,
+      gstNumber: data.gst_number ?? null,
+      qstNumber: data.qst_number ?? null,
+      province: data.province ?? null,
+    },
+    depositPercent: Number(data.deposit_percent ?? 0),
+    terms: data.estimate_terms ?? null,
+  };
+}
+
+function sendPdf(res: express.Response, pdf: Buffer, filename: string, disposition: "inline" | "attachment") {
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `${disposition}; filename="${filename}"`);
+  res.setHeader("Content-Length", String(pdf.length));
+  res.end(pdf);
+}
+
+// Shared by the business panel and (via the client portal) the customer, so
+// it takes the ids rather than reading them off the request.
+async function buildEstimatePdf(businessId: string, estimateId: string, lang: DocLang): Promise<Buffer | null> {
+  const admin = getSupabaseAdmin();
+
+  const [estimate, lines, business] = await Promise.all([
+    admin
+      .from("estimates")
+      .select("id, status, margin_percent, waste_percent, description, created_at, clients(name, address, phone, email), projects(name)")
+      .eq("business_id", businessId)
+      .eq("id", estimateId)
+      .maybeSingle(),
+    admin
+      .from("estimate_lines")
+      .select("zone, item_name, quantity, unit_cost, total, visible_to_client")
+      .eq("business_id", businessId)
+      .eq("estimate_id", estimateId)
+      .order("zone"),
+    loadBusinessIdentity(admin, businessId),
+  ]);
+
+  if (estimate.error) throw estimate.error;
+  if (lines.error) throw lines.error;
+  if (!estimate.data) return null;
+
+  // Only lines the business chose to show reach the customer's copy — the
+  // internal cost breakdown behind a price is not the customer's business.
+  const visible = lines.data.filter((l) => l.visible_to_client);
+  const marginPercent = Number(estimate.data.margin_percent ?? 0);
+  const wastePercent = Number(estimate.data.waste_percent ?? 0);
+
+  // Waste and margin are the contractor's own arithmetic, not line items the
+  // customer should be asked to read, so they are folded into each unit price
+  // instead of being printed as extra rows.
+  const uplift = (1 + wastePercent / 100) * (1 + marginPercent / 100);
+  const docLines: DocLine[] = visible.map((l) => {
+    const total = Math.round(Number(l.total) * uplift * 100) / 100;
+    const quantity = Number(l.quantity);
+    return {
+      zone: l.zone,
+      item: l.item_name,
+      quantity,
+      unitCost: quantity ? Math.round((total / quantity) * 100) / 100 : total,
+      total,
+    };
+  });
+
+  const subtotal = Math.round(docLines.reduce((sum, l) => sum + l.total, 0) * 100) / 100;
+  const { taxAmount, breakdown } = await computeInvoiceTax(admin, businessId, subtotal);
+
+  const client = estimate.data.clients as unknown as
+    | { name: string; address: string | null; phone: string | null; email: string | null }
+    | null;
+  const createdAt = new Date(estimate.data.created_at);
+  // A construction estimate that never expires is a price the contractor is
+  // stuck with when material costs move, so every one carries 30 days.
+  const validUntil = new Date(createdAt.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  return renderEstimatePdf(
+    {
+      kind: "estimate",
+      number: documentNumber("estimate", estimate.data.id),
+      date: createdAt,
+      validUntil,
+      business: business.identity,
+      client: {
+        name: client?.name ?? "—",
+        address: client?.address ?? null,
+        phone: client?.phone ?? null,
+        email: client?.email ?? null,
+      },
+      projectName: (estimate.data.projects as any)?.name ?? null,
+      description: estimate.data.description ?? null,
+      lines: docLines,
+      subtotal,
+      taxAmount,
+      taxBreakdown: breakdown,
+      total: Math.round((subtotal + taxAmount) * 100) / 100,
+      depositPercent: business.depositPercent,
+      terms: business.terms,
+    },
+    lang
+  );
+}
+
+async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocLang): Promise<Buffer | null> {
+  const admin = getSupabaseAdmin();
+
+  const [invoice, business] = await Promise.all([
+    admin
+      .from("invoices")
+      .select("id, type, amount, subtotal, tax_amount, tax_breakdown, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
+      .eq("business_id", businessId)
+      .eq("id", invoiceId)
+      .maybeSingle(),
+    loadBusinessIdentity(admin, businessId),
+  ]);
+
+  if (invoice.error) throw invoice.error;
+  if (!invoice.data) return null;
+
+  const client = invoice.data.clients as unknown as
+    | { name: string; address: string | null; phone: string | null; email: string | null }
+    | null;
+
+  // Invoices issued before the tax columns existed only carry `amount`; that
+  // figure is the amount actually charged, so it stands in as the total and
+  // the document simply shows no tax line rather than inventing one.
+  const subtotal = Number(invoice.data.subtotal ?? invoice.data.amount ?? 0);
+  const taxAmount = Number(invoice.data.tax_amount ?? 0);
+  const label = INVOICE_TYPE_LABEL[invoice.data.type] ?? invoice.data.type;
+
+  return renderInvoicePdf(
+    {
+      kind: "invoice",
+      number: documentNumber("invoice", invoice.data.id),
+      date: new Date(invoice.data.created_at),
+      dueDate: invoice.data.due_date ? new Date(`${invoice.data.due_date}T00:00:00`) : null,
+      paidAt: invoice.data.paid_at ? new Date(invoice.data.paid_at) : null,
+      business: business.identity,
+      client: {
+        name: client?.name ?? "—",
+        address: client?.address ?? null,
+        phone: client?.phone ?? null,
+        email: client?.email ?? null,
+      },
+      projectName: (invoice.data.projects as any)?.name ?? null,
+      // The description IS the single line item on an invoice, so printing it
+      // again above the table would just say the same thing twice.
+      description: null,
+      lines: [
+        {
+          zone: null,
+          item: invoice.data.description || label,
+          quantity: 1,
+          unitCost: subtotal,
+          total: subtotal,
+        },
+      ],
+      subtotal,
+      taxAmount,
+      taxBreakdown: (invoice.data.tax_breakdown as TaxBreakdown) ?? {},
+      total: Math.round((subtotal + taxAmount) * 100) / 100,
+    },
+    lang
+  );
+}
+
+apiRouter.get(
+  "/estimates/:id/pdf",
+  route(async (req, res) => {
+    const lang = normalizeDocLang(req.query.lang);
+    const pdf = await buildEstimatePdf(req.businessId!, req.params.id, lang);
+    if (!pdf) {
+      res.status(404).json({ error: "estimate not found" });
+      return;
+    }
+    sendPdf(res, pdf, `${documentNumber("estimate", req.params.id)}.pdf`, req.query.download ? "attachment" : "inline");
+  })
+);
+
+apiRouter.get(
+  "/invoices/:id/pdf",
+  route(async (req, res) => {
+    const lang = normalizeDocLang(req.query.lang);
+    const pdf = await buildInvoicePdf(req.businessId!, req.params.id, lang);
+    if (!pdf) {
+      res.status(404).json({ error: "invoice not found" });
+      return;
+    }
+    sendPdf(res, pdf, `${documentNumber("invoice", req.params.id)}.pdf`, req.query.download ? "attachment" : "inline");
+  })
+);
+
 // ---------- Reports & Analytics ----------
 // The month-by-month revenue/expense series is grouped from real payment
 // and expense dates (not a stored aggregate, and not a fabricated series
@@ -4738,7 +5046,9 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("businesses")
-      .select("id, name, slug, license_number, tax_config, province")
+      .select(
+        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, estimate_terms"
+      )
       .eq("id", req.businessId!)
       .single();
 
@@ -4751,6 +5061,15 @@ apiRouter.get(
       licenseNumber: data.license_number,
       taxConfig: data.tax_config,
       province: data.province,
+      // Everything below prints in the header (or the footer) of every
+      // estimate and invoice this business sends out.
+      address: data.address,
+      phone: data.phone,
+      email: data.email,
+      gstNumber: data.gst_number,
+      qstNumber: data.qst_number,
+      depositPercent: Number(data.deposit_percent ?? 0),
+      estimateTerms: data.estimate_terms,
     });
   })
 );
@@ -4792,6 +5111,20 @@ apiRouter.patch(
     if (body.licenseNumber !== undefined) update.license_number = body.licenseNumber;
     if (body.taxConfig !== undefined) update.tax_config = body.taxConfig;
     if (body.province !== undefined) update.province = body.province;
+    if (body.address !== undefined) update.address = body.address || null;
+    if (body.phone !== undefined) update.phone = body.phone || null;
+    if (body.email !== undefined) update.email = body.email || null;
+    if (body.gstNumber !== undefined) update.gst_number = body.gstNumber || null;
+    if (body.qstNumber !== undefined) update.qst_number = body.qstNumber || null;
+    if (body.estimateTerms !== undefined) update.estimate_terms = body.estimateTerms || null;
+    if (body.depositPercent !== undefined) {
+      const pct = Number(body.depositPercent);
+      if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+        res.status(400).json({ error: "depositPercent must be between 0 and 100" });
+        return;
+      }
+      update.deposit_percent = pct;
+    }
 
     // Slug uniqueness spans every business, not just this one's own RLS-visible
     // row, so checking it needs the admin client — the update itself still

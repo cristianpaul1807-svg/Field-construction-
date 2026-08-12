@@ -33,6 +33,31 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   return fetch(path, { ...init, headers });
 }
 
+/**
+ * Saves a file from an authenticated endpoint. A plain <a download> can't be
+ * used for these: the bearer token lives in a header, and a link request
+ * carries no headers, so the server would answer 401. Fetching the bytes and
+ * handing the browser a blob URL is what makes "Download PDF" work at all.
+ */
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  const res = await apiFetch(path);
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error || `Request failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Revoking immediately can cancel the download in some browsers; one tick
+  // is enough for the click to have been consumed.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 // Small fetch hook — no data library in this project yet, and the app's
 // data needs (a handful of read endpoints per screen) don't warrant adding one.
 // Pass `null` as the path to skip fetching (e.g. while waiting on a prerequisite id).
