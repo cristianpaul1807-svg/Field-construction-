@@ -14,12 +14,13 @@ interface SelectedProjectContextValue {
   selectedProjectId: string | null;
   selectedProject: ProjectOption | null;
   setSelectedProjectId: (id: string | null) => void;
+  reloadProjects: () => void;
 }
 
 const SelectedProjectContext = createContext<SelectedProjectContextValue | null>(null);
 
 export function SelectedProjectProvider({ children }: { children: ReactNode }) {
-  const { data: projects, loading: projectsLoading } = useApi<ProjectOption[]>("/api/projects");
+  const { data: projects, loading: projectsLoading, reload: reloadProjects } = useApi<ProjectOption[]>("/api/projects");
   const [selectedProjectId, setSelectedProjectIdState] = useState<string | null>(() =>
     localStorage.getItem(STORAGE_KEY)
   );
@@ -33,6 +34,17 @@ export function SelectedProjectProvider({ children }: { children: ReactNode }) {
     }
   }, [projects, selectedProjectId]);
 
+  // The list is fetched once at mount, so a project created afterwards —
+  // by accepting an estimate, or on another tab — left the switcher claiming
+  // there were no projects while the Projects page listed one. Refetching
+  // when the window regains focus catches every case the explicit reload
+  // calls miss.
+  useEffect(() => {
+    const refresh = () => reloadProjects();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [reloadProjects]);
+
   const setSelectedProjectId = (id: string | null) => {
     setSelectedProjectIdState(id);
     if (id) localStorage.setItem(STORAGE_KEY, id);
@@ -43,7 +55,14 @@ export function SelectedProjectProvider({ children }: { children: ReactNode }) {
 
   return (
     <SelectedProjectContext.Provider
-      value={{ projects: projects ?? [], projectsLoading, selectedProjectId, selectedProject, setSelectedProjectId }}
+      value={{
+        projects: projects ?? [],
+        projectsLoading,
+        selectedProjectId,
+        selectedProject,
+        setSelectedProjectId,
+        reloadProjects,
+      }}
     >
       {children}
     </SelectedProjectContext.Provider>

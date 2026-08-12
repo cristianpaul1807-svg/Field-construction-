@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch } from "@/lib/api";
+import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
 
 interface Project {
@@ -106,6 +107,7 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
 
 export default function Projects() {
   const { t } = useTranslation();
+  const { reloadProjects } = useSelectedProject();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: projects, loading, error } = useApi<Project[]>(`/api/projects?_r=${reloadToken}`);
 
@@ -114,7 +116,15 @@ export default function Projects() {
       <PageHeader
         title={t("projects.title")}
         description={t("projects.description")}
-        action={<NewProjectDialog onCreated={() => setReloadToken((n) => n + 1)} />}
+        action={
+          <NewProjectDialog
+            onCreated={() => {
+              setReloadToken((n) => n + 1);
+              // The header's project switcher holds its own copy of the list.
+              reloadProjects();
+            }}
+          />
+        }
       />
 
       {loading && (

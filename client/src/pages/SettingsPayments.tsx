@@ -45,6 +45,7 @@ export default function SettingsPayments() {
   const [connecting, setConnecting] = useState(false);
   const [savingProvince, setSavingProvince] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsConnectSignup, setNeedsConnectSignup] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -56,10 +57,21 @@ export default function SettingsPayments() {
   const connect = async () => {
     setConnecting(true);
     setError(null);
+    setNeedsConnectSignup(false);
     try {
       const res = await apiFetch("/api/stripe/connect/onboarding-link", { method: "POST" });
       const body = await readJson(res);
-      if (!res.ok) throw new Error(body?.error || t("payments.connectError"));
+      if (!res.ok) {
+        // Connect not enabled on the platform account is not an error the
+        // business can fix by retrying — it is a one-time signup — so it gets
+        // its own explanation and a link, not a red sentence in English.
+        if (body?.code === "stripe_connect_not_enabled") {
+          setNeedsConnectSignup(true);
+          setConnecting(false);
+          return;
+        }
+        throw new Error(body?.error || t("payments.connectError"));
+      }
       window.location.href = body.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : t("payments.connectError"));
@@ -124,6 +136,20 @@ export default function SettingsPayments() {
           </div>
         )}
 
+        {needsConnectSignup && (
+          <div className="rounded-lg border border-status-warning-fg/30 bg-status-warning-bg/40 p-4 space-y-2">
+            <p className="text-sm font-medium text-foreground">{t("payments.connectNotEnabledTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("payments.connectNotEnabledBody")}</p>
+            <a
+              href="https://dashboard.stripe.com/connect"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              {t("payments.connectNotEnabledAction")} <ExternalLink size={13} strokeWidth={1.75} />
+            </a>
+          </div>
+        )}
         {error && <p className="text-sm text-status-error-fg">{error}</p>}
       </Card>
 

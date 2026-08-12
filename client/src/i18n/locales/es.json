@@ -225,7 +225,18 @@
       "Mano de obra": "Mano de obra",
       "Subcontratistas": "Subcontratistas"
     },
-    "marginTypeLabel": "Tipo de margen"
+    "marginTypeLabel": "Tipo de margen",
+    "pickFromCatalog": "Elige del catálogo",
+    "otherItem": "Otro (escribir a mano)",
+    "visibleToClientShort": "Visible al cliente",
+    "sendToClientTitle": "¿Enviar el presupuesto al cliente?",
+    "sendToClientHint": "Le llega el PDF a su chat, donde puede leerlo, aceptarlo o pedirte cambios. Puedes revisarlo antes de enviarlo.",
+    "reviewPdfFirst": "Revisar el PDF antes",
+    "messageToClient": "Mensaje para el cliente",
+    "messageToClientPlaceholder": "Ej. Aquí tienes el presupuesto. Cualquier duda, escríbeme por aquí.",
+    "approveWithoutSending": "Aprobar sin enviar",
+    "approveAndDeliver": "Aprobar y enviar",
+    "sentToClient": "Enviado al chat del cliente."
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -287,7 +298,10 @@
       "active": "Activa — puede recibir pagos",
       "pending": "Onboarding pendiente",
       "restricted": "Stripe requiere más información"
-    }
+    },
+    "connectNotEnabledTitle": "Falta activar Stripe Connect en tu cuenta de Stripe",
+    "connectNotEnabledBody": "Stripe no deja crear cuentas conectadas hasta que la cuenta de la plataforma se da de alta en Connect. Es un registro único y gratuito, y solo se puede hacer desde el panel de Stripe. Cuando lo termines, vuelve aquí y pulsa Conectar Stripe otra vez.",
+    "connectNotEnabledAction": "Abrir dashboard.stripe.com/connect"
   },
   "communication": {
     "title": "Mensajería",
@@ -327,7 +341,9 @@
       "title": "Solicitudes de cita",
       "description": "El cliente propone día/hora y motivo desde el chat — nunca se agenda solo. Confirma un espacio real o rechaza la solicitud.",
       "none": "Sin solicitudes pendientes."
-    }
+    },
+    "attachment": "Adjunto",
+    "attachFile": "Adjuntar archivo"
   },
   "technicians": {
     "title": "Técnicos y equipo",

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Send, Settings, Bot, UserRound } from "lucide-react";
+import { Send, Settings, Bot, UserRound, Paperclip, FileText, Download, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,10 @@ interface ChatThreadProps {
   messages: ChatMessage[] | null;
   ownSenderTypes: string[];
   onSend: (content: string) => void | Promise<void>;
+  /** Uploads a file into this conversation. Omitted where attachments aren't allowed. */
+  onSendFile?: (file: File) => void | Promise<void>;
+  /** Resolves a message's attachment to something openable. */
+  onOpenAttachment?: (message: ChatMessage) => void | Promise<void>;
   onUpdateSettings?: (patch: { disappearingDuration: "24h" | "72h" | "nunca" }) => void | Promise<void>;
   onToggleControlMode?: () => void | Promise<void>;
   showAcceptInvite?: boolean;
@@ -38,6 +42,8 @@ export function ChatThread({
   messages,
   ownSenderTypes,
   onSend,
+  onSendFile,
+  onOpenAttachment,
   onUpdateSettings,
   onToggleControlMode,
   showAcceptInvite,
@@ -48,6 +54,7 @@ export function ChatThread({
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -151,6 +158,30 @@ export function ChatThread({
                 )}
               >
                 <p className="whitespace-pre-wrap">{message.content}</p>
+                {message.attachment && (
+                  // A document in a conversation has to look like a document,
+                  // not like a line of text — otherwise nobody opens it.
+                  <button
+                    onClick={() => onOpenAttachment?.(message)}
+                    disabled={!onOpenAttachment}
+                    className={cn(
+                      "mt-2 w-full flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors",
+                      isOwn
+                        ? "border-primary-foreground/25 hover:bg-primary-foreground/10"
+                        : "border-border hover:bg-secondary"
+                    )}
+                  >
+                    {message.attachment.kind === "image" ? (
+                      <ImageIcon size={16} strokeWidth={1.75} className="flex-shrink-0" />
+                    ) : (
+                      <FileText size={16} strokeWidth={1.75} className="flex-shrink-0" />
+                    )}
+                    <span className="flex-1 min-w-0 truncate text-xs">
+                      {message.attachment.name ?? t("communication.attachment")}
+                    </span>
+                    {onOpenAttachment && <Download size={14} strokeWidth={1.75} className="flex-shrink-0 opacity-70" />}
+                  </button>
+                )}
                 <div className="flex items-center gap-1 mt-1 opacity-70">
                   <span className="text-[10px]">{message.timestamp?.slice(0, 16).replace("T", " ")}</span>
                   {message.senderType === "bot" && (
@@ -181,6 +212,36 @@ export function ChatThread({
             submit();
           }}
         >
+          {onSendFile && (
+            <>
+              <input
+                ref={fileInput}
+                type="file"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  setSending(true);
+                  try {
+                    await onSendFile(file);
+                  } finally {
+                    setSending(false);
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                disabled={blocked || sending}
+                onClick={() => fileInput.current?.click()}
+                aria-label={t("communication.attachFile")}
+              >
+                <Paperclip size={16} />
+              </Button>
+            </>
+          )}
           <Input
             placeholder={blocked ? t("communication.acceptToWrite") : t("communication.typeMessage")}
             value={text}
@@ -188,7 +249,7 @@ export function ChatThread({
             disabled={blocked}
           />
           <Button type="submit" size="icon" disabled={blocked || sending || !text.trim()}>
-            <Send size={16} />
+            {sending ? <Spinner className="size-4" /> : <Send size={16} />}
           </Button>
         </form>
       )}

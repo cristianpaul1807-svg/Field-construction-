@@ -225,7 +225,18 @@
       "Mano de obra": "Main-d'œuvre",
       "Subcontratistas": "Sous-traitants"
     },
-    "marginTypeLabel": "Type de marge"
+    "marginTypeLabel": "Type de marge",
+    "pickFromCatalog": "Choisir dans le catalogue",
+    "otherItem": "Autre (saisir à la main)",
+    "visibleToClientShort": "Visible par le client",
+    "sendToClientTitle": "Envoyer la soumission au client ?",
+    "sendToClientHint": "Le PDF arrive dans son clavardage, où il peut le lire, l'accepter ou vous demander des modifications. Vous pouvez le relire avant l'envoi.",
+    "reviewPdfFirst": "Relire le PDF d'abord",
+    "messageToClient": "Message pour le client",
+    "messageToClientPlaceholder": "Ex. Voici votre soumission. Pour toute question, écrivez-moi ici.",
+    "approveWithoutSending": "Approuver sans envoyer",
+    "approveAndDeliver": "Approuver et envoyer",
+    "sentToClient": "Envoyé dans le clavardage du client."
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -287,7 +298,10 @@
       "active": "Actif — peut recevoir des paiements",
       "pending": "Configuration en attente",
       "restricted": "Stripe demande plus d'informations"
-    }
+    },
+    "connectNotEnabledTitle": "Stripe Connect n'est pas encore activé sur votre compte Stripe",
+    "connectNotEnabledBody": "Stripe ne crée pas de comptes connectés tant que le compte de la plateforme n'est pas inscrit à Connect. C'est une inscription unique et gratuite, à faire depuis le tableau de bord Stripe. Une fois terminée, revenez ici et appuyez de nouveau sur Connecter Stripe.",
+    "connectNotEnabledAction": "Ouvrir dashboard.stripe.com/connect"
   },
   "communication": {
     "title": "Messagerie",
@@ -327,7 +341,9 @@
       "title": "Demandes de rendez-vous",
       "description": "Le client propose une date/heure et un motif depuis le clavardage — rien n'est jamais réservé automatiquement. Confirmez une vraie plage ou refusez la demande.",
       "none": "Aucune demande en attente."
-    }
+    },
+    "attachment": "Pièce jointe",
+    "attachFile": "Joindre un fichier"
   },
   "technicians": {
     "title": "Techniciens et équipe",

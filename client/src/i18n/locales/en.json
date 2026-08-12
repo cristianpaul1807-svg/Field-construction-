@@ -225,7 +225,18 @@
       "Mano de obra": "Labor",
       "Subcontratistas": "Subcontractors"
     },
-    "marginTypeLabel": "Margin type"
+    "marginTypeLabel": "Margin type",
+    "pickFromCatalog": "Pick from the catalog",
+    "otherItem": "Other (type it in)",
+    "visibleToClientShort": "Visible to client",
+    "sendToClientTitle": "Send the estimate to the client?",
+    "sendToClientHint": "The PDF lands in their chat, where they can read it, accept it, or ask you for changes. You can review it before sending.",
+    "reviewPdfFirst": "Review the PDF first",
+    "messageToClient": "Message for the client",
+    "messageToClientPlaceholder": "e.g. Here's your estimate. Any questions, just write to me here.",
+    "approveWithoutSending": "Approve without sending",
+    "approveAndDeliver": "Approve and send",
+    "sentToClient": "Sent to the client's chat."
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -287,7 +298,10 @@
       "active": "Active — can receive payments",
       "pending": "Onboarding pending",
       "restricted": "Stripe needs more information"
-    }
+    },
+    "connectNotEnabledTitle": "Stripe Connect isn't enabled on your Stripe account yet",
+    "connectNotEnabledBody": "Stripe won't create connected accounts until the platform account signs up for Connect. It's a one-time, free signup that can only be done from the Stripe dashboard. Once it's done, come back here and press Connect Stripe again.",
+    "connectNotEnabledAction": "Open dashboard.stripe.com/connect"
   },
   "communication": {
     "title": "Messaging",
@@ -327,7 +341,9 @@
       "title": "Appointment requests",
       "description": "The client proposes a day/time and reason from the chat — nothing is ever booked automatically. Confirm a real slot or decline the request.",
       "none": "No pending requests."
-    }
+    },
+    "attachment": "Attachment",
+    "attachFile": "Attach a file"
   },
   "technicians": {
     "title": "Technicians & Crew",

@@ -1079,7 +1079,7 @@ apiRouter.get(
     await purgeExpiredMessages(admin, channel.id);
     const { data, error } = await admin
       .from("chat_messages")
-      .select("id, sender_type, content, created_at")
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .eq("channel_id", channel.id)
       .order("created_at");
     if (error) throw error;
@@ -1124,10 +1124,18 @@ apiRouter.post(
         content,
         expires_at: computeExpiresAt(channel.disappearing_duration),
       })
-      .select("id, sender_type, content, created_at")
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .single();
     if (error) throw error;
-    res.status(201).json({ id: data.id, senderType: data.sender_type, content: data.content, timestamp: data.created_at });
+    res.status(201).json({
+      id: data.id,
+      senderType: data.sender_type,
+      content: data.content,
+      timestamp: data.created_at,
+      attachment: data.attachment_kind
+        ? { kind: data.attachment_kind, id: data.attachment_id, name: data.attachment_name, mime: data.attachment_mime }
+        : null,
+    });
   })
 );
 
@@ -1293,7 +1301,7 @@ apiRouter.get(
     await purgeExpiredMessages(supabase, req.params.id);
     const { data, error } = await supabase
       .from("chat_messages")
-      .select("id, sender_type, content, created_at")
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .eq("channel_id", req.params.id)
       .order("created_at");
     if (error) throw error;
@@ -1334,10 +1342,18 @@ apiRouter.post(
         content,
         expires_at: computeExpiresAt(channel.disappearing_duration),
       })
-      .select("id, sender_type, content, created_at")
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .single();
     if (error) throw error;
-    res.status(201).json({ id: data.id, senderType: data.sender_type, content: data.content, timestamp: data.created_at });
+    res.status(201).json({
+      id: data.id,
+      senderType: data.sender_type,
+      content: data.content,
+      timestamp: data.created_at,
+      attachment: data.attachment_kind
+        ? { kind: data.attachment_kind, id: data.attachment_id, name: data.attachment_name, mime: data.attachment_mime }
+        : null,
+    });
   })
 );
 
@@ -1552,7 +1568,7 @@ apiRouter.get(
     await purgeExpiredMessages(admin, req.params.id);
     const { data, error } = await admin
       .from("chat_messages")
-      .select("id, sender_type, content, created_at")
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .eq("channel_id", req.params.id)
       .order("created_at");
     if (error) throw error;
@@ -1597,7 +1613,7 @@ apiRouter.post(
         content,
         expires_at: computeExpiresAt(channel.disappearing_duration),
       })
-      .select("id, sender_type, content, created_at")
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .single();
     if (error) throw error;
     res.status(201).json({
@@ -1726,6 +1742,104 @@ apiRouter.post(
       .eq("id", changeOrder.id);
     if (error) throw error;
     res.json({ ok: true, status: decision });
+  })
+);
+
+// The customer's and the worker's side of attachments. Both go above the
+// business gate, and both prove the channel is theirs before resolving
+// anything — a message id is guessable, a permission is not.
+apiRouter.get(
+  "/client/chat/messages/:id/attachment",
+  requireClientAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const result = await resolveAttachment(admin, req.params.id, async (m) => {
+      const { data: owned } = await admin
+        .from("chat_channels")
+        .select("id")
+        .eq("id", m.channel_id)
+        .eq("participant_type", "client")
+        .eq("participant_id", req.clientId!)
+        .maybeSingle();
+      return Boolean(owned);
+    });
+    res.status(result.status).json(result.body);
+  })
+);
+
+apiRouter.post(
+  "/client/chat/channels/:id/attachments",
+  requireClientAuth,
+  upload.single("file"),
+  route(async (req, res) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "file is required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: channel } = await admin
+      .from("chat_channels")
+      .select("id, business_id, disappearing_duration")
+      .eq("id", req.params.id)
+      .eq("participant_type", "client")
+      .eq("participant_id", req.clientId!)
+      .maybeSingle();
+    if (!channel) {
+      res.status(404).json({ error: "channel not found" });
+      return;
+    }
+
+    const storagePath = `${channel.business_id}/${channel.id}/${randomUUID()}-${file.originalname}`;
+    const { error: uploadError } = await admin.storage
+      .from("chat-attachments")
+      .upload(storagePath, file.buffer, { contentType: file.mimetype });
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await admin
+      .from("chat_messages")
+      .insert({
+        channel_id: channel.id,
+        business_id: channel.business_id,
+        sender_type: "client",
+        sender_id: req.clientId!,
+        content: String(req.body?.content ?? "").trim() || file.originalname,
+        attachment_kind: file.mimetype.startsWith("image/") ? "image" : "file",
+        attachment_path: storagePath,
+        attachment_name: file.originalname,
+        attachment_mime: file.mimetype,
+        expires_at: computeExpiresAt(channel.disappearing_duration),
+      })
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
+      .single();
+    if (error) throw error;
+
+    res.status(201).json({
+      id: data.id,
+      senderType: data.sender_type,
+      content: data.content,
+      timestamp: data.created_at,
+      attachment: { kind: data.attachment_kind, id: data.attachment_id, name: data.attachment_name, mime: data.attachment_mime },
+    });
+  })
+);
+
+apiRouter.get(
+  "/worker/chat/messages/:id/attachment",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const result = await resolveAttachment(admin, req.params.id, async (m) => {
+      const { data: owned } = await admin
+        .from("chat_channels")
+        .select("id")
+        .eq("id", m.channel_id)
+        .eq("participant_type", req.workerKind!)
+        .eq("participant_id", req.workerId!)
+        .maybeSingle();
+      return Boolean(owned);
+    });
+    res.status(result.status).json(result.body);
   })
 );
 
@@ -4144,12 +4258,27 @@ apiRouter.post(
 
     if (!account?.stripe_account_id) {
       const { data: business } = await admin.from("businesses").select("name").eq("id", req.businessId!).single();
-      const created = await stripe.accounts.create({
-        type: "express",
-        business_type: "company",
-        company: { name: business?.name },
-        business_profile: { name: business?.name, mcc: "1520" },
-      });
+      let created;
+      try {
+        created = await stripe.accounts.create({
+          type: "express",
+          business_type: "company",
+          company: { name: business?.name },
+          business_profile: { name: business?.name, mcc: "1520" },
+        });
+      } catch (err) {
+        // Connect is a capability the platform's own Stripe account has to be
+        // enrolled in; until then Stripe refuses to create any connected
+        // account. That is a one-time signup nobody can do from here, so the
+        // error carries a code the UI turns into the actual instruction
+        // instead of showing Stripe's raw English sentence.
+        const message = err instanceof Error ? err.message : String(err);
+        if (/signed up for Connect|Connect.*not.*enabled|dashboard\.stripe\.com\/connect/i.test(message)) {
+          res.status(409).json({ error: message, code: "stripe_connect_not_enabled" });
+          return;
+        }
+        throw err;
+      }
       const { data: inserted, error: insertError } = await admin
         .from("stripe_connected_accounts")
         .upsert({ business_id: req.businessId!, stripe_account_id: created.id, status: "pending" }, { onConflict: "business_id" })
@@ -5330,6 +5459,201 @@ apiRouter.patch(
   })
 );
 
+// ---------- Chat attachments ----------
+// Anything the conversation needs to carry: a generated estimate or invoice
+// (stored as a reference so the PDF always matches the live row), or an
+// uploaded file.
+
+/** Finds the client's internal channel, creating it the first time. */
+async function ensureClientChannel(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  clientId: string
+): Promise<string> {
+  const { data: existing } = await admin
+    .from("chat_channels")
+    .select("id")
+    .eq("business_id", businessId)
+    .eq("participant_type", "client")
+    .eq("participant_id", clientId)
+    .eq("system", "interno")
+    .maybeSingle();
+  if (existing) return existing.id;
+
+  const { data: created, error } = await admin
+    .from("chat_channels")
+    .insert({
+      business_id: businessId,
+      participant_type: "client",
+      participant_id: clientId,
+      system: "interno",
+      status: "activo",
+      control_mode: "humano",
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return created.id;
+}
+
+// Sends the estimate to the customer as a document in their own chat. This
+// is the moment the estimate stops being an internal draft and becomes an
+// offer someone can read, question, or accept.
+apiRouter.post(
+  "/estimates/:id/send-to-client",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: estimate } = await admin
+      .from("estimates")
+      .select("id, client_id, status")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!estimate) {
+      res.status(404).json({ error: "estimate not found" });
+      return;
+    }
+    if (!estimate.client_id) {
+      res.status(409).json({ error: "this estimate has no client to send it to" });
+      return;
+    }
+
+    // Sending it IS sending it: an estimate the customer can read but that
+    // still says "draft" internally would let them accept something the
+    // contractor never released.
+    if (estimate.status === "borrador" || estimate.status === "pendiente_aprobacion") {
+      const { error: statusError } = await admin
+        .from("estimates")
+        .update({ status: "enviado" })
+        .eq("id", estimate.id);
+      if (statusError) throw statusError;
+    }
+
+    const channelId = await ensureClientChannel(admin, req.businessId!, estimate.client_id);
+    const { data: channel } = await admin
+      .from("chat_channels")
+      .select("disappearing_duration")
+      .eq("id", channelId)
+      .single();
+
+    const { data: message, error } = await admin
+      .from("chat_messages")
+      .insert({
+        channel_id: channelId,
+        business_id: req.businessId!,
+        sender_type: "admin",
+        sender_id: req.authUserId ?? null,
+        content: String(req.body?.message ?? "").trim() || documentNumber("estimate", estimate.id),
+        attachment_kind: "estimate",
+        attachment_id: estimate.id,
+        attachment_name: `${documentNumber("estimate", estimate.id)}.pdf`,
+        attachment_mime: "application/pdf",
+        expires_at: computeExpiresAt(channel?.disappearing_duration ?? null),
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+
+    res.status(201).json({ id: message.id, channelId, status: "enviado" });
+  })
+);
+
+apiRouter.post(
+  "/chat/channels/:id/attachments",
+  upload.single("file"),
+  route(async (req, res) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "file is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data: channel, error: channelError } = await supabase
+      .from("chat_channels")
+      .select("id, disappearing_duration")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .single();
+    if (channelError) throw channelError;
+
+    const storagePath = `${req.businessId}/${channel.id}/${randomUUID()}-${file.originalname}`;
+    const { error: uploadError } = await supabase.storage
+      .from("chat-attachments")
+      .upload(storagePath, file.buffer, { contentType: file.mimetype });
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .insert({
+        channel_id: channel.id,
+        business_id: req.businessId!,
+        sender_type: "admin",
+        sender_id: req.authUserId ?? null,
+        content: String(req.body?.content ?? "").trim() || file.originalname,
+        attachment_kind: file.mimetype.startsWith("image/") ? "image" : "file",
+        attachment_path: storagePath,
+        attachment_name: file.originalname,
+        attachment_mime: file.mimetype,
+        expires_at: computeExpiresAt(channel.disappearing_duration),
+      })
+      .select("id, sender_type, sender_id, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
+      .single();
+    if (error) throw error;
+
+    res.status(201).json({
+      id: data.id,
+      senderType: data.sender_type,
+      content: data.content,
+      timestamp: data.created_at,
+      attachment: { kind: data.attachment_kind, id: data.attachment_id, name: data.attachment_name, mime: data.attachment_mime },
+    });
+  })
+);
+
+/**
+ * Resolves a message attachment to something openable. Shared by the panel,
+ * the client portal and the field app, so the ownership check is passed in
+ * rather than assumed: each caller knows how it is allowed to see a channel.
+ */
+async function resolveAttachment(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  messageId: string,
+  canSee: (message: { business_id: string; channel_id: string }) => Promise<boolean>
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const { data: message } = await admin
+    .from("chat_messages")
+    .select("id, business_id, channel_id, attachment_kind, attachment_id, attachment_path, attachment_name")
+    .eq("id", messageId)
+    .maybeSingle();
+  if (!message?.attachment_kind || !(await canSee(message))) {
+    return { status: 404, body: { error: "attachment not found" } };
+  }
+
+  if (message.attachment_kind === "estimate" || message.attachment_kind === "invoice") {
+    // Generated on demand from the live row, so the document a customer opens
+    // months later is the document the system actually holds.
+    return {
+      status: 200,
+      body: { kind: message.attachment_kind, documentId: message.attachment_id, name: message.attachment_name },
+    };
+  }
+
+  const { data: signed, error } = await admin.storage
+    .from("chat-attachments")
+    .createSignedUrl(message.attachment_path!, 300);
+  if (error) throw error;
+  return { status: 200, body: { kind: message.attachment_kind, url: signed.signedUrl, name: message.attachment_name } };
+}
+
+apiRouter.get(
+  "/chat/messages/:id/attachment",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const result = await resolveAttachment(admin, req.params.id, async (m) => m.business_id === req.businessId);
+    res.status(result.status).json(result.body);
+  })
+);
+
 // ---------- Reports & Analytics ----------
 // The month-by-month revenue/expense series is grouped from real payment
 // and expense dates (not a stored aggregate, and not a fabricated series
@@ -5747,7 +6071,7 @@ apiRouter.get(
     await purgeExpiredMessages(supabase, req.params.id);
     const { data, error } = await supabase
       .from("chat_messages")
-      .select("id, sender_type, sender_id, content, created_at")
+      .select("id, sender_type, sender_id, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .eq("business_id", req.businessId!)
       .eq("channel_id", req.params.id)
       .order("created_at");
@@ -5759,6 +6083,14 @@ apiRouter.get(
         senderId: m.sender_id,
         content: m.content,
         timestamp: m.created_at,
+        attachment: m.attachment_kind
+          ? {
+              kind: m.attachment_kind,
+              id: m.attachment_id,
+              name: m.attachment_name,
+              mime: m.attachment_mime,
+            }
+          : null,
       }))
     );
   })
@@ -5791,7 +6123,7 @@ apiRouter.post(
         content,
         expires_at: computeExpiresAt(channel.disappearing_duration),
       })
-      .select("id, sender_type, sender_id, content, created_at")
+      .select("id, sender_type, sender_id, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
       .single();
     if (error) throw error;
     res.status(201).json({
@@ -5800,6 +6132,9 @@ apiRouter.post(
       senderId: data.sender_id,
       content: data.content,
       timestamp: data.created_at,
+      attachment: data.attachment_kind
+        ? { kind: data.attachment_kind, id: data.attachment_id, name: data.attachment_name, mime: data.attachment_mime }
+        : null,
     });
   })
 );

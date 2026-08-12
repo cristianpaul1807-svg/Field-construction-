@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useApi, apiFetch, readJson } from "@/lib/api";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
+import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
 import type { ChatChannel, ChatMessage, DirectoryContact } from "@/lib/chatApi";
 import { AppointmentRequestsPanel } from "@/components/AppointmentRequestsPanel";
 import { useTranslation } from "react-i18next";
@@ -85,7 +86,7 @@ function NewConversationDialog({ onStarted }: { onStarted: (id: string) => void 
 }
 
 export default function Communication() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [system, setSystem] = useState<"publico" | "interno">("publico");
   const [labelFilter, setLabelFilter] = useState<LabelFilter>("general");
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -95,7 +96,7 @@ export default function Communication() {
   if (system === "interno" && labelFilter !== "general") query.set("label", labelFilter);
 
   const { data: channels, loading, error } = useApi<ChatChannel[]>(`/api/chat/channels?${query.toString()}&_r=${reloadToken}`);
-  const { data: messages } = useApi<ChatMessage[]>(
+  const { data: messages, reload: reloadMessages } = useApi<ChatMessage[]>(
     activeId ? `/api/chat/channels/${activeId}/messages?_r=${reloadToken}` : null
   );
 
@@ -213,6 +214,12 @@ export default function Communication() {
               messages={activeId ? messages ?? null : null}
               ownSenderTypes={["admin", "bot"]}
               onSend={sendMessage}
+              onSendFile={async (file) => {
+                if (!activeId) return;
+                await sendChatAttachment(activeId, file, "");
+                reloadMessages();
+              }}
+              onOpenAttachment={(message) => openChatAttachment(message, "", i18n.language)}
               onUpdateSettings={updateSettings}
               onToggleControlMode={system === "publico" || activeChannel?.label === "cliente" ? toggleControlMode : undefined}
             />

@@ -2,17 +2,18 @@ import { useState } from "react";
 import { useApi, apiFetch } from "@/lib/api";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
+import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
 import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
 import { Spinner } from "@/components/ui/spinner";
 import { useTranslation } from "react-i18next";
 
 export function ClientChat() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   const { data: channels, loading } = useApi<ChatChannel[]>(`/api/client/chat/channels?_r=${reloadToken}`);
-  const { data: messages } = useApi<ChatMessage[]>(
+  const { data: messages, reload: reloadMessages } = useApi<ChatMessage[]>(
     activeId ? `/api/client/chat/channels/${activeId}/messages?_r=${reloadToken}` : null
   );
 
@@ -48,6 +49,12 @@ export function ClientChat() {
           messages={activeId ? messages ?? null : null}
           ownSenderTypes={["client"]}
           onSend={sendMessage}
+          onSendFile={async (file) => {
+            if (!activeId) return;
+            await sendChatAttachment(activeId, file, "/client");
+            reloadMessages();
+          }}
+          onOpenAttachment={(message) => openChatAttachment(message, "/client", i18n.language)}
         />
       </div>
     </div>

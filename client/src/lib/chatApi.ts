@@ -15,12 +15,21 @@ export interface ChatChannel {
   lastMessageAt?: string | null;
 }
 
+export interface ChatAttachment {
+  /** estimate/invoice render on demand from the live row; file/image are stored uploads. */
+  kind: "estimate" | "invoice" | "file" | "image";
+  id: string | null;
+  name: string | null;
+  mime: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   senderType: "admin" | "employee" | "subcontractor" | "client" | "bot";
   senderId?: string | null;
   content: string;
   timestamp: string;
+  attachment?: ChatAttachment | null;
 }
 
 export interface DirectoryContact {

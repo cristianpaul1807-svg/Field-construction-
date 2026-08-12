@@ -225,7 +225,18 @@
       "Mano de obra": "Manodopera",
       "Subcontratistas": "Subappaltatori"
     },
-    "marginTypeLabel": "Tipo di margine"
+    "marginTypeLabel": "Tipo di margine",
+    "pickFromCatalog": "Scegli dal catalogo",
+    "otherItem": "Altro (scrivi a mano)",
+    "visibleToClientShort": "Visibile al cliente",
+    "sendToClientTitle": "Inviare il preventivo al cliente?",
+    "sendToClientHint": "Il PDF arriva nella sua chat, dove può leggerlo, accettarlo o chiederti modifiche. Puoi rivederlo prima di inviarlo.",
+    "reviewPdfFirst": "Rivedi prima il PDF",
+    "messageToClient": "Messaggio per il cliente",
+    "messageToClientPlaceholder": "Es. Ecco il tuo preventivo. Per qualsiasi dubbio, scrivimi qui.",
+    "approveWithoutSending": "Approva senza inviare",
+    "approveAndDeliver": "Approva e invia",
+    "sentToClient": "Inviato nella chat del cliente."
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -287,7 +298,10 @@
       "active": "Attivo — può ricevere pagamenti",
       "pending": "Configurazione in sospeso",
       "restricted": "Stripe richiede altre informazioni"
-    }
+    },
+    "connectNotEnabledTitle": "Stripe Connect non è ancora attivo sul tuo account Stripe",
+    "connectNotEnabledBody": "Stripe non crea account collegati finché l'account della piattaforma non si registra a Connect. È una registrazione unica e gratuita, da fare dalla dashboard di Stripe. Una volta fatta, torna qui e premi di nuovo Collega Stripe.",
+    "connectNotEnabledAction": "Apri dashboard.stripe.com/connect"
   },
   "communication": {
     "title": "Messaggistica",
@@ -327,7 +341,9 @@
       "title": "Richieste di appuntamento",
       "description": "Il cliente propone giorno/ora e motivo dalla chat — non viene mai prenotato nulla in automatico. Conferma uno spazio reale o rifiuta la richiesta.",
       "none": "Nessuna richiesta in sospeso."
-    }
+    },
+    "attachment": "Allegato",
+    "attachFile": "Allega un file"
   },
   "technicians": {
     "title": "Tecnici e squadra",

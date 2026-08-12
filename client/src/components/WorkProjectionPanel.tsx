@@ -7,8 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, CheckCircle2, ArrowRight } from "lucide-react";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { Plus, Trash2, CheckCircle2, ArrowRight, Send, FileText } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useApi, apiFetch, readJson, downloadFile } from "@/lib/api";
 
 interface ProjectionItem {
   id: string;
@@ -35,7 +44,7 @@ interface WorkProjectionPanelProps {
 }
 
 export function WorkProjectionPanel({ estimateId, status, createdBy, clientName, onChanged }: WorkProjectionPanelProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: items, loading } = useApi<ProjectionItem[]>(
     `/api/estimates/${estimateId}/projection?_r=${reloadToken}`
@@ -51,6 +60,10 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
   const [duration, setDuration] = useState(60);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ projectId: string; scheduledCount: number } | null>(null);
+  const [sendPrompt, setSendPrompt] = useState(false);
+  const [sendMessage, setSendMessage] = useState("");
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sentOk, setSentOk] = useState(false);
 
   const refresh = () => {
     setReloadToken((t) => t + 1);
@@ -95,7 +108,12 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
     refresh();
   };
 
-  const approveDraft = async () => {
+  // Approving asks first, because approving and delivering are two different
+  // decisions: the contractor may want to read the PDF once more, or call the
+  // customer before it lands in their chat.
+  const approveDraft = () => setSendPrompt(true);
+
+  const approveOnly = async () => {
     setBusy(true);
     try {
       await apiFetch(`/api/estimates/${estimateId}/status`, {
@@ -103,10 +121,40 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "enviado" }),
       });
+      setSendPrompt(false);
       onChanged();
     } finally {
       setBusy(false);
     }
+  };
+
+  const approveAndDeliver = async () => {
+    setBusy(true);
+    setSendError(null);
+    try {
+      // One call: it marks the estimate as sent and posts the PDF into the
+      // client's own conversation, so the two can never disagree.
+      const res = await apiFetch(`/api/estimates/${estimateId}/send-to-client`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: sendMessage.trim() || undefined }),
+      });
+      if (!res.ok) throw new Error((await readJson<{ error?: string }>(res))?.error || t("common.genericError"));
+      setSendPrompt(false);
+      setSentOk(true);
+      onChanged();
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const previewPdf = async () => {
+    await downloadFile(
+      `/api/estimates/${estimateId}/pdf?lang=${i18n.language.slice(0, 2)}`,
+      `${t("budgets.estimateFilePrefix")}-${estimateId.slice(0, 8).toUpperCase()}.pdf`
+    );
   };
 
   const acceptEstimate = async () => {
@@ -238,6 +286,45 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
           </div>
         </>
       )}
+
+      {sentOk && (
+        <div className="rounded-lg border border-status-success-bg bg-status-success-bg/40 p-3 text-sm text-status-success-fg flex items-center gap-2">
+          <CheckCircle2 size={15} strokeWidth={1.75} /> {t("budgets.sentToClient")}
+        </div>
+      )}
+
+      <Dialog open={sendPrompt} onOpenChange={setSendPrompt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("budgets.sendToClientTitle")}</DialogTitle>
+            <DialogDescription>{t("budgets.sendToClientHint")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Button variant="outline" size="sm" className="gap-2 w-full" onClick={previewPdf}>
+              <FileText size={14} strokeWidth={1.75} /> {t("budgets.reviewPdfFirst")}
+            </Button>
+            <div className="space-y-1.5">
+              <Label htmlFor="send-note">{t("budgets.messageToClient")}</Label>
+              <Textarea
+                id="send-note"
+                rows={3}
+                value={sendMessage}
+                onChange={(e) => setSendMessage(e.target.value)}
+                placeholder={t("budgets.messageToClientPlaceholder")}
+              />
+            </div>
+            {sendError && <p className="text-sm text-status-error-fg">{sendError}</p>}
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={approveOnly} disabled={busy} className="sm:flex-1">
+              {t("budgets.approveWithoutSending")}
+            </Button>
+            <Button onClick={approveAndDeliver} disabled={busy} className="gap-2 sm:flex-1">
+              <Send size={14} strokeWidth={1.75} /> {t("budgets.approveAndDeliver")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

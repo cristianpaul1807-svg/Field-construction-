@@ -2,13 +2,14 @@ import { readJson } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
+import { openChatAttachment } from "@/lib/chatAttachments";
 import { workerApiFetch } from "@/lib/workerSession";
 import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
 import { Spinner } from "@/components/ui/spinner";
 import { useTranslation } from "react-i18next";
 
 export function WorkerChat() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [channels, setChannels] = useState<ChatChannel[] | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[] | null>(null);
@@ -72,6 +73,7 @@ export function WorkerChat() {
           messages={activeId ? messages : null}
           ownSenderTypes={["employee", "subcontractor"]}
           onSend={sendMessage}
+          onOpenAttachment={(message) => openChatAttachment(message, "/worker", i18n.language)}
           showAcceptInvite={activeChannel?.status === "invitado"}
           onAccept={acceptInvite}
         />

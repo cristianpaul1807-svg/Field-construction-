@@ -150,6 +150,28 @@ export default function Budgets() {
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [lineEdits, setLineEdits] = useState<Record<string, { item: string; quantity: number; unitCost: number }>>({});
   const [lineForm, setLineForm] = useState(emptyLineForm);
+  const [catalogPick, setCatalogPick] = useState("");
+  const { data: catalog } = useApi<{
+    materials: { id: string; name: string; price: number | null }[];
+    laborRates: { id: string; name: string; hourlyRate: number }[];
+    subcontractors: { id: string; name: string; trade: string | null }[];
+  }>("/api/materials");
+
+  // One shape for three tables, so the picker does not care which catalog it
+  // is showing — only what the chosen category points at.
+  const catalogFor = (category: string): { id: string; name: string; price: number | null }[] => {
+    if (category === "Mano de obra") {
+      return (catalog?.laborRates ?? []).map((l) => ({ id: l.id, name: l.name, price: l.hourlyRate }));
+    }
+    if (category === "Subcontratistas") {
+      return (catalog?.subcontractors ?? []).map((s) => ({
+        id: s.id,
+        name: s.trade ? `${s.name} · ${s.trade}` : s.name,
+        price: null,
+      }));
+    }
+    return (catalog?.materials ?? []).map((m) => ({ id: m.id, name: m.name, price: m.price }));
+  };
   const [addingLine, setAddingLine] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
@@ -222,6 +244,7 @@ export default function Budgets() {
         }),
       });
       setLineForm(emptyLineForm);
+      setCatalogPick("");
       refresh();
     } finally {
       setAddingLine(false);
@@ -399,46 +422,61 @@ export default function Budgets() {
                               {zoneLines.map(({ line, idx }) => {
                                 const edit = lineEdits[line.id] ?? { item: line.item, quantity: line.quantity, unitCost: line.unitCost };
                                 return (
-                                  <div key={line.id} className="flex items-center gap-2 text-sm">
-                                    <Checkbox
-                                      checked={visibility[idx]}
-                                      onCheckedChange={(checked) => toggleLineVisibility(line.id, idx, checked === true)}
-                                    />
-                                    <Input
-                                      value={edit.item}
-                                      onChange={(e) =>
-                                        setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, item: e.target.value } }))
-                                      }
-                                      onBlur={() => saveLineEdit(line.id)}
-                                      className="h-8 flex-1 min-w-0"
-                                    />
-                                    <Input
-                                      type="number"
-                                      value={edit.quantity}
-                                      onChange={(e) =>
-                                        setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, quantity: Number(e.target.value) } }))
-                                      }
-                                      onBlur={() => saveLineEdit(line.id)}
-                                      className="h-8 w-20 flex-shrink-0"
-                                    />
-                                    <Input
-                                      type="number"
-                                      value={edit.unitCost}
-                                      onChange={(e) =>
-                                        setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, unitCost: Number(e.target.value) } }))
-                                      }
-                                      onBlur={() => saveLineEdit(line.id)}
-                                      className="h-8 w-24 flex-shrink-0"
-                                    />
-                                    <span className="text-foreground flex-shrink-0 w-20 text-right">
-                                      {formatCurrency(edit.quantity * edit.unitCost)}
-                                    </span>
-                                    <button
-                                      onClick={() => removeLine(line.id)}
-                                      className="text-muted-foreground hover:text-status-error-fg flex-shrink-0"
-                                    >
-                                      <Trash2 size={14} />
-                                    </button>
+                                  // On a phone the five controls cannot share one
+                                  // row: the item name collapsed to nothing and
+                                  // left two unlabelled number boxes. The name
+                                  // gets its own line, and quantity × price =
+                                  // total reads underneath it.
+                                  <div key={line.id} className="text-sm border border-border rounded-lg p-2 sm:border-0 sm:p-0 sm:flex sm:items-center sm:gap-2">
+                                    <div className="flex items-center gap-2 sm:contents">
+                                      <Checkbox
+                                        checked={visibility[idx]}
+                                        onCheckedChange={(checked) => toggleLineVisibility(line.id, idx, checked === true)}
+                                        aria-label={t("budgets.visibleToClientShort")}
+                                      />
+                                      <Input
+                                        value={edit.item}
+                                        onChange={(e) =>
+                                          setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, item: e.target.value } }))
+                                        }
+                                        onBlur={() => saveLineEdit(line.id)}
+                                        className="h-8 flex-1 min-w-0"
+                                        aria-label={t("budgets.item")}
+                                      />
+                                      <button
+                                        onClick={() => removeLine(line.id)}
+                                        className="text-muted-foreground hover:text-status-error-fg flex-shrink-0 sm:order-last"
+                                        aria-label={t("common.delete")}
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:contents">
+                                      <Input
+                                        type="number"
+                                        value={edit.quantity}
+                                        onChange={(e) =>
+                                          setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, quantity: Number(e.target.value) } }))
+                                        }
+                                        onBlur={() => saveLineEdit(line.id)}
+                                        className="h-8 w-20 flex-shrink-0"
+                                        aria-label={t("budgets.quantity")}
+                                      />
+                                      <span className="text-muted-foreground sm:hidden">×</span>
+                                      <Input
+                                        type="number"
+                                        value={edit.unitCost}
+                                        onChange={(e) =>
+                                          setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, unitCost: Number(e.target.value) } }))
+                                        }
+                                        onBlur={() => saveLineEdit(line.id)}
+                                        className="h-8 w-24 flex-shrink-0"
+                                        aria-label={t("budgets.unitCost")}
+                                      />
+                                      <span className="text-foreground font-medium flex-1 sm:flex-none sm:w-20 text-right">
+                                        {formatCurrency(edit.quantity * edit.unitCost)}
+                                      </span>
+                                    </div>
                                   </div>
                                 );
                               })}
@@ -468,7 +506,10 @@ export default function Budgets() {
                         <Label className="text-xs">{t("common.category")}</Label>
                         <Select
                           value={lineForm.category}
-                          onValueChange={(v) => setLineForm((f) => ({ ...f, category: v as EstimateLine["category"] }))}
+                          onValueChange={(v) => {
+                            setLineForm((f) => ({ ...f, category: v as EstimateLine["category"], item: "" }));
+                            setCatalogPick("");
+                          }}
                         >
                           <SelectTrigger className="h-8">
                             <SelectValue />
@@ -480,14 +521,51 @@ export default function Budgets() {
                           </SelectContent>
                         </Select>
                       </div>
+                      {/* The item comes from the catalog, so the name and the
+                          unit price arrive together and nobody retypes a price
+                          that already lives in Materiales. "Otro" is still
+                          there for the one-off that isn't in the catalog. */}
                       <div className="space-y-1 col-span-2 sm:col-span-1">
                         <Label className="text-xs">{t("budgets.item")}</Label>
-                        <Input
-                          value={lineForm.item}
-                          onChange={(e) => setLineForm((f) => ({ ...f, item: e.target.value }))}
-                          placeholder={t("budgets.itemPlaceholder")}
-                          className="h-8"
-                        />
+                        <Select
+                          value={catalogPick}
+                          onValueChange={(v) => {
+                            setCatalogPick(v);
+                            if (v === "otro") {
+                              setLineForm((f) => ({ ...f, item: "" }));
+                              return;
+                            }
+                            const entry = catalogFor(lineForm.category).find((c) => c.id === v);
+                            if (entry) {
+                              setLineForm((f) => ({
+                                ...f,
+                                item: entry.name,
+                                unitCost: entry.price ?? f.unitCost,
+                              }));
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder={t("budgets.pickFromCatalog")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {catalogFor(lineForm.category).map((entry) => (
+                              <SelectItem key={entry.id} value={entry.id}>
+                                {entry.name}
+                                {entry.price !== null ? ` · ${formatCurrency(entry.price)}` : ""}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="otro">{t("budgets.otherItem")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {catalogPick === "otro" && (
+                          <Input
+                            value={lineForm.item}
+                            onChange={(e) => setLineForm((f) => ({ ...f, item: e.target.value }))}
+                            placeholder={t("budgets.itemPlaceholder")}
+                            className="h-8 mt-1"
+                          />
+                        )}
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">{t("budgets.quantity")}</Label>
