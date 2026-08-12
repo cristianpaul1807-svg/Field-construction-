@@ -1,5 +1,13 @@
 import { apiFetch, readJson, downloadFile } from "@/lib/api";
+import { workerApiFetch } from "@/lib/workerSession";
 import type { ChatMessage } from "@/lib/chatApi";
+
+export type ChatPrefix = "" | "/client" | "/worker";
+
+// A worker carries an access code in localStorage, not a Supabase session, so
+// apiFetch would send no Authorization header at all and the request would
+// come back 401. Which fetcher to use follows from the namespace.
+const fetcherFor = (prefix: ChatPrefix) => (prefix === "/worker" ? workerApiFetch : apiFetch);
 
 /**
  * Opens a message's attachment, whichever kind it is.
@@ -15,12 +23,12 @@ import type { ChatMessage } from "@/lib/chatApi";
  */
 export async function openChatAttachment(
   message: ChatMessage,
-  prefix: "" | "/client" | "/worker",
+  prefix: ChatPrefix,
   lang: string
 ): Promise<void> {
   if (!message.attachment) return;
 
-  const res = await apiFetch(`/api${prefix}/chat/messages/${message.id}/attachment`);
+  const res = await fetcherFor(prefix)(`/api${prefix}/chat/messages/${message.id}/attachment`);
   const body = await readJson<{ kind?: string; url?: string; documentId?: string; name?: string }>(res);
   if (!res.ok) {
     throw new Error((body as { error?: string })?.error || "No se pudo abrir el adjunto");
@@ -48,12 +56,15 @@ export async function openChatAttachment(
 export async function sendChatAttachment(
   channelId: string,
   file: File,
-  prefix: "" | "/client"
+  prefix: ChatPrefix
 ): Promise<void> {
   const body = new FormData();
   body.append("file", file);
   // No Content-Type header: the browser sets the multipart boundary itself.
-  const res = await apiFetch(`/api${prefix}/chat/channels/${channelId}/attachments`, { method: "POST", body });
+  const res = await fetcherFor(prefix)(`/api${prefix}/chat/channels/${channelId}/attachments`, {
+    method: "POST",
+    body,
+  });
   if (!res.ok) {
     const err = await readJson<{ error?: string }>(res);
     throw new Error(err?.error || "No se pudo enviar el archivo");

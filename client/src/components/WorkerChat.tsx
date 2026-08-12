@@ -2,7 +2,7 @@ import { readJson } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
-import { openChatAttachment } from "@/lib/chatAttachments";
+import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
 import { workerApiFetch } from "@/lib/workerSession";
 import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
 import { Spinner } from "@/components/ui/spinner";
@@ -73,6 +73,11 @@ export function WorkerChat() {
           messages={activeId ? messages : null}
           ownSenderTypes={["employee", "subcontractor"]}
           onSend={sendMessage}
+          onSendFile={async (file) => {
+            if (!activeId) return;
+            await sendChatAttachment(activeId, file, "/worker");
+            await loadMessages(activeId);
+          }}
           onOpenAttachment={(message) => openChatAttachment(message, "/worker", i18n.language)}
           showAcceptInvite={activeChannel?.status === "invitado"}
           onAccept={acceptInvite}

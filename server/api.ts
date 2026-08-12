@@ -1928,6 +1928,75 @@ apiRouter.get(
   })
 );
 
+// The crew's half of the same conversation. A worker standing in front of a
+// problem — a wall that is not where the plan says, a part that arrived wrong
+// — needs to send the photo, not describe it. Mirrors the client route above;
+// the only differences are which participant column proves the channel is
+// theirs and which sender_type the message carries.
+apiRouter.post(
+  "/worker/chat/channels/:id/attachments",
+  requireWorkerAuth,
+  upload.single("file"),
+  route(async (req, res) => {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "file is required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: channel } = await admin
+      .from("chat_channels")
+      .select("id, business_id, status, disappearing_duration")
+      .eq("id", req.params.id)
+      .eq("business_id", req.workerBusinessId!)
+      .eq("participant_type", req.workerKind!)
+      .eq("participant_id", req.workerId!)
+      .maybeSingle();
+    if (!channel) {
+      res.status(404).json({ error: "channel not found" });
+      return;
+    }
+    // Same gate the text messages use: an invitation that has not been
+    // accepted is not yet a conversation.
+    if (channel.status !== "activo") {
+      res.status(403).json({ error: "Acepta la invitación antes de escribir" });
+      return;
+    }
+
+    const storagePath = `${channel.business_id}/${channel.id}/${randomUUID()}-${file.originalname}`;
+    const { error: uploadError } = await admin.storage
+      .from("chat-attachments")
+      .upload(storagePath, file.buffer, { contentType: file.mimetype });
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await admin
+      .from("chat_messages")
+      .insert({
+        channel_id: channel.id,
+        business_id: channel.business_id,
+        sender_type: req.workerKind!,
+        sender_id: req.workerId!,
+        content: String(req.body?.content ?? "").trim() || file.originalname,
+        attachment_kind: file.mimetype.startsWith("image/") ? "image" : "file",
+        attachment_path: storagePath,
+        attachment_name: file.originalname,
+        attachment_mime: file.mimetype,
+        expires_at: computeExpiresAt(channel.disappearing_duration),
+      })
+      .select("id, sender_type, content, created_at, attachment_kind, attachment_id, attachment_name, attachment_mime")
+      .single();
+    if (error) throw error;
+
+    res.status(201).json({
+      id: data.id,
+      senderType: data.sender_type,
+      content: data.content,
+      timestamp: data.created_at,
+      attachment: { kind: data.attachment_kind, id: data.attachment_id, name: data.attachment_name, mime: data.attachment_mime },
+    });
+  })
+);
+
 // The customer accepting their own estimate — the moment a lead becomes a
 // job. Only an estimate that was actually sent to them can be accepted, so a
 // draft the contractor is still pricing can't be locked in behind their back.
