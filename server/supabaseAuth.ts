@@ -39,6 +39,23 @@ declare global {
   }
 }
 
+// An auth middleware that throws takes the entire process down, because
+// Express can't catch a rejected promise from an async handler. Any
+// infrastructure failure here (misconfigured service-role key, Supabase
+// unreachable) should degrade to a clean 503 for that one request instead.
+function guarded(
+  handler: (req: Request, res: Response, next: NextFunction) => Promise<void>
+) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    handler(req, res, next).catch((err) => {
+      console.error("auth middleware failed", err);
+      if (!res.headersSent) {
+        res.status(503).json({ error: "Authentication is temporarily unavailable" });
+      }
+    });
+  };
+}
+
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -52,7 +69,7 @@ function bearerToken(req: Request): string | null {
 // Authenticated but persona-agnostic — used only by the two provisioning
 // endpoints (register-business / claim-client), which run before a users
 // or clients row exists yet, so business_id/client_id can't be resolved.
-export async function requireAuthenticatedUser(req: Request, res: Response, next: NextFunction) {
+export const requireAuthenticatedUser = guarded(async (req: Request, res: Response, next: NextFunction) => {
   const token = bearerToken(req);
   if (!token) {
     res.status(401).json({ error: "Missing bearer token" });
@@ -66,11 +83,11 @@ export async function requireAuthenticatedUser(req: Request, res: Response, next
   req.authUserId = data.user.id;
   req.supabase = getSupabaseForToken(token);
   next();
-}
+});
 
 // Every business-panel route: resolves which business the caller belongs
 // to via their own users row, read through their own RLS-scoped client.
-export async function requireBusinessAuth(req: Request, res: Response, next: NextFunction) {
+export const requireBusinessAuth = guarded(async (req: Request, res: Response, next: NextFunction) => {
   const token = bearerToken(req);
   if (!token) {
     res.status(401).json({ error: "Missing bearer token" });
@@ -98,16 +115,44 @@ export async function requireBusinessAuth(req: Request, res: Response, next: Nex
   req.businessId = userRow.business_id;
   req.supabase = scoped;
   next();
-}
+});
 
-// Client Portal routes: resolves which clients row the caller claimed.
-export async function requireClientAuth(req: Request, res: Response, next: NextFunction) {
+// Client Portal routes. A client can arrive two ways:
+//
+//   1. An access code the business handed them (the default). Same
+//      passwordless mechanism the worker PWA uses — no email delivery, no
+//      password reset, nothing external standing between the client and
+//      their project. There's no auth.uid() in this path, so RLS can't
+//      apply and req.supabase is the service-role client; every client
+//      route filters by req.clientId explicitly in application code.
+//   2. A Supabase Auth session, for clients who already set up an
+//      email/password login. RLS applies as before.
+//
+// The access code is checked first because it's the cheaper lookup and the
+// common case; a value that isn't a known code falls through to being
+// treated as a JWT.
+export const requireClientAuth = guarded(async (req: Request, res: Response, next: NextFunction) => {
   const token = bearerToken(req);
   if (!token) {
     res.status(401).json({ error: "Missing bearer token" });
     return;
   }
-  const { data: userData, error: userError } = await getSupabaseAdmin().auth.getUser(token);
+
+  const admin = getSupabaseAdmin();
+  const { data: byCode } = await admin
+    .from("clients")
+    .select("id")
+    .eq("access_token_hash", hashToken(token))
+    .maybeSingle();
+
+  if (byCode) {
+    req.clientId = byCode.id;
+    req.supabase = admin;
+    next();
+    return;
+  }
+
+  const { data: userData, error: userError } = await admin.auth.getUser(token);
   if (userError || !userData.user) {
     res.status(401).json({ error: "Invalid or expired session" });
     return;
@@ -129,7 +174,7 @@ export async function requireClientAuth(req: Request, res: Response, next: NextF
   req.clientId = clientRow.id;
   req.supabase = scoped;
   next();
-}
+});
 
 // Worker PWA (/campo): a completely separate flow, deliberately not built
 // on Supabase Auth. The bearer value is the raw token issued once via
@@ -138,7 +183,7 @@ export async function requireClientAuth(req: Request, res: Response, next: NextF
 // apply — every worker endpoint uses the service-role client and filters
 // by employee_id/subcontractor_id + business_id explicitly in application
 // code instead.
-export async function requireWorkerAuth(req: Request, res: Response, next: NextFunction) {
+export const requireWorkerAuth = guarded(async (req: Request, res: Response, next: NextFunction) => {
   const token = bearerToken(req);
   if (!token) {
     res.status(401).json({ error: "Missing worker token" });
@@ -162,4 +207,4 @@ export async function requireWorkerAuth(req: Request, res: Response, next: NextF
   req.workerKind = employee.data ? "employee" : "subcontractor";
   req.workerBusinessId = worker.business_id;
   next();
-}
+});

@@ -69,7 +69,9 @@
     "users": "Utilisateurs et rôles",
     "whatsapp": "Connexion WhatsApp",
     "automations": "Automatisations",
-    "askAssistant": "Demandez quelque chose à l'assistant..."
+    "askAssistant": "Demandez quelque chose à l'assistant...",
+    "assistantTitle": "Assistant de l'entreprise",
+    "assistantHint": "Demandez-lui d'ajouter une projection de travaux, de revoir les soumissions en attente, ou tout ce que vous souhaitez automatiser."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -306,7 +308,10 @@
     "payError": "Impossible de démarrer le paiement",
     "signatureNote": "La signature électronique sera connectée plus tard (SignWell). Les paiements passent déjà par Stripe.",
     "previewNote": "Seules les photos et soumissions marquées comme visibles sont affichées. Ceci est un aperçu en lecture seule — le client paie depuis son propre portail, pas d'ici.",
-    "previewDisabled": "Aperçu — non interactif ici"
+    "previewDisabled": "Aperçu — non interactif ici",
+    "generateAccessCode": "Générer un code d'accès",
+    "accessCodeFor": "Code d'accès pour {{name}}",
+    "accessCodeNote": "Partagez-le avec {{name}} pour qu'il accède au portail client. Ni courriel ni mot de passe requis, et il ne sera plus affiché."
   },
   "worker": {
     "accessTitle": "Accès travailleur",
@@ -381,7 +386,8 @@
     "signInClient": "Connexion — Client",
     "enterCodeAndNewPassword": "Entrez le code et votre nouveau mot de passe",
     "recoverPassword": "Récupérer le mot de passe",
-    "recoverPasswordHint": "Nous vous avons envoyé un code pour créer un nouveau mot de passe."
+    "recoverPasswordHint": "Nous vous avons envoyé un code pour créer un nouveau mot de passe.",
+    "clientAccessDescription": "Entrez le code que votre entrepreneur vous a donné — ni courriel ni mot de passe requis."
   },
   "landing": {
     "tagline": "Le système tout-en-un pour votre entreprise de construction",

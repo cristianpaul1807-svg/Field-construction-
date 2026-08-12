@@ -90,7 +90,7 @@ export default function SettingsPayments() {
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <CreditCard size={20} className="text-primary" />
+            <CreditCard size={20} strokeWidth={1.75} className="text-foreground" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-foreground">{t("payments.stripeAccount")}</h2>
@@ -130,7 +130,7 @@ export default function SettingsPayments() {
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <ShieldCheck size={20} className="text-primary" />
+            <ShieldCheck size={20} strokeWidth={1.75} className="text-foreground" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-foreground">{t("payments.taxes")}</h2>

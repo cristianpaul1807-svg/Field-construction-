@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { getClientSession } from "@/lib/clientSession";
 
 export interface ApiState<T> {
   data: T | null;
@@ -15,7 +16,14 @@ export interface ApiState<T> {
 async function authHeaders(): Promise<HeadersInit> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (token) return { Authorization: `Bearer ${token}` };
+
+  // No Supabase session — this may be a client who entered with the access
+  // code their contractor gave them (no email, no password). The server's
+  // requireClientAuth accepts either credential, so every client-portal
+  // screen works through this same path without knowing which it is.
+  const clientSession = getClientSession();
+  return clientSession ? { Authorization: `Bearer ${clientSession.token}` } : {};
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {

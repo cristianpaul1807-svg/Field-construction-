@@ -1,5 +1,38 @@
-import { useState, useEffect } from "react";
-import { Menu, X, ChevronDown, Bell, LogOut } from "lucide-react";
+import { useState, useEffect, type ComponentType } from "react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  Bell,
+  LogOut,
+  LayoutDashboard,
+  Contact,
+  Globe,
+  MessageSquare,
+  Building2,
+  Calculator,
+  Package,
+  TrendingUp,
+  FileText,
+  Image,
+  Users,
+  Handshake,
+  MapPin,
+  Clock,
+  ClipboardList,
+  Calendar,
+  CreditCard,
+  BarChart3,
+  Wallet,
+  Percent,
+  UserCog,
+  Smartphone,
+  Zap,
+  Home,
+  FolderKanban,
+  HardHat,
+  Settings,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,17 +45,22 @@ import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
+// Monochrome line icons only — no emoji, no fills, no per-item colour. The
+// icon inherits the surrounding text colour so the whole chrome reads as one
+// calm, professional surface instead of a toybox of coloured glyphs.
+type IconType = ComponentType<{ size?: number | string; className?: string; strokeWidth?: number | string }>;
+
 interface NavItem {
   id: string;
   labelKey: string;
-  icon: string;
+  Icon: IconType;
   path: string;
 }
 
 interface NavSection {
   id: string;
   titleKey: string;
-  icon: string;
+  Icon: IconType;
   items: NavItem[];
 }
 
@@ -30,65 +68,65 @@ const navSections: NavSection[] = [
   {
     id: "home",
     titleKey: "nav.home",
-    icon: "🏠",
-    items: [{ id: "dashboard", labelKey: "nav.dashboard", icon: "📊", path: "/" }],
+    Icon: Home,
+    items: [{ id: "dashboard", labelKey: "nav.dashboard", Icon: LayoutDashboard, path: "/" }],
   },
   {
     id: "clients",
     titleKey: "nav.clients",
-    icon: "👥",
+    Icon: Users,
     items: [
-      { id: "crm", labelKey: "nav.crm", icon: "📇", path: "/crm" },
-      { id: "client-portal", labelKey: "nav.clientPortal", icon: "🌐", path: "/client-portal" },
-      { id: "communication", labelKey: "nav.communication", icon: "💬", path: "/communication" },
+      { id: "crm", labelKey: "nav.crm", Icon: Contact, path: "/crm" },
+      { id: "client-portal", labelKey: "nav.clientPortal", Icon: Globe, path: "/client-portal" },
+      { id: "communication", labelKey: "nav.communication", Icon: MessageSquare, path: "/communication" },
     ],
   },
   {
     id: "projects",
     titleKey: "nav.projects",
-    icon: "📋",
+    Icon: FolderKanban,
     items: [
-      { id: "projects", labelKey: "nav.projectsList", icon: "🏗️", path: "/projects" },
-      { id: "budgets", labelKey: "nav.budgets", icon: "💰", path: "/budgets" },
-      { id: "materials", labelKey: "nav.materials", icon: "📦", path: "/materials" },
-      { id: "cost-tracking", labelKey: "nav.costTracking", icon: "📈", path: "/cost-tracking" },
-      { id: "contracts", labelKey: "nav.contracts", icon: "📄", path: "/contracts" },
-      { id: "photo-gallery", labelKey: "nav.photoGallery", icon: "📸", path: "/photo-gallery" },
+      { id: "projects", labelKey: "nav.projectsList", Icon: Building2, path: "/projects" },
+      { id: "budgets", labelKey: "nav.budgets", Icon: Calculator, path: "/budgets" },
+      { id: "materials", labelKey: "nav.materials", Icon: Package, path: "/materials" },
+      { id: "cost-tracking", labelKey: "nav.costTracking", Icon: TrendingUp, path: "/cost-tracking" },
+      { id: "contracts", labelKey: "nav.contracts", Icon: FileText, path: "/contracts" },
+      { id: "photo-gallery", labelKey: "nav.photoGallery", Icon: Image, path: "/photo-gallery" },
     ],
   },
   {
     id: "field",
     titleKey: "nav.field",
-    icon: "🔧",
+    Icon: HardHat,
     items: [
-      { id: "technicians", labelKey: "nav.technicians", icon: "👨‍🔧", path: "/technicians" },
-      { id: "subcontractors", labelKey: "nav.subcontractors", icon: "🤝", path: "/subcontractors" },
-      { id: "gps-routing", labelKey: "nav.gpsRouting", icon: "📍", path: "/gps-routing" },
-      { id: "check-in", labelKey: "nav.checkIn", icon: "✓", path: "/check-in" },
-      { id: "work-orders", labelKey: "nav.workOrders", icon: "📋", path: "/work-orders" },
-      { id: "scheduling", labelKey: "nav.scheduling", icon: "📅", path: "/scheduling" },
+      { id: "technicians", labelKey: "nav.technicians", Icon: Users, path: "/technicians" },
+      { id: "subcontractors", labelKey: "nav.subcontractors", Icon: Handshake, path: "/subcontractors" },
+      { id: "gps-routing", labelKey: "nav.gpsRouting", Icon: MapPin, path: "/gps-routing" },
+      { id: "check-in", labelKey: "nav.checkIn", Icon: Clock, path: "/check-in" },
+      { id: "work-orders", labelKey: "nav.workOrders", Icon: ClipboardList, path: "/work-orders" },
+      { id: "scheduling", labelKey: "nav.scheduling", Icon: Calendar, path: "/scheduling" },
     ],
   },
   {
     id: "finance",
     titleKey: "nav.finance",
-    icon: "💰",
+    Icon: Wallet,
     items: [
-      { id: "invoicing", labelKey: "nav.invoicing", icon: "💳", path: "/invoicing" },
-      { id: "reports", labelKey: "nav.reports", icon: "📊", path: "/reports" },
+      { id: "invoicing", labelKey: "nav.invoicing", Icon: CreditCard, path: "/invoicing" },
+      { id: "reports", labelKey: "nav.reports", Icon: BarChart3, path: "/reports" },
     ],
   },
   {
     id: "settings",
     titleKey: "nav.settings",
-    icon: "⚙️",
+    Icon: Settings,
     items: [
-      { id: "company-data", labelKey: "nav.companyData", icon: "🏢", path: "/settings/company" },
-      { id: "payments", labelKey: "nav.payments", icon: "💳", path: "/settings/payments" },
-      { id: "margins-rules", labelKey: "nav.margins", icon: "⚖️", path: "/settings/margins" },
-      { id: "users-roles", labelKey: "nav.users", icon: "👨‍💼", path: "/settings/users" },
-      { id: "whatsapp-connection", labelKey: "nav.whatsapp", icon: "📱", path: "/settings/whatsapp" },
-      { id: "automations", labelKey: "nav.automations", icon: "🔗", path: "/settings/automations" },
+      { id: "company-data", labelKey: "nav.companyData", Icon: Building2, path: "/settings/company" },
+      { id: "payments", labelKey: "nav.payments", Icon: Wallet, path: "/settings/payments" },
+      { id: "margins-rules", labelKey: "nav.margins", Icon: Percent, path: "/settings/margins" },
+      { id: "users-roles", labelKey: "nav.users", Icon: UserCog, path: "/settings/users" },
+      { id: "whatsapp-connection", labelKey: "nav.whatsapp", Icon: Smartphone, path: "/settings/whatsapp" },
+      { id: "automations", labelKey: "nav.automations", Icon: Zap, path: "/settings/automations" },
     ],
   },
 ];
@@ -108,141 +146,163 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { signOut } = useAuth();
   const { data: company } = useApi<{ name: string }>("/api/settings/company");
   const [location] = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(navSections.map((s) => [s.id, true]))
-  );
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  // Any navigation closes the mobile sheet — otherwise it stays open on top
+  // of the page the user just asked for.
   useEffect(() => {
-    if (isMobile) setSidebarOpen(false);
-  }, [location, isMobile]);
+    setMobileNavOpen(false);
+  }, [location]);
 
-  const toggleSection = (id: string) => {
-    setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  const SectionMenu = ({ section }: { section: NavSection }) => {
+    const active = sectionContainsActive(section, location);
+    // A one-item section is a plain link, not a menu that opens to reveal a
+    // single option.
+    if (section.items.length === 1) {
+      const only = section.items[0];
+      return (
+        <Link
+          href={only.path}
+          className={cn(
+            "h-8 px-3 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
+            active ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+          )}
+        >
+          <only.Icon size={15} strokeWidth={1.75} />
+          {t(only.labelKey)}
+        </Link>
+      );
+    }
 
-  const NavItemComponent = ({ item }: { item: NavItem }) => {
-    const active = isActivePath(location, item.path);
     return (
-      <Link
-        href={item.path}
-        onClick={() => isMobile && setSidebarOpen(false)}
-        className={cn(
-          "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
-          active
-            ? "bg-primary text-primary-foreground font-medium"
-            : "text-foreground hover:bg-secondary"
-        )}
-      >
-        <span className="text-base leading-none">{item.icon}</span>
-        <span>{t(item.labelKey)}</span>
-      </Link>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            className={cn(
+              "h-8 px-3 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
+              active ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+            )}
+          >
+            <section.Icon size={15} strokeWidth={1.75} />
+            {t(section.titleKey)}
+            <ChevronDown size={13} strokeWidth={1.75} className="opacity-60" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60">
+          {section.items.map((item) => (
+            <DropdownMenuItem key={item.id} asChild>
+              <Link
+                href={item.path}
+                className={cn(
+                  "gap-2.5 cursor-pointer",
+                  isActivePath(location, item.path) && "bg-secondary font-medium"
+                )}
+              >
+                <item.Icon size={15} strokeWidth={1.75} className="text-muted-foreground" />
+                {t(item.labelKey)}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      {isMobile && sidebarOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar */}
-      <div
-        className={cn(
-          "transition-all duration-200 border-r border-sidebar-border bg-sidebar flex flex-col fixed sm:relative h-full z-50",
-          isMobile
-            ? sidebarOpen
-              ? "w-72"
-              : "-translate-x-full w-72"
-            : sidebarOpen
-              ? "w-64"
-              : "w-0 overflow-hidden"
-        )}
-      >
-        <div className="p-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm flex-shrink-0">
-              R
+    // A single vertically-scrolling column, the way a modern AI product reads
+    // — the page itself scrolls, rather than an inner pane inside a fixed
+    // sidebar shell.
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+        <div className="h-14 px-4 sm:px-6 flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 min-w-0">
+            <div className="w-7 h-7 border border-border rounded-lg flex items-center justify-center text-foreground flex-shrink-0">
+              <HardHat size={15} strokeWidth={1.75} />
             </div>
-            <div className="flex flex-col min-w-0">
-              <h1 className="font-semibold text-sidebar-foreground truncate text-sm">
-                {company?.name ?? t("common.loading")}
-              </h1>
-              <p className="text-xs text-muted-foreground">FSM &amp; Construction Hub</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-3 space-y-1">
-          {navSections.map((section) => (
-            <div key={section.id}>
-              <button
-                onClick={() => toggleSection(section.id)}
-                className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <span>{t(section.titleKey)}</span>
-                <ChevronDown
-                  size={14}
-                  className={cn("transition-transform", expandedSections[section.id] ? "rotate-180" : "")}
-                />
-              </button>
-
-              {expandedSections[section.id] && (
-                <div className="space-y-0.5 mt-1 mb-2">
-                  {section.items.map((item) => (
-                    <NavItemComponent key={item.id} item={item} />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="p-3 border-t border-sidebar-border space-y-0.5">
-          <Link
-            href="/settings/company"
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-secondary transition-colors text-foreground"
-          >
-            <span>⚙️</span> {t("nav.settings")}
+            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] sm:max-w-none">
+              {company?.name ?? t("common.loading")}
+            </span>
           </Link>
-          <LanguageSwitcher variant="full" className="w-full" />
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full sm:w-auto min-w-0">
-        <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-foreground"
-          >
-            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-          </Button>
-          <div className="flex items-center gap-3">
-            <ProjectSwitcher />
-            <button className="w-8 h-8 rounded-full bg-secondary hover:bg-muted transition-colors flex items-center justify-center">
-              <Bell size={15} className="text-foreground" />
+          {!isMobile && (
+            <nav className="flex items-center gap-0.5 min-w-0 overflow-x-auto ml-2">
+              {navSections.map((section) => (
+                <SectionMenu key={section.id} section={section} />
+              ))}
+            </nav>
+          )}
+
+          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+            {!isMobile && <ProjectSwitcher />}
+            <LanguageSwitcher />
+            <button
+              className="w-8 h-8 rounded-md hover:bg-secondary transition-colors flex items-center justify-center text-muted-foreground hover:text-foreground"
+              aria-label="Notifications"
+            >
+              <Bell size={16} strokeWidth={1.75} />
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-8 h-8 rounded-full bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center text-xs font-semibold">
-                  AT
+                <button className="w-8 h-8 rounded-full border border-border hover:bg-secondary transition-colors flex items-center justify-center text-xs font-medium text-foreground">
+                  {(company?.name ?? "?").trim().charAt(0).toUpperCase()}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={signOut} className="gap-2 text-status-error-fg">
-                  <LogOut size={14} /> {t("common.logout")}
+                  <LogOut size={14} strokeWidth={1.75} /> {t("common.logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileNavOpen((open) => !open)}
+                className="text-foreground"
+                aria-label="Menu"
+              >
+                {mobileNavOpen ? <X size={18} strokeWidth={1.75} /> : <Menu size={18} strokeWidth={1.75} />}
+              </Button>
+            )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto w-full">{children}</div>
-        <AdminAssistantBar />
-      </div>
+        {isMobile && mobileNavOpen && (
+          <div className="border-t border-border max-h-[70vh] overflow-y-auto px-3 py-3 space-y-4">
+            {navSections.map((section) => (
+              <div key={section.id}>
+                <p className="px-2 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground flex items-center gap-1.5">
+                  <section.Icon size={13} strokeWidth={1.75} />
+                  {t(section.titleKey)}
+                </p>
+                <div className="space-y-0.5">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.path}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-2 py-2 text-sm rounded-md transition-colors",
+                        isActivePath(location, item.path)
+                          ? "bg-secondary text-foreground font-medium"
+                          : "text-foreground hover:bg-secondary/60"
+                      )}
+                    >
+                      <item.Icon size={15} strokeWidth={1.75} className="text-muted-foreground" />
+                      {t(item.labelKey)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div className="pt-1 border-t border-border">
+              <ProjectSwitcher />
+            </div>
+          </div>
+        )}
+      </header>
+
+      <main className="flex-1 w-full">{children}</main>
+      <AdminAssistantBar />
     </div>
   );
 }

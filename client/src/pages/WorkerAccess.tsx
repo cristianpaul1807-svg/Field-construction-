@@ -48,7 +48,7 @@ function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) 
         </Link>
 
         <div className="text-center space-y-2">
-          <HardHat className="mx-auto text-primary" size={28} />
+          <HardHat className="mx-auto text-foreground" size={28} strokeWidth={1.5} />
           <h1 className="text-xl font-semibold text-foreground">{t("worker.accessTitle")}</h1>
           <p className="text-sm text-muted-foreground">
             {t("worker.accessDescription")}

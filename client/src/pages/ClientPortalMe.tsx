@@ -10,6 +10,8 @@ import { useApi, apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
 import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { clearClientSession } from "@/lib/clientSession";
 
 interface ClientPortalData {
   client: { id: string; name: string };
@@ -28,6 +30,14 @@ function colorForId(id: string) {
 export default function ClientPortalMe() {
   const { t } = useTranslation();
   const { signOut } = useAuth();
+
+  // The portal serves two kinds of session (access code and Supabase login),
+  // so signing out has to clear whichever one got them in.
+  const leave = async () => {
+    clearClientSession();
+    await signOut();
+    window.location.href = "/cliente/acceso";
+  };
   const { data, loading, error } = useApi<ClientPortalData>("/api/client-portal/me");
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
@@ -55,9 +65,12 @@ export default function ClientPortalMe() {
           </div>
           <span className="font-semibold text-foreground text-sm">{t("clientPortal.title")}</span>
         </div>
-        <Button variant="ghost" size="sm" className="gap-2" onClick={signOut}>
-          <LogOut size={14} /> {t("common.logout")}
-        </Button>
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher />
+          <Button variant="ghost" size="sm" className="gap-2" onClick={leave}>
+            <LogOut size={14} /> {t("common.logout")}
+          </Button>
+        </div>
       </div>
 
       <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-6">

@@ -83,7 +83,7 @@ export default function AuthForgotPassword() {
         </Link>
 
         <div className="text-center space-y-2">
-          <KeyRound className="mx-auto text-primary" size={28} />
+          <KeyRound className="mx-auto text-foreground" size={28} strokeWidth={1.5} />
           <h1 className="text-xl font-semibold text-foreground">
             {sent ? t("auth.enterCodeAndNewPassword") : t("auth.recoverPassword")}
           </h1>

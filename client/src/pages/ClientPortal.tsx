@@ -4,9 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { FileSignature, CreditCard, Image as ImageIcon } from "lucide-react";
+import { FileSignature, CreditCard, Image as ImageIcon, KeyRound } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface ClientOption {
@@ -35,6 +36,22 @@ export default function ClientPortal() {
   const clientId = selectedClientId ?? clients?.[0]?.id ?? null;
 
   const { data, loading, error } = useApi<ClientPortalData>(clientId ? `/api/client-portal/${clientId}` : null);
+  const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
+  const [issuing, setIssuing] = useState(false);
+
+  // The business hands this code to the client however they already talk —
+  // it's what replaces the old email + password-reset round trip.
+  const generateCode = async () => {
+    if (!clientId || !data) return;
+    setIssuing(true);
+    try {
+      const res = await apiFetch(`/api/clients/${clientId}/access-token`, { method: "POST" });
+      const body = await res.json();
+      if (res.ok) setNewToken({ name: data.client.name, token: body.token });
+    } finally {
+      setIssuing(false);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-4xl mx-auto">
@@ -54,7 +71,25 @@ export default function ClientPortal() {
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+        <Button size="sm" variant="outline" className="gap-1.5 ml-auto" onClick={generateCode} disabled={!clientId || issuing}>
+          <KeyRound size={13} /> {t("clientPortal.generateAccessCode")}
+        </Button>
       </div>
+
+      <Dialog open={!!newToken} onOpenChange={(open) => !open && setNewToken(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("clientPortal.accessCodeFor", { name: newToken?.name })}</DialogTitle>
+            <DialogDescription>{t("clientPortal.accessCodeNote", { name: newToken?.name })}</DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-border bg-secondary p-4 text-center font-mono text-lg tracking-wider">
+            {newToken?.token}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setNewToken(null)}>{t("common.done")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">

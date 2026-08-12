@@ -119,7 +119,7 @@ export default function AuthBusiness() {
         </button>
 
         <div className="text-center space-y-2">
-          <Briefcase className="mx-auto text-primary" size={28} />
+          <Briefcase className="mx-auto text-foreground" size={28} strokeWidth={1.5} />
           <h1 className="text-xl font-semibold text-foreground">
             {needsCode ? t("auth.verifyYourEmail") : mode === "register" ? t("auth.createBusinessAccount") : t("auth.signInBusiness")}
           </h1>

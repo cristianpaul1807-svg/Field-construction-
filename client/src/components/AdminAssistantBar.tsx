@@ -3,6 +3,7 @@ import { Sparkles, Send, ChevronDown, Bot, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useApi, apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface AssistantMessage {
   id: string;
@@ -18,6 +19,7 @@ interface AssistantMessage {
 // come back as a clearly-labeled placeholder until the Claude API key
 // is configured.
 export function AdminAssistantBar() {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const { data: messages, loading } = useApi<AssistantMessage[]>(`/api/admin-assistant/messages?_r=${reloadToken}`);
@@ -49,12 +51,12 @@ export function AdminAssistantBar() {
   };
 
   return (
-    <div className="relative flex-shrink-0 border-t border-border bg-card">
+    <div className="sticky bottom-0 z-30 flex-shrink-0 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
       {expanded && (
         <div className="absolute bottom-full left-0 right-0 max-h-80 flex flex-col border-t border-border bg-card shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Sparkles size={14} className="text-primary" /> Asistente del negocio
+              <Sparkles size={14} strokeWidth={1.75} className="text-muted-foreground" /> {t("nav.assistantTitle")}
             </div>
             <button onClick={() => setExpanded(false)} className="text-muted-foreground hover:text-foreground">
               <ChevronDown size={16} />
@@ -64,8 +66,7 @@ export function AdminAssistantBar() {
             {loading && <p className="text-xs text-muted-foreground">Cargando...</p>}
             {messages?.length === 0 && (
               <p className="text-xs text-muted-foreground">
-                Pídele que agregue una proyección de trabajo, revise presupuestos pendientes, o cualquier cosa que quieras
-                automatizar — por ahora responde con un mensaje de "todavía no conectada", listo para Fase D.
+                {t("nav.assistantHint")}
               </p>
             )}
             {messages?.map((m) => (
@@ -97,7 +98,7 @@ export function AdminAssistantBar() {
       )}
 
       <div className="flex items-center gap-2 px-4 py-2.5">
-        <Sparkles size={16} className="text-primary flex-shrink-0" />
+        <Sparkles size={16} strokeWidth={1.75} className="text-muted-foreground flex-shrink-0" />
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -105,7 +106,7 @@ export function AdminAssistantBar() {
           onKeyDown={(e) => {
             if (e.key === "Enter") send();
           }}
-          placeholder="Pídele algo al asistente del negocio..."
+          placeholder={t("nav.askAssistant")}
           className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
         />
         <Button size="icon" variant="ghost" onClick={send} disabled={sending || !draft.trim()}>

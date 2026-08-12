@@ -69,7 +69,9 @@
     "users": "Utenti e ruoli",
     "whatsapp": "Connessione WhatsApp",
     "automations": "Automazioni",
-    "askAssistant": "Chiedi qualcosa all'assistente..."
+    "askAssistant": "Chiedi qualcosa all'assistente...",
+    "assistantTitle": "Assistente dell'impresa",
+    "assistantHint": "Chiedigli di aggiungere una proiezione di lavoro, rivedere i preventivi in sospeso, o qualsiasi cosa tu voglia automatizzare."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -306,7 +308,10 @@
     "payError": "Impossibile avviare il pagamento",
     "signatureNote": "La firma elettronica verrà collegata più avanti (SignWell). I pagamenti passano già da Stripe.",
     "previewNote": "Vengono mostrate solo le foto e i preventivi contrassegnati come visibili. Questa è un'anteprima in sola lettura — il cliente paga dal proprio portale, non da qui.",
-    "previewDisabled": "Anteprima — non interattivo qui"
+    "previewDisabled": "Anteprima — non interattivo qui",
+    "generateAccessCode": "Genera codice di accesso",
+    "accessCodeFor": "Codice di accesso per {{name}}",
+    "accessCodeNote": "Condividilo con {{name}} per farlo entrare nel portale cliente. Non servono email né password, e non verrà più mostrato."
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",
@@ -381,7 +386,8 @@
     "signInClient": "Accedi — Cliente",
     "enterCodeAndNewPassword": "Inserisci il codice e la tua nuova password",
     "recoverPassword": "Recupera password",
-    "recoverPasswordHint": "Ti abbiamo inviato un codice per creare una nuova password."
+    "recoverPasswordHint": "Ti abbiamo inviato un codice per creare una nuova password.",
+    "clientAccessDescription": "Inserisci il codice che ti ha dato il tuo appaltatore — non servono email né password."
   },
   "landing": {
     "tagline": "Il sistema tutto-in-uno per la tua impresa edile",

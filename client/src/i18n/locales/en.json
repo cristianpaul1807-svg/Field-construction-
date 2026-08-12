@@ -69,7 +69,9 @@
     "users": "Users & Roles",
     "whatsapp": "WhatsApp Connection",
     "automations": "Automations",
-    "askAssistant": "Ask the business assistant..."
+    "askAssistant": "Ask the business assistant...",
+    "assistantTitle": "Business assistant",
+    "assistantHint": "Ask it to add a work projection, review pending estimates, or anything else you'd like to automate."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -306,7 +308,10 @@
     "payError": "Could not start the payment",
     "signatureNote": "E-signature will be connected later (SignWell). Payments already run through Stripe.",
     "previewNote": "Only photos and estimates marked as visible are shown. This is a read-only preview — the client pays from their own portal, not from here.",
-    "previewDisabled": "Preview — not interactive here"
+    "previewDisabled": "Preview — not interactive here",
+    "generateAccessCode": "Generate access code",
+    "accessCodeFor": "Access code for {{name}}",
+    "accessCodeNote": "Share it with {{name}} so they can open the client portal. No email or password needed, and it won't be shown again."
   },
   "worker": {
     "accessTitle": "Worker access",
@@ -381,7 +386,8 @@
     "signInClient": "Sign in — Client",
     "enterCodeAndNewPassword": "Enter the code and your new password",
     "recoverPassword": "Recover password",
-    "recoverPasswordHint": "We've sent you a code to create a new password."
+    "recoverPasswordHint": "We've sent you a code to create a new password.",
+    "clientAccessDescription": "Enter the code your contractor gave you — no email or password needed."
   },
   "landing": {
     "tagline": "The all-in-one system for your construction company",

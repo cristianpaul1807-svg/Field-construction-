@@ -15,8 +15,8 @@ export default function Landing() {
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-2xl space-y-8">
           <div className="text-center space-y-3">
-            <div className="w-12 h-12 mx-auto bg-primary rounded-xl flex items-center justify-center text-primary-foreground font-semibold text-lg">
-              R
+            <div className="w-12 h-12 mx-auto border border-border rounded-xl flex items-center justify-center text-foreground">
+              <HardHat size={22} strokeWidth={1.5} />
             </div>
             <h1 className="text-3xl font-bold text-foreground">{t("landing.hubName")}</h1>
             <p className="text-muted-foreground max-w-md mx-auto">
@@ -35,7 +35,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link href="/negocio/acceso">
               <Card className="p-6 hover:border-primary/50 transition-colors cursor-pointer h-full">
-                <Briefcase className="text-primary mb-3" size={28} />
+                <Briefcase className="text-foreground mb-3" size={28} strokeWidth={1.5} />
                 <h2 className="font-semibold text-foreground mb-1">{t("landing.businessAccess")}</h2>
                 <p className="text-sm text-muted-foreground">
                   {t("landing.businessCardDesc")}
@@ -45,7 +45,7 @@ export default function Landing() {
 
             <Link href="/cliente/acceso">
               <Card className="p-6 hover:border-primary/50 transition-colors cursor-pointer h-full">
-                <UserRound className="text-primary mb-3" size={28} />
+                <UserRound className="text-foreground mb-3" size={28} strokeWidth={1.5} />
                 <h2 className="font-semibold text-foreground mb-1">{t("landing.clientAccess")}</h2>
                 <p className="text-sm text-muted-foreground">
                   {t("landing.clientCardDesc")}

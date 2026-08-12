@@ -47,7 +47,7 @@ export default function AuthLogin() {
         </Link>
 
         <div className="text-center space-y-2">
-          <LogIn className="mx-auto text-primary" size={28} />
+          <LogIn className="mx-auto text-foreground" size={28} strokeWidth={1.5} />
           <h1 className="text-xl font-semibold text-foreground">{t("auth.loginTitle")}</h1>
           <p className="text-sm text-muted-foreground">{t("auth.worksForBoth")}</p>
         </div>

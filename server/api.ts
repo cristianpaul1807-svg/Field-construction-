@@ -611,6 +611,33 @@ apiRouter.post(
   })
 );
 
+// Client Portal passwordless login: same shape as worker-auth/login above.
+// The client types the code their contractor gave them — no email, no
+// password, nothing to receive or wait for.
+apiRouter.post(
+  "/client-auth/login",
+  route(async (req, res) => {
+    const token = (req.body?.token ?? "").trim();
+    if (!token) {
+      res.status(400).json({ error: "token is required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: client } = await admin
+      .from("clients")
+      .select("id, name, business_id")
+      .eq("access_token_hash", hashToken(token))
+      .maybeSingle();
+
+    if (!client) {
+      res.status(401).json({ error: "Código inválido" });
+      return;
+    }
+
+    res.json({ id: client.id, name: client.name, businessId: client.business_id });
+  })
+);
+
 // Everything below is scoped to the calling worker (employee or
 // subcontractor) via requireWorkerAuth, which resolves req.workerId /
 // req.workerKind / req.workerBusinessId from the raw token — there's no
@@ -1119,6 +1146,20 @@ apiRouter.get(
   requireClientAuth,
   route(async (req, res) => {
     const supabase = req.supabase!;
+    // Ownership is checked in application code rather than left to RLS,
+    // because a client authenticated by access code has no auth.uid() and
+    // therefore runs through the service-role client.
+    const { data: owned } = await supabase
+      .from("chat_channels")
+      .select("id")
+      .eq("id", req.params.id)
+      .eq("participant_type", "client")
+      .eq("participant_id", req.clientId!)
+      .maybeSingle();
+    if (!owned) {
+      res.status(404).json({ error: "Chat no encontrado" });
+      return;
+    }
     await purgeExpiredMessages(supabase, req.params.id);
     const { data, error } = await supabase
       .from("chat_messages")
@@ -1144,8 +1185,14 @@ apiRouter.post(
       .from("chat_channels")
       .select("id, business_id, disappearing_duration")
       .eq("id", req.params.id)
-      .single();
+      .eq("participant_type", "client")
+      .eq("participant_id", req.clientId!)
+      .maybeSingle();
     if (channelError) throw channelError;
+    if (!channel) {
+      res.status(404).json({ error: "Chat no encontrado" });
+      return;
+    }
 
     const { data, error } = await supabase
       .from("chat_messages")
@@ -2489,6 +2536,25 @@ apiRouter.get(
       })),
       projects: projects.data,
     });
+  })
+);
+
+// Issues a fresh access code for the Client Portal — only the hash is
+// stored, so the raw code is shown to the admin exactly once here, then
+// handed to the client however they already talk (in person, phone, chat).
+// This is what lets a client in with no email and no password.
+apiRouter.post(
+  "/clients/:id/access-token",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const token = randomBytes(9).toString("base64url");
+    const { error } = await supabase
+      .from("clients")
+      .update({ access_token_hash: hashToken(token) })
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ token });
   })
 );
 
