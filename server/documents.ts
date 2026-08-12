@@ -55,6 +55,13 @@ export interface EstimateMaterial {
   unit: string | null;
 }
 
+/** One stage of the payment plan, priced against this estimate's total. */
+export interface EstimatePaymentStage {
+  label: string;
+  percent: number;
+  amount: number;
+}
+
 export interface EstimateScheduleEntry {
   title: string;
   zone: string | null;
@@ -84,6 +91,8 @@ export interface EstimateDoc {
   materials: EstimateMaterial[];
   /** When the work happens. Empty when there is no projection, or it's off. */
   schedule: EstimateScheduleEntry[];
+  /** How it gets paid, in stages. Empty when the business bills in one go. */
+  payments: EstimatePaymentStage[];
 }
 
 export interface InvoiceDoc {
@@ -136,6 +145,8 @@ interface Copy {
   scheduleTitle: string;
   scheduleNote: string;
   scheduleDuration: (hours: string) => string;
+  paymentsTitle: string;
+  paymentsNote: string;
   acceptance: string;
   signature: string;
   signatureDate: string;
@@ -172,6 +183,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N.º TPS",
     qstNumber: "N.º TVQ",
     deposit: (p, a) => `Depósito para iniciar los trabajos: ${p}% (${a})`,
+    paymentsTitle: "Forma de pago",
+    paymentsNote: "Cada pago se factura cuando la obra llega a esa etapa. Los importes incluyen impuestos.",
     holdback: "Retención",
     holdbackNote: (p) => `Se retiene un ${p}% de cada pago parcial hasta la finalización de los trabajos.`,
     materialsTitle: "Materiales previstos",
@@ -213,6 +226,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "GST no.",
     qstNumber: "QST no.",
     deposit: (p, a) => `Deposit to start the work: ${p}% (${a})`,
+    paymentsTitle: "How this is paid",
+    paymentsNote: "Each payment is invoiced when the job reaches that stage. Amounts include tax.",
     holdback: "Holdback",
     holdbackNote: (p) => `${p}% of each progress payment is held back until the work is complete.`,
     materialsTitle: "Materials to be used",
@@ -254,6 +269,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "No TPS",
     qstNumber: "No TVQ",
     deposit: (p, a) => `Dépôt pour démarrer les travaux : ${p} % (${a})`,
+    paymentsTitle: "Modalités de paiement",
+    paymentsNote: "Chaque paiement est facturé lorsque le chantier atteint cette étape. Montants taxes comprises.",
     holdback: "Retenue",
     holdbackNote: (p) => `Une retenue de ${p} % est appliquée à chaque paiement partiel jusqu'à la fin des travaux.`,
     materialsTitle: "Matériaux prévus",
@@ -295,6 +312,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N. GST",
     qstNumber: "N. QST",
     deposit: (p, a) => `Acconto per avviare i lavori: ${p}% (${a})`,
+    paymentsTitle: "Modalità di pagamento",
+    paymentsNote: "Ogni pagamento viene fatturato quando il cantiere raggiunge quella fase. Importi tasse incluse.",
     holdback: "Ritenuta",
     holdbackNote: (p) => `Viene trattenuto il ${p}% di ogni pagamento parziale fino al completamento dei lavori.`,
     materialsTitle: "Materiali previsti",
@@ -613,7 +632,32 @@ function extraSections(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) {
 function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) {
   ensureRoom(doc, 120, copy);
 
-  if (data.depositPercent > 0) {
+  // The payment plan replaces the single deposit line when there is one: a
+  // customer signing is agreeing to the whole schedule, not just the first
+  // cheque, and the stages are the part they will be asked about later.
+  if (data.payments.length > 0) {
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111").text(copy.paymentsTitle, MARGIN, doc.y);
+    doc.y += 4;
+    for (const stage of data.payments) {
+      ensureRoom(doc, 14, copy);
+      const y = doc.y;
+      doc
+        .font("Helvetica")
+        .fontSize(8.5)
+        .fillColor("#333333")
+        .text(`· ${stage.label} (${stage.percent}%)`, MARGIN + 6, y, { width: CONTENT_WIDTH - 140 });
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(8.5)
+        .fillColor("#111111")
+        .text(money(stage.amount, lang), MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+      doc.y = Math.max(doc.y, y + 12);
+    }
+    doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.paymentsNote, MARGIN, doc.y + 2, {
+      width: CONTENT_WIDTH,
+    });
+    doc.y += 12;
+  } else if (data.depositPercent > 0) {
     const depositAmount = Math.round(data.total * (data.depositPercent / 100) * 100) / 100;
     doc
       .font("Helvetica-Bold")

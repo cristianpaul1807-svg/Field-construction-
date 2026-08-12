@@ -5629,6 +5629,9 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
   const client = estimate.data.clients as unknown as
     | { name: string; address: string | null; phone: string | null; email: string | null }
     | null;
+  // A signed estimate is an agreement to the whole payment schedule, not just
+  // to the first cheque, so the stages are priced here and printed on it.
+  const plan = await readPlan(admin, businessId);
   const createdAt = new Date(estimate.data.created_at);
   // A construction estimate that never expires is a price the contractor is
   // stuck with when material costs move, so every one carries 30 days.
@@ -5674,9 +5677,34 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
               worker: item.employees?.name ?? item.subcontractors?.name ?? null,
             }))
           : [],
+      // Against the tax-inclusive total, because that is the figure the
+      // customer will actually be asked to pay at each stage.
+      payments: splitIntoStages(Math.round((subtotal + taxAmount) * 100) / 100, plan),
     },
     lang
   );
+}
+
+/**
+ * Splits a total across the payment stages so the column adds up to it exactly.
+ *
+ * Rounding each stage on its own leaves the last cent unaccounted for — three
+ * thirds of $100 come to $99.99 — and a customer who adds up the schedule on a
+ * document they are about to sign will find it. The last stage takes whatever
+ * is left instead of its own rounded percentage.
+ */
+function splitIntoStages(
+  total: number,
+  plan: { label: string; percent: number }[]
+): { label: string; percent: number; amount: number }[] {
+  const totalCents = Math.round(total * 100);
+  let assigned = 0;
+  return plan.map((stage, index) => {
+    const isLast = index === plan.length - 1;
+    const cents = isLast ? totalCents - assigned : Math.round(totalCents * (stage.percent / 100));
+    assigned += cents;
+    return { label: stage.label, percent: stage.percent, amount: cents / 100 };
+  });
 }
 
 async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocLang): Promise<Buffer | null> {

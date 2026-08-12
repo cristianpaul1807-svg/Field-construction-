@@ -53,7 +53,10 @@ Salen en el **idioma en que tengas el panel**, con tu cabecera completa.
 │                          TVQ                  938 $ │
 │                          TOTAL             10 820 $ │
 ├─────────────────────────────────────────────────────┤
-│ Depósito para empezar: 30 % (3 246 $)               │
+│ Forma de pago                                       │
+│  · Depósito inicial (50 %)          7 277,65 $      │
+│  · Avance de obra (25 %)            3 638,82 $      │
+│  · Entrega final (25 %)             3 638,82 $      │
 │ Se retiene un 10 % de cada pago parcial…            │
 │ tus condiciones                                     │
 │                                                     │
@@ -70,8 +73,18 @@ Detalles que importan:
   precio unitario: son tu aritmética, no algo que el cliente deba leer.
 - **Válido 30 días.** Un presupuesto sin caducidad es un precio al que te
   quedas atado cuando suban los materiales.
-- **Depósito y retención** se anuncian desde el principio, no en la primera
-  factura.
+- **Forma de pago completa, no solo el depósito.** Si tienes un
+  [plan de pagos](facturacion.md#el-plan-de-pagos), el presupuesto imprime las
+  etapas con su porcentaje y su importe sobre el total con impuestos. Firmar es
+  aceptar el calendario entero, no el primer cheque, así que ahí está escrito.
+  Sin plan, sale la línea de depósito de siempre.
+- **Las etapas suman exactamente el total.** Redondear cada una por su cuenta
+  deja un céntimo suelto — tres tercios de 100 $ dan 99,99 $ — y el cliente que
+  sume la columna antes de firmar lo encuentra. La última etapa se lleva el
+  resto en vez de su propio porcentaje redondeado.
+- **Retención** se anuncia desde el principio, no en la primera factura.
+- **Materiales y programación** son opcionales, por negocio: Configuración →
+  Datos de la empresa.
 - **Hueco de firma.** Es lo que convierte el documento en un acuerdo.
 
 ---
