@@ -301,7 +301,8 @@
     },
     "connectNotEnabledTitle": "Stripe Connect non è ancora attivo sul tuo account Stripe",
     "connectNotEnabledBody": "Stripe non crea account collegati finché l'account della piattaforma non si registra a Connect. È una registrazione unica e gratuita, da fare dalla dashboard di Stripe. Una volta fatta, torna qui e premi di nuovo Collega Stripe.",
-    "connectNotEnabledAction": "Apri dashboard.stripe.com/connect"
+    "connectNotEnabledAction": "Apri dashboard.stripe.com/connect",
+    "accountMissing": "L'account Stripe che avevamo salvato non esiste più. L'abbiamo scollegato: premi di nuovo Collega Stripe per crearne uno nuovo."
   },
   "communication": {
     "title": "Messaggistica",

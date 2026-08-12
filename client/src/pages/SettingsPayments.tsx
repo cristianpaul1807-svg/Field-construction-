@@ -70,6 +70,14 @@ export default function SettingsPayments() {
           setConnecting(false);
           return;
         }
+        // The stale row has already been cleared server-side, so the very
+        // next press works. Saying "press it again" is more useful than
+        // Stripe's "No such account".
+        if (body?.code === "stripe_account_missing") {
+          setError(t("payments.accountMissing"));
+          setConnecting(false);
+          return;
+        }
         throw new Error(body?.error || t("payments.connectError"));
       }
       window.location.href = body.url;

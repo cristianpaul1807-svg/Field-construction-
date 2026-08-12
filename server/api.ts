@@ -315,6 +315,17 @@ async function createBotEstimate(
 // so the money, Stripe fees, disputes and payouts all belong to that
 // account, never to this platform's own Stripe balance.
 
+// Stripe words the "your platform account is not a Connect platform" refusal
+// several different ways depending on how far the platform account got, and
+// all of them mean the same one-time signup that nobody can do from inside
+// this app. Matching them together is what lets the UI show the actual
+// instruction instead of Stripe's raw English sentence.
+function isConnectNotEnabled(message: string): boolean {
+  return /signed up for Connect|Only Stripe Connect platforms|Connect.*not.*enabled|stripe\.com\/(docs\/)?connect|client_id/i.test(
+    message
+  );
+}
+
 const INVOICE_TYPE_LABEL: Record<string, string> = { deposito: "Depósito", parcial: "Pago parcial", final: "Pago final" };
 
 async function computeInvoiceTax(admin: ReturnType<typeof getSupabaseAdmin>, businessId: string, subtotal: number) {
@@ -4486,13 +4497,8 @@ apiRouter.post(
           business_profile: { name: business?.name, mcc: "1520" },
         });
       } catch (err) {
-        // Connect is a capability the platform's own Stripe account has to be
-        // enrolled in; until then Stripe refuses to create any connected
-        // account. That is a one-time signup nobody can do from here, so the
-        // error carries a code the UI turns into the actual instruction
-        // instead of showing Stripe's raw English sentence.
         const message = err instanceof Error ? err.message : String(err);
-        if (/signed up for Connect|Connect.*not.*enabled|dashboard\.stripe\.com\/connect/i.test(message)) {
+        if (isConnectNotEnabled(message)) {
           res.status(409).json({ error: message, code: "stripe_connect_not_enabled" });
           return;
         }
@@ -4507,12 +4513,32 @@ apiRouter.post(
       account = inserted;
     }
 
-    const link = await stripe.accountLinks.create({
-      account: account.stripe_account_id!,
-      refresh_url: `${baseUrl}/settings/pagos`,
-      return_url: `${baseUrl}/settings/pagos?onboarding=completo`,
-      type: "account_onboarding",
-    });
+    let link;
+    try {
+      link = await stripe.accountLinks.create({
+        account: account.stripe_account_id!,
+        refresh_url: `${baseUrl}/settings/pagos`,
+        return_url: `${baseUrl}/settings/pagos?onboarding=completo`,
+        type: "account_onboarding",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (isConnectNotEnabled(message)) {
+        res.status(409).json({ error: message, code: "stripe_connect_not_enabled" });
+        return;
+      }
+      // The id we stored no longer exists at Stripe — the account was deleted
+      // there, or it belongs to a different Stripe key than the one now
+      // configured. Left alone the business is stuck forever: our row says
+      // connected, Stripe says no such account, and every retry repeats it.
+      // Dropping the row lets the next attempt create a fresh one.
+      if (/No such account|resource_missing/i.test(message)) {
+        await admin.from("stripe_connected_accounts").delete().eq("business_id", req.businessId!);
+        res.status(409).json({ error: message, code: "stripe_account_missing" });
+        return;
+      }
+      throw err;
+    }
 
     res.json({ url: link.url });
   })

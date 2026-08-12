@@ -301,7 +301,8 @@
     },
     "connectNotEnabledTitle": "Falta activar Stripe Connect en tu cuenta de Stripe",
     "connectNotEnabledBody": "Stripe no deja crear cuentas conectadas hasta que la cuenta de la plataforma se da de alta en Connect. Es un registro único y gratuito, y solo se puede hacer desde el panel de Stripe. Cuando lo termines, vuelve aquí y pulsa Conectar Stripe otra vez.",
-    "connectNotEnabledAction": "Abrir dashboard.stripe.com/connect"
+    "connectNotEnabledAction": "Abrir dashboard.stripe.com/connect",
+    "accountMissing": "La cuenta de Stripe que teníamos guardada ya no existe. La hemos desvinculado: pulsa Conectar Stripe otra vez para crear una nueva."
   },
   "communication": {
     "title": "Mensajería",
