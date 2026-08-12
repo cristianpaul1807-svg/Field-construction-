@@ -5,6 +5,7 @@ import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { useTranslation } from "react-i18next";
 
 interface CostRow {
   category: string;
@@ -19,6 +20,7 @@ interface ProjectCostTracking {
 }
 
 export default function CostTracking() {
+  const { t } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const { data, loading, error } = useApi<ProjectCostTracking[]>("/api/cost-tracking");
 
@@ -27,7 +29,7 @@ export default function CostTracking() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-4xl mx-auto">
       <PageHeader
-        title="Cost Tracking & Profitability"
+        title={t("costTracking.title")}
         description={
           selectedProject
             ? `Presupuestado vs. gastado real — ${selectedProject.name}`
@@ -56,10 +58,10 @@ export default function CostTracking() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Ítem</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Presupuestado</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Actual</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Desviación</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("costTracking.item")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.budgeted")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.actual")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.deviation")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,7 +84,7 @@ export default function CostTracking() {
                   const totalVariance = totalBudgeted > 0 ? ((totalActual - totalBudgeted) / totalBudgeted) * 100 : null;
                   return (
                     <tr className="bg-secondary font-semibold">
-                      <td className="py-3 text-foreground">TOTAL</td>
+                      <td className="py-3 text-foreground">{t("costTracking.total")}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(totalBudgeted)}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(totalActual)}</td>
                       <td className={`py-3 text-right ${totalVariance === null ? "text-muted-foreground" : totalVariance > 0 ? "text-status-error-fg" : "text-status-success-fg"}`}>

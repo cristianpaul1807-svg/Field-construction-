@@ -7,6 +7,7 @@ import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { Upload } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { useTranslation } from "react-i18next";
 
 interface Photo {
   id: string;
@@ -25,6 +26,7 @@ function colorForId(id: string) {
 }
 
 export default function PhotoGallery() {
+  const { t } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const { data: photos, loading, error } = useApi<Photo[]>("/api/photos");
 
@@ -33,7 +35,7 @@ export default function PhotoGallery() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
-        title="Photo Gallery"
+        title={t("photoGallery.title")}
         description={
           selectedProject
             ? `Fotos de ${selectedProject.name}, organizadas por fecha y zona`
@@ -75,7 +77,7 @@ export default function PhotoGallery() {
             </Card>
           ))}
           {filtered.length === 0 && (
-            <p className="col-span-full text-sm text-muted-foreground text-center py-8">Sin fotos para este proyecto.</p>
+            <p className="col-span-full text-sm text-muted-foreground text-center py-8">{t("photoGallery.noPhotos")}</p>
           )}
         </div>
       )}

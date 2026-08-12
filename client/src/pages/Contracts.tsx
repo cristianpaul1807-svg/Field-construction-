@@ -9,6 +9,7 @@ import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { Search, Upload, FileText } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { useTranslation } from "react-i18next";
 
 const tagTone: Record<string, "info" | "warning" | "neutral" | "success"> = {
   contrato: "success",
@@ -27,6 +28,7 @@ interface Document {
 }
 
 export default function Contracts() {
+  const { t } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const { data: documents, loading, error } = useApi<Document[]>("/api/documents");
   const [query, setQuery] = useState("");
@@ -42,7 +44,7 @@ export default function Contracts() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <PageHeader
-        title="Contracts & Documents"
+        title={t("contracts.title")}
         description={
           selectedProject
             ? `Archivos de ${selectedProject.name} — contratos, permisos, planos, garantías`
@@ -61,7 +63,7 @@ export default function Contracts() {
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Search size={16} className="text-muted-foreground" />
-            <Input placeholder="Buscar documento..." value={query} onChange={(e) => setQuery(e.target.value)} className="max-w-xs" />
+            <Input placeholder={t("contracts.searchPlaceholder")} value={query} onChange={(e) => setQuery(e.target.value)} className="max-w-xs" />
           </div>
 
           {loading && (
@@ -91,7 +93,7 @@ export default function Contracts() {
                 </div>
               ))}
               {filtered.length === 0 && (
-                <p className="text-sm text-muted-foreground py-6 text-center">Sin documentos para este proyecto.</p>
+                <p className="text-sm text-muted-foreground py-6 text-center">{t("contracts.noDocuments")}</p>
               )}
             </div>
           )}

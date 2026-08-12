@@ -6,6 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { MapPin, Check } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface TimeEntry {
   id: string;
@@ -18,6 +19,7 @@ interface TimeEntry {
 }
 
 export default function CheckIn() {
+  const { t } = useTranslation();
   const { data: entries, loading, error } = useApi<TimeEntry[]>("/api/time-entries");
   const [locallyApproved, setLocallyApproved] = useState<Set<string>>(new Set());
 
@@ -38,8 +40,8 @@ export default function CheckIn() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <PageHeader
-        title="Check-in / Check-out"
-        description="Registro de entrada/salida con hora y ubicación GPS, por proyecto"
+        title={t("checkIn.title")}
+        description={t("checkIn.description")}
       />
 
       <Card className="p-6">
@@ -78,7 +80,7 @@ export default function CheckIn() {
                       <p>Salida: {entry.checkOutTime ? entry.checkOutTime.slice(11, 16) : "En curso"}</p>
                     </div>
                     {isApproved ? (
-                      <StatusBadge tone="success">Aprobado</StatusBadge>
+                      <StatusBadge tone="success">{t("checkIn.approved")}</StatusBadge>
                     ) : (
                       <Button size="sm" variant="outline" className="gap-1.5" onClick={() => approve(entry.id)}>
                         <Check size={14} /> Aprobar horas

@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Plus, StickyNote } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { hashColor, cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const typeLabel: Record<string, string> = {
   visita: "Visita",
@@ -64,6 +65,7 @@ function blockDetail(heightPx: number) {
 }
 
 export default function Scheduling() {
+  const { t } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [reloadToken, setReloadToken] = useState(0);
@@ -96,7 +98,7 @@ export default function Scheduling() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <PageHeader
-        title="Scheduling"
+        title={t("scheduling.title")}
         description={
           selectedProject
             ? `Agenda de ${selectedProject.name} — trabajos anclados por trabajador y notas`

@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Plus, Search, Send } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface MaterialRow {
   id: string;
@@ -26,6 +27,7 @@ interface MaterialsResponse {
 }
 
 export default function Materials() {
+  const { t } = useTranslation();
   const { data, loading, error } = useApi<MaterialsResponse>("/api/materials");
   const [query, setQuery] = useState("");
 
@@ -63,8 +65,8 @@ export default function Materials() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
-        title="Materials & Costs"
-        description="Catálogo maestro de materiales, mano de obra y subcontratistas del negocio"
+        title={t("materials.title")}
+        description={t("materials.description")}
         action={
           <Button className="gap-2 w-full sm:w-auto">
             <Plus size={16} /> New Material
@@ -76,7 +78,7 @@ export default function Materials() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-2">
             <Search size={16} className="text-muted-foreground" />
-            <Input placeholder="Buscar material..." value={query} onChange={(e) => setQuery(e.target.value)} className="max-w-xs" />
+            <Input placeholder={t("materials.searchPlaceholder")} value={query} onChange={(e) => setQuery(e.target.value)} className="max-w-xs" />
           </div>
           <Button variant="outline" size="sm" className="gap-2">
             <Send size={14} /> Exportar solicitud de precios a proveedores
@@ -100,11 +102,11 @@ export default function Materials() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Nombre</th>
-                  <th className="text-left py-2 text-muted-foreground font-medium">Categoría</th>
-                  <th className="text-left py-2 text-muted-foreground font-medium">Unidad</th>
-                  <th className="text-left py-2 text-muted-foreground font-medium">Proveedor</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Precio</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("common.name")}</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("common.category")}</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("materials.unit")}</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("materials.supplier")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("materials.price")}</th>
                 </tr>
               </thead>
               <tbody>

@@ -150,7 +150,9 @@
       "enviado": "Envoyée",
       "aceptado": "Acceptée",
       "rechazado": "Refusée"
-    }
+    },
+    "insert": "Insérer",
+    "templates": "Modèles d'assemblage"
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -387,7 +389,13 @@
     "startFree": "Commencer gratuitement",
     "businessAccess": "Je suis une entreprise",
     "workerAccess": "Je suis un travailleur",
-    "clientAccess": "Je suis un client"
+    "clientAccess": "Je suis un client",
+    "hubName": "FSM & Construction Hub",
+    "intro": "Le centre d'opérations de votre entreprise de construction — soumissions, projets, équipe et clients au même endroit.",
+    "haveAccount": "J'ai déjà un compte — Se connecter",
+    "businessCardDesc": "Gérez vos projets, soumissions, équipe et clients.",
+    "clientCardDesc": "Suivez l'avancement de votre projet, votre soumission et vos photos.",
+    "fieldWorkerAccess": "Accès travailleur de chantier"
   },
   "settings": {
     "companyTitle": "Données de l'entreprise",
@@ -436,5 +444,78 @@
     "hoursByEmployee": "Heures travaillées par employé",
     "topMaterials": "Matériaux les plus utilisés",
     "noMaterials": "Aucun matériau pour l'instant."
+  },
+  "materials": {
+    "title": "Matériaux et coûts",
+    "description": "Catalogue maître des matériaux, de la main-d'œuvre et des sous-traitants",
+    "searchPlaceholder": "Rechercher un matériau...",
+    "price": "Prix",
+    "unit": "Unité",
+    "supplier": "Fournisseur"
+  },
+  "projects": {
+    "title": "Projets",
+    "description": "Le centre névralgique de chaque projet",
+    "progress": "Avancement",
+    "budgeted": "Budgété",
+    "real": "Réel",
+    "deviation": "Écart",
+    "schedule": "Échéancier",
+    "dates": "Dates",
+    "assignedTeam": "Équipe assignée",
+    "documents": "Documents",
+    "photos": "Photos",
+    "expenses": "Dépenses",
+    "linkedEstimate": "Soumission liée",
+    "noLinkedEstimate": "Ce projet n'a aucune soumission liée.",
+    "estimate": "Soumission"
+  },
+  "clientDetail": {
+    "title": "Fiche client",
+    "backToCrm": "Retour au CRM",
+    "clientSince": "Client depuis",
+    "leadSource": "Source du prospect",
+    "sentEstimates": "Soumissions envoyées",
+    "projects": "Projets",
+    "noProjects": "Aucun projet lié pour l'instant.",
+    "noEstimates": "Aucune soumission pour l'instant.",
+    "activityTimeline": "Historique d'activité",
+    "noActivity": "Aucune activité enregistrée pour l'instant."
+  },
+  "contracts": {
+    "title": "Contrats et documents",
+    "searchPlaceholder": "Rechercher un document...",
+    "noDocuments": "Aucun document pour ce projet."
+  },
+  "costTracking": {
+    "title": "Suivi des coûts et rentabilité",
+    "budgeted": "Budgété",
+    "actual": "Réel",
+    "deviation": "Écart",
+    "item": "Article",
+    "total": "TOTAL"
+  },
+  "workOrders": {
+    "title": "Bons de travail",
+    "description": "Tâches spécifiques assignées, liées à un projet"
+  },
+  "scheduling": {
+    "title": "Calendrier"
+  },
+  "checkIn": {
+    "title": "Pointage (entrée / sortie)",
+    "description": "Pointage avec heure et position GPS, par projet",
+    "approved": "Approuvé"
+  },
+  "gps": {
+    "title": "GPS et itinéraires",
+    "description": "Position en temps réel des techniciens et sous-traitants actifs",
+    "activeNow": "Actifs maintenant",
+    "mapWaiting": "Carte en attente d'une clé API",
+    "nobodyActive": "Personne d'actif en ce moment."
+  },
+  "photoGallery": {
+    "title": "Galerie photos",
+    "noPhotos": "Aucune photo pour ce projet."
   }
 }

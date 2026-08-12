@@ -7,6 +7,7 @@ import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { ArrowLeft, FileText, MessageCircle, MapPin } from "lucide-react";
 import { formatCurrency, projectStatusLabel, type ProjectStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface ProjectDetailResponse {
   id: string;
@@ -33,6 +34,7 @@ function colorForId(id: string) {
 }
 
 export default function ProjectDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { data: project, loading, error } = useApi<ProjectDetailResponse>(id ? `/api/projects/${id}` : null);
 
@@ -83,25 +85,25 @@ export default function ProjectDetailPage() {
       <Tabs defaultValue="summary">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
-          <TabsTrigger value="budget">Presupuesto</TabsTrigger>
-          <TabsTrigger value="expenses">Gastos</TabsTrigger>
-          <TabsTrigger value="documents">Documentos</TabsTrigger>
-          <TabsTrigger value="photos">Fotos</TabsTrigger>
-          <TabsTrigger value="schedule">Cronograma</TabsTrigger>
+          <TabsTrigger value="budget">{t("projects.estimate")}</TabsTrigger>
+          <TabsTrigger value="expenses">{t("projects.expenses")}</TabsTrigger>
+          <TabsTrigger value="documents">{t("projects.documents")}</TabsTrigger>
+          <TabsTrigger value="photos">{t("projects.photos")}</TabsTrigger>
+          <TabsTrigger value="schedule">{t("projects.schedule")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary" className="mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               <Card className="p-6">
-                <h3 className="font-semibold text-foreground mb-4 text-sm">Progreso</h3>
+                <h3 className="font-semibold text-foreground mb-4 text-sm">{t("projects.progress")}</h3>
                 <div className="w-full bg-secondary rounded-full h-2 mb-2">
                   <div className="bg-primary h-2 rounded-full" style={{ width: `${project.progressPercent}%` }} />
                 </div>
                 <p className="text-xs text-muted-foreground">{project.progressPercent}% completado</p>
               </Card>
               <Card className="p-6">
-                <h3 className="font-semibold text-foreground mb-3 text-sm">Equipo asignado</h3>
+                <h3 className="font-semibold text-foreground mb-3 text-sm">{t("projects.assignedTeam")}</h3>
                 <div className="space-y-2">
                   {project.team.map((member) => (
                     <div key={member} className="flex items-center gap-2 text-sm text-foreground">
@@ -119,13 +121,13 @@ export default function ProjectDetailPage() {
             </div>
             <div className="space-y-4">
               <Card className="p-4">
-                <p className="text-xs text-muted-foreground">Presupuesto</p>
+                <p className="text-xs text-muted-foreground">{t("projects.estimate")}</p>
                 <p className="text-lg font-semibold text-foreground">
                   {formatCurrency(budgetUsed)} / {formatCurrency(budgetTotal)}
                 </p>
               </Card>
               <Card className="p-4">
-                <p className="text-xs text-muted-foreground">Fechas</p>
+                <p className="text-xs text-muted-foreground">{t("projects.dates")}</p>
                 <p className="text-sm text-foreground mt-1">{project.startDate} → {project.endDate}</p>
               </Card>
               <Button variant="outline" className="w-full gap-2">
@@ -143,7 +145,7 @@ export default function ProjectDetailPage() {
             {project.estimateLines.length > 0 ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground text-sm">Presupuesto vinculado</h3>
+                  <h3 className="font-semibold text-foreground text-sm">{t("projects.linkedEstimate")}</h3>
                   <Button size="sm" variant="outline" className="gap-2">
                     <FileText size={14} /> Ver PDF
                   </Button>
@@ -153,7 +155,7 @@ export default function ProjectDetailPage() {
                     <thead>
                       <tr className="border-b border-border">
                         <th className="text-left py-2 text-muted-foreground font-medium">Zona</th>
-                        <th className="text-left py-2 text-muted-foreground font-medium">Categoría</th>
+                        <th className="text-left py-2 text-muted-foreground font-medium">{t("common.category")}</th>
                         <th className="text-left py-2 text-muted-foreground font-medium">Ítem</th>
                         <th className="text-right py-2 text-muted-foreground font-medium">Total</th>
                       </tr>
@@ -172,7 +174,7 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Este proyecto no tiene un presupuesto vinculado.</p>
+              <p className="text-sm text-muted-foreground">{t("projects.noLinkedEstimate")}</p>
             )}
           </Card>
         </TabsContent>
@@ -182,10 +184,10 @@ export default function ProjectDetailPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Categoría</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Presupuestado</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Real</th>
-                  <th className="text-right py-2 text-muted-foreground font-medium">Desviación</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("common.category")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("projects.budgeted")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("projects.real")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("projects.deviation")}</th>
                 </tr>
               </thead>
               <tbody>

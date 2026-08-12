@@ -7,6 +7,7 @@ import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { Plus } from "lucide-react";
 import { projectStatusLabel, formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface Project {
   id: string;
@@ -21,13 +22,14 @@ interface Project {
 }
 
 export default function Projects() {
+  const { t } = useTranslation();
   const { data: projects, loading, error } = useApi<Project[]>("/api/projects");
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
-        title="Projects"
-        description="Hub central de cada proyecto"
+        title={t("projects.title")}
+        description={t("projects.description")}
         action={
           <Button className="gap-2 w-full sm:w-auto">
             <Plus size={16} /> New Project
@@ -65,7 +67,7 @@ export default function Projects() {
 
                 <div className="mt-4">
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-                    <span>Progreso</span>
+                    <span>{t("projects.progress")}</span>
                     <span>{project.progressPercent}%</span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-1.5">

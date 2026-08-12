@@ -23,6 +23,7 @@ import { useApi, apiFetch } from "@/lib/api";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
+import { useTranslation } from "react-i18next";
 
 interface EstimateSummary {
   id: string;
@@ -101,6 +102,7 @@ const emptyLineForm: { zone: string; category: EstimateLine["category"]; item: s
 };
 
 export default function Budgets() {
+  const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
   const [newBudgetOpen, setNewBudgetOpen] = useState(false);
@@ -246,11 +248,11 @@ export default function Budgets() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
-        title="Budgets & Estimates"
-        description="Constructor de presupuestos con jerarquía Zona → Categoría → Ítem"
+        title={t("budgets.title")}
+        description={t("budgets.description")}
         action={
           <Button className="gap-2 w-full sm:w-auto" onClick={() => setNewBudgetOpen(true)}>
-            <Plus size={16} /> New Budget
+            <Plus size={16} /> {t("budgets.newBudget")}
           </Button>
         }
       />
@@ -266,7 +268,7 @@ export default function Budgets() {
 
       {!summariesLoading && !summariesError && (summaries?.length ?? 0) > 0 && (
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-foreground">Solicitudes y presupuestos</h2>
+          <h2 className="text-sm font-semibold text-foreground">{t("budgets.requestsAndBudgets")}</h2>
           <div className="flex gap-3 overflow-x-auto pb-1">
             {[...(summaries ?? [])]
               .sort((a, b) => {
@@ -289,11 +291,11 @@ export default function Budgets() {
                       <p className="text-sm font-medium text-foreground truncate">{summary.clientName ?? "Sin cliente"}</p>
                       {isNewFromChat && (
                         <span className="text-[10px] font-semibold text-status-warning-fg bg-status-warning-bg/60 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                          Nueva del chat
+                          {t("budgets.newFromChat")}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{summary.categoryName ?? "Sin categoría"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{summary.categoryName ?? t("budgets.noCategory")}</p>
                     {summary.description && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{summary.description}</p>
                     )}
@@ -312,9 +314,9 @@ export default function Budgets() {
 
       <Tabs defaultValue="builder">
         <TabsList>
-          <TabsTrigger value="builder">Presupuesto</TabsTrigger>
-          <TabsTrigger value="templates">Assembly Templates</TabsTrigger>
-          <TabsTrigger value="categorias">Categorías y referencias</TabsTrigger>
+          <TabsTrigger value="builder">{t("budgets.tabBuilder")}</TabsTrigger>
+          <TabsTrigger value="templates">{t("budgets.templates")}</TabsTrigger>
+          <TabsTrigger value="categorias">{t("budgets.tabCategories")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="builder" className="mt-4">
@@ -326,7 +328,7 @@ export default function Budgets() {
           {error && <ErrorNote message={error} />}
           {!loading && !error && !draft && (
             <p className="text-sm text-muted-foreground py-8 text-center">
-              Este negocio todavía no tiene presupuestos.
+              {t("budgets.noBudgets")}
             </p>
           )}
 
@@ -435,7 +437,7 @@ export default function Budgets() {
                   </p>
 
                   <div className="border-t border-border pt-4">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">Agregar línea</h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">{t("budgets.addLine")}</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
                       <div className="space-y-1 col-span-2 sm:col-span-1">
                         <Label className="text-xs">Zona</Label>
@@ -447,7 +449,7 @@ export default function Budgets() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Categoría</Label>
+                        <Label className="text-xs">{t("common.category")}</Label>
                         <Select
                           value={lineForm.category}
                           onValueChange={(v) => setLineForm((f) => ({ ...f, category: v as EstimateLine["category"] }))}
@@ -457,7 +459,7 @@ export default function Budgets() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Materiales">Materiales</SelectItem>
-                            <SelectItem value="Mano de obra">Mano de obra</SelectItem>
+                            <SelectItem value="Mano de obra">{t("budgets.labor")}</SelectItem>
                             <SelectItem value="Subcontratistas">Subcontratistas</SelectItem>
                           </SelectContent>
                         </Select>
@@ -472,7 +474,7 @@ export default function Budgets() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Cantidad</Label>
+                        <Label className="text-xs">{t("budgets.quantity")}</Label>
                         <Input
                           type="number"
                           value={lineForm.quantity}
@@ -481,7 +483,7 @@ export default function Budgets() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Costo unitario</Label>
+                        <Label className="text-xs">{t("budgets.unitCost")}</Label>
                         <Input
                           type="number"
                           value={lineForm.unitCost}
@@ -499,7 +501,7 @@ export default function Budgets() {
 
               <div className="space-y-4">
                 <Card className="p-4">
-                  <h3 className="font-semibold text-foreground mb-3 text-sm">Margen y merma</h3>
+                  <h3 className="font-semibold text-foreground mb-3 text-sm">{t("budgets.marginAndWaste")}</h3>
                   <div className="space-y-3">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1.5">Tipo de margen</p>
@@ -534,7 +536,7 @@ export default function Budgets() {
                     </div>
                     <div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                        <span>Factor de merma</span>
+                        <span>{t("budgets.waste")}</span>
                         <span>{wastePercent}%</span>
                       </div>
                       <input
@@ -629,7 +631,7 @@ export default function Budgets() {
                       >
                         Insertar en presupuesto
                       </Button>
-                      <Button size="sm" variant="outline">Editar</Button>
+                      <Button size="sm" variant="outline">{t("common.edit")}</Button>
                     </div>
                   </Card>
                 ))}
@@ -674,8 +676,8 @@ export default function Budgets() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setPdfOpen(false)}>Cerrar</Button>
-              <Button>Descargar PDF</Button>
+              <Button variant="outline" onClick={() => setPdfOpen(false)}>{t("common.close")}</Button>
+              <Button>{t("budgets.downloadPdf")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -697,8 +699,8 @@ export default function Budgets() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTemplateZonePrompt(null)}>Cancelar</Button>
-            <Button onClick={insertTemplate} disabled={!templateZone.trim() || insertingTemplate}>Insertar</Button>
+            <Button variant="outline" onClick={() => setTemplateZonePrompt(null)}>{t("common.cancel")}</Button>
+            <Button onClick={insertTemplate} disabled={!templateZone.trim() || insertingTemplate}>{t("budgets.insert")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

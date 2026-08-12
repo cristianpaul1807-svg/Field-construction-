@@ -150,7 +150,9 @@
       "enviado": "Enviado",
       "aceptado": "Aceptado",
       "rechazado": "Rechazado"
-    }
+    },
+    "insert": "Insertar",
+    "templates": "Assembly Templates"
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -387,7 +389,13 @@
     "startFree": "Empezar gratis",
     "businessAccess": "Soy un negocio",
     "workerAccess": "Soy trabajador",
-    "clientAccess": "Soy cliente"
+    "clientAccess": "Soy cliente",
+    "hubName": "FSM & Construction Hub",
+    "intro": "El centro de operaciones para tu negocio de construcción — presupuestos, proyectos, equipo y clientes en un solo lugar.",
+    "haveAccount": "Ya tengo cuenta — Iniciar sesión",
+    "businessCardDesc": "Gestiona tus proyectos, presupuestos, equipo y clientes.",
+    "clientCardDesc": "Revisa el avance de tu proyecto, tu presupuesto y tus fotos.",
+    "fieldWorkerAccess": "Acceso de trabajador de campo"
   },
   "settings": {
     "companyTitle": "Datos de la empresa",
@@ -436,5 +444,78 @@
     "hoursByEmployee": "Horas trabajadas por empleado",
     "topMaterials": "Materiales más usados",
     "noMaterials": "Sin materiales todavía."
+  },
+  "materials": {
+    "title": "Materiales y costos",
+    "description": "Catálogo maestro de materiales, mano de obra y subcontratistas del negocio",
+    "searchPlaceholder": "Buscar material...",
+    "price": "Precio",
+    "unit": "Unidad",
+    "supplier": "Proveedor"
+  },
+  "projects": {
+    "title": "Proyectos",
+    "description": "Hub central de cada proyecto",
+    "progress": "Progreso",
+    "budgeted": "Presupuestado",
+    "real": "Real",
+    "deviation": "Desviación",
+    "schedule": "Cronograma",
+    "dates": "Fechas",
+    "assignedTeam": "Equipo asignado",
+    "documents": "Documentos",
+    "photos": "Fotos",
+    "expenses": "Gastos",
+    "linkedEstimate": "Presupuesto vinculado",
+    "noLinkedEstimate": "Este proyecto no tiene un presupuesto vinculado.",
+    "estimate": "Presupuesto"
+  },
+  "clientDetail": {
+    "title": "Ficha del cliente",
+    "backToCrm": "Volver al CRM",
+    "clientSince": "Cliente desde",
+    "leadSource": "Origen del lead",
+    "sentEstimates": "Presupuestos enviados",
+    "projects": "Proyectos",
+    "noProjects": "Aún sin proyectos vinculados.",
+    "noEstimates": "Sin presupuestos todavía.",
+    "activityTimeline": "Timeline de actividad",
+    "noActivity": "Sin actividad registrada todavía."
+  },
+  "contracts": {
+    "title": "Contratos y documentos",
+    "searchPlaceholder": "Buscar documento...",
+    "noDocuments": "Sin documentos para este proyecto."
+  },
+  "costTracking": {
+    "title": "Control de costos y rentabilidad",
+    "budgeted": "Presupuestado",
+    "actual": "Actual",
+    "deviation": "Desviación",
+    "item": "Ítem",
+    "total": "TOTAL"
+  },
+  "workOrders": {
+    "title": "Órdenes de trabajo",
+    "description": "Tareas específicas asignadas, vinculadas a un proyecto"
+  },
+  "scheduling": {
+    "title": "Agenda"
+  },
+  "checkIn": {
+    "title": "Fichaje (entrada / salida)",
+    "description": "Registro de entrada/salida con hora y ubicación GPS, por proyecto",
+    "approved": "Aprobado"
+  },
+  "gps": {
+    "title": "GPS y rutas",
+    "description": "Ubicación en tiempo real de técnicos y subcontratistas activos",
+    "activeNow": "Activos ahora",
+    "mapWaiting": "Mapa en espera de API key",
+    "nobodyActive": "Nadie activo en este momento."
+  },
+  "photoGallery": {
+    "title": "Galería de fotos",
+    "noPhotos": "Sin fotos para este proyecto."
   }
 }

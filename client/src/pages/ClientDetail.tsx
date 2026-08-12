@@ -6,6 +6,7 @@ import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
 import { ArrowLeft, Phone, MessageCircle, StickyNote, FileText } from "lucide-react";
 import { leadStatusLabel, formatCurrency, type LeadStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const activityIcon = {
   call: Phone,
@@ -35,6 +36,7 @@ interface ClientDetailResponse {
 }
 
 export default function ClientDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { data: client, loading, error } = useApi<ClientDetailResponse>(id ? `/api/clients/${id}` : null);
 
@@ -50,7 +52,7 @@ export default function ClientDetail() {
     return (
       <div className="p-8 max-w-3xl mx-auto text-center text-muted-foreground">
         {error ? `No se pudo cargar desde Supabase: ${error}` : "Cliente no encontrado."}{" "}
-        <Link href="/crm" className="text-primary hover:underline">Volver al CRM</Link>
+        <Link href="/crm" className="text-primary hover:underline">{t("clientDetail.backToCrm")}</Link>
       </div>
     );
   }
@@ -79,7 +81,7 @@ export default function ClientDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6">
-            <h2 className="text-base font-semibold text-foreground mb-4">Timeline de actividad</h2>
+            <h2 className="text-base font-semibold text-foreground mb-4">{t("clientDetail.activityTimeline")}</h2>
             <div className="space-y-4">
               {client.activities.map((activity) => {
                 const Icon = activityIcon[activity.type];
@@ -98,13 +100,13 @@ export default function ClientDetail() {
                 );
               })}
               {client.activities.length === 0 && (
-                <p className="text-sm text-muted-foreground">Sin actividad registrada todavía.</p>
+                <p className="text-sm text-muted-foreground">{t("clientDetail.noActivity")}</p>
               )}
             </div>
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-base font-semibold text-foreground mb-4">Presupuestos enviados</h2>
+            <h2 className="text-base font-semibold text-foreground mb-4">{t("clientDetail.sentEstimates")}</h2>
             <div className="space-y-3">
               {client.estimates.map((estimate) => (
                 <div key={estimate.id} className="flex items-center justify-between pb-3 border-b border-border last:border-0">
@@ -119,7 +121,7 @@ export default function ClientDetail() {
                 </div>
               ))}
               {client.estimates.length === 0 && (
-                <p className="text-sm text-muted-foreground">Sin presupuestos todavía.</p>
+                <p className="text-sm text-muted-foreground">{t("clientDetail.noEstimates")}</p>
               )}
             </div>
           </Card>
@@ -127,25 +129,25 @@ export default function ClientDetail() {
 
         <div className="space-y-4">
           <Card className="p-4">
-            <h3 className="font-semibold text-foreground mb-3 text-sm">Ficha del cliente</h3>
+            <h3 className="font-semibold text-foreground mb-3 text-sm">{t("clientDetail.title")}</h3>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-xs text-muted-foreground">Dirección</dt>
+                <dt className="text-xs text-muted-foreground">{t("common.address")}</dt>
                 <dd className="text-foreground">{client.address}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Origen del lead</dt>
+                <dt className="text-xs text-muted-foreground">{t("clientDetail.leadSource")}</dt>
                 <dd className="text-foreground">{client.source}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Cliente desde</dt>
+                <dt className="text-xs text-muted-foreground">{t("clientDetail.clientSince")}</dt>
                 <dd className="text-foreground">{client.createdAt?.slice(0, 10)}</dd>
               </div>
             </dl>
           </Card>
 
           <Card className="p-4">
-            <h3 className="font-semibold text-foreground mb-3 text-sm">Proyectos</h3>
+            <h3 className="font-semibold text-foreground mb-3 text-sm">{t("clientDetail.projects")}</h3>
             <div className="space-y-2">
               {client.projects.map((project) => (
                 <Link
@@ -157,7 +159,7 @@ export default function ClientDetail() {
                 </Link>
               ))}
               {client.projects.length === 0 && (
-                <p className="text-xs text-muted-foreground">Aún sin proyectos vinculados.</p>
+                <p className="text-xs text-muted-foreground">{t("clientDetail.noProjects")}</p>
               )}
             </div>
           </Card>

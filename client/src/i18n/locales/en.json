@@ -150,7 +150,9 @@
       "enviado": "Sent",
       "aceptado": "Accepted",
       "rechazado": "Rejected"
-    }
+    },
+    "insert": "Insert",
+    "templates": "Assembly Templates"
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -387,7 +389,13 @@
     "startFree": "Start free",
     "businessAccess": "I'm a business",
     "workerAccess": "I'm a worker",
-    "clientAccess": "I'm a client"
+    "clientAccess": "I'm a client",
+    "hubName": "FSM & Construction Hub",
+    "intro": "The operations hub for your construction business — estimates, projects, crew and clients all in one place.",
+    "haveAccount": "I already have an account — Sign in",
+    "businessCardDesc": "Manage your projects, estimates, crew and clients.",
+    "clientCardDesc": "Check your project's progress, your estimate and your photos.",
+    "fieldWorkerAccess": "Field worker access"
   },
   "settings": {
     "companyTitle": "Company Data",
@@ -436,5 +444,78 @@
     "hoursByEmployee": "Hours worked per employee",
     "topMaterials": "Most used materials",
     "noMaterials": "No materials yet."
+  },
+  "materials": {
+    "title": "Materials & Costs",
+    "description": "Master catalog of the business's materials, labor and subcontractors",
+    "searchPlaceholder": "Search material...",
+    "price": "Price",
+    "unit": "Unit",
+    "supplier": "Supplier"
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "The central hub for every project",
+    "progress": "Progress",
+    "budgeted": "Budgeted",
+    "real": "Actual",
+    "deviation": "Variance",
+    "schedule": "Schedule",
+    "dates": "Dates",
+    "assignedTeam": "Assigned crew",
+    "documents": "Documents",
+    "photos": "Photos",
+    "expenses": "Expenses",
+    "linkedEstimate": "Linked estimate",
+    "noLinkedEstimate": "This project has no linked estimate.",
+    "estimate": "Estimate"
+  },
+  "clientDetail": {
+    "title": "Client record",
+    "backToCrm": "Back to CRM",
+    "clientSince": "Client since",
+    "leadSource": "Lead source",
+    "sentEstimates": "Estimates sent",
+    "projects": "Projects",
+    "noProjects": "No linked projects yet.",
+    "noEstimates": "No estimates yet.",
+    "activityTimeline": "Activity timeline",
+    "noActivity": "No activity recorded yet."
+  },
+  "contracts": {
+    "title": "Contracts & Documents",
+    "searchPlaceholder": "Search document...",
+    "noDocuments": "No documents for this project."
+  },
+  "costTracking": {
+    "title": "Cost Tracking & Profitability",
+    "budgeted": "Budgeted",
+    "actual": "Actual",
+    "deviation": "Variance",
+    "item": "Item",
+    "total": "TOTAL"
+  },
+  "workOrders": {
+    "title": "Work Orders",
+    "description": "Specific assigned tasks, linked to a project"
+  },
+  "scheduling": {
+    "title": "Scheduling"
+  },
+  "checkIn": {
+    "title": "Check-in / Check-out",
+    "description": "Clock in/out with time and GPS location, per project",
+    "approved": "Approved"
+  },
+  "gps": {
+    "title": "GPS & Routing",
+    "description": "Real-time location of active technicians and subcontractors",
+    "activeNow": "Active now",
+    "mapWaiting": "Map awaiting API key",
+    "nobodyActive": "Nobody active right now."
+  },
+  "photoGallery": {
+    "title": "Photo Gallery",
+    "noPhotos": "No photos for this project."
   }
 }

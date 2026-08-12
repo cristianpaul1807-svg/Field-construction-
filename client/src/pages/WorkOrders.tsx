@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, workOrderStatusTone, priorityTone } from "@/components/StatusBadge";
 import { Plus } from "lucide-react";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const statusLabel = { pendiente: "Pendiente", en_progreso: "En progreso", completada: "Completada" };
 const priorityLabel = { baja: "Baja", media: "Media", alta: "Alta" };
@@ -20,13 +21,14 @@ interface WorkOrder {
 }
 
 export default function WorkOrders() {
+  const { t } = useTranslation();
   const { data: orders, loading, error } = useApi<WorkOrder[]>("/api/work-orders");
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <PageHeader
-        title="Work Orders"
-        description="Tareas específicas asignadas, vinculadas a un proyecto"
+        title={t("workOrders.title")}
+        description={t("workOrders.description")}
         action={
           <Button className="gap-2 w-full sm:w-auto">
             <Plus size={16} /> New Work Order
