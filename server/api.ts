@@ -1732,7 +1732,7 @@ apiRouter.get(
         .order("name"),
       supabase
         .from("subcontractors")
-        .select("id, name, trade, phone, rating, telegram_chat_id")
+        .select("id, name, trade, phone, rating, access_token_hash")
         .eq("business_id", req.businessId!)
         .order("name"),
     ]);
@@ -1762,7 +1762,9 @@ apiRouter.get(
         trade: s.trade,
         phone: s.phone,
         rating: s.rating,
-        telegramLinked: Boolean(s.telegram_chat_id),
+        // Whether they can actually open the field app — the only "linked or
+        // not" state this product really has for a subcontractor.
+        hasAccessCode: Boolean(s.access_token_hash),
       })),
     });
   })
@@ -2603,6 +2605,163 @@ apiRouter.get(
   })
 );
 
+// A template is only useful if the contractor can build their own: the
+// seeded recipes describe somebody else's way of working. Items are replaced
+// wholesale on save rather than diffed, because a recipe is edited as one
+// object in the UI and a partial update would leave orphans behind.
+apiRouter.get(
+  "/assembly-templates/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const [template, items] = await Promise.all([
+      supabase
+        .from("assembly_templates")
+        .select("id, name, description")
+        .eq("business_id", req.businessId!)
+        .eq("id", req.params.id)
+        .maybeSingle(),
+      supabase
+        .from("assembly_items")
+        .select("id, material_id, labor_rate_id, subcontractor_id, quantity_default")
+        .eq("business_id", req.businessId!)
+        .eq("assembly_template_id", req.params.id),
+    ]);
+    if (template.error) throw template.error;
+    if (items.error) throw items.error;
+    if (!template.data) {
+      res.status(404).json({ error: "template not found" });
+      return;
+    }
+    res.json({
+      id: template.data.id,
+      name: template.data.name,
+      description: template.data.description,
+      items: items.data.map((i) => ({
+        id: i.id,
+        materialId: i.material_id,
+        laborRateId: i.labor_rate_id,
+        subcontractorId: i.subcontractor_id,
+        quantity: Number(i.quantity_default),
+      })),
+    });
+  })
+);
+
+// Each item points at exactly one catalog row — a material, a labor rate or a
+// subcontractor — so the estimate builder knows which price to pull.
+function normalizeAssemblyItems(raw: unknown): { materialId: string | null; laborRateId: string | null; subcontractorId: string | null; quantity: number }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item: any) => ({
+      materialId: item?.materialId || null,
+      laborRateId: item?.laborRateId || null,
+      subcontractorId: item?.subcontractorId || null,
+      quantity: Number(item?.quantity ?? 0),
+    }))
+    .filter((item) => {
+      const refs = [item.materialId, item.laborRateId, item.subcontractorId].filter(Boolean).length;
+      return refs === 1 && item.quantity > 0;
+    });
+}
+
+apiRouter.post(
+  "/assembly-templates",
+  route(async (req, res) => {
+    const { name, description, items } = req.body ?? {};
+    if (!name?.trim()) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("assembly_templates")
+      .insert({ business_id: req.businessId!, name: name.trim(), description: description?.trim() || null })
+      .select("id")
+      .single();
+    if (error) throw error;
+
+    const rows = normalizeAssemblyItems(items).map((i) => ({
+      business_id: req.businessId!,
+      assembly_template_id: data.id,
+      material_id: i.materialId,
+      labor_rate_id: i.laborRateId,
+      subcontractor_id: i.subcontractorId,
+      quantity_default: i.quantity,
+    }));
+    if (rows.length > 0) {
+      const { error: itemsError } = await supabase.from("assembly_items").insert(rows);
+      if (itemsError) throw itemsError;
+    }
+
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.patch(
+  "/assembly-templates/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const supabase = req.supabase!;
+
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.description !== undefined) update.description = body.description || null;
+    if (Object.keys(update).length > 0) {
+      const { error } = await supabase
+        .from("assembly_templates")
+        .update(update)
+        .eq("business_id", req.businessId!)
+        .eq("id", req.params.id);
+      if (error) throw error;
+    }
+
+    if (body.items !== undefined) {
+      const { error: deleteError } = await supabase
+        .from("assembly_items")
+        .delete()
+        .eq("business_id", req.businessId!)
+        .eq("assembly_template_id", req.params.id);
+      if (deleteError) throw deleteError;
+
+      const rows = normalizeAssemblyItems(body.items).map((i) => ({
+        business_id: req.businessId!,
+        assembly_template_id: req.params.id,
+        material_id: i.materialId,
+        labor_rate_id: i.laborRateId,
+        subcontractor_id: i.subcontractorId,
+        quantity_default: i.quantity,
+      }));
+      if (rows.length > 0) {
+        const { error: insertError } = await supabase.from("assembly_items").insert(rows);
+        if (insertError) throw insertError;
+      }
+    }
+
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/assembly-templates/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    // Items first: the FK would block the parent delete otherwise.
+    const { error: itemsError } = await supabase
+      .from("assembly_items")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("assembly_template_id", req.params.id);
+    if (itemsError) throw itemsError;
+    const { error } = await supabase
+      .from("assembly_templates")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 // ---------- CRM ----------
 
 apiRouter.get(
@@ -2829,7 +2988,7 @@ apiRouter.get(
     const [projects, expenses, assignments] = await Promise.all([
       supabase
         .from("projects")
-        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name)")
+        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address)")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase.from("expenses").select("project_id, amount").eq("business_id", req.businessId!),
@@ -2889,7 +3048,7 @@ apiRouter.get(
     const [project, estimateLines, expenses, documents, photos, scheduleEvents, assignments] = await Promise.all([
       supabase
         .from("projects")
-        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name)")
+        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address)")
         .eq("business_id", req.businessId!)
         .eq("id", projectId)
         .single(),
@@ -2933,11 +3092,16 @@ apiRouter.get(
     if (scheduleEvents.error) throw scheduleEvents.error;
     if (assignments.error) throw assignments.error;
 
-    const client = (project.data as any).clients as { name: string } | null;
+    const client = (project.data as any).clients as { name: string; address: string | null } | null;
 
     res.json({
       id: project.data.id,
+      clientId: project.data.client_id,
       clientName: client?.name ?? null,
+      // The project hub links out to the estimate PDF, the client's chat and
+      // a map, so it needs the ids and the address to build those links.
+      clientAddress: client?.address ?? null,
+      estimateId: project.data.estimate_id ?? null,
       name: project.data.name,
       type: project.data.type,
       status: project.data.status,
@@ -3303,7 +3467,7 @@ apiRouter.get(
     const [subcontractors, assignments] = await Promise.all([
       supabase
         .from("subcontractors")
-        .select("id, name, trade, phone, rating, telegram_chat_id")
+        .select("id, name, trade, phone, rating, access_token_hash")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -3323,7 +3487,9 @@ apiRouter.get(
         trade: s.trade,
         phone: s.phone,
         rating: s.rating,
-        telegramLinked: Boolean(s.telegram_chat_id),
+        // Whether they can actually open the field app — the only "linked or
+        // not" state this product really has for a subcontractor.
+        hasAccessCode: Boolean(s.access_token_hash),
         assignedProjects: (assignments.data as any[])
           .filter((a) => a.subcontractor_id === s.id)
           .map((a) => a.projects?.name)

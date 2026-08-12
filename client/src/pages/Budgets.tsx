@@ -18,6 +18,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Plus, Trash2, Check, Download } from "lucide-react";
+import { AssemblyTemplateDialog } from "@/components/AssemblyTemplateDialog";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
@@ -160,6 +161,7 @@ export default function Budgets() {
   const [savingDraft, setSavingDraft] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [templateZonePrompt, setTemplateZonePrompt] = useState<{ id: string; name: string } | null>(null);
+  const [templateEditor, setTemplateEditor] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [templateZone, setTemplateZone] = useState("");
   const [insertingTemplate, setInsertingTemplate] = useState(false);
 
@@ -619,18 +621,16 @@ export default function Budgets() {
         <TabsContent value="templates" className="mt-4">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-base font-semibold text-foreground">Assembly Templates</h2>
-              <Button size="sm" className="gap-2">
-                <Plus size={14} /> New Template
+              <h2 className="text-base font-semibold text-foreground">{t("budgets.templates")}</h2>
+              <Button size="sm" className="gap-2" onClick={() => setTemplateEditor({ open: true, id: null })}>
+                <Plus size={14} /> {t("budgets.newTemplate")}
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Recetas reutilizables por negocio — materiales, mano de obra y subcontratistas predefinidos.
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">{t("budgets.templateHint")}</p>
 
             {templatesLoading && (
               <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-                <Spinner className="size-4" /> Cargando plantillas...
+                <Spinner className="size-4" /> {t("common.loading")}
               </div>
             )}
             {templatesError && <ErrorNote message={templatesError} />}
@@ -642,7 +642,7 @@ export default function Budgets() {
                     <p className="font-medium text-foreground">{template.name}</p>
                     <p className="text-xs text-muted-foreground mt-1">{template.description}</p>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {template.itemCount} ítems · {template.laborHours} hrs de mano de obra
+                      {t("budgets.templateSummary", { items: template.itemCount, hours: template.laborHours })}
                     </p>
                     <div className="flex gap-2 mt-3">
                       <Button
@@ -651,12 +651,23 @@ export default function Budgets() {
                         disabled={!draftId}
                         onClick={() => setTemplateZonePrompt({ id: template.id, name: template.name })}
                       >
-                        Insertar en presupuesto
+                        {t("budgets.insertIntoEstimate")}
                       </Button>
-                      <Button size="sm" variant="outline">{t("common.edit")}</Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setTemplateEditor({ open: true, id: template.id })}
+                      >
+                        {t("common.edit")}
+                      </Button>
                     </div>
                   </Card>
                 ))}
+                {assemblyTemplates?.length === 0 && (
+                  <p className="col-span-full text-sm text-muted-foreground text-center py-6">
+                    {t("budgets.noTemplates")}
+                  </p>
+                )}
               </div>
             )}
           </Card>
@@ -709,18 +720,25 @@ export default function Budgets() {
         </Dialog>
       )}
 
+      <AssemblyTemplateDialog
+        templateId={templateEditor.id}
+        open={templateEditor.open}
+        onOpenChange={(open) => setTemplateEditor((prev) => ({ ...prev, open }))}
+        onSaved={refresh}
+      />
+
       <Dialog open={!!templateZonePrompt} onOpenChange={(open) => !open && setTemplateZonePrompt(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Insertar "{templateZonePrompt?.name}"</DialogTitle>
-            <DialogDescription>¿A qué zona del presupuesto pertenece esta plantilla?</DialogDescription>
+            <DialogTitle>{t("budgets.insertTemplate", { name: templateZonePrompt?.name ?? "" })}</DialogTitle>
+            <DialogDescription>{t("budgets.templateZoneQuestion")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label>Zona</Label>
+            <Label>{t("budgets.zone")}</Label>
             <Input
               value={templateZone}
               onChange={(e) => setTemplateZone(e.target.value)}
-              placeholder="Ej. Baño 2"
+              placeholder={t("budgets.zonePlaceholder")}
               autoFocus
             />
           </div>

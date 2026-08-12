@@ -36,7 +36,8 @@
     "loadError": "Impossibile caricare da Supabase: {{message}}",
     "genericError": "Si è verificato un errore imprevisto",
     "logout": "Esci",
-    "language": "Lingua"
+    "language": "Lingua",
+    "copy": "Copia"
   },
   "nav": {
     "home": "HOME",
@@ -159,7 +160,22 @@
     "insert": "Inserisci",
     "templates": "Modelli",
     "pdfPreview": "Anteprima PDF",
-    "estimateFilePrefix": "Preventivo"
+    "estimateFilePrefix": "Preventivo",
+    "newTemplate": "Nuovo modello",
+    "editTemplate": "Modifica modello",
+    "templateHint": "Ricette riutilizzabili della tua impresa — materiali, manodopera e subappaltatori predefiniti.",
+    "templateItems": "Composizione",
+    "templateNameRequired": "Inserisci un nome per il modello.",
+    "templateNamePlaceholder": "Es. Bagno completo 5x8",
+    "templateDescriptionPlaceholder": "Cosa include questa ricetta e quando la usi.",
+    "selectCatalogItem": "Scegli dal catalogo",
+    "templateEstimatedCost": "Costo stimato della ricetta: {{amount}}",
+    "templateSummary": "{{items}} voci · {{hours}} h di manodopera",
+    "noTemplates": "Nessun modello finora. Creane uno per non preventivare più lo stesso lavoro da zero.",
+    "insertIntoEstimate": "Inserisci nel preventivo",
+    "insertTemplate": "Inserisci \"{{name}}\"",
+    "templateZoneQuestion": "A quale zona del preventivo appartiene questo modello?",
+    "zonePlaceholder": "Es. Bagno 2"
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -293,7 +309,10 @@
     "noProjects": "Nessun progetto assegnato",
     "pwaCode": "Codice PWA",
     "createSubcontractor": "Crea subappaltatore",
-    "createError": "Impossibile creare il subappaltatore"
+    "createError": "Impossibile creare il subappaltatore",
+    "codeIssued": "Codice emesso",
+    "noCodeYet": "Nessun codice",
+    "newPwaCode": "Genera un nuovo codice"
   },
   "clientPortal": {
     "title": "Portale cliente",
@@ -477,7 +496,20 @@
     "depositPercent": "Acconto predefinito (%)",
     "depositPercentHint": "Mostrato su ogni preventivo come l'importo necessario per avviare i lavori.",
     "estimateTerms": "Condizioni del preventivo",
-    "estimateTermsPlaceholder": "Es. I prezzi sono validi 30 giorni. Ogni variazione dell'ambito sarà documentata per iscritto."
+    "estimateTermsPlaceholder": "Es. I prezzi sono validi 30 giorni. Ogni variazione dell'ambito sarà documentata per iscritto.",
+    "publicChannelTitle": "Il tuo canale di ingresso clienti",
+    "publicChannelBody": "Questo link apre la tua chat pubblica: il cliente risponde con i pulsanti e alla fine la sua richiesta ti arriva pronta da preventivare. Funziona senza approvazione di Meta e senza costi per messaggio.",
+    "noSlugYet": "Non hai ancora un link pubblico. Configuralo in Dati dell'impresa.",
+    "howToUseLink": "Dove mettere questo link",
+    "howToUseStep1": "Nel messaggio di benvenuto automatico del tuo WhatsApp Business — il cliente lo riceve al primo messaggio.",
+    "howToUseStep2": "Nella bio di Instagram o Facebook, e sul pulsante \"Contatta\" della tua scheda Google.",
+    "howToUseStep3": "Come codice QR sui tuoi veicoli, cartelli di cantiere e biglietti da visita.",
+    "openAutomations": "Vedi il testo di benvenuto suggerito",
+    "directWhatsappTitle": "E collegare WhatsApp direttamente?",
+    "directWhatsappBody": "L'API di WhatsApp Business non si può attivare da qui: Meta richiede che l'impresa completi la propria verifica. Una volta soddisfatti i tre requisiti seguenti, questa schermata potrà collegarla.",
+    "directWhatsappReq1": "Un account Meta Business Manager verificato a nome dell'impresa.",
+    "directWhatsappReq2": "Un'app WhatsApp Business creata nella Meta Developer Console.",
+    "directWhatsappReq3": "Un numero di telefono dedicato, non già in uso nell'app WhatsApp normale."
   },
   "reports": {
     "title": "Report",

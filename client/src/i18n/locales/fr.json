@@ -36,7 +36,8 @@
     "loadError": "Impossible de charger depuis Supabase : {{message}}",
     "genericError": "Une erreur inattendue s'est produite",
     "logout": "Se déconnecter",
-    "language": "Langue"
+    "language": "Langue",
+    "copy": "Copier"
   },
   "nav": {
     "home": "ACCUEIL",
@@ -159,7 +160,22 @@
     "insert": "Insérer",
     "templates": "Modèles d'assemblage",
     "pdfPreview": "Aperçu du PDF",
-    "estimateFilePrefix": "Soumission"
+    "estimateFilePrefix": "Soumission",
+    "newTemplate": "Nouveau modèle",
+    "editTemplate": "Modifier le modèle",
+    "templateHint": "Recettes réutilisables de votre entreprise — matériaux, main-d'œuvre et sous-traitants prédéfinis.",
+    "templateItems": "Composition",
+    "templateNameRequired": "Saisissez un nom pour le modèle.",
+    "templateNamePlaceholder": "Ex. Salle de bain complète 5x8",
+    "templateDescriptionPlaceholder": "Ce que cette recette comprend et quand vous l'utilisez.",
+    "selectCatalogItem": "Choisir dans le catalogue",
+    "templateEstimatedCost": "Coût estimé de la recette : {{amount}}",
+    "templateSummary": "{{items}} postes · {{hours}} h de main-d'œuvre",
+    "noTemplates": "Aucun modèle pour l'instant. Créez-en un pour ne plus jamais chiffrer le même travail à partir de zéro.",
+    "insertIntoEstimate": "Insérer dans la soumission",
+    "insertTemplate": "Insérer « {{name}} »",
+    "templateZoneQuestion": "À quelle zone de la soumission ce modèle appartient-il ?",
+    "zonePlaceholder": "Ex. Salle de bain 2"
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -293,7 +309,10 @@
     "noProjects": "Aucun projet assigné",
     "pwaCode": "Code PWA",
     "createSubcontractor": "Créer le sous-traitant",
-    "createError": "Impossible de créer le sous-traitant"
+    "createError": "Impossible de créer le sous-traitant",
+    "codeIssued": "Code émis",
+    "noCodeYet": "Aucun code",
+    "newPwaCode": "Générer un nouveau code"
   },
   "clientPortal": {
     "title": "Portail client",
@@ -477,7 +496,20 @@
     "depositPercent": "Dépôt par défaut (%)",
     "depositPercentHint": "Affiché sur chaque soumission comme le montant requis pour démarrer les travaux.",
     "estimateTerms": "Conditions de la soumission",
-    "estimateTermsPlaceholder": "Ex. Les prix sont valides 30 jours. Tout changement de portée fera l'objet d'un avenant écrit."
+    "estimateTermsPlaceholder": "Ex. Les prix sont valides 30 jours. Tout changement de portée fera l'objet d'un avenant écrit.",
+    "publicChannelTitle": "Votre canal d'accueil des clients",
+    "publicChannelBody": "Ce lien ouvre votre clavardage public : le client répond par boutons et, à la fin, sa demande vous arrive prête à chiffrer. Fonctionne sans approbation de Meta et sans frais par message.",
+    "noSlugYet": "Vous n'avez pas encore de lien public. Configurez-le dans Coordonnées de l'entreprise.",
+    "howToUseLink": "Où placer ce lien",
+    "howToUseStep1": "Dans le message d'accueil automatique de votre WhatsApp Business — le client le reçoit dès son premier message.",
+    "howToUseStep2": "Dans votre bio Instagram ou Facebook, et sur le bouton « Contact » de votre fiche Google.",
+    "howToUseStep3": "Sous forme de code QR sur vos véhicules, panneaux de chantier et cartes d'affaires.",
+    "openAutomations": "Voir le texte de bienvenue suggéré",
+    "directWhatsappTitle": "Et connecter WhatsApp directement ?",
+    "directWhatsappBody": "L'API WhatsApp Business ne peut pas être activée d'ici : Meta exige que l'entreprise complète sa propre vérification. Une fois les trois exigences ci-dessous remplies, cet écran pourra la connecter.",
+    "directWhatsappReq1": "Un compte Meta Business Manager vérifié au nom de l'entreprise.",
+    "directWhatsappReq2": "Une application WhatsApp Business créée dans la console développeur de Meta.",
+    "directWhatsappReq3": "Un numéro de téléphone dédié, non déjà utilisé dans l'application WhatsApp normale."
   },
   "reports": {
     "title": "Rapports",

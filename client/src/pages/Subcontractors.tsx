@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Star, Send, KeyRound } from "lucide-react";
+import { Plus, Star, KeyRound } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -17,7 +17,7 @@ interface Subcontractor {
   trade: string;
   phone: string;
   rating: number;
-  telegramLinked: boolean;
+  hasAccessCode: boolean;
   assignedProjects: string[];
 }
 
@@ -144,18 +144,13 @@ export default function Subcontractors() {
                 <p className="text-xs text-muted-foreground">
                   {sub.assignedProjects.length > 0 ? sub.assignedProjects.join(", ") : t("subcontractors.noProjects")}
                 </p>
-                <StatusBadge tone={sub.telegramLinked ? "success" : "neutral"}>
-                  {sub.telegramLinked ? "Telegram vinculado" : "Sin vincular"}
+                <StatusBadge tone={sub.hasAccessCode ? "success" : "neutral"}>
+                  {sub.hasAccessCode ? t("subcontractors.codeIssued") : t("subcontractors.noCodeYet")}
                 </StatusBadge>
               </div>
               <div className="flex gap-2 mt-3">
-                {!sub.telegramLinked && (
-                  <Button size="sm" variant="outline" className="flex-1 gap-2">
-                    <Send size={14} /> Invitar por Telegram
-                  </Button>
-                )}
                 <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => generateToken(sub)}>
-                  <KeyRound size={14} /> {t("subcontractors.pwaCode")}
+                  <KeyRound size={14} /> {sub.hasAccessCode ? t("subcontractors.newPwaCode") : t("subcontractors.pwaCode")}
                 </Button>
               </div>
             </Card>

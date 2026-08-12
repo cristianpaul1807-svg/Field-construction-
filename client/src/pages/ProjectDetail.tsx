@@ -17,14 +17,17 @@ import {
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "pausado", "completado"];
 
 interface ProjectDetailResponse {
   id: string;
+  clientId: string | null;
   clientName: string | null;
+  clientAddress: string | null;
+  estimateId: string | null;
   name: string;
   type: string;
   status: ProjectStatus;
@@ -47,7 +50,7 @@ function colorForId(id: string) {
 }
 
 export default function ProjectDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const { data: project, loading, error, reload } = useApi<ProjectDetailResponse>(id ? `/api/projects/${id}` : null);
 
@@ -56,12 +59,26 @@ export default function ProjectDetailPage() {
   const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     if (!project) return;
     setStatus(project.status);
     setProgress(project.progressPercent);
   }, [project]);
+
+  const downloadEstimate = async () => {
+    if (!project?.estimateId) return;
+    setDownloadingPdf(true);
+    try {
+      await downloadFile(
+        `/api/estimates/${project.estimateId}/pdf?download=1&lang=${i18n.language.slice(0, 2)}`,
+        `${t("budgets.estimateFilePrefix")}-${project.estimateId.slice(0, 8).toUpperCase()}.pdf`
+      );
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const saveProgress = async () => {
     setSaving(true);
@@ -179,12 +196,25 @@ export default function ProjectDetailPage() {
                 <p className="text-xs text-muted-foreground">{t("projects.dates")}</p>
                 <p className="text-sm text-foreground mt-1">{project.startDate} → {project.endDate}</p>
               </Card>
-              <Button variant="outline" className="w-full gap-2">
-                <MessageCircle size={14} /> {t("projects.sendUpdate")}
-              </Button>
-              <Button variant="outline" className="w-full gap-2">
-                <MapPin size={14} /> {t("projects.viewLocation")}
-              </Button>
+              {/* Both of these hand off to something that already works
+                  rather than reimplementing it here: the internal chat with
+                  this client, and whatever map app the device prefers. */}
+              <Link href="/communication">
+                <Button variant="outline" className="w-full gap-2">
+                  <MessageCircle size={14} /> {t("projects.sendUpdate")}
+                </Button>
+              </Link>
+              {project.clientAddress && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.clientAddress)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Button variant="outline" className="w-full gap-2">
+                    <MapPin size={14} /> {t("projects.viewLocation")}
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </TabsContent>
@@ -195,9 +225,12 @@ export default function ProjectDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-foreground text-sm">{t("projects.linkedEstimate")}</h3>
-                  <Button size="sm" variant="outline" className="gap-2">
-                    <FileText size={14} /> {t("projects.viewPdf")}
-                  </Button>
+                  {project.estimateId && (
+                    <Button size="sm" variant="outline" className="gap-2" onClick={downloadEstimate} disabled={downloadingPdf}>
+                      {downloadingPdf ? <Spinner className="size-3.5" /> : <FileText size={14} />}
+                      {t("projects.viewPdf")}
+                    </Button>
+                  )}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

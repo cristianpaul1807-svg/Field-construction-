@@ -36,7 +36,8 @@
     "loadError": "Could not load from Supabase: {{message}}",
     "genericError": "An unexpected error occurred",
     "logout": "Sign out",
-    "language": "Language"
+    "language": "Language",
+    "copy": "Copy"
   },
   "nav": {
     "home": "HOME",
@@ -159,7 +160,22 @@
     "insert": "Insert",
     "templates": "Assembly Templates",
     "pdfPreview": "PDF preview",
-    "estimateFilePrefix": "Estimate"
+    "estimateFilePrefix": "Estimate",
+    "newTemplate": "New template",
+    "editTemplate": "Edit template",
+    "templateHint": "Reusable recipes for your business — predefined materials, labor and subcontractors.",
+    "templateItems": "Composition",
+    "templateNameRequired": "Enter a name for the template.",
+    "templateNamePlaceholder": "e.g. Full bathroom 5x8",
+    "templateDescriptionPlaceholder": "What this recipe includes and when you use it.",
+    "selectCatalogItem": "Choose from the catalog",
+    "templateEstimatedCost": "Estimated cost of the recipe: {{amount}}",
+    "templateSummary": "{{items}} items · {{hours}} labor hrs",
+    "noTemplates": "No templates yet. Create one so you never price the same job from scratch again.",
+    "insertIntoEstimate": "Insert into estimate",
+    "insertTemplate": "Insert \"{{name}}\"",
+    "templateZoneQuestion": "Which zone of the estimate does this template belong to?",
+    "zonePlaceholder": "e.g. Bathroom 2"
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -293,7 +309,10 @@
     "noProjects": "No projects assigned",
     "pwaCode": "PWA code",
     "createSubcontractor": "Create subcontractor",
-    "createError": "Could not create the subcontractor"
+    "createError": "Could not create the subcontractor",
+    "codeIssued": "Code issued",
+    "noCodeYet": "No code yet",
+    "newPwaCode": "Generate a new code"
   },
   "clientPortal": {
     "title": "Client Portal",
@@ -477,7 +496,20 @@
     "depositPercent": "Default deposit (%)",
     "depositPercentHint": "Shown on every estimate as the amount needed to start the work.",
     "estimateTerms": "Estimate terms",
-    "estimateTermsPlaceholder": "e.g. Prices are valid for 30 days. Any change of scope will be documented in writing."
+    "estimateTermsPlaceholder": "e.g. Prices are valid for 30 days. Any change of scope will be documented in writing.",
+    "publicChannelTitle": "Your customer intake channel",
+    "publicChannelBody": "This link opens your public chat: the customer answers with buttons, and when they finish their request arrives ready to price. It works with no Meta approval and no per-message fee.",
+    "noSlugYet": "You don't have a public link yet. Set it up in Company details.",
+    "howToUseLink": "Where to put this link",
+    "howToUseStep1": "In your WhatsApp Business automatic Greeting Message — the customer gets it the first time they write to you.",
+    "howToUseStep2": "In your Instagram or Facebook bio, and on the \"Contact\" button of your Google listing.",
+    "howToUseStep3": "As a QR code on your vehicles, job-site signs and business cards.",
+    "openAutomations": "See the suggested welcome text",
+    "directWhatsappTitle": "What about connecting WhatsApp directly?",
+    "directWhatsappBody": "The WhatsApp Business API can't be switched on from here: Meta requires the business to complete its own verification. Once you have the three requirements below, this screen can connect it.",
+    "directWhatsappReq1": "A verified Meta Business Manager account in the business's name.",
+    "directWhatsappReq2": "A WhatsApp Business app created in the Meta Developer Console.",
+    "directWhatsappReq3": "A dedicated phone number, not already in use in the regular WhatsApp app."
   },
   "reports": {
     "title": "Reports & Analytics",
