@@ -691,7 +691,8 @@
       "planificacion": "Planification",
       "en_progreso": "En cours",
       "pausado": "En pause",
-      "completado": "Terminé"
+      "completado": "Terminé",
+      "confirmado": "Confirmé"
     },
     "noProjectsForBusiness": "Cette entreprise n'a encore aucun projet.",
     "backToProjects": "Retour aux projets",
@@ -712,7 +713,50 @@
     "editProgressHint": "L'avancement et le statut sont affichés au client dans son portail.",
     "saveError": "Impossible d'enregistrer le projet",
     "sendUpdate": "Envoyer une mise à jour",
-    "viewLocation": "Voir l'emplacement"
+    "viewLocation": "Voir l'emplacement",
+    "lifecycle": {
+      "title": "Ordre d'exécution",
+      "subtitle": "Ce que le logiciel sait déjà de ce chantier, dans l'ordre.",
+      "originLabel": "Arrivé par",
+      "origin": {
+        "panel": "Créé à la main dans le panneau",
+        "chat_publico": "Chat public",
+        "portal_cliente": "Portail client"
+      },
+      "steps": {
+        "solicitud_chat": "Demande reçue via le chat public",
+        "solicitud_portal": "Demande du client depuis son portail",
+        "alta_manual": "Chantier saisi dans le panneau",
+        "presupuesto_aceptado": "Devis accepté",
+        "trabajo_programado": "Travaux planifiés à l'agenda",
+        "equipo_en_obra": "Équipe pointant sur le chantier",
+        "ordenes_completadas": "Bons de travail terminés",
+        "factura_final_emitida": "Facture finale émise",
+        "factura_final_pagada": "Facture finale encaissée"
+      },
+      "nextStep": "Prochaine étape",
+      "allDone": "Il ne reste rien en suspens sur ce chantier.",
+      "since": "Dans cet état depuis le {{date}}",
+      "history": "Historique des états",
+      "noHistory": "Aucun changement d'état enregistré pour l'instant.",
+      "actors": {
+        "admin": "Bureau",
+        "cliente": "Client",
+        "trabajador": "Ouvrier",
+        "sistema": "Système"
+      },
+      "triggers": {
+        "proyecto_creado": "Chantier créé",
+        "presupuesto_aceptado": "Devis accepté",
+        "trabajo_programado": "Travaux planifiés",
+        "primer_fichaje": "Premier pointage sur le chantier",
+        "orden_iniciada": "Bon de travail démarré",
+        "ordenes_completadas": "Tous les bons de travail terminés",
+        "cliente_confirmo": "Le client a validé les travaux",
+        "factura_final_pagada": "Facture finale encaissée",
+        "cambio_manual": "Changement manuel"
+      }
+    }
   },
   "clientDetail": {
     "title": "Fiche client",
@@ -894,6 +938,15 @@
       "invoiceOverdue": "Facture en retard",
       "appointmentRequest": "Demande de rendez-vous",
       "changeOrderAwaiting": "Avenant en attente du client"
+    }
+  },
+  "portal": {
+    "progress": {
+      "title": "Où en est votre chantier",
+      "confirm": "Confirmer que les travaux sont terminés",
+      "confirmHint": "Ne confirmez qu'après avoir inspecté les travaux. C'est enregistré avec la date.",
+      "confirmed": "Vous avez validé les travaux. Merci.",
+      "confirmError": "La confirmation n'a pas pu être enregistrée"
     }
   }
 }

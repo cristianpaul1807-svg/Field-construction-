@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileSignature, CreditCard, Download, FilePlus2, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
+import { FileSignature, CreditCard, CheckCircle2, Download, FilePlus2, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,10 +12,11 @@ import { ClientChat } from "@/components/ClientChat";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { clearClientSession } from "@/lib/clientSession";
+import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
 
 interface ClientPortalData {
   client: { id: string; name: string };
-  project: { id: string; name: string; progressPercent: number } | null;
+  project: { id: string; name: string; progressPercent: number; status: string; lifecycle: Lifecycle | null } | null;
   estimate: { id: string; status: string; total: number } | null;
   pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
@@ -54,6 +55,7 @@ export default function ClientPortalMe() {
   const [downloading, setDownloading] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [decidingId, setDecidingId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const {
     data: changeOrders,
     reload: reloadChangeOrders,
@@ -103,6 +105,24 @@ export default function ClientPortalMe() {
       setPayError(err instanceof Error ? err.message : t("common.genericError"));
     } finally {
       setAccepting(false);
+    }
+  };
+
+  // The customer saying the work is finished. It does not close the job —
+  // the final invoice still has to be paid — but it puts their sign-off on
+  // the record with a date, which is the half of the argument that usually
+  // has no evidence behind it.
+  const confirmWork = async (projectId: string) => {
+    setConfirming(true);
+    setPayError(null);
+    try {
+      const res = await apiFetch(`/api/client-portal/projects/${projectId}/confirm`, { method: "POST" });
+      if (!res.ok) throw new Error((await readJson<{ error?: string }>(res))?.error || t("portal.progress.confirmError"));
+      reload();
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : t("portal.progress.confirmError"));
+    } finally {
+      setConfirming(false);
     }
   };
 
@@ -178,6 +198,30 @@ export default function ClientPortalMe() {
                     <div className="bg-primary h-2 rounded-full" style={{ width: `${data.project.progressPercent}%` }} />
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">{t("clientPortal.projectProgress")}</p>
+
+                  {data.project.lifecycle && (
+                    <div className="mt-4">
+                      <LifecyclePanel lifecycle={data.project.lifecycle} showHistory={false} />
+                    </div>
+                  )}
+
+                  {data.project.status === "en_progreso" && (
+                    <div className="mt-4">
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => confirmWork(data.project!.id)}
+                        disabled={confirming}
+                      >
+                        {confirming ? <Spinner className="size-4" /> : <CheckCircle2 size={16} />}
+                        {t("portal.progress.confirm")}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">{t("portal.progress.confirmHint")}</p>
+                    </div>
+                  )}
+                  {data.project.status === "confirmado" && (
+                    <p className="text-xs text-muted-foreground mt-4">{t("portal.progress.confirmed")}</p>
+                  )}
                 </div>
               )}
 

@@ -151,7 +151,7 @@ export const conversationControl: Record<string, "bot" | "human"> = {
 };
 
 // ---------- Projects ----------
-export type ProjectStatus = "planificacion" | "en_progreso" | "pausado" | "completado";
+export type ProjectStatus = "planificacion" | "en_progreso" | "confirmado" | "completado" | "pausado";
 
 export interface Project {
   id: string;
@@ -543,6 +543,7 @@ export const leadStatusLabel: Record<LeadStatus, string> = {
 export const projectStatusLabel: Record<ProjectStatus, string> = {
   planificacion: "Planificación",
   en_progreso: "En progreso",
-  pausado: "Pausado",
+  confirmado: "Confirmado",
   completado: "Completado",
+  pausado: "Pausado",
 };

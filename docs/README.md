@@ -51,6 +51,7 @@ directamente al paso a paso.
 | Presupuestos | [funciones/presupuestos.md](funciones/presupuestos.md) |
 | *(dentro de Presupuestos)* Plantillas | [funciones/presupuestos.md](funciones/presupuestos.md#plantillas-de-presupuesto) |
 | *(dentro de Proyectos)* Órdenes de cambio | [funciones/proyectos.md](funciones/proyectos.md#órdenes-de-cambio) |
+| *(dentro de Proyectos)* Orden de ejecución y estados | [funciones/proyectos.md](funciones/proyectos.md#el-orden-de-ejecución) |
 | Materiales y costos | [funciones/materiales.md](funciones/materiales.md) |
 | Control de costos | [funciones/control-de-costos.md](funciones/control-de-costos.md) |
 | Contratos y documentos | [funciones/documentos-y-fotos.md](funciones/documentos-y-fotos.md#contratos-y-documentos) |

@@ -17,12 +17,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
+import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
 import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal, Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
-const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "pausado", "completado"];
+const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "confirmado", "completado", "pausado"];
 
 interface ProjectDetailResponse {
   id: string;
@@ -33,6 +34,7 @@ interface ProjectDetailResponse {
   name: string;
   type: string;
   status: ProjectStatus;
+  lifecycle: Lifecycle | null;
   progressPercent: number;
   startDate: string;
   endDate: string;
@@ -235,6 +237,7 @@ export default function ProjectDetailPage() {
                 </div>
                 <p className="text-xs text-muted-foreground">{t("projects.percentComplete", { percent: project.progressPercent })}</p>
               </Card>
+              {project.lifecycle && <LifecyclePanel lifecycle={project.lifecycle} />}
               <Card className="p-6">
                 <h3 className="font-semibold text-foreground mb-3 text-sm">{t("projects.assignedTeam")}</h3>
                 <div className="space-y-2">

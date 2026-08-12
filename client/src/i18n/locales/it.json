@@ -691,7 +691,8 @@
       "planificacion": "Pianificazione",
       "en_progreso": "In corso",
       "pausado": "In pausa",
-      "completado": "Completato"
+      "completado": "Completato",
+      "confirmado": "Confermato"
     },
     "noProjectsForBusiness": "Questa impresa non ha ancora progetti.",
     "backToProjects": "Torna ai progetti",
@@ -712,7 +713,50 @@
     "editProgressHint": "Avanzamento e stato sono mostrati al cliente nel suo portale.",
     "saveError": "Impossibile salvare il progetto",
     "sendUpdate": "Invia aggiornamento",
-    "viewLocation": "Vedi posizione"
+    "viewLocation": "Vedi posizione",
+    "lifecycle": {
+      "title": "Ordine di esecuzione",
+      "subtitle": "Ciò che il software sa già di questo cantiere, in ordine.",
+      "originLabel": "Arrivato tramite",
+      "origin": {
+        "panel": "Creato a mano nel pannello",
+        "chat_publico": "Chat pubblica",
+        "portal_cliente": "Portale cliente"
+      },
+      "steps": {
+        "solicitud_chat": "Richiesta ricevuta dalla chat pubblica",
+        "solicitud_portal": "Richiesta del cliente dal suo portale",
+        "alta_manual": "Cantiere inserito nel pannello",
+        "presupuesto_aceptado": "Preventivo accettato",
+        "trabajo_programado": "Lavoro pianificato in agenda",
+        "equipo_en_obra": "Squadra che timbra in cantiere",
+        "ordenes_completadas": "Ordini di lavoro completati",
+        "factura_final_emitida": "Fattura finale emessa",
+        "factura_final_pagada": "Fattura finale incassata"
+      },
+      "nextStep": "Prossimo passo",
+      "allDone": "Non resta nulla in sospeso su questo cantiere.",
+      "since": "In questo stato dal {{date}}",
+      "history": "Storico degli stati",
+      "noHistory": "Nessun cambio di stato registrato finora.",
+      "actors": {
+        "admin": "Ufficio",
+        "cliente": "Cliente",
+        "trabajador": "Operaio",
+        "sistema": "Sistema"
+      },
+      "triggers": {
+        "proyecto_creado": "Cantiere creato",
+        "presupuesto_aceptado": "Preventivo accettato",
+        "trabajo_programado": "Lavoro pianificato",
+        "primer_fichaje": "Prima timbratura in cantiere",
+        "orden_iniciada": "Ordine di lavoro avviato",
+        "ordenes_completadas": "Tutti gli ordini completati",
+        "cliente_confirmo": "Il cliente ha confermato il lavoro",
+        "factura_final_pagada": "Fattura finale incassata",
+        "cambio_manual": "Cambio manuale"
+      }
+    }
   },
   "clientDetail": {
     "title": "Scheda cliente",
@@ -894,6 +938,15 @@
       "invoiceOverdue": "Fattura scaduta",
       "appointmentRequest": "Richiesta di appuntamento",
       "changeOrderAwaiting": "Variante in attesa del cliente"
+    }
+  },
+  "portal": {
+    "progress": {
+      "title": "Come procede il tuo cantiere",
+      "confirm": "Conferma che il lavoro è finito",
+      "confirmHint": "Conferma solo dopo aver controllato il lavoro. Resta registrato con la data.",
+      "confirmed": "Hai confermato il lavoro. Grazie.",
+      "confirmError": "Non è stato possibile registrare la conferma"
     }
   }
 }

@@ -691,7 +691,8 @@
       "planificacion": "Planning",
       "en_progreso": "In progress",
       "pausado": "Paused",
-      "completado": "Completed"
+      "completado": "Completed",
+      "confirmado": "Confirmed"
     },
     "noProjectsForBusiness": "This business has no projects yet.",
     "backToProjects": "Back to Projects",
@@ -712,7 +713,50 @@
     "editProgressHint": "Progress and status are shown to the client in their portal.",
     "saveError": "Could not save the project",
     "sendUpdate": "Send update",
-    "viewLocation": "View location"
+    "viewLocation": "View location",
+    "lifecycle": {
+      "title": "Execution order",
+      "subtitle": "What the software already knows about this job, in order.",
+      "originLabel": "Came in through",
+      "origin": {
+        "panel": "Created by hand in the panel",
+        "chat_publico": "Public chat",
+        "portal_cliente": "Client portal"
+      },
+      "steps": {
+        "solicitud_chat": "Request received through the public chat",
+        "solicitud_portal": "Request from the client's own portal",
+        "alta_manual": "Job entered in the panel",
+        "presupuesto_aceptado": "Estimate accepted",
+        "trabajo_programado": "Work booked on the calendar",
+        "equipo_en_obra": "Crew clocking in on site",
+        "ordenes_completadas": "Work orders finished",
+        "factura_final_emitida": "Final invoice issued",
+        "factura_final_pagada": "Final invoice paid"
+      },
+      "nextStep": "Next step",
+      "allDone": "Nothing is left open on this job.",
+      "since": "In this state since {{date}}",
+      "history": "Status history",
+      "noHistory": "No status changes recorded yet.",
+      "actors": {
+        "admin": "Office",
+        "cliente": "Client",
+        "trabajador": "Worker",
+        "sistema": "System"
+      },
+      "triggers": {
+        "proyecto_creado": "Job created",
+        "presupuesto_aceptado": "Estimate accepted",
+        "trabajo_programado": "Work scheduled",
+        "primer_fichaje": "First check-in on site",
+        "orden_iniciada": "Work order started",
+        "ordenes_completadas": "All work orders finished",
+        "cliente_confirmo": "The client signed the work off",
+        "factura_final_pagada": "Final invoice paid",
+        "cambio_manual": "Changed by hand"
+      }
+    }
   },
   "clientDetail": {
     "title": "Client record",
@@ -894,6 +938,15 @@
       "invoiceOverdue": "Overdue invoice",
       "appointmentRequest": "Appointment request",
       "changeOrderAwaiting": "Change order awaiting the client"
+    }
+  },
+  "portal": {
+    "progress": {
+      "title": "How your job is going",
+      "confirm": "Confirm the work is finished",
+      "confirmHint": "Only confirm once you have looked over the work. It is recorded with the date.",
+      "confirmed": "You have signed the work off. Thank you.",
+      "confirmError": "The confirmation could not be recorded"
     }
   }
 }

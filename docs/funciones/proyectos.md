@@ -29,15 +29,76 @@ que hacer nada.
 
 ---
 
-## Estado y avance
+## El orden de ejecución
 
-Los dos los ve tu cliente en su portal. Mantenerlos al día es lo que evita la
-llamada de "¿cómo va lo mío?".
+Una obra no es una fila que alguien edita: es una secuencia de cosas que
+pasan. El software mueve el estado solo, a partir de esas cosas, y deja
+constancia de qué lo movió. Está en `server/lifecycle.ts`.
+
+| Estado | Qué significa | Qué lo dispara |
+|---|---|---|
+| Planificación | Aceptada, programándose, nadie en obra todavía | Se acepta el presupuesto, o se crea la obra a mano |
+| En progreso | Hay gente trabajando | Primer fichaje en obra, o una orden de trabajo que arranca |
+| Confirmado | El trabajo está hecho y visto bueno | Se cierra la última orden de trabajo, o el cliente lo confirma desde su portal |
+| Completado | No queda nada abierto | Se cobra la factura final |
+
+**Pausado** está fuera de la secuencia. Es una decisión humana — un permiso
+que no llega, un cliente que dejó de contestar — así que ningún evento
+automático lo levanta. Alguien tiene que decir que la obra se reanudó. Un
+fichaje sobre una obra pausada se registra igual, pero no la reactiva.
+
+Hacia atrás nunca va sola. Sí puedes moverla tú a donde quieras (una obra
+cerrada que vuelve por garantía, una obra en efectivo que nunca tuvo factura):
+el cambio se acepta y queda registrado como manual, con tu nombre y la fecha.
+
+### Los tres flujos de entrada
+
+De dónde vino la obra cambia lo que falta al principio, y por eso se guarda:
+
+| Entró por | Primer paso | Cómo llega |
+|---|---|---|
+| Chat público | Solicitud recibida por el chat | Un desconocido usa `/c/:slug`; el bot recoge los datos y deja un presupuesto en borrador |
+| Portal del cliente | Solicitud desde su portal | Un cliente que ya tiene acceso escribe o acepta desde `/portal` |
+| Panel | Obra dada de alta a mano | La creas tú, con o sin presupuesto detrás |
+
+A partir del segundo paso los tres van por el mismo camino: presupuesto
+aceptado → trabajo programado → equipo fichando → órdenes terminadas →
+factura final emitida → factura final cobrada.
+
+El origen no se pregunta: se hereda del cliente, que ya guarda por dónde
+apareció. Una obra que escribes tú para un cliente que llegó por el chat
+sigue siendo una obra de chat.
+
+### Dónde se ve
+
+En el hub del proyecto, pestaña **Resumen**: la tarjeta *Orden de ejecución*
+lista los pasos, marca los hechos, señala cuál es el siguiente y abajo enseña
+el historial de estados con quién y cuándo. El cliente ve la misma lista en su
+portal, sin el historial.
+
+Nada de esa tarjeta es pulsable, y es a propósito: un paso se marca haciendo
+la cosa, no diciendo que la hiciste.
+
+### Cómo se cierra desde el otro lado
+
+El cliente, desde su portal, tiene **Confirmar que el trabajo está terminado**
+mientras la obra está en progreso. No la cierra — la factura final sigue
+pendiente — pero deja su visto bueno con fecha, que es la mitad de la discusión
+que normalmente no tiene ninguna prueba detrás.
+
+---
+
+## Estado y avance a mano
+
+Los dos los ve tu cliente en su portal.
 
 1. Entra al proyecto → **Editar estado y avance**.
-2. Estado: planificación, en progreso, pausado, completado.
+2. Estado: planificación, en progreso, confirmado, completado, pausado.
 3. Avance: la barra, de 0 a 100 en saltos de 5.
 4. **Guardar**.
+
+El estado que pongas se respeta, pero el orden de ejecución de arriba se sigue
+calculando de los datos reales, así que la tarjeta te dirá igualmente qué falta.
 
 ---
 

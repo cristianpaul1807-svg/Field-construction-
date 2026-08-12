@@ -41,8 +41,9 @@ export const leadStatusTone: Record<string, StatusTone> = {
 export const projectStatusTone: Record<string, StatusTone> = {
   planificacion: "info",
   en_progreso: "warning",
-  pausado: "neutral",
+  confirmado: "info",
   completado: "success",
+  pausado: "neutral",
 };
 
 export const invoiceStatusTone: Record<string, StatusTone> = {

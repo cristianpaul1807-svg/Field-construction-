@@ -15,6 +15,14 @@ import {
   type TaxBreakdown,
 } from "./documents";
 import {
+  advanceProject,
+  checkWorkOrdersComplete,
+  lifecycleSnapshot,
+  originFromClientSource,
+  setProjectStatus,
+  PROJECT_STATUSES,
+} from "./lifecycle";
+import {
   requireAuthenticatedUser,
   requireBusinessAuth,
   requireClientAuth,
@@ -419,7 +427,7 @@ async function stripeWebhookHandler(req: Request, res: Response) {
       const admin = getSupabaseAdmin();
       const { data: invoice } = await admin
         .from("invoices")
-        .select("id, amount, status")
+        .select("id, amount, status, type, project_id")
         .eq("id", invoiceId)
         .eq("business_id", businessId)
         .maybeSingle();
@@ -434,6 +442,17 @@ async function stripeWebhookHandler(req: Request, res: Response) {
           status: "succeeded",
           paid_at: new Date().toISOString(),
         });
+
+        // The final payment landing is what closes a job. A deposit or a
+        // progress payment does not: there is still work owed.
+        if (invoice.type === "final" && invoice.project_id) {
+          await advanceProject(admin, {
+            businessId,
+            projectId: invoice.project_id,
+            trigger: "factura_final_pagada",
+            actor: "cliente",
+          });
+        }
       }
     }
   }
@@ -842,17 +861,17 @@ apiRouter.get(
     const [assignments, events, orders] = await Promise.all([
       admin
         .from("assignments")
-        .select("projects(id, name)")
+        .select("projects(id, name, status)")
         .eq("business_id", req.workerBusinessId!)
         .eq(column, req.workerId!),
       admin
         .from("schedule_events")
-        .select("projects(id, name)")
+        .select("projects(id, name, status)")
         .eq("business_id", req.workerBusinessId!)
         .eq(assignedColumn, req.workerId!),
       admin
         .from("work_orders")
-        .select("projects(id, name)")
+        .select("projects(id, name, status)")
         .eq("business_id", req.workerBusinessId!)
         .eq(assignedColumn, req.workerId!),
     ]);
@@ -860,10 +879,15 @@ apiRouter.get(
     if (events.error) throw events.error;
     if (orders.error) throw orders.error;
 
+    // Finished and paused jobs come off the clock-in list. A worker scrolling
+    // past last spring's kitchen to find today's site is how hours end up
+    // booked to the wrong project, and those hours become an invoice.
+    const CLOCKABLE = new Set(["planificacion", "en_progreso", "confirmado"]);
+
     const seen = new Set<string>();
     const projects = [];
     for (const row of [...(assignments.data as any[]), ...(events.data as any[]), ...(orders.data as any[])]) {
-      if (row.projects && !seen.has(row.projects.id)) {
+      if (row.projects && !seen.has(row.projects.id) && CLOCKABLE.has(row.projects.status)) {
         seen.add(row.projects.id);
         projects.push({ id: row.projects.id, name: row.projects.name });
       }
@@ -933,6 +957,16 @@ apiRouter.post(
       .select("id, check_in_time")
       .single();
     if (error) throw error;
+
+    // Somebody standing on the site is the strongest evidence there is that
+    // the job left planning, so the first check-in moves it — nobody in the
+    // office has to remember to.
+    await advanceProject(admin, {
+      businessId: req.workerBusinessId!,
+      projectId,
+      trigger: "primer_fichaje",
+      actor: "trabajador",
+    });
 
     res.status(201).json({ id: data.id, checkInTime: data.check_in_time });
   })
@@ -1008,6 +1042,13 @@ apiRouter.post(
       .select("id, check_in_time")
       .single();
     if (openError) throw openError;
+
+    await advanceProject(admin, {
+      businessId: req.workerBusinessId!,
+      projectId,
+      trigger: "primer_fichaje",
+      actor: "trabajador",
+    });
 
     res.status(201).json({ id: data.id, checkInTime: data.check_in_time });
   })
@@ -1172,7 +1213,7 @@ apiRouter.get(
       supabase.from("clients").select("id, name").eq("id", clientId).single(),
       supabase
         .from("projects")
-        .select("id, name, progress_percent")
+        .select("id, name, progress_percent, business_id, status")
         .eq("client_id", clientId)
         .limit(1)
         .maybeSingle(),
@@ -1209,10 +1250,23 @@ apiRouter.get(
       visiblePhotos = data;
     }
 
+    // "How is my renovation going" is the question the portal exists to
+    // answer, and a percentage nobody maintains is not an answer. The customer
+    // sees the same derived checklist the contractor does.
+    const lifecycle = project.data
+      ? await lifecycleSnapshot(getSupabaseAdmin(), project.data.business_id, project.data.id)
+      : null;
+
     res.json({
       client: { id: client.data.id, name: client.data.name },
       project: project.data
-        ? { id: project.data.id, name: project.data.name, progressPercent: Number(project.data.progress_percent) }
+        ? {
+            id: project.data.id,
+            name: project.data.name,
+            progressPercent: Number(project.data.progress_percent),
+            status: project.data.status,
+            lifecycle,
+          }
         : null,
       estimate: estimate.data
         ? { id: estimate.data.id, status: estimate.data.status, total: Number(estimate.data.total) }
@@ -1873,7 +1927,7 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const { data: estimate } = await admin
       .from("estimates")
-      .select("id, status, business_id")
+      .select("id, status, business_id, client_id, project_id, description, clients(name, source)")
       .eq("id", req.params.id)
       .eq("client_id", req.clientId!)
       .maybeSingle();
@@ -1891,7 +1945,75 @@ apiRouter.post(
     }
     const { error } = await admin.from("estimates").update({ status: "aceptado" }).eq("id", estimate.id);
     if (error) throw error;
-    res.json({ ok: true, status: "aceptado" });
+
+    // A customer accepting in the portal is the same commercial event as the
+    // contractor accepting for them in the panel, so it has to have the same
+    // consequence: the job appears under Proyectos. Without this the estimate
+    // went green and nothing else in the software knew about it — the crew had
+    // nothing to clock into and the office had no job to schedule.
+    const client = estimate.clients as unknown as { name: string | null; source: string | null } | null;
+    let projectId = estimate.project_id as string | null;
+    if (!projectId) {
+      const { data: project, error: projectError } = await admin
+        .from("projects")
+        .insert({
+          business_id: estimate.business_id,
+          client_id: estimate.client_id,
+          estimate_id: estimate.id,
+          name: estimate.description?.trim() || client?.name || "Nuevo proyecto",
+          status: "planificacion",
+          origin: originFromClientSource(client?.source),
+        })
+        .select("id")
+        .single();
+      if (projectError) throw projectError;
+      projectId = project.id;
+      await admin.from("estimates").update({ project_id: projectId }).eq("id", estimate.id);
+    }
+
+    await advanceProject(admin, {
+      businessId: estimate.business_id,
+      projectId: projectId!,
+      trigger: "presupuesto_aceptado",
+      actor: "cliente",
+    });
+
+    res.json({ ok: true, status: "aceptado", projectId });
+  })
+);
+
+// The customer signing off the finished work. This is the difference between
+// "we think we're done" and "they agree we're done", and in a trade where the
+// last payment is argued about it is worth having on record with a timestamp.
+// It does not close the job — the final invoice still has to be paid.
+apiRouter.post(
+  "/client-portal/projects/:id/confirm",
+  requireClientAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: project } = await admin
+      .from("projects")
+      .select("id, business_id, status")
+      .eq("id", req.params.id)
+      .eq("client_id", req.clientId!)
+      .maybeSingle();
+    if (!project) {
+      res.status(404).json({ error: "project not found" });
+      return;
+    }
+    if (project.status !== "en_progreso") {
+      res.status(409).json({ error: "this project is not awaiting confirmation" });
+      return;
+    }
+
+    const status = await advanceProject(admin, {
+      businessId: project.business_id,
+      projectId: project.id,
+      trigger: "cliente_confirmo",
+      actor: "cliente",
+      note: typeof req.body?.note === "string" ? req.body.note.slice(0, 500) : undefined,
+    });
+    res.json({ ok: true, status: status ?? project.status });
   })
 );
 
@@ -2492,7 +2614,7 @@ apiRouter.post(
 
     const { data: estimate, error: estimateError } = await supabase
       .from("estimates")
-      .select("id, client_id, project_id, status")
+      .select("id, client_id, project_id, status, clients(source)")
       .eq("business_id", req.businessId!)
       .eq("id", estimateId)
       .single();
@@ -2509,6 +2631,7 @@ apiRouter.post(
           name: req.body?.projectName || "Nuevo proyecto",
           type: req.body?.projectType ?? null,
           status: "planificacion",
+          origin: originFromClientSource((estimate.clients as unknown as { source: string | null } | null)?.source),
         })
         .select("id")
         .single();
@@ -2595,6 +2718,25 @@ apiRouter.post(
         const { error: assignError } = await supabase.from("assignments").insert(row);
         if (assignError) throw assignError;
       }
+    }
+
+    // The acceptance is what turns a quote into a job, so the project starts
+    // its lifecycle here rather than waiting for someone to remember to set it.
+    const admin = getSupabaseAdmin();
+    await advanceProject(admin, {
+      businessId: req.businessId!,
+      projectId: projectId!,
+      trigger: "presupuesto_aceptado",
+      actor: "admin",
+    });
+    if (pendingItems.length > 0) {
+      await advanceProject(admin, {
+        businessId: req.businessId!,
+        projectId: projectId!,
+        trigger: "trabajo_programado",
+        actor: "admin",
+        note: `${pendingItems.length}`,
+      });
     }
 
     res.json({ projectId, scheduledCount: pendingItems.length });
@@ -3421,6 +3563,10 @@ apiRouter.get(
 
     const client = (project.data as any).clients as { name: string; address: string | null } | null;
 
+    // The checklist is derived from the other tables, so it is read after
+    // them rather than folded into the batch above.
+    const lifecycle = await lifecycleSnapshot(getSupabaseAdmin(), req.businessId!, projectId);
+
     res.json({
       id: project.data.id,
       clientId: project.data.client_id,
@@ -3432,6 +3578,7 @@ apiRouter.get(
       name: project.data.name,
       type: project.data.type,
       status: project.data.status,
+      lifecycle,
       progressPercent: Number(project.data.progress_percent),
       startDate: project.data.start_date,
       endDate: project.data.end_date,
@@ -3492,6 +3639,16 @@ apiRouter.post(
       return;
     }
     const supabase = req.supabase!;
+    // A job the contractor types in still inherits the door its client came
+    // through: a lead who arrived by public chat and was later written up by
+    // hand is still a chat lead, and the checklist has to say so.
+    const { data: client } = await supabase
+      .from("clients")
+      .select("source")
+      .eq("business_id", req.businessId!)
+      .eq("id", clientId)
+      .maybeSingle();
+
     const { data, error } = await supabase
       .from("projects")
       .insert({
@@ -3501,6 +3658,7 @@ apiRouter.post(
         name: name.trim(),
         type: type?.trim() || null,
         status: "planificacion",
+        origin: originFromClientSource(client?.source),
         progress_percent: 0,
         start_date: startDate || null,
         end_date: endDate || null,
@@ -4130,6 +4288,14 @@ apiRouter.post(
       .single();
 
     if (error) throw error;
+
+    await advanceProject(getSupabaseAdmin(), {
+      businessId: req.businessId!,
+      projectId: body.projectId,
+      trigger: "trabajo_programado",
+      actor: "admin",
+    });
+
     res.status(201).json({ id: data.id });
   })
 );
@@ -4703,11 +4869,18 @@ apiRouter.patch(
     if (body.startDate !== undefined) update.start_date = body.startDate || null;
     if (body.endDate !== undefined) update.end_date = body.endDate || null;
     if (body.status !== undefined) {
-      if (!["planificacion", "en_progreso", "pausado", "completado"].includes(body.status)) {
+      if (!PROJECT_STATUSES.includes(body.status)) {
         res.status(400).json({ error: "invalid status" });
         return;
       }
-      update.status = body.status;
+      // Goes through the lifecycle so the change is recorded with who made it,
+      // instead of the column quietly changing value with no trace.
+      await setProjectStatus(getSupabaseAdmin(), {
+        businessId: req.businessId!,
+        projectId: req.params.id,
+        status: body.status,
+        actor: "admin",
+      });
     }
     if (body.progressPercent !== undefined) {
       const pct = Number(body.progressPercent);
@@ -4716,6 +4889,12 @@ apiRouter.patch(
         return;
       }
       update.progress_percent = pct;
+    }
+    // The status went through setProjectStatus above, so a status-only edit
+    // leaves nothing here — and PostgREST rejects an empty update.
+    if (Object.keys(update).length === 0) {
+      res.json({ ok: true });
+      return;
     }
     const supabase = req.supabase!;
     const { error } = await supabase
@@ -4750,12 +4929,41 @@ apiRouter.patch(
     if (body.title !== undefined) update.title = String(body.title).trim();
     if (body.description !== undefined) update.description = body.description || null;
     const supabase = req.supabase!;
-    const { error } = await supabase
+    const { data: updated, error } = await supabase
       .from("work_orders")
       .update(update)
       .eq("business_id", req.businessId!)
-      .eq("id", req.params.id);
+      .eq("id", req.params.id)
+      .select("project_id")
+      .maybeSingle();
     if (error) throw error;
+
+    // Work orders are how the office tracks what is left, so they are what
+    // says the job is running and what says it is done. Closing the last open
+    // one is checked here rather than counted once, because orders get added
+    // mid-job and "all complete" is only ever true of the current list.
+    if (body.status !== undefined && updated?.project_id) {
+      const admin = getSupabaseAdmin();
+      if (body.status === "en_progreso") {
+        await advanceProject(admin, {
+          businessId: req.businessId!,
+          projectId: updated.project_id,
+          trigger: "orden_iniciada",
+          actor: "admin",
+        });
+      } else if (body.status === "completada") {
+        const allDone = await checkWorkOrdersComplete(admin, req.businessId!, updated.project_id);
+        if (allDone) {
+          await advanceProject(admin, {
+            businessId: req.businessId!,
+            projectId: updated.project_id,
+            trigger: "ordenes_completadas",
+            actor: "admin",
+          });
+        }
+      }
+    }
+
     res.json({ ok: true });
   })
 );

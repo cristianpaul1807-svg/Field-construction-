@@ -691,7 +691,8 @@
       "planificacion": "Planificación",
       "en_progreso": "En progreso",
       "pausado": "Pausado",
-      "completado": "Completado"
+      "completado": "Completado",
+      "confirmado": "Confirmado"
     },
     "noProjectsForBusiness": "Este negocio todavía no tiene proyectos.",
     "backToProjects": "Volver a Proyectos",
@@ -712,7 +713,50 @@
     "editProgressHint": "El avance y el estado se muestran al cliente en su portal.",
     "saveError": "No se pudo guardar el proyecto",
     "sendUpdate": "Enviar actualización",
-    "viewLocation": "Ver ubicación"
+    "viewLocation": "Ver ubicación",
+    "lifecycle": {
+      "title": "Orden de ejecución",
+      "subtitle": "Lo que el software ya sabe de esta obra, en orden.",
+      "originLabel": "Entró por",
+      "origin": {
+        "panel": "Alta manual en el panel",
+        "chat_publico": "Chat público",
+        "portal_cliente": "Portal del cliente"
+      },
+      "steps": {
+        "solicitud_chat": "Solicitud recibida por el chat público",
+        "solicitud_portal": "Solicitud del cliente desde su portal",
+        "alta_manual": "Obra dada de alta en el panel",
+        "presupuesto_aceptado": "Presupuesto aceptado",
+        "trabajo_programado": "Trabajo programado en la agenda",
+        "equipo_en_obra": "Equipo fichando en la obra",
+        "ordenes_completadas": "Órdenes de trabajo terminadas",
+        "factura_final_emitida": "Factura final emitida",
+        "factura_final_pagada": "Factura final cobrada"
+      },
+      "nextStep": "Siguiente paso",
+      "allDone": "No queda nada pendiente en esta obra.",
+      "since": "En este estado desde el {{date}}",
+      "history": "Historial de estados",
+      "noHistory": "Todavía no hay cambios de estado registrados.",
+      "actors": {
+        "admin": "Oficina",
+        "cliente": "Cliente",
+        "trabajador": "Trabajador",
+        "sistema": "Sistema"
+      },
+      "triggers": {
+        "proyecto_creado": "Obra creada",
+        "presupuesto_aceptado": "Presupuesto aceptado",
+        "trabajo_programado": "Trabajo programado",
+        "primer_fichaje": "Primer fichaje en obra",
+        "orden_iniciada": "Orden de trabajo iniciada",
+        "ordenes_completadas": "Todas las órdenes terminadas",
+        "cliente_confirmo": "El cliente confirmó el trabajo",
+        "factura_final_pagada": "Factura final cobrada",
+        "cambio_manual": "Cambio manual"
+      }
+    }
   },
   "clientDetail": {
     "title": "Ficha del cliente",
@@ -894,6 +938,15 @@
       "invoiceOverdue": "Factura vencida",
       "appointmentRequest": "Solicitud de cita",
       "changeOrderAwaiting": "Orden de cambio esperando al cliente"
+    }
+  },
+  "portal": {
+    "progress": {
+      "title": "Cómo va tu obra",
+      "confirm": "Confirmar que el trabajo está terminado",
+      "confirmHint": "Confírmalo solo cuando hayas revisado la obra. Queda registrado con la fecha.",
+      "confirmed": "Has confirmado el trabajo. Gracias.",
+      "confirmError": "No se pudo registrar la confirmación"
     }
   }
 }
