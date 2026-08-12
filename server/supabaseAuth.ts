@@ -60,6 +60,24 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+// supabase-js reports both "this JWT is bad" and "I couldn't reach the auth
+// server" as an error on the same call. Blaming the user's session for an
+// infrastructure problem sends them chasing a login that was never broken,
+// so the two are separated here by status code: only a 4xx from the auth
+// service is really about the token.
+function isCredentialRejection(err: unknown): boolean {
+  const status = (err as { status?: number } | null)?.status;
+  return typeof status === "number" && status >= 400 && status < 500;
+}
+
+function authUnavailable(res: Response, err: unknown) {
+  console.error("Supabase auth is unreachable", err);
+  res.status(503).json({
+    error:
+      "El servidor no pudo contactar con Supabase. Revisa SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en el entorno del servidor.",
+  });
+}
+
 function bearerToken(req: Request): string | null {
   const header = req.header("authorization") ?? req.header("Authorization");
   if (!header?.startsWith("Bearer ")) return null;
@@ -76,6 +94,10 @@ export const requireAuthenticatedUser = guarded(async (req: Request, res: Respon
     return;
   }
   const { data, error } = await getSupabaseAdmin().auth.getUser(token);
+  if (error && !isCredentialRejection(error)) {
+    authUnavailable(res, error);
+    return;
+  }
   if (error || !data.user) {
     res.status(401).json({ error: "Invalid or expired session" });
     return;
@@ -94,6 +116,10 @@ export const requireBusinessAuth = guarded(async (req: Request, res: Response, n
     return;
   }
   const { data: userData, error: userError } = await getSupabaseAdmin().auth.getUser(token);
+  if (userError && !isCredentialRejection(userError)) {
+    authUnavailable(res, userError);
+    return;
+  }
   if (userError || !userData.user) {
     res.status(401).json({ error: "Invalid or expired session" });
     return;
@@ -153,6 +179,10 @@ export const requireClientAuth = guarded(async (req: Request, res: Response, nex
   }
 
   const { data: userData, error: userError } = await admin.auth.getUser(token);
+  if (userError && !isCredentialRejection(userError)) {
+    authUnavailable(res, userError);
+    return;
+  }
   if (userError || !userData.user) {
     res.status(401).json({ error: "Invalid or expired session" });
     return;

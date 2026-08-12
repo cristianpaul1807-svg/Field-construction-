@@ -445,6 +445,40 @@ function route(handler: Handler) {
   };
 }
 
+// Unauthenticated config check. Deliberately reports only whether each piece
+// is configured and reachable — never a key, or any part of one — so it is
+// safe to open in a browser when a deployment misbehaves.
+apiRouter.get(
+  "/health",
+  route(async (_req, res) => {
+    const report: Record<string, unknown> = {
+      supabaseUrlConfigured: Boolean(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL),
+      supabaseServiceRoleKeyConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      supabaseAnonKeyConfigured: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
+      stripeSecretKeyConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
+      stripeWebhookSecretConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+    };
+
+    // The project ref is the subdomain, which is already public (the browser
+    // bundle contains it) — showing it is what makes a front-end/back-end
+    // project mismatch obvious at a glance.
+    const rawUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+    report.supabaseProjectRef = rawUrl.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? null;
+
+    try {
+      const admin = getSupabaseAdmin();
+      const { error } = await admin.from("businesses").select("id", { head: true, count: "exact" }).limit(1);
+      report.supabaseReachable = !error;
+      if (error) report.supabaseError = error.message;
+    } catch (err) {
+      report.supabaseReachable = false;
+      report.supabaseError = err instanceof Error ? err.message : "unknown";
+    }
+
+    res.json(report);
+  })
+);
+
 // ---------- Auth: registration/provisioning + persona detection ----------
 // These run BEFORE requireBusinessAuth is mounted below, since a brand-new
 // authenticated user has no users/clients row yet — that's exactly what
