@@ -34,6 +34,20 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 }
 
 /**
+ * Reads a JSON body without ever throwing. A failed request can answer with
+ * an HTML error page, an empty body, or a proxy timeout — and a parse error
+ * thrown here replaces the real reason with a message about JSON syntax,
+ * which is how a backend outage once read as a broken Stripe button.
+ */
+export async function readJson<T = any>(res: Response): Promise<T> {
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return {} as T;
+  }
+}
+
+/**
  * Saves a file from an authenticated endpoint. A plain <a download> can't be
  * used for these: the bearer token lives in a header, and a link request
  * carries no headers, so the server would answer 401. Fetching the bytes and

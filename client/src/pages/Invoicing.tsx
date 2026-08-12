@@ -16,7 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Plus, Copy, Check, Download, Ban } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, downloadFile } from "@/lib/api";
+import { useApi, apiFetch, downloadFile, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 const INVOICE_TYPES = ["deposito", "parcial", "final"] as const;
@@ -201,7 +201,7 @@ export default function Invoicing() {
     setLinkError(null);
     try {
       const res = await apiFetch(`/api/invoices/${invoiceId}/checkout-link`, { method: "POST" });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("invoicing.linkError"));
       await navigator.clipboard.writeText(body.url);
       setCopiedId(invoiceId);

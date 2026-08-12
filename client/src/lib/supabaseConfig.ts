@@ -33,7 +33,12 @@ export async function loadSupabaseConfig(): Promise<SupabaseConfig> {
   if (!res.ok) {
     throw new SupabaseConfigError(`El servidor respondió ${res.status} al pedir la configuración.`);
   }
-  const body = (await res.json()) as { supabaseUrl?: string; supabaseAnonKey?: string };
+  // Parsed inline rather than through lib/api's readJson: this module runs
+  // before the app mounts, and importing from api.ts (which imports the
+  // Supabase client, which imports this) would make the boot order circular.
+  const body = await res
+    .json()
+    .catch(() => ({}) as { supabaseUrl?: string; supabaseAnonKey?: string });
   if (!body.supabaseUrl || !body.supabaseAnonKey) {
     throw new SupabaseConfigError(
       "SUPABASE_URL / SUPABASE_ANON_KEY are not configured on the server. Open /api/health to see exactly which one is missing."

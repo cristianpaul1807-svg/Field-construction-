@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Star, KeyRound } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface Subcontractor {
@@ -102,7 +102,7 @@ export default function Subcontractors() {
 
   const generateToken = async (sub: Subcontractor) => {
     const res = await apiFetch(`/api/subcontractors/${sub.id}/access-token`, { method: "POST" });
-    const body = await res.json();
+    const body = await readJson(res);
     if (res.ok) setNewToken({ name: sub.name, token: body.token });
   };
 

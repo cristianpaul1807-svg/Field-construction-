@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { FileSignature, CreditCard, Image as ImageIcon, KeyRound } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface ClientOption {
@@ -46,7 +46,7 @@ export default function ClientPortal() {
     setIssuing(true);
     try {
       const res = await apiFetch(`/api/clients/${clientId}/access-token`, { method: "POST" });
-      const body = await res.json();
+      const body = await readJson(res);
       if (res.ok) setNewToken({ name: data.client.name, token: body.token });
     } finally {
       setIssuing(false);

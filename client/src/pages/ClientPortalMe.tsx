@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileSignature, CreditCard, Download, FilePlus2, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, downloadFile } from "@/lib/api";
+import { useApi, apiFetch, downloadFile, readJson } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
 import { useTranslation } from "react-i18next";
@@ -111,7 +111,7 @@ export default function ClientPortalMe() {
     setPayError(null);
     try {
       const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("clientPortal.payError"));
       window.location.href = body.url;
     } catch (err) {

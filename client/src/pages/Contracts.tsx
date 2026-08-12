@@ -10,7 +10,7 @@ import { Search, Upload, FileText, Download } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
 
@@ -108,7 +108,7 @@ export default function Contracts() {
     setDownloadingId(id);
     try {
       const res = await apiFetch(`/api/documents/${id}/download-url`, { method: "GET" });
-      const body = await res.json();
+      const body = await readJson(res);
       if (res.ok && body.url) window.open(body.url, "_blank", "noopener");
     } finally {
       setDownloadingId(null);

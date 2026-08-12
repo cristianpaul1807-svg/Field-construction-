@@ -6090,3 +6090,17 @@ apiApp.post("/public/stripe/webhook", express.raw({ type: "application/json" }),
 });
 apiApp.use(express.json());
 apiApp.use(apiRouter);
+
+// Every API failure has to answer JSON. Without this, an unhandled error
+// falls through to Express's default handler, which replies with an HTML
+// page — and every screen in this app does `await res.json()` on the way to
+// reading the error message. The browser then reports a JSON parse failure
+// ("The string did not match the expected pattern" in Safari) instead of
+// what actually went wrong, which is how a Supabase outage ended up looking
+// like a broken Stripe button.
+apiApp.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const message = err instanceof Error ? err.message : String(err);
+  console.error("[api]", message, err instanceof Error ? err.stack : "");
+  if (res.headersSent) return;
+  res.status(500).json({ error: message || "Unexpected server error" });
+});

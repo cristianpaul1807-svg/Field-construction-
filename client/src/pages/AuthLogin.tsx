@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, LogIn } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, readJson } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 
@@ -28,7 +28,7 @@ export default function AuthLogin() {
       await refreshPersona();
 
       const res = await apiFetch("/api/auth/me");
-      const body = await res.json();
+      const body = await readJson(res);
       if (body.persona === "client") setLocation("/portal");
       else if (body.persona === "business") setLocation("/");
       else setLocation("/");

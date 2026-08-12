@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, Upload, FileText } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 
 interface Category {
   id: string;
@@ -82,7 +82,7 @@ export function BudgetCategoriesPanel() {
       form.append("categoryId", categoryId);
       form.append("file", file);
       const res = await apiFetch("/api/estimate-reference-documents", { method: "POST", body: form });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("budgets.uploadError"));
       refresh();
     } catch (err) {

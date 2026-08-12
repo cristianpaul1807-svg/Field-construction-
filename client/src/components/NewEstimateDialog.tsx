@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 
 interface Client {
   id: string;
@@ -64,7 +64,7 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
           categoryId: categoryId || undefined,
         }),
       });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("budgets.createEstimateError"));
       reset();
       onOpenChange(false);

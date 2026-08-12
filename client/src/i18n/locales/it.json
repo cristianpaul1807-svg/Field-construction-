@@ -47,7 +47,8 @@
     "no": "No",
     "add": "Aggiungi",
     "selectProjectHint": "Usa il selettore \"Progetti\" nella barra in alto per scegliere di quale progetto vedere queste informazioni.",
-    "selectProject": "Seleziona un progetto"
+    "selectProject": "Seleziona un progetto",
+    "clearSelection": "Rimuovi selezione"
   },
   "nav": {
     "home": "HOME",
@@ -591,7 +592,10 @@
     "pasteInWhatsapp": "Incollalo in WhatsApp Business → Strumenti per l'impresa → Messaggio di benvenuto.",
     "holdbackPercent": "Ritenuta predefinita (%)",
     "holdbackPercentHint": "Trattenuta da ogni pagamento parziale fino alla fine dei lavori — in Quebec di norma è il 10%. Lascia 0 se non la applichi.",
-    "logoHint": "Stampato nell'intestazione di ogni preventivo e fattura. PNG, JPG, WebP o SVG."
+    "logoHint": "Stampato nell'intestazione di ogni preventivo e fattura. PNG, JPG, WebP o SVG.",
+    "publicLinkBody": "Chiunque abbia questo link può scriverti senza creare un account — ideale per i social, la tua bio di Instagram, o il messaggio di benvenuto di WhatsApp Business.",
+    "yourLinkLabel": "Il tuo link",
+    "suggestedMessageLabel": "Messaggio suggerito"
   },
   "reports": {
     "title": "Report",

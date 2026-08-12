@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, CheckCircle2, ArrowRight } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 
 interface ProjectionItem {
   id: string;
@@ -117,7 +117,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectName: clientName ? t("budgets.projectNameFromClient", { client: clientName }) : undefined }),
       });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("budgets.acceptError"));
       setResult(body);
       onChanged();

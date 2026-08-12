@@ -1,3 +1,4 @@
+import { readJson } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
@@ -14,14 +15,14 @@ export function WorkerChat() {
 
   const loadChannels = useCallback(async () => {
     const res = await workerApiFetch("/api/worker/chat/channels");
-    const body = await res.json();
+    const body = await readJson(res);
     setChannels(body);
   }, []);
 
   const loadMessages = useCallback(async (id: string) => {
     setMessages(null);
     const res = await workerApiFetch(`/api/worker/chat/channels/${id}/messages`);
-    const body = await res.json();
+    const body = await readJson(res);
     setMessages(body);
   }, []);
 

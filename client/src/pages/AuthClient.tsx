@@ -1,3 +1,4 @@
+import { readJson } from "@/lib/api";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
@@ -31,7 +32,7 @@ export default function AuthClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token.trim() }),
       });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("worker.invalidCode"));
       const clientSession: ClientSession = {
         token: token.trim(),

@@ -1,3 +1,4 @@
+import { readJson } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "wouter";
 import { Card } from "@/components/ui/card";
@@ -64,7 +65,11 @@ export default function PublicBusinessChat() {
   const [textValue, setTextValue] = useState("");
   const [freeText, setFreeText] = useState("");
   const [activeBubble, setActiveBubble] = useState<"cita" | null>(null);
-  const [appointmentWhen, setAppointmentWhen] = useState("");
+  // Split into date and time so the visitor gets the same native pickers the
+  // rest of the product uses. A free-text box invited "next tuesday morning",
+  // which the business then had to chase down to an actual slot.
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [appointmentTime, setAppointmentTime] = useState("09:00");
   const [appointmentWhy, setAppointmentWhy] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -139,7 +144,7 @@ export default function PublicBusinessChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value, lang: i18n.resolvedLanguage }),
       });
-      const body = await res.json();
+      const body = await readJson(res);
       setFlow(body);
       setTextValue("");
       loadMessages();
@@ -166,15 +171,23 @@ export default function PublicBusinessChat() {
   };
 
   const submitAppointmentRequest = async () => {
-    if (!lead || !appointmentWhen.trim()) return;
+    if (!lead || !appointmentDate) return;
     setBusy(true);
     try {
       await fetch(`/api/public/conversations/${lead.conversationId}/appointment-requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestedDatetimeText: appointmentWhen, reasonText: appointmentWhy || null }),
+        // Still sent as text, because that is what the column holds and what
+        // the business reads — but now it is an unambiguous date and time.
+        body: JSON.stringify({
+          requestedDatetimeText: new Date(`${appointmentDate}T${appointmentTime}:00`).toLocaleString(i18n.language, {
+            dateStyle: "full",
+            timeStyle: "short",
+          }),
+          reasonText: appointmentWhy || null,
+        }),
       });
-      setAppointmentWhen("");
+      setAppointmentDate("");
       setAppointmentWhy("");
       setActiveBubble(null);
       loadMessages();
@@ -287,15 +300,32 @@ export default function PublicBusinessChat() {
                 {activeBubble === "cita" && (
                   <div className="rounded-lg border border-border p-3 space-y-2">
                     <div className="space-y-1">
-                      <Label htmlFor="appt-when" className="text-xs">{t("publicChat.whenWouldYouLike")}</Label>
-                      <Input id="appt-when" value={appointmentWhen} onChange={(e) => setAppointmentWhen(e.target.value)} autoFocus />
+                      <Label className="text-xs">{t("publicChat.whenWouldYouLike")}</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          id="appt-date"
+                          type="date"
+                          value={appointmentDate}
+                          min={new Date().toISOString().slice(0, 10)}
+                          onChange={(e) => setAppointmentDate(e.target.value)}
+                          aria-label={t("common.date")}
+                          autoFocus
+                        />
+                        <Input
+                          id="appt-time"
+                          type="time"
+                          value={appointmentTime}
+                          onChange={(e) => setAppointmentTime(e.target.value)}
+                          aria-label={t("scheduling.time")}
+                        />
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="appt-why" className="text-xs">{t("publicChat.reasonOptional")}</Label>
                       <Input id="appt-why" value={appointmentWhy} onChange={(e) => setAppointmentWhy(e.target.value)} />
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={submitAppointmentRequest} disabled={!appointmentWhen.trim() || busy}>
+                      <Button size="sm" onClick={submitAppointmentRequest} disabled={!appointmentDate || busy}>
                         {t("publicChat.sendRequest")}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setActiveBubble(null)}>{t("common.cancel")}</Button>

@@ -1,3 +1,4 @@
+import { readJson } from "@/lib/api";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
@@ -28,7 +29,7 @@ function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token.trim() }),
       });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("worker.invalidCode"));
       const session: WorkerSession = { token: token.trim(), id: body.id, name: body.name, businessId: body.businessId, kind: body.kind };
       setWorkerSession(session);

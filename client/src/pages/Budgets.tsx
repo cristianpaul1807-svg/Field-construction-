@@ -356,7 +356,7 @@ export default function Budgets() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="text-base font-semibold text-foreground">
-                        Presupuesto #{draft.id.slice(0, 8).toUpperCase()}
+                        {t("budgets.budgetNumber", { id: draft.id.slice(0, 8).toUpperCase() })}
                       </h2>
                       <p className="text-xs text-muted-foreground">
                         {draft.clientName}
@@ -380,7 +380,7 @@ export default function Budgets() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <StatusBadge tone="info">{draft.status}</StatusBadge>
+                      <StatusBadge tone="info">{t(`budgets.estimateStatus.${draft.status}`, { defaultValue: draft.status })}</StatusBadge>
                     </div>
                   </div>
 
@@ -481,7 +481,7 @@ export default function Budgets() {
                         </Select>
                       </div>
                       <div className="space-y-1 col-span-2 sm:col-span-1">
-                        <Label className="text-xs">Ítem</Label>
+                        <Label className="text-xs">{t("budgets.item")}</Label>
                         <Input
                           value={lineForm.item}
                           onChange={(e) => setLineForm((f) => ({ ...f, item: e.target.value }))}

@@ -47,7 +47,8 @@
     "no": "Non",
     "add": "Ajouter",
     "selectProjectHint": "Utilisez le sélecteur « Projets » de la barre du haut pour choisir le projet à afficher.",
-    "selectProject": "Sélectionnez un projet"
+    "selectProject": "Sélectionnez un projet",
+    "clearSelection": "Effacer la sélection"
   },
   "nav": {
     "home": "ACCUEIL",
@@ -591,7 +592,10 @@
     "pasteInWhatsapp": "Collez-le dans WhatsApp Business → Outils d'entreprise → Message d'accueil.",
     "holdbackPercent": "Retenue par défaut (%)",
     "holdbackPercentHint": "Retenue sur chaque paiement partiel jusqu'à la fin des travaux — 10 % est la norme au Québec. Laissez 0 si vous ne l'appliquez pas.",
-    "logoHint": "Imprimé en en-tête de chaque soumission et facture. PNG, JPG, WebP ou SVG."
+    "logoHint": "Imprimé en en-tête de chaque soumission et facture. PNG, JPG, WebP ou SVG.",
+    "publicLinkBody": "Toute personne ayant ce lien peut vous écrire sans créer de compte — idéal pour les réseaux sociaux, votre bio Instagram, ou votre message d'accueil WhatsApp Business.",
+    "yourLinkLabel": "Votre lien",
+    "suggestedMessageLabel": "Message suggéré"
   },
   "reports": {
     "title": "Rapports",

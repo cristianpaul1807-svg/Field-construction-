@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, KeyRound } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
@@ -107,7 +107,7 @@ export default function Technicians() {
 
   const generateToken = async (emp: Employee) => {
     const res = await apiFetch(`/api/employees/${emp.id}/access-token`, { method: "POST" });
-    const body = await res.json();
+    const body = await readJson(res);
     if (res.ok) setNewToken({ name: emp.name, token: body.token });
   };
 

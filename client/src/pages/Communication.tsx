@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Search, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
 import type { ChatChannel, ChatMessage, DirectoryContact } from "@/lib/chatApi";
@@ -35,7 +35,7 @@ function NewConversationDialog({ onStarted }: { onStarted: (id: string) => void 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ participantType: contact.participantType, participantId: contact.participantId }),
     });
-    const body = await res.json();
+    const body = await readJson(res);
     setOpen(false);
     onStarted(body.id);
   };

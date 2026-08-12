@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, ExternalLink, ShieldCheck } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface ConnectStatus {
@@ -58,7 +58,7 @@ export default function SettingsPayments() {
     setError(null);
     try {
       const res = await apiFetch("/api/stripe/connect/onboarding-link", { method: "POST" });
-      const body = await res.json();
+      const body = await readJson(res);
       if (!res.ok) throw new Error(body?.error || t("payments.connectError"));
       window.location.href = body.url;
     } catch (err) {

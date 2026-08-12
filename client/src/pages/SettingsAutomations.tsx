@@ -74,11 +74,10 @@ export default function SettingsAutomations() {
                 <div>
                   <p className="font-medium text-foreground">{t("settings.yourPublicLink")}</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Cualquiera con este link puede escribirte sin crear cuenta — ideal para compartir en
-                    redes, tu bio de Instagram, o pegarlo en tu Mensaje de Bienvenida de WhatsApp Business.
+                    {t("settings.publicLinkBody")}
                   </p>
                 </div>
-                <CopyField label="Tu link" value={publicLink} />
+                <CopyField label={t("settings.yourLinkLabel")} value={publicLink} />
               </div>
             </div>
           </Card>
@@ -90,7 +89,7 @@ export default function SettingsAutomations() {
                 {t("settings.pasteInWhatsapp")}
               </p>
             </div>
-            <CopyField label="Mensaje sugerido" value={welcomeMessage} multiline />
+            <CopyField label={t("settings.suggestedMessageLabel")} value={welcomeMessage} multiline />
           </Card>
         </>
       )}

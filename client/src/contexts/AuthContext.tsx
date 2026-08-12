@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, readJson } from "@/lib/api";
 
 // "none" means the server positively answered that this account isn't linked
 // to a business or a client yet — that's the signal to send someone into
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPersonaError(body?.error || `HTTP ${res.status}`);
         return;
       }
-      const body = await res.json();
+      const body = await readJson(res);
       setPersona(body.persona);
       setPersonaError(null);
       setBusinessId(body.businessId ?? null);

@@ -161,12 +161,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: notifications } = useApi<NotificationFeed>("/api/notifications");
   const [location] = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // Only one section is open at a time, so the menu stays short enough to
+  // read without scrolling and the category you're in is the one you see.
+  const [openSection, setOpenSection] = useState<string | null>(null);
 
   // Any navigation closes the mobile sheet — otherwise it stays open on top
   // of the page the user just asked for.
   useEffect(() => {
     setMobileNavOpen(false);
   }, [location]);
+
+  // Opening the menu shows the section you're already in, expanded — the
+  // most likely place to want to go next is next door.
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const current = navSections.find((section) => sectionContainsActive(section, location));
+    setOpenSection(current?.id ?? null);
+  }, [mobileNavOpen, location]);
 
   const SectionMenu = ({ section }: { section: NavSection }) => {
     const active = sectionContainsActive(section, location);
@@ -246,8 +257,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </nav>
           )}
 
-          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-            {!isMobile && <ProjectSwitcher />}
+          {/* The project selector stays in the top bar at every width. Half
+              the screens in this app are scoped to one project, so hiding it
+              on a phone meant the field user could read those screens but
+              never change which project they were reading. */}
+          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 min-w-0">
+            <ProjectSwitcher />
             <LanguageSwitcher />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -314,35 +329,69 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {isMobile && mobileNavOpen && (
-          <div className="border-t border-border max-h-[70vh] overflow-y-auto px-3 py-3 space-y-4">
-            {navSections.map((section) => (
-              <div key={section.id}>
-                <p className="px-2 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground flex items-center gap-1.5">
-                  <section.Icon size={13} strokeWidth={1.75} />
-                  {t(section.titleKey)}
-                </p>
-                <div className="space-y-0.5">
-                  {section.items.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.path}
-                      className={cn(
-                        "w-full flex items-center gap-2.5 px-2 py-2 text-sm rounded-md transition-colors",
-                        isActivePath(location, item.path)
-                          ? "bg-secondary text-foreground font-medium"
-                          : "text-foreground hover:bg-secondary/60"
-                      )}
-                    >
-                      <item.Icon size={15} strokeWidth={1.75} className="text-muted-foreground" />
-                      {t(item.labelKey)}
-                    </Link>
-                  ))}
+          <div className="border-t border-border max-h-[75vh] overflow-y-auto px-3 py-2">
+            {navSections.map((section) => {
+              const active = sectionContainsActive(section, location);
+              // A one-item section has nothing to expand into, so it stays a
+              // plain link rather than a header that opens to reveal itself.
+              if (section.items.length === 1) {
+                const only = section.items[0];
+                return (
+                  <Link
+                    key={section.id}
+                    href={only.path}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-2 py-2.5 text-sm rounded-md transition-colors",
+                      active ? "bg-secondary text-foreground font-medium" : "text-foreground hover:bg-secondary/60"
+                    )}
+                  >
+                    <only.Icon size={16} strokeWidth={1.75} className="text-muted-foreground" />
+                    {t(only.labelKey)}
+                  </Link>
+                );
+              }
+
+              const expanded = openSection === section.id;
+              return (
+                <div key={section.id}>
+                  <button
+                    onClick={() => setOpenSection(expanded ? null : section.id)}
+                    aria-expanded={expanded}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-2 py-2.5 text-sm rounded-md transition-colors",
+                      active ? "text-foreground font-medium" : "text-foreground hover:bg-secondary/60"
+                    )}
+                  >
+                    <section.Icon size={16} strokeWidth={1.75} className="text-muted-foreground" />
+                    <span className="flex-1 text-left">{t(section.titleKey)}</span>
+                    <ChevronDown
+                      size={15}
+                      strokeWidth={1.75}
+                      className={cn("text-muted-foreground transition-transform", expanded && "rotate-180")}
+                    />
+                  </button>
+                  {expanded && (
+                    <div className="pl-4 pb-1 space-y-0.5">
+                      {section.items.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={item.path}
+                          className={cn(
+                            "w-full flex items-center gap-2.5 px-2 py-2 text-sm rounded-md transition-colors",
+                            isActivePath(location, item.path)
+                              ? "bg-secondary text-foreground font-medium"
+                              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                          )}
+                        >
+                          <item.Icon size={15} strokeWidth={1.75} className="text-muted-foreground" />
+                          {t(item.labelKey)}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
-            <div className="pt-1 border-t border-border">
-              <ProjectSwitcher />
-            </div>
+              );
+            })}
           </div>
         )}
       </header>

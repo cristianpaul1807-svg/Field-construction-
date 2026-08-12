@@ -47,7 +47,8 @@
     "no": "No",
     "add": "Add",
     "selectProjectHint": "Use the \"Projects\" picker in the top bar to choose which project you want to see this for.",
-    "selectProject": "Select a project"
+    "selectProject": "Select a project",
+    "clearSelection": "Clear selection"
   },
   "nav": {
     "home": "HOME",
@@ -591,7 +592,10 @@
     "pasteInWhatsapp": "Paste it in WhatsApp Business → Business tools → Greeting message.",
     "holdbackPercent": "Default holdback (%)",
     "holdbackPercentHint": "Held back from each progress payment until the job is finished — 10% is standard in Quebec. Leave 0 if you don't use it.",
-    "logoHint": "Printed at the top of every estimate and invoice. PNG, JPG, WebP or SVG."
+    "logoHint": "Printed at the top of every estimate and invoice. PNG, JPG, WebP or SVG.",
+    "publicLinkBody": "Anyone with this link can write to you without creating an account — ideal for social media, your Instagram bio, or your WhatsApp Business greeting message.",
+    "yourLinkLabel": "Your link",
+    "suggestedMessageLabel": "Suggested message"
   },
   "reports": {
     "title": "Reports & Analytics",
