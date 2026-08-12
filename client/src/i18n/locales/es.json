@@ -704,7 +704,12 @@
     "description": "Ubicación en tiempo real de técnicos y subcontratistas activos",
     "activeNow": "Activos ahora",
     "mapWaiting": "Mapa en espera de API key",
-    "nobodyActive": "Nadie activo en este momento."
+    "nobodyActive": "Nadie activo en este momento.",
+    "noLocations": "Todavía no hay posiciones que mostrar",
+    "noLocationsHint": "El mapa se dibuja con los check-in de las últimas 24 horas. En cuanto alguien fiche desde la obra, aparecerá aquí.",
+    "recentCheckIns": "Check-in recientes",
+    "openMap": "Ver en el mapa",
+    "onRoute": "En ruta"
   },
   "photoGallery": {
     "title": "Galería de fotos",

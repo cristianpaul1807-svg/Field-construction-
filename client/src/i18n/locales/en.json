@@ -704,7 +704,12 @@
     "description": "Real-time location of active technicians and subcontractors",
     "activeNow": "Active now",
     "mapWaiting": "Map awaiting API key",
-    "nobodyActive": "Nobody active right now."
+    "nobodyActive": "Nobody active right now.",
+    "noLocations": "No positions to show yet",
+    "noLocationsHint": "The map is drawn from check-ins in the last 24 hours. As soon as somebody clocks in from a site, they'll show up here.",
+    "recentCheckIns": "Recent check-ins",
+    "openMap": "Open in map",
+    "onRoute": "On route"
   },
   "photoGallery": {
     "title": "Photo Gallery",

@@ -704,7 +704,12 @@
     "description": "Posizione in tempo reale di tecnici e subappaltatori attivi",
     "activeNow": "Attivi ora",
     "mapWaiting": "Mappa in attesa della chiave API",
-    "nobodyActive": "Nessuno attivo in questo momento."
+    "nobodyActive": "Nessuno attivo in questo momento.",
+    "noLocations": "Nessuna posizione da mostrare finora",
+    "noLocationsHint": "La mappa si basa sulle timbrature delle ultime 24 ore. Non appena qualcuno timbra dal cantiere, comparirà qui.",
+    "recentCheckIns": "Timbrature recenti",
+    "openMap": "Apri nella mappa",
+    "onRoute": "In viaggio"
   },
   "photoGallery": {
     "title": "Galleria foto",

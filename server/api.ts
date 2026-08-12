@@ -3588,7 +3588,33 @@ apiRouter.get(
         currentProject: (assignments.data as any[]).find((a) => a.subcontractor_id === s.id)?.projects?.name ?? null,
       }));
 
-    res.json([...activeEmployees, ...activeSubcontractors]);
+    // Where people actually are comes from their check-ins, which already
+    // record coordinates — so the map plots real positions instead of waiting
+    // on a maps API key that was never going to arrive.
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: pings, error: pingsError } = await supabase
+      .from("time_entries")
+      .select(
+        "id, check_in_time, check_in_lat, check_in_lng, check_out_time, projects(name), employees(name), subcontractors(name)"
+      )
+      .eq("business_id", req.businessId!)
+      .gte("check_in_time", since)
+      .not("check_in_lat", "is", null)
+      .order("check_in_time", { ascending: false });
+    if (pingsError) throw pingsError;
+
+    res.json({
+      workers: [...activeEmployees, ...activeSubcontractors],
+      locations: (pings as any[]).map((p) => ({
+        id: p.id,
+        name: p.employees?.name ?? p.subcontractors?.name ?? null,
+        projectName: p.projects?.name ?? null,
+        lat: Number(p.check_in_lat),
+        lng: Number(p.check_in_lng),
+        checkInTime: p.check_in_time,
+        stillOnSite: !p.check_out_time,
+      })),
+    });
   })
 );
 

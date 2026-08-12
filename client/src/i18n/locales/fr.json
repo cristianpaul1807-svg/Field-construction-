@@ -704,7 +704,12 @@
     "description": "Position en temps réel des techniciens et sous-traitants actifs",
     "activeNow": "Actifs maintenant",
     "mapWaiting": "Carte en attente d'une clé API",
-    "nobodyActive": "Personne d'actif en ce moment."
+    "nobodyActive": "Personne d'actif en ce moment.",
+    "noLocations": "Aucune position à afficher pour l'instant",
+    "noLocationsHint": "La carte est tracée à partir des pointages des dernières 24 heures. Dès que quelqu'un pointe depuis un chantier, il apparaîtra ici.",
+    "recentCheckIns": "Pointages récents",
+    "openMap": "Ouvrir dans la carte",
+    "onRoute": "En route"
   },
   "photoGallery": {
     "title": "Galerie photos",
