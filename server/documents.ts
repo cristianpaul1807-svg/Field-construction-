@@ -49,6 +49,20 @@ export interface TaxBreakdown {
   hst?: number;
 }
 
+export interface EstimateMaterial {
+  name: string;
+  quantity: number;
+  unit: string | null;
+}
+
+export interface EstimateScheduleEntry {
+  title: string;
+  zone: string | null;
+  start: Date;
+  durationMinutes: number;
+  worker: string | null;
+}
+
 export interface EstimateDoc {
   kind: "estimate";
   number: string;
@@ -66,6 +80,10 @@ export interface EstimateDoc {
   depositPercent: number;
   holdbackPercent: number;
   terms: string | null;
+  /** What will be installed. Empty when the business turns the section off. */
+  materials: EstimateMaterial[];
+  /** When the work happens. Empty when there is no projection, or it's off. */
+  schedule: EstimateScheduleEntry[];
 }
 
 export interface InvoiceDoc {
@@ -113,6 +131,11 @@ interface Copy {
   deposit: (percent: number, amount: string) => string;
   holdback: string;
   holdbackNote: (percent: number) => string;
+  materialsTitle: string;
+  materialsNote: string;
+  scheduleTitle: string;
+  scheduleNote: string;
+  scheduleDuration: (hours: string) => string;
   acceptance: string;
   signature: string;
   signatureDate: string;
@@ -151,6 +174,11 @@ const COPY: Record<DocLang, Copy> = {
     deposit: (p, a) => `Depósito para iniciar los trabajos: ${p}% (${a})`,
     holdback: "Retención",
     holdbackNote: (p) => `Se retiene un ${p}% de cada pago parcial hasta la finalización de los trabajos.`,
+    materialsTitle: "Materiales previstos",
+    materialsNote: "Cantidades estimadas; cualquier cambio se acuerda por escrito antes de ejecutarlo.",
+    scheduleTitle: "Programación prevista",
+    scheduleNote: "Fechas orientativas: se confirman al aceptar el presupuesto.",
+    scheduleDuration: (h) => `${h} h`,
     acceptance: "Al firmar, el cliente acepta el alcance y el importe de este presupuesto.",
     signature: "Firma del cliente",
     signatureDate: "Fecha",
@@ -187,6 +215,11 @@ const COPY: Record<DocLang, Copy> = {
     deposit: (p, a) => `Deposit to start the work: ${p}% (${a})`,
     holdback: "Holdback",
     holdbackNote: (p) => `${p}% of each progress payment is held back until the work is complete.`,
+    materialsTitle: "Materials to be used",
+    materialsNote: "Estimated quantities; any change is agreed in writing before it is carried out.",
+    scheduleTitle: "Planned schedule",
+    scheduleNote: "Indicative dates, confirmed when the estimate is accepted.",
+    scheduleDuration: (h) => `${h} h`,
     acceptance: "By signing, the client accepts the scope and the amount of this estimate.",
     signature: "Client signature",
     signatureDate: "Date",
@@ -223,6 +256,11 @@ const COPY: Record<DocLang, Copy> = {
     deposit: (p, a) => `Dépôt pour démarrer les travaux : ${p} % (${a})`,
     holdback: "Retenue",
     holdbackNote: (p) => `Une retenue de ${p} % est appliquée à chaque paiement partiel jusqu'à la fin des travaux.`,
+    materialsTitle: "Matériaux prévus",
+    materialsNote: "Quantités estimées ; tout changement est convenu par écrit avant d'être réalisé.",
+    scheduleTitle: "Calendrier prévu",
+    scheduleNote: "Dates indicatives, confirmées à l'acceptation de la soumission.",
+    scheduleDuration: (h) => `${h} h`,
     acceptance: "En signant, le client accepte la portée et le montant de cette soumission.",
     signature: "Signature du client",
     signatureDate: "Date",
@@ -259,6 +297,11 @@ const COPY: Record<DocLang, Copy> = {
     deposit: (p, a) => `Acconto per avviare i lavori: ${p}% (${a})`,
     holdback: "Ritenuta",
     holdbackNote: (p) => `Viene trattenuto il ${p}% di ogni pagamento parziale fino al completamento dei lavori.`,
+    materialsTitle: "Materiali previsti",
+    materialsNote: "Quantità stimate; ogni variazione viene concordata per iscritto prima di eseguirla.",
+    scheduleTitle: "Programmazione prevista",
+    scheduleNote: "Date indicative, confermate all'accettazione del preventivo.",
+    scheduleDuration: (h) => `${h} h`,
     acceptance: "Firmando, il cliente accetta l'ambito e l'importo di questo preventivo.",
     signature: "Firma del cliente",
     signatureDate: "Data",
@@ -514,6 +557,59 @@ function totals(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocL
   doc.y += 10;
 }
 
+// Two sections that answer what the price alone does not: what goes in, and
+// when it happens. Both are drawn from data the estimate already holds — the
+// lines and the work projection — so nothing here is retyped or invented.
+function extraSections(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) {
+  if (data.materials.length > 0) {
+    ensureRoom(doc, 60, copy);
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111").text(copy.materialsTitle, MARGIN, doc.y);
+    doc.y += 4;
+    doc.font("Helvetica").fontSize(8.5).fillColor("#333333");
+    for (const material of data.materials) {
+      ensureRoom(doc, 14, copy);
+      const y = doc.y;
+      doc.text(`· ${material.name}`, MARGIN + 6, y, { width: CONTENT_WIDTH - 120 });
+      doc.text(
+        material.unit ? `${material.quantity} ${material.unit}` : String(material.quantity),
+        MARGIN + CONTENT_WIDTH - 110,
+        y,
+        { width: 110, align: "right" }
+      );
+      doc.y = Math.max(doc.y, y + 12);
+    }
+    doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.materialsNote, MARGIN, doc.y + 2, {
+      width: CONTENT_WIDTH,
+    });
+    doc.y += 10;
+  }
+
+  if (data.schedule.length > 0) {
+    ensureRoom(doc, 60, copy);
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111").text(copy.scheduleTitle, MARGIN, doc.y);
+    doc.y += 4;
+    doc.font("Helvetica").fontSize(8.5).fillColor("#333333");
+    for (const entry of data.schedule) {
+      ensureRoom(doc, 14, copy);
+      const y = doc.y;
+      const label = [entry.title, entry.zone].filter(Boolean).join(" · ");
+      doc.text(`· ${label}`, MARGIN + 6, y, { width: CONTENT_WIDTH - 190 });
+      const hours = (entry.durationMinutes / 60).toFixed(1).replace(/\.0$/, "");
+      doc.text(
+        `${shortDate(entry.start, lang)} · ${copy.scheduleDuration(hours)}`,
+        MARGIN + CONTENT_WIDTH - 180,
+        y,
+        { width: 180, align: "right" }
+      );
+      doc.y = Math.max(doc.y, y + 12);
+    }
+    doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.scheduleNote, MARGIN, doc.y + 2, {
+      width: CONTENT_WIDTH,
+    });
+    doc.y += 10;
+  }
+}
+
 function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) {
   ensureRoom(doc, 120, copy);
 
@@ -599,7 +695,10 @@ function render(data: EstimateDoc | InvoiceDoc, lang: DocLang): Promise<Buffer> 
   parties(doc, data, copy);
   lineTable(doc, data, copy, lang);
   totals(doc, data, copy, lang);
-  if (data.kind === "estimate") estimateFooter(doc, data, copy, lang);
+  if (data.kind === "estimate") {
+    extraSections(doc, data, copy, lang);
+    estimateFooter(doc, data, copy, lang);
+  }
   else invoiceFooter(doc, data, copy);
   pageNumbers(doc, copy);
 

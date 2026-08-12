@@ -611,7 +611,12 @@
     "logoHint": "Se imprime en la cabecera de cada presupuesto y factura. PNG, JPG, WebP o SVG.",
     "publicLinkBody": "Cualquiera con este link puede escribirte sin crear cuenta — ideal para compartir en redes, tu bio de Instagram, o pegarlo en tu Mensaje de Bienvenida de WhatsApp Business.",
     "yourLinkLabel": "Tu link",
-    "suggestedMessageLabel": "Mensaje sugerido"
+    "suggestedMessageLabel": "Mensaje sugerido",
+    "estimateSections": "Qué incluir en el presupuesto que ve el cliente",
+    "showMaterials": "Lista de materiales previstos",
+    "showMaterialsHint": "Sale de las líneas de materiales del propio presupuesto, así que nunca promete algo que el precio no incluya.",
+    "showSchedule": "Programación prevista de los trabajos",
+    "showScheduleHint": "Sale de la proyección de trabajo. Saber cuándo empieza y cuánto dura es lo que más tranquiliza al cliente antes de firmar."
   },
   "reports": {
     "title": "Informes",

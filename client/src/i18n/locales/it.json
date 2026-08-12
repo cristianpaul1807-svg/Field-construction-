@@ -611,7 +611,12 @@
     "logoHint": "Stampato nell'intestazione di ogni preventivo e fattura. PNG, JPG, WebP o SVG.",
     "publicLinkBody": "Chiunque abbia questo link può scriverti senza creare un account — ideale per i social, la tua bio di Instagram, o il messaggio di benvenuto di WhatsApp Business.",
     "yourLinkLabel": "Il tuo link",
-    "suggestedMessageLabel": "Messaggio suggerito"
+    "suggestedMessageLabel": "Messaggio suggerito",
+    "estimateSections": "Cosa includere nel preventivo che vede il cliente",
+    "showMaterials": "Elenco dei materiali previsti",
+    "showMaterialsHint": "Costruito dalle voci di materiale del preventivo stesso, quindi non può promettere ciò che il prezzo non copre.",
+    "showSchedule": "Programmazione prevista dei lavori",
+    "showScheduleHint": "Costruita dalla proiezione dei lavori. Sapere quando si inizia e quanto dura è ciò che più rassicura il cliente prima di firmare."
   },
   "reports": {
     "title": "Report",

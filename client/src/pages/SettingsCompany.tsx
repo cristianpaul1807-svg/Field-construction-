@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Check, Upload, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -25,6 +26,8 @@ interface CompanyData {
   holdbackPercent: number;
   estimateTerms: string | null;
   logoUrl: string | null;
+  estimateShowMaterials: boolean;
+  estimateShowSchedule: boolean;
 }
 
 export default function SettingsCompany() {
@@ -43,6 +46,8 @@ export default function SettingsCompany() {
   const [depositPercent, setDepositPercent] = useState("30");
   const [holdbackPercent, setHoldbackPercent] = useState("0");
   const [estimateTerms, setEstimateTerms] = useState("");
+  const [showMaterials, setShowMaterials] = useState(true);
+  const [showSchedule, setShowSchedule] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -92,6 +97,8 @@ export default function SettingsCompany() {
     setDepositPercent(String(data.depositPercent ?? 30));
     setHoldbackPercent(String(data.holdbackPercent ?? 0));
     setEstimateTerms(data.estimateTerms ?? "");
+    setShowMaterials(data.estimateShowMaterials !== false);
+    setShowSchedule(data.estimateShowSchedule !== false);
   }, [data]);
 
   const save = async () => {
@@ -114,6 +121,8 @@ export default function SettingsCompany() {
           depositPercent: depositPercent === "" ? 0 : Number(depositPercent),
           holdbackPercent: holdbackPercent === "" ? 0 : Number(holdbackPercent),
           estimateTerms,
+          estimateShowMaterials: showMaterials,
+          estimateShowSchedule: showSchedule,
         }),
       });
       if (!res.ok) {
@@ -281,6 +290,26 @@ export default function SettingsCompany() {
                   onChange={(e) => setHoldbackPercent(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">{t("settings.holdbackPercentHint")}</p>
+              </div>
+              {/* Both sections are built from data the estimate already
+                  holds, so turning them on costs nothing to maintain — and
+                  they are what a customer reads before signing. */}
+              <div className="sm:col-span-2 space-y-3 rounded-lg border border-border p-3">
+                <p className="text-sm font-medium text-foreground">{t("settings.estimateSections")}</p>
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <Checkbox checked={showMaterials} onCheckedChange={(v) => setShowMaterials(v === true)} className="mt-0.5" />
+                  <span>
+                    <span className="block text-sm text-foreground">{t("settings.showMaterials")}</span>
+                    <span className="block text-xs text-muted-foreground">{t("settings.showMaterialsHint")}</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <Checkbox checked={showSchedule} onCheckedChange={(v) => setShowSchedule(v === true)} className="mt-0.5" />
+                  <span>
+                    <span className="block text-sm text-foreground">{t("settings.showSchedule")}</span>
+                    <span className="block text-xs text-muted-foreground">{t("settings.showScheduleHint")}</span>
+                  </span>
+                </label>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="terms">{t("settings.estimateTerms")}</Label>

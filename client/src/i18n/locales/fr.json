@@ -611,7 +611,12 @@
     "logoHint": "Imprimé en en-tête de chaque soumission et facture. PNG, JPG, WebP ou SVG.",
     "publicLinkBody": "Toute personne ayant ce lien peut vous écrire sans créer de compte — idéal pour les réseaux sociaux, votre bio Instagram, ou votre message d'accueil WhatsApp Business.",
     "yourLinkLabel": "Votre lien",
-    "suggestedMessageLabel": "Message suggéré"
+    "suggestedMessageLabel": "Message suggéré",
+    "estimateSections": "Ce qu'il faut inclure dans la soumission que voit le client",
+    "showMaterials": "Liste des matériaux prévus",
+    "showMaterialsHint": "Construite à partir des postes de matériaux de la soumission, elle ne peut donc jamais promettre ce que le prix ne couvre pas.",
+    "showSchedule": "Calendrier prévu des travaux",
+    "showScheduleHint": "Construit à partir de la projection des travaux. Savoir quand ça commence et combien de temps ça dure est ce qui rassure le plus avant de signer."
   },
   "reports": {
     "title": "Rapports",

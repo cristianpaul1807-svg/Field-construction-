@@ -611,7 +611,12 @@
     "logoHint": "Printed at the top of every estimate and invoice. PNG, JPG, WebP or SVG.",
     "publicLinkBody": "Anyone with this link can write to you without creating an account — ideal for social media, your Instagram bio, or your WhatsApp Business greeting message.",
     "yourLinkLabel": "Your link",
-    "suggestedMessageLabel": "Suggested message"
+    "suggestedMessageLabel": "Suggested message",
+    "estimateSections": "What to include on the estimate the client sees",
+    "showMaterials": "List of materials to be used",
+    "showMaterialsHint": "Built from the estimate's own material lines, so it can never promise something the price doesn't cover.",
+    "showSchedule": "Planned work schedule",
+    "showScheduleHint": "Built from the work projection. Knowing when it starts and how long it takes is what reassures a client most before signing."
   },
   "reports": {
     "title": "Reports & Analytics",

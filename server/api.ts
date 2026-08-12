@@ -4887,10 +4887,17 @@ async function fetchLogo(url: string | null | undefined): Promise<Buffer | null>
 async function loadBusinessIdentity(
   admin: ReturnType<typeof getSupabaseAdmin>,
   businessId: string
-): Promise<{ identity: BusinessIdentity; depositPercent: number; holdbackPercent: number; terms: string | null }> {
+): Promise<{
+  identity: BusinessIdentity;
+  depositPercent: number;
+  holdbackPercent: number;
+  terms: string | null;
+  showMaterials: boolean;
+  showSchedule: boolean;
+}> {
   const { data, error } = await admin
     .from("businesses")
-    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, holdback_percent, estimate_terms, logo_url")
+    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule")
     .eq("id", businessId)
     .single();
   if (error) throw error;
@@ -4909,6 +4916,8 @@ async function loadBusinessIdentity(
     depositPercent: Number(data.deposit_percent ?? 0),
     holdbackPercent: Number(data.holdback_percent ?? 0),
     terms: data.estimate_terms ?? null,
+    showMaterials: data.estimate_show_materials !== false,
+    showSchedule: data.estimate_show_schedule !== false,
   };
 }
 
@@ -4924,7 +4933,7 @@ function sendPdf(res: express.Response, pdf: Buffer, filename: string, dispositi
 async function buildEstimatePdf(businessId: string, estimateId: string, lang: DocLang): Promise<Buffer | null> {
   const admin = getSupabaseAdmin();
 
-  const [estimate, lines, business] = await Promise.all([
+  const [estimate, lines, business, projection] = await Promise.all([
     admin
       .from("estimates")
       .select(
@@ -4939,11 +4948,17 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       .maybeSingle(),
     admin
       .from("estimate_lines")
-      .select("zone, item_name, quantity, unit_cost, total, visible_to_client")
+      .select("zone, category, item_name, quantity, unit_cost, total, visible_to_client")
       .eq("business_id", businessId)
       .eq("estimate_id", estimateId)
       .order("zone"),
     loadBusinessIdentity(admin, businessId),
+    admin
+      .from("estimate_projection_items")
+      .select("title, zone, planned_start, duration_minutes, employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+      .eq("business_id", businessId)
+      .eq("estimate_id", estimateId)
+      .order("planned_start"),
   ]);
 
   if (estimate.error) throw estimate.error;
@@ -5006,6 +5021,23 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       depositPercent: business.depositPercent,
       holdbackPercent: business.holdbackPercent,
       terms: business.terms,
+      // Materials come from the estimate's own visible lines, so the list
+      // can never claim something the price does not include.
+      materials: business.showMaterials
+        ? visible
+            .filter((l) => l.category === "Materiales")
+            .map((l) => ({ name: l.item_name, quantity: Number(l.quantity), unit: null }))
+        : [],
+      schedule:
+        business.showSchedule && !projection.error
+          ? (projection.data as any[]).map((item) => ({
+              title: item.title,
+              zone: item.zone,
+              start: new Date(item.planned_start),
+              durationMinutes: Number(item.duration_minutes),
+              worker: item.employees?.name ?? item.subcontractors?.name ?? null,
+            }))
+          : [],
     },
     lang
   );
@@ -6245,7 +6277,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, holdback_percent, estimate_terms, logo_url"
+        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule"
       )
       .eq("id", req.businessId!)
       .single();
@@ -6270,6 +6302,8 @@ apiRouter.get(
       holdbackPercent: Number(data.holdback_percent ?? 0),
       estimateTerms: data.estimate_terms,
       logoUrl: data.logo_url ?? null,
+      estimateShowMaterials: data.estimate_show_materials !== false,
+      estimateShowSchedule: data.estimate_show_schedule !== false,
     });
   })
 );
@@ -6372,6 +6406,8 @@ apiRouter.patch(
     if (body.gstNumber !== undefined) update.gst_number = body.gstNumber || null;
     if (body.qstNumber !== undefined) update.qst_number = body.qstNumber || null;
     if (body.estimateTerms !== undefined) update.estimate_terms = body.estimateTerms || null;
+    if (body.estimateShowMaterials !== undefined) update.estimate_show_materials = Boolean(body.estimateShowMaterials);
+    if (body.estimateShowSchedule !== undefined) update.estimate_show_schedule = Boolean(body.estimateShowSchedule);
     if (body.holdbackPercent !== undefined) {
       const pct = Number(body.holdbackPercent);
       if (Number.isNaN(pct) || pct < 0 || pct > 100) {
