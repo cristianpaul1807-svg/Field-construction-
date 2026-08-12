@@ -17,17 +17,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send, Plus, Copy, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
-const typeLabel = { deposito: "Depósito", parcial: "Parcial", final: "Final" };
-const statusLabel = { pendiente: "Pendiente", pagado: "Pagado", vencido: "Vencido", cancelado: "Cancelado" };
+const INVOICE_TYPES = ["deposito", "parcial", "final"] as const;
+const INVOICE_STATUSES = ["pendiente", "pagado", "vencido", "cancelado"] as const;
 
 interface Invoice {
   id: string;
-  type: keyof typeof typeLabel;
+  type: (typeof INVOICE_TYPES)[number];
   amount: number;
   subtotal: number;
   taxAmount: number;
-  status: keyof typeof statusLabel;
+  status: (typeof INVOICE_STATUSES)[number];
   dueDate: string | null;
   description: string | null;
   projectName: string | null;
@@ -48,6 +49,7 @@ interface TaxRate {
 }
 
 function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState("");
   const [type, setType] = useState<"deposito" | "parcial" | "final">("deposito");
@@ -85,12 +87,12 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
         body: JSON.stringify({ clientId, type, subtotal: subtotalNum, description: description || undefined }),
       });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || "No se pudo crear la factura");
+      if (!res.ok) throw new Error(body?.error || t("invoicing.createError"));
       setOpen(false);
       reset();
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear la factura");
+      setError(err instanceof Error ? err.message : t("invoicing.createError"));
     } finally {
       setSaving(false);
     }
@@ -100,18 +102,18 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
       <DialogTrigger asChild>
         <Button className="gap-2 w-full sm:w-auto">
-          <Plus size={16} /> Nueva factura
+          <Plus size={16} /> {t("invoicing.newInvoice")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nueva factura</DialogTitle>
+          <DialogTitle>{t("invoicing.newInvoice")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Cliente</Label>
+            <Label>{t("common.client")}</Label>
             <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona un cliente" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("invoicing.selectClient")} /></SelectTrigger>
               <SelectContent>
                 {(clients ?? []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -120,36 +122,36 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Tipo</Label>
+            <Label>{t("common.type")}</Label>
             <Select value={type} onValueChange={(v) => setType(v as typeof type)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="deposito">Depósito</SelectItem>
-                <SelectItem value="parcial">Pago parcial</SelectItem>
-                <SelectItem value="final">Pago final</SelectItem>
+                {INVOICE_TYPES.map((v) => (
+                  <SelectItem key={v} value={v}>{t(`invoicing.typeLong.${v}`)}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Monto (antes de impuestos)</Label>
+            <Label>{t("invoicing.amountBeforeTax")}</Label>
             <Input type="number" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} placeholder="0.00" />
           </div>
           <div className="space-y-1.5">
-            <Label>Descripción (opcional)</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ej. Depósito inicial cocina" />
+            <Label>{t("common.description")} ({t("common.optional")})</Label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("invoicing.descriptionPlaceholder")} />
           </div>
           {subtotalNum > 0 && (
             <div className="rounded-lg bg-secondary/60 p-3 text-sm space-y-1">
-              <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>{formatCurrency(subtotalNum)}</span></div>
+              <div className="flex justify-between text-muted-foreground"><span>{t("common.subtotal")}</span><span>{formatCurrency(subtotalNum)}</span></div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Impuesto ({(taxRate * 100).toFixed(3)}%)</span><span>{formatCurrency(taxAmount)}</span>
+                <span>{t("invoicing.tax", { rate: (taxRate * 100).toFixed(3) })}</span><span>{formatCurrency(taxAmount)}</span>
               </div>
-              <div className="flex justify-between font-medium text-foreground pt-1 border-t border-border"><span>Total</span><span>{formatCurrency(total)}</span></div>
+              <div className="flex justify-between font-medium text-foreground pt-1 border-t border-border"><span>{t("common.total")}</span><span>{formatCurrency(total)}</span></div>
             </div>
           )}
           {error && <p className="text-sm text-status-error-fg">{error}</p>}
           <Button className="w-full" onClick={create} disabled={!clientId || subtotalNum <= 0 || saving}>
-            {saving ? "Creando..." : "Crear factura"}
+            {saving ? t("common.creating") : t("invoicing.createInvoice")}
           </Button>
         </div>
       </DialogContent>
@@ -158,6 +160,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 }
 
 export default function Invoicing() {
+  const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: invoices, loading, error } = useApi<Invoice[]>(`/api/invoices?_r=${reloadToken}`);
   const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
@@ -173,12 +176,12 @@ export default function Invoicing() {
     try {
       const res = await apiFetch(`/api/invoices/${invoiceId}/checkout-link`, { method: "POST" });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "No se pudo generar el link de pago");
+      if (!res.ok) throw new Error(body?.error || t("invoicing.linkError"));
       await navigator.clipboard.writeText(body.url);
       setCopiedId(invoiceId);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
-      setLinkError(err instanceof Error ? err.message : "No se pudo generar el link de pago");
+      setLinkError(err instanceof Error ? err.message : t("invoicing.linkError"));
     } finally {
       setLinkBusyId(null);
     }
@@ -187,22 +190,22 @@ export default function Invoicing() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
-        title="Invoicing & Payments"
-        description="Depósito, pagos parciales y pago final por proyecto"
+        title={t("invoicing.title")}
+        description={t("invoicing.description")}
         action={<NewInvoiceDialog onCreated={() => setReloadToken((t) => t + 1)} />}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-6">
-          <p className="text-sm text-muted-foreground">Cobrado</p>
+          <p className="text-sm text-muted-foreground">{t("invoicing.collected")}</p>
           <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(totalPaid)}</p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-muted-foreground">Pendiente / vencido</p>
+          <p className="text-sm text-muted-foreground">{t("invoicing.pendingOverdue")}</p>
           <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(totalPending)}</p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-muted-foreground">Facturas totales</p>
+          <p className="text-sm text-muted-foreground">{t("invoicing.totalInvoices")}</p>
           <p className="text-2xl font-semibold text-foreground mt-2">{invoices?.length ?? 0}</p>
         </Card>
       </div>
@@ -214,12 +217,12 @@ export default function Invoicing() {
       <Card className="p-6 overflow-x-auto">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-            <Spinner className="size-4" /> Cargando facturas...
+            <Spinner className="size-4" /> {t("common.loading")}
           </div>
         )}
         {error && (
           <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-            No se pudo cargar desde Supabase: {error}
+            {t("common.loadError", { message: error })}
           </div>
         )}
 
@@ -227,11 +230,11 @@ export default function Invoicing() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-2 text-muted-foreground font-medium">Cliente</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Descripción</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Tipo</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Monto</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Estado</th>
+                <th className="text-left py-2 text-muted-foreground font-medium">{t("common.client")}</th>
+                <th className="text-left py-2 text-muted-foreground font-medium">{t("common.description")}</th>
+                <th className="text-left py-2 text-muted-foreground font-medium">{t("common.type")}</th>
+                <th className="text-right py-2 text-muted-foreground font-medium">{t("common.amount")}</th>
+                <th className="text-left py-2 text-muted-foreground font-medium">{t("common.status")}</th>
                 <th className="py-2" />
               </tr>
             </thead>
@@ -240,10 +243,10 @@ export default function Invoicing() {
                 <tr key={invoice.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
                   <td className="py-3 text-foreground font-medium">{invoice.clientName ?? invoice.projectName}</td>
                   <td className="py-3 text-muted-foreground">{invoice.description ?? "-"}</td>
-                  <td className="py-3 text-muted-foreground">{typeLabel[invoice.type]}</td>
+                  <td className="py-3 text-muted-foreground">{t(`invoicing.type.${invoice.type}`)}</td>
                   <td className="py-3 text-right text-foreground">{formatCurrency(invoice.amount)}</td>
                   <td className="py-3">
-                    <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{statusLabel[invoice.status]}</StatusBadge>
+                    <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{t(`invoicing.status.${invoice.status}`)}</StatusBadge>
                   </td>
                   <td className="py-3 text-right">
                     {invoice.status !== "pagado" && (
@@ -261,7 +264,7 @@ export default function Invoicing() {
                         ) : (
                           <Copy size={13} />
                         )}
-                        {copiedId === invoice.id ? "Copiado" : "Copiar link de pago"}
+                        {copiedId === invoice.id ? t("invoicing.copied") : t("invoicing.copyPaymentLink")}
                       </Button>
                     )}
                   </td>
@@ -269,7 +272,7 @@ export default function Invoicing() {
               ))}
               {invoices?.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-muted-foreground">Sin facturas todavía.</td>
+                  <td colSpan={6} className="py-8 text-center text-muted-foreground">{t("invoicing.noInvoices")}</td>
                 </tr>
               )}
             </tbody>
@@ -278,7 +281,7 @@ export default function Invoicing() {
       </Card>
 
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-        <Send size={12} /> Procesado con Stripe Connect — cada pago va directo a la cuenta conectada del negocio.
+        <Send size={12} /> {t("invoicing.stripeNote")}
       </p>
     </div>
   );

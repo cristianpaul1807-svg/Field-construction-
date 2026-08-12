@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarClock, Check, X } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface AppointmentRequest {
   id: string;
@@ -31,6 +32,7 @@ const statusTone: Record<AppointmentRequest["status"], "info" | "success" | "err
 };
 
 export function AppointmentRequestsPanel() {
+  const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: requests, loading } = useApi<AppointmentRequest[]>(`/api/appointment-requests?_r=${reloadToken}`);
   const { data: employees } = useApi<WorkerOption[]>("/api/employees");
@@ -93,18 +95,17 @@ export function AppointmentRequestsPanel() {
     <Card className="p-6 space-y-4">
       <div>
         <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-          <CalendarClock size={16} /> Solicitudes de cita
+          <CalendarClock size={16} /> {t("communication.appointments.title")}
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          El cliente propone día/hora y motivo desde el chat — nunca se agenda solo. Confirma un espacio real o
-          rechaza la solicitud.
+          {t("communication.appointments.description")}
         </p>
       </div>
 
-      {loading && <p className="text-xs text-muted-foreground">Cargando...</p>}
+      {loading && <p className="text-xs text-muted-foreground">{t("common.loading")}</p>}
 
       {!loading && pending.length === 0 && (
-        <p className="text-xs text-muted-foreground">Sin solicitudes pendientes.</p>
+        <p className="text-xs text-muted-foreground">{t("communication.appointments.none")}</p>
       )}
 
       <div className="space-y-3">

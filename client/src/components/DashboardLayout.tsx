@@ -9,17 +9,19 @@ import { ProjectSwitcher } from "@/components/ProjectSwitcher";
 import { AdminAssistantBar } from "@/components/AdminAssistantBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface NavItem {
   id: string;
-  label: string;
+  labelKey: string;
   icon: string;
   path: string;
 }
 
 interface NavSection {
   id: string;
-  title: string;
+  titleKey: string;
   icon: string;
   items: NavItem[];
 }
@@ -27,66 +29,66 @@ interface NavSection {
 const navSections: NavSection[] = [
   {
     id: "home",
-    title: "INICIO",
+    titleKey: "nav.home",
     icon: "🏠",
-    items: [{ id: "dashboard", label: "Dashboard", icon: "📊", path: "/" }],
+    items: [{ id: "dashboard", labelKey: "nav.dashboard", icon: "📊", path: "/" }],
   },
   {
     id: "clients",
-    title: "CLIENTES",
+    titleKey: "nav.clients",
     icon: "👥",
     items: [
-      { id: "crm", label: "CRM", icon: "📇", path: "/crm" },
-      { id: "client-portal", label: "Client Portal", icon: "🌐", path: "/client-portal" },
-      { id: "communication", label: "Communication", icon: "💬", path: "/communication" },
+      { id: "crm", labelKey: "nav.crm", icon: "📇", path: "/crm" },
+      { id: "client-portal", labelKey: "nav.clientPortal", icon: "🌐", path: "/client-portal" },
+      { id: "communication", labelKey: "nav.communication", icon: "💬", path: "/communication" },
     ],
   },
   {
     id: "projects",
-    title: "PROYECTOS",
+    titleKey: "nav.projects",
     icon: "📋",
     items: [
-      { id: "projects", label: "Projects", icon: "🏗️", path: "/projects" },
-      { id: "budgets", label: "Budgets & Estimates", icon: "💰", path: "/budgets" },
-      { id: "materials", label: "Materials & Costs", icon: "📦", path: "/materials" },
-      { id: "cost-tracking", label: "Cost Tracking", icon: "📈", path: "/cost-tracking" },
-      { id: "contracts", label: "Contracts & Documents", icon: "📄", path: "/contracts" },
-      { id: "photo-gallery", label: "Photo Gallery", icon: "📸", path: "/photo-gallery" },
+      { id: "projects", labelKey: "nav.projectsList", icon: "🏗️", path: "/projects" },
+      { id: "budgets", labelKey: "nav.budgets", icon: "💰", path: "/budgets" },
+      { id: "materials", labelKey: "nav.materials", icon: "📦", path: "/materials" },
+      { id: "cost-tracking", labelKey: "nav.costTracking", icon: "📈", path: "/cost-tracking" },
+      { id: "contracts", labelKey: "nav.contracts", icon: "📄", path: "/contracts" },
+      { id: "photo-gallery", labelKey: "nav.photoGallery", icon: "📸", path: "/photo-gallery" },
     ],
   },
   {
     id: "field",
-    title: "CAMPO",
+    titleKey: "nav.field",
     icon: "🔧",
     items: [
-      { id: "technicians", label: "Technicians & Crew", icon: "👨‍🔧", path: "/technicians" },
-      { id: "subcontractors", label: "Subcontractors", icon: "🤝", path: "/subcontractors" },
-      { id: "gps-routing", label: "GPS & Routing", icon: "📍", path: "/gps-routing" },
-      { id: "check-in", label: "Check-in/Check-out", icon: "✓", path: "/check-in" },
-      { id: "work-orders", label: "Work Orders", icon: "📋", path: "/work-orders" },
-      { id: "scheduling", label: "Scheduling", icon: "📅", path: "/scheduling" },
+      { id: "technicians", labelKey: "nav.technicians", icon: "👨‍🔧", path: "/technicians" },
+      { id: "subcontractors", labelKey: "nav.subcontractors", icon: "🤝", path: "/subcontractors" },
+      { id: "gps-routing", labelKey: "nav.gpsRouting", icon: "📍", path: "/gps-routing" },
+      { id: "check-in", labelKey: "nav.checkIn", icon: "✓", path: "/check-in" },
+      { id: "work-orders", labelKey: "nav.workOrders", icon: "📋", path: "/work-orders" },
+      { id: "scheduling", labelKey: "nav.scheduling", icon: "📅", path: "/scheduling" },
     ],
   },
   {
     id: "finance",
-    title: "FINANZAS",
+    titleKey: "nav.finance",
     icon: "💰",
     items: [
-      { id: "invoicing", label: "Invoicing & Payments", icon: "💳", path: "/invoicing" },
-      { id: "reports", label: "Reports & Analytics", icon: "📊", path: "/reports" },
+      { id: "invoicing", labelKey: "nav.invoicing", icon: "💳", path: "/invoicing" },
+      { id: "reports", labelKey: "nav.reports", icon: "📊", path: "/reports" },
     ],
   },
   {
     id: "settings",
-    title: "CONFIGURACIÓN",
+    titleKey: "nav.settings",
     icon: "⚙️",
     items: [
-      { id: "company-data", label: "Company Data", icon: "🏢", path: "/settings/company" },
-      { id: "payments", label: "Pagos (Stripe)", icon: "💳", path: "/settings/payments" },
-      { id: "margins-rules", label: "Margins & Rules", icon: "⚖️", path: "/settings/margins" },
-      { id: "users-roles", label: "Users & Roles", icon: "👨‍💼", path: "/settings/users" },
-      { id: "whatsapp-connection", label: "WhatsApp Connection", icon: "📱", path: "/settings/whatsapp" },
-      { id: "automations", label: "Automatizaciones", icon: "🔗", path: "/settings/automations" },
+      { id: "company-data", labelKey: "nav.companyData", icon: "🏢", path: "/settings/company" },
+      { id: "payments", labelKey: "nav.payments", icon: "💳", path: "/settings/payments" },
+      { id: "margins-rules", labelKey: "nav.margins", icon: "⚖️", path: "/settings/margins" },
+      { id: "users-roles", labelKey: "nav.users", icon: "👨‍💼", path: "/settings/users" },
+      { id: "whatsapp-connection", labelKey: "nav.whatsapp", icon: "📱", path: "/settings/whatsapp" },
+      { id: "automations", labelKey: "nav.automations", icon: "🔗", path: "/settings/automations" },
     ],
   },
 ];
@@ -102,6 +104,7 @@ function sectionContainsActive(section: NavSection, current: string) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
   const { signOut } = useAuth();
   const { data: company } = useApi<{ name: string }>("/api/settings/company");
   const [location] = useLocation();
@@ -132,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       >
         <span className="text-base leading-none">{item.icon}</span>
-        <span>{item.label}</span>
+        <span>{t(item.labelKey)}</span>
       </Link>
     );
   };
@@ -163,7 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex flex-col min-w-0">
               <h1 className="font-semibold text-sidebar-foreground truncate text-sm">
-                {company?.name ?? "Cargando..."}
+                {company?.name ?? t("common.loading")}
               </h1>
               <p className="text-xs text-muted-foreground">FSM &amp; Construction Hub</p>
             </div>
@@ -177,7 +180,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => toggleSection(section.id)}
                 className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
-                <span>{section.title}</span>
+                <span>{t(section.titleKey)}</span>
                 <ChevronDown
                   size={14}
                   className={cn("transition-transform", expandedSections[section.id] ? "rotate-180" : "")}
@@ -200,8 +203,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             href="/settings/company"
             className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-secondary transition-colors text-foreground"
           >
-            <span>⚙️</span> Settings
+            <span>⚙️</span> {t("nav.settings")}
           </Link>
+          <LanguageSwitcher variant="full" className="w-full" />
         </div>
       </div>
 
@@ -229,7 +233,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={signOut} className="gap-2 text-status-error-fg">
-                  <LogOut size={14} /> Cerrar sesión
+                  <LogOut size={14} /> {t("common.logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

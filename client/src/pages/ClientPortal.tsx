@@ -7,13 +7,12 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { FileSignature, CreditCard, Image as ImageIcon } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface ClientOption {
   id: string;
   name: string;
 }
-
-const invoiceTypeLabel: Record<string, string> = { deposito: "depósito", parcial: "pago parcial", final: "pago final" };
 
 interface ClientPortalData {
   client: { id: string; name: string };
@@ -30,6 +29,7 @@ function colorForId(id: string) {
 }
 
 export default function ClientPortal() {
+  const { t } = useTranslation();
   const { data: clients } = useApi<ClientOption[]>("/api/clients");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const clientId = selectedClientId ?? clients?.[0]?.id ?? null;
@@ -39,12 +39,12 @@ export default function ClientPortal() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-4xl mx-auto">
       <PageHeader
-        title="Client Portal"
-        description="Vista previa de lo que ve el cliente al abrir su link único (o vía WhatsApp)"
+        title={t("clientPortal.title")}
+        description={t("clientPortal.previewDescription")}
       />
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">Previsualizar como:</span>
+        <span className="text-xs text-muted-foreground">{t("clientPortal.previewAs")}</span>
         <select
           value={clientId ?? ""}
           onChange={(e) => setSelectedClientId(e.target.value)}
@@ -58,20 +58,20 @@ export default function ClientPortal() {
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-          <Spinner className="size-4" /> Cargando portal...
+          <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
       {error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          No se pudo cargar desde Supabase: {error}
+          {t("common.loadError", { message: error })}
         </div>
       )}
 
       {!loading && !error && data && (
         <Card className="p-0 overflow-hidden border-2">
           <div className="bg-secondary px-6 py-4 border-b border-border">
-            <p className="text-xs text-muted-foreground">Portal del cliente · solo lectura</p>
-            <h2 className="text-lg font-semibold text-foreground mt-0.5">Hola, {data.client.name.split(" ")[0]}</h2>
+            <p className="text-xs text-muted-foreground">{t("clientPortal.title")} · {t("clientPortal.readOnly")}</p>
+            <h2 className="text-lg font-semibold text-foreground mt-0.5">{t("clientPortal.hello", { name: data.client.name.split(" ")[0] })}</h2>
           </div>
 
           <div className="p-6 space-y-6">
@@ -84,7 +84,7 @@ export default function ClientPortal() {
                 <div className="w-full bg-secondary rounded-full h-2">
                   <div className="bg-primary h-2 rounded-full" style={{ width: `${data.project.progressPercent}%` }} />
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Avance de tu proyecto</p>
+                <p className="text-xs text-muted-foreground mt-2">{t("clientPortal.projectProgress")}</p>
               </div>
             )}
 
@@ -92,20 +92,20 @@ export default function ClientPortal() {
               <Card className="p-4 bg-secondary border-none">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Presupuesto #{data.estimate.id.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-xs text-muted-foreground">{t("clientPortal.estimateNumber", { id: data.estimate.id.slice(0, 8).toUpperCase() })}</p>
                     <p className="text-xl font-semibold text-foreground mt-1">{formatCurrency(data.estimate.total)}</p>
                   </div>
                   <StatusBadge tone="info">{data.estimate.status}</StatusBadge>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                  <Button className="gap-2 flex-1" disabled title="Vista previa — no interactivo aquí">
-                    <FileSignature size={16} /> Firmar presupuesto
+                  <Button className="gap-2 flex-1" disabled title={t("clientPortal.previewDisabled")}>
+                    <FileSignature size={16} /> {t("clientPortal.signEstimate")}
                   </Button>
-                  <Button variant="outline" className="gap-2 flex-1" disabled title="Vista previa — no interactivo aquí">
+                  <Button variant="outline" className="gap-2 flex-1" disabled title={t("clientPortal.previewDisabled")}>
                     <CreditCard size={16} />
                     {data.pendingInvoice
-                      ? `Pagar ${invoiceTypeLabel[data.pendingInvoice.type] ?? "factura"} (${formatCurrency(data.pendingInvoice.amount)})`
-                      : "Pagar depósito"}
+                      ? t("clientPortal.payInvoice", { type: t(`invoicing.typeLong.${data.pendingInvoice.type}`).toLowerCase(), amount: formatCurrency(data.pendingInvoice.amount) })
+                      : t("clientPortal.payDeposit")}
                   </Button>
                 </div>
               </Card>
@@ -114,7 +114,7 @@ export default function ClientPortal() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <ImageIcon size={16} className="text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">Fotos compartidas por la empresa</p>
+                <p className="text-sm font-medium text-foreground">{t("clientPortal.sharedPhotos")}</p>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {data.visiblePhotos.map((photo) => (
@@ -126,7 +126,7 @@ export default function ClientPortal() {
                 ))}
                 {data.visiblePhotos.length === 0 && (
                   <p className="col-span-3 text-xs text-muted-foreground">
-                    Aún no hay fotos marcadas como visibles para este cliente.
+                    {t("clientPortal.noPhotosAdmin")}
                   </p>
                 )}
               </div>
@@ -136,9 +136,7 @@ export default function ClientPortal() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Solo se muestran fotos y presupuestos marcados como "visible_to_client". Esta es una vista
-        previa de solo lectura — el cliente paga desde su propio portal, no desde aquí. La firma
-        electrónica se conectará más adelante (SignWell).
+        {t("clientPortal.previewNote")}
       </p>
     </div>
   );

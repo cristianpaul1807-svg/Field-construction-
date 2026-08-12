@@ -4,8 +4,10 @@ import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
 import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
 import { Spinner } from "@/components/ui/spinner";
+import { useTranslation } from "react-i18next";
 
 export function ClientChat() {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
@@ -30,7 +32,7 @@ export function ClientChat() {
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-        <Spinner className="size-4" /> Cargando mensajes...
+        <Spinner className="size-4" /> {t("worker.loadingMessages")}
       </div>
     );
   }
@@ -39,7 +41,7 @@ export function ClientChat() {
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="grid grid-cols-1 sm:grid-cols-[220px_1fr] h-[520px]">
         <div className="border-b sm:border-b-0 sm:border-r border-border overflow-hidden">
-          <ChatList channels={channels} activeId={activeId} onSelect={setActiveId} emptyLabel="Sin mensajes todavía." />
+          <ChatList channels={channels} activeId={activeId} onSelect={setActiveId} emptyLabel={t("communication.noMessages")} />
         </div>
         <ChatThread
           channel={activeChannel}

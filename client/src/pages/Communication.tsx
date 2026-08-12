@@ -13,6 +13,7 @@ import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
 import type { ChatChannel, ChatMessage, DirectoryContact } from "@/lib/chatApi";
 import { AppointmentRequestsPanel } from "@/components/AppointmentRequestsPanel";
+import { useTranslation } from "react-i18next";
 
 type LabelFilter = "general" | "trabajador" | "subcontrato" | "cliente";
 
@@ -21,6 +22,7 @@ function initials(name: string | null | undefined) {
 }
 
 function NewConversationDialog({ onStarted }: { onStarted: (id: string) => void }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { data: directory, loading } = useApi<DirectoryContact[]>(open ? "/api/chat/directory" : null);
@@ -42,20 +44,20 @@ function NewConversationDialog({ onStarted }: { onStarted: (id: string) => void 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5">
-          <Plus size={14} /> Nueva conversación
+          <Plus size={14} /> {t("communication.newConversation")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nueva conversación</DialogTitle>
+          <DialogTitle>{t("communication.newConversation")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Buscar contacto..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
+            <Input placeholder={t("communication.searchContact")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
           </div>
           <div className="max-h-80 overflow-y-auto space-y-1">
-            {loading && <p className="text-sm text-muted-foreground p-2">Cargando...</p>}
+            {loading && <p className="text-sm text-muted-foreground p-2">{t("common.loading")}</p>}
             {filtered.map((c) => (
               <button
                 key={`${c.participantType}-${c.participantId}`}
@@ -68,12 +70,12 @@ function NewConversationDialog({ onStarted }: { onStarted: (id: string) => void 
                 </Avatar>
                 <div>
                   <p className="text-sm text-foreground">{c.name}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{c.participantType}</p>
+                  <p className="text-xs text-muted-foreground">{t(`communication.labels.${c.participantType === "employee" ? "trabajador" : c.participantType === "subcontractor" ? "subcontrato" : "cliente"}`)}</p>
                 </div>
               </button>
             ))}
             {!loading && filtered.length === 0 && (
-              <p className="text-sm text-muted-foreground p-2">Todos tus contactos ya tienen chat.</p>
+              <p className="text-sm text-muted-foreground p-2">{t("communication.allContactsHaveChat")}</p>
             )}
           </div>
         </div>
@@ -83,6 +85,7 @@ function NewConversationDialog({ onStarted }: { onStarted: (id: string) => void 
 }
 
 export default function Communication() {
+  const { t } = useTranslation();
   const [system, setSystem] = useState<"publico" | "interno">("publico");
   const [labelFilter, setLabelFilter] = useState<LabelFilter>("general");
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -157,14 +160,14 @@ export default function Communication() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <PageHeader title="Communication" description="Mensajería interna — clientes, trabajadores y subcontratistas" />
+        <PageHeader title={t("communication.title")} description={t("communication.description")} />
         {system === "interno" && <NewConversationDialog onStarted={setActiveId} />}
       </div>
 
       <Tabs value={system} onValueChange={(v) => setSystem(v as "publico" | "interno")}>
         <TabsList>
-          <TabsTrigger value="publico">Chat Público</TabsTrigger>
-          <TabsTrigger value="interno">Chat Interno</TabsTrigger>
+          <TabsTrigger value="publico">{t("communication.publicChat")}</TabsTrigger>
+          <TabsTrigger value="interno">{t("communication.internalChat")}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -175,20 +178,20 @@ export default function Communication() {
               key={l}
               onClick={() => setLabelFilter(l)}
               className={cn(
-                "px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors",
+                "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
                 labelFilter === l ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground hover:bg-secondary/70"
               )}
             >
-              {l}
+              {t(`communication.labels.${l}`)}
             </button>
           ))}
         </div>
       )}
 
-      {loading && <p className="text-sm text-muted-foreground py-8 text-center">Cargando conversaciones...</p>}
+      {loading && <p className="text-sm text-muted-foreground py-8 text-center">{t("common.loading")}</p>}
       {error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          No se pudo cargar desde Supabase: {error}
+          {t("common.loadError", { message: error })}
         </div>
       )}
 
@@ -202,7 +205,7 @@ export default function Communication() {
                 onSelect={setActiveId}
                 onTogglePin={togglePin}
                 onBulkDelete={bulkDelete}
-                emptyLabel={system === "publico" ? "Sin leads todavía." : "Sin conversaciones todavía."}
+                emptyLabel={system === "publico" ? t("communication.noLeads") : t("communication.noConversations")}
               />
             </div>
             <ChatThread

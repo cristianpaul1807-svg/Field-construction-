@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, ExternalLink, ShieldCheck } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface ConnectStatus {
   connected: boolean;
@@ -35,13 +36,8 @@ const statusTone: Record<ConnectStatus["status"], "success" | "warning" | "error
   restricted: "error",
 };
 
-const statusLabel: Record<ConnectStatus["status"], string> = {
-  active: "Activa — puede recibir pagos",
-  pending: "Onboarding pendiente",
-  restricted: "Stripe requiere más información",
-};
-
 export default function SettingsPayments() {
+  const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: connectStatus, loading } = useApi<ConnectStatus>(`/api/stripe/connect/status?_r=${reloadToken}`);
   const { data: rates } = useApi<TaxRate[]>("/api/canada-tax-rates");
@@ -63,10 +59,10 @@ export default function SettingsPayments() {
     try {
       const res = await apiFetch("/api/stripe/connect/onboarding-link", { method: "POST" });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "No se pudo iniciar la conexión con Stripe");
+      if (!res.ok) throw new Error(body?.error || t("payments.connectError"));
       window.location.href = body.url;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo iniciar la conexión con Stripe");
+      setError(err instanceof Error ? err.message : t("payments.connectError"));
       setConnecting(false);
     }
   };
@@ -89,7 +85,7 @@ export default function SettingsPayments() {
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
-      <PageHeader title="Pagos (Stripe)" description="Conecta tu cuenta para cobrar depósitos y facturas directo a tu banco" />
+      <PageHeader title={t("payments.title")} description={t("payments.description")} />
 
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-3">
@@ -97,14 +93,14 @@ export default function SettingsPayments() {
             <CreditCard size={20} className="text-primary" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-foreground">Cuenta de Stripe</h2>
-            <p className="text-xs text-muted-foreground">Los pagos de tus clientes van directo a tu propia cuenta — nosotros no los tocamos.</p>
+            <h2 className="text-base font-semibold text-foreground">{t("payments.stripeAccount")}</h2>
+            <p className="text-xs text-muted-foreground">{t("payments.stripeAccountNote")}</p>
           </div>
         </div>
 
         {loading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Spinner className="size-4" /> Cargando estado...
+            <Spinner className="size-4" /> {t("common.loading")}
           </div>
         )}
 
@@ -112,18 +108,18 @@ export default function SettingsPayments() {
           <div className="flex items-center justify-between flex-wrap gap-3 rounded-lg border border-border p-4">
             <div>
               <StatusBadge tone={connectStatus.connected ? statusTone[connectStatus.status] : "warning"}>
-                {connectStatus.connected ? statusLabel[connectStatus.status] : "No conectado"}
+                {connectStatus.connected ? t(`payments.status.${connectStatus.status}`) : t("payments.notConnected")}
               </StatusBadge>
               {connectStatus.connected && (
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  {connectStatus.chargesEnabled ? "Puede cobrar" : "Todavía no puede cobrar"} ·{" "}
-                  {connectStatus.payoutsEnabled ? "Depósitos activos" : "Depósitos pendientes"}
+                  {connectStatus.chargesEnabled ? t("payments.canCharge") : t("payments.cannotCharge")} ·{" "}
+                  {connectStatus.payoutsEnabled ? t("payments.payoutsActive") : t("payments.payoutsPending")}
                 </p>
               )}
             </div>
             <Button className="gap-2" onClick={connect} disabled={connecting}>
               {connecting ? <Spinner className="size-4" /> : <ExternalLink size={16} />}
-              {connectStatus.connected ? "Continuar configuración" : "Conectar Stripe"}
+              {connectStatus.connected ? t("payments.continueSetup") : t("payments.connectStripe")}
             </Button>
           </div>
         )}
@@ -137,15 +133,15 @@ export default function SettingsPayments() {
             <ShieldCheck size={20} className="text-primary" />
           </div>
           <div>
-            <h2 className="text-base font-semibold text-foreground">Impuestos</h2>
-            <p className="text-xs text-muted-foreground">Elige tu provincia y calculamos GST/HST/QST automáticamente en cada factura.</p>
+            <h2 className="text-base font-semibold text-foreground">{t("payments.taxes")}</h2>
+            <p className="text-xs text-muted-foreground">{t("payments.taxesNote")}</p>
           </div>
         </div>
 
         <div className="space-y-1.5 max-w-xs">
           <Select value={company?.province} onValueChange={setProvince} disabled={savingProvince}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecciona tu provincia" />
+              <SelectValue placeholder={t("payments.selectProvince")} />
             </SelectTrigger>
             <SelectContent>
               {(rates ?? []).map((r) => (

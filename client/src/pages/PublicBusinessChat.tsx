@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Send, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface LeadSession {
   businessId: string;
@@ -50,6 +52,7 @@ function loadLeadSession(slug: string): LeadSession | null {
 }
 
 export default function PublicBusinessChat() {
+  const { t, i18n } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const [business, setBusiness] = useState<{ id: string; name: string } | null | undefined>(undefined);
   const [lead, setLead] = useState<LeadSession | null>(null);
@@ -80,15 +83,19 @@ export default function PublicBusinessChat() {
     if (!slug || business === undefined || business === null || lead) return;
     setStarting(true);
     setStartError(null);
-    fetch(`/api/public/businesses/${slug}/leads`, { method: "POST" })
+    fetch(`/api/public/businesses/${slug}/leads`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lang: i18n.resolvedLanguage }),
+    })
       .then(async (res) => {
         const body = await res.json().catch(() => null);
-        if (!res.ok) throw new Error(body?.error || "No se pudo iniciar la conversación");
+        if (!res.ok) throw new Error(body?.error || t("publicChat.startError"));
         const session: LeadSession = { businessId: body.businessId, clientId: body.clientId, conversationId: body.conversationId };
         localStorage.setItem(storageKey(slug), JSON.stringify(session));
         setLead(session);
       })
-      .catch((err) => setStartError(err instanceof Error ? err.message : "No se pudo iniciar la conversación"))
+      .catch((err) => setStartError(err instanceof Error ? err.message : t("publicChat.startError")))
       .finally(() => setStarting(false));
   }, [slug, business, lead]);
 
@@ -111,6 +118,14 @@ export default function PublicBusinessChat() {
     loadFlow();
   }, [lead]);
 
+  // Switching languages re-fetches the current step so its buttons and
+  // placeholder come back in the newly chosen language. Messages already in
+  // the transcript keep the language they were written in, like any real
+  // conversation.
+  useEffect(() => {
+    loadFlow();
+  }, [i18n.resolvedLanguage]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -122,7 +137,7 @@ export default function PublicBusinessChat() {
       const res = await fetch(`/api/public/conversations/${lead.conversationId}/flow/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
+        body: JSON.stringify({ value, lang: i18n.resolvedLanguage }),
       });
       const body = await res.json();
       setFlow(body);
@@ -180,8 +195,8 @@ export default function PublicBusinessChat() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-2">
-          <h1 className="text-lg font-semibold text-foreground">No encontramos este negocio</h1>
-          <p className="text-sm text-muted-foreground">Revisa que el link esté completo y correcto.</p>
+          <h1 className="text-lg font-semibold text-foreground">{t("publicChat.businessNotFound")}</h1>
+          <p className="text-sm text-muted-foreground">{t("publicChat.businessNotFoundHint")}</p>
         </div>
       </div>
     );
@@ -197,17 +212,18 @@ export default function PublicBusinessChat() {
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm">
           {business.name.charAt(0)}
         </div>
-        <div>
-          <p className="font-semibold text-foreground text-sm leading-tight">{business.name}</p>
-          <p className="text-xs text-muted-foreground leading-tight">Chat con el negocio</p>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-foreground text-sm leading-tight truncate">{business.name}</p>
+          <p className="text-xs text-muted-foreground leading-tight">{t("publicChat.chatWithBusiness")}</p>
         </div>
+        <LanguageSwitcher />
       </div>
 
       <div className="flex-1 flex flex-col max-w-2xl w-full mx-auto">
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {(starting || messages === null) && (
             <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-              <Spinner className="size-4" /> Cargando...
+              <Spinner className="size-4" /> {t("common.loading")}
             </div>
           )}
           {startError && <p className="text-center text-sm text-status-error-fg py-8">{startError}</p>}
@@ -271,18 +287,18 @@ export default function PublicBusinessChat() {
                 {activeBubble === "cita" && (
                   <div className="rounded-lg border border-border p-3 space-y-2">
                     <div className="space-y-1">
-                      <Label htmlFor="appt-when" className="text-xs">¿Cuándo te gustaría?</Label>
+                      <Label htmlFor="appt-when" className="text-xs">{t("publicChat.whenWouldYouLike")}</Label>
                       <Input id="appt-when" value={appointmentWhen} onChange={(e) => setAppointmentWhen(e.target.value)} autoFocus />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="appt-why" className="text-xs">Motivo (opcional)</Label>
+                      <Label htmlFor="appt-why" className="text-xs">{t("publicChat.reasonOptional")}</Label>
                       <Input id="appt-why" value={appointmentWhy} onChange={(e) => setAppointmentWhy(e.target.value)} />
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" onClick={submitAppointmentRequest} disabled={!appointmentWhen.trim() || busy}>
-                        Enviar solicitud
+                        {t("publicChat.sendRequest")}
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => setActiveBubble(null)}>Cancelar</Button>
+                      <Button size="sm" variant="outline" onClick={() => setActiveBubble(null)}>{t("common.cancel")}</Button>
                     </div>
                   </div>
                 )}
@@ -290,7 +306,7 @@ export default function PublicBusinessChat() {
                 {!activeBubble && (
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setActiveBubble("cita")}>
-                      <CalendarDays size={14} /> Agendar cita
+                      <CalendarDays size={14} /> {t("publicChat.scheduleAppointment")}
                     </Button>
                   </div>
                 )}
@@ -303,7 +319,7 @@ export default function PublicBusinessChat() {
                   }}
                 >
                   <Input
-                    placeholder="Escribe un mensaje..."
+                    placeholder={t("publicChat.typeMessage")}
                     value={freeText}
                     onChange={(e) => setFreeText(e.target.value)}
                   />

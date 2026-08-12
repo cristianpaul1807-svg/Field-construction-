@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Search, Pin, Trash2, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatChannel } from "@/lib/chatApi";
+import { useTranslation } from "react-i18next";
 
 const MAX_SELECTION = 5;
 const LONG_PRESS_MS = 500;
@@ -24,6 +25,7 @@ interface ChatListProps {
 }
 
 export function ChatList({ channels, activeId, onSelect, onTogglePin, onBulkDelete, emptyLabel }: ChatListProps) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [archivedOpen, setArchivedOpen] = useState(false);
@@ -100,13 +102,13 @@ export function ChatList({ channels, activeId, onSelect, onTogglePin, onBulkDele
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="text-sm font-medium text-foreground truncate">{channel.participantName ?? "Sin nombre"}</p>
+            <p className="text-sm font-medium text-foreground truncate">{channel.participantName ?? t("communication.unnamed")}</p>
             {channel.pinned && <Pin size={11} className="text-muted-foreground flex-shrink-0" />}
             {channel.status === "invitado" && (
-              <span className="text-[10px] text-status-warning-fg flex-shrink-0">Invitado</span>
+              <span className="text-[10px] text-status-warning-fg flex-shrink-0">{t("communication.invited")}</span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground truncate">{channel.lastMessage ?? "Sin mensajes todavía"}</p>
+          <p className="text-xs text-muted-foreground truncate">{channel.lastMessage ?? t("communication.noMessages")}</p>
         </div>
       </button>
     );
@@ -120,7 +122,7 @@ export function ChatList({ channels, activeId, onSelect, onTogglePin, onBulkDele
             <button onClick={() => setSelected([])} className="text-muted-foreground">
               <X size={16} />
             </button>
-            <span className="text-sm text-foreground">{selected.length} seleccionado(s)</span>
+            <span className="text-sm text-foreground">{t("communication.selectedCount", { count: selected.length })}</span>
           </div>
           <div className="flex items-center gap-1">
             {onTogglePin && selected.length === 1 && (
@@ -156,7 +158,7 @@ export function ChatList({ channels, activeId, onSelect, onTogglePin, onBulkDele
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar..."
+              placeholder={t("common.search")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-sm"
@@ -168,13 +170,13 @@ export function ChatList({ channels, activeId, onSelect, onTogglePin, onBulkDele
       <div className="flex-1 overflow-y-auto">
         {active.map(renderItem)}
         {active.length === 0 && (
-          <p className="p-4 text-xs text-muted-foreground">{emptyLabel ?? "Sin chats todavía."}</p>
+          <p className="p-4 text-xs text-muted-foreground">{emptyLabel ?? t("communication.noConversations")}</p>
         )}
 
         {archived.length > 0 && (
           <Collapsible open={archivedOpen} onOpenChange={setArchivedOpen}>
             <CollapsibleTrigger className="w-full px-4 py-2 flex items-center justify-between text-xs font-medium text-muted-foreground hover:bg-secondary/40">
-              Archivados ({archived.length})
+              {t("communication.archived", { count: archived.length })}
               <ChevronDown size={14} className={cn("transition-transform", archivedOpen && "rotate-180")} />
             </CollapsibleTrigger>
             <CollapsibleContent>{archived.map(renderItem)}</CollapsibleContent>

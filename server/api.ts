@@ -3,6 +3,7 @@ import multer from "multer";
 import { randomUUID, randomBytes } from "crypto";
 import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
 import { getStripe, getStripeWebhookSecret, StripeNotConfiguredError } from "./stripe";
+import { flowCopy, normalizeFlowLang, type FlowLang } from "./flowMessages";
 import {
   requireAuthenticatedUser,
   requireBusinessAuth,
@@ -89,11 +90,15 @@ async function ensureClientAccount(businessId: string, clientId: string) {
   // with no prior public chat gets a fresh one here.
   const { data: existingChannel } = await admin
     .from("chat_channels")
-    .select("id")
+    .select("id, flow_state")
     .eq("business_id", businessId)
     .eq("participant_type", "client")
     .eq("participant_id", clientId)
     .maybeSingle();
+
+  // Keep speaking whatever language this client already chose in the public
+  // chat, rather than resetting them to the default.
+  const channelLang = normalizeFlowLang((existingChannel?.flow_state as any)?.lang);
 
   let channelId: string | undefined;
   if (existingChannel) {
@@ -120,7 +125,7 @@ async function ensureClientAccount(businessId: string, clientId: string) {
       channel_id: channelId,
       business_id: businessId,
       sender_type: "bot",
-      content: `¡Tu presupuesto está listo! Ya puedes seguir todo desde la app: inicia sesión como Cliente con ${client.email}, y usa "¿Olvidaste tu contraseña?" para crear la tuya propia.`,
+      content: flowCopy(channelLang).accountReady(client.email),
     });
   }
 }
@@ -187,28 +192,29 @@ interface FlowCategory {
 // What the frontend renders for the CURRENT step — the corresponding bot
 // message is a separate chat_messages row (posted once, when the step is
 // entered), this only describes the input control to show underneath it.
-function flowStepView(step: FlowStepId, categories: FlowCategory[]) {
+function flowStepView(step: FlowStepId, categories: FlowCategory[], lang: FlowLang) {
+  const copy = flowCopy(lang);
   switch (step) {
     case "welcome":
-      return { step, kind: "button" as const, options: [{ value: "empezar", label: "Empezar" }] };
+      return { step, kind: "button" as const, options: [{ value: "empezar", label: copy.startButton }] };
     case "select_service":
       return {
         step,
         kind: "buttons" as const,
-        options: [...categories.map((c) => ({ value: c.id, label: c.name })), { value: "otro", label: "Otro / no estoy seguro" }],
+        options: [...categories.map((c) => ({ value: c.id, label: c.name })), { value: "otro", label: copy.otherOption }],
       };
     case "describe_project":
-      return { step, kind: "text" as const, placeholder: "Escribe aquí una descripción breve del proyecto..." };
+      return { step, kind: "text" as const, placeholder: copy.describePlaceholder };
     case "address":
-      return { step, kind: "text" as const, placeholder: "Escribe aquí la dirección del proyecto..." };
+      return { step, kind: "text" as const, placeholder: copy.addressPlaceholder };
     case "name":
-      return { step, kind: "text" as const, placeholder: "Escribe aquí tu nombre..." };
+      return { step, kind: "text" as const, placeholder: copy.namePlaceholder };
     case "phone":
-      return { step, kind: "text" as const, placeholder: "Escribe aquí tu teléfono..." };
+      return { step, kind: "text" as const, placeholder: copy.phonePlaceholder };
     case "email":
-      return { step, kind: "text" as const, placeholder: "Escribe aquí tu correo electrónico..." };
+      return { step, kind: "text" as const, placeholder: copy.emailPlaceholder };
     case "summary":
-      return { step, kind: "button" as const, options: [{ value: "enviar", label: "Enviar solicitud" }] };
+      return { step, kind: "button" as const, options: [{ value: "enviar", label: copy.sendButton }] };
     case "done":
       return { step, kind: "terminal" as const, options: [] };
   }
@@ -218,38 +224,40 @@ function flowBotMessage(
   step: FlowStepId,
   businessName: string,
   categories: FlowCategory[],
-  answers: Record<string, string>
+  answers: Record<string, string>,
+  lang: FlowLang
 ): string {
+  const copy = flowCopy(lang);
   switch (step) {
     case "welcome":
-      return `¡Hola! Soy el asistente de ${businessName}. Te haré unas preguntas rápidas para preparar tu solicitud de presupuesto.`;
+      return copy.welcome(businessName);
     case "select_service":
-      return "¿Qué tipo de servicio necesitas?";
+      return copy.selectService;
     case "describe_project":
-      return "Cuéntanos brevemente qué te gustaría hacer.";
+      return copy.describeProject;
     case "address":
-      return "¿Cuál es la dirección del proyecto?";
+      return copy.address;
     case "name":
-      return "¿Cómo te llamas?";
+      return copy.name;
     case "phone":
-      return "¿Cuál es tu número de teléfono?";
+      return copy.phone;
     case "email":
-      return "¿Cuál es tu correo electrónico?";
+      return copy.email;
     case "summary": {
-      const categoryName = categories.find((c) => c.id === answers.categoryId)?.name ?? "Otro";
+      const categoryName = categories.find((c) => c.id === answers.categoryId)?.name ?? copy.otherService;
       return [
-        "Revisemos tu solicitud:",
-        `• Servicio: ${categoryName}`,
-        `• Proyecto: ${answers.description ?? "-"}`,
-        `• Dirección: ${answers.address ?? "-"}`,
-        `• Nombre: ${answers.name ?? "-"}`,
-        `• Teléfono: ${answers.phone ?? "-"}`,
-        `• Correo: ${answers.email ?? "-"}`,
-        "¿Confirmas que la enviemos?",
+        copy.summaryHeader,
+        `\u2022 ${copy.summaryService}: ${categoryName}`,
+        `\u2022 ${copy.summaryProject}: ${answers.description ?? "-"}`,
+        `\u2022 ${copy.summaryAddress}: ${answers.address ?? "-"}`,
+        `\u2022 ${copy.summaryName}: ${answers.name ?? "-"}`,
+        `\u2022 ${copy.summaryPhone}: ${answers.phone ?? "-"}`,
+        `\u2022 ${copy.summaryEmail}: ${answers.email ?? "-"}`,
+        copy.summaryConfirm,
       ].join("\n");
     }
     case "done":
-      return `¡Listo, ${answers.name ?? ""}! Recibimos tu solicitud. ${businessName} la revisará y te enviará un presupuesto pronto.`;
+      return copy.done(answers.name ?? "", businessName);
   }
 }
 
@@ -1192,6 +1200,7 @@ apiRouter.get(
 apiRouter.post(
   "/public/businesses/:slug/leads",
   route(async (req, res) => {
+    const lang = normalizeFlowLang(req.body?.lang);
     const admin = getSupabaseAdmin();
     const { data: business, error: businessError } = await admin
       .from("businesses")
@@ -1221,6 +1230,7 @@ apiRouter.post(
         participant_id: client.id,
         status: "activo",
         control_mode: "bot",
+        flow_state: { step: "welcome", answers: {}, lang },
       })
       .select("id")
       .single();
@@ -1230,7 +1240,7 @@ apiRouter.post(
       channel_id: channel.id,
       business_id: business.id,
       sender_type: "bot",
-      content: flowBotMessage("welcome", business.name, [], {}),
+      content: flowBotMessage("welcome", business.name, [], {}, lang),
     });
 
     res.status(201).json({ businessId: business.id, clientId: client.id, conversationId: channel.id });
@@ -1262,7 +1272,8 @@ apiRouter.get(
       .order("name");
 
     const step = (channel.flow_state as any)?.step ?? "welcome";
-    res.json({ controlMode: channel.control_mode, ...flowStepView(step, categories ?? []) });
+    const lang = normalizeFlowLang((channel.flow_state as any)?.lang);
+    res.json({ controlMode: channel.control_mode, ...flowStepView(step, categories ?? [], lang) });
   })
 );
 
@@ -1300,15 +1311,18 @@ apiRouter.post(
 
     const currentStep = ((channel.flow_state as any)?.step ?? "welcome") as FlowStepId;
     const answers = { ...((channel.flow_state as any)?.answers ?? {}) } as Record<string, string>;
+    // The visitor can switch languages mid-flow; the newest choice wins and
+    // is persisted, so every later bot message matches what they're reading.
+    const lang = normalizeFlowLang(req.body?.lang ?? (channel.flow_state as any)?.lang);
 
     if (currentStep === "done") {
-      res.json({ controlMode: null, ...flowStepView("done", categoryList) });
+      res.json({ controlMode: null, ...flowStepView("done", categoryList, lang) });
       return;
     }
 
     // Echo what the visitor picked/typed as their own chat bubble — for a
     // button step this is the option's label, not its raw id/value.
-    const view = flowStepView(currentStep, categoryList);
+    const view = flowStepView(currentStep, categoryList, lang);
     const echoLabel =
       view.kind === "buttons" || view.kind === "button"
         ? view.options.find((o) => o.value === value)?.label ?? value
@@ -1338,16 +1352,16 @@ apiRouter.post(
       }
     }
 
-    await admin.from("chat_channels").update({ flow_state: { step: newStep, answers } }).eq("id", channel.id);
+    await admin.from("chat_channels").update({ flow_state: { step: newStep, answers, lang } }).eq("id", channel.id);
     await admin.from("chat_messages").insert({
       channel_id: channel.id,
       business_id: channel.business_id,
       sender_type: "bot",
-      content: flowBotMessage(newStep, businessName, categoryList, answers),
+      content: flowBotMessage(newStep, businessName, categoryList, answers, lang),
       expires_at: computeExpiresAt(channel.disappearing_duration),
     });
 
-    res.json({ controlMode: null, ...flowStepView(newStep, categoryList) });
+    res.json({ controlMode: null, ...flowStepView(newStep, categoryList, lang) });
   })
 );
 
@@ -1434,7 +1448,7 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const { data: channel, error: channelError } = await admin
       .from("chat_channels")
-      .select("id, business_id, participant_id, disappearing_duration")
+      .select("id, business_id, participant_id, disappearing_duration, flow_state")
       .eq("id", req.params.id)
       .maybeSingle();
     if (channelError) throw channelError;
@@ -1459,7 +1473,7 @@ apiRouter.post(
       channel_id: channel.id,
       business_id: channel.business_id,
       sender_type: "client",
-      content: `Solicitó una cita — ${requestedDatetimeText}${reasonText ? `: ${reasonText}` : ""}`,
+      content: flowCopy((channel.flow_state as any)?.lang).appointmentSummary(requestedDatetimeText, reasonText),
       expires_at: computeExpiresAt(channel.disappearing_duration),
     });
 

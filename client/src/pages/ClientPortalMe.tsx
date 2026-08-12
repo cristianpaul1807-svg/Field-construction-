@@ -9,8 +9,7 @@ import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
-
-const invoiceTypeLabel: Record<string, string> = { deposito: "depósito", parcial: "pago parcial", final: "pago final" };
+import { useTranslation } from "react-i18next";
 
 interface ClientPortalData {
   client: { id: string; name: string };
@@ -27,6 +26,7 @@ function colorForId(id: string) {
 }
 
 export default function ClientPortalMe() {
+  const { t } = useTranslation();
   const { signOut } = useAuth();
   const { data, loading, error } = useApi<ClientPortalData>("/api/client-portal/me");
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
@@ -38,10 +38,10 @@ export default function ClientPortalMe() {
     try {
       const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
       const body = await res.json();
-      if (!res.ok) throw new Error(body?.error || "No se pudo iniciar el pago");
+      if (!res.ok) throw new Error(body?.error || t("clientPortal.payError"));
       window.location.href = body.url;
     } catch (err) {
-      setPayError(err instanceof Error ? err.message : "No se pudo iniciar el pago");
+      setPayError(err instanceof Error ? err.message : t("clientPortal.payError"));
       setPayingInvoiceId(null);
     }
   };
@@ -53,10 +53,10 @@ export default function ClientPortalMe() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm">
             R
           </div>
-          <span className="font-semibold text-foreground text-sm">Portal del cliente</span>
+          <span className="font-semibold text-foreground text-sm">{t("clientPortal.title")}</span>
         </div>
         <Button variant="ghost" size="sm" className="gap-2" onClick={signOut}>
-          <LogOut size={14} /> Cerrar sesión
+          <LogOut size={14} /> {t("common.logout")}
         </Button>
       </div>
 
@@ -64,30 +64,30 @@ export default function ClientPortalMe() {
         <Tabs defaultValue="resumen">
           <TabsList className="w-full">
             <TabsTrigger value="resumen" className="flex-1 gap-1.5">
-              <LayoutDashboard size={14} /> Resumen
+              <LayoutDashboard size={14} /> {t("clientPortal.summary")}
             </TabsTrigger>
             <TabsTrigger value="mensajes" className="flex-1 gap-1.5">
-              <MessageCircle size={14} /> Mensajes
+              <MessageCircle size={14} /> {t("clientPortal.messages")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="resumen" className="mt-4 space-y-6">
             {loading && (
               <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-                <Spinner className="size-4" /> Cargando portal...
+                <Spinner className="size-4" /> {t("common.loading")}
               </div>
             )}
             {error && (
               <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-                No se pudo cargar: {error}
+                {t("common.loadError", { message: error })}
               </div>
             )}
 
             {!loading && !error && data && (
               <Card className="p-0 overflow-hidden border-2">
             <div className="bg-secondary px-6 py-4 border-b border-border">
-              <p className="text-xs text-muted-foreground">Solo lectura</p>
-              <h2 className="text-lg font-semibold text-foreground mt-0.5">Hola, {data.client.name.split(" ")[0]}</h2>
+              <p className="text-xs text-muted-foreground">{t("clientPortal.readOnly")}</p>
+              <h2 className="text-lg font-semibold text-foreground mt-0.5">{t("clientPortal.hello", { name: data.client.name.split(" ")[0] })}</h2>
             </div>
 
             <div className="p-6 space-y-6">
@@ -100,26 +100,26 @@ export default function ClientPortalMe() {
                   <div className="w-full bg-secondary rounded-full h-2">
                     <div className="bg-primary h-2 rounded-full" style={{ width: `${data.project.progressPercent}%` }} />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Avance de tu proyecto</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("clientPortal.projectProgress")}</p>
                 </div>
               )}
 
               {!data.project && (
-                <p className="text-sm text-muted-foreground">Todavía no tienes un proyecto activo.</p>
+                <p className="text-sm text-muted-foreground">{t("clientPortal.noActiveProject")}</p>
               )}
 
               {data.estimate && (
                 <Card className="p-4 bg-secondary border-none">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">Presupuesto #{data.estimate.id.slice(0, 8).toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground">{t("clientPortal.estimateNumber", { id: data.estimate.id.slice(0, 8).toUpperCase() })}</p>
                       <p className="text-xl font-semibold text-foreground mt-1">{formatCurrency(data.estimate.total)}</p>
                     </div>
                     <StatusBadge tone="info">{data.estimate.status}</StatusBadge>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 mt-4">
                     <Button className="gap-2 flex-1">
-                      <FileSignature size={16} /> Firmar presupuesto
+                      <FileSignature size={16} /> {t("clientPortal.signEstimate")}
                     </Button>
                     {data.pendingInvoice && (
                       <Button
@@ -133,7 +133,7 @@ export default function ClientPortalMe() {
                         ) : (
                           <CreditCard size={16} />
                         )}
-                        Pagar {invoiceTypeLabel[data.pendingInvoice.type] ?? "factura"} ({formatCurrency(data.pendingInvoice.amount)})
+                        {t("clientPortal.payInvoice", { type: t(`invoicing.typeLong.${data.pendingInvoice.type}`).toLowerCase(), amount: formatCurrency(data.pendingInvoice.amount) })}
                       </Button>
                     )}
                   </div>
@@ -144,7 +144,7 @@ export default function ClientPortalMe() {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <ImageIcon size={16} className="text-muted-foreground" />
-                  <p className="text-sm font-medium text-foreground">Fotos compartidas por la empresa</p>
+                  <p className="text-sm font-medium text-foreground">{t("clientPortal.sharedPhotos")}</p>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {data.visiblePhotos.map((photo) => (
@@ -156,7 +156,7 @@ export default function ClientPortalMe() {
                   ))}
                   {data.visiblePhotos.length === 0 && (
                     <p className="col-span-3 text-xs text-muted-foreground">
-                      Aún no hay fotos marcadas como visibles para ti.
+                      {t("clientPortal.noPhotos")}
                     </p>
                   )}
                 </div>
@@ -166,7 +166,7 @@ export default function ClientPortalMe() {
             )}
 
             <p className="text-xs text-muted-foreground text-center">
-              La firma electrónica se conectará más adelante (SignWell). Los pagos ya se procesan con Stripe.
+              {t("clientPortal.signatureNote")}
             </p>
           </TabsContent>
 

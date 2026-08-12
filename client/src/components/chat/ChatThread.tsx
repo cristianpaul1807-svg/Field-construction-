@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Send, Settings, Bot, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
+import { useTranslation } from "react-i18next";
 
 function initials(name: string | null | undefined) {
   return (name ?? "?").trim().charAt(0).toUpperCase() || "?";
@@ -43,6 +44,7 @@ export function ChatThread({
   onAccept,
   disabled,
 }: ChatThreadProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -52,7 +54,7 @@ export function ChatThread({
   }, [messages]);
 
   if (!channel) {
-    return <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">Selecciona un chat</div>;
+    return <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{t("communication.selectChat")}</div>;
   }
 
   const submit = async () => {
@@ -86,10 +88,10 @@ export function ChatThread({
           {onToggleControlMode && channel.label === "cliente" && (
             <>
               <StatusBadge tone={channel.controlMode === "bot" ? "info" : "success"}>
-                {channel.controlMode === "bot" ? "Bot" : "Humano"}
+                {channel.controlMode === "bot" ? t("dashboard.controlBot") : t("dashboard.controlHuman")}
               </StatusBadge>
               <Button size="sm" variant={channel.controlMode === "bot" ? "default" : "outline"} onClick={onToggleControlMode}>
-                {channel.controlMode === "bot" ? "Tomar control" : "Devolver al bot"}
+                {channel.controlMode === "bot" ? t("communication.takeControl") : t("communication.returnToBot")}
               </Button>
             </>
           )}
@@ -103,10 +105,10 @@ export function ChatThread({
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Configuración del chat</DialogTitle>
+                  <DialogTitle>{t("communication.chatSettings")}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-1.5 py-2">
-                  <p className="text-sm text-foreground">Auto-borrado de mensajes</p>
+                  <p className="text-sm text-foreground">{t("communication.autoDelete")}</p>
                   <Select
                     value={channel.disappearingDuration}
                     onValueChange={(v) => onUpdateSettings({ disappearingDuration: v as "24h" | "72h" | "nunca" })}
@@ -115,13 +117,13 @@ export function ChatThread({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="nunca">Nunca</SelectItem>
-                      <SelectItem value="24h">24 horas</SelectItem>
-                      <SelectItem value="72h">72 horas</SelectItem>
+                      <SelectItem value="nunca">{t("communication.never")}</SelectItem>
+                      <SelectItem value="24h">{t("communication.hours24")}</SelectItem>
+                      <SelectItem value="72h">{t("communication.hours72")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Los mensajes de este chat se borran solos para ambos al cumplirse el tiempo.
+                    {t("communication.autoDeleteNote")}
                   </p>
                 </div>
               </DialogContent>
@@ -166,9 +168,9 @@ export function ChatThread({
 
       {showAcceptInvite ? (
         <div className="p-4 border-t border-border flex items-center justify-between gap-3 bg-card">
-          <p className="text-sm text-muted-foreground">Tienes una invitación para chatear aquí.</p>
+          <p className="text-sm text-muted-foreground">{t("communication.invitationPrompt")}</p>
           <Button onClick={onAccept} className="gap-2">
-            <UserRound size={14} /> Aceptar
+            <UserRound size={14} /> {t("communication.accept")}
           </Button>
         </div>
       ) : (
@@ -180,7 +182,7 @@ export function ChatThread({
           }}
         >
           <Input
-            placeholder={blocked ? "Acepta la invitación para escribir..." : "Escribe un mensaje..."}
+            placeholder={blocked ? t("communication.acceptToWrite") : t("communication.typeMessage")}
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={blocked}
