@@ -591,8 +591,6 @@
     "addressPlaceholder": "Calle, ciudad, provincia, código postal",
     "gstNumber": "Número de TPS/GST",
     "qstNumber": "Número de TVQ/QST",
-    "depositPercent": "Depósito por defecto (%)",
-    "depositPercentHint": "Aparece en cada presupuesto como el importe necesario para iniciar los trabajos.",
     "estimateTerms": "Condiciones del presupuesto",
     "estimateTermsPlaceholder": "Ej. Los precios son válidos 30 días. Todo cambio de alcance se documentará por escrito.",
     "publicChannelTitle": "Tu canal de entrada de clientes",
@@ -975,8 +973,7 @@
       "manual": "Cuando yo lo diga",
       "al_aceptar": "Al aceptar el presupuesto",
       "al_iniciar": "Al empezar la obra",
-      "al_confirmar": "Al confirmar el trabajo",
-      "al_terminar": "Al cerrar la obra"
+      "al_confirmar": "Al confirmar el trabajo"
     }
   }
 }

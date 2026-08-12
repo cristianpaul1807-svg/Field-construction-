@@ -591,8 +591,6 @@
     "addressPlaceholder": "Street, city, province, postal code",
     "gstNumber": "GST number",
     "qstNumber": "QST number",
-    "depositPercent": "Default deposit (%)",
-    "depositPercentHint": "Shown on every estimate as the amount needed to start the work.",
     "estimateTerms": "Estimate terms",
     "estimateTermsPlaceholder": "e.g. Prices are valid for 30 days. Any change of scope will be documented in writing.",
     "publicChannelTitle": "Your customer intake channel",
@@ -975,8 +973,7 @@
       "manual": "When I say so",
       "al_aceptar": "When the estimate is accepted",
       "al_iniciar": "When the work starts",
-      "al_confirmar": "When the work is signed off",
-      "al_terminar": "When the job closes"
+      "al_confirmar": "When the work is signed off"
     }
   }
 }

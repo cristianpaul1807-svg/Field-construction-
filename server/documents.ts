@@ -84,7 +84,6 @@ export interface EstimateDoc {
   taxAmount: number;
   taxBreakdown: TaxBreakdown;
   total: number;
-  depositPercent: number;
   holdbackPercent: number;
   terms: string | null;
   /** What will be installed. Empty when the business turns the section off. */
@@ -137,7 +136,6 @@ interface Copy {
   license: string;
   gstNumber: string;
   qstNumber: string;
-  deposit: (percent: number, amount: string) => string;
   holdback: string;
   holdbackNote: (percent: number) => string;
   materialsTitle: string;
@@ -182,7 +180,6 @@ const COPY: Record<DocLang, Copy> = {
     license: "Licencia",
     gstNumber: "N.º TPS",
     qstNumber: "N.º TVQ",
-    deposit: (p, a) => `Depósito para iniciar los trabajos: ${p}% (${a})`,
     paymentsTitle: "Forma de pago",
     paymentsNote: "Cada pago se factura cuando la obra llega a esa etapa. Los importes incluyen impuestos.",
     holdback: "Retención",
@@ -225,7 +222,6 @@ const COPY: Record<DocLang, Copy> = {
     license: "Licence",
     gstNumber: "GST no.",
     qstNumber: "QST no.",
-    deposit: (p, a) => `Deposit to start the work: ${p}% (${a})`,
     paymentsTitle: "How this is paid",
     paymentsNote: "Each payment is invoiced when the job reaches that stage. Amounts include tax.",
     holdback: "Holdback",
@@ -268,7 +264,6 @@ const COPY: Record<DocLang, Copy> = {
     license: "Licence RBQ",
     gstNumber: "No TPS",
     qstNumber: "No TVQ",
-    deposit: (p, a) => `Dépôt pour démarrer les travaux : ${p} % (${a})`,
     paymentsTitle: "Modalités de paiement",
     paymentsNote: "Chaque paiement est facturé lorsque le chantier atteint cette étape. Montants taxes comprises.",
     holdback: "Retenue",
@@ -311,7 +306,6 @@ const COPY: Record<DocLang, Copy> = {
     license: "Licenza",
     gstNumber: "N. GST",
     qstNumber: "N. QST",
-    deposit: (p, a) => `Acconto per avviare i lavori: ${p}% (${a})`,
     paymentsTitle: "Modalità di pagamento",
     paymentsNote: "Ogni pagamento viene fatturato quando il cantiere raggiunge quella fase. Importi tasse incluse.",
     holdback: "Ritenuta",
@@ -632,9 +626,9 @@ function extraSections(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) {
 function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) {
   ensureRoom(doc, 120, copy);
 
-  // The payment plan replaces the single deposit line when there is one: a
-  // customer signing is agreeing to the whole schedule, not just the first
-  // cheque, and the stages are the part they will be asked about later.
+  // A customer signing is agreeing to the whole schedule, not just the first
+  // cheque, so the stages are what the document states. This replaced a single
+  // "deposit: N%" line, which said less and could disagree with the plan.
   if (data.payments.length > 0) {
     doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111").text(copy.paymentsTitle, MARGIN, doc.y);
     doc.y += 4;
@@ -657,16 +651,6 @@ function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) 
       width: CONTENT_WIDTH,
     });
     doc.y += 12;
-  } else if (data.depositPercent > 0) {
-    const depositAmount = Math.round(data.total * (data.depositPercent / 100) * 100) / 100;
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(9)
-      .fillColor("#111111")
-      .text(copy.deposit(data.depositPercent, money(depositAmount, lang)), MARGIN, doc.y, {
-        width: CONTENT_WIDTH,
-      });
-    doc.y += 8;
   }
 
   if (data.holdbackPercent > 0) {

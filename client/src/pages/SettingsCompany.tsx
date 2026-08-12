@@ -22,7 +22,6 @@ interface CompanyData {
   email: string | null;
   gstNumber: string | null;
   qstNumber: string | null;
-  depositPercent: number;
   holdbackPercent: number;
   estimateTerms: string | null;
   logoUrl: string | null;
@@ -43,7 +42,6 @@ export default function SettingsCompany() {
   const [email, setEmail] = useState("");
   const [gstNumber, setGstNumber] = useState("");
   const [qstNumber, setQstNumber] = useState("");
-  const [depositPercent, setDepositPercent] = useState("30");
   const [holdbackPercent, setHoldbackPercent] = useState("0");
   const [estimateTerms, setEstimateTerms] = useState("");
   const [showMaterials, setShowMaterials] = useState(true);
@@ -94,7 +92,6 @@ export default function SettingsCompany() {
     setEmail(data.email ?? "");
     setGstNumber(data.gstNumber ?? "");
     setQstNumber(data.qstNumber ?? "");
-    setDepositPercent(String(data.depositPercent ?? 30));
     setHoldbackPercent(String(data.holdbackPercent ?? 0));
     setEstimateTerms(data.estimateTerms ?? "");
     setShowMaterials(data.estimateShowMaterials !== false);
@@ -118,7 +115,6 @@ export default function SettingsCompany() {
           email,
           gstNumber,
           qstNumber,
-          depositPercent: depositPercent === "" ? 0 : Number(depositPercent),
           holdbackPercent: holdbackPercent === "" ? 0 : Number(holdbackPercent),
           estimateTerms,
           estimateShowMaterials: showMaterials,
@@ -266,18 +262,6 @@ export default function SettingsCompany() {
                   onChange={(e) => setQstNumber(e.target.value)}
                   placeholder="1234567890 TQ0001"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="deposit">{t("settings.depositPercent")}</Label>
-                <Input
-                  id="deposit"
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={depositPercent}
-                  onChange={(e) => setDepositPercent(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">{t("settings.depositPercentHint")}</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="holdback">{t("settings.holdbackPercent")}</Label>

@@ -591,8 +591,6 @@
     "addressPlaceholder": "Via, città, provincia, codice postale",
     "gstNumber": "Numero GST",
     "qstNumber": "Numero QST",
-    "depositPercent": "Acconto predefinito (%)",
-    "depositPercentHint": "Mostrato su ogni preventivo come l'importo necessario per avviare i lavori.",
     "estimateTerms": "Condizioni del preventivo",
     "estimateTermsPlaceholder": "Es. I prezzi sono validi 30 giorni. Ogni variazione dell'ambito sarà documentata per iscritto.",
     "publicChannelTitle": "Il tuo canale di ingresso clienti",
@@ -975,8 +973,7 @@
       "manual": "Quando lo decido io",
       "al_aceptar": "All'accettazione del preventivo",
       "al_iniciar": "All'inizio dei lavori",
-      "al_confirmar": "Alla conferma del lavoro",
-      "al_terminar": "Alla chiusura del cantiere"
+      "al_confirmar": "Alla conferma del lavoro"
     }
   }
 }

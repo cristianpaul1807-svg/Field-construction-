@@ -109,8 +109,14 @@ sumar 100%** — el botón de guardar no se activa hasta que suman, porque una
 etapa mal calculada no se ve hasta que llega a un cliente.
 
 Los momentos que puedes elegir son los estados del
-[orden de ejecución](proyectos.md#el-orden-de-ejecución), más *Cuando yo lo
-diga* para las etapas que son una decisión tuya.
+[orden de ejecución](proyectos.md#el-orden-de-ejecución) hasta *Al confirmar el
+trabajo*, más *Cuando yo lo diga* para las etapas que son una decisión tuya.
+
+No se puede elegir *al cerrar la obra*, y es a propósito: una obra pasa a
+**completado** cuando se cobra la factura final, así que una etapa esperando a
+eso cobraría después de haber cobrado. Si todas esperasen a eso, no se
+facturaría nada, no se cobraría nada y la obra no se cerraría nunca. *Al
+confirmar el trabajo* es el momento real de "está hecho, cobra el resto".
 
 ### Cuándo se copia y cuándo no
 

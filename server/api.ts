@@ -5525,7 +5525,6 @@ async function loadBusinessIdentity(
   businessId: string
 ): Promise<{
   identity: BusinessIdentity;
-  depositPercent: number;
   holdbackPercent: number;
   terms: string | null;
   showMaterials: boolean;
@@ -5533,7 +5532,7 @@ async function loadBusinessIdentity(
 }> {
   const { data, error } = await admin
     .from("businesses")
-    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule")
+    .select("name, address, phone, email, license_number, gst_number, qst_number, province, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule")
     .eq("id", businessId)
     .single();
   if (error) throw error;
@@ -5549,7 +5548,6 @@ async function loadBusinessIdentity(
       province: data.province ?? null,
       logo: await fetchLogo(data.logo_url),
     },
-    depositPercent: Number(data.deposit_percent ?? 0),
     holdbackPercent: Number(data.holdback_percent ?? 0),
     terms: data.estimate_terms ?? null,
     showMaterials: data.estimate_show_materials !== false,
@@ -5657,7 +5655,6 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       taxAmount,
       taxBreakdown: breakdown,
       total: Math.round((subtotal + taxAmount) * 100) / 100,
-      depositPercent: business.depositPercent,
       holdbackPercent: business.holdbackPercent,
       terms: business.terms,
       // Materials come from the estimate's own visible lines, so the list
@@ -6945,7 +6942,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule"
+        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule"
       )
       .eq("id", req.businessId!)
       .single();
@@ -6966,8 +6963,7 @@ apiRouter.get(
       email: data.email,
       gstNumber: data.gst_number,
       qstNumber: data.qst_number,
-      depositPercent: Number(data.deposit_percent ?? 0),
-      holdbackPercent: Number(data.holdback_percent ?? 0),
+        holdbackPercent: Number(data.holdback_percent ?? 0),
       estimateTerms: data.estimate_terms,
       logoUrl: data.logo_url ?? null,
       estimateShowMaterials: data.estimate_show_materials !== false,
@@ -7083,14 +7079,6 @@ apiRouter.patch(
         return;
       }
       update.holdback_percent = pct;
-    }
-    if (body.depositPercent !== undefined) {
-      const pct = Number(body.depositPercent);
-      if (Number.isNaN(pct) || pct < 0 || pct > 100) {
-        res.status(400).json({ error: "depositPercent must be between 0 and 100" });
-        return;
-      }
-      update.deposit_percent = pct;
     }
 
     // Slug uniqueness spans every business, not just this one's own RLS-visible

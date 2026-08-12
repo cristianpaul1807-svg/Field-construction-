@@ -22,12 +22,23 @@ import type { getSupabaseAdmin } from "./supabaseAdmin";
 
 export type MilestoneTrigger = "manual" | "al_aceptar" | "al_iniciar" | "al_confirmar" | "al_terminar";
 
+/**
+ * The stages a business can pick from.
+ *
+ * `al_terminar` is deliberately not offered. A project only reaches
+ * `completado` when its final invoice is paid, so a stage waiting on that
+ * would bill after the money it was meant to collect had already arrived —
+ * and a plan where every stage waited on it would deadlock: nothing bills, so
+ * nothing is paid, so the job never closes. `al_confirmar` is the real "the
+ * work is done, bill the rest" moment, and `manual` covers the rest. The
+ * value stays valid in the database so any row already carrying it keeps
+ * working.
+ */
 export const MILESTONE_TRIGGERS: MilestoneTrigger[] = [
   "manual",
   "al_aceptar",
   "al_iniciar",
   "al_confirmar",
-  "al_terminar",
 ];
 
 export interface PlanMilestone {
@@ -267,10 +278,15 @@ export async function billMilestonesForTrigger(
   }
 }
 
-/** The lifecycle states that bill a stage, keyed by the trigger that names them. */
+/**
+ * The lifecycle states that bill a stage, keyed by the trigger that names them.
+ *
+ * `completado` is absent on purpose: it is reached by the final invoice being
+ * paid, so billing anything there would be billing after the fact. See
+ * MILESTONE_TRIGGERS.
+ */
 export const TRIGGER_FOR_STATUS: Record<string, Exclude<MilestoneTrigger, "manual">> = {
   planificacion: "al_aceptar",
   en_progreso: "al_iniciar",
   confirmado: "al_confirmar",
-  completado: "al_terminar",
 };

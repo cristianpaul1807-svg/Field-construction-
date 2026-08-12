@@ -591,8 +591,6 @@
     "addressPlaceholder": "Rue, ville, province, code postal",
     "gstNumber": "Numéro de TPS",
     "qstNumber": "Numéro de TVQ",
-    "depositPercent": "Dépôt par défaut (%)",
-    "depositPercentHint": "Affiché sur chaque soumission comme le montant requis pour démarrer les travaux.",
     "estimateTerms": "Conditions de la soumission",
     "estimateTermsPlaceholder": "Ex. Les prix sont valides 30 jours. Tout changement de portée fera l'objet d'un avenant écrit.",
     "publicChannelTitle": "Votre canal d'accueil des clients",
@@ -975,8 +973,7 @@
       "manual": "Quand je le décide",
       "al_aceptar": "À l'acceptation du devis",
       "al_iniciar": "Au démarrage des travaux",
-      "al_confirmar": "À la validation des travaux",
-      "al_terminar": "À la clôture du chantier"
+      "al_confirmar": "À la validation des travaux"
     }
   }
 }
