@@ -112,7 +112,8 @@
       "ganado": "Won",
       "perdido": "Lost"
     },
-    "descriptionFull": "Manage leads and client relationships"
+    "descriptionFull": "Manage leads and client relationships",
+    "newLeadName": "Client name"
   },
   "budgets": {
     "title": "Budgets & Estimates",
@@ -474,7 +475,17 @@
     "expenses": "Expenses",
     "linkedEstimate": "Linked estimate",
     "noLinkedEstimate": "This project has no linked estimate.",
-    "estimate": "Estimate"
+    "estimate": "Estimate",
+    "newProject": "New project",
+    "projectName": "Project name",
+    "projectType": "Job type",
+    "typePlaceholder": "e.g. Kitchen remodel",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "selectClient": "Select a client",
+    "createProject": "Create project",
+    "createError": "Could not create the project",
+    "noProjectsYet": "You don't have any projects yet."
   },
   "clientDetail": {
     "title": "Client record",
@@ -491,7 +502,23 @@
   "contracts": {
     "title": "Contracts & Documents",
     "searchPlaceholder": "Search document...",
-    "noDocuments": "No documents for this project."
+    "noDocuments": "No documents for this project.",
+    "uploadDocument": "Upload document",
+    "selectProject": "Select a project",
+    "documentName": "Document name",
+    "file": "File",
+    "tag": "Tag",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "uploadError": "Could not upload the document",
+    "download": "Download",
+    "tags": {
+      "contrato": "Contract",
+      "permiso": "Permit",
+      "plano": "Drawing",
+      "garantia": "Warranty"
+    },
+    "storageNote": "Files are stored in Supabase Storage, isolated per business. Downloads use temporary links that expire after 5 minutes."
   },
   "costTracking": {
     "title": "Cost Tracking & Profitability",
@@ -502,8 +529,21 @@
     "total": "TOTAL"
   },
   "workOrders": {
-    "title": "Work Orders",
-    "description": "Specific assigned tasks, linked to a project"
+    "title": "Title",
+    "description": "Specific assigned tasks, linked to a project",
+    "newWorkOrder": "New work order",
+    "selectProject": "Select a project",
+    "titlePlaceholder": "e.g. Install bathroom tiles",
+    "priority": "Priority",
+    "assignTo": "Assign to",
+    "unassigned": "Unassigned",
+    "createWorkOrder": "Create order",
+    "createError": "Could not create the work order",
+    "priorities": {
+      "baja": "Low",
+      "media": "Medium",
+      "alta": "High"
+    }
   },
   "scheduling": {
     "title": "Scheduling"
@@ -522,6 +562,14 @@
   },
   "photoGallery": {
     "title": "Photo Gallery",
-    "noPhotos": "No photos for this project."
+    "noPhotos": "No photos for this project.",
+    "uploadPhoto": "Upload photo",
+    "selectProject": "Select a project",
+    "zone": "Zone",
+    "zonePlaceholder": "e.g. Kitchen, Bathroom",
+    "visibleToClient": "Visible to the client",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "uploadError": "Could not upload the photo"
   }
 }

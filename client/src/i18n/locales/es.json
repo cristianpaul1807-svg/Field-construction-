@@ -112,7 +112,8 @@
       "ganado": "Ganado",
       "perdido": "Perdido"
     },
-    "descriptionFull": "Gestiona leads y relaciones con clientes"
+    "descriptionFull": "Gestiona leads y relaciones con clientes",
+    "newLeadName": "Nombre del cliente"
   },
   "budgets": {
     "title": "Presupuestos",
@@ -474,7 +475,17 @@
     "expenses": "Gastos",
     "linkedEstimate": "Presupuesto vinculado",
     "noLinkedEstimate": "Este proyecto no tiene un presupuesto vinculado.",
-    "estimate": "Presupuesto"
+    "estimate": "Presupuesto",
+    "newProject": "Nuevo proyecto",
+    "projectName": "Nombre del proyecto",
+    "projectType": "Tipo de obra",
+    "typePlaceholder": "Ej. Reforma de cocina",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de fin",
+    "selectClient": "Selecciona un cliente",
+    "createProject": "Crear proyecto",
+    "createError": "No se pudo crear el proyecto",
+    "noProjectsYet": "Todavía no tienes proyectos."
   },
   "clientDetail": {
     "title": "Ficha del cliente",
@@ -491,7 +502,23 @@
   "contracts": {
     "title": "Contratos y documentos",
     "searchPlaceholder": "Buscar documento...",
-    "noDocuments": "Sin documentos para este proyecto."
+    "noDocuments": "Sin documentos para este proyecto.",
+    "uploadDocument": "Subir documento",
+    "selectProject": "Selecciona un proyecto",
+    "documentName": "Nombre del documento",
+    "file": "Archivo",
+    "tag": "Etiqueta",
+    "upload": "Subir",
+    "uploading": "Subiendo...",
+    "uploadError": "No se pudo subir el documento",
+    "download": "Descargar",
+    "tags": {
+      "contrato": "Contrato",
+      "permiso": "Permiso",
+      "plano": "Plano",
+      "garantia": "Garantía"
+    },
+    "storageNote": "Los archivos se guardan cifrados en Supabase Storage, aislados por negocio. Las descargas usan enlaces temporales que caducan a los 5 minutos."
   },
   "costTracking": {
     "title": "Control de costos y rentabilidad",
@@ -502,8 +529,21 @@
     "total": "TOTAL"
   },
   "workOrders": {
-    "title": "Órdenes de trabajo",
-    "description": "Tareas específicas asignadas, vinculadas a un proyecto"
+    "title": "Título",
+    "description": "Tareas específicas asignadas, vinculadas a un proyecto",
+    "newWorkOrder": "Nueva orden de trabajo",
+    "selectProject": "Selecciona un proyecto",
+    "titlePlaceholder": "Ej. Instalar azulejos del baño",
+    "priority": "Prioridad",
+    "assignTo": "Asignar a",
+    "unassigned": "Sin asignar",
+    "createWorkOrder": "Crear orden",
+    "createError": "No se pudo crear la orden",
+    "priorities": {
+      "baja": "Baja",
+      "media": "Media",
+      "alta": "Alta"
+    }
   },
   "scheduling": {
     "title": "Agenda"
@@ -522,6 +562,14 @@
   },
   "photoGallery": {
     "title": "Galería de fotos",
-    "noPhotos": "Sin fotos para este proyecto."
+    "noPhotos": "Sin fotos para este proyecto.",
+    "uploadPhoto": "Subir foto",
+    "selectProject": "Selecciona un proyecto",
+    "zone": "Zona",
+    "zonePlaceholder": "Ej. Cocina, Baño",
+    "visibleToClient": "Visible para el cliente",
+    "upload": "Subir",
+    "uploading": "Subiendo...",
+    "uploadError": "No se pudo subir la foto"
   }
 }

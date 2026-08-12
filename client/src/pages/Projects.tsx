@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { projectStatusLabel, formatCurrency, type ProjectStatus } from "@/lib/mockData";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface Project {
@@ -21,25 +26,100 @@ interface Project {
   team: string[];
 }
 
+interface ClientOption { id: string; name: string }
+
+function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [clientId, setClientId] = useState("");
+  const [name, setName] = useState("");
+  const [type, setType] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { data: clients } = useApi<ClientOption[]>(open ? "/api/clients" : null);
+
+  const reset = () => { setClientId(""); setName(""); setType(""); setStartDate(""); setEndDate(""); setError(null); };
+
+  const create = async () => {
+    if (!clientId || !name.trim()) return;
+    setSaving(true); setError(null);
+    try {
+      const res = await apiFetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId, name: name.trim(), type, startDate: startDate || undefined, endDate: endDate || undefined }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error || t("projects.createError"));
+      setOpen(false); reset(); onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("projects.createError"));
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 w-full sm:w-auto"><Plus size={16} /> {t("projects.newProject")}</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>{t("projects.newProject")}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>{t("common.client")}</Label>
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger><SelectValue placeholder={t("projects.selectClient")} /></SelectTrigger>
+              <SelectContent>
+                {(clients ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("projects.projectName")}</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("projects.projectType")} ({t("common.optional")})</Label>
+            <Input value={type} onChange={(e) => setType(e.target.value)} placeholder={t("projects.typePlaceholder")} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>{t("projects.startDate")}</Label>
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("projects.endDate")}</Label>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+          </div>
+          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+          <Button className="w-full" onClick={create} disabled={!clientId || !name.trim() || saving}>
+            {saving ? t("common.creating") : t("projects.createProject")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Projects() {
   const { t } = useTranslation();
-  const { data: projects, loading, error } = useApi<Project[]>("/api/projects");
+  const [reloadToken, setReloadToken] = useState(0);
+  const { data: projects, loading, error } = useApi<Project[]>(`/api/projects?_r=${reloadToken}`);
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
         title={t("projects.title")}
         description={t("projects.description")}
-        action={
-          <Button className="gap-2 w-full sm:w-auto">
-            <Plus size={16} /> New Project
-          </Button>
-        }
+        action={<NewProjectDialog onCreated={() => setReloadToken((n) => n + 1)} />}
       />
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-          <Spinner className="size-4" /> Cargando proyectos...
+          <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
 

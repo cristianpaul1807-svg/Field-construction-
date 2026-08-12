@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
 import { Plus, Search } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { leadStatusLabel, type LeadStatus } from "@/lib/mockData";
-import { useApi } from "@/lib/api";
+import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface Client {
@@ -22,9 +24,77 @@ interface Client {
 
 const statuses: LeadStatus[] = ["nuevo", "cotizado", "negociando", "ganado", "perdido"];
 
+function NewLeadDialog({ onCreated }: { onCreated: () => void }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reset = () => { setName(""); setPhone(""); setEmail(""); setAddress(""); setError(null); };
+
+  const create = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), phone, email, address }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error || t("common.genericError"));
+      setOpen(false); reset(); onCreated();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 w-full sm:w-auto"><Plus size={16} /> {t("crm.newLead")}</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("crm.newLeadTitle")}</DialogTitle>
+          <DialogDescription>{t("crm.newLeadDescription")}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>{t("common.name")}</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("crm.newLeadName")} autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("common.phone")} ({t("common.optional")})</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("common.email")} ({t("common.optional")})</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("common.address")} ({t("common.optional")})</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+          <Button className="w-full" onClick={create} disabled={!name.trim() || saving}>
+            {saving ? t("common.creating") : t("common.create")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Crm() {
   const { t } = useTranslation();
-  const { data: clients, loading, error } = useApi<Client[]>("/api/clients");
+  const [reloadToken, setReloadToken] = useState(0);
+  const { data: clients, loading, error } = useApi<Client[]>(`/api/clients?_r=${reloadToken}`);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
 
@@ -45,11 +115,7 @@ export default function Crm() {
       <PageHeader
         title={t("crm.title")}
         description={t("crm.descriptionFull")}
-        action={
-          <Button className="gap-2 w-full sm:w-auto">
-            <Plus size={16} /> New Lead
-          </Button>
-        }
+        action={<NewLeadDialog onCreated={() => setReloadToken((n) => n + 1)} />}
       />
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">

@@ -112,7 +112,8 @@
       "ganado": "Acquisito",
       "perdido": "Perso"
     },
-    "descriptionFull": "Gestisci contatti e relazioni con i clienti"
+    "descriptionFull": "Gestisci contatti e relazioni con i clienti",
+    "newLeadName": "Nome del cliente"
   },
   "budgets": {
     "title": "Preventivi",
@@ -474,7 +475,17 @@
     "expenses": "Spese",
     "linkedEstimate": "Preventivo collegato",
     "noLinkedEstimate": "Questo progetto non ha un preventivo collegato.",
-    "estimate": "Preventivo"
+    "estimate": "Preventivo",
+    "newProject": "Nuovo progetto",
+    "projectName": "Nome del progetto",
+    "projectType": "Tipo di lavoro",
+    "typePlaceholder": "Es. Ristrutturazione cucina",
+    "startDate": "Data di inizio",
+    "endDate": "Data di fine",
+    "selectClient": "Seleziona un cliente",
+    "createProject": "Crea progetto",
+    "createError": "Impossibile creare il progetto",
+    "noProjectsYet": "Non hai ancora progetti."
   },
   "clientDetail": {
     "title": "Scheda cliente",
@@ -491,7 +502,23 @@
   "contracts": {
     "title": "Contratti e documenti",
     "searchPlaceholder": "Cerca documento...",
-    "noDocuments": "Nessun documento per questo progetto."
+    "noDocuments": "Nessun documento per questo progetto.",
+    "uploadDocument": "Carica documento",
+    "selectProject": "Seleziona un progetto",
+    "documentName": "Nome del documento",
+    "file": "File",
+    "tag": "Etichetta",
+    "upload": "Carica",
+    "uploading": "Caricamento...",
+    "uploadError": "Impossibile caricare il documento",
+    "download": "Scarica",
+    "tags": {
+      "contrato": "Contratto",
+      "permiso": "Permesso",
+      "plano": "Disegno",
+      "garantia": "Garanzia"
+    },
+    "storageNote": "I file sono archiviati su Supabase Storage, isolati per impresa. I download usano link temporanei che scadono dopo 5 minuti."
   },
   "costTracking": {
     "title": "Controllo costi e redditività",
@@ -502,8 +529,21 @@
     "total": "TOTALE"
   },
   "workOrders": {
-    "title": "Ordini di lavoro",
-    "description": "Attività specifiche assegnate, collegate a un progetto"
+    "title": "Titolo",
+    "description": "Attività specifiche assegnate, collegate a un progetto",
+    "newWorkOrder": "Nuovo ordine di lavoro",
+    "selectProject": "Seleziona un progetto",
+    "titlePlaceholder": "Es. Posare le piastrelle del bagno",
+    "priority": "Priorità",
+    "assignTo": "Assegna a",
+    "unassigned": "Non assegnato",
+    "createWorkOrder": "Crea ordine",
+    "createError": "Impossibile creare l'ordine",
+    "priorities": {
+      "baja": "Bassa",
+      "media": "Media",
+      "alta": "Alta"
+    }
   },
   "scheduling": {
     "title": "Calendario"
@@ -522,6 +562,14 @@
   },
   "photoGallery": {
     "title": "Galleria foto",
-    "noPhotos": "Nessuna foto per questo progetto."
+    "noPhotos": "Nessuna foto per questo progetto.",
+    "uploadPhoto": "Carica foto",
+    "selectProject": "Seleziona un progetto",
+    "zone": "Zona",
+    "zonePlaceholder": "Es. Cucina, Bagno",
+    "visibleToClient": "Visibile al cliente",
+    "upload": "Carica",
+    "uploading": "Caricamento...",
+    "uploadError": "Impossibile caricare la foto"
   }
 }

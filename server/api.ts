@@ -2539,6 +2539,35 @@ apiRouter.get(
   })
 );
 
+// "Nuevo contacto" in the CRM — a lead added by hand, as opposed to one
+// that arrived through the public chat flow.
+apiRouter.post(
+  "/clients",
+  route(async (req, res) => {
+    const { name, phone, email, address } = req.body ?? {};
+    if (!name?.trim()) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("clients")
+      .insert({
+        business_id: req.businessId!,
+        name: name.trim(),
+        phone: phone?.trim() || null,
+        email: email?.trim() || null,
+        address: address?.trim() || null,
+        lead_status: "nuevo",
+        source: "manual",
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
 // Issues a fresh access code for the Client Portal — only the hash is
 // stored, so the raw code is shown to the admin exactly once here, then
 // handed to the client however they already talk (in person, phone, chat).
@@ -2779,6 +2808,35 @@ apiRouter.get(
   })
 );
 
+apiRouter.post(
+  "/projects",
+  route(async (req, res) => {
+    const { clientId, name, type, startDate, endDate, estimateId } = req.body ?? {};
+    if (!clientId || !name?.trim()) {
+      res.status(400).json({ error: "clientId and name are required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({
+        business_id: req.businessId!,
+        client_id: clientId,
+        estimate_id: estimateId ?? null,
+        name: name.trim(),
+        type: type?.trim() || null,
+        status: "planificacion",
+        progress_percent: 0,
+        start_date: startDate || null,
+        end_date: endDate || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
 // ---------- Contracts & Documents ----------
 
 apiRouter.get(
@@ -2803,6 +2861,72 @@ apiRouter.get(
         projectName: d.projects?.name ?? null,
       }))
     );
+  })
+);
+
+// Uploads a real file to the project-documents bucket and records it. The
+// bucket is private; the row stores the storage path and reads go through a
+// short-lived signed URL rather than a public link.
+apiRouter.post(
+  "/documents",
+  upload.single("file"),
+  route(async (req, res) => {
+    const { projectId, tag, name } = req.body ?? {};
+    const file = req.file;
+    if (!projectId || !file) {
+      res.status(400).json({ error: "projectId and file are required" });
+      return;
+    }
+    if (tag && !["contrato", "permiso", "plano", "garantia"].includes(tag)) {
+      res.status(400).json({ error: "tag must be contrato, permiso, plano or garantia" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const storagePath = `${req.businessId}/${projectId}/${randomUUID()}-${file.originalname}`;
+    const { error: uploadError } = await supabase.storage
+      .from("project-documents")
+      .upload(storagePath, file.buffer, { contentType: file.mimetype });
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await supabase
+      .from("documents")
+      .insert({
+        business_id: req.businessId!,
+        project_id: projectId,
+        name: (name?.trim() || file.originalname),
+        file_url: storagePath,
+        tag: tag || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+// Short-lived signed URL for one document — the bucket stays private, so
+// this is the only way a stored file is ever readable.
+apiRouter.get(
+  "/documents/:id/download-url",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: doc, error } = await supabase
+      .from("documents")
+      .select("file_url")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!doc?.file_url) {
+      res.status(404).json({ error: "Documento no encontrado" });
+      return;
+    }
+    const { data: signed, error: signError } = await supabase.storage
+      .from("project-documents")
+      .createSignedUrl(doc.file_url, 300);
+    if (signError) throw signError;
+    res.json({ url: signed.signedUrl });
   })
 );
 
@@ -2833,6 +2957,64 @@ apiRouter.get(
         uploadedBy: p.employees?.name ?? p.subcontractors?.name ?? null,
       }))
     );
+  })
+);
+
+apiRouter.post(
+  "/photos",
+  upload.single("file"),
+  route(async (req, res) => {
+    const { projectId, zone, visibleToClient } = req.body ?? {};
+    const file = req.file;
+    if (!projectId || !file) {
+      res.status(400).json({ error: "projectId and file are required" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const storagePath = `${req.businessId}/${projectId}/${randomUUID()}-${file.originalname}`;
+    const { error: uploadError } = await supabase.storage
+      .from("project-photos")
+      .upload(storagePath, file.buffer, { contentType: file.mimetype });
+    if (uploadError) throw uploadError;
+
+    const { data, error } = await supabase
+      .from("photos")
+      .insert({
+        business_id: req.businessId!,
+        project_id: projectId,
+        url: storagePath,
+        zone: zone?.trim() || null,
+        // Nothing is shown to the client unless the business says so.
+        visible_to_client: visibleToClient === "true" || visibleToClient === true,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.get(
+  "/photos/:id/url",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: photo, error } = await supabase
+      .from("photos")
+      .select("url")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!photo?.url) {
+      res.status(404).json({ error: "Foto no encontrada" });
+      return;
+    }
+    const { data: signed, error: signError } = await supabase.storage
+      .from("project-photos")
+      .createSignedUrl(photo.url, 300);
+    if (signError) throw signError;
+    res.json({ url: signed.signedUrl });
   })
 );
 
@@ -3138,6 +3320,45 @@ apiRouter.get(
         assignedTo: w.employees?.name ?? w.subcontractors?.name ?? null,
       }))
     );
+  })
+);
+
+apiRouter.post(
+  "/work-orders",
+  route(async (req, res) => {
+    const { projectId, title, description, priority, assignedEmployeeId, assignedSubcontractorId } = req.body ?? {};
+    if (!projectId || !title?.trim()) {
+      res.status(400).json({ error: "projectId and title are required" });
+      return;
+    }
+    if (priority && !["baja", "media", "alta"].includes(priority)) {
+      res.status(400).json({ error: "priority must be baja, media or alta" });
+      return;
+    }
+    // The table allows at most one assignee; reject the ambiguous case up
+    // front rather than letting the constraint produce a cryptic error.
+    if (assignedEmployeeId && assignedSubcontractorId) {
+      res.status(400).json({ error: "Assign either an employee or a subcontractor, not both" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("work_orders")
+      .insert({
+        business_id: req.businessId!,
+        project_id: projectId,
+        title: title.trim(),
+        description: description?.trim() || null,
+        priority: priority || "media",
+        status: "pendiente",
+        assigned_employee_id: assignedEmployeeId || null,
+        assigned_subcontractor_id: assignedSubcontractorId || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
   })
 );
 

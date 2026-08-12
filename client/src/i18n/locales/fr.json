@@ -112,7 +112,8 @@
       "ganado": "Gagné",
       "perdido": "Perdu"
     },
-    "descriptionFull": "Gérez vos prospects et vos relations clients"
+    "descriptionFull": "Gérez vos prospects et vos relations clients",
+    "newLeadName": "Nom du client"
   },
   "budgets": {
     "title": "Soumissions",
@@ -474,7 +475,17 @@
     "expenses": "Dépenses",
     "linkedEstimate": "Soumission liée",
     "noLinkedEstimate": "Ce projet n'a aucune soumission liée.",
-    "estimate": "Soumission"
+    "estimate": "Soumission",
+    "newProject": "Nouveau projet",
+    "projectName": "Nom du projet",
+    "projectType": "Type de travaux",
+    "typePlaceholder": "Ex. Rénovation de cuisine",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "selectClient": "Sélectionnez un client",
+    "createProject": "Créer le projet",
+    "createError": "Impossible de créer le projet",
+    "noProjectsYet": "Vous n'avez pas encore de projets."
   },
   "clientDetail": {
     "title": "Fiche client",
@@ -491,7 +502,23 @@
   "contracts": {
     "title": "Contrats et documents",
     "searchPlaceholder": "Rechercher un document...",
-    "noDocuments": "Aucun document pour ce projet."
+    "noDocuments": "Aucun document pour ce projet.",
+    "uploadDocument": "Téléverser un document",
+    "selectProject": "Sélectionnez un projet",
+    "documentName": "Nom du document",
+    "file": "Fichier",
+    "tag": "Étiquette",
+    "upload": "Téléverser",
+    "uploading": "Téléversement...",
+    "uploadError": "Impossible de téléverser le document",
+    "download": "Télécharger",
+    "tags": {
+      "contrato": "Contrat",
+      "permiso": "Permis",
+      "plano": "Plan",
+      "garantia": "Garantie"
+    },
+    "storageNote": "Les fichiers sont stockés dans Supabase Storage, isolés par entreprise. Les téléchargements utilisent des liens temporaires qui expirent après 5 minutes."
   },
   "costTracking": {
     "title": "Suivi des coûts et rentabilité",
@@ -502,8 +529,21 @@
     "total": "TOTAL"
   },
   "workOrders": {
-    "title": "Bons de travail",
-    "description": "Tâches spécifiques assignées, liées à un projet"
+    "title": "Titre",
+    "description": "Tâches spécifiques assignées, liées à un projet",
+    "newWorkOrder": "Nouveau bon de travail",
+    "selectProject": "Sélectionnez un projet",
+    "titlePlaceholder": "Ex. Poser les carreaux de la salle de bain",
+    "priority": "Priorité",
+    "assignTo": "Assigner à",
+    "unassigned": "Non assigné",
+    "createWorkOrder": "Créer le bon",
+    "createError": "Impossible de créer le bon de travail",
+    "priorities": {
+      "baja": "Basse",
+      "media": "Moyenne",
+      "alta": "Haute"
+    }
   },
   "scheduling": {
     "title": "Calendrier"
@@ -522,6 +562,14 @@
   },
   "photoGallery": {
     "title": "Galerie photos",
-    "noPhotos": "Aucune photo pour ce projet."
+    "noPhotos": "Aucune photo pour ce projet.",
+    "uploadPhoto": "Téléverser une photo",
+    "selectProject": "Sélectionnez un projet",
+    "zone": "Zone",
+    "zonePlaceholder": "Ex. Cuisine, Salle de bain",
+    "visibleToClient": "Visible pour le client",
+    "upload": "Téléverser",
+    "uploading": "Téléversement...",
+    "uploadError": "Impossible de téléverser la photo"
   }
 }
