@@ -529,7 +529,16 @@ export const rolePermissions: Record<AppUser["role"], string[]> = {
 export const findClient = (id: string) => clients.find((c) => c.id === id);
 export const findProject = (id: string) => projects.find((p) => p.id === id);
 
+// Exact, to the cent. This is an invoicing product: nearly every figure on
+// screen is a price somebody pays, a line a customer checks against a quote,
+// or a catalogue rate. Rounding $5,748.75 to "$5,749" on a payment schedule
+// is a small lie that costs trust the first time the card is charged.
 export const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(value);
+
+// For headline totals, where the cents are noise and the shape of the number
+// is the point. Only for aggregates — never for anything owed.
+export const formatCurrencyRounded = (value: number) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(value);
 
 export const leadStatusLabel: Record<LeadStatus, string> = {

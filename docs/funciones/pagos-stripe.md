@@ -13,6 +13,33 @@ comisiones, las disputas y los depósitos bancarios son tuyos**, no de esta
 plataforma. Esta no es intermediaria de tus cobros: solo los origina en tu
 nombre.
 
+### Quién paga las comisiones de Stripe
+
+La cuenta conectada, siempre. La plataforma no cobra ninguna comisión propia
+(`application_fee`) y no aparece en la factura de Stripe de nadie.
+
+Esto **no es lo que hace Stripe por defecto** y por eso está escrito así en el
+código. Crear una cuenta con `type: "express"` equivale a
+`controller.fees.payer = "application"`, que pone la comisión de proceso de
+cada cobro a cargo de la plataforma. Las cuentas se crean con las propiedades
+`controller` explícitas:
+
+```
+controller.fees.payer            = "account"   // la cuenta conectada paga
+controller.losses.payments       = "stripe"
+controller.requirement_collection = "stripe"
+controller.stripe_dashboard.type = "express"   // o "full" si Stripe rechaza esa combinación
+```
+
+Ver `createConnectedAccount()` en `server/api.ts`. **No hay respaldo hacia la
+opción por defecto**: si Stripe rechaza todas las combinaciones seguras, la
+conexión falla con un error. Fallar al conectar se arregla; pagar las
+comisiones de otros en silencio, no.
+
+Quién paga se fija al crear la cuenta y **no se puede cambiar después**. Por eso
+se guarda en `stripe_connected_accounts.fees_payer` y la pantalla de Pagos lo
+dice: una cuenta creada de la forma antigua hay que reemplazarla, no editarla.
+
 ---
 
 ## Conectar tu cuenta

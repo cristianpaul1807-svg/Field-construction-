@@ -15,6 +15,16 @@ import {
   type TaxBreakdown,
 } from "./documents";
 import {
+  billMilestone,
+  billMilestonesForTrigger,
+  materializePlan,
+  planTotalsCorrectly,
+  readPlan,
+  DEFAULT_PLAN,
+  MILESTONE_TRIGGERS,
+  TRIGGER_FOR_STATUS,
+} from "./paymentPlans";
+import {
   advanceProject,
   checkWorkOrdersComplete,
   lifecycleSnapshot,
@@ -419,6 +429,65 @@ async function computeInvoiceTax(admin: ReturnType<typeof getSupabaseAdmin>, bus
   return { taxAmount: gst + pst, breakdown: { province: rate.province, gst, pst } };
 }
 
+/**
+ * The one place an invoice row is created.
+ *
+ * Tax and holdback are the two rules most easily got wrong, and they were
+ * inline in a route until the payment plans needed to create invoices too —
+ * two copies of this would have drifted, and the drift would be somebody's
+ * tax return.
+ */
+async function createInvoiceRecord(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  input: {
+    businessId: string;
+    clientId: string;
+    projectId: string | null;
+    estimateId: string | null;
+    type: "deposito" | "parcial" | "final";
+    subtotal: number;
+    description: string | null;
+    dueDate?: string | null;
+  }
+): Promise<string> {
+  const { taxAmount, breakdown } = await computeInvoiceTax(admin, input.businessId, input.subtotal);
+
+  // The holdback is withheld from progress payments, not from the final one —
+  // the final invoice is where the withheld money is released, so applying it
+  // there would hold the same money back twice.
+  const { data: business } = await admin
+    .from("businesses")
+    .select("holdback_percent")
+    .eq("id", input.businessId)
+    .single();
+  const holdbackPercent = input.type === "final" ? 0 : Number(business?.holdback_percent ?? 0);
+  const holdbackAmount = Math.round(input.subtotal * (holdbackPercent / 100) * 100) / 100;
+
+  const { data, error } = await admin
+    .from("invoices")
+    .insert({
+      business_id: input.businessId,
+      client_id: input.clientId,
+      project_id: input.projectId,
+      estimate_id: input.estimateId,
+      type: input.type,
+      description: input.description,
+      subtotal: input.subtotal,
+      tax_amount: taxAmount,
+      tax_breakdown: breakdown,
+      holdback_amount: holdbackAmount,
+      // Tax is charged on the full value of the work; only the payment is
+      // reduced by the holdback, which is why it is subtracted last.
+      amount: Math.round((input.subtotal + taxAmount - holdbackAmount) * 100) / 100,
+      status: "pendiente",
+      due_date: input.dueDate ?? null,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
 // Creates (or reuses) the Stripe Checkout Session for an invoice, on the
 // business's own connected account. Used by both the business panel
 // ("reenviar link") and the client portal ("pagar depósito") — same
@@ -524,7 +593,7 @@ async function stripeWebhookHandler(req: Request, res: Response) {
         // The final payment landing is what closes a job. A deposit or a
         // progress payment does not: there is still work owed.
         if (invoice.type === "final" && invoice.project_id) {
-          await advanceProject(admin, {
+          await advanceAndBill(admin, {
             businessId,
             projectId: invoice.project_id,
             trigger: "factura_final_pagada",
@@ -536,6 +605,42 @@ async function stripeWebhookHandler(req: Request, res: Response) {
   }
 
   res.json({ received: true });
+}
+
+/**
+ * Moves a project forward and bills whatever that move just made due.
+ *
+ * The events a contractor invoices against are the same events that move the
+ * job — accepted, started, finished — so keeping these apart would mean
+ * remembering to invoice by hand for something the software already knew had
+ * happened. Everything that advances a project goes through here instead of
+ * calling advanceProject directly.
+ */
+async function advanceAndBill(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  input: Parameters<typeof advanceProject>[1]
+): Promise<string | null> {
+  const status = await advanceProject(admin, input);
+  if (!status) return null;
+  const trigger = TRIGGER_FOR_STATUS[status];
+  if (trigger) {
+    await billMilestonesForTrigger(admin, {
+      businessId: input.businessId,
+      projectId: input.projectId,
+      trigger,
+      createInvoice: (args) =>
+        createInvoiceRecord(admin, {
+          businessId: args.businessId,
+          clientId: args.clientId,
+          projectId: args.projectId,
+          estimateId: args.estimateId,
+          type: args.type,
+          subtotal: args.subtotal,
+          description: args.description,
+        }),
+    });
+  }
+  return status;
 }
 
 // Wraps a handler so any thrown error (including a missing service-role key)
@@ -1039,7 +1144,7 @@ apiRouter.post(
     // Somebody standing on the site is the strongest evidence there is that
     // the job left planning, so the first check-in moves it — nobody in the
     // office has to remember to.
-    await advanceProject(admin, {
+    await advanceAndBill(admin, {
       businessId: req.workerBusinessId!,
       projectId,
       trigger: "primer_fichaje",
@@ -1121,7 +1226,7 @@ apiRouter.post(
       .single();
     if (openError) throw openError;
 
-    await advanceProject(admin, {
+    await advanceAndBill(admin, {
       businessId: req.workerBusinessId!,
       projectId,
       trigger: "primer_fichaje",
@@ -1330,10 +1435,38 @@ apiRouter.get(
 
     // "How is my renovation going" is the question the portal exists to
     // answer, and a percentage nobody maintains is not an answer. The customer
-    // sees the same derived checklist the contractor does.
-    const lifecycle = project.data
-      ? await lifecycleSnapshot(getSupabaseAdmin(), project.data.business_id, project.data.id)
-      : null;
+    // sees the same derived checklist the contractor does — and the payment
+    // schedule with it, because "what do I still owe and when" is the other
+    // half of why they open this page.
+    const admin = getSupabaseAdmin();
+    const [lifecycle, milestones] = project.data
+      ? await Promise.all([
+          lifecycleSnapshot(admin, project.data.business_id, project.data.id),
+          admin
+            .from("project_payment_milestones")
+            .select("id, position, label, percent, invoice_id, billed_at, invoices(amount, status, due_date)")
+            .eq("project_id", project.data.id)
+            .order("position"),
+        ])
+      : [null, { data: [] as unknown[] }];
+
+    const paymentSchedule = ((milestones as { data: unknown[] }).data ?? []).map((row) => {
+      const m = row as Record<string, unknown>;
+      const invoice = m.invoices as { amount: number; status: string; due_date: string | null } | null;
+      return {
+        id: String(m.id),
+        position: Number(m.position),
+        label: String(m.label),
+        percent: Number(m.percent),
+        // Only a billed stage has a real figure. Showing a projected amount
+        // for an unbilled one would put a number in front of the customer
+        // that nobody has agreed to yet.
+        amount: invoice ? Number(invoice.amount) : null,
+        status: invoice?.status ?? null,
+        dueDate: invoice?.due_date ?? null,
+        invoiceId: (m.invoice_id as string | null) ?? null,
+      };
+    });
 
     res.json({
       client: { id: client.data.id, name: client.data.name },
@@ -1344,6 +1477,7 @@ apiRouter.get(
             progressPercent: Number(project.data.progress_percent),
             status: project.data.status,
             lifecycle,
+            paymentSchedule,
           }
         : null,
       estimate: estimate.data
@@ -2118,7 +2252,8 @@ apiRouter.post(
       await admin.from("estimates").update({ project_id: projectId }).eq("id", estimate.id);
     }
 
-    await advanceProject(admin, {
+    await materializePlan(admin, estimate.business_id, projectId!);
+    await advanceAndBill(admin, {
       businessId: estimate.business_id,
       projectId: projectId!,
       trigger: "presupuesto_aceptado",
@@ -2153,7 +2288,7 @@ apiRouter.post(
       return;
     }
 
-    const status = await advanceProject(admin, {
+    const status = await advanceAndBill(admin, {
       businessId: project.business_id,
       projectId: project.id,
       trigger: "cliente_confirmo",
@@ -2869,15 +3004,18 @@ apiRouter.post(
 
     // The acceptance is what turns a quote into a job, so the project starts
     // its lifecycle here rather than waiting for someone to remember to set it.
+    // The payment schedule is copied first: advancing bills whatever the move
+    // makes due, and there is nothing to bill until the stages exist.
     const admin = getSupabaseAdmin();
-    await advanceProject(admin, {
+    await materializePlan(admin, req.businessId!, projectId!);
+    await advanceAndBill(admin, {
       businessId: req.businessId!,
       projectId: projectId!,
       trigger: "presupuesto_aceptado",
       actor: "admin",
     });
     if (pendingItems.length > 0) {
-      await advanceProject(admin, {
+      await advanceAndBill(admin, {
         businessId: req.businessId!,
         projectId: projectId!,
         trigger: "trabajo_programado",
@@ -4436,7 +4574,7 @@ apiRouter.post(
 
     if (error) throw error;
 
-    await advanceProject(getSupabaseAdmin(), {
+    await advanceAndBill(getSupabaseAdmin(), {
       businessId: req.businessId!,
       projectId: body.projectId,
       trigger: "trabajo_programado",
@@ -4780,45 +4918,142 @@ apiRouter.post(
       return;
     }
 
+    const id = await createInvoiceRecord(getSupabaseAdmin(), {
+      businessId: req.businessId!,
+      clientId,
+      projectId: projectId ?? null,
+      estimateId: estimateId ?? null,
+      type,
+      subtotal: Number(subtotal),
+      description: description ?? null,
+      dueDate: dueDate ?? null,
+    });
+    res.status(201).json({ id });
+  })
+);
+
+// ---------- Payment plans ----------
+// The business's template, and each project's own copy of it. See
+// server/paymentPlans.ts for why a project keeps a copy rather than reading
+// the template every time.
+
+apiRouter.get(
+  "/payment-plan",
+  route(async (req, res) => {
+    const plan = await readPlan(getSupabaseAdmin(), req.businessId!);
+    res.json({ milestones: plan, triggers: MILESTONE_TRIGGERS, isDefault: plan === DEFAULT_PLAN });
+  })
+);
+
+apiRouter.put(
+  "/payment-plan",
+  route(async (req, res) => {
+    const milestones = Array.isArray(req.body?.milestones) ? req.body.milestones : null;
+    if (!milestones || milestones.length === 0) {
+      res.status(400).json({ error: "at least one milestone is required" });
+      return;
+    }
+    const cleaned = milestones.map((m: Record<string, unknown>, index: number) => ({
+      position: index + 1,
+      label: String(m.label ?? "").trim(),
+      percent: Number(m.percent),
+      trigger: String(m.trigger ?? "manual"),
+    }));
+    for (const m of cleaned) {
+      if (!m.label) {
+        res.status(400).json({ error: "every milestone needs a name" });
+        return;
+      }
+      if (!Number.isFinite(m.percent) || m.percent <= 0 || m.percent > 100) {
+        res.status(400).json({ error: "every percentage must be between 0 and 100" });
+        return;
+      }
+      if (!MILESTONE_TRIGGERS.includes(m.trigger as never)) {
+        res.status(400).json({ error: "invalid trigger" });
+        return;
+      }
+    }
+    // Rejected rather than silently normalised: a plan that does not add up to
+    // the whole job means one stage bills the wrong amount, and the business
+    // needs to see that before it reaches a customer.
+    if (!planTotalsCorrectly(cleaned)) {
+      res.status(400).json({ error: "percentages must add up to 100", code: "plan_not_100" });
+      return;
+    }
+
     const admin = getSupabaseAdmin();
-    const { taxAmount, breakdown } = await computeInvoiceTax(admin, req.businessId!, Number(subtotal));
-
-    // The holdback is withheld from progress payments, not from the final
-    // one — the final invoice is where the withheld money is released, so
-    // applying it there would hold the same money back twice.
-    const { data: business } = await admin
-      .from("businesses")
-      .select("holdback_percent")
-      .eq("id", req.businessId!)
-      .single();
-    const holdbackPercent = type === "final" ? 0 : Number(business?.holdback_percent ?? 0);
-    const holdbackAmount = Math.round(Number(subtotal) * (holdbackPercent / 100) * 100) / 100;
-
-    const supabase = req.supabase!;
-    const { data, error } = await supabase
-      .from("invoices")
-      .insert({
-        business_id: req.businessId!,
-        client_id: clientId,
-        project_id: projectId ?? null,
-        estimate_id: estimateId ?? null,
-        type,
-        description: description ?? null,
-        subtotal: Number(subtotal),
-        tax_amount: taxAmount,
-        tax_breakdown: breakdown,
-        holdback_amount: holdbackAmount,
-        // Tax is charged on the full value of the work; only the payment is
-        // reduced by the holdback, which is why it is subtracted last.
-        amount: Math.round((Number(subtotal) + taxAmount - holdbackAmount) * 100) / 100,
-        status: "pendiente",
-        due_date: dueDate ?? null,
-      })
-      .select("id")
-      .single();
+    // Replace wholesale: positions are contiguous by construction, so
+    // reconciling row by row would only invent ways to leave a gap.
+    const { error: deleteError } = await admin
+      .from("payment_plan_milestones")
+      .delete()
+      .eq("business_id", req.businessId!);
+    if (deleteError) throw deleteError;
+    const { error } = await admin
+      .from("payment_plan_milestones")
+      .insert(cleaned.map((m: (typeof cleaned)[number]) => ({ ...m, business_id: req.businessId! })));
     if (error) throw error;
+    res.json({ ok: true });
+  })
+);
 
-    res.status(201).json({ id: data.id });
+apiRouter.get(
+  "/projects/:id/payment-milestones",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("project_payment_milestones")
+      .select("id, position, label, percent, trigger, invoice_id, billed_at, invoices(amount, status, due_date)")
+      .eq("business_id", req.businessId!)
+      .eq("project_id", req.params.id)
+      .order("position");
+    if (error) throw error;
+    res.json(
+      (data ?? []).map((m) => {
+        const invoice = m.invoices as unknown as { amount: number; status: string; due_date: string | null } | null;
+        return {
+          id: m.id,
+          position: Number(m.position),
+          label: m.label,
+          percent: Number(m.percent),
+          trigger: m.trigger,
+          invoiceId: m.invoice_id,
+          billedAt: m.billed_at,
+          amount: invoice ? Number(invoice.amount) : null,
+          invoiceStatus: invoice?.status ?? null,
+          dueDate: invoice?.due_date ?? null,
+        };
+      })
+    );
+  })
+);
+
+// Billing a stage before its trigger fires — the customer who wants to pay
+// early, the job where the deposit is collected on a handshake.
+apiRouter.post(
+  "/projects/:id/payment-milestones/:milestoneId/bill",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const billed = await billMilestone(admin, {
+      businessId: req.businessId!,
+      projectId: req.params.id,
+      milestoneId: req.params.milestoneId,
+      createInvoice: (args) =>
+        createInvoiceRecord(admin, {
+          businessId: args.businessId,
+          clientId: args.clientId,
+          projectId: args.projectId,
+          estimateId: args.estimateId,
+          type: args.type,
+          subtotal: args.subtotal,
+          description: args.description,
+        }),
+    });
+    if (!billed) {
+      res.status(409).json({ error: "nothing to bill for this milestone", code: "milestone_not_billable" });
+      return;
+    }
+    res.status(201).json(billed);
   })
 );
 
@@ -5045,12 +5280,35 @@ apiRouter.patch(
       }
       // Goes through the lifecycle so the change is recorded with who made it,
       // instead of the column quietly changing value with no trace.
-      await setProjectStatus(getSupabaseAdmin(), {
+      const admin = getSupabaseAdmin();
+      await setProjectStatus(admin, {
         businessId: req.businessId!,
         projectId: req.params.id,
         status: body.status,
         actor: "admin",
       });
+      // A hand-set status bills the same stages an automatic one would: a
+      // contractor who marks a job finished expects its invoice either way,
+      // and having it depend on how the status got there is the kind of
+      // inconsistency that makes people stop trusting the numbers.
+      const trigger = TRIGGER_FOR_STATUS[body.status];
+      if (trigger) {
+        await billMilestonesForTrigger(admin, {
+          businessId: req.businessId!,
+          projectId: req.params.id,
+          trigger,
+          createInvoice: (args) =>
+            createInvoiceRecord(admin, {
+              businessId: args.businessId,
+              clientId: args.clientId,
+              projectId: args.projectId,
+              estimateId: args.estimateId,
+              type: args.type,
+              subtotal: args.subtotal,
+              description: args.description,
+            }),
+        });
+      }
     }
     if (body.progressPercent !== undefined) {
       const pct = Number(body.progressPercent);
@@ -5115,7 +5373,7 @@ apiRouter.patch(
     if (body.status !== undefined && updated?.project_id) {
       const admin = getSupabaseAdmin();
       if (body.status === "en_progreso") {
-        await advanceProject(admin, {
+        await advanceAndBill(admin, {
           businessId: req.businessId!,
           projectId: updated.project_id,
           trigger: "orden_iniciada",
@@ -5124,7 +5382,7 @@ apiRouter.patch(
       } else if (body.status === "completada") {
         const allDone = await checkWorkOrdersComplete(admin, req.businessId!, updated.project_id);
         if (allDone) {
-          await advanceProject(admin, {
+          await advanceAndBill(admin, {
             businessId: req.businessId!,
             projectId: updated.project_id,
             trigger: "ordenes_completadas",

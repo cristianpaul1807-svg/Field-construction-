@@ -84,6 +84,7 @@ directamente al paso a paso.
 |---|---|
 | Datos de la empresa | [funciones/configuracion.md](funciones/configuracion.md#datos-de-la-empresa) |
 | Pagos (Stripe) | [funciones/pagos-stripe.md](funciones/pagos-stripe.md) |
+| *(dentro de Pagos)* Plan de pagos por etapas | [funciones/facturacion.md](funciones/facturacion.md#el-plan-de-pagos) |
 | Márgenes y reglas | [funciones/configuracion.md](funciones/configuracion.md#márgenes-y-reglas) |
 | Usuarios y roles | [funciones/configuracion.md](funciones/configuracion.md#usuarios-y-roles) |
 | Conexión WhatsApp | [funciones/configuracion.md](funciones/configuracion.md#conexión-whatsapp) |

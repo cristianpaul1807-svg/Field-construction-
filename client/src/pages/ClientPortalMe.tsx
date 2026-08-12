@@ -13,10 +13,18 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { clearClientSession } from "@/lib/clientSession";
 import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
+import { PaymentScheduleCard, type PaymentMilestone } from "@/components/PaymentScheduleCard";
 
 interface ClientPortalData {
   client: { id: string; name: string };
-  project: { id: string; name: string; progressPercent: number; status: string; lifecycle: Lifecycle | null } | null;
+  project: {
+    id: string;
+    name: string;
+    progressPercent: number;
+    status: string;
+    lifecycle: Lifecycle | null;
+    paymentSchedule: PaymentMilestone[];
+  } | null;
   estimate: { id: string; status: string; total: number } | null;
   pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
@@ -202,6 +210,14 @@ export default function ClientPortalMe() {
                   {data.project.lifecycle && (
                     <div className="mt-4">
                       <LifecyclePanel lifecycle={data.project.lifecycle} showHistory={false} />
+                    </div>
+                  )}
+
+                  {/* No billing button here on purpose: the customer reads the
+                      schedule, the contractor is the one who issues. */}
+                  {data.project.paymentSchedule?.length > 0 && (
+                    <div className="mt-4">
+                      <PaymentScheduleCard milestones={data.project.paymentSchedule} />
                     </div>
                   )}
 

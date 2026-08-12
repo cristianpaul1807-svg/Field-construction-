@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { formatCurrency } from "@/lib/mockData";
+import { formatCurrencyRounded } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import {
   ResponsiveContainer,
@@ -49,11 +49,11 @@ export default function Reports() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("reports.billedCollected")}</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(data.totalRevenue)}</p>
+              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrencyRounded(data.totalRevenue)}</p>
             </Card>
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("reports.realProfit")}</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(data.profit)}</p>
+              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrencyRounded(data.profit)}</p>
             </Card>
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("reports.activeProjects")}</p>

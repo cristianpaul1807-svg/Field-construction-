@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
-import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
+import { formatCurrencyRounded, type ProjectStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import {
   ResponsiveContainer,
@@ -93,7 +93,7 @@ export default function Dashboard() {
             </Card>
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("dashboard.monthlyBilling")}</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(monthlyRevenue)}</p>
+              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrencyRounded(monthlyRevenue)}</p>
               <div className="flex items-center gap-1 mt-2">
                 {revenueDelta >= 0 ? (
                   <TrendingUp size={14} className="text-status-success-fg" />
@@ -107,7 +107,7 @@ export default function Dashboard() {
             </Card>
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("dashboard.pendingCollections")}</p>
-              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(pendingInvoicesTotal)}</p>
+              <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrencyRounded(pendingInvoicesTotal)}</p>
               <p className="text-xs text-muted-foreground mt-2">{pendingInvoices.length} facturas</p>
             </Card>
             <Card className="p-6">

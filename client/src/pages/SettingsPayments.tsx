@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, ExternalLink, ShieldCheck } from "lucide-react";
+import { CreditCard, ExternalLink, Receipt, ShieldCheck } from "lucide-react";
 import { useApi, apiFetch, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
 
 interface ConnectStatus {
   connected: boolean;
@@ -173,6 +174,19 @@ export default function SettingsPayments() {
           </div>
         )}
         {error && <p className="text-sm text-status-error-fg">{error}</p>}
+      </Card>
+
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Receipt size={20} strokeWidth={1.75} className="text-foreground" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-foreground">{t("paymentPlan.settingsTitle")}</h2>
+            <p className="text-xs text-muted-foreground">{t("paymentPlan.settingsNote")}</p>
+          </div>
+        </div>
+        <PaymentPlanEditor />
       </Card>
 
       <Card className="p-6 space-y-4">

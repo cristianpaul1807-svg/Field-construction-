@@ -952,5 +952,31 @@
       "confirmed": "You have signed the work off. Thank you.",
       "confirmError": "The confirmation could not be recorded"
     }
+  },
+  "paymentPlan": {
+    "title": "Payment schedule",
+    "subtitle": "Each stage invoices itself when the job reaches that point.",
+    "settingsTitle": "How you get paid for a job",
+    "settingsNote": "This is the plan copied onto every new job when its estimate is accepted. Changing it does not touch jobs already running.",
+    "stageName": "Stage",
+    "stageNamePlaceholder": "Deposit",
+    "percent": "%",
+    "billsWhen": "Invoices",
+    "addStage": "Add stage",
+    "total": "Total: {{percent}}%",
+    "mustTotal100": "The stages have to add up to 100%.",
+    "saved": "Saved",
+    "percentOfTotal": "{{percent}}% of the total",
+    "billNow": "Invoice now",
+    "notBilledYet": "Not invoiced yet",
+    "none": "This job has no payment schedule.",
+    "billError": "This stage's invoice could not be issued",
+    "triggers": {
+      "manual": "When I say so",
+      "al_aceptar": "When the estimate is accepted",
+      "al_iniciar": "When the work starts",
+      "al_confirmar": "When the work is signed off",
+      "al_terminar": "When the job closes"
+    }
   }
 }

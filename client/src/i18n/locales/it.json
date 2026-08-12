@@ -952,5 +952,31 @@
       "confirmed": "Hai confermato il lavoro. Grazie.",
       "confirmError": "Non è stato possibile registrare la conferma"
     }
+  },
+  "paymentPlan": {
+    "title": "Piano di pagamento",
+    "subtitle": "Ogni fase si fattura da sola quando il cantiere arriva a quel punto.",
+    "settingsTitle": "Come ti fai pagare un cantiere",
+    "settingsNote": "È il piano che viene copiato su ogni nuovo cantiere quando si accetta il preventivo. Modificarlo non tocca i cantieri già avviati.",
+    "stageName": "Fase",
+    "stageNamePlaceholder": "Acconto",
+    "percent": "%",
+    "billsWhen": "Si fattura",
+    "addStage": "Aggiungi fase",
+    "total": "Totale: {{percent}}%",
+    "mustTotal100": "Le fasi devono sommare 100%.",
+    "saved": "Salvato",
+    "percentOfTotal": "{{percent}}% del totale",
+    "billNow": "Fattura ora",
+    "notBilledYet": "Non ancora fatturata",
+    "none": "Questo cantiere non ha un piano di pagamento.",
+    "billError": "Non è stato possibile emettere la fattura di questa fase",
+    "triggers": {
+      "manual": "Quando lo decido io",
+      "al_aceptar": "All'accettazione del preventivo",
+      "al_iniciar": "All'inizio dei lavori",
+      "al_confirmar": "Alla conferma del lavoro",
+      "al_terminar": "Alla chiusura del cantiere"
+    }
   }
 }

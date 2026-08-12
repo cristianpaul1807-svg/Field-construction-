@@ -952,5 +952,31 @@
       "confirmed": "Has confirmado el trabajo. Gracias.",
       "confirmError": "No se pudo registrar la confirmación"
     }
+  },
+  "paymentPlan": {
+    "title": "Plan de pagos",
+    "subtitle": "Cada etapa se factura sola cuando la obra llega a ese punto.",
+    "settingsTitle": "Cómo cobras una obra",
+    "settingsNote": "Este es el plan que se copia en cada obra nueva al aceptar el presupuesto. Cambiarlo no toca las obras ya en marcha.",
+    "stageName": "Etapa",
+    "stageNamePlaceholder": "Depósito inicial",
+    "percent": "%",
+    "billsWhen": "Se factura",
+    "addStage": "Añadir etapa",
+    "total": "Total: {{percent}}%",
+    "mustTotal100": "Las etapas tienen que sumar 100%.",
+    "saved": "Guardado",
+    "percentOfTotal": "{{percent}}% del total",
+    "billNow": "Facturar ahora",
+    "notBilledYet": "Todavía sin facturar",
+    "none": "Esta obra no tiene plan de pagos.",
+    "billError": "No se pudo emitir la factura de esta etapa",
+    "triggers": {
+      "manual": "Cuando yo lo diga",
+      "al_aceptar": "Al aceptar el presupuesto",
+      "al_iniciar": "Al empezar la obra",
+      "al_confirmar": "Al confirmar el trabajo",
+      "al_terminar": "Al cerrar la obra"
+    }
   }
 }

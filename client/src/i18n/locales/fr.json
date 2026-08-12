@@ -952,5 +952,31 @@
       "confirmed": "Vous avez validé les travaux. Merci.",
       "confirmError": "La confirmation n'a pas pu être enregistrée"
     }
+  },
+  "paymentPlan": {
+    "title": "Échéancier de paiement",
+    "subtitle": "Chaque étape se facture d'elle-même quand le chantier y arrive.",
+    "settingsTitle": "Comment vous êtes payé pour un chantier",
+    "settingsNote": "C'est le plan copié sur chaque nouveau chantier à l'acceptation du devis. Le modifier ne touche pas les chantiers en cours.",
+    "stageName": "Étape",
+    "stageNamePlaceholder": "Acompte",
+    "percent": "%",
+    "billsWhen": "Se facture",
+    "addStage": "Ajouter une étape",
+    "total": "Total : {{percent}} %",
+    "mustTotal100": "Les étapes doivent totaliser 100 %.",
+    "saved": "Enregistré",
+    "percentOfTotal": "{{percent}} % du total",
+    "billNow": "Facturer maintenant",
+    "notBilledYet": "Pas encore facturée",
+    "none": "Ce chantier n'a pas d'échéancier.",
+    "billError": "La facture de cette étape n'a pas pu être émise",
+    "triggers": {
+      "manual": "Quand je le décide",
+      "al_aceptar": "À l'acceptation du devis",
+      "al_iniciar": "Au démarrage des travaux",
+      "al_confirmar": "À la validation des travaux",
+      "al_terminar": "À la clôture du chantier"
+    }
   }
 }

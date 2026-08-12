@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
+import { PaymentScheduleCard, type PaymentMilestone } from "@/components/PaymentScheduleCard";
 import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal, Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
@@ -75,6 +76,28 @@ export default function ProjectDetailPage() {
   const { t, i18n } = useTranslation();
   const { id } = useParams();
   const { data: project, loading, error, reload } = useApi<ProjectDetailResponse>(id ? `/api/projects/${id}` : null);
+  const { data: milestones, reload: reloadMilestones } = useApi<PaymentMilestone[]>(
+    id ? `/api/projects/${id}/payment-milestones` : null
+  );
+  const [billingId, setBillingId] = useState<string | null>(null);
+  const [billError, setBillError] = useState<string | null>(null);
+
+  // Billing a stage early — the customer who offers to pay now, the deposit
+  // taken on a handshake before anything moved in the software.
+  const billMilestone = async (milestoneId: string) => {
+    if (!id) return;
+    setBillingId(milestoneId);
+    setBillError(null);
+    try {
+      const res = await apiFetch(`/api/projects/${id}/payment-milestones/${milestoneId}/bill`, { method: "POST" });
+      if (!res.ok) throw new Error(t("paymentPlan.billError"));
+      reloadMilestones();
+    } catch (err) {
+      setBillError(err instanceof Error ? err.message : t("paymentPlan.billError"));
+    } finally {
+      setBillingId(null);
+    }
+  };
 
   const [editing, setEditing] = useState(false);
   const [status, setStatus] = useState<ProjectStatus>("planificacion");
@@ -238,6 +261,12 @@ export default function ProjectDetailPage() {
                 <p className="text-xs text-muted-foreground">{t("projects.percentComplete", { percent: project.progressPercent })}</p>
               </Card>
               {project.lifecycle && <LifecyclePanel lifecycle={project.lifecycle} />}
+              <PaymentScheduleCard
+                milestones={milestones ?? []}
+                onBill={billMilestone}
+                billingId={billingId}
+              />
+              {billError && <p className="text-sm text-status-error-fg">{billError}</p>}
               <Card className="p-6">
                 <h3 className="font-semibold text-foreground mb-3 text-sm">{t("projects.assignedTeam")}</h3>
                 <div className="space-y-2">
