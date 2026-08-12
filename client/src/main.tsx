@@ -43,6 +43,16 @@ function showFatal(message: string) {
 // was compiled with VITE_* values, otherwise from the server. App is imported
 // dynamically so nothing in its module graph touches the Supabase client
 // before that config exists.
+// Registered after the app has a chance to boot, so a failing worker can
+// never be the reason the app doesn't start.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // An unregistrable worker costs offline support, nothing else.
+    });
+  });
+}
+
 loadSupabaseConfig()
   .then(async () => {
     const { default: App } = await import("./App");

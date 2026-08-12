@@ -1,0 +1,22 @@
+{
+  "name": "Field Construction",
+  "short_name": "Field",
+  "description": "Gestión completa para empresas de construcción: presupuestos, obras, equipo y cobros.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Presupuestos", "url": "/budgets" },
+    { "name": "Proyectos", "url": "/projects" },
+    { "name": "Agenda", "url": "/scheduling" }
+  ]
+}

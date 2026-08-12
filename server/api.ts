@@ -832,17 +832,37 @@ apiRouter.get(
   route(async (req, res) => {
     const admin = getSupabaseAdmin();
     const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+    const assignedColumn = req.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
 
-    const { data, error } = await admin
-      .from("assignments")
-      .select("projects(id, name)")
-      .eq("business_id", req.workerBusinessId!)
-      .eq(column, req.workerId!);
-    if (error) throw error;
+    // A worker can clock into any project they are actually attached to, and
+    // there are three ways to be attached: a formal assignment, a job on the
+    // calendar, or a work order. Reading only `assignments` meant a project
+    // created by accepting an estimate — which schedules work but writes no
+    // assignment — was invisible to the very people scheduled on it.
+    const [assignments, events, orders] = await Promise.all([
+      admin
+        .from("assignments")
+        .select("projects(id, name)")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(column, req.workerId!),
+      admin
+        .from("schedule_events")
+        .select("projects(id, name)")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(assignedColumn, req.workerId!),
+      admin
+        .from("work_orders")
+        .select("projects(id, name)")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(assignedColumn, req.workerId!),
+    ]);
+    if (assignments.error) throw assignments.error;
+    if (events.error) throw events.error;
+    if (orders.error) throw orders.error;
 
     const seen = new Set<string>();
     const projects = [];
-    for (const row of data as any[]) {
+    for (const row of [...(assignments.data as any[]), ...(events.data as any[]), ...(orders.data as any[])]) {
       if (row.projects && !seen.has(row.projects.id)) {
         seen.add(row.projects.id);
         projects.push({ id: row.projects.id, name: row.projects.name });
@@ -2542,6 +2562,39 @@ apiRouter.post(
         .eq("estimate_id", estimateId)
         .eq("status", "pendiente");
       if (markAppliedError) throw markAppliedError;
+
+      // Everyone the projection scheduled becomes part of the project's team.
+      // Without this the project has work booked for people who do not appear
+      // on it, and the Technicians screen shows nobody assigned to a job that
+      // is already on their calendar.
+      const teamRows = Array.from(
+        new Map(
+          pendingItems
+            .filter((item) => item.assigned_employee_id || item.assigned_subcontractor_id)
+            .map((item) => [
+              `${item.assigned_employee_id ?? ""}:${item.assigned_subcontractor_id ?? ""}`,
+              {
+                business_id: req.businessId!,
+                project_id: projectId,
+                employee_id: item.assigned_employee_id,
+                subcontractor_id: item.assigned_subcontractor_id,
+              },
+            ])
+        ).values()
+      );
+
+      for (const row of teamRows) {
+        const { data: already } = await supabase
+          .from("assignments")
+          .select("id")
+          .eq("business_id", req.businessId!)
+          .eq("project_id", projectId)
+          .eq(row.employee_id ? "employee_id" : "subcontractor_id", row.employee_id ?? row.subcontractor_id)
+          .maybeSingle();
+        if (already) continue;
+        const { error: assignError } = await supabase.from("assignments").insert(row);
+        if (assignError) throw assignError;
+      }
     }
 
     res.json({ projectId, scheduledCount: pendingItems.length });
