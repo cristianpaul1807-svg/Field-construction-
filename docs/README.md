@@ -64,7 +64,7 @@ directamente al paso a paso.
 | Subcontratistas | [funciones/equipo.md](funciones/equipo.md#subcontratistas) |
 | *(sin menú)* App del trabajador `/campo` | [funciones/equipo.md](funciones/equipo.md#la-app-del-trabajador) |
 | GPS y rutas | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#gps-y-rutas) |
-| Check-in / Check-out | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#check-in--check-out) |
+| Check-in / Check-out | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#check-in-check-out) |
 | Órdenes de trabajo | [funciones/ordenes-de-trabajo.md](funciones/ordenes-de-trabajo.md) |
 | Agenda | [funciones/agenda.md](funciones/agenda.md) |
 
