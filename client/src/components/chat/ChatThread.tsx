@@ -157,7 +157,7 @@ export function ChatThread({
                     : "bg-card border border-border text-foreground rounded-bl-sm"
                 )}
               >
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                <p className="whitespace-pre-wrap break-words">{message.content}</p>
                 {message.attachment && (
                   // A document in a conversation has to look like a document,
                   // not like a line of text — otherwise nobody opens it.

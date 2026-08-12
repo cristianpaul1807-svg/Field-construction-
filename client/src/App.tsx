@@ -6,6 +6,8 @@ import { RequireBusinessAuth } from "@/components/RequireBusinessAuth";
 import { RequireClientAuth } from "@/components/RequireClientAuth";
 import { ServerUnreachable } from "@/components/ServerUnreachable";
 import Landing from "@/pages/Landing";
+import { getWorkerSession } from "@/lib/workerSession";
+import { getClientSession } from "@/lib/clientSession";
 import AuthBusiness from "@/pages/AuthBusiness";
 import AuthClient from "@/pages/AuthClient";
 import AuthLogin from "@/pages/AuthLogin";
@@ -108,7 +110,17 @@ function RootRoute() {
       </div>
     );
   }
-  if (!session) return <Landing />;
+
+  // Installed as an app, this is the launch screen, and a PWA manifest can
+  // only name one start_url. A worker or a code-entry client has no Supabase
+  // session, so without this they relaunch straight into the marketing page —
+  // which on a phone is indistinguishable from the app having dumped them in
+  // the browser. Their stored session is what says which door they came in by.
+  if (!session) {
+    if (getWorkerSession()) return <Redirect to="/campo" />;
+    if (getClientSession()) return <Redirect to="/portal" />;
+    return <Landing />;
+  }
   // The server didn't tell us who this is. That is not the same as "you have
   // no business yet", so it must not fall through to the signup redirect
   // below — it would look like the account had vanished.

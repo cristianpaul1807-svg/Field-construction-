@@ -244,7 +244,7 @@ export default function PublicBusinessChat() {
             <div key={message.id} className={cn("flex", message.direction === "in" ? "justify-end" : "justify-start")}>
               <div
                 className={cn(
-                  "max-w-[80%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap",
+                  "max-w-[80%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words",
                   message.direction === "in"
                     ? "bg-primary text-primary-foreground rounded-br-sm"
                     : "bg-card border border-border text-foreground rounded-bl-sm"

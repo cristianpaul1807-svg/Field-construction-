@@ -12,7 +12,7 @@ interface CompanyData {
   slug: string;
 }
 
-function CopyField({ label, value }: { label: string; value: string; multiline?: boolean }) {
+function CopyField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -25,7 +25,7 @@ function CopyField({ label, value }: { label: string; value: string; multiline?:
     <div className="space-y-1.5">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <div className="flex items-start gap-2">
-        <pre className="flex-1 whitespace-pre-wrap rounded-lg border border-border bg-secondary/40 p-3 text-sm text-foreground font-sans">
+        <pre className="flex-1 min-w-0 whitespace-pre-wrap break-words rounded-lg border border-border bg-secondary/40 p-3 text-sm text-foreground font-sans">
           {value}
         </pre>
         <Button variant="outline" size="icon" className="flex-shrink-0" onClick={copy}>
@@ -89,7 +89,7 @@ export default function SettingsAutomations() {
                 {t("settings.pasteInWhatsapp")}
               </p>
             </div>
-            <CopyField label={t("settings.suggestedMessageLabel")} value={welcomeMessage} multiline />
+            <CopyField label={t("settings.suggestedMessageLabel")} value={welcomeMessage} />
           </Card>
         </>
       )}

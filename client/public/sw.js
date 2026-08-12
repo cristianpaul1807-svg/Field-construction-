@@ -33,7 +33,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          caches.open(SHELL).then((cache) => cache.put(SHELL_URL, response.clone()));
+          // Only a good response becomes the offline shell. Caching a 502
+          // would freeze the app on the hosting provider's error page, and
+          // being offline would then look permanently broken.
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(SHELL).then((cache) => cache.put(SHELL_URL, copy));
+          }
           return response;
         })
         .catch(() => caches.match(SHELL_URL).then((cached) => cached ?? Response.error()))
