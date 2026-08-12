@@ -302,7 +302,10 @@
     "connectNotEnabledTitle": "Stripe Connect non è ancora attivo sul tuo account Stripe",
     "connectNotEnabledBody": "Stripe non crea account collegati finché l'account della piattaforma non si registra a Connect. È una registrazione unica e gratuita, da fare dalla dashboard di Stripe. Una volta fatta, torna qui e premi di nuovo Collega Stripe.",
     "connectNotEnabledAction": "Apri dashboard.stripe.com/connect",
-    "accountMissing": "L'account Stripe che avevamo salvato non esiste più. L'abbiamo scollegato: premi di nuovo Collega Stripe per crearne uno nuovo."
+    "accountMissing": "L'account Stripe che avevamo salvato non esiste più. L'abbiamo scollegato: premi di nuovo Collega Stripe per crearne uno nuovo.",
+    "feesPaidByAccount": "Le commissioni di Stripe vengono addebitate su questo conto, non sulla piattaforma.",
+    "feesPayerWrongTitle": "Questo account è precedente all'impostazione delle commissioni",
+    "feesPayerWrongBody": "Le commissioni di Stripe vengono addebitate alla piattaforma. Chi le paga si fissa alla creazione dell'account e non è più modificabile, quindi va creato un account nuovo. Scrivici prima di farlo per non perdere i pagamenti già ricevuti."
   },
   "communication": {
     "title": "Messaggistica",

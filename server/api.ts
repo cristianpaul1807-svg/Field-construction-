@@ -320,6 +320,73 @@ async function createBotEstimate(
 // all of them mean the same one-time signup that nobody can do from inside
 // this app. Matching them together is what lets the UI show the actual
 // instruction instead of Stripe's raw English sentence.
+/**
+ * Creates a connected account on which the CONTRACTOR pays Stripe's fees.
+ *
+ * This is not the default and the difference is money. `type: "express"` is
+ * shorthand for `controller.fees.payer = "application"`, which makes this
+ * platform liable for the processing fee on every charge every contractor
+ * takes — recoverable only through an application fee, which this product
+ * does not charge. Left alone it would quietly bill us for our customers'
+ * revenue.
+ *
+ * So the controller properties are set explicitly. Stripe accepts several
+ * shapes of them and rejects some combinations depending on the platform's
+ * own country and settings, so the fee-safe ones are tried in order of how
+ * much of the Express experience they keep. Every option in the list has
+ * `fees.payer: "account"`; there is deliberately no fallback to the default,
+ * because failing to connect is recoverable and silently paying everyone
+ * else's Stripe fees is not.
+ */
+async function createConnectedAccount(
+  stripe: ReturnType<typeof getStripe>,
+  businessName: string | null | undefined
+): Promise<{ account: { id: string }; feesPayer: "account" }> {
+  const shared = {
+    business_type: "company" as const,
+    company: { name: businessName ?? undefined },
+    business_profile: { name: businessName ?? undefined, mcc: "1520" },
+  };
+
+  // Ordered best-first: keep the Express dashboard the onboarding flow is
+  // built around; fall back to the full dashboard, which is the combination
+  // Stripe has always supported for account-paid fees.
+  const attempts = [
+    {
+      controller: {
+        fees: { payer: "account" as const },
+        losses: { payments: "stripe" as const },
+        requirement_collection: "stripe" as const,
+        stripe_dashboard: { type: "express" as const },
+      },
+    },
+    {
+      controller: {
+        fees: { payer: "account" as const },
+        losses: { payments: "stripe" as const },
+        requirement_collection: "stripe" as const,
+        stripe_dashboard: { type: "full" as const },
+      },
+    },
+  ];
+
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    try {
+      const account = await stripe.accounts.create({ ...shared, ...attempt } as never);
+      return { account, feesPayer: "account" };
+    } catch (err) {
+      // A refusal to create any connected account at all is about Connect not
+      // being enabled, not about this particular parameter shape — retrying
+      // with a different dashboard type would only hide the real reason.
+      const message = err instanceof Error ? err.message : String(err);
+      if (isConnectNotEnabled(message)) throw err;
+      lastError = err;
+    }
+  }
+  throw lastError;
+}
+
 function isConnectNotEnabled(message: string): boolean {
   return /signed up for Connect|Only Stripe Connect platforms|Connect.*not.*enabled|stripe\.com\/(docs\/)?connect|client_id/i.test(
     message
@@ -4525,7 +4592,7 @@ apiRouter.get(
     const admin = getSupabaseAdmin();
     const { data, error } = await admin
       .from("stripe_connected_accounts")
-      .select("stripe_account_id, status, charges_enabled, payouts_enabled, details_submitted")
+      .select("stripe_account_id, status, charges_enabled, payouts_enabled, details_submitted, fees_payer")
       .eq("business_id", req.businessId!)
       .maybeSingle();
     if (error) throw error;
@@ -4535,6 +4602,11 @@ apiRouter.get(
       chargesEnabled: data?.charges_enabled ?? false,
       payoutsEnabled: data?.payouts_enabled ?? false,
       detailsSubmitted: data?.details_submitted ?? false,
+      // Fixed when the account was created and unchangeable afterwards, so an
+      // account that predates the fee-safe setup has to be replaced rather
+      // than corrected. The page says so instead of leaving it to be found on
+      // a Stripe invoice at the end of the month.
+      feesPayer: data?.fees_payer ?? null,
     });
   })
 );
@@ -4559,12 +4631,7 @@ apiRouter.post(
       const { data: business } = await admin.from("businesses").select("name").eq("id", req.businessId!).single();
       let created;
       try {
-        created = await stripe.accounts.create({
-          type: "express",
-          business_type: "company",
-          company: { name: business?.name },
-          business_profile: { name: business?.name, mcc: "1520" },
-        });
+        created = await createConnectedAccount(stripe, business?.name);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (isConnectNotEnabled(message)) {
@@ -4575,7 +4642,15 @@ apiRouter.post(
       }
       const { data: inserted, error: insertError } = await admin
         .from("stripe_connected_accounts")
-        .upsert({ business_id: req.businessId!, stripe_account_id: created.id, status: "pending" }, { onConflict: "business_id" })
+        .upsert(
+          {
+            business_id: req.businessId!,
+            stripe_account_id: created.account.id,
+            status: "pending",
+            fees_payer: created.feesPayer,
+          },
+          { onConflict: "business_id" }
+        )
         .select("stripe_account_id")
         .single();
       if (insertError) throw insertError;

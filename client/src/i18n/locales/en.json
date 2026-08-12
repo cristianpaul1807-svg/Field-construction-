@@ -302,7 +302,10 @@
     "connectNotEnabledTitle": "Stripe Connect isn't enabled on your Stripe account yet",
     "connectNotEnabledBody": "Stripe won't create connected accounts until the platform account signs up for Connect. It's a one-time, free signup that can only be done from the Stripe dashboard. Once it's done, come back here and press Connect Stripe again.",
     "connectNotEnabledAction": "Open dashboard.stripe.com/connect",
-    "accountMissing": "The Stripe account we had on file no longer exists. We have unlinked it — press Connect Stripe again to create a new one."
+    "accountMissing": "The Stripe account we had on file no longer exists. We have unlinked it — press Connect Stripe again to create a new one.",
+    "feesPaidByAccount": "Stripe's fees come out of this account, not the platform's.",
+    "feesPayerWrongTitle": "This account predates the fee setup",
+    "feesPayerWrongBody": "Stripe's fees are being billed to the platform. Who pays them is fixed when the account is created and cannot be changed afterwards, so a new account has to be created. Get in touch before doing it so no received payments are lost."
   },
   "communication": {
     "title": "Messaging",

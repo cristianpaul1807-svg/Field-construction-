@@ -302,7 +302,10 @@
     "connectNotEnabledTitle": "Falta activar Stripe Connect en tu cuenta de Stripe",
     "connectNotEnabledBody": "Stripe no deja crear cuentas conectadas hasta que la cuenta de la plataforma se da de alta en Connect. Es un registro único y gratuito, y solo se puede hacer desde el panel de Stripe. Cuando lo termines, vuelve aquí y pulsa Conectar Stripe otra vez.",
     "connectNotEnabledAction": "Abrir dashboard.stripe.com/connect",
-    "accountMissing": "La cuenta de Stripe que teníamos guardada ya no existe. La hemos desvinculado: pulsa Conectar Stripe otra vez para crear una nueva."
+    "accountMissing": "La cuenta de Stripe que teníamos guardada ya no existe. La hemos desvinculado: pulsa Conectar Stripe otra vez para crear una nueva.",
+    "feesPaidByAccount": "Las comisiones de Stripe se descuentan de esta cuenta, no de la plataforma.",
+    "feesPayerWrongTitle": "Esta cuenta se creó antes del ajuste de comisiones",
+    "feesPayerWrongBody": "Las comisiones de Stripe se están cargando a la plataforma. Quién las paga se fija al crear la cuenta y no se puede cambiar después, así que hay que crear una cuenta nueva. Escríbenos antes de hacerlo para no perder los pagos ya recibidos."
   },
   "communication": {
     "title": "Mensajería",

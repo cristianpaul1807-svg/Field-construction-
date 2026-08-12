@@ -302,7 +302,10 @@
     "connectNotEnabledTitle": "Stripe Connect n'est pas encore activé sur votre compte Stripe",
     "connectNotEnabledBody": "Stripe ne crée pas de comptes connectés tant que le compte de la plateforme n'est pas inscrit à Connect. C'est une inscription unique et gratuite, à faire depuis le tableau de bord Stripe. Une fois terminée, revenez ici et appuyez de nouveau sur Connecter Stripe.",
     "connectNotEnabledAction": "Ouvrir dashboard.stripe.com/connect",
-    "accountMissing": "Le compte Stripe enregistré n'existe plus. Nous l'avons dissocié : appuyez de nouveau sur Connecter Stripe pour en créer un nouveau."
+    "accountMissing": "Le compte Stripe enregistré n'existe plus. Nous l'avons dissocié : appuyez de nouveau sur Connecter Stripe pour en créer un nouveau.",
+    "feesPaidByAccount": "Les frais de Stripe sont prélevés sur ce compte, pas sur celui de la plateforme.",
+    "feesPayerWrongTitle": "Ce compte a été créé avant le réglage des frais",
+    "feesPayerWrongBody": "Les frais de Stripe sont facturés à la plateforme. Le payeur est fixé à la création du compte et ne peut plus être modifié : il faut créer un nouveau compte. Contactez-nous avant, pour ne perdre aucun paiement déjà reçu."
   },
   "communication": {
     "title": "Messagerie",

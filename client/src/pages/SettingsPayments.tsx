@@ -15,6 +15,7 @@ interface ConnectStatus {
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
+  feesPayer: "account" | "application" | null;
 }
 
 interface TaxRate {
@@ -141,6 +142,19 @@ export default function SettingsPayments() {
               {connecting ? <Spinner className="size-4" /> : <ExternalLink size={16} />}
               {connectStatus.connected ? t("payments.continueSetup") : t("payments.connectStripe")}
             </Button>
+          </div>
+        )}
+
+        {/* Who pays Stripe's cut is fixed when the account is created and
+            cannot be edited afterwards, so it is stated plainly rather than
+            left to be discovered on a statement. */}
+        {!loading && connectStatus?.connected && connectStatus.feesPayer === "account" && (
+          <p className="text-xs text-muted-foreground">{t("payments.feesPaidByAccount")}</p>
+        )}
+        {!loading && connectStatus?.connected && connectStatus.feesPayer !== "account" && (
+          <div className="rounded-lg border border-status-warning-fg/30 bg-status-warning-bg/40 p-4 space-y-1.5">
+            <p className="text-sm font-medium text-foreground">{t("payments.feesPayerWrongTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("payments.feesPayerWrongBody")}</p>
           </div>
         )}
 
