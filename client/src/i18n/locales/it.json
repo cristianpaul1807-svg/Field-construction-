@@ -829,5 +829,25 @@
     "uploading": "Caricamento...",
     "uploadError": "Impossibile caricare la foto",
     "uploadedBy": "Caricata da {{name}}"
+  },
+  "changeOrders": {
+    "tab": "Varianti",
+    "new": "Nuova variante",
+    "hint": "Tutto ciò che il cliente ha chiesto dopo aver accettato il preventivo. Una volta approvata, la variante si somma al totale del progetto.",
+    "newHint": "Metti per iscritto il lavoro extra prima di farlo — è ciò che evita la discussione a fine cantiere.",
+    "titleRequired": "Inserisci un titolo per la variante.",
+    "titlePlaceholder": "Es. Aggiungere isola cucina",
+    "descriptionPlaceholder": "Cosa viene aggiunto o rimosso, e perché.",
+    "amountHint": "Al netto delle imposte. Usa un importo negativo se il lavoro viene tolto dall'ambito.",
+    "none": "Questo progetto non ha ancora varianti.",
+    "approvedTotal": "Totale varianti approvate",
+    "status": {
+      "borrador": "Bozza",
+      "enviado": "Inviata",
+      "aprobado": "Approvata",
+      "rechazado": "Rifiutata"
+    },
+    "approve": "Approva",
+    "reject": "Rifiuta"
   }
 }

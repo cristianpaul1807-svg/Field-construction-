@@ -1619,6 +1619,77 @@ apiRouter.post(
   })
 );
 
+// The customer's half of a change order. A contractor writing "approved" on
+// their own screen is a note; the customer pressing approve is the agreement,
+// which is the whole reason change orders exist.
+apiRouter.get(
+  "/client-portal/change-orders",
+  requireClientAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: projects } = await admin.from("projects").select("id").eq("client_id", req.clientId!);
+    const projectIds = (projects ?? []).map((p) => p.id);
+    if (projectIds.length === 0) {
+      res.json([]);
+      return;
+    }
+    const { data, error } = await admin
+      .from("change_orders")
+      .select("id, title, description, amount, status, created_at, projects(name)")
+      .in("project_id", projectIds)
+      // A draft is the contractor still writing; only what was actually sent
+      // is any of the customer's business.
+      .neq("status", "borrador")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    res.json(
+      data.map((c: any) => ({
+        id: c.id,
+        projectName: c.projects?.name ?? null,
+        title: c.title,
+        description: c.description,
+        amount: Number(c.amount),
+        status: c.status,
+        createdAt: c.created_at,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/client-portal/change-orders/:id/decide",
+  requireClientAuth,
+  route(async (req, res) => {
+    const decision = req.body?.decision;
+    if (decision !== "aprobado" && decision !== "rechazado") {
+      res.status(400).json({ error: "decision must be aprobado or rechazado" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: projects } = await admin.from("projects").select("id").eq("client_id", req.clientId!);
+    const projectIds = (projects ?? []).map((p) => p.id);
+    const { data: changeOrder } = await admin
+      .from("change_orders")
+      .select("id, status, project_id")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!changeOrder || !changeOrder.project_id || !projectIds.includes(changeOrder.project_id)) {
+      res.status(404).json({ error: "change order not found" });
+      return;
+    }
+    if (changeOrder.status !== "enviado") {
+      res.status(409).json({ error: "change order is not awaiting a decision" });
+      return;
+    }
+    const { error } = await admin
+      .from("change_orders")
+      .update({ status: decision, decided_at: new Date().toISOString() })
+      .eq("id", changeOrder.id);
+    if (error) throw error;
+    res.json({ ok: true, status: decision });
+  })
+);
+
 // The customer accepting their own estimate — the moment a lead becomes a
 // job. Only an estimate that was actually sent to them can be accepted, so a
 // draft the contractor is still pricing can't be locked in behind their back.
@@ -2930,7 +3001,7 @@ apiRouter.get(
   route(async (req, res) => {
     const supabase = req.supabase!;
 
-    const [projects, expenses] = await Promise.all([
+    const [projects, expenses, changeOrders] = await Promise.all([
       supabase
         .from("projects")
         .select("id, name, estimate_id")
@@ -2940,10 +3011,22 @@ apiRouter.get(
         .from("expenses")
         .select("project_id, category, amount")
         .eq("business_id", req.businessId!),
+      supabase
+        .from("change_orders")
+        .select("project_id, amount")
+        .eq("business_id", req.businessId!)
+        .eq("status", "aprobado"),
     ]);
 
     if (projects.error) throw projects.error;
     if (expenses.error) throw expenses.error;
+    if (changeOrders.error) throw changeOrders.error;
+
+    const approvedByProject = new Map<string, number>();
+    for (const co of changeOrders.data) {
+      if (!co.project_id) continue;
+      approvedByProject.set(co.project_id, (approvedByProject.get(co.project_id) ?? 0) + Number(co.amount));
+    }
 
     const estimateIds = projects.data.map((p) => p.estimate_id).filter((id): id is string => Boolean(id));
     let lines: { estimate_id: string; category: string; total: number }[] = [];
@@ -2957,21 +3040,52 @@ apiRouter.get(
       lines = data;
     }
 
+    // Budget lines carry display names ("Materiales") while expenses carry
+    // slugs ("materiales"), so both sides are folded onto one canonical key
+    // before they are compared — otherwise a recorded expense would never
+    // line up with the budget it is supposed to be measured against, and
+    // every project would read as perfectly on budget forever.
+    const canonical = (raw: string | null): string => {
+      const value = (raw ?? "").trim().toLowerCase();
+      if (value.startsWith("material")) return "materiales";
+      if (value.startsWith("mano") || value === "mano_obra" || value === "labor") return "mano_obra";
+      if (value.startsWith("subcontrat")) return "subcontratistas";
+      if (value.startsWith("equipo")) return "equipos";
+      if (value.startsWith("permiso")) return "permisos";
+      return "otros";
+    };
+
     const result = projects.data.map((project) => {
-      const categories = ["Materiales", "Mano de obra", "Subcontratistas"] as const;
-      const rows = categories
-        .map((category) => {
-          const budgeted = lines
-            .filter((l) => l.estimate_id === project.estimate_id && l.category === category)
-            .reduce((sum, l) => sum + Number(l.total), 0);
-          const actual = expenses.data
-            .filter((e) => e.project_id === project.id && e.category === category)
-            .reduce((sum, e) => sum + Number(e.amount), 0);
-          return { category, budgeted, actual };
-        })
+      const budgeted = new Map<string, number>();
+      for (const line of lines) {
+        if (line.estimate_id !== project.estimate_id) continue;
+        const key = canonical(line.category);
+        budgeted.set(key, (budgeted.get(key) ?? 0) + Number(line.total));
+      }
+
+      const actual = new Map<string, number>();
+      for (const expense of expenses.data) {
+        if (expense.project_id !== project.id) continue;
+        const key = canonical(expense.category);
+        actual.set(key, (actual.get(key) ?? 0) + Number(expense.amount));
+      }
+
+      const rows = Array.from(new Set(Array.from(budgeted.keys()).concat(Array.from(actual.keys()))))
+        .map((category) => ({
+          category,
+          budgeted: budgeted.get(category) ?? 0,
+          actual: actual.get(category) ?? 0,
+        }))
         .filter((r) => r.budgeted > 0 || r.actual > 0);
 
-      return { projectId: project.id, projectName: project.name, rows };
+      return {
+        projectId: project.id,
+        projectName: project.name,
+        rows,
+        // Approved change orders raise the contract price, so they belong in
+        // the budget the real spend is judged against.
+        approvedChangeOrders: approvedByProject.get(project.id) ?? 0,
+      };
     });
 
     res.json(result.filter((p) => p.rows.length > 0));
@@ -3045,7 +3159,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const projectId = req.params.id;
 
-    const [project, estimateLines, expenses, documents, photos, scheduleEvents, assignments] = await Promise.all([
+    const [project, estimateLines, expenses, documents, photos, scheduleEvents, assignments, changeOrders] = await Promise.all([
       supabase
         .from("projects")
         .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address)")
@@ -3082,6 +3196,12 @@ apiRouter.get(
         .select("employees(name), subcontractors(name)")
         .eq("business_id", req.businessId!)
         .eq("project_id", projectId),
+      supabase
+        .from("change_orders")
+        .select("id, title, description, amount, status, created_at, decided_at")
+        .eq("business_id", req.businessId!)
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
     ]);
 
     if (project.error) throw project.error;
@@ -3091,6 +3211,7 @@ apiRouter.get(
     if (photos.error) throw photos.error;
     if (scheduleEvents.error) throw scheduleEvents.error;
     if (assignments.error) throw assignments.error;
+    if (changeOrders.error) throw changeOrders.error;
 
     const client = (project.data as any).clients as { name: string; address: string | null } | null;
 
@@ -3142,6 +3263,15 @@ apiRouter.get(
         title: s.title,
         type: s.type,
         startTime: s.start_time,
+      })),
+      changeOrders: changeOrders.data.map((c) => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        amount: Number(c.amount),
+        status: c.status,
+        createdAt: c.created_at,
+        decidedAt: c.decided_at,
       })),
     });
   })
@@ -4709,6 +4839,117 @@ apiRouter.get(
       return;
     }
     sendPdf(res, pdf, `${documentNumber("invoice", req.params.id)}.pdf`, req.query.download ? "attachment" : "inline");
+  })
+);
+
+// ---------- Change orders ----------
+// A change order is the amendment that keeps an accepted estimate honest
+// when the customer asks for something extra mid-job. Approved ones count
+// toward the project's budget, which is why /projects/:id folds them in.
+
+const CHANGE_ORDER_STATUSES = ["borrador", "enviado", "aprobado", "rechazado"];
+
+apiRouter.get(
+  "/change-orders",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    let query = supabase
+      .from("change_orders")
+      .select("id, project_id, estimate_id, title, description, amount, status, created_at, sent_at, decided_at, projects(name)")
+      .eq("business_id", req.businessId!)
+      .order("created_at", { ascending: false });
+    if (req.query.projectId) query = query.eq("project_id", req.query.projectId as string);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(
+      data.map((c: any) => ({
+        id: c.id,
+        projectId: c.project_id,
+        projectName: c.projects?.name ?? null,
+        estimateId: c.estimate_id,
+        title: c.title,
+        description: c.description,
+        amount: Number(c.amount),
+        status: c.status,
+        createdAt: c.created_at,
+        sentAt: c.sent_at,
+        decidedAt: c.decided_at,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/change-orders",
+  route(async (req, res) => {
+    const { projectId, estimateId, title, description, amount } = req.body ?? {};
+    if (!title?.trim()) {
+      res.status(400).json({ error: "title is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("change_orders")
+      .insert({
+        business_id: req.businessId!,
+        project_id: projectId || null,
+        estimate_id: estimateId || null,
+        title: title.trim(),
+        description: description?.trim() || null,
+        // A negative amount is a credit — work taken out of scope — so the
+        // value is deliberately not clamped to zero.
+        amount: Number(amount ?? 0),
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.patch(
+  "/change-orders/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.title !== undefined) update.title = String(body.title).trim();
+    if (body.description !== undefined) update.description = body.description || null;
+    if (body.amount !== undefined) update.amount = Number(body.amount);
+    if (body.status !== undefined) {
+      if (!CHANGE_ORDER_STATUSES.includes(body.status)) {
+        res.status(400).json({ error: "invalid status" });
+        return;
+      }
+      update.status = body.status;
+      // The timestamps are derived from the transition rather than trusted
+      // from the client, so the audit trail can't be back-dated.
+      if (body.status === "enviado") update.sent_at = new Date().toISOString();
+      if (body.status === "aprobado" || body.status === "rechazado") {
+        update.decided_at = new Date().toISOString();
+      }
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("change_orders")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/change-orders/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("change_orders")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
   })
 );
 

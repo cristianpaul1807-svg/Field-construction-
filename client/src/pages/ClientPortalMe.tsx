@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileSignature, CreditCard, Download, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
+import { FileSignature, CreditCard, Download, FilePlus2, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,16 @@ interface ClientPortalData {
   estimate: { id: string; status: string; total: number } | null;
   pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
+}
+
+interface ClientChangeOrder {
+  id: string;
+  projectName: string | null;
+  title: string;
+  description: string | null;
+  amount: number;
+  status: "enviado" | "aprobado" | "rechazado";
+  createdAt: string;
 }
 
 function colorForId(id: string) {
@@ -43,6 +53,29 @@ export default function ClientPortalMe() {
   const [payError, setPayError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const [decidingId, setDecidingId] = useState<string | null>(null);
+  const {
+    data: changeOrders,
+    reload: reloadChangeOrders,
+  } = useApi<ClientChangeOrder[]>("/api/client-portal/change-orders");
+
+  const decideChangeOrder = async (changeOrderId: string, decision: "aprobado" | "rechazado") => {
+    setDecidingId(changeOrderId);
+    setPayError(null);
+    try {
+      const res = await apiFetch(`/api/client-portal/change-orders/${changeOrderId}/decide`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      reloadChangeOrders();
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setDecidingId(null);
+    }
+  };
 
   const downloadEstimate = async (estimateId: string) => {
     setDownloading(true);
@@ -200,6 +233,63 @@ export default function ClientPortalMe() {
                   </div>
                   {payError && <p className="text-sm text-status-error-fg mt-2">{payError}</p>}
                 </Card>
+              )}
+
+              {(changeOrders ?? []).length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <FilePlus2 size={16} className="text-muted-foreground" strokeWidth={1.75} />
+                    <p className="text-sm font-medium text-foreground">{t("changeOrders.tab")}</p>
+                  </div>
+                  <div className="space-y-3">
+                    {(changeOrders ?? []).map((co) => (
+                      <Card key={co.id} className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground">{co.title}</p>
+                            {co.description && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{co.description}</p>
+                            )}
+                            {co.projectName && (
+                              <p className="text-xs text-muted-foreground mt-1">{co.projectName}</p>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold text-foreground flex-shrink-0">
+                            {formatCurrency(co.amount)}
+                          </span>
+                        </div>
+                        {co.status === "enviado" ? (
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => decideChangeOrder(co.id, "aprobado")}
+                              disabled={decidingId === co.id}
+                            >
+                              {decidingId === co.id ? <Spinner className="size-4" /> : null}
+                              {t("changeOrders.approve")}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => decideChangeOrder(co.id, "rechazado")}
+                              disabled={decidingId === co.id}
+                            >
+                              {t("changeOrders.reject")}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="mt-3">
+                            <StatusBadge tone={co.status === "aprobado" ? "success" : "neutral"}>
+                              {t(`changeOrders.status.${co.status}`)}
+                            </StatusBadge>
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               )}
 
               <div>

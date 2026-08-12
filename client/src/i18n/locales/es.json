@@ -829,5 +829,25 @@
     "uploading": "Subiendo...",
     "uploadError": "No se pudo subir la foto",
     "uploadedBy": "Subida por {{name}}"
+  },
+  "changeOrders": {
+    "tab": "Órdenes de cambio",
+    "new": "Nueva orden de cambio",
+    "hint": "Todo lo que el cliente pidió después de aceptar el presupuesto. Una vez aprobada, la orden se suma al total del proyecto.",
+    "newHint": "Deja por escrito el trabajo extra antes de hacerlo — es lo que evita la discusión al final de la obra.",
+    "titleRequired": "Escribe un título para la orden de cambio.",
+    "titlePlaceholder": "Ej. Añadir isla de cocina",
+    "descriptionPlaceholder": "Qué se añade o se quita, y por qué.",
+    "amountHint": "Antes de impuestos. Usa un importe negativo si se quita trabajo del alcance.",
+    "none": "Este proyecto todavía no tiene órdenes de cambio.",
+    "approvedTotal": "Total aprobado en órdenes de cambio",
+    "status": {
+      "borrador": "Borrador",
+      "enviado": "Enviada",
+      "aprobado": "Aprobada",
+      "rechazado": "Rechazada"
+    },
+    "approve": "Aprobar",
+    "reject": "Rechazar"
   }
 }

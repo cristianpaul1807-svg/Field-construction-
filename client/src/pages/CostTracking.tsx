@@ -31,6 +31,7 @@ interface ProjectCostTracking {
   projectId: string;
   projectName: string;
   rows: CostRow[];
+  approvedChangeOrders: number;
 }
 
 interface Expense {
@@ -155,7 +156,7 @@ export default function CostTracking() {
                   const variance = row.budgeted > 0 ? ((row.actual - row.budgeted) / row.budgeted) * 100 : null;
                   return (
                     <tr key={row.category} className="border-b border-border hover:bg-secondary transition-colors">
-                      <td className="py-3 text-foreground font-medium">{row.category}</td>
+                      <td className="py-3 text-foreground font-medium">{categoryLabel(row.category)}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(row.budgeted)}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(row.actual)}</td>
                       <td className={`py-3 text-right font-medium ${variance === null ? "text-muted-foreground" : variance > 0 ? "text-status-error-fg" : "text-status-success-fg"}`}>
@@ -164,8 +165,17 @@ export default function CostTracking() {
                     </tr>
                   );
                 })}
+                {project.approvedChangeOrders !== 0 && (
+                  <tr className="border-b border-border">
+                    <td className="py-3 text-foreground font-medium">{t("changeOrders.approvedTotal")}</td>
+                    <td className="py-3 text-right text-foreground">{formatCurrency(project.approvedChangeOrders)}</td>
+                    <td className="py-3 text-right text-muted-foreground">—</td>
+                    <td className="py-3 text-right text-muted-foreground">—</td>
+                  </tr>
+                )}
                 {(() => {
-                  const totalBudgeted = project.rows.reduce((s, r) => s + r.budgeted, 0);
+                  const totalBudgeted =
+                    project.rows.reduce((s, r) => s + r.budgeted, 0) + project.approvedChangeOrders;
                   const totalActual = project.rows.reduce((s, r) => s + r.actual, 0);
                   const totalVariance = totalBudgeted > 0 ? ((totalActual - totalBudgeted) / totalBudgeted) * 100 : null;
                   return (

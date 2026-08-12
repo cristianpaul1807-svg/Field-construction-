@@ -829,5 +829,25 @@
     "uploading": "Téléversement...",
     "uploadError": "Impossible de téléverser la photo",
     "uploadedBy": "Téléversée par {{name}}"
+  },
+  "changeOrders": {
+    "tab": "Avenants",
+    "new": "Nouvel avenant",
+    "hint": "Tout ce que le client a demandé après avoir accepté la soumission. Une fois approuvé, l'avenant s'ajoute au total du projet.",
+    "newHint": "Mettez les travaux supplémentaires par écrit avant de les réaliser — c'est ce qui évite la dispute en fin de chantier.",
+    "titleRequired": "Saisissez un titre pour l'avenant.",
+    "titlePlaceholder": "Ex. Ajouter un îlot de cuisine",
+    "descriptionPlaceholder": "Ce qui est ajouté ou retiré, et pourquoi.",
+    "amountHint": "Avant taxes. Utilisez un montant négatif si des travaux sont retirés de la portée.",
+    "none": "Ce projet n'a encore aucun avenant.",
+    "approvedTotal": "Total des avenants approuvés",
+    "status": {
+      "borrador": "Brouillon",
+      "enviado": "Envoyé",
+      "aprobado": "Approuvé",
+      "rechazado": "Refusé"
+    },
+    "approve": "Approuver",
+    "reject": "Refuser"
   }
 }

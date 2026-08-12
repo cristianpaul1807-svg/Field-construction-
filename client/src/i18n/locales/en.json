@@ -829,5 +829,25 @@
     "uploading": "Uploading...",
     "uploadError": "Could not upload the photo",
     "uploadedBy": "Uploaded by {{name}}"
+  },
+  "changeOrders": {
+    "tab": "Change orders",
+    "new": "New change order",
+    "hint": "Everything the client asked for after accepting the estimate. Once approved, a change order is added to the project total.",
+    "newHint": "Put the extra work in writing before doing it — that's what prevents the argument at the end of the job.",
+    "titleRequired": "Enter a title for the change order.",
+    "titlePlaceholder": "e.g. Add a kitchen island",
+    "descriptionPlaceholder": "What is being added or removed, and why.",
+    "amountHint": "Before tax. Use a negative amount if work is being removed from the scope.",
+    "none": "This project has no change orders yet.",
+    "approvedTotal": "Approved change orders total",
+    "status": {
+      "borrador": "Draft",
+      "enviado": "Sent",
+      "aprobado": "Approved",
+      "rechazado": "Rejected"
+    },
+    "approve": "Approve",
+    "reject": "Reject"
   }
 }

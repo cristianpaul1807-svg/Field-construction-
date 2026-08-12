@@ -3,6 +3,8 @@ import { useParams, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
-import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal, Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { useTranslation } from "react-i18next";
@@ -40,7 +42,25 @@ interface ProjectDetailResponse {
   documents: { id: string; name: string; tag: string; uploadedAt: string }[];
   photos: { id: string; zone: string; visibleToClient: boolean; timestamp: string }[];
   scheduleEvents: { id: string; title: string; type: string; startTime: string }[];
+  changeOrders: {
+    id: string;
+    title: string;
+    description: string | null;
+    amount: number;
+    status: "borrador" | "enviado" | "aprobado" | "rechazado";
+    createdAt: string;
+    decidedAt: string | null;
+  }[];
 }
+
+const CHANGE_ORDER_STATUSES = ["borrador", "enviado", "aprobado", "rechazado"] as const;
+
+const changeOrderTone: Record<string, "neutral" | "info" | "success" | "error"> = {
+  borrador: "neutral",
+  enviado: "info",
+  aprobado: "success",
+  rechazado: "error",
+};
 
 // Deterministic placeholder color per photo id — no image storage wired up yet.
 function colorForId(id: string) {
@@ -60,6 +80,47 @@ export default function ProjectDetailPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [changeOrderOpen, setChangeOrderOpen] = useState(false);
+  const [coTitle, setCoTitle] = useState("");
+  const [coDescription, setCoDescription] = useState("");
+  const [coAmount, setCoAmount] = useState("");
+  const [coSaving, setCoSaving] = useState(false);
+  const [coError, setCoError] = useState<string | null>(null);
+
+  const createChangeOrder = async () => {
+    if (!coTitle.trim()) {
+      setCoError(t("changeOrders.titleRequired"));
+      return;
+    }
+    setCoSaving(true);
+    setCoError(null);
+    try {
+      const res = await apiFetch("/api/change-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: id, title: coTitle, description: coDescription, amount: coAmount || 0 }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      setChangeOrderOpen(false);
+      setCoTitle("");
+      setCoDescription("");
+      setCoAmount("");
+      reload();
+    } catch (err) {
+      setCoError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setCoSaving(false);
+    }
+  };
+
+  const setChangeOrderStatus = async (changeOrderId: string, status: string) => {
+    const res = await apiFetch(`/api/change-orders/${changeOrderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) reload();
+  };
 
   useEffect(() => {
     if (!project) return;
@@ -116,7 +177,12 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const budgetTotal = project.estimateLines.reduce((sum, l) => sum + l.total, 0);
+  // An approved change order is part of the contract price now, so leaving it
+  // out of the total would make every project look under budget.
+  const approvedChanges = project.changeOrders
+    .filter((c) => c.status === "aprobado")
+    .reduce((sum, c) => sum + c.amount, 0);
+  const budgetTotal = project.estimateLines.reduce((sum, l) => sum + l.total, 0) + approvedChanges;
   const budgetUsed = project.expenses.reduce((sum, e) => sum + e.amount, 0);
 
   const expensesByCategory = ["Materiales", "Mano de obra", "Subcontratistas"]
@@ -155,6 +221,7 @@ export default function ProjectDetailPage() {
           <TabsTrigger value="expenses">{t("projects.expenses")}</TabsTrigger>
           <TabsTrigger value="documents">{t("projects.documents")}</TabsTrigger>
           <TabsTrigger value="photos">{t("projects.photos")}</TabsTrigger>
+          <TabsTrigger value="changeOrders">{t("changeOrders.tab")}</TabsTrigger>
           <TabsTrigger value="schedule">{t("projects.schedule")}</TabsTrigger>
         </TabsList>
 
@@ -339,6 +406,55 @@ export default function ProjectDetailPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="changeOrders" className="mt-4">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-semibold text-foreground text-sm">{t("changeOrders.tab")}</h3>
+              <Button size="sm" className="gap-2" onClick={() => { setCoError(null); setChangeOrderOpen(true); }}>
+                <Plus size={14} strokeWidth={1.75} /> {t("changeOrders.new")}
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">{t("changeOrders.hint")}</p>
+
+            <div className="space-y-3">
+              {project.changeOrders.map((co) => (
+                <div key={co.id} className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 py-3 border-b border-border last:border-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{co.title}</p>
+                    {co.description && <p className="text-xs text-muted-foreground mt-0.5">{co.description}</p>}
+                    <p className="text-xs text-muted-foreground mt-1">{co.createdAt?.slice(0, 10)}</p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className={`text-sm font-medium ${co.amount < 0 ? "text-status-success-fg" : "text-foreground"}`}>
+                      {formatCurrency(co.amount)}
+                    </span>
+                    <StatusBadge tone={changeOrderTone[co.status]}>{t(`changeOrders.status.${co.status}`)}</StatusBadge>
+                    <Select value={co.status} onValueChange={(v) => setChangeOrderStatus(co.id, v)}>
+                      <SelectTrigger className="w-auto h-8 gap-1.5 text-xs" aria-label={t("workOrders.changeStatus")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CHANGE_ORDER_STATUSES.map((st) => (
+                          <SelectItem key={st} value={st}>{t(`changeOrders.status.${st}`)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
+              {project.changeOrders.length === 0 && (
+                <p className="text-sm text-muted-foreground py-4 text-center">{t("changeOrders.none")}</p>
+              )}
+              {approvedChanges !== 0 && (
+                <div className="flex justify-between pt-3 border-t border-border text-sm font-semibold">
+                  <span className="text-foreground">{t("changeOrders.approvedTotal")}</span>
+                  <span className="text-foreground">{formatCurrency(approvedChanges)}</span>
+                </div>
+              )}
+            </div>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="schedule" className="mt-4">
           <Card className="p-6">
             <div className="space-y-3">
@@ -358,6 +474,55 @@ export default function ProjectDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={changeOrderOpen} onOpenChange={setChangeOrderOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("changeOrders.new")}</DialogTitle>
+            <DialogDescription>{t("changeOrders.newHint")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="co-title">{t("common.title")}</Label>
+              <Input
+                id="co-title"
+                value={coTitle}
+                onChange={(e) => setCoTitle(e.target.value)}
+                placeholder={t("changeOrders.titlePlaceholder")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="co-description">{t("common.description")}</Label>
+              <Textarea
+                id="co-description"
+                rows={3}
+                value={coDescription}
+                onChange={(e) => setCoDescription(e.target.value)}
+                placeholder={t("changeOrders.descriptionPlaceholder")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="co-amount">{t("common.amount")}</Label>
+              <Input
+                id="co-amount"
+                type="number"
+                step="0.01"
+                value={coAmount}
+                onChange={(e) => setCoAmount(e.target.value)}
+                placeholder="0.00"
+              />
+              <p className="text-xs text-muted-foreground">{t("changeOrders.amountHint")}</p>
+            </div>
+            {coError && <p className="text-sm text-status-error-fg">{coError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChangeOrderOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={createChangeOrder} disabled={coSaving}>
+              {coSaving ? t("common.loading") : t("common.create")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editing} onOpenChange={setEditing}>
         <DialogContent className="sm:max-w-md">
