@@ -1,13 +1,26 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
-import { ArrowLeft, FileText, MessageCircle, MapPin } from "lucide-react";
-import { formatCurrency, projectStatusLabel, type ProjectStatus } from "@/lib/mockData";
-import { useApi } from "@/lib/api";
+import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal } from "lucide-react";
+import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
+import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+
+const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "pausado", "completado"];
 
 interface ProjectDetailResponse {
   id: string;
@@ -36,12 +49,43 @@ function colorForId(id: string) {
 export default function ProjectDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams();
-  const { data: project, loading, error } = useApi<ProjectDetailResponse>(id ? `/api/projects/${id}` : null);
+  const { data: project, loading, error, reload } = useApi<ProjectDetailResponse>(id ? `/api/projects/${id}` : null);
+
+  const [editing, setEditing] = useState(false);
+  const [status, setStatus] = useState<ProjectStatus>("planificacion");
+  const [progress, setProgress] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!project) return;
+    setStatus(project.status);
+    setProgress(project.progressPercent);
+  }, [project]);
+
+  const saveProgress = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await apiFetch(`/api/projects/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, progressPercent: progress }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("projects.saveError"));
+      setEditing(false);
+      reload();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : t("projects.saveError"));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
       <div className="p-8 max-w-3xl mx-auto flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Spinner className="size-4" /> Cargando proyecto...
+        <Spinner className="size-4" /> {t("common.loading")}
       </div>
     );
   }
@@ -49,8 +93,8 @@ export default function ProjectDetailPage() {
   if (error || !project) {
     return (
       <div className="p-8 max-w-3xl mx-auto text-center text-muted-foreground">
-        {error ? `No se pudo cargar desde Supabase: ${error}` : "Proyecto no encontrado."}{" "}
-        <Link href="/projects" className="text-primary hover:underline">Volver a Projects</Link>
+        {error ? t("common.loadError", { message: error }) : t("projects.notFound")}{" "}
+        <Link href="/projects" className="text-primary hover:underline">{t("projects.backToProjects")}</Link>
       </div>
     );
   }
@@ -69,7 +113,7 @@ export default function ProjectDetailPage() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <Link href="/projects" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft size={14} /> Volver a Projects
+        <ArrowLeft size={14} /> {t("projects.backToProjects")}
       </Link>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -77,14 +121,19 @@ export default function ProjectDetailPage() {
           <h1 className="text-2xl font-semibold text-foreground">{project.name}</h1>
           <p className="text-sm text-muted-foreground mt-1">{project.clientName} · {project.type}</p>
         </div>
-        <StatusBadge tone={projectStatusTone[project.status]}>
-          {projectStatusLabel[project.status]}
-        </StatusBadge>
+        <div className="flex items-center gap-3">
+          <StatusBadge tone={projectStatusTone[project.status]}>
+            {t(`projects.statuses.${project.status}`)}
+          </StatusBadge>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditing(true)}>
+            <SlidersHorizontal size={14} strokeWidth={1.75} /> {t("projects.editProgress")}
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="summary">
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="summary">Resumen</TabsTrigger>
+          <TabsTrigger value="summary">{t("projects.summary")}</TabsTrigger>
           <TabsTrigger value="budget">{t("projects.estimate")}</TabsTrigger>
           <TabsTrigger value="expenses">{t("projects.expenses")}</TabsTrigger>
           <TabsTrigger value="documents">{t("projects.documents")}</TabsTrigger>
@@ -100,7 +149,7 @@ export default function ProjectDetailPage() {
                 <div className="w-full bg-secondary rounded-full h-2 mb-2">
                   <div className="bg-primary h-2 rounded-full" style={{ width: `${project.progressPercent}%` }} />
                 </div>
-                <p className="text-xs text-muted-foreground">{project.progressPercent}% completado</p>
+                <p className="text-xs text-muted-foreground">{t("projects.percentComplete", { percent: project.progressPercent })}</p>
               </Card>
               <Card className="p-6">
                 <h3 className="font-semibold text-foreground mb-3 text-sm">{t("projects.assignedTeam")}</h3>
@@ -114,7 +163,7 @@ export default function ProjectDetailPage() {
                     </div>
                   ))}
                   {project.team.length === 0 && (
-                    <p className="text-xs text-muted-foreground">Sin equipo asignado todavía.</p>
+                    <p className="text-xs text-muted-foreground">{t("projects.noTeamYet")}</p>
                   )}
                 </div>
               </Card>
@@ -131,10 +180,10 @@ export default function ProjectDetailPage() {
                 <p className="text-sm text-foreground mt-1">{project.startDate} → {project.endDate}</p>
               </Card>
               <Button variant="outline" className="w-full gap-2">
-                <MessageCircle size={14} /> Enviar actualización
+                <MessageCircle size={14} /> {t("projects.sendUpdate")}
               </Button>
               <Button variant="outline" className="w-full gap-2">
-                <MapPin size={14} /> Ver ubicación
+                <MapPin size={14} /> {t("projects.viewLocation")}
               </Button>
             </div>
           </div>
@@ -147,17 +196,17 @@ export default function ProjectDetailPage() {
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-foreground text-sm">{t("projects.linkedEstimate")}</h3>
                   <Button size="sm" variant="outline" className="gap-2">
-                    <FileText size={14} /> Ver PDF
+                    <FileText size={14} /> {t("projects.viewPdf")}
                   </Button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-2 text-muted-foreground font-medium">Zona</th>
+                        <th className="text-left py-2 text-muted-foreground font-medium">{t("projects.zone")}</th>
                         <th className="text-left py-2 text-muted-foreground font-medium">{t("common.category")}</th>
-                        <th className="text-left py-2 text-muted-foreground font-medium">Ítem</th>
-                        <th className="text-right py-2 text-muted-foreground font-medium">Total</th>
+                        <th className="text-left py-2 text-muted-foreground font-medium">{t("projects.item")}</th>
+                        <th className="text-right py-2 text-muted-foreground font-medium">{t("common.total")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -207,7 +256,7 @@ export default function ProjectDetailPage() {
                 {expensesByCategory.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-6 text-center text-muted-foreground">
-                      Sin gastos registrados todavía.
+                      {t("projects.noExpensesYet")}
                     </td>
                   </tr>
                 )}
@@ -232,7 +281,7 @@ export default function ProjectDetailPage() {
                 </div>
               ))}
               {project.documents.length === 0 && (
-                <p className="text-sm text-muted-foreground">Sin documentos todavía.</p>
+                <p className="text-sm text-muted-foreground">{t("projects.noDocumentsYet")}</p>
               )}
             </div>
           </Card>
@@ -246,12 +295,12 @@ export default function ProjectDetailPage() {
                   <div className="aspect-square rounded-lg border border-border" style={{ background: colorForId(photo.id) }} />
                   <p className="text-xs text-muted-foreground truncate">{photo.zone}</p>
                   <StatusBadge tone={photo.visibleToClient ? "success" : "neutral"}>
-                    {photo.visibleToClient ? "Visible al cliente" : "Interno"}
+                    {photo.visibleToClient ? t("projects.visibleToClient") : t("projects.internalPhoto")}
                   </StatusBadge>
                 </div>
               ))}
               {project.photos.length === 0 && (
-                <p className="col-span-full text-sm text-muted-foreground">Sin fotos todavía.</p>
+                <p className="col-span-full text-sm text-muted-foreground">{t("projects.noPhotosYet")}</p>
               )}
             </div>
           </Card>
@@ -270,12 +319,58 @@ export default function ProjectDetailPage() {
                 </div>
               ))}
               {project.scheduleEvents.length === 0 && (
-                <p className="text-sm text-muted-foreground">Sin eventos programados para este proyecto.</p>
+                <p className="text-sm text-muted-foreground">{t("projects.noEventsYet")}</p>
               )}
             </div>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("projects.editProgress")}</DialogTitle>
+            <DialogDescription>{t("projects.editProgressHint")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>{t("common.status")}</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROJECT_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>{t(`projects.statuses.${s}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-sm">
+                <Label>{t("projects.progress")}</Label>
+                <span className="text-muted-foreground">{progress}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={progress}
+                onChange={(e) => setProgress(Number(e.target.value))}
+                className="w-full accent-primary"
+              />
+            </div>
+            {saveError && <p className="text-sm text-status-error-fg">{saveError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(false)}>{t("common.cancel")}</Button>
+            <Button onClick={saveProgress} disabled={saving}>
+              {saving ? t("common.loading") : t("common.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

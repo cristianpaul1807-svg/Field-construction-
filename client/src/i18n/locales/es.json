@@ -113,7 +113,9 @@
       "perdido": "Perdido"
     },
     "descriptionFull": "Gestiona leads y relaciones con clientes",
-    "newLeadName": "Nombre del cliente"
+    "newLeadName": "Nombre del cliente",
+    "editClient": "Editar cliente",
+    "editClientHint": "El estado del lead mueve al cliente por tu embudo de ventas."
   },
   "budgets": {
     "title": "Presupuestos",
@@ -441,7 +443,24 @@
     "automationsTitle": "Automatizaciones",
     "automationsDescription": "Tu link público de chat y el texto sugerido para tu Mensaje de Bienvenida de WhatsApp Business",
     "yourPublicLink": "Link público de tu negocio",
-    "suggestedWelcome": "Texto sugerido para tu Mensaje de Bienvenida"
+    "suggestedWelcome": "Texto sugerido para tu Mensaje de Bienvenida",
+    "marginGlobal": "Global",
+    "marginPerSection": "Por sección",
+    "marginTypeHint": "Determina si el margen se aplica a todo el presupuesto o se puede ajustar zona por zona.",
+    "wasteHint": "Se aplica automáticamente al crear un nuevo presupuesto; editable por presupuesto.",
+    "inviteUser": "Invitar usuario",
+    "editUser": "Editar usuario",
+    "inviteUserHint": "No se envía ningún correo: la persona entra registrándose con este mismo correo y su cuenta se enlaza sola.",
+    "role": "Rol",
+    "userActive": "Activo",
+    "userInvited": "Invitado",
+    "noUsers": "Todavía no hay usuarios en este negocio.",
+    "roles": {
+      "admin": "Admin",
+      "oficina": "Oficina",
+      "tecnico": "Técnico",
+      "subcontratista": "Subcontratista"
+    }
   },
   "reports": {
     "title": "Informes",
@@ -461,7 +480,30 @@
     "searchPlaceholder": "Buscar material...",
     "price": "Precio",
     "unit": "Unidad",
-    "supplier": "Proveedor"
+    "supplier": "Proveedor",
+    "newMaterial": "Nuevo material",
+    "editMaterial": "Editar material",
+    "newLaborRate": "Nueva tarifa",
+    "editLaborRate": "Editar tarifa",
+    "hourlyRate": "Tarifa por hora",
+    "hour": "hora",
+    "service": "servicio",
+    "categoryMaterials": "Materiales",
+    "categoryLabor": "Mano de obra",
+    "categorySubcontractors": "Subcontratistas",
+    "referenceOnly": "Solo referencia",
+    "quotedPerProject": "Cotiza por proyecto",
+    "noResults": "No se encontraron materiales.",
+    "deleteConfirm": "¿Eliminar esta línea del catálogo?",
+    "nameUnitRequired": "Escribe un nombre y una unidad.",
+    "nameRateRequired": "Escribe un nombre y una tarifa por hora.",
+    "materialDialogHint": "Este precio se usará al armar presupuestos.",
+    "laborDialogHint": "La tarifa se usa para calcular la mano de obra de cada partida.",
+    "namePlaceholder": "Ej. Placa de yeso 4x8",
+    "unitPlaceholder": "Ej. unidad, m², saco",
+    "categoryPlaceholder": "Ej. Acabados",
+    "supplierPlaceholder": "Ej. RONA",
+    "laborNamePlaceholder": "Ej. Carpintero"
   },
   "projects": {
     "title": "Proyectos",
@@ -488,7 +530,33 @@
     "selectClient": "Selecciona un cliente",
     "createProject": "Crear proyecto",
     "createError": "No se pudo crear el proyecto",
-    "noProjectsYet": "Todavía no tienes proyectos."
+    "noProjectsYet": "Todavía no tienes proyectos.",
+    "statuses": {
+      "planificacion": "Planificación",
+      "en_progreso": "En progreso",
+      "pausado": "Pausado",
+      "completado": "Completado"
+    },
+    "noProjectsForBusiness": "Este negocio todavía no tiene proyectos.",
+    "backToProjects": "Volver a Proyectos",
+    "notFound": "Proyecto no encontrado.",
+    "summary": "Resumen",
+    "percentComplete": "{{percent}}% completado",
+    "noTeamYet": "Sin equipo asignado todavía.",
+    "noExpensesYet": "Sin gastos registrados todavía.",
+    "noDocumentsYet": "Sin documentos todavía.",
+    "noPhotosYet": "Sin fotos todavía.",
+    "noEventsYet": "Sin eventos programados para este proyecto.",
+    "visibleToClient": "Visible al cliente",
+    "internalPhoto": "Interno",
+    "zone": "Zona",
+    "item": "Ítem",
+    "viewPdf": "Ver PDF",
+    "editProgress": "Editar estado y avance",
+    "editProgressHint": "El avance y el estado se muestran al cliente en su portal.",
+    "saveError": "No se pudo guardar el proyecto",
+    "sendUpdate": "Enviar actualización",
+    "viewLocation": "Ver ubicación"
   },
   "clientDetail": {
     "title": "Ficha del cliente",
@@ -529,7 +597,25 @@
     "actual": "Actual",
     "deviation": "Desviación",
     "item": "Ítem",
-    "total": "TOTAL"
+    "total": "TOTAL",
+    "description": "Presupuestado vs. gastado real, por proyecto",
+    "descriptionForProject": "Presupuestado vs. gastado real — {{project}}",
+    "recordExpense": "Registrar gasto",
+    "recordExpenseHint": "Cada gasto se compara automáticamente contra lo presupuestado en su categoría.",
+    "expensesTitle": "Gastos registrados",
+    "noExpenses": "Todavía no has registrado gastos en este proyecto.",
+    "noBudgetLinked": "Este proyecto todavía no tiene gastos ni presupuesto vinculado.",
+    "amountRequired": "Escribe un monto mayor que cero.",
+    "deleteConfirm": "¿Eliminar este gasto?",
+    "descriptionPlaceholder": "Ej. Compra de placas de yeso en RONA",
+    "categories": {
+      "materiales": "Materiales",
+      "mano_obra": "Mano de obra",
+      "subcontratistas": "Subcontratistas",
+      "equipos": "Equipos y alquiler",
+      "permisos": "Permisos y tasas",
+      "otros": "Otros"
+    }
   },
   "workOrders": {
     "title": "Título",
@@ -546,7 +632,15 @@
       "baja": "Baja",
       "media": "Media",
       "alta": "Alta"
-    }
+    },
+    "statuses": {
+      "pendiente": "Pendiente",
+      "en_progreso": "En progreso",
+      "completada": "Completada"
+    },
+    "changeStatus": "Cambiar estado",
+    "assignedTo": "Asignado a {{name}}",
+    "noWorkOrders": "Todavía no tienes órdenes de trabajo."
   },
   "scheduling": {
     "title": "Agenda"

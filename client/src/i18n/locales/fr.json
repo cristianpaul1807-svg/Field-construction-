@@ -113,7 +113,9 @@
       "perdido": "Perdu"
     },
     "descriptionFull": "Gérez vos prospects et vos relations clients",
-    "newLeadName": "Nom du client"
+    "newLeadName": "Nom du client",
+    "editClient": "Modifier le client",
+    "editClientHint": "Le statut du prospect fait avancer ce client dans votre entonnoir de vente."
   },
   "budgets": {
     "title": "Soumissions",
@@ -441,7 +443,24 @@
     "automationsTitle": "Automatisations",
     "automationsDescription": "Votre lien de clavardage public et le texte suggéré pour votre message d'accueil WhatsApp Business",
     "yourPublicLink": "Le lien public de votre entreprise",
-    "suggestedWelcome": "Texte suggéré pour votre message d'accueil"
+    "suggestedWelcome": "Texte suggéré pour votre message d'accueil",
+    "marginGlobal": "Global",
+    "marginPerSection": "Par section",
+    "marginTypeHint": "Détermine si la marge s'applique à toute la soumission ou peut être ajustée zone par zone.",
+    "wasteHint": "Appliqué automatiquement à chaque nouvelle soumission ; modifiable au cas par cas.",
+    "inviteUser": "Inviter un utilisateur",
+    "editUser": "Modifier l'utilisateur",
+    "inviteUserHint": "Aucun courriel n'est envoyé : la personne s'inscrit avec cette même adresse et son compte se relie tout seul.",
+    "role": "Rôle",
+    "userActive": "Actif",
+    "userInvited": "Invité",
+    "noUsers": "Aucun utilisateur dans cette entreprise pour le moment.",
+    "roles": {
+      "admin": "Admin",
+      "oficina": "Bureau",
+      "tecnico": "Technicien",
+      "subcontratista": "Sous-traitant"
+    }
   },
   "reports": {
     "title": "Rapports",
@@ -461,7 +480,30 @@
     "searchPlaceholder": "Rechercher un matériau...",
     "price": "Prix",
     "unit": "Unité",
-    "supplier": "Fournisseur"
+    "supplier": "Fournisseur",
+    "newMaterial": "Nouveau matériau",
+    "editMaterial": "Modifier le matériau",
+    "newLaborRate": "Nouveau taux",
+    "editLaborRate": "Modifier le taux",
+    "hourlyRate": "Taux horaire",
+    "hour": "heure",
+    "service": "service",
+    "categoryMaterials": "Matériaux",
+    "categoryLabor": "Main-d'œuvre",
+    "categorySubcontractors": "Sous-traitants",
+    "referenceOnly": "Référence seulement",
+    "quotedPerProject": "Devis par projet",
+    "noResults": "Aucun matériau trouvé.",
+    "deleteConfirm": "Supprimer cette entrée du catalogue ?",
+    "nameUnitRequired": "Saisissez un nom et une unité.",
+    "nameRateRequired": "Saisissez un nom et un taux horaire.",
+    "materialDialogHint": "Ce prix est utilisé lors de la création des soumissions.",
+    "laborDialogHint": "Le taux sert à chiffrer la main-d'œuvre de chaque poste.",
+    "namePlaceholder": "Ex. Panneau de gypse 4x8",
+    "unitPlaceholder": "Ex. unité, pi², sac",
+    "categoryPlaceholder": "Ex. Finitions",
+    "supplierPlaceholder": "Ex. RONA",
+    "laborNamePlaceholder": "Ex. Charpentier"
   },
   "projects": {
     "title": "Projets",
@@ -488,7 +530,33 @@
     "selectClient": "Sélectionnez un client",
     "createProject": "Créer le projet",
     "createError": "Impossible de créer le projet",
-    "noProjectsYet": "Vous n'avez pas encore de projets."
+    "noProjectsYet": "Vous n'avez pas encore de projets.",
+    "statuses": {
+      "planificacion": "Planification",
+      "en_progreso": "En cours",
+      "pausado": "En pause",
+      "completado": "Terminé"
+    },
+    "noProjectsForBusiness": "Cette entreprise n'a encore aucun projet.",
+    "backToProjects": "Retour aux projets",
+    "notFound": "Projet introuvable.",
+    "summary": "Résumé",
+    "percentComplete": "{{percent}} % terminé",
+    "noTeamYet": "Aucune équipe assignée pour le moment.",
+    "noExpensesYet": "Aucune dépense enregistrée pour le moment.",
+    "noDocumentsYet": "Aucun document pour le moment.",
+    "noPhotosYet": "Aucune photo pour le moment.",
+    "noEventsYet": "Aucun événement planifié pour ce projet.",
+    "visibleToClient": "Visible par le client",
+    "internalPhoto": "Interne",
+    "zone": "Zone",
+    "item": "Poste",
+    "viewPdf": "Voir le PDF",
+    "editProgress": "Modifier le statut et l'avancement",
+    "editProgressHint": "L'avancement et le statut sont affichés au client dans son portail.",
+    "saveError": "Impossible d'enregistrer le projet",
+    "sendUpdate": "Envoyer une mise à jour",
+    "viewLocation": "Voir l'emplacement"
   },
   "clientDetail": {
     "title": "Fiche client",
@@ -529,7 +597,25 @@
     "actual": "Réel",
     "deviation": "Écart",
     "item": "Article",
-    "total": "TOTAL"
+    "total": "TOTAL",
+    "description": "Budget vs. dépenses réelles, par projet",
+    "descriptionForProject": "Budget vs. dépenses réelles — {{project}}",
+    "recordExpense": "Enregistrer une dépense",
+    "recordExpenseHint": "Chaque dépense est comparée automatiquement au budget de sa catégorie.",
+    "expensesTitle": "Dépenses enregistrées",
+    "noExpenses": "Vous n'avez encore enregistré aucune dépense sur ce projet.",
+    "noBudgetLinked": "Ce projet n'a encore ni dépenses ni soumission liée.",
+    "amountRequired": "Saisissez un montant supérieur à zéro.",
+    "deleteConfirm": "Supprimer cette dépense ?",
+    "descriptionPlaceholder": "Ex. Achat de panneaux de gypse chez RONA",
+    "categories": {
+      "materiales": "Matériaux",
+      "mano_obra": "Main-d'œuvre",
+      "subcontratistas": "Sous-traitants",
+      "equipos": "Équipement et location",
+      "permisos": "Permis et frais",
+      "otros": "Autre"
+    }
   },
   "workOrders": {
     "title": "Titre",
@@ -546,7 +632,15 @@
       "baja": "Basse",
       "media": "Moyenne",
       "alta": "Haute"
-    }
+    },
+    "statuses": {
+      "pendiente": "En attente",
+      "en_progreso": "En cours",
+      "completada": "Terminée"
+    },
+    "changeStatus": "Changer le statut",
+    "assignedTo": "Assigné à {{name}}",
+    "noWorkOrders": "Vous n'avez encore aucun bon de travail."
   },
   "scheduling": {
     "title": "Calendrier"

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import { projectStatusLabel, formatCurrency, type ProjectStatus } from "@/lib/mockData";
+import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -125,7 +125,7 @@ export default function Projects() {
 
       {error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          No se pudo cargar desde Supabase: {error}
+          {t("common.loadError", { message: error })}
         </div>
       )}
 
@@ -141,7 +141,7 @@ export default function Projects() {
                     <p className="text-xs text-muted-foreground mt-1">{project.clientName}</p>
                   </div>
                   <StatusBadge tone={projectStatusTone[project.status]}>
-                    {projectStatusLabel[project.status]}
+                    {t(`projects.statuses.${project.status}`)}
                   </StatusBadge>
                 </div>
 
@@ -181,7 +181,7 @@ export default function Projects() {
           ))}
           {projects?.length === 0 && (
             <p className="col-span-full text-sm text-muted-foreground text-center py-8">
-              Este negocio todavía no tiene proyectos.
+              {t("projects.noProjectsForBusiness")}
             </p>
           )}
         </div>

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
-import { formatCurrency, projectStatusLabel, type ProjectStatus } from "@/lib/mockData";
+import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import {
   ResponsiveContainer,
@@ -177,7 +177,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-2 gap-2">
                       <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
                       <StatusBadge tone={projectStatusTone[project.status]}>
-                        {projectStatusLabel[project.status]}
+                        {t(`projects.statuses.${project.status}`)}
                       </StatusBadge>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-1.5">

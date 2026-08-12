@@ -4844,12 +4844,12 @@ apiRouter.get(
     const [users, roles] = await Promise.all([
       supabase
         .from("users")
-        .select("id, name, email, status, roles(name, permissions)")
+        .select("id, name, email, phone, status, role_id, roles(name, permissions)")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("roles")
-        .select("name, permissions")
+        .select("id, name, permissions")
         .eq("business_id", req.businessId!),
     ]);
 
@@ -4857,14 +4857,18 @@ apiRouter.get(
     if (roles.error) throw roles.error;
 
     res.json({
+      // roleId and phone come back alongside the display fields so the
+      // edit dialog can round-trip a user without a second request.
       users: users.data.map((u: any) => ({
         id: u.id,
         name: u.name,
         email: u.email,
+        phone: u.phone ?? null,
         status: u.status,
+        roleId: u.role_id ?? null,
         role: u.roles?.name ?? null,
       })),
-      roles: roles.data.map((r) => ({ name: r.name, permissions: r.permissions })),
+      roles: roles.data.map((r) => ({ id: r.id, name: r.name, permissions: r.permissions })),
     });
   })
 );

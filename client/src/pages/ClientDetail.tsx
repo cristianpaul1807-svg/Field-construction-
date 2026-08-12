@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
 import { ArrowLeft, Phone, MessageCircle, StickyNote, FileText } from "lucide-react";
-import { leadStatusLabel, formatCurrency, type LeadStatus } from "@/lib/mockData";
+import { formatCurrency, type LeadStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -74,7 +74,7 @@ export default function ClientDetail() {
           </div>
         </div>
         <StatusBadge tone={leadStatusTone[client.leadStatus]}>
-          {leadStatusLabel[client.leadStatus]}
+          {t(`crm.status.${client.leadStatus}`)}
         </StatusBadge>
       </div>
 

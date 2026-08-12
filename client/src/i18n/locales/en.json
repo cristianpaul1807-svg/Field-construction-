@@ -113,7 +113,9 @@
       "perdido": "Lost"
     },
     "descriptionFull": "Manage leads and client relationships",
-    "newLeadName": "Client name"
+    "newLeadName": "Client name",
+    "editClient": "Edit client",
+    "editClientHint": "The lead status moves this client along your sales pipeline."
   },
   "budgets": {
     "title": "Budgets & Estimates",
@@ -441,7 +443,24 @@
     "automationsTitle": "Automations",
     "automationsDescription": "Your public chat link and suggested copy for your WhatsApp Business welcome message",
     "yourPublicLink": "Your business's public link",
-    "suggestedWelcome": "Suggested copy for your welcome message"
+    "suggestedWelcome": "Suggested copy for your welcome message",
+    "marginGlobal": "Global",
+    "marginPerSection": "Per section",
+    "marginTypeHint": "Sets whether the margin applies to the whole estimate or can be adjusted zone by zone.",
+    "wasteHint": "Applied automatically to every new estimate; editable per estimate.",
+    "inviteUser": "Invite user",
+    "editUser": "Edit user",
+    "inviteUserHint": "No email is sent: the person signs up with this same address and their account links itself.",
+    "role": "Role",
+    "userActive": "Active",
+    "userInvited": "Invited",
+    "noUsers": "No users in this business yet.",
+    "roles": {
+      "admin": "Admin",
+      "oficina": "Office",
+      "tecnico": "Technician",
+      "subcontratista": "Subcontractor"
+    }
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -461,7 +480,30 @@
     "searchPlaceholder": "Search material...",
     "price": "Price",
     "unit": "Unit",
-    "supplier": "Supplier"
+    "supplier": "Supplier",
+    "newMaterial": "New material",
+    "editMaterial": "Edit material",
+    "newLaborRate": "New labor rate",
+    "editLaborRate": "Edit labor rate",
+    "hourlyRate": "Hourly rate",
+    "hour": "hour",
+    "service": "service",
+    "categoryMaterials": "Materials",
+    "categoryLabor": "Labor",
+    "categorySubcontractors": "Subcontractors",
+    "referenceOnly": "Reference only",
+    "quotedPerProject": "Quoted per project",
+    "noResults": "No materials found.",
+    "deleteConfirm": "Delete this catalog entry?",
+    "nameUnitRequired": "Enter a name and a unit.",
+    "nameRateRequired": "Enter a name and an hourly rate.",
+    "materialDialogHint": "This price is used when building estimates.",
+    "laborDialogHint": "The rate is used to price the labor on each line item.",
+    "namePlaceholder": "e.g. Drywall sheet 4x8",
+    "unitPlaceholder": "e.g. unit, sq ft, bag",
+    "categoryPlaceholder": "e.g. Finishes",
+    "supplierPlaceholder": "e.g. RONA",
+    "laborNamePlaceholder": "e.g. Carpenter"
   },
   "projects": {
     "title": "Projects",
@@ -488,7 +530,33 @@
     "selectClient": "Select a client",
     "createProject": "Create project",
     "createError": "Could not create the project",
-    "noProjectsYet": "You don't have any projects yet."
+    "noProjectsYet": "You don't have any projects yet.",
+    "statuses": {
+      "planificacion": "Planning",
+      "en_progreso": "In progress",
+      "pausado": "Paused",
+      "completado": "Completed"
+    },
+    "noProjectsForBusiness": "This business has no projects yet.",
+    "backToProjects": "Back to Projects",
+    "notFound": "Project not found.",
+    "summary": "Summary",
+    "percentComplete": "{{percent}}% complete",
+    "noTeamYet": "No team assigned yet.",
+    "noExpensesYet": "No expenses recorded yet.",
+    "noDocumentsYet": "No documents yet.",
+    "noPhotosYet": "No photos yet.",
+    "noEventsYet": "No events scheduled for this project.",
+    "visibleToClient": "Visible to client",
+    "internalPhoto": "Internal",
+    "zone": "Zone",
+    "item": "Item",
+    "viewPdf": "View PDF",
+    "editProgress": "Edit status and progress",
+    "editProgressHint": "Progress and status are shown to the client in their portal.",
+    "saveError": "Could not save the project",
+    "sendUpdate": "Send update",
+    "viewLocation": "View location"
   },
   "clientDetail": {
     "title": "Client record",
@@ -529,7 +597,25 @@
     "actual": "Actual",
     "deviation": "Variance",
     "item": "Item",
-    "total": "TOTAL"
+    "total": "TOTAL",
+    "description": "Budgeted vs. actual spend, by project",
+    "descriptionForProject": "Budgeted vs. actual spend — {{project}}",
+    "recordExpense": "Record expense",
+    "recordExpenseHint": "Every expense is compared automatically against the budget for its category.",
+    "expensesTitle": "Recorded expenses",
+    "noExpenses": "You haven't recorded any expenses on this project yet.",
+    "noBudgetLinked": "This project has no expenses or linked estimate yet.",
+    "amountRequired": "Enter an amount greater than zero.",
+    "deleteConfirm": "Delete this expense?",
+    "descriptionPlaceholder": "e.g. Drywall purchase at RONA",
+    "categories": {
+      "materiales": "Materials",
+      "mano_obra": "Labor",
+      "subcontratistas": "Subcontractors",
+      "equipos": "Equipment and rentals",
+      "permisos": "Permits and fees",
+      "otros": "Other"
+    }
   },
   "workOrders": {
     "title": "Title",
@@ -546,7 +632,15 @@
       "baja": "Low",
       "media": "Medium",
       "alta": "High"
-    }
+    },
+    "statuses": {
+      "pendiente": "Pending",
+      "en_progreso": "In progress",
+      "completada": "Completed"
+    },
+    "changeStatus": "Change status",
+    "assignedTo": "Assigned to {{name}}",
+    "noWorkOrders": "You don't have any work orders yet."
   },
   "scheduling": {
     "title": "Scheduling"

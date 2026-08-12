@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getClientSession } from "@/lib/clientSession";
 
@@ -6,6 +6,8 @@ export interface ApiState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+  /** Re-runs the request. Screens that write call this after a mutation. */
+  reload: () => void;
 }
 
 // Every business/client panel route needs the caller's Supabase session
@@ -35,7 +37,13 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 // data needs (a handful of read endpoints per screen) don't warrant adding one.
 // Pass `null` as the path to skip fetching (e.g. while waiting on a prerequisite id).
 export function useApi<T>(path: string | null): ApiState<T> {
-  const [state, setState] = useState<ApiState<T>>({ data: null, loading: path !== null, error: null });
+  const [state, setState] = useState<Omit<ApiState<T>, "reload">>({
+    data: null,
+    loading: path !== null,
+    error: null,
+  });
+  const [nonce, setNonce] = useState(0);
+  const reload = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
     if (path === null) {
@@ -64,7 +72,7 @@ export function useApi<T>(path: string | null): ApiState<T> {
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [path, nonce]);
 
-  return state;
+  return { ...state, reload };
 }

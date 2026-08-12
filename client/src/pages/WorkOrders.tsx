@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
-const statusLabel = { pendiente: "Pendiente", en_progreso: "En progreso", completada: "Completada" };
+const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
 const PRIORITIES = ["baja", "media", "alta"] as const;
 
 interface ProjectOption { id: string; name: string }
@@ -121,22 +121,39 @@ interface WorkOrder {
   title: string;
   description: string;
   priority: (typeof PRIORITIES)[number];
-  status: keyof typeof statusLabel;
+  status: (typeof STATUSES)[number];
   projectName: string | null;
   assignedTo: string | null;
 }
 
 export default function WorkOrders() {
   const { t } = useTranslation();
-  const [reloadToken, setReloadToken] = useState(0);
-  const { data: orders, loading, error } = useApi<WorkOrder[]>(`/api/work-orders?_r=${reloadToken}`);
+  const { data: orders, loading, error, reload } = useApi<WorkOrder[]>("/api/work-orders");
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  // Status is edited straight from the card rather than behind a dialog:
+  // moving a work order along is the single most frequent action on this
+  // screen, and it happens on a phone, on site.
+  const changeStatus = async (id: string, status: string) => {
+    setBusyId(id);
+    try {
+      const res = await apiFetch(`/api/work-orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) reload();
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
       <PageHeader
         title={t("workOrders.title")}
         description={t("workOrders.description")}
-        action={<NewWorkOrderDialog onCreated={() => setReloadToken((n) => n + 1)} />}
+        action={<NewWorkOrderDialog onCreated={reload} />}
       />
 
       {loading && (
@@ -159,22 +176,35 @@ export default function WorkOrders() {
                   <p className="font-medium text-foreground">{order.title}</p>
                   <p className="text-sm text-muted-foreground mt-1">{order.description}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {order.projectName} · Asignado a {order.assignedTo ?? "sin asignar"}
+                    {order.projectName} · {t("workOrders.assignedTo", { name: order.assignedTo ?? t("workOrders.unassigned") })}
                   </p>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <StatusBadge tone={priorityTone[order.priority]}>{t(`workOrders.priorities.${order.priority}`)}</StatusBadge>
-                  <StatusBadge tone={workOrderStatusTone[order.status]}>{statusLabel[order.status]}</StatusBadge>
+                  <StatusBadge tone={workOrderStatusTone[order.status]}>{t(`workOrders.statuses.${order.status}`)}</StatusBadge>
+                  <Select
+                    value={order.status}
+                    onValueChange={(v) => changeStatus(order.id, v)}
+                    disabled={busyId === order.id}
+                  >
+                    <SelectTrigger className="w-auto h-8 gap-1.5 text-xs" aria-label={t("workOrders.changeStatus")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>{t(`workOrders.statuses.${s}`)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </Card>
           ))}
+          {orders?.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-8">{t("workOrders.noWorkOrders")}</p>
+          )}
         </div>
       )}
-
-      <p className="text-xs text-muted-foreground">
-        Notificación automática por Telegram cuando se crea o asigna una orden (Fase C).
-      </p>
     </div>
   );
 }

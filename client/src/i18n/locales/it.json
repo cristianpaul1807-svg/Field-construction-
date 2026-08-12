@@ -113,7 +113,9 @@
       "perdido": "Perso"
     },
     "descriptionFull": "Gestisci contatti e relazioni con i clienti",
-    "newLeadName": "Nome del cliente"
+    "newLeadName": "Nome del cliente",
+    "editClient": "Modifica cliente",
+    "editClientHint": "Lo stato del lead fa avanzare il cliente nel tuo funnel di vendita."
   },
   "budgets": {
     "title": "Preventivi",
@@ -441,7 +443,24 @@
     "automationsTitle": "Automazioni",
     "automationsDescription": "Il tuo link pubblico di chat e il testo suggerito per il messaggio di benvenuto di WhatsApp Business",
     "yourPublicLink": "Il link pubblico della tua impresa",
-    "suggestedWelcome": "Testo suggerito per il tuo messaggio di benvenuto"
+    "suggestedWelcome": "Testo suggerito per il tuo messaggio di benvenuto",
+    "marginGlobal": "Globale",
+    "marginPerSection": "Per sezione",
+    "marginTypeHint": "Determina se il margine si applica a tutto il preventivo o può essere regolato zona per zona.",
+    "wasteHint": "Applicato automaticamente a ogni nuovo preventivo; modificabile per preventivo.",
+    "inviteUser": "Invita utente",
+    "editUser": "Modifica utente",
+    "inviteUserHint": "Non viene inviata alcuna email: la persona si registra con questo stesso indirizzo e il suo account si collega da solo.",
+    "role": "Ruolo",
+    "userActive": "Attivo",
+    "userInvited": "Invitato",
+    "noUsers": "Nessun utente in questa impresa finora.",
+    "roles": {
+      "admin": "Admin",
+      "oficina": "Ufficio",
+      "tecnico": "Tecnico",
+      "subcontratista": "Subappaltatore"
+    }
   },
   "reports": {
     "title": "Report",
@@ -461,7 +480,30 @@
     "searchPlaceholder": "Cerca materiale...",
     "price": "Prezzo",
     "unit": "Unità",
-    "supplier": "Fornitore"
+    "supplier": "Fornitore",
+    "newMaterial": "Nuovo materiale",
+    "editMaterial": "Modifica materiale",
+    "newLaborRate": "Nuova tariffa",
+    "editLaborRate": "Modifica tariffa",
+    "hourlyRate": "Tariffa oraria",
+    "hour": "ora",
+    "service": "servizio",
+    "categoryMaterials": "Materiali",
+    "categoryLabor": "Manodopera",
+    "categorySubcontractors": "Subappaltatori",
+    "referenceOnly": "Solo riferimento",
+    "quotedPerProject": "Preventivo per progetto",
+    "noResults": "Nessun materiale trovato.",
+    "deleteConfirm": "Eliminare questa voce dal catalogo?",
+    "nameUnitRequired": "Inserisci un nome e un'unità.",
+    "nameRateRequired": "Inserisci un nome e una tariffa oraria.",
+    "materialDialogHint": "Questo prezzo viene usato per creare i preventivi.",
+    "laborDialogHint": "La tariffa serve a calcolare la manodopera di ogni voce.",
+    "namePlaceholder": "Es. Lastra di cartongesso 4x8",
+    "unitPlaceholder": "Es. unità, m², sacco",
+    "categoryPlaceholder": "Es. Finiture",
+    "supplierPlaceholder": "Es. RONA",
+    "laborNamePlaceholder": "Es. Carpentiere"
   },
   "projects": {
     "title": "Progetti",
@@ -488,7 +530,33 @@
     "selectClient": "Seleziona un cliente",
     "createProject": "Crea progetto",
     "createError": "Impossibile creare il progetto",
-    "noProjectsYet": "Non hai ancora progetti."
+    "noProjectsYet": "Non hai ancora progetti.",
+    "statuses": {
+      "planificacion": "Pianificazione",
+      "en_progreso": "In corso",
+      "pausado": "In pausa",
+      "completado": "Completato"
+    },
+    "noProjectsForBusiness": "Questa impresa non ha ancora progetti.",
+    "backToProjects": "Torna ai progetti",
+    "notFound": "Progetto non trovato.",
+    "summary": "Riepilogo",
+    "percentComplete": "{{percent}}% completato",
+    "noTeamYet": "Nessuna squadra assegnata finora.",
+    "noExpensesYet": "Nessuna spesa registrata finora.",
+    "noDocumentsYet": "Nessun documento finora.",
+    "noPhotosYet": "Nessuna foto finora.",
+    "noEventsYet": "Nessun evento programmato per questo progetto.",
+    "visibleToClient": "Visibile al cliente",
+    "internalPhoto": "Interno",
+    "zone": "Zona",
+    "item": "Voce",
+    "viewPdf": "Vedi PDF",
+    "editProgress": "Modifica stato e avanzamento",
+    "editProgressHint": "Avanzamento e stato sono mostrati al cliente nel suo portale.",
+    "saveError": "Impossibile salvare il progetto",
+    "sendUpdate": "Invia aggiornamento",
+    "viewLocation": "Vedi posizione"
   },
   "clientDetail": {
     "title": "Scheda cliente",
@@ -529,7 +597,25 @@
     "actual": "Effettivo",
     "deviation": "Scostamento",
     "item": "Voce",
-    "total": "TOTALE"
+    "total": "TOTALE",
+    "description": "Preventivato vs. speso reale, per progetto",
+    "descriptionForProject": "Preventivato vs. speso reale — {{project}}",
+    "recordExpense": "Registra spesa",
+    "recordExpenseHint": "Ogni spesa viene confrontata automaticamente con il budget della sua categoria.",
+    "expensesTitle": "Spese registrate",
+    "noExpenses": "Non hai ancora registrato spese su questo progetto.",
+    "noBudgetLinked": "Questo progetto non ha ancora spese né preventivo collegato.",
+    "amountRequired": "Inserisci un importo maggiore di zero.",
+    "deleteConfirm": "Eliminare questa spesa?",
+    "descriptionPlaceholder": "Es. Acquisto cartongesso da RONA",
+    "categories": {
+      "materiales": "Materiali",
+      "mano_obra": "Manodopera",
+      "subcontratistas": "Subappaltatori",
+      "equipos": "Attrezzature e noleggi",
+      "permisos": "Permessi e tasse",
+      "otros": "Altro"
+    }
   },
   "workOrders": {
     "title": "Titolo",
@@ -546,7 +632,15 @@
       "baja": "Bassa",
       "media": "Media",
       "alta": "Alta"
-    }
+    },
+    "statuses": {
+      "pendiente": "In attesa",
+      "en_progreso": "In corso",
+      "completada": "Completata"
+    },
+    "changeStatus": "Cambia stato",
+    "assignedTo": "Assegnato a {{name}}",
+    "noWorkOrders": "Non hai ancora ordini di lavoro."
   },
   "scheduling": {
     "title": "Calendario"
