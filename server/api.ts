@@ -465,14 +465,38 @@ apiRouter.get(
     const rawUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
     report.supabaseProjectRef = rawUrl.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1] ?? null;
 
+    // Shape-only facts about the secrets — length and whether they contain
+    // whitespace or look like the expected format. Enough to spot a truncated
+    // or newline-corrupted paste without ever revealing a key.
+    const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+    report.serviceRoleKeyLength = rawKey.length;
+    report.serviceRoleKeyHasWhitespace = /\s/.test(rawKey);
+    report.serviceRoleKeyLooksLikeJwt = rawKey.trim().split(".").length === 3;
+    report.serviceRoleKeyLooksLikeSecret = rawKey.trim().startsWith("sb_secret_");
+    report.supabaseUrlHasWhitespace = /\s/.test(process.env.SUPABASE_URL ?? "");
+
     try {
       const admin = getSupabaseAdmin();
       const { error } = await admin.from("businesses").select("id", { head: true, count: "exact" }).limit(1);
       report.supabaseReachable = !error;
-      if (error) report.supabaseError = error.message;
+      if (error) {
+        // A failed fetch surfaces an error whose `message` is often empty, so
+        // report every field that might actually carry the reason.
+        report.supabaseError = {
+          message: error.message || null,
+          name: (error as { name?: string }).name ?? null,
+          code: (error as { code?: string }).code ?? null,
+          hint: (error as { hint?: string }).hint ?? null,
+          details: (error as { details?: string }).details ?? null,
+        };
+      }
     } catch (err) {
       report.supabaseReachable = false;
-      report.supabaseError = err instanceof Error ? err.message : "unknown";
+      report.supabaseError = {
+        message: err instanceof Error ? err.message : String(err),
+        name: err instanceof Error ? err.name : null,
+        cause: err instanceof Error && err.cause ? String(err.cause) : null,
+      };
     }
 
     res.json(report);

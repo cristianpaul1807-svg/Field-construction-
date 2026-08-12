@@ -5,8 +5,10 @@ import { createHash } from "crypto";
 import WebSocket from "ws";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 
-const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY ?? "";
+// Same hand-pasted-into-a-panel hazard as in supabaseAdmin: strip stray
+// whitespace so a trailing newline cannot corrupt the request headers.
+const SUPABASE_URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim();
+const SUPABASE_ANON_KEY = (process.env.VITE_SUPABASE_ANON_KEY ?? "").replace(/\s+/g, "");
 
 function normalizeProjectUrl(url: string): string {
   return url.trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");

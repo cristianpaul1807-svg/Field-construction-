@@ -30,8 +30,12 @@ function normalizeProjectUrl(url: string): string {
 export function getSupabaseAdmin(): SupabaseClient {
   if (client) return client;
 
-  const rawUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Trimmed on the way in: these are pasted into a hosting panel by hand,
+  // and a trailing newline or stray space survives the "is it set?" check
+  // while quietly corrupting the Authorization header, which fails with an
+  // error that carries no message at all.
+  const rawUrl = process.env.SUPABASE_URL?.trim();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.replace(/\s+/g, "");
 
   if (!rawUrl || !serviceRoleKey) {
     throw new SupabaseNotConfiguredError();
