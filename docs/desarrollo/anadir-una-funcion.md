@@ -155,7 +155,8 @@ alguien va a tener que reconstruir leyendo el código.
 ## 7. Verifica de verdad
 
 ```bash
-npx tsc --noEmit     # en silencio
+npx tsc --noEmit                      # en silencio
+python3 scripts/check-route-gate.py   # cada ruta en su lado de la barrera
 npm run build        # sin errores
 ```
 

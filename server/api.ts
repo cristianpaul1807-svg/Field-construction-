@@ -6063,7 +6063,11 @@ apiRouter.get(
   })
 );
 
-// ---------- Client Portal ----------
+// ---------- Client Portal, as the business previews it ----------
+// Despite the prefix this is a BUSINESS route and belongs below the auth
+// gate: it is the admin's preview of what one of their clients sees, scoped
+// by req.businessId. The client's own version is /client-portal/me, which
+// sits above the gate with requireClientAuth. Do not move this one up.
 
 apiRouter.get(
   "/client-portal/:clientId",

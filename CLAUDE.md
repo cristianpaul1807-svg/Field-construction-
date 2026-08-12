@@ -68,8 +68,9 @@ only the payment is reduced by a holdback.
 ## Before you finish
 
 ```bash
-npx tsc --noEmit     # must be silent
-npm run build        # must succeed
+npx tsc --noEmit                      # must be silent
+npm run build                         # must succeed
+python3 scripts/check-route-gate.py   # every route on its correct side
 ```
 
 Then check locale parity (`docs/desarrollo/idiomas.md`) and, for anything
