@@ -3849,6 +3849,369 @@ apiRouter.post(
   })
 );
 
+
+// ---------- Catalog write operations (materials, labor rates) ----------
+// The catalog is the spine of every estimate, so it has to be editable from
+// the app rather than seeded once — a contractor's prices change constantly.
+
+apiRouter.post(
+  "/materials",
+  route(async (req, res) => {
+    const { name, unit, price, category, supplier } = req.body ?? {};
+    if (!name?.trim() || !unit?.trim()) {
+      res.status(400).json({ error: "name and unit are required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("materials_catalog")
+      .insert({
+        business_id: req.businessId!,
+        name: name.trim(),
+        unit: unit.trim(),
+        price: price === undefined || price === null || price === "" ? null : Number(price),
+        category: category?.trim() || null,
+        supplier: supplier?.trim() || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.patch(
+  "/materials/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.unit !== undefined) update.unit = String(body.unit).trim();
+    if (body.price !== undefined) update.price = body.price === "" ? null : Number(body.price);
+    if (body.category !== undefined) update.category = body.category || null;
+    if (body.supplier !== undefined) update.supplier = body.supplier || null;
+    if (Object.keys(update).length === 0) {
+      res.json({ ok: true });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("materials_catalog")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/materials/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("materials_catalog")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.post(
+  "/labor-rates",
+  route(async (req, res) => {
+    const { name, hourlyRate } = req.body ?? {};
+    if (!name?.trim() || hourlyRate === undefined || hourlyRate === null || hourlyRate === "") {
+      res.status(400).json({ error: "name and hourlyRate are required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("labor_rates")
+      .insert({ business_id: req.businessId!, name: name.trim(), hourly_rate: Number(hourlyRate) })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.patch(
+  "/labor-rates/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.hourlyRate !== undefined) update.hourly_rate = Number(body.hourlyRate);
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("labor_rates")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/labor-rates/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("labor_rates")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- Expenses ----------
+// Cost Tracking compares budgeted against real spend, so without a way to
+// record spend the whole screen is decorative.
+
+apiRouter.get(
+  "/expenses",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    let query = supabase
+      .from("expenses")
+      .select("id, project_id, category, description, amount, date, projects(name)")
+      .eq("business_id", req.businessId!)
+      .order("date", { ascending: false });
+    if (req.query.projectId) query = query.eq("project_id", req.query.projectId as string);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(
+      data.map((e: any) => ({
+        id: e.id,
+        projectId: e.project_id,
+        projectName: e.projects?.name ?? null,
+        category: e.category,
+        description: e.description,
+        amount: Number(e.amount),
+        date: e.date,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/expenses",
+  route(async (req, res) => {
+    const { projectId, category, description, amount, date } = req.body ?? {};
+    if (!projectId || amount === undefined || Number(amount) <= 0) {
+      res.status(400).json({ error: "projectId and a positive amount are required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("expenses")
+      .insert({
+        business_id: req.businessId!,
+        project_id: projectId,
+        category: category?.trim() || null,
+        description: description?.trim() || null,
+        amount: Number(amount),
+        date: date || new Date().toISOString().slice(0, 10),
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.delete(
+  "/expenses/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- Lifecycle updates that were previously read-only ----------
+
+apiRouter.patch(
+  "/projects/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.type !== undefined) update.type = body.type || null;
+    if (body.startDate !== undefined) update.start_date = body.startDate || null;
+    if (body.endDate !== undefined) update.end_date = body.endDate || null;
+    if (body.status !== undefined) {
+      if (!["planificacion", "en_progreso", "pausado", "completado"].includes(body.status)) {
+        res.status(400).json({ error: "invalid status" });
+        return;
+      }
+      update.status = body.status;
+    }
+    if (body.progressPercent !== undefined) {
+      const pct = Number(body.progressPercent);
+      if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+        res.status(400).json({ error: "progressPercent must be between 0 and 100" });
+        return;
+      }
+      update.progress_percent = pct;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("projects")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.patch(
+  "/work-orders/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.status !== undefined) {
+      if (!["pendiente", "en_progreso", "completada"].includes(body.status)) {
+        res.status(400).json({ error: "invalid status" });
+        return;
+      }
+      update.status = body.status;
+    }
+    if (body.priority !== undefined) {
+      if (!["baja", "media", "alta"].includes(body.priority)) {
+        res.status(400).json({ error: "invalid priority" });
+        return;
+      }
+      update.priority = body.priority;
+    }
+    if (body.title !== undefined) update.title = String(body.title).trim();
+    if (body.description !== undefined) update.description = body.description || null;
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("work_orders")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.patch(
+  "/clients/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.phone !== undefined) update.phone = body.phone || null;
+    if (body.email !== undefined) update.email = body.email || null;
+    if (body.address !== undefined) update.address = body.address || null;
+    if (body.leadStatus !== undefined) {
+      if (!["nuevo", "cotizado", "negociando", "ganado", "perdido"].includes(body.leadStatus)) {
+        res.status(400).json({ error: "invalid leadStatus" });
+        return;
+      }
+      update.lead_status = body.leadStatus;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("clients")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- Settings that could be read but never saved ----------
+
+apiRouter.patch(
+  "/settings/margins",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.defaultMarginType !== undefined) {
+      if (!["global", "section"].includes(body.defaultMarginType)) {
+        res.status(400).json({ error: "defaultMarginType must be global or section" });
+        return;
+      }
+      update.default_margin_type = body.defaultMarginType;
+    }
+    if (body.defaultWastePercent !== undefined) update.default_waste_percent = Number(body.defaultWastePercent);
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("business_settings")
+      .update(update)
+      .eq("business_id", req.businessId!);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// Adds a teammate to the business. No Supabase Auth account is created here:
+// they claim it themselves by signing up with this email, which links to the
+// row by email — the same reason nothing in this product depends on an
+// invitation email being delivered.
+apiRouter.post(
+  "/settings/users",
+  route(async (req, res) => {
+    const { name, email, phone, roleId } = req.body ?? {};
+    if (!name?.trim()) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("users")
+      .insert({
+        business_id: req.businessId!,
+        name: name.trim(),
+        email: email?.trim() || null,
+        phone: phone?.trim() || null,
+        role_id: roleId || null,
+        status: "activo",
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.patch(
+  "/settings/users/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.email !== undefined) update.email = body.email || null;
+    if (body.phone !== undefined) update.phone = body.phone || null;
+    if (body.roleId !== undefined) update.role_id = body.roleId || null;
+    if (body.status !== undefined) update.status = body.status;
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("users")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 // ---------- Reports & Analytics ----------
 // The month-by-month revenue/expense series is grouped from real payment
 // and expense dates (not a stored aggregate, and not a fabricated series
