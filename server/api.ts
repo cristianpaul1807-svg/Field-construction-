@@ -445,6 +445,29 @@ function route(handler: Handler) {
   };
 }
 
+// Lets the browser bootstrap itself at runtime instead of depending on
+// VITE_* values baked in at build time. Those are embedded when the bundle is
+// compiled, so a hosting panel that injects variables only at run time
+// produces a bundle with no Supabase config and a blank, broken app — and
+// fixing it needs a full rebuild, not a restart. Serving the same values from
+// here means the server's environment is the single source of truth.
+//
+// The publishable/anon key is designed to be public (it is already inside the
+// JS bundle today, and RLS is what actually protects the data), so this
+// exposes nothing that wasn't public already. The service-role key is never
+// part of this response.
+apiRouter.get(
+  "/public/config",
+  route(async (_req, res) => {
+    const supabaseUrl = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "")
+      .trim()
+      .replace(/\/rest\/v1\/?$/, "")
+      .replace(/\/+$/, "");
+    const supabaseAnonKey = (process.env.VITE_SUPABASE_ANON_KEY ?? "").replace(/\s+/g, "");
+    res.json({ supabaseUrl, supabaseAnonKey });
+  })
+);
+
 // Unauthenticated config check. Deliberately reports only whether each piece
 // is configured and reachable — never a key, or any part of one — so it is
 // safe to open in a browser when a deployment misbehaves.
