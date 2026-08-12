@@ -4,10 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Spinner } from "@/components/ui/spinner";
 import { useTranslation } from "react-i18next";
 import { getClientSession } from "@/lib/clientSession";
+import { ServerUnreachable } from "@/components/ServerUnreachable";
 
 export function RequireClientAuth({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const { session, loading, persona } = useAuth();
+  const { session, loading, persona, personaError } = useAuth();
 
   // A client who entered with an access code has no Supabase session at all,
   // so that check comes first — waiting on Supabase's loading state would
@@ -22,6 +23,7 @@ export function RequireClientAuth({ children }: { children: ReactNode }) {
     );
   }
 
+  if (personaError) return <ServerUnreachable message={personaError} />;
   if (!session) return <Redirect to="/cliente/acceso" />;
   if (persona === "business") return <Redirect to="/" />;
   if (persona === "none") return <Redirect to="/cliente/acceso" />;

@@ -388,7 +388,10 @@
     "enterCodeAndNewPassword": "Inserisci il codice e la tua nuova password",
     "recoverPassword": "Recupera password",
     "recoverPasswordHint": "Ti abbiamo inviato un codice per creare una nuova password.",
-    "clientAccessDescription": "Inserisci il codice che ti ha dato il tuo appaltatore — non servono email né password."
+    "clientAccessDescription": "Inserisci il codice che ti ha dato il tuo appaltatore — non servono email né password.",
+    "serverUnreachable": "Non siamo riusciti a caricare il tuo account",
+    "serverUnreachableHint": "La tua sessione è valida, ma il server non ha risposto. Il tuo account e i tuoi dati sono intatti.",
+    "retry": "Riprova"
   },
   "landing": {
     "tagline": "Il sistema tutto-in-uno per la tua impresa edile",

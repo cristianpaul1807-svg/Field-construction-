@@ -388,7 +388,10 @@
     "enterCodeAndNewPassword": "Entrez le code et votre nouveau mot de passe",
     "recoverPassword": "Récupérer le mot de passe",
     "recoverPasswordHint": "Nous vous avons envoyé un code pour créer un nouveau mot de passe.",
-    "clientAccessDescription": "Entrez le code que votre entrepreneur vous a donné — ni courriel ni mot de passe requis."
+    "clientAccessDescription": "Entrez le code que votre entrepreneur vous a donné — ni courriel ni mot de passe requis.",
+    "serverUnreachable": "Impossible de charger votre compte",
+    "serverUnreachableHint": "Votre session est valide, mais le serveur n'a pas répondu. Votre compte et vos données sont intacts.",
+    "retry": "Réessayer"
   },
   "landing": {
     "tagline": "Le système tout-en-un pour votre entreprise de construction",

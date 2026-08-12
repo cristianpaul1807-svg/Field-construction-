@@ -388,7 +388,10 @@
     "enterCodeAndNewPassword": "Ingresa el código y tu nueva contraseña",
     "recoverPassword": "Recuperar contraseña",
     "recoverPasswordHint": "Te mandamos un código para crear una contraseña nueva.",
-    "clientAccessDescription": "Ingresa el código que te dio tu contratista — no necesitas correo ni contraseña."
+    "clientAccessDescription": "Ingresa el código que te dio tu contratista — no necesitas correo ni contraseña.",
+    "serverUnreachable": "No pudimos cargar tu cuenta",
+    "serverUnreachableHint": "Tu sesión es válida, pero el servidor no respondió. Tu cuenta y tus datos están intactos.",
+    "retry": "Reintentar"
   },
   "landing": {
     "tagline": "El sistema todo-en-uno para tu empresa de construcción",

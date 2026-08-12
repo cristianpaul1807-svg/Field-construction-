@@ -388,7 +388,10 @@
     "enterCodeAndNewPassword": "Enter the code and your new password",
     "recoverPassword": "Recover password",
     "recoverPasswordHint": "We've sent you a code to create a new password.",
-    "clientAccessDescription": "Enter the code your contractor gave you — no email or password needed."
+    "clientAccessDescription": "Enter the code your contractor gave you — no email or password needed.",
+    "serverUnreachable": "We couldn't load your account",
+    "serverUnreachableHint": "Your session is valid, but the server didn't answer. Your account and data are intact.",
+    "retry": "Try again"
   },
   "landing": {
     "tagline": "The all-in-one system for your construction company",

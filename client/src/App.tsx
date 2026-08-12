@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import DashboardLayout from "@/components/DashboardLayout";
 import { RequireBusinessAuth } from "@/components/RequireBusinessAuth";
 import { RequireClientAuth } from "@/components/RequireClientAuth";
+import { ServerUnreachable } from "@/components/ServerUnreachable";
 import Landing from "@/pages/Landing";
 import AuthBusiness from "@/pages/AuthBusiness";
 import AuthClient from "@/pages/AuthClient";
@@ -96,7 +97,7 @@ function ClientPortalRoute() {
 // "/" is ambiguous on purpose: it's the public landing page for a visitor,
 // and the business dashboard's home once logged in — this decides which.
 function RootRoute() {
-  const { session, loading, persona } = useAuth();
+  const { session, loading, persona, personaError } = useAuth();
 
   if (loading) {
     return (
@@ -106,6 +107,10 @@ function RootRoute() {
     );
   }
   if (!session) return <Landing />;
+  // The server didn't tell us who this is. That is not the same as "you have
+  // no business yet", so it must not fall through to the signup redirect
+  // below — it would look like the account had vanished.
+  if (personaError) return <ServerUnreachable message={personaError} />;
   // An orphaned session (confirmed and authenticated, but never finished
   // linking a business — e.g. the old link-based confirmation email opened
   // to an unreachable localhost redirect) still has a perfectly valid,
