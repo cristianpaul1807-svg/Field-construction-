@@ -22,6 +22,7 @@ interface CompanyData {
   gstNumber: string | null;
   qstNumber: string | null;
   depositPercent: number;
+  holdbackPercent: number;
   estimateTerms: string | null;
 }
 
@@ -39,6 +40,7 @@ export default function SettingsCompany() {
   const [gstNumber, setGstNumber] = useState("");
   const [qstNumber, setQstNumber] = useState("");
   const [depositPercent, setDepositPercent] = useState("30");
+  const [holdbackPercent, setHoldbackPercent] = useState("0");
   const [estimateTerms, setEstimateTerms] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -57,6 +59,7 @@ export default function SettingsCompany() {
     setGstNumber(data.gstNumber ?? "");
     setQstNumber(data.qstNumber ?? "");
     setDepositPercent(String(data.depositPercent ?? 30));
+    setHoldbackPercent(String(data.holdbackPercent ?? 0));
     setEstimateTerms(data.estimateTerms ?? "");
   }, [data]);
 
@@ -78,6 +81,7 @@ export default function SettingsCompany() {
           gstNumber,
           qstNumber,
           depositPercent: depositPercent === "" ? 0 : Number(depositPercent),
+          holdbackPercent: holdbackPercent === "" ? 0 : Number(holdbackPercent),
           estimateTerms,
         }),
       });
@@ -202,6 +206,18 @@ export default function SettingsCompany() {
                   onChange={(e) => setDepositPercent(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">{t("settings.depositPercentHint")}</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="holdback">{t("settings.holdbackPercent")}</Label>
+                <Input
+                  id="holdback"
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={holdbackPercent}
+                  onChange={(e) => setHoldbackPercent(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">{t("settings.holdbackPercentHint")}</p>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="terms">{t("settings.estimateTerms")}</Label>

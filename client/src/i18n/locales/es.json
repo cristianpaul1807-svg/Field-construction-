@@ -261,7 +261,8 @@
       "cancelado": "Cancelado"
     },
     "downloadPdf": "Descargar factura",
-    "invoiceFilePrefix": "Factura"
+    "invoiceFilePrefix": "Factura",
+    "holdbackWithheld": "Retención de {{amount}}"
   },
   "payments": {
     "title": "Pagos (Stripe)",
@@ -585,7 +586,9 @@
     "directWhatsappReq2": "Una app de WhatsApp Business creada en el Meta Developer Console.",
     "directWhatsappReq3": "Un número de teléfono dedicado, que no esté ya en la app normal de WhatsApp.",
     "suggestedWelcomeText": "¡Hola! 👋 Gracias por escribir a {{business}}. Cuéntanos qué necesitas por aquí, o empieza directamente tu solicitud de presupuesto en este link: {{link}}",
-    "pasteInWhatsapp": "Pégalo en WhatsApp Business → Herramientas para la empresa → Mensaje de bienvenida."
+    "pasteInWhatsapp": "Pégalo en WhatsApp Business → Herramientas para la empresa → Mensaje de bienvenida.",
+    "holdbackPercent": "Retención por defecto (%)",
+    "holdbackPercentHint": "Se retiene de cada pago parcial hasta terminar la obra — en Quebec suele ser 10%. Deja 0 si no la aplicas."
   },
   "reports": {
     "title": "Informes",

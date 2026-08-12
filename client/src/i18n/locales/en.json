@@ -261,7 +261,8 @@
       "cancelado": "Cancelled"
     },
     "downloadPdf": "Download invoice",
-    "invoiceFilePrefix": "Invoice"
+    "invoiceFilePrefix": "Invoice",
+    "holdbackWithheld": "{{amount}} held back"
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -585,7 +586,9 @@
     "directWhatsappReq2": "A WhatsApp Business app created in the Meta Developer Console.",
     "directWhatsappReq3": "A dedicated phone number, not already in use in the regular WhatsApp app.",
     "suggestedWelcomeText": "Hi! 👋 Thanks for reaching out to {{business}}. Tell us what you need here, or start your estimate request straight away at this link: {{link}}",
-    "pasteInWhatsapp": "Paste it in WhatsApp Business → Business tools → Greeting message."
+    "pasteInWhatsapp": "Paste it in WhatsApp Business → Business tools → Greeting message.",
+    "holdbackPercent": "Default holdback (%)",
+    "holdbackPercentHint": "Held back from each progress payment until the job is finished — 10% is standard in Quebec. Leave 0 if you don't use it."
   },
   "reports": {
     "title": "Reports & Analytics",

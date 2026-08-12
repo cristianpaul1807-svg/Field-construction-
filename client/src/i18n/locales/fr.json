@@ -261,7 +261,8 @@
       "cancelado": "Annulée"
     },
     "downloadPdf": "Télécharger la facture",
-    "invoiceFilePrefix": "Facture"
+    "invoiceFilePrefix": "Facture",
+    "holdbackWithheld": "Retenue de {{amount}}"
   },
   "payments": {
     "title": "Paiements (Stripe)",
@@ -585,7 +586,9 @@
     "directWhatsappReq2": "Une application WhatsApp Business créée dans la console développeur de Meta.",
     "directWhatsappReq3": "Un numéro de téléphone dédié, non déjà utilisé dans l'application WhatsApp normale.",
     "suggestedWelcomeText": "Bonjour ! 👋 Merci d'avoir contacté {{business}}. Dites-nous ce dont vous avez besoin ici, ou lancez directement votre demande de soumission via ce lien : {{link}}",
-    "pasteInWhatsapp": "Collez-le dans WhatsApp Business → Outils d'entreprise → Message d'accueil."
+    "pasteInWhatsapp": "Collez-le dans WhatsApp Business → Outils d'entreprise → Message d'accueil.",
+    "holdbackPercent": "Retenue par défaut (%)",
+    "holdbackPercentHint": "Retenue sur chaque paiement partiel jusqu'à la fin des travaux — 10 % est la norme au Québec. Laissez 0 si vous ne l'appliquez pas."
   },
   "reports": {
     "title": "Rapports",

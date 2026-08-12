@@ -61,6 +61,7 @@ export interface EstimateDoc {
   taxBreakdown: TaxBreakdown;
   total: number;
   depositPercent: number;
+  holdbackPercent: number;
   terms: string | null;
 }
 
@@ -78,6 +79,7 @@ export interface InvoiceDoc {
   subtotal: number;
   taxAmount: number;
   taxBreakdown: TaxBreakdown;
+  holdbackAmount: number;
   total: number;
 }
 
@@ -106,6 +108,8 @@ interface Copy {
   gstNumber: string;
   qstNumber: string;
   deposit: (percent: number, amount: string) => string;
+  holdback: string;
+  holdbackNote: (percent: number) => string;
   acceptance: string;
   signature: string;
   signatureDate: string;
@@ -142,6 +146,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N.º TPS",
     qstNumber: "N.º TVQ",
     deposit: (p, a) => `Depósito para iniciar los trabajos: ${p}% (${a})`,
+    holdback: "Retención",
+    holdbackNote: (p) => `Se retiene un ${p}% de cada pago parcial hasta la finalización de los trabajos.`,
     acceptance: "Al firmar, el cliente acepta el alcance y el importe de este presupuesto.",
     signature: "Firma del cliente",
     signatureDate: "Fecha",
@@ -176,6 +182,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "GST no.",
     qstNumber: "QST no.",
     deposit: (p, a) => `Deposit to start the work: ${p}% (${a})`,
+    holdback: "Holdback",
+    holdbackNote: (p) => `${p}% of each progress payment is held back until the work is complete.`,
     acceptance: "By signing, the client accepts the scope and the amount of this estimate.",
     signature: "Client signature",
     signatureDate: "Date",
@@ -210,6 +218,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "No TPS",
     qstNumber: "No TVQ",
     deposit: (p, a) => `Dépôt pour démarrer les travaux : ${p} % (${a})`,
+    holdback: "Retenue",
+    holdbackNote: (p) => `Une retenue de ${p} % est appliquée à chaque paiement partiel jusqu'à la fin des travaux.`,
     acceptance: "En signant, le client accepte la portée et le montant de cette soumission.",
     signature: "Signature du client",
     signatureDate: "Date",
@@ -244,6 +254,8 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N. GST",
     qstNumber: "N. QST",
     deposit: (p, a) => `Acconto per avviare i lavori: ${p}% (${a})`,
+    holdback: "Ritenuta",
+    holdbackNote: (p) => `Viene trattenuto il ${p}% di ogni pagamento parziale fino al completamento dei lavori.`,
     acceptance: "Firmando, il cliente accetta l'ambito e l'importo di questo preventivo.",
     signature: "Firma del cliente",
     signatureDate: "Data",
@@ -455,6 +467,11 @@ function totals(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocL
     // province on the breakdown is what tells the two apart.
     rows.push([tb.province === "QC" ? copy.qst : copy.pst, money(tb.pst, lang), false]);
   }
+  if (data.kind === "invoice" && data.holdbackAmount > 0) {
+    // Shown as a negative line so the customer can see the invoiced value and
+    // the amount actually payable are different, and by exactly how much.
+    rows.push([copy.holdback, `-${money(data.holdbackAmount, lang)}`, false]);
+  }
   rows.push([copy.total, money(data.total, lang), true]);
 
   const labelX = MARGIN + 290;
@@ -492,6 +509,15 @@ function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) 
       .text(copy.deposit(data.depositPercent, money(depositAmount, lang)), MARGIN, doc.y, {
         width: CONTENT_WIDTH,
       });
+    doc.y += 8;
+  }
+
+  if (data.holdbackPercent > 0) {
+    doc
+      .font("Helvetica")
+      .fontSize(8)
+      .fillColor("#555555")
+      .text(copy.holdbackNote(data.holdbackPercent), MARGIN, doc.y, { width: CONTENT_WIDTH });
     doc.y += 8;
   }
 

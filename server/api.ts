@@ -4226,6 +4226,17 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const { taxAmount, breakdown } = await computeInvoiceTax(admin, req.businessId!, Number(subtotal));
 
+    // The holdback is withheld from progress payments, not from the final
+    // one — the final invoice is where the withheld money is released, so
+    // applying it there would hold the same money back twice.
+    const { data: business } = await admin
+      .from("businesses")
+      .select("holdback_percent")
+      .eq("id", req.businessId!)
+      .single();
+    const holdbackPercent = type === "final" ? 0 : Number(business?.holdback_percent ?? 0);
+    const holdbackAmount = Math.round(Number(subtotal) * (holdbackPercent / 100) * 100) / 100;
+
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("invoices")
@@ -4239,7 +4250,10 @@ apiRouter.post(
         subtotal: Number(subtotal),
         tax_amount: taxAmount,
         tax_breakdown: breakdown,
-        amount: Number(subtotal) + taxAmount,
+        holdback_amount: holdbackAmount,
+        // Tax is charged on the full value of the work; only the payment is
+        // reduced by the holdback, which is why it is subtracted last.
+        amount: Math.round((Number(subtotal) + taxAmount - holdbackAmount) * 100) / 100,
         status: "pendiente",
         due_date: dueDate ?? null,
       })
@@ -4638,10 +4652,10 @@ apiRouter.patch(
 async function loadBusinessIdentity(
   admin: ReturnType<typeof getSupabaseAdmin>,
   businessId: string
-): Promise<{ identity: BusinessIdentity; depositPercent: number; terms: string | null }> {
+): Promise<{ identity: BusinessIdentity; depositPercent: number; holdbackPercent: number; terms: string | null }> {
   const { data, error } = await admin
     .from("businesses")
-    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, estimate_terms")
+    .select("name, address, phone, email, license_number, gst_number, qst_number, province, deposit_percent, holdback_percent, estimate_terms")
     .eq("id", businessId)
     .single();
   if (error) throw error;
@@ -4657,6 +4671,7 @@ async function loadBusinessIdentity(
       province: data.province ?? null,
     },
     depositPercent: Number(data.deposit_percent ?? 0),
+    holdbackPercent: Number(data.holdback_percent ?? 0),
     terms: data.estimate_terms ?? null,
   };
 }
@@ -4747,6 +4762,7 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       taxBreakdown: breakdown,
       total: Math.round((subtotal + taxAmount) * 100) / 100,
       depositPercent: business.depositPercent,
+      holdbackPercent: business.holdbackPercent,
       terms: business.terms,
     },
     lang
@@ -4759,7 +4775,7 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
   const [invoice, business] = await Promise.all([
     admin
       .from("invoices")
-      .select("id, type, amount, subtotal, tax_amount, tax_breakdown, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
+      .select("id, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
       .eq("business_id", businessId)
       .eq("id", invoiceId)
       .maybeSingle(),
@@ -4810,7 +4826,8 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
       subtotal,
       taxAmount,
       taxBreakdown: (invoice.data.tax_breakdown as TaxBreakdown) ?? {},
-      total: Math.round((subtotal + taxAmount) * 100) / 100,
+      holdbackAmount: Number(invoice.data.holdback_amount ?? 0),
+      total: Math.round((subtotal + taxAmount - Number(invoice.data.holdback_amount ?? 0)) * 100) / 100,
     },
     lang
   );
@@ -5480,7 +5497,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, estimate_terms"
+        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, deposit_percent, holdback_percent, estimate_terms"
       )
       .eq("id", req.businessId!)
       .single();
@@ -5502,6 +5519,7 @@ apiRouter.get(
       gstNumber: data.gst_number,
       qstNumber: data.qst_number,
       depositPercent: Number(data.deposit_percent ?? 0),
+      holdbackPercent: Number(data.holdback_percent ?? 0),
       estimateTerms: data.estimate_terms,
     });
   })
@@ -5550,6 +5568,14 @@ apiRouter.patch(
     if (body.gstNumber !== undefined) update.gst_number = body.gstNumber || null;
     if (body.qstNumber !== undefined) update.qst_number = body.qstNumber || null;
     if (body.estimateTerms !== undefined) update.estimate_terms = body.estimateTerms || null;
+    if (body.holdbackPercent !== undefined) {
+      const pct = Number(body.holdbackPercent);
+      if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+        res.status(400).json({ error: "holdbackPercent must be between 0 and 100" });
+        return;
+      }
+      update.holdback_percent = pct;
+    }
     if (body.depositPercent !== undefined) {
       const pct = Number(body.depositPercent);
       if (Number.isNaN(pct) || pct < 0 || pct > 100) {
