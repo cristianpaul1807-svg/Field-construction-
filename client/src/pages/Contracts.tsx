@@ -100,7 +100,6 @@ interface Document {
 export default function Contracts() {
   const { t } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
-  const [reloadToken, setReloadToken] = useState(0);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // The bucket is private, so a download is a short-lived signed URL rather
@@ -115,7 +114,7 @@ export default function Contracts() {
       setDownloadingId(null);
     }
   };
-  const { data: documents, loading, error } = useApi<Document[]>(`/api/documents?_r=${reloadToken}`);
+  const { data: documents, loading, error, reload } = useApi<Document[]>("/api/documents");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(
@@ -125,6 +124,12 @@ export default function Contracts() {
         .filter((d) => d.name.toLowerCase().includes(query.toLowerCase())),
     [documents, selectedProjectId, query]
   );
+
+  const removeDocument = async (id: string) => {
+    if (!window.confirm(t("contracts.deleteConfirm"))) return;
+    const res = await apiFetch(`/api/documents/${id}`, { method: "DELETE" });
+    if (res.ok) reload();
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
@@ -137,7 +142,7 @@ export default function Contracts() {
         }
         action={
           selectedProjectId ? (
-            <UploadDocumentDialog projectId={selectedProjectId} onUploaded={() => setReloadToken((n) => n + 1)} />
+            <UploadDocumentDialog projectId={selectedProjectId} onUploaded={() => reload()} />
           ) : undefined
         }
       />

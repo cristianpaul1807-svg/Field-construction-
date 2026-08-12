@@ -262,7 +262,9 @@
     },
     "downloadPdf": "Scarica fattura",
     "invoiceFilePrefix": "Fattura",
-    "holdbackWithheld": "Ritenuta di {{amount}}"
+    "holdbackWithheld": "Ritenuta di {{amount}}",
+    "cancel": "Annulla fattura",
+    "cancelConfirm": "Annullare questa fattura? Resta registrata come annullata, non viene eliminata."
   },
   "payments": {
     "title": "Pagamenti (Stripe)",
@@ -722,7 +724,8 @@
     },
     "storageNote": "I file sono archiviati su Supabase Storage, isolati per impresa. I download usano link temporanei che scadono dopo 5 minuti.",
     "descriptionForProject": "File di {{project}} — contratti, permessi, disegni e garanzie",
-    "descriptionAll": "Archivio di file per progetto — contratti, permessi, disegni e garanzie"
+    "descriptionAll": "Archivio di file per progetto — contratti, permessi, disegni e garanzie",
+    "deleteConfirm": "Eliminare questo documento? Viene rimosso anche il file."
   },
   "costTracking": {
     "title": "Controllo costi e redditività",
@@ -773,7 +776,8 @@
     },
     "changeStatus": "Cambia stato",
     "assignedTo": "Assegnato a {{name}}",
-    "noWorkOrders": "Non hai ancora ordini di lavoro."
+    "noWorkOrders": "Non hai ancora ordini di lavoro.",
+    "deleteConfirm": "Eliminare questo ordine di lavoro?"
   },
   "scheduling": {
     "title": "Calendario",
@@ -797,7 +801,8 @@
       "fin": "Consegna"
     },
     "time": "Ora",
-    "notes": "Note"
+    "notes": "Note",
+    "deleteConfirm": "Eliminare questo evento dall'agenda?"
   },
   "checkIn": {
     "title": "Timbratura (entrata / uscita)",
@@ -832,7 +837,9 @@
     "upload": "Carica",
     "uploading": "Caricamento...",
     "uploadError": "Impossibile caricare la foto",
-    "uploadedBy": "Caricata da {{name}}"
+    "uploadedBy": "Caricata da {{name}}",
+    "deleteConfirm": "Eliminare questa foto? Viene rimosso anche il file.",
+    "toggleVisibility": "Cambia se il cliente la vede"
   },
   "changeOrders": {
     "tab": "Varianti",

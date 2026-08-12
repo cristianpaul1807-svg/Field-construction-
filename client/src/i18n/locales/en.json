@@ -262,7 +262,9 @@
     },
     "downloadPdf": "Download invoice",
     "invoiceFilePrefix": "Invoice",
-    "holdbackWithheld": "{{amount}} held back"
+    "holdbackWithheld": "{{amount}} held back",
+    "cancel": "Cancel invoice",
+    "cancelConfirm": "Cancel this invoice? It stays on record as cancelled, it is not deleted."
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -722,7 +724,8 @@
     },
     "storageNote": "Files are stored in Supabase Storage, isolated per business. Downloads use temporary links that expire after 5 minutes.",
     "descriptionForProject": "{{project}} files — contracts, permits, drawings and warranties",
-    "descriptionAll": "File repository by project — contracts, permits, drawings and warranties"
+    "descriptionAll": "File repository by project — contracts, permits, drawings and warranties",
+    "deleteConfirm": "Delete this document? The file is removed too."
   },
   "costTracking": {
     "title": "Cost Tracking & Profitability",
@@ -773,7 +776,8 @@
     },
     "changeStatus": "Change status",
     "assignedTo": "Assigned to {{name}}",
-    "noWorkOrders": "You don't have any work orders yet."
+    "noWorkOrders": "You don't have any work orders yet.",
+    "deleteConfirm": "Delete this work order?"
   },
   "scheduling": {
     "title": "Scheduling",
@@ -797,7 +801,8 @@
       "fin": "Handover"
     },
     "time": "Time",
-    "notes": "Notes"
+    "notes": "Notes",
+    "deleteConfirm": "Delete this event from the schedule?"
   },
   "checkIn": {
     "title": "Check-in / Check-out",
@@ -832,7 +837,9 @@
     "upload": "Upload",
     "uploading": "Uploading...",
     "uploadError": "Could not upload the photo",
-    "uploadedBy": "Uploaded by {{name}}"
+    "uploadedBy": "Uploaded by {{name}}",
+    "deleteConfirm": "Delete this photo? The file is removed too.",
+    "toggleVisibility": "Toggle whether the client sees it"
   },
   "changeOrders": {
     "tab": "Change orders",

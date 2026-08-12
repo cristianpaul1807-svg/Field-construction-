@@ -262,7 +262,9 @@
     },
     "downloadPdf": "Télécharger la facture",
     "invoiceFilePrefix": "Facture",
-    "holdbackWithheld": "Retenue de {{amount}}"
+    "holdbackWithheld": "Retenue de {{amount}}",
+    "cancel": "Annuler la facture",
+    "cancelConfirm": "Annuler cette facture ? Elle reste enregistrée comme annulée, elle n'est pas supprimée."
   },
   "payments": {
     "title": "Paiements (Stripe)",
@@ -722,7 +724,8 @@
     },
     "storageNote": "Les fichiers sont stockés dans Supabase Storage, isolés par entreprise. Les téléchargements utilisent des liens temporaires qui expirent après 5 minutes.",
     "descriptionForProject": "Fichiers de {{project}} — contrats, permis, plans et garanties",
-    "descriptionAll": "Répertoire de fichiers par projet — contrats, permis, plans et garanties"
+    "descriptionAll": "Répertoire de fichiers par projet — contrats, permis, plans et garanties",
+    "deleteConfirm": "Supprimer ce document ? Le fichier est également effacé."
   },
   "costTracking": {
     "title": "Suivi des coûts et rentabilité",
@@ -773,7 +776,8 @@
     },
     "changeStatus": "Changer le statut",
     "assignedTo": "Assigné à {{name}}",
-    "noWorkOrders": "Vous n'avez encore aucun bon de travail."
+    "noWorkOrders": "Vous n'avez encore aucun bon de travail.",
+    "deleteConfirm": "Supprimer ce bon de travail ?"
   },
   "scheduling": {
     "title": "Calendrier",
@@ -797,7 +801,8 @@
       "fin": "Livraison"
     },
     "time": "Heure",
-    "notes": "Notes"
+    "notes": "Notes",
+    "deleteConfirm": "Supprimer cet événement du calendrier ?"
   },
   "checkIn": {
     "title": "Pointage (entrée / sortie)",
@@ -832,7 +837,9 @@
     "upload": "Téléverser",
     "uploading": "Téléversement...",
     "uploadError": "Impossible de téléverser la photo",
-    "uploadedBy": "Téléversée par {{name}}"
+    "uploadedBy": "Téléversée par {{name}}",
+    "deleteConfirm": "Supprimer cette photo ? Le fichier est également effacé.",
+    "toggleVisibility": "Basculer la visibilité pour le client"
   },
   "changeOrders": {
     "tab": "Avenants",

@@ -14,7 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Plus, Copy, Check, Download } from "lucide-react";
+import { Send, Plus, Copy, Check, Download, Ban } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { useTranslation } from "react-i18next";
@@ -186,6 +186,16 @@ export default function Invoicing() {
     }
   };
 
+  // Cancelling, not deleting: an invoice is an accounting record, and one
+  // that was paid cannot be cancelled at all.
+  const cancelInvoice = async (invoiceId: string) => {
+    if (!window.confirm(t("invoicing.cancelConfirm"))) return;
+    setLinkError(null);
+    const res = await apiFetch(`/api/invoices/${invoiceId}/cancel`, { method: "PATCH" });
+    if (res.ok) reload();
+    else setLinkError((await res.json().catch(() => null))?.error || t("common.genericError"));
+  };
+
   const copyLink = async (invoiceId: string) => {
     setLinkBusyId(invoiceId);
     setLinkError(null);
@@ -283,7 +293,17 @@ export default function Invoicing() {
                       {pdfBusyId === invoice.id ? <Spinner className="size-3.5" /> : <Download size={13} strokeWidth={1.75} />}
                       {t("invoicing.downloadPdf")}
                     </Button>
-                    {invoice.status !== "pagado" && (
+                    {invoice.status !== "pagado" && invoice.status !== "cancelado" && (
+                      <button
+                        aria-label={t("invoicing.cancel")}
+                        title={t("invoicing.cancel")}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-status-error-fg hover:bg-secondary transition-colors"
+                        onClick={() => cancelInvoice(invoice.id)}
+                      >
+                        <Ban size={14} strokeWidth={1.75} />
+                      </button>
+                    )}
+                    {invoice.status !== "pagado" && invoice.status !== "cancelado" && (
                       <Button
                         size="sm"
                         variant="outline"

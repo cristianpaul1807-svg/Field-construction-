@@ -5115,6 +5115,215 @@ apiRouter.get(
   })
 );
 
+// ---------- Lifecycle operations that were missing ----------
+// A calendar you cannot correct, a file you cannot remove and a phone number
+// you cannot fix are not a smaller product — they are a product somebody
+// stops trusting the first time reality moves.
+
+apiRouter.patch(
+  "/schedule-events/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.title !== undefined) update.title = String(body.title).trim();
+    if (body.type !== undefined) update.type = body.type;
+    if (body.notes !== undefined) update.notes = body.notes || null;
+    if (body.startTime !== undefined) update.start_time = body.startTime;
+    if (body.endTime !== undefined) update.end_time = body.endTime || null;
+    // Assignee is set as a pair so moving a job from an employee to a
+    // subcontractor clears the other column; the table allows only one.
+    if (body.assignedEmployeeId !== undefined || body.assignedSubcontractorId !== undefined) {
+      update.assigned_employee_id = body.assignedEmployeeId || null;
+      update.assigned_subcontractor_id = body.assignedSubcontractorId || null;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("schedule_events")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/schedule-events/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("schedule_events")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/work-orders/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("work_orders")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// Files are deleted from storage first: an orphaned row is a broken link the
+// user can retry, while an orphaned object is a file nobody can ever reach
+// again and that still counts against the storage bill.
+apiRouter.delete(
+  "/documents/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    // file_url holds the storage path, not a URL — the bucket is private and
+    // reads go through a short-lived signed link.
+    const { data: doc } = await supabase
+      .from("documents")
+      .select("id, file_url")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!doc) {
+      res.status(404).json({ error: "document not found" });
+      return;
+    }
+    if (doc.file_url) {
+      await supabase.storage.from("project-documents").remove([doc.file_url]);
+    }
+    const { error } = await supabase.from("documents").delete().eq("id", doc.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.delete(
+  "/photos/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: photo } = await supabase
+      .from("photos")
+      .select("id, url")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!photo) {
+      res.status(404).json({ error: "photo not found" });
+      return;
+    }
+    if (photo.url) {
+      await supabase.storage.from("project-photos").remove([photo.url]);
+    }
+    const { error } = await supabase.from("photos").delete().eq("id", photo.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.patch(
+  "/photos/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.zone !== undefined) update.zone = body.zone || null;
+    if (body.visibleToClient !== undefined) update.visible_to_client = Boolean(body.visibleToClient);
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("photos")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.patch(
+  "/employees/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.phone !== undefined) update.phone = body.phone || null;
+    if (body.role !== undefined) update.role = body.role || null;
+    if (body.status !== undefined) {
+      if (!["disponible", "en_proyecto", "descanso"].includes(body.status)) {
+        res.status(400).json({ error: "invalid status" });
+        return;
+      }
+      update.status = body.status;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("employees")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.patch(
+  "/subcontractors/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const update: Record<string, unknown> = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.trade !== undefined) update.trade = body.trade || null;
+    if (body.phone !== undefined) update.phone = body.phone || null;
+    if (body.rating !== undefined) {
+      const rating = Number(body.rating);
+      if (Number.isNaN(rating) || rating < 0 || rating > 5) {
+        res.status(400).json({ error: "rating must be between 0 and 5" });
+        return;
+      }
+      update.rating = rating;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("subcontractors")
+      .update(update)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// An invoice is an accounting record, so it is cancelled rather than deleted —
+// and a paid one is not cancellable at all: that money moved, and pretending
+// otherwise would put the books and the bank out of agreement.
+apiRouter.patch(
+  "/invoices/:id/cancel",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: invoice } = await supabase
+      .from("invoices")
+      .select("id, status")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!invoice) {
+      res.status(404).json({ error: "invoice not found" });
+      return;
+    }
+    if (invoice.status === "pagado") {
+      res.status(409).json({ error: "a paid invoice cannot be cancelled — issue a credit instead" });
+      return;
+    }
+    const { error } = await supabase.from("invoices").update({ status: "cancelado" }).eq("id", invoice.id);
+    if (error) throw error;
+    res.json({ ok: true, status: "cancelado" });
+  })
+);
+
 // ---------- Reports & Analytics ----------
 // The month-by-month revenue/expense series is grouped from real payment
 // and expense dates (not a stored aggregate, and not a fabricated series

@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { ScheduleEventDialog } from "@/components/ScheduleEventDialog";
-import { ChevronLeft, ChevronRight, Plus, StickyNote } from "lucide-react";
-import { useApi } from "@/lib/api";
+import { ChevronLeft, ChevronRight, Plus, StickyNote, X } from "lucide-react";
+import { useApi, apiFetch } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { hashColor, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -60,13 +60,16 @@ export default function Scheduling() {
   const { t, i18n } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [reloadToken, setReloadToken] = useState(0);
-  const { data: events, loading, error } = useApi<ScheduleEvent[]>(
-    `/api/schedule-events?_r=${reloadToken}`
-  );
+  const { data: events, loading, error, reload } = useApi<ScheduleEvent[]>("/api/schedule-events");
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogInitialDate, setDialogInitialDate] = useState(new Date());
+
+  const removeEvent = async (id: string) => {
+    if (!window.confirm(t("scheduling.deleteConfirm"))) return;
+    const res = await apiFetch(`/api/schedule-events/${id}`, { method: "DELETE" });
+    if (res.ok) reload();
+  };
 
   const dayEvents = useMemo(
     () =>
@@ -197,7 +200,7 @@ export default function Scheduling() {
                         key={event.id}
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
-                          "absolute rounded-lg overflow-hidden z-10 border-l-4",
+                          "group absolute rounded-lg overflow-hidden z-10 border-l-4",
                           detail.padding,
                           isNote
                             ? "bg-secondary border-dashed border border-muted-foreground/30 border-l-muted-foreground/40"
@@ -217,7 +220,21 @@ export default function Scheduling() {
                         }}
                         title={event.notes ?? undefined}
                       >
-                        <div className={cn("font-semibold truncate leading-tight flex items-center gap-1", detail.text, isNote ? "text-foreground" : "text-foreground")}>
+                        {/* A cancelled visit that cannot be removed leaves a
+                            calendar nobody trusts, so every event carries its
+                            own delete — revealed on hover so it doesn't
+                            compete with reading the day. */}
+                        <button
+                          aria-label={t("common.delete")}
+                          className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-status-error-fg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeEvent(event.id);
+                          }}
+                        >
+                          <X size={11} strokeWidth={2} />
+                        </button>
+                        <div className={cn("font-semibold truncate leading-tight flex items-center gap-1 pr-3", detail.text, isNote ? "text-foreground" : "text-foreground")}>
                           {isNote && <StickyNote size={10} className="flex-shrink-0" />}
                           {event.title}
                         </div>
@@ -239,7 +256,7 @@ export default function Scheduling() {
             onOpenChange={setDialogOpen}
             projectId={selectedProjectId}
             initialDate={dialogInitialDate}
-            onCreated={() => setReloadToken((t) => t + 1)}
+            onCreated={() => reload()}
           />
         </>
       )}

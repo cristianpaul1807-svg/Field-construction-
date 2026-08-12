@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
-import { Upload } from "lucide-react";
+import { Upload, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -112,10 +112,26 @@ function colorForId(id: string) {
 export default function PhotoGallery() {
   const { t } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
-  const [reloadToken, setReloadToken] = useState(0);
-  const { data: photos, loading, error } = useApi<Photo[]>(`/api/photos?_r=${reloadToken}`);
+  const { data: photos, loading, error, reload } = useApi<Photo[]>("/api/photos");
 
   const filtered = (photos ?? []).filter((p) => p.projectId === selectedProjectId);
+
+  const removePhoto = async (id: string) => {
+    if (!window.confirm(t("photoGallery.deleteConfirm"))) return;
+    const res = await apiFetch(`/api/photos/${id}`, { method: "DELETE" });
+    if (res.ok) reload();
+  };
+
+  // Toggling from the card rather than a dialog: deciding what the client
+  // sees is a judgement made while looking at the photo.
+  const toggleVisibility = async (id: string, visible: boolean) => {
+    const res = await apiFetch(`/api/photos/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visibleToClient: visible }),
+    });
+    if (res.ok) reload();
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
@@ -128,7 +144,7 @@ export default function PhotoGallery() {
         }
         action={
           selectedProjectId ? (
-            <UploadPhotoDialog projectId={selectedProjectId} onUploaded={() => setReloadToken((n) => n + 1)} />
+            <UploadPhotoDialog projectId={selectedProjectId} onUploaded={() => reload()} />
           ) : undefined
         }
       />
@@ -156,9 +172,23 @@ export default function PhotoGallery() {
                 <p className="text-xs text-muted-foreground">{photo.zone} · {photo.timestamp?.slice(0, 10)}</p>
                 <p className="text-xs text-muted-foreground">{t("photoGallery.uploadedBy", { name: photo.uploadedBy ?? "—" })}</p>
               </div>
-              <StatusBadge tone={photo.visibleToClient ? "success" : "neutral"}>
-                {photo.visibleToClient ? t("projects.visibleToClient") : t("projects.internalPhoto")}
-              </StatusBadge>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={() => toggleVisibility(photo.id, !photo.visibleToClient)}
+                  title={t("photoGallery.toggleVisibility")}
+                >
+                  <StatusBadge tone={photo.visibleToClient ? "success" : "neutral"}>
+                    {photo.visibleToClient ? t("projects.visibleToClient") : t("projects.internalPhoto")}
+                  </StatusBadge>
+                </button>
+                <button
+                  aria-label={t("common.delete")}
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-status-error-fg hover:bg-secondary transition-colors"
+                  onClick={() => removePhoto(photo.id)}
+                >
+                  <Trash2 size={14} strokeWidth={1.75} />
+                </button>
+              </div>
             </Card>
           ))}
           {filtered.length === 0 && (

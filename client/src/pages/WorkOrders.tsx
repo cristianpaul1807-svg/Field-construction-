@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, workOrderStatusTone, priorityTone } from "@/components/StatusBadge";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -134,6 +134,12 @@ export default function WorkOrders() {
   // Status is edited straight from the card rather than behind a dialog:
   // moving a work order along is the single most frequent action on this
   // screen, and it happens on a phone, on site.
+  const removeOrder = async (id: string) => {
+    if (!window.confirm(t("workOrders.deleteConfirm"))) return;
+    const res = await apiFetch(`/api/work-orders/${id}`, { method: "DELETE" });
+    if (res.ok) reload();
+  };
+
   const changeStatus = async (id: string, status: string) => {
     setBusyId(id);
     try {
@@ -196,6 +202,13 @@ export default function WorkOrders() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <button
+                    aria-label={t("common.delete")}
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-status-error-fg hover:bg-secondary transition-colors"
+                    onClick={() => removeOrder(order.id)}
+                  >
+                    <Trash2 size={14} strokeWidth={1.75} />
+                  </button>
                 </div>
               </div>
             </Card>
