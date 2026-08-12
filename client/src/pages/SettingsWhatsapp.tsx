@@ -3,11 +3,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { MessageCircle, Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsWhatsapp() {
+  const { t } = useTranslation();
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
-      <PageHeader title="WhatsApp Connection" description="Conecta el número de WhatsApp Business del negocio" />
+      <PageHeader title={t("settings.whatsappTitle")} description={t("settings.whatsappDescription")} />
 
       <Card className="p-6">
         <div className="flex items-start gap-4">
@@ -16,7 +18,7 @@ export default function SettingsWhatsapp() {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <p className="font-medium text-foreground">WhatsApp Business (Cloud API directa de Meta)</p>
+              <p className="font-medium text-foreground">{t("settings.whatsappCloud")}</p>
               <StatusBadge tone="warning">No conectado</StatusBadge>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
@@ -31,7 +33,7 @@ export default function SettingsWhatsapp() {
       </Card>
 
       <Card className="p-6">
-        <h3 className="font-semibold text-foreground mb-3 text-sm">Qué necesitarás para conectar</h3>
+        <h3 className="font-semibold text-foreground mb-3 text-sm">{t("settings.whatNeeded")}</h3>
         <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
           <li>Una cuenta de Meta Business Manager verificada para el negocio.</li>
           <li>Acceso al Meta Developer Console para crear la app de WhatsApp Business.</li>
@@ -44,12 +46,12 @@ export default function SettingsWhatsapp() {
       </Card>
 
       <Card className="p-6">
-        <h3 className="font-semibold text-foreground mb-3 text-sm">Bot de Telegram del equipo</h3>
+        <h3 className="font-semibold text-foreground mb-3 text-sm">{t("settings.telegramBot")}</h3>
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">Usado para check-in/check-out y notificaciones de work orders</p>
+          <p className="text-sm text-muted-foreground">{t("settings.telegramNote")}</p>
           <StatusBadge tone="warning">No conectado</StatusBadge>
         </div>
-        <Button variant="outline" className="mt-4">Conectar bot de Telegram</Button>
+        <Button variant="outline" className="mt-4">{t("settings.connectTelegram")}</Button>
       </Card>
     </div>
   );

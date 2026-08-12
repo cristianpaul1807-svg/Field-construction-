@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Check } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface CompanyData {
   id: string;
@@ -17,6 +18,7 @@ interface CompanyData {
 }
 
 export default function SettingsCompany() {
+  const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
   const { data, loading, error } = useApi<CompanyData>(`/api/settings/company?_r=${reloadToken}`);
   const [name, setName] = useState("");
@@ -67,7 +69,7 @@ export default function SettingsCompany() {
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
-      <PageHeader title="Company Data" description="Datos de la empresa visibles en presupuestos y facturas" />
+      <PageHeader title={t("settings.companyTitle")} description={t("settings.companyDescriptionFull")} />
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
@@ -86,20 +88,20 @@ export default function SettingsCompany() {
             <div className="w-16 h-16 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-xl font-semibold">
               {data.name.charAt(0)}
             </div>
-            <Button variant="outline" size="sm">Cambiar logo</Button>
+            <Button variant="outline" size="sm">{t("settings.changeLogo")}</Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Nombre del negocio</Label>
+              <Label htmlFor="name">{t("settings.businessName")}</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="license">Número de licencia</Label>
+              <Label htmlFor="license">{t("settings.licenseNumber")}</Label>
               <Input id="license" value={license} onChange={(e) => setLicense(e.target.value)} />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="slug">Link público (Automatizaciones)</Label>
+              <Label htmlFor="slug">{t("settings.publicLinkAutomations")}</Label>
               <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
               <p className="text-xs text-status-warning-fg">
                 Cambiar esto rompe cualquier link que ya hayas compartido — los que tengan el link viejo dejarán
@@ -107,11 +109,11 @@ export default function SettingsCompany() {
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="region">Provincia / Estado</Label>
+              <Label htmlFor="region">{t("settings.province")}</Label>
               <Input id="region" value={region} onChange={(e) => setRegion(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="rate">Tasa de impuesto (%)</Label>
+              <Label htmlFor="rate">{t("settings.taxRate")}</Label>
               <Input id="rate" type="number" value={rate} onChange={(e) => setRate(e.target.value)} />
             </div>
           </div>

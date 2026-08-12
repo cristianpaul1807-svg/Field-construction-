@@ -15,6 +15,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 
 interface Project {
   id: string;
@@ -51,6 +52,7 @@ interface ReportsData {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { data: projects, loading: projectsLoading } = useApi<Project[]>("/api/projects");
   const { data: invoices, loading: invoicesLoading } = useApi<Invoice[]>("/api/invoices");
   const { data: estimates, loading: estimatesLoading } = useApi<EstimateSummary[]>("/api/estimates");
@@ -73,7 +75,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto">
-      <PageHeader title="Dashboard" description="Resumen ejecutivo de tu negocio" />
+      <PageHeader title={t("dashboard.title")} description={t("dashboard.description")} />
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
@@ -85,12 +87,12 @@ export default function Dashboard() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="p-6">
-              <p className="text-sm text-muted-foreground">Proyectos activos</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.activeProjects")}</p>
               <p className="text-2xl font-semibold text-foreground mt-2">{activeProjects.length}</p>
               <p className="text-xs text-muted-foreground mt-2">de {projects?.length ?? 0} totales</p>
             </Card>
             <Card className="p-6">
-              <p className="text-sm text-muted-foreground">Facturación del mes</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.monthlyBilling")}</p>
               <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(monthlyRevenue)}</p>
               <div className="flex items-center gap-1 mt-2">
                 {revenueDelta >= 0 ? (
@@ -104,20 +106,20 @@ export default function Dashboard() {
               </div>
             </Card>
             <Card className="p-6">
-              <p className="text-sm text-muted-foreground">Cobros pendientes</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.pendingCollections")}</p>
               <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrency(pendingInvoicesTotal)}</p>
               <p className="text-xs text-muted-foreground mt-2">{pendingInvoices.length} facturas</p>
             </Card>
             <Card className="p-6">
-              <p className="text-sm text-muted-foreground">Presupuestos por aprobar</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.estimatesToApprove")}</p>
               <p className="text-2xl font-semibold text-foreground mt-2">{pendingEstimates.length}</p>
-              <p className="text-xs text-muted-foreground mt-2">Esperando respuesta del cliente</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("dashboard.awaitingClient")}</p>
             </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 p-6">
-              <h2 className="text-base font-semibold text-foreground mb-4">Ingresos vs. Gastos</h2>
+              <h2 className="text-base font-semibold text-foreground mb-4">{t("dashboard.revenueVsExpenses")}</h2>
               <div className="h-56">
                 {revenueByMonth.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -147,8 +149,8 @@ export default function Dashboard() {
 
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-foreground">Próximas visitas</h2>
-                <Link href="/scheduling" className="text-xs text-primary hover:underline">Ver todas</Link>
+                <h2 className="text-base font-semibold text-foreground">{t("dashboard.upcomingVisits")}</h2>
+                <Link href="/scheduling" className="text-xs text-primary hover:underline">{t("dashboard.seeAll")}</Link>
               </div>
               <div className="space-y-3">
                 {scheduleEvents?.slice(0, 4).map((event) => (
@@ -164,7 +166,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-foreground">Proyectos activos</h2>
+                <h2 className="text-base font-semibold text-foreground">{t("dashboard.activeProjects")}</h2>
                 <Link href="/projects" className="text-xs text-primary hover:underline flex items-center gap-1">
                   Ver todos <ArrowRight size={12} />
                 </Link>
@@ -189,8 +191,8 @@ export default function Dashboard() {
 
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-foreground">Notificaciones recientes</h2>
-                <Link href="/communication" className="text-xs text-primary hover:underline">Ver bandeja</Link>
+                <h2 className="text-base font-semibold text-foreground">{t("dashboard.recentNotifications")}</h2>
+                <Link href="/communication" className="text-xs text-primary hover:underline">{t("dashboard.seeInbox")}</Link>
               </div>
               <div className="space-y-3">
                 {botConversations.map((conv) => (
@@ -206,7 +208,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {botConversations.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Sin notificaciones nuevas.</p>
+                  <p className="text-sm text-muted-foreground">{t("dashboard.noNotifications")}</p>
                 )}
               </div>
             </Card>

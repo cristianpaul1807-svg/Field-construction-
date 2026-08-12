@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, UserRound } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 // A client account never self-registers — it's created server-side the
 // moment the business approves their first estimate (see ensureClientAccount
@@ -17,6 +18,7 @@ const LOGIN_FAILED_MESSAGE =
   "No encontramos una cuenta con estos datos. Si aún no has hablado con la empresa, contáctala directamente para comenzar.";
 
 export default function AuthClient() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { session, signOut, refreshPersona } = useAuth();
   const [email, setEmail] = useState("");
@@ -54,7 +56,7 @@ export default function AuthClient() {
 
         <div className="text-center space-y-2">
           <UserRound className="mx-auto text-primary" size={28} />
-          <h1 className="text-xl font-semibold text-foreground">Inicia sesión — Cliente</h1>
+          <h1 className="text-xl font-semibold text-foreground">{t("auth.signInClient")}</h1>
           <p className="text-sm text-muted-foreground">
             Tu contratista te avisa cuando tu cuenta esté lista, con instrucciones para entrar.
           </p>
@@ -69,7 +71,7 @@ export default function AuthClient() {
             }}
           >
             <div className="space-y-1.5">
-              <Label htmlFor="email">Correo electrónico</Label>
+              <Label htmlFor="email">{t("common.email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -81,7 +83,7 @@ export default function AuthClient() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <Input
                 id="password"
                 name="password"

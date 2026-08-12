@@ -9,8 +9,10 @@ import { ArrowLeft, Briefcase } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function AuthBusiness() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { session, persona, refreshPersona, signOut } = useAuth();
   const [mode, setMode] = useState<"register" | "login">("register");
@@ -30,11 +32,11 @@ export default function AuthBusiness() {
       setBusy(true);
       try {
         const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "No se pudo crear el negocio");
+        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("auth.couldNotCreateBusiness"));
         await refreshPersona();
         setLocation("/");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Algo salió mal");
+        setError(err instanceof Error ? err.message : t("auth.somethingWentWrong"));
       } finally {
         setBusy(false);
       }
@@ -56,7 +58,7 @@ export default function AuthBusiness() {
         }
 
         const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "No se pudo crear el negocio");
+        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("auth.couldNotCreateBusiness"));
         await refreshPersona();
         setLocation("/");
       } else {
@@ -66,7 +68,7 @@ export default function AuthBusiness() {
         setLocation("/");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo salió mal");
+      setError(err instanceof Error ? err.message : t("auth.somethingWentWrong"));
     } finally {
       setBusy(false);
     }
@@ -78,14 +80,14 @@ export default function AuthBusiness() {
     try {
       const { data, error: verifyError } = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
       if (verifyError) throw verifyError;
-      if (!data.session) throw new Error("Código inválido");
+      if (!data.session) throw new Error(t("worker.invalidCode"));
 
       const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || "No se pudo crear el negocio");
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("auth.couldNotCreateBusiness"));
       await refreshPersona();
       setLocation("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Código inválido o expirado");
+      setError(err instanceof Error ? err.message : t("auth.invalidOrExpiredCode"));
     } finally {
       setBusy(false);
     }
@@ -99,7 +101,7 @@ export default function AuthBusiness() {
       if (resendError) throw resendError;
       setResent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo reenviar el código");
+      setError(err instanceof Error ? err.message : t("auth.couldNotResendCode"));
     }
   };
 
@@ -119,14 +121,14 @@ export default function AuthBusiness() {
         <div className="text-center space-y-2">
           <Briefcase className="mx-auto text-primary" size={28} />
           <h1 className="text-xl font-semibold text-foreground">
-            {needsCode ? "Verifica tu correo" : mode === "register" ? "Crea la cuenta de tu negocio" : "Inicia sesión — Negocio"}
+            {needsCode ? t("auth.verifyYourEmail") : mode === "register" ? t("auth.createBusinessAccount") : t("auth.signInBusiness")}
           </h1>
           <p className="text-sm text-muted-foreground">
             {needsCode
               ? `Enviamos un código de 8 dígitos a ${email}. Ingrésalo para continuar.`
               : mode === "register"
                 ? "Solo necesitas correo y contraseña. Los datos de tu empresa se completan después, en Configuración."
-                : "Ingresa con el correo y contraseña de tu negocio."}
+                : t("auth.signInBusinessHint")}
           </p>
         </div>
 
@@ -155,7 +157,7 @@ export default function AuthBusiness() {
               </div>
 
               {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
-              {resent && !error && <p className="text-sm text-status-success-fg text-center">Código reenviado.</p>}
+              {resent && !error && <p className="text-sm text-status-success-fg text-center">{t("auth.codeResent")}</p>}
 
               <Button type="submit" className="w-full" disabled={code.length !== 8 || busy}>
                 Verificar código
@@ -177,7 +179,7 @@ export default function AuthBusiness() {
               }}
             >
               <div className="space-y-1.5">
-                <Label htmlFor="email">Correo electrónico</Label>
+                <Label htmlFor="email">{t("common.email")}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -189,7 +191,7 @@ export default function AuthBusiness() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password">{t("auth.password")}</Label>
                 <Input
                   id="password"
                   name="password"
@@ -203,7 +205,7 @@ export default function AuthBusiness() {
               {error && <p className="text-sm text-status-error-fg">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={!email || !password || busy}>
-                {mode === "register" ? "Crear cuenta" : "Iniciar sesión"}
+                {mode === "register" ? t("auth.createAccount") : "Iniciar sesión"}
               </Button>
 
               {mode === "login" && (

@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { useTranslation } from "react-i18next";
 
 export default function AuthForgotPassword() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -27,7 +29,7 @@ export default function AuthForgotPassword() {
       if (resetError) throw resetError;
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Algo salió mal");
+      setError(err instanceof Error ? err.message : t("auth.somethingWentWrong"));
     } finally {
       setBusy(false);
     }
@@ -41,21 +43,21 @@ export default function AuthForgotPassword() {
       if (resetError) throw resetError;
       setResent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo reenviar el código");
+      setError(err instanceof Error ? err.message : t("auth.couldNotResendCode"));
     }
   };
 
   const confirmReset = async () => {
     setError(null);
     if (newPassword !== confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      setError(t("auth.passwordsDontMatch"));
       return;
     }
     setBusy(true);
     try {
       const { data, error: verifyError } = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
       if (verifyError) throw verifyError;
-      if (!data.session) throw new Error("Código inválido");
+      if (!data.session) throw new Error(t("worker.invalidCode"));
 
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
@@ -67,7 +69,7 @@ export default function AuthForgotPassword() {
       await supabase.auth.signOut();
       setLocation("/iniciar-sesion");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Código inválido o expirado");
+      setError(err instanceof Error ? err.message : t("auth.invalidOrExpiredCode"));
     } finally {
       setBusy(false);
     }
@@ -83,12 +85,12 @@ export default function AuthForgotPassword() {
         <div className="text-center space-y-2">
           <KeyRound className="mx-auto text-primary" size={28} />
           <h1 className="text-xl font-semibold text-foreground">
-            {sent ? "Ingresa el código y tu nueva contraseña" : "Recuperar contraseña"}
+            {sent ? t("auth.enterCodeAndNewPassword") : t("auth.recoverPassword")}
           </h1>
           <p className="text-sm text-muted-foreground">
             {sent
               ? `Enviamos un código de 8 dígitos a ${email}.`
-              : "Te mandamos un código para crear una contraseña nueva."}
+              : t("auth.recoverPasswordHint")}
           </p>
         </div>
 
@@ -117,7 +119,7 @@ export default function AuthForgotPassword() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="newPassword">Nueva contraseña</Label>
+                <Label htmlFor="newPassword">{t("auth.newPassword")}</Label>
                 <Input
                   id="newPassword"
                   name="new-password"
@@ -128,7 +130,7 @@ export default function AuthForgotPassword() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+                <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
                 <Input
                   id="confirmPassword"
                   name="confirm-password"
@@ -140,7 +142,7 @@ export default function AuthForgotPassword() {
               </div>
 
               {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
-              {resent && !error && <p className="text-sm text-status-success-fg text-center">Código reenviado.</p>}
+              {resent && !error && <p className="text-sm text-status-success-fg text-center">{t("auth.codeResent")}</p>}
 
               <Button
                 type="submit"
@@ -166,7 +168,7 @@ export default function AuthForgotPassword() {
               }}
             >
               <div className="space-y-1.5">
-                <Label htmlFor="email">Correo electrónico</Label>
+                <Label htmlFor="email">{t("common.email")}</Label>
                 <Input
                   id="email"
                   name="email"

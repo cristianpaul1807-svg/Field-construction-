@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Plus } from "lucide-react";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const roleLabel: Record<string, string> = {
   admin: "Admin",
@@ -27,13 +28,14 @@ interface SettingsUsersData {
 }
 
 export default function SettingsUsers() {
+  const { t } = useTranslation();
   const { data, loading, error } = useApi<SettingsUsersData>("/api/settings/users");
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-4xl mx-auto">
       <PageHeader
-        title="Users & Roles"
-        description="Permisos por rol: admin, oficina, técnico, subcontratista"
+        title={t("settings.usersTitle")}
+        description={t("settings.usersDescriptionFull")}
         action={
           <Button className="gap-2 w-full sm:w-auto">
             <Plus size={16} /> Invite User
@@ -79,7 +81,7 @@ export default function SettingsUsers() {
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-base font-semibold text-foreground mb-4">Permisos por rol</h2>
+            <h2 className="text-base font-semibold text-foreground mb-4">{t("settings.permissionsByRole")}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {data.roles.map((role) => (
                 <div key={role.name} className="border border-border rounded-lg p-4">

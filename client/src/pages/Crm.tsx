@@ -9,6 +9,7 @@ import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
 import { Plus, Search } from "lucide-react";
 import { leadStatusLabel, type LeadStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface Client {
   id: string;
@@ -22,6 +23,7 @@ interface Client {
 const statuses: LeadStatus[] = ["nuevo", "cotizado", "negociando", "ganado", "perdido"];
 
 export default function Crm() {
+  const { t } = useTranslation();
   const { data: clients, loading, error } = useApi<Client[]>("/api/clients");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
@@ -41,8 +43,8 @@ export default function Crm() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader
-        title="CRM"
-        description="Gestiona leads y relaciones con clientes"
+        title={t("crm.title")}
+        description={t("crm.descriptionFull")}
         action={
           <Button className="gap-2 w-full sm:w-auto">
             <Plus size={16} /> New Lead
@@ -74,7 +76,7 @@ export default function Crm() {
         <div className="flex items-center gap-2 mb-4">
           <Search size={16} className="text-muted-foreground" />
           <Input
-            placeholder="Buscar cliente..."
+            placeholder={t("crm.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="max-w-xs"
@@ -98,11 +100,11 @@ export default function Crm() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-2 text-muted-foreground font-medium">Cliente</th>
-                  <th className="text-left py-2 text-muted-foreground font-medium">Teléfono</th>
-                  <th className="text-left py-2 text-muted-foreground font-medium">Estado</th>
-                  <th className="text-left py-2 text-muted-foreground font-medium">Origen</th>
-                  <th className="text-left py-2 text-muted-foreground font-medium">Última actividad</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("common.client")}</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("common.phone")}</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("common.status")}</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("crm.source")}</th>
+                  <th className="text-left py-2 text-muted-foreground font-medium">{t("crm.lastActivity")}</th>
                 </tr>
               </thead>
               <tbody>

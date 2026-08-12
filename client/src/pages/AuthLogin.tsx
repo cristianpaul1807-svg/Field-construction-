@@ -8,8 +8,10 @@ import { ArrowLeft, LogIn } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function AuthLogin() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { refreshPersona } = useAuth();
   const [email, setEmail] = useState("");
@@ -31,7 +33,7 @@ export default function AuthLogin() {
       else if (body.persona === "business") setLocation("/");
       else setLocation("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Correo o contraseña incorrectos");
+      setError(err instanceof Error ? err.message : t("auth.wrongCredentials"));
     } finally {
       setBusy(false);
     }
@@ -46,8 +48,8 @@ export default function AuthLogin() {
 
         <div className="text-center space-y-2">
           <LogIn className="mx-auto text-primary" size={28} />
-          <h1 className="text-xl font-semibold text-foreground">Iniciar sesión</h1>
-          <p className="text-sm text-muted-foreground">Funciona para cuentas de negocio o de cliente.</p>
+          <h1 className="text-xl font-semibold text-foreground">{t("auth.loginTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("auth.worksForBoth")}</p>
         </div>
 
         <Card className="p-6">
@@ -59,7 +61,7 @@ export default function AuthLogin() {
             }}
           >
             <div className="space-y-1.5">
-              <Label htmlFor="email">Correo electrónico</Label>
+              <Label htmlFor="email">{t("common.email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -71,7 +73,7 @@ export default function AuthLogin() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <Input
                 id="password"
                 name="password"
@@ -96,7 +98,7 @@ export default function AuthLogin() {
 
         <p className="text-sm text-center text-muted-foreground">
           ¿No tienes cuenta de negocio?{" "}
-          <Link href="/negocio/acceso" className="text-primary hover:underline">Regístrate</Link>
+          <Link href="/negocio/acceso" className="text-primary hover:underline">{t("auth.signUpLink")}</Link>
         </p>
       </div>
     </div>

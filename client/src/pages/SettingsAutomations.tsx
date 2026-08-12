@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Link2, Check, Copy } from "lucide-react";
 import { useApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 interface CompanyData {
   name: string;
@@ -36,6 +37,7 @@ function CopyField({ label, value }: { label: string; value: string; multiline?:
 }
 
 export default function SettingsAutomations() {
+  const { t } = useTranslation();
   const { data, loading, error } = useApi<CompanyData>("/api/settings/company");
 
   const publicLink = data ? `${window.location.origin}/c/${data.slug}` : "";
@@ -46,8 +48,8 @@ export default function SettingsAutomations() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
       <PageHeader
-        title="Automatizaciones"
-        description="Tu link público de chat y el texto sugerido para tu Mensaje de Bienvenida de WhatsApp Business"
+        title={t("settings.automationsTitle")}
+        description={t("settings.automationsDescription")}
       />
 
       {loading && (
@@ -70,7 +72,7 @@ export default function SettingsAutomations() {
               </div>
               <div className="flex-1 space-y-4">
                 <div>
-                  <p className="font-medium text-foreground">Link público de tu negocio</p>
+                  <p className="font-medium text-foreground">{t("settings.yourPublicLink")}</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Cualquiera con este link puede escribirte sin crear cuenta — ideal para compartir en
                     redes, tu bio de Instagram, o pegarlo en tu Mensaje de Bienvenida de WhatsApp Business.
@@ -83,7 +85,7 @@ export default function SettingsAutomations() {
 
           <Card className="p-6 space-y-4">
             <div>
-              <p className="font-medium text-foreground">Texto sugerido para tu Mensaje de Bienvenida</p>
+              <p className="font-medium text-foreground">{t("settings.suggestedWelcome")}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Pégalo en WhatsApp Business → Herramientas para la empresa → Mensaje de bienvenida.
               </p>
