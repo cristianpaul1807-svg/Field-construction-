@@ -4745,7 +4745,13 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
   const [estimate, lines, business] = await Promise.all([
     admin
       .from("estimates")
-      .select("id, status, margin_percent, waste_percent, description, created_at, clients(name, address, phone, email), projects(name)")
+      .select(
+        // The embed names its foreign key explicitly because there are two
+        // between these tables — estimates.project_id and
+        // projects.estimate_id — and PostgREST refuses to guess which one
+        // a bare `projects(name)` means.
+        "id, status, margin_percent, waste_percent, description, created_at, clients(name, address, phone, email), projects!estimates_project_id_fkey(name)"
+      )
       .eq("business_id", businessId)
       .eq("id", estimateId)
       .maybeSingle(),
@@ -6099,8 +6105,24 @@ apiApp.use(apiRouter);
 // what actually went wrong, which is how a Supabase outage ended up looking
 // like a broken Stripe button.
 apiApp.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  const message = err instanceof Error ? err.message : String(err);
-  console.error("[api]", message, err instanceof Error ? err.stack : "");
+  // Supabase rejects with a plain object ({ message, code, details, hint }),
+  // not an Error, so String(err) yields "[object Object]" — a 500 that says
+  // nothing. Reading the object's own fields is what turns an opaque failure
+  // into a sentence that names the table and the column.
+  const detail = (() => {
+    if (err instanceof Error) return { message: err.message, stack: err.stack };
+    if (err && typeof err === "object") {
+      const e = err as Record<string, unknown>;
+      const parts = [e.message, e.details, e.hint].filter(Boolean).map(String);
+      return { message: parts.join(" — ") || JSON.stringify(e), code: e.code ? String(e.code) : undefined };
+    }
+    return { message: String(err) };
+  })();
+
+  console.error("[api]", detail.message, (detail as { stack?: string }).stack ?? "");
   if (res.headersSent) return;
-  res.status(500).json({ error: message || "Unexpected server error" });
+  res.status(500).json({
+    error: detail.message || "Unexpected server error",
+    ...(detail.code ? { code: detail.code } : {}),
+  });
 });
