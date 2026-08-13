@@ -258,7 +258,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Button>
           )}
 
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 min-w-0">
+          {/* Allowed to shrink, unlike the controls beside it. With the menu
+              button now on this side too, a long company name had nowhere to
+              give and pushed the avatar three pixels off the screen. The name
+              already truncates; it just needed permission to. */}
+          <Link href="/" className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 border border-border rounded-lg flex items-center justify-center text-foreground flex-shrink-0">
               <HardHat size={15} strokeWidth={1.75} />
             </div>

@@ -1157,5 +1157,23 @@
     "empty": "Nadie tiene horas ni programación en este periodo.",
     "hoursShort": "{{hours}} h",
     "overtimeExplainer": "El fichaje se parte a las 8 h del día: lo anterior son horas normales y lo posterior, extra."
+  },
+  "receivables": {
+    "title": "Cuentas por cobrar",
+    "note": "Quién debe y desde cuándo. La mayoría de las facturas impagadas no están en disputa: están olvidadas.",
+    "empty": "No hay nada pendiente de cobro.",
+    "unknownClient": "Cliente sin nombre",
+    "invoiceCount": "{{count}} factura(s) pendiente(s)",
+    "overdueDays": "{{days}} días de retraso",
+    "notYetDue": "Aún no vence",
+    "remind": "Escribir al cliente",
+    "holdbackNote": "Además hay {{amount}} de retención sobre facturas ya pagadas. No está vencido: se cobra al cerrar la obra.",
+    "bucket": {
+      "corriente": "Aún no vence",
+      "d1_30": "1-30 días",
+      "d31_60": "31-60 días",
+      "d61_90": "61-90 días",
+      "d90_mas": "Más de 90"
+    }
   }
 }

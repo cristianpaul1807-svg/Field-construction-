@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
+import { ReceivablesPanel } from "@/components/ReceivablesPanel";
 import { useTranslation } from "react-i18next";
 
 interface ReportsData {
@@ -124,6 +125,10 @@ export default function Reports() {
           </div>
         </>
       )}
+
+      {/* Outside the loading gate above: it fetches on its own, and money
+          owed is the thing on this page somebody actually acts on. */}
+      <ReceivablesPanel />
     </div>
   );
 }

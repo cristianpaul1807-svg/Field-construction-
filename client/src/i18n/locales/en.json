@@ -1157,5 +1157,23 @@
     "empty": "Nobody has hours or schedule in this period.",
     "hoursShort": "{{hours}} h",
     "overtimeExplainer": "A shift is cut at the eighth hour of the day: before it is regular time, after it is overtime."
+  },
+  "receivables": {
+    "title": "Accounts receivable",
+    "note": "Who owes you and since when. Most unpaid invoices are not disputed — they are forgotten.",
+    "empty": "Nothing outstanding.",
+    "unknownClient": "Unnamed client",
+    "invoiceCount": "{{count}} unpaid invoice(s)",
+    "overdueDays": "{{days}} days overdue",
+    "notYetDue": "Not yet due",
+    "remind": "Message the client",
+    "holdbackNote": "There is also {{amount}} of holdback on invoices already paid. It is not overdue — it is collected when the job closes.",
+    "bucket": {
+      "corriente": "Not yet due",
+      "d1_30": "1-30 days",
+      "d31_60": "31-60 days",
+      "d61_90": "61-90 days",
+      "d90_mas": "Over 90"
+    }
   }
 }

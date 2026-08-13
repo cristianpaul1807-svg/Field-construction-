@@ -24,6 +24,7 @@ import {
 import { closeEntryWithOvertime, workerPerformance } from "./workTime";
 import { businessCoordinates } from "./geocode";
 import { provisionWebhook, readStoredWebhookSecrets } from "./stripeWebhookSetup";
+import { receivables } from "./receivables";
 import {
   annualTotals,
   approvedHours,
@@ -5266,6 +5267,15 @@ apiRouter.post(
       payoutsEnabled: !!remote.payouts_enabled,
       detailsSubmitted: !!remote.details_submitted,
     });
+  })
+);
+
+// Who owes money and since when. Read with the caller's own session so RLS
+// scopes it, like every other report on this side of the gate.
+apiRouter.get(
+  "/reports/receivables",
+  route(async (req, res) => {
+    res.json(await receivables(req.supabase! as never, req.businessId!));
   })
 );
 

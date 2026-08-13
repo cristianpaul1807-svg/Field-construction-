@@ -1157,5 +1157,23 @@
     "empty": "Nessuno ha ore o pianificazione in questo periodo.",
     "hoursShort": "{{hours}} h",
     "overtimeExplainer": "La timbratura si divide all'ottava ora del giorno: prima ore normali, dopo straordinari."
+  },
+  "receivables": {
+    "title": "Crediti verso clienti",
+    "note": "Chi ti deve e da quando. La maggior parte delle fatture non pagate non è contestata: è dimenticata.",
+    "empty": "Non c'è nulla da incassare.",
+    "unknownClient": "Cliente senza nome",
+    "invoiceCount": "{{count}} fattura/e non pagata/e",
+    "overdueDays": "{{days}} giorni di ritardo",
+    "notYetDue": "Non ancora scaduta",
+    "remind": "Scrivi al cliente",
+    "holdbackNote": "Ci sono anche {{amount}} di ritenuta su fatture già pagate. Non è in ritardo: si incassa alla chiusura del cantiere.",
+    "bucket": {
+      "corriente": "Non ancora scaduta",
+      "d1_30": "1-30 giorni",
+      "d31_60": "31-60 giorni",
+      "d61_90": "61-90 giorni",
+      "d90_mas": "Oltre 90"
+    }
   }
 }

@@ -1157,5 +1157,23 @@
     "empty": "Personne n'a d'heures ni de planning sur cette période.",
     "hoursShort": "{{hours}} h",
     "overtimeExplainer": "Le pointage est coupé à la 8ᵉ heure de la journée : avant, heures normales ; après, supplémentaires."
+  },
+  "receivables": {
+    "title": "Comptes clients",
+    "note": "Qui vous doit et depuis quand. La plupart des factures impayées ne sont pas contestées : elles sont oubliées.",
+    "empty": "Rien à recouvrer.",
+    "unknownClient": "Client sans nom",
+    "invoiceCount": "{{count}} facture(s) impayée(s)",
+    "overdueDays": "{{days}} jours de retard",
+    "notYetDue": "Pas encore échue",
+    "remind": "Écrire au client",
+    "holdbackNote": "Il y a aussi {{amount}} de retenue sur des factures déjà payées. Ce n'est pas en retard : cela se perçoit à la fin des travaux.",
+    "bucket": {
+      "corriente": "Pas encore échue",
+      "d1_30": "1-30 jours",
+      "d31_60": "31-60 jours",
+      "d61_90": "61-90 jours",
+      "d90_mas": "Plus de 90"
+    }
   }
 }
