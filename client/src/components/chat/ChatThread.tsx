@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Send, Settings, Bot, UserRound, Paperclip, FileText, Download, Image as ImageIcon } from "lucide-react";
+import { Send, Settings, Bot, UserRound, Paperclip, FileText, Download, CreditCard, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/mockData";
 import type { ChatChannel, ChatMessage } from "@/lib/chatApi";
 import { useTranslation } from "react-i18next";
 
@@ -30,6 +31,13 @@ interface ChatThreadProps {
   onSendFile?: (file: File) => void | Promise<void>;
   /** Resolves a message's attachment to something openable. */
   onOpenAttachment?: (message: ChatMessage) => void | Promise<void>;
+  /**
+   * Pays an unpaid invoice attached to a message. Only the customer's own
+   * thread passes this — the panel has an invoicing screen for that.
+   */
+  onPayAttachment?: (message: ChatMessage) => void | Promise<void>;
+  /** The invoice currently being paid, so its button can show progress. */
+  payingMessageId?: string | null;
   onUpdateSettings?: (patch: { disappearingDuration: "24h" | "72h" | "nunca" }) => void | Promise<void>;
   onToggleControlMode?: () => void | Promise<void>;
   showAcceptInvite?: boolean;
@@ -44,6 +52,8 @@ export function ChatThread({
   onSend,
   onSendFile,
   onOpenAttachment,
+  onPayAttachment,
+  payingMessageId,
   onUpdateSettings,
   onToggleControlMode,
   showAcceptInvite,
@@ -181,6 +191,27 @@ export function ChatThread({
                     </span>
                     {onOpenAttachment && <Download size={14} strokeWidth={1.75} className="flex-shrink-0 opacity-70" />}
                   </button>
+                )}
+
+                {/* An invoice in a conversation is an ask, so it gets the
+                    button that answers it. A paid one says so instead, because
+                    the thread is also the record of what was settled. */}
+                {message.attachment?.kind === "invoice" && message.attachment.status && (
+                  message.attachment.status === "pagado" ? (
+                    <p className="mt-1.5 text-xs opacity-70">{t("communication.invoicePaid")}</p>
+                  ) : onPayAttachment && message.attachment.status !== "cancelado" ? (
+                    <Button
+                      size="sm"
+                      className="mt-2 w-full gap-1.5"
+                      onClick={() => onPayAttachment(message)}
+                      disabled={payingMessageId === message.id}
+                    >
+                      {payingMessageId === message.id ? <Spinner className="size-4" /> : <CreditCard size={14} />}
+                      {message.attachment.amount != null
+                        ? t("communication.payAmount", { amount: formatCurrency(message.attachment.amount) })
+                        : t("communication.pay")}
+                    </Button>
+                  ) : null
                 )}
                 <div className="flex items-center gap-1 mt-1 opacity-70">
                   <span className="text-[10px]">{message.timestamp?.slice(0, 16).replace("T", " ")}</span>

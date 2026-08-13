@@ -277,7 +277,9 @@
     "invoiceFilePrefix": "Invoice",
     "holdbackWithheld": "{{amount}} held back",
     "cancel": "Cancel invoice",
-    "cancelConfirm": "Cancel this invoice? It stays on record as cancelled, it is not deleted."
+    "cancelConfirm": "Cancel this invoice? It stays on record as cancelled, it is not deleted.",
+    "tabInvoices": "Invoices",
+    "tabRequests": "Chat charges"
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -350,7 +352,10 @@
       "none": "No pending requests."
     },
     "attachment": "Attachment",
-    "attachFile": "Attach a file"
+    "attachFile": "Attach a file",
+    "pay": "Pay",
+    "payAmount": "Pay {{amount}}",
+    "invoicePaid": "Paid"
   },
   "technicians": {
     "title": "Technicians & Crew",
@@ -643,7 +648,11 @@
     "revenueVsExpensesMonth": "Revenue vs. expenses by month",
     "hoursByEmployee": "Hours worked per employee",
     "topMaterials": "Most used materials",
-    "noMaterials": "No materials yet."
+    "noMaterials": "No materials yet.",
+    "chargeKind": {
+      "proyecto": "Project work",
+      "extra": "Extra work"
+    }
   },
   "materials": {
     "title": "Materials & Costs",
@@ -1070,5 +1079,39 @@
     "annualYear": "Year",
     "includesCarryIn": "includes carry-in",
     "hoursHere": "{{hours}} h worked here"
+  },
+  "paymentRequests": {
+    "newTitle": "Ask for a payment through the chat",
+    "newNote": "It reaches the client as a message with a pay button. Send it now or schedule it.",
+    "kind": "What this charge is",
+    "kinds": {
+      "proyecto": "Part of the project",
+      "extra": "Extra work"
+    },
+    "basis": "How it is worked out",
+    "bases": {
+      "monto": "Exact amount",
+      "porcentaje": "% of the project"
+    },
+    "percentLabel": "Percentage",
+    "amountLabel": "Amount",
+    "description": "What it is for",
+    "descriptionPlaceholder": "Window change approved on Tuesday",
+    "sendOn": "Send on",
+    "sendOnHint": "Leave empty to send it right now.",
+    "schedule": "Schedule",
+    "sendNow": "Send now",
+    "percentOf": "{{percent}}% of the project",
+    "scheduledFor": "scheduled for {{date}}",
+    "empty": "You have not asked for any payment through the chat yet.",
+    "percentNeedsProject": "A percentage needs a project — it has to be a percentage of something.",
+    "status": {
+      "programado": "Scheduled",
+      "enviado": "Sent",
+      "pagado": "Paid",
+      "cancelado": "Cancelled"
+    },
+    "needsStripeTitle": "This needs Stripe connected",
+    "needsStripeBody": "A chat charge is a pay button, and without Stripe that button leads nowhere. In the meantime you can issue the invoice normally and send its PDF through the chat; the client pays however they do today and you mark it paid."
   }
 }

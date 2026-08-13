@@ -16,6 +16,12 @@ import {
   type TaxBreakdown,
 } from "./documents";
 import {
+  markRequestPaidByInvoice,
+  resolveAmount,
+  sendPaymentRequest,
+  sweepDueRequests,
+} from "./paymentRequests";
+import {
   annualTotals,
   approvedHours,
   computePayroll,
@@ -457,6 +463,8 @@ async function createInvoiceRecord(
     subtotal: number;
     description: string | null;
     dueDate?: string | null;
+    /** Agreed work, or extra on top of it. Everything defaults to agreed. */
+    chargeKind?: "proyecto" | "extra";
   }
 ): Promise<string> {
   const { taxAmount, breakdown } = await computeInvoiceTax(admin, input.businessId, input.subtotal);
@@ -490,6 +498,7 @@ async function createInvoiceRecord(
       amount: Math.round((input.subtotal + taxAmount - holdbackAmount) * 100) / 100,
       status: "pendiente",
       due_date: input.dueDate ?? null,
+      charge_kind: input.chargeKind ?? "proyecto",
     })
     .select("id")
     .single();
@@ -598,6 +607,10 @@ async function stripeWebhookHandler(req: Request, res: Response) {
           status: "succeeded",
           paid_at: new Date().toISOString(),
         });
+
+        // If this invoice came from a request in the chat, that thread should
+        // stop saying "pending" the moment the money lands.
+        await markRequestPaidByInvoice(admin, invoiceId);
 
         // The final payment landing is what closes a job. A deposit or a
         // progress payment does not: there is still work owed.
@@ -1336,7 +1349,7 @@ apiRouter.get(
       .eq("channel_id", channel.id)
       .order("created_at");
     if (error) throw error;
-    res.json(data.map((m) => ({ id: m.id, senderType: m.sender_type, content: m.content, timestamp: m.created_at })));
+    res.json(data.map(toChatMessage));
   })
 );
 
@@ -1448,6 +1461,12 @@ apiRouter.get(
     // schedule with it, because "what do I still owe and when" is the other
     // half of why they open this page.
     const admin = getSupabaseAdmin();
+    // A request whose day has come goes out now: the customer is right here,
+    // which is exactly when it wants to be seen.
+    if (project.data?.business_id) {
+      await sweepDueRequests(admin, project.data.business_id, paymentRequestDeps(admin));
+    }
+
     const [lifecycle, milestones] = project.data
       ? await Promise.all([
           lifecycleSnapshot(admin, project.data.business_id, project.data.id),
@@ -1600,7 +1619,7 @@ apiRouter.get(
       .eq("channel_id", req.params.id)
       .order("created_at");
     if (error) throw error;
-    res.json(data.map((m) => ({ id: m.id, senderType: m.sender_type, content: m.content, timestamp: m.created_at })));
+    res.json(await withInvoiceState(getSupabaseAdmin(), data.map(toChatMessage)));
   })
 );
 
@@ -4985,6 +5004,198 @@ apiRouter.post(
   })
 );
 
+// ---------- Payment requests ----------
+// Asking a customer for money inside the conversation they are already in.
+// See server/paymentRequests.ts for why a percentage stays a percentage until
+// it is sent, and why sending is idempotent by status.
+
+/** The two things every send needs: an invoice, and a message carrying it. */
+function paymentRequestDeps(admin: ReturnType<typeof getSupabaseAdmin>) {
+  return {
+    createInvoice: (args: {
+      businessId: string;
+      clientId: string;
+      projectId: string | null;
+      type: "deposito" | "parcial" | "final";
+      chargeKind: "proyecto" | "extra";
+      subtotal: number;
+      description: string;
+    }) =>
+      createInvoiceRecord(admin, {
+        businessId: args.businessId,
+        clientId: args.clientId,
+        projectId: args.projectId,
+        estimateId: null,
+        type: args.type,
+        subtotal: args.subtotal,
+        description: args.description || null,
+        chargeKind: args.chargeKind,
+      }),
+    postToChat: async (args: { businessId: string; clientId: string; invoiceId: string; content: string }) => {
+      const channelId = await ensureClientChannel(admin, args.businessId, args.clientId);
+      const { data: channel } = await admin
+        .from("chat_channels")
+        .select("disappearing_duration")
+        .eq("id", channelId)
+        .maybeSingle();
+      const { data: message, error } = await admin
+        .from("chat_messages")
+        .insert({
+          channel_id: channelId,
+          business_id: args.businessId,
+          sender_type: "admin",
+          sender_id: null,
+          content: args.content || documentNumber("invoice", args.invoiceId),
+          attachment_kind: "invoice",
+          attachment_id: args.invoiceId,
+          attachment_name: `${documentNumber("invoice", args.invoiceId)}.pdf`,
+          attachment_mime: "application/pdf",
+          expires_at: computeExpiresAt(channel?.disappearing_duration ?? null),
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      return message.id;
+    },
+  };
+}
+
+apiRouter.get(
+  "/payment-requests",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    // Anything due goes out while somebody is looking at the list, which is
+    // the closest this product gets to a scheduler.
+    await sweepDueRequests(admin, req.businessId!, paymentRequestDeps(admin));
+
+    const { data, error } = await admin
+      .from("payment_requests")
+      .select(
+        "id, kind, basis, percent, amount, description, status, send_at, sent_at, invoice_id, clients(name), projects(name), invoices(amount, status)"
+      )
+      .eq("business_id", req.businessId!)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+
+    res.json(
+      (data ?? []).map((r: any) => ({
+        id: r.id,
+        kind: r.kind,
+        basis: r.basis,
+        percent: r.percent === null ? null : Number(r.percent),
+        amount: r.amount === null ? null : Number(r.amount),
+        description: r.description,
+        status: r.status,
+        sendAt: r.send_at,
+        sentAt: r.sent_at,
+        clientName: r.clients?.name ?? null,
+        projectName: r.projects?.name ?? null,
+        invoiceId: r.invoice_id,
+        // Only once it exists — before that there is nothing anybody agreed to.
+        invoiceAmount: r.invoices?.amount === undefined ? null : Number(r.invoices.amount),
+        invoiceStatus: r.invoices?.status ?? null,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/payment-requests",
+  route(async (req, res) => {
+    const { clientId, projectId, kind, basis, percent, amount, description, sendAt } = req.body ?? {};
+    if (!clientId || !["proyecto", "extra"].includes(kind) || !["porcentaje", "monto"].includes(basis)) {
+      res.status(400).json({ error: "clientId, kind and basis are required" });
+      return;
+    }
+    if (basis === "porcentaje") {
+      const pct = Number(percent);
+      if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
+        res.status(400).json({ error: "percent must be between 0 and 100" });
+        return;
+      }
+      // A share of nothing is not a charge; say so instead of sending $0.
+      if (!projectId) {
+        res.status(400).json({ error: "a percentage needs a project", code: "percent_needs_project" });
+        return;
+      }
+    } else {
+      const value = Number(amount);
+      if (!Number.isFinite(value) || value <= 0) {
+        res.status(400).json({ error: "amount must be positive" });
+        return;
+      }
+    }
+
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("payment_requests")
+      .insert({
+        business_id: req.businessId!,
+        client_id: clientId,
+        project_id: projectId || null,
+        kind,
+        basis,
+        percent: basis === "porcentaje" ? Number(percent) : null,
+        amount: basis === "monto" ? Number(amount) : null,
+        description: description?.trim() || null,
+        send_at: sendAt || null,
+      })
+      .select("id, business_id, client_id, project_id, kind, basis, percent, amount, description, status, send_at")
+      .single();
+    if (error) throw error;
+
+    // No date means now. Anything else waits for its day.
+    if (!sendAt) {
+      const sent = await sendPaymentRequest(admin, data.id, paymentRequestDeps(admin));
+      res.status(201).json({ id: data.id, sent: Boolean(sent), amount: sent?.amount ?? null });
+      return;
+    }
+    res.status(201).json({ id: data.id, sent: false, amount: await resolveAmount(admin, data as never) });
+  })
+);
+
+// Sending a scheduled one early — the customer who offers to pay now.
+apiRouter.post(
+  "/payment-requests/:id/send",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: owned } = await admin
+      .from("payment_requests")
+      .select("id")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!owned) {
+      res.status(404).json({ error: "request not found" });
+      return;
+    }
+    const sent = await sendPaymentRequest(admin, req.params.id, paymentRequestDeps(admin));
+    if (!sent) {
+      res.status(409).json({ error: "nothing to send", code: "not_sendable" });
+      return;
+    }
+    res.status(201).json(sent);
+  })
+);
+
+apiRouter.delete(
+  "/payment-requests/:id",
+  route(async (req, res) => {
+    // Cancelled rather than deleted once sent: the invoice and the message
+    // already exist, and pretending the ask never happened would leave both
+    // orphaned in front of the customer.
+    const { error } = await getSupabaseAdmin()
+      .from("payment_requests")
+      .update({ status: "cancelado" })
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .in("status", ["programado", "enviado"]);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 // ---------- Payroll ----------
 // Everything under here is the office's. No /worker/* route reads a rate or a
 // run: what somebody earns is between them and the office, and the field app
@@ -6716,6 +6927,62 @@ apiRouter.patch(
 // uploaded file.
 
 /** Finds the client's internal channel, creating it the first time. */
+/**
+ * The wire shape of a message, attachment included.
+ *
+ * Every GET-messages route used to drop the attachment and return only text,
+ * so a worker or a customer saw a bare filename-less line where a document had
+ * been sent — the estimate the contractor "sent to the client through the
+ * chat" was invisible to the client. Only the POST echoed it back, which made
+ * it look like it worked right up until the page was reloaded.
+ */
+function toChatMessage(m: Record<string, any>) {
+  return {
+    id: m.id,
+    senderType: m.sender_type,
+    content: m.content,
+    timestamp: m.created_at,
+    attachment: m.attachment_kind
+      ? {
+          kind: m.attachment_kind,
+          id: m.attachment_id,
+          name: m.attachment_name,
+          mime: m.attachment_mime,
+        }
+      : null,
+  };
+}
+
+/**
+ * Adds what an invoice attachment is worth and whether it is still owed, so a
+ * conversation can show a pay button instead of a document nobody acts on.
+ * Only for the customer's own side; the panel already has an invoicing screen.
+ */
+async function withInvoiceState(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  messages: ReturnType<typeof toChatMessage>[]
+) {
+  const invoiceIds = Array.from(
+    new Set(messages.filter((m) => m.attachment?.kind === "invoice").map((m) => m.attachment!.id as string))
+  );
+  if (invoiceIds.length === 0) return messages;
+
+  const { data } = await admin.from("invoices").select("id, amount, status").in("id", invoiceIds);
+  const byId = new Map((data ?? []).map((i) => [i.id, i]));
+  return messages.map((m) => {
+    if (m.attachment?.kind !== "invoice") return m;
+    const invoice = byId.get(m.attachment.id as string);
+    return {
+      ...m,
+      attachment: {
+        ...m.attachment,
+        amount: invoice ? Number(invoice.amount) : null,
+        status: invoice?.status ?? null,
+      },
+    };
+  });
+}
+
 async function ensureClientChannel(
   admin: ReturnType<typeof getSupabaseAdmin>,
   businessId: string,
@@ -6914,10 +7181,18 @@ apiRouter.get(
   route(async (req, res) => {
     const supabase = req.supabase!;
 
-    const [payments, expenses, projects, employees, timeEntries, materialLines] = await Promise.all([
+    const [payments, expenses, projects, paidInvoices, employees, timeEntries, materialLines] = await Promise.all([
       supabase.from("payments").select("amount, paid_at").eq("business_id", req.businessId!),
       supabase.from("expenses").select("amount, date").eq("business_id", req.businessId!),
       supabase.from("projects").select("status").eq("business_id", req.businessId!),
+      // Split by what the money was for. A job over budget and a job that grew
+      // are opposite problems with opposite answers, and revenue alone cannot
+      // tell them apart.
+      supabase
+        .from("invoices")
+        .select("amount, charge_kind, status")
+        .eq("business_id", req.businessId!)
+        .eq("status", "pagado"),
       supabase.from("employees").select("id, name").eq("business_id", req.businessId!),
       supabase
         .from("time_entries")
@@ -6936,6 +7211,7 @@ apiRouter.get(
     if (payments.error) throw payments.error;
     if (expenses.error) throw expenses.error;
     if (projects.error) throw projects.error;
+    if (paidInvoices.error) throw paidInvoices.error;
     if (employees.error) throw employees.error;
     if (timeEntries.error) throw timeEntries.error;
     if (materialLines.error) throw materialLines.error;
@@ -6989,6 +7265,19 @@ apiRouter.get(
       profit: totalRevenue - totalExpense,
       activeProjects: projects.data.filter((p) => p.status === "en_progreso").length,
       completedProjects: projects.data.filter((p) => p.status === "completado").length,
+      // Collected, split by what it was for.
+      revenueByChargeKind: {
+        proyecto: Math.round(
+          paidInvoices.data
+            .filter((i) => i.charge_kind !== "extra")
+            .reduce((sum, i) => sum + Number(i.amount), 0) * 100
+        ) / 100,
+        extra: Math.round(
+          paidInvoices.data
+            .filter((i) => i.charge_kind === "extra")
+            .reduce((sum, i) => sum + Number(i.amount), 0) * 100
+        ) / 100,
+      },
       hoursByEmployee,
       topMaterials,
     });

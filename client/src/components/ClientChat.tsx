@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, readJson } from "@/lib/api";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
 import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
@@ -11,6 +11,8 @@ export function ClientChat() {
   const { t, i18n } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [payingMessageId, setPayingMessageId] = useState<string | null>(null);
+  const [payError, setPayError] = useState<string | null>(null);
 
   const { data: channels, loading } = useApi<ChatChannel[]>(`/api/client/chat/channels?_r=${reloadToken}`);
   const { data: messages, reload: reloadMessages } = useApi<ChatMessage[]>(
@@ -28,6 +30,23 @@ export function ClientChat() {
       body: JSON.stringify({ content }),
     });
     refresh();
+  };
+
+  // Paying an invoice without leaving the conversation it arrived in. The
+  // checkout session is the same one the portal's own pay button opens — one
+  // invoice, one link, whichever way the customer reached it.
+  const payInvoice = async (invoiceId: string, messageId: string) => {
+    setPayingMessageId(messageId);
+    setPayError(null);
+    try {
+      const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
+      const body = await readJson<{ url?: string; error?: string }>(res);
+      if (!res.ok || !body?.url) throw new Error(body?.error || t("clientPortal.payError"));
+      window.location.href = body.url;
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : t("clientPortal.payError"));
+      setPayingMessageId(null);
+    }
   };
 
   if (loading) {
@@ -55,8 +74,13 @@ export function ClientChat() {
             reloadMessages();
           }}
           onOpenAttachment={(message) => openChatAttachment(message, "/client", i18n.language)}
+          onPayAttachment={(message) => {
+            if (message.attachment?.id) payInvoice(message.attachment.id, message.id);
+          }}
+          payingMessageId={payingMessageId}
         />
       </div>
+      {payError && <p className="px-4 pb-3 text-sm text-status-error-fg">{payError}</p>}
     </div>
   );
 }

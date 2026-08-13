@@ -148,6 +148,52 @@ prometer un número que nadie ha acordado.
 
 ---
 
+## Cobros por el chat
+
+**Dónde:** Finanzas → Facturación → *Cobros por chat*
+
+El plan de pagos cubre las etapas acordadas al firmar. Esto es todo lo demás:
+el extra que aprobó el cliente el martes, un parcial adelantado, el depósito de
+una obra que nunca tuvo plan formal.
+
+Eliges cliente, obra, **qué es** ese dinero y **cuánto**:
+
+- **Qué es**: *parte del proyecto* o *trabajo extra*. Sin esta distinción los
+  reportes no pueden separar una obra que se pasó de presupuesto de una que
+  simplemente creció — que son problemas opuestos con respuestas opuestas.
+- **Cuánto**: una cantidad exacta, o un **% del proyecto**. El porcentaje sigue
+  siendo porcentaje hasta que se envía, así que una orden de cambio aprobada
+  entre medias mueve el importe. Resolverlo al crearlo cobraría el contrato
+  viejo.
+
+Le llega al cliente **como un mensaje en su chat, con su botón de pagar**. Paga
+sin salir de la conversación, y el hilo queda como registro de lo que se pidió y
+lo que se pagó.
+
+### Programarlo
+
+Deja la fecha vacía y sale ahora. Ponle fecha y espera a ese día.
+
+No hay un proceso corriendo en segundo plano: lo pendiente sale cuando alguien
+usa la aplicación — tú abriendo la lista, o el propio cliente entrando a su
+portal, que es justamente cuando quiere verse. Puede llegar unos minutos tarde,
+nunca días. Y siempre puedes darle a **Enviar ahora**.
+
+### Necesita Stripe
+
+Un cobro por el chat es un botón de pagar; sin Stripe ese botón no lleva a
+ningún sitio. Si no lo tienes conectado la pestaña te lo dice y te señala lo que
+sí funciona: emitir la factura normal y mandar su PDF por el chat. **La función
+es opcional**, como todo lo de Stripe.
+
+### Cancelar
+
+Una petición programada se cancela sin más. Una ya enviada se marca cancelada,
+no se borra: la factura y el mensaje ya existen delante del cliente, y hacer
+como que nunca pasó los dejaría huérfanos.
+
+---
+
 ## La retención en el plan
 
 La última etapa se emite como **pago final**, que es la que no lleva retención
@@ -168,6 +214,9 @@ etapas importa: la última es la que cierra.
 | `GET/PUT /api/payment-plan` | La plantilla del negocio |
 | `GET /api/projects/:id/payment-milestones` | El plan de una obra |
 | `POST /api/projects/:id/payment-milestones/:mid/bill` | Facturar una etapa a mano |
+| `GET/POST /api/payment-requests` | Cobros por chat |
+| `POST /api/payment-requests/:id/send` | Enviar uno programado ya |
+| `DELETE /api/payment-requests/:id` | Cancelarlo |
 | `POST /api/public/stripe/webhook` | Confirmación de Stripe |
 
 En `invoices`: `subtotal`, `tax_amount`, `tax_breakdown` (jsonb con el

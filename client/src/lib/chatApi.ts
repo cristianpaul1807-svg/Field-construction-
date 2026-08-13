@@ -21,6 +21,10 @@ export interface ChatAttachment {
   id: string | null;
   name: string | null;
   mime: string | null;
+  /** Invoices only, and only on the customer's own side: what it is worth. */
+  amount?: number | null;
+  /** Invoices only: pendiente / pagado / vencido / cancelado. */
+  status?: string | null;
 }
 
 export interface ChatMessage {

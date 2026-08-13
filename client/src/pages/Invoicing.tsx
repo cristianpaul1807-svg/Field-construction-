@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { PaymentRequestPanel } from "@/components/PaymentRequestPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,6 +165,9 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 export default function Invoicing() {
   const { t, i18n } = useTranslation();
   const { data: invoices, loading, error, reload } = useApi<Invoice[]>("/api/invoices");
+  // Chat charges are a pay button, so they only make sense once the business
+  // can actually take a card.
+  const { data: connect } = useApi<{ chargesEnabled: boolean }>("/api/stripe/connect/status");
   const [pdfBusyId, setPdfBusyId] = useState<string | null>(null);
   const [linkBusyId, setLinkBusyId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -221,6 +226,17 @@ export default function Invoicing() {
         action={<NewInvoiceDialog onCreated={reload} />}
       />
 
+      <Tabs defaultValue="invoices">
+        <TabsList>
+          <TabsTrigger value="invoices">{t("invoicing.tabInvoices")}</TabsTrigger>
+          <TabsTrigger value="requests">{t("invoicing.tabRequests")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="requests" className="mt-4">
+          <PaymentRequestPanel stripeReady={Boolean(connect?.chargesEnabled)} />
+        </TabsContent>
+
+        <TabsContent value="invoices" className="mt-4 space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">{t("invoicing.collected")}</p>
@@ -338,6 +354,8 @@ export default function Invoicing() {
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
         <Send size={12} /> {t("invoicing.stripeNote")}
       </p>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -277,7 +277,9 @@
     "invoiceFilePrefix": "Fattura",
     "holdbackWithheld": "Ritenuta di {{amount}}",
     "cancel": "Annulla fattura",
-    "cancelConfirm": "Annullare questa fattura? Resta registrata come annullata, non viene eliminata."
+    "cancelConfirm": "Annullare questa fattura? Resta registrata come annullata, non viene eliminata.",
+    "tabInvoices": "Fatture",
+    "tabRequests": "Richieste in chat"
   },
   "payments": {
     "title": "Pagamenti (Stripe)",
@@ -350,7 +352,10 @@
       "none": "Nessuna richiesta in sospeso."
     },
     "attachment": "Allegato",
-    "attachFile": "Allega un file"
+    "attachFile": "Allega un file",
+    "pay": "Paga",
+    "payAmount": "Paga {{amount}}",
+    "invoicePaid": "Pagata"
   },
   "technicians": {
     "title": "Tecnici e squadra",
@@ -643,7 +648,11 @@
     "revenueVsExpensesMonth": "Ricavi e spese per mese",
     "hoursByEmployee": "Ore lavorate per dipendente",
     "topMaterials": "Materiali più usati",
-    "noMaterials": "Ancora nessun materiale."
+    "noMaterials": "Ancora nessun materiale.",
+    "chargeKind": {
+      "proyecto": "Del progetto",
+      "extra": "Lavoro extra"
+    }
   },
   "materials": {
     "title": "Materiali e costi",
@@ -1070,5 +1079,39 @@
     "annualYear": "Anno",
     "includesCarryIn": "riporto incluso",
     "hoursHere": "{{hours}} h lavorate qui"
+  },
+  "paymentRequests": {
+    "newTitle": "Chiedi un pagamento in chat",
+    "newNote": "Arriva al cliente come un messaggio con il pulsante per pagare. Invialo ora o programmalo.",
+    "kind": "Cos'è questo addebito",
+    "kinds": {
+      "proyecto": "Parte del progetto",
+      "extra": "Lavoro extra"
+    },
+    "basis": "Come si calcola",
+    "bases": {
+      "monto": "Importo esatto",
+      "porcentaje": "% del progetto"
+    },
+    "percentLabel": "Percentuale",
+    "amountLabel": "Importo",
+    "description": "Causale",
+    "descriptionPlaceholder": "Cambio finestre approvato martedì",
+    "sendOn": "Invia il",
+    "sendOnHint": "Lascia vuoto per inviarlo subito.",
+    "schedule": "Programma",
+    "sendNow": "Invia ora",
+    "percentOf": "{{percent}}% del progetto",
+    "scheduledFor": "programmato per il {{date}}",
+    "empty": "Non hai ancora chiesto nessun pagamento in chat.",
+    "percentNeedsProject": "Una percentuale ha bisogno di un progetto: è una percentuale di qualcosa.",
+    "status": {
+      "programado": "Programmato",
+      "enviado": "Inviato",
+      "pagado": "Pagato",
+      "cancelado": "Annullato"
+    },
+    "needsStripeTitle": "Serve Stripe collegato",
+    "needsStripeBody": "Un addebito in chat è un pulsante di pagamento, e senza Stripe quel pulsante non porta da nessuna parte. Intanto puoi emettere la fattura normalmente e inviarne il PDF in chat; il cliente paga come fa oggi e tu la segni pagata."
   }
 }

@@ -125,7 +125,7 @@ export async function materializePlan(admin: Admin, businessId: string, projectI
  * against the original figure would leave the extra money uninvoiced until
  * somebody noticed by hand.
  */
-async function contractValue(admin: Admin, businessId: string, projectId: string): Promise<number> {
+export async function contractValue(admin: Admin, businessId: string, projectId: string): Promise<number> {
   const [project, changeOrders] = await Promise.all([
     admin.from("projects").select("estimate_id").eq("business_id", businessId).eq("id", projectId).maybeSingle(),
     admin

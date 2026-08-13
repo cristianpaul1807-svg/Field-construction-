@@ -21,6 +21,7 @@ interface ReportsData {
   profit: number;
   activeProjects: number;
   completedProjects: number;
+  revenueByChargeKind: { proyecto: number; extra: number };
   hoursByEmployee: { name: string; horas: number }[];
   topMaterials: { name: string; unit: string; totalQuantity: number }[];
 }
@@ -50,6 +51,13 @@ export default function Reports() {
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("reports.billedCollected")}</p>
               <p className="text-2xl font-semibold text-foreground mt-2">{formatCurrencyRounded(data.totalRevenue)}</p>
+              {/* A job over budget and a job that grew look identical in a
+                  revenue total. This is the line that tells them apart. */}
+              {data.revenueByChargeKind && data.revenueByChargeKind.extra > 0 && (
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  {t("reports.chargeKind.extra")}: {formatCurrencyRounded(data.revenueByChargeKind.extra)}
+                </p>
+              )}
             </Card>
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("reports.realProfit")}</p>

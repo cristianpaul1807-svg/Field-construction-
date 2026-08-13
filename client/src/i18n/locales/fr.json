@@ -277,7 +277,9 @@
     "invoiceFilePrefix": "Facture",
     "holdbackWithheld": "Retenue de {{amount}}",
     "cancel": "Annuler la facture",
-    "cancelConfirm": "Annuler cette facture ? Elle reste enregistrée comme annulée, elle n'est pas supprimée."
+    "cancelConfirm": "Annuler cette facture ? Elle reste enregistrée comme annulée, elle n'est pas supprimée.",
+    "tabInvoices": "Factures",
+    "tabRequests": "Demandes par chat"
   },
   "payments": {
     "title": "Paiements (Stripe)",
@@ -350,7 +352,10 @@
       "none": "Aucune demande en attente."
     },
     "attachment": "Pièce jointe",
-    "attachFile": "Joindre un fichier"
+    "attachFile": "Joindre un fichier",
+    "pay": "Payer",
+    "payAmount": "Payer {{amount}}",
+    "invoicePaid": "Payée"
   },
   "technicians": {
     "title": "Techniciens et équipe",
@@ -643,7 +648,11 @@
     "revenueVsExpensesMonth": "Revenus et dépenses par mois",
     "hoursByEmployee": "Heures travaillées par employé",
     "topMaterials": "Matériaux les plus utilisés",
-    "noMaterials": "Aucun matériau pour l'instant."
+    "noMaterials": "Aucun matériau pour l'instant.",
+    "chargeKind": {
+      "proyecto": "Du chantier",
+      "extra": "Travaux supplémentaires"
+    }
   },
   "materials": {
     "title": "Matériaux et coûts",
@@ -1070,5 +1079,39 @@
     "annualYear": "Année",
     "includesCarryIn": "reprise incluse",
     "hoursHere": "{{hours}} h travaillées ici"
+  },
+  "paymentRequests": {
+    "newTitle": "Demander un paiement par le chat",
+    "newNote": "Le client le reçoit comme un message avec un bouton de paiement. Envoyez-le maintenant ou planifiez-le.",
+    "kind": "Nature de la demande",
+    "kinds": {
+      "proyecto": "Partie du chantier",
+      "extra": "Travaux supplémentaires"
+    },
+    "basis": "Mode de calcul",
+    "bases": {
+      "monto": "Montant exact",
+      "porcentaje": "% du chantier"
+    },
+    "percentLabel": "Pourcentage",
+    "amountLabel": "Montant",
+    "description": "Objet",
+    "descriptionPlaceholder": "Changement de fenêtres approuvé mardi",
+    "sendOn": "Envoyer le",
+    "sendOnHint": "Laissez vide pour l'envoyer tout de suite.",
+    "schedule": "Planifier",
+    "sendNow": "Envoyer maintenant",
+    "percentOf": "{{percent}} % du chantier",
+    "scheduledFor": "planifié pour le {{date}}",
+    "empty": "Vous n'avez encore demandé aucun paiement par le chat.",
+    "percentNeedsProject": "Un pourcentage a besoin d'un chantier : c'est un pourcentage de quelque chose.",
+    "status": {
+      "programado": "Planifié",
+      "enviado": "Envoyé",
+      "pagado": "Payé",
+      "cancelado": "Annulé"
+    },
+    "needsStripeTitle": "Ceci nécessite Stripe connecté",
+    "needsStripeBody": "Une demande par chat est un bouton de paiement, et sans Stripe ce bouton ne mène nulle part. En attendant, émettez la facture normalement et envoyez son PDF par le chat ; le client paie comme aujourd'hui et vous la marquez payée."
   }
 }
