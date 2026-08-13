@@ -1175,5 +1175,19 @@
       "d61_90": "61-90 days",
       "d90_mas": "Over 90"
     }
+  },
+  "profitability": {
+    "title": "Profit by job",
+    "note": "What each job is worth, what it costs, what has been invoiced and collected. Worst first.",
+    "empty": "No jobs with a contract or costs yet.",
+    "noClient": "No client",
+    "contract": "Contract",
+    "cost": "Cost",
+    "invoiced": "Invoiced",
+    "collected": "Collected",
+    "marginPercent": "{{percent}}% margin",
+    "toInvoice": "Still to invoice",
+    "outstanding": "Awaiting payment",
+    "noLabourRates": "Cost excludes labour: no pay rates are set for the workers."
   }
 }

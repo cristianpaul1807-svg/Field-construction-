@@ -1175,5 +1175,19 @@
       "d61_90": "61-90 días",
       "d90_mas": "Más de 90"
     }
+  },
+  "profitability": {
+    "title": "Rentabilidad por obra",
+    "note": "Lo que vale cada obra, lo que cuesta, lo facturado y lo cobrado. Primero las que peor van.",
+    "empty": "Todavía no hay obras con contrato ni costes.",
+    "noClient": "Sin cliente",
+    "contract": "Contrato",
+    "cost": "Coste",
+    "invoiced": "Facturado",
+    "collected": "Cobrado",
+    "marginPercent": "{{percent}}% de margen",
+    "toInvoice": "Queda por facturar",
+    "outstanding": "Pendiente de cobro",
+    "noLabourRates": "El coste no incluye mano de obra: no hay tarifas configuradas para los trabajadores."
   }
 }

@@ -1175,5 +1175,19 @@
       "d61_90": "61-90 giorni",
       "d90_mas": "Oltre 90"
     }
+  },
+  "profitability": {
+    "title": "Redditività per cantiere",
+    "note": "Quanto vale ogni cantiere, quanto costa, quanto è fatturato e incassato. Prima i peggiori.",
+    "empty": "Non ci sono ancora cantieri con contratto o costi.",
+    "noClient": "Senza cliente",
+    "contract": "Contratto",
+    "cost": "Costo",
+    "invoiced": "Fatturato",
+    "collected": "Incassato",
+    "marginPercent": "{{percent}}% di margine",
+    "toInvoice": "Ancora da fatturare",
+    "outstanding": "In attesa di pagamento",
+    "noLabourRates": "Il costo esclude la manodopera: non ci sono tariffe configurate."
   }
 }

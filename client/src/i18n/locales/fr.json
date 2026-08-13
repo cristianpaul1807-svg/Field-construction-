@@ -1175,5 +1175,19 @@
       "d61_90": "61-90 jours",
       "d90_mas": "Plus de 90"
     }
+  },
+  "profitability": {
+    "title": "Rentabilité par chantier",
+    "note": "Ce que vaut chaque chantier, ce qu'il coûte, ce qui est facturé et encaissé. Les pires d'abord.",
+    "empty": "Aucun chantier avec contrat ni coûts pour l'instant.",
+    "noClient": "Sans client",
+    "contract": "Contrat",
+    "cost": "Coût",
+    "invoiced": "Facturé",
+    "collected": "Encaissé",
+    "marginPercent": "{{percent}} % de marge",
+    "toInvoice": "Reste à facturer",
+    "outstanding": "En attente de paiement",
+    "noLabourRates": "Le coût exclut la main-d'œuvre : aucun taux horaire n'est configuré."
   }
 }

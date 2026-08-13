@@ -25,6 +25,7 @@ import { closeEntryWithOvertime, workerPerformance } from "./workTime";
 import { businessCoordinates } from "./geocode";
 import { provisionWebhook, readStoredWebhookSecrets } from "./stripeWebhookSetup";
 import { receivables } from "./receivables";
+import { profitabilityByProject } from "./profitability";
 import {
   annualTotals,
   approvedHours,
@@ -5267,6 +5268,16 @@ apiRouter.post(
       payoutsEnabled: !!remote.payouts_enabled,
       detailsSubmitted: !!remote.details_submitted,
     });
+  })
+);
+
+// Is each job making money. The caller's session reads the project figures;
+// the admin client is passed alongside because labour cost comes from pay
+// rates, which no ordinary session is allowed to see.
+apiRouter.get(
+  "/reports/profitability",
+  route(async (req, res) => {
+    res.json(await profitabilityByProject(req.supabase! as never, getSupabaseAdmin(), req.businessId!));
   })
 );
 
