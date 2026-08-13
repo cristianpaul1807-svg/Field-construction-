@@ -433,7 +433,7 @@
     "week": "Settimana",
     "weekOf": "Settimana del {{date}}",
     "noJobsAssigned": "Nessun lavoro assegnato.",
-    "pendingWorkOrders": "Ordini di lavoro in sospeso",
+    "pendingWorkOrders": "Ordini di lavoro aperti",
     "business": "Impresa",
     "serviceTypes": {
       "instalacion": "Installazione",
@@ -448,7 +448,15 @@
     "noActiveEntry": "Nessuna timbratura attiva",
     "billable": "Fatturabile",
     "serviceType": "Tipo di servizio",
-    "noProjects": "Nessun progetto finora."
+    "noProjects": "Nessun progetto finora.",
+    "selectProject": "Scegli un cantiere",
+    "selectPlaceholder": "Scegli",
+    "clockIn": "Timbra entrata",
+    "clockOut": "Timbra uscita",
+    "switchProject": "Cambia cantiere",
+    "confirmSwitch": "Conferma il cambio",
+    "onSiteSince": "Su {{project}} dalle {{time}}",
+    "unnamedProject": "il cantiere"
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",

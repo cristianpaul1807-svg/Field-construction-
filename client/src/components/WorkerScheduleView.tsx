@@ -68,7 +68,7 @@ const priorityTone: Record<string, string> = {
 };
 
 export function WorkerScheduleView() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [events, setEvents] = useState<ScheduleEvent[] | null>(null);
   const [workOrders, setWorkOrders] = useState<WorkOrder[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,8 +118,10 @@ export function WorkerScheduleView() {
           </Button>
           <div className="text-sm font-medium text-foreground min-w-[8rem] text-center">
             {view === "dia"
-              ? currentDate.toLocaleDateString("es-ES", { day: "numeric", month: "long" })
-              : `Semana del ${weekStart.toLocaleDateString("es-ES", { day: "numeric", month: "short" })}`}
+              ? currentDate.toLocaleDateString(i18n.language, { day: "numeric", month: "long" })
+              : t("worker.weekOf", {
+                  date: weekStart.toLocaleDateString(i18n.language, { day: "numeric", month: "short" }),
+                })}
           </div>
           <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => new Date(d.getTime() + (view === "dia" ? 86400000 : 7 * 86400000)))}>
             <ChevronRight size={16} />
@@ -200,7 +202,7 @@ export function WorkerScheduleView() {
             return (
               <div key={day.toISOString()} className="rounded-lg border border-border bg-card p-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                  {day.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "short" })}
+                  {day.toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "short" })}
                 </p>
                 {items.length === 0 && <p className="text-xs text-muted-foreground">{t("worker.noJobsAssigned")}</p>}
                 <div className="space-y-1.5">
@@ -211,7 +213,7 @@ export function WorkerScheduleView() {
                         style={{ backgroundColor: hashColor(e.projectId ?? e.id) }}
                       />
                       <span className="text-muted-foreground text-xs w-12 flex-shrink-0">
-                        {new Date(e.startTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(e.startTime).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}
                       </span>
                       <span className="text-foreground truncate">{e.title}</span>
                       {e.projectName && <span className="text-xs text-muted-foreground truncate">· {e.projectName}</span>}
@@ -228,7 +230,7 @@ export function WorkerScheduleView() {
         <div className="rounded-lg border border-border bg-card p-4">
           <div className="flex items-center gap-2 mb-3">
             <ClipboardList size={15} className="text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Órdenes de trabajo pendientes</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t("worker.pendingWorkOrders")}</h3>
           </div>
           <div className="space-y-2">
             {workOrders!.map((w) => (

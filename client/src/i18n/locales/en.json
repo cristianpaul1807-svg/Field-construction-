@@ -433,7 +433,7 @@
     "week": "Week",
     "weekOf": "Week of {{date}}",
     "noJobsAssigned": "No jobs assigned.",
-    "pendingWorkOrders": "Pending work orders",
+    "pendingWorkOrders": "Open work orders",
     "business": "Business",
     "serviceTypes": {
       "instalacion": "Installation",
@@ -448,7 +448,15 @@
     "noActiveEntry": "Not clocked in",
     "billable": "Billable",
     "serviceType": "Service type",
-    "noProjects": "No projects yet."
+    "noProjects": "No projects yet.",
+    "selectProject": "Pick a project",
+    "selectPlaceholder": "Pick one",
+    "clockIn": "Clock in",
+    "clockOut": "Clock out",
+    "switchProject": "Switch project",
+    "confirmSwitch": "Confirm switch",
+    "onSiteSince": "On {{project}} since {{time}}",
+    "unnamedProject": "the project"
   },
   "publicChat": {
     "chatWithBusiness": "Chat with the business",

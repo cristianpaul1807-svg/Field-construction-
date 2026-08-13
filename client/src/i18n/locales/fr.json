@@ -433,7 +433,7 @@
     "week": "Semaine",
     "weekOf": "Semaine du {{date}}",
     "noJobsAssigned": "Aucun travail assigné.",
-    "pendingWorkOrders": "Bons de travail en attente",
+    "pendingWorkOrders": "Bons de travail en cours",
     "business": "Entreprise",
     "serviceTypes": {
       "instalacion": "Installation",
@@ -448,7 +448,15 @@
     "noActiveEntry": "Aucun pointage actif",
     "billable": "Facturable",
     "serviceType": "Type de service",
-    "noProjects": "Aucun projet pour l'instant."
+    "noProjects": "Aucun projet pour l'instant.",
+    "selectProject": "Choisis un chantier",
+    "selectPlaceholder": "Choisis",
+    "clockIn": "Pointer l'arrivée",
+    "clockOut": "Pointer le départ",
+    "switchProject": "Changer de chantier",
+    "confirmSwitch": "Confirmer le changement",
+    "onSiteSince": "Sur {{project}} depuis {{time}}",
+    "unnamedProject": "le chantier"
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",

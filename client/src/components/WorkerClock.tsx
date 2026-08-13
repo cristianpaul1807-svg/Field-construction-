@@ -46,7 +46,7 @@ function getLocation(): Promise<{ latitude: number; longitude: number }> {
 }
 
 export function WorkerClock() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [active, setActive] = useState<ActiveEntry | null | undefined>(undefined);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState("");
@@ -147,8 +147,15 @@ export function WorkerClock() {
         </div>
         {active ? (
           <p className="text-sm text-muted-foreground">
-            En {active.projectName ?? "proyecto"} desde{" "}
-            {new Date(active.checkInTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+            {t("worker.onSiteSince", {
+              project: active.projectName ?? t("worker.unnamedProject"),
+              // The reader's locale, not the app's origin: a crew in Montreal
+              // reads 14:30 or 2:30 PM depending on who is holding the phone.
+              time: new Date(active.checkInTime).toLocaleTimeString(i18n.language, {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            })}
           </p>
         ) : (
           <p className="text-sm text-muted-foreground">{t("worker.noActiveEntry")}</p>
@@ -167,7 +174,7 @@ export function WorkerClock() {
             <Label className="text-xs">{t("common.project")}</Label>
             <Select value={projectId} onValueChange={setProjectId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona un proyecto" />
+                <SelectValue placeholder={t("worker.selectProject")} />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((p) => (
@@ -178,7 +185,7 @@ export function WorkerClock() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Facturable</Label>
+              <Label className="text-xs">{t("worker.billable")}</Label>
               <Select value={billable ? "si" : "no"} onValueChange={(v) => setBillable(v === "si")}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -193,7 +200,7 @@ export function WorkerClock() {
               <Label className="text-xs">{t("worker.serviceType")}</Label>
               <Select value={serviceType} onValueChange={setServiceType}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona" />
+                  <SelectValue placeholder={t("worker.selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {SERVICE_TYPES.map((type) => (
@@ -207,23 +214,23 @@ export function WorkerClock() {
           {switching ? (
             <div className="flex gap-2">
               <Button className="flex-1" size="lg" onClick={confirmSwitch} disabled={!projectId || busy}>
-                Confirmar cambio
+                {t("worker.confirmSwitch")}
               </Button>
               <Button variant="outline" size="lg" onClick={() => setSwitching(false)}>{t("common.cancel")}</Button>
             </div>
           ) : (
             <Button className="w-full gap-2" size="lg" onClick={checkIn} disabled={!projectId || busy}>
-              <MapPin size={16} /> Marcar entrada
+              <MapPin size={16} /> {t("worker.clockIn")}
             </Button>
           )}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
           <Button className="w-full gap-2" size="lg" variant="destructive" onClick={checkOut} disabled={busy}>
-            <MapPin size={16} /> Marcar salida
+            <MapPin size={16} /> {t("worker.clockOut")}
           </Button>
           <Button className="w-full gap-2" size="lg" variant="outline" onClick={() => setSwitching(true)} disabled={busy}>
-            <RefreshCw size={16} /> Cambiar de proyecto
+            <RefreshCw size={16} /> {t("worker.switchProject")}
           </Button>
         </div>
       )}

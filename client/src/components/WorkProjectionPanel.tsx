@@ -211,7 +211,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
                       {item.title} {item.zone && <span className="text-muted-foreground">· {item.zone}</span>}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(item.plannedStart).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" })}
+                      {new Date(item.plannedStart).toLocaleString(i18n.language, { dateStyle: "medium", timeStyle: "short" })}
                       {" · "}
                       {item.durationMinutes} min
                       {item.assignedWorkerName && <> · {item.assignedWorkerName}</>}

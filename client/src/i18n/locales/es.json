@@ -448,7 +448,15 @@
     "noActiveEntry": "Sin entrada activa",
     "billable": "Facturable",
     "serviceType": "Tipo de servicio",
-    "noProjects": "Sin proyectos todavía."
+    "noProjects": "Sin proyectos todavía.",
+    "selectProject": "Selecciona un proyecto",
+    "selectPlaceholder": "Selecciona",
+    "clockIn": "Marcar entrada",
+    "clockOut": "Marcar salida",
+    "switchProject": "Cambiar de proyecto",
+    "confirmSwitch": "Confirmar cambio",
+    "onSiteSince": "En {{project}} desde las {{time}}",
+    "unnamedProject": "el proyecto"
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",
