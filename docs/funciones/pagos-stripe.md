@@ -84,9 +84,19 @@ cliente paga pero la factura sigue apareciendo pendiente.
 **Configurarlo en Stripe** (Developers → Webhooks):
 
 - Endpoint: `https://tu-dominio/api/public/stripe/webhook`
-- Eventos: `checkout.session.completed`, `payment_intent.succeeded`
+- Evento: `checkout.session.completed`
 - Copia el *signing secret* (`whsec_…`) y ponlo como `STRIPE_WEBHOOK_SECRET`
   en tu hosting.
+
+> **La ruta completa, no el dominio.** Esto ya pasó: el endpoint estaba puesto
+> como `https://tu-dominio/` a secas. Esa URL devuelve la página web, así que
+> Stripe recibía un 200 y se quedaba tan tranquilo mientras **ningún pago se
+> marcaba como pagado**. Un webhook mal apuntado no da error en ningún sitio;
+> sólo deja de funcionar en silencio.
+
+> **Un solo evento a propósito.** El código maneja `checkout.session.completed`
+> y nada más. Suscribirse a los 200 y pico eventos que ofrece Stripe no aporta:
+> el resto entra, no hace nada y sale con un 200.
 
 **Comprobar que está bien:**
 
@@ -95,6 +105,23 @@ curl -s https://tu-dominio/api/health | python3 -m json.tool
 ```
 
 `stripeWebhookSecretConfigured` tiene que ser `true`.
+
+Eso confirma que hay un secreto, no que sea **el** secreto. Para saber si el
+que tiene tu hosting es el mismo que el del endpoint, manda un evento firmado
+de un tipo que el manejador ignora — verifica la firma y responde 200 sin tocar
+ninguna factura:
+
+```bash
+PAYLOAD='{"id":"evt_probe","object":"event","type":"ping","data":{"object":{}}}'
+T=$(date +%s)
+SIG=$(printf '%s' "$T.$PAYLOAD" | openssl dgst -sha256 -hmac "$STRIPE_WEBHOOK_SECRET" -r | cut -d' ' -f1)
+curl -s -X POST https://tu-dominio/api/public/stripe/webhook \
+  -H "Stripe-Signature: t=$T,v1=$SIG" -H "Content-Type: application/json" \
+  --data-binary "$PAYLOAD"
+```
+
+`{"received":true}` significa que la cadena entera funciona. Un 400 con
+"No signatures found matching" significa que el secreto no coincide.
 
 > **Detalle técnico que importa:** Stripe firma el cuerpo **crudo** de la
 > petición. Por eso esta ruta se monta con `express.raw()` **antes** del
