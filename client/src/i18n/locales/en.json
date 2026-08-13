@@ -911,13 +911,20 @@
     "title": "GPS & Routing",
     "description": "Real-time location of active technicians and subcontractors",
     "activeNow": "Active now",
-    "mapWaiting": "Map awaiting API key",
     "nobodyActive": "Nobody active right now.",
     "noLocations": "No positions to show yet",
     "noLocationsHint": "The map is drawn from check-ins in the last 24 hours. As soon as somebody clocks in from a site, they'll show up here.",
     "recentCheckIns": "Recent check-ins",
     "openMap": "Open in map",
-    "onRoute": "On route"
+    "onRoute": "On route",
+    "noProject": "No project",
+    "onSite": "On site",
+    "checkedOut": "Clocked out",
+    "runningLate": "Running late",
+    "elapsed": "Time on site",
+    "since": "Since",
+    "todaysJobs": "Their day",
+    "nothingScheduled": "Nothing scheduled today."
   },
   "photoGallery": {
     "title": "Photo Gallery",
@@ -1130,5 +1137,20 @@
   "estimates": {
     "signedBadge": "Signed",
     "signedDetail": "Signed by {{name}} on {{date}} · {{amount}}"
+  },
+  "performance": {
+    "title": "Planned vs actual",
+    "note": "What each person had scheduled against what they actually clocked. Three numbers, not a score: hours planned, hours worked, and jobs that passed with nobody on them.",
+    "planned": "Planned",
+    "actual": "Worked",
+    "overtime": "Overtime",
+    "difference": "Difference",
+    "adherence": "{{percent}}% of the plan",
+    "noPlan": "Nothing was scheduled",
+    "missed": "{{count}} of {{total}} jobs with nobody on them",
+    "allCovered": "Covered all {{total}} jobs",
+    "empty": "Nobody has hours or schedule in this period.",
+    "hoursShort": "{{hours}} h",
+    "overtimeExplainer": "A shift is cut at the eighth hour of the day: before it is regular time, after it is overtime."
   }
 }

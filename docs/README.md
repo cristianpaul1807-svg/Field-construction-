@@ -66,6 +66,8 @@ directamente al paso a paso.
 | *(sin menú)* App del trabajador `/campo` | [funciones/equipo.md](funciones/equipo.md#la-app-del-trabajador) |
 | GPS y rutas | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#gps-y-rutas) |
 | Check-in / Check-out | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#check-in-check-out) |
+| *(dentro de Check-in)* Las 8 horas y las extra | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#las-8-horas-y-las-extra) |
+| *(dentro de Check-in)* Planificado vs. real | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#planificado-vs-real) |
 | Órdenes de trabajo | [funciones/ordenes-de-trabajo.md](funciones/ordenes-de-trabajo.md) |
 | Agenda | [funciones/agenda.md](funciones/agenda.md) |
 

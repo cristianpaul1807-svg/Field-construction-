@@ -473,6 +473,8 @@ export interface WorkerHours {
   name: string;
   hourlyRate: number | null;
   hours: number;
+  /** Of those hours, the ones past the eighth of a day. */
+  overtimeHours: number;
   /** Hours per project, for the cost figures rather than the payslip. */
   byProject: Record<string, number>;
 }
@@ -493,7 +495,7 @@ export async function approvedHours(
   const [entries, employees, subcontractors] = await Promise.all([
     admin
       .from("time_entries")
-      .select("employee_id, subcontractor_id, project_id, check_in_time, check_out_time")
+      .select("employee_id, subcontractor_id, project_id, check_in_time, check_out_time, overtime")
       .eq("business_id", businessId)
       .eq("approved", true)
       .gte("check_in_time", from)
@@ -510,6 +512,7 @@ export async function approvedHours(
       name: e.name,
       hourlyRate: e.hourly_rate === null ? null : Number(e.hourly_rate),
       hours: 0,
+      overtimeHours: 0,
       byProject: {},
     });
   }
@@ -520,6 +523,7 @@ export async function approvedHours(
       name: s.name,
       hourlyRate: s.hourly_rate === null ? null : Number(s.hourly_rate),
       hours: 0,
+      overtimeHours: 0,
       byProject: {},
     });
   }
@@ -531,6 +535,7 @@ export async function approvedHours(
     const hours = entryHours(entry.check_in_time, entry.check_out_time);
     if (hours <= 0) continue;
     person.hours = round(person.hours + hours);
+    if (entry.overtime) person.overtimeHours = round(person.overtimeHours + hours);
     if (entry.project_id) {
       person.byProject[entry.project_id] = round((person.byProject[entry.project_id] ?? 0) + hours);
     }

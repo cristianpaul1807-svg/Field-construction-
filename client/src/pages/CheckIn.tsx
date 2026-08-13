@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { WorkerPerformancePanel } from "@/components/WorkerPerformancePanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -58,6 +60,17 @@ export default function CheckIn() {
         description={t("checkIn.description")}
       />
 
+      <Tabs defaultValue="entries">
+        <TabsList>
+          <TabsTrigger value="entries">{t("checkIn.title")}</TabsTrigger>
+          <TabsTrigger value="performance">{t("performance.title")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="performance" className="mt-4">
+          <WorkerPerformancePanel />
+        </TabsContent>
+
+        <TabsContent value="entries" className="mt-4">
       <Card className="p-6">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
@@ -115,6 +128,8 @@ export default function CheckIn() {
           </div>
         )}
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

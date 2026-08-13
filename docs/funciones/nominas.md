@@ -42,6 +42,12 @@ se le retiene, lo que le queda y lo que le cuesta a la empresa.
 > Solo cuentan las horas aprobadas. Un fichaje sin aprobar es una afirmación, no
 > un coste — y si se pagara sin revisar, el botón de aprobar sería decorativo.
 
+La fila separa **horas normales** de **horas extra**. Las extra son las que
+pasaron de las 8 del día: el fichaje se parte solo en ese instante, y aquí
+llegan ya separadas para que se puedan pagar a otra tarifa sin recontar nada.
+Cómo se hace el corte está en
+[campo-gps-y-fichaje.md](campo-gps-y-fichaje.md#las-8-horas-y-las-extra).
+
 **Emitir hoja** guarda ese cálculo tal cual y lo deja en *Emitidas*, de donde
 sale el PDF. Se guarda congelado a propósito: las nóminas se discuten meses
 después y "recalcúlalo con las tasas de hoy" es la respuesta equivocada, porque

@@ -21,6 +21,7 @@ import {
   sendPaymentRequest,
   sweepDueRequests,
 } from "./paymentRequests";
+import { closeEntryWithOvertime, workerPerformance } from "./workTime";
 import {
   annualTotals,
   approvedHours,
@@ -1188,19 +1189,18 @@ apiRouter.post(
     }
 
     const admin = getSupabaseAdmin();
-    const { error } = await admin
-      .from("time_entries")
-      .update({
-        check_out_time: new Date().toISOString(),
-        check_out_location: `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`,
-        check_out_lat: latitude,
-        check_out_lng: longitude,
-      })
-      .eq("business_id", req.workerBusinessId!)
-      .eq("id", req.params.id);
-    if (error) throw error;
+    // Past the eighth hour of the day the shift is cut in two: the ordinary
+    // part ends there and an overtime entry carries on.
+    const { overtimeEntryId } = await closeEntryWithOvertime(admin, {
+      businessId: req.workerBusinessId!,
+      entryId: req.params.id,
+      checkOutTime: new Date(),
+      location: `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`,
+      latitude,
+      longitude,
+    });
 
-    res.json({ ok: true });
+    res.json({ ok: true, overtimeEntryId });
   })
 );
 
@@ -1220,17 +1220,14 @@ apiRouter.post(
     const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
     const locationStr = `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`;
 
-    const { error: closeError } = await admin
-      .from("time_entries")
-      .update({
-        check_out_time: new Date().toISOString(),
-        check_out_location: locationStr,
-        check_out_lat: latitude,
-        check_out_lng: longitude,
-      })
-      .eq("business_id", req.workerBusinessId!)
-      .eq("id", activeEntryId);
-    if (closeError) throw closeError;
+    await closeEntryWithOvertime(admin, {
+      businessId: req.workerBusinessId!,
+      entryId: activeEntryId,
+      checkOutTime: new Date(),
+      location: locationStr,
+      latitude,
+      longitude,
+    });
 
     const { data, error: openError } = await admin
       .from("time_entries")
@@ -4474,7 +4471,7 @@ apiRouter.get(
     const { data: pings, error: pingsError } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_lat, check_in_lng, check_out_time, projects(name), employees(name), subcontractors(name)"
+        "id, employee_id, subcontractor_id, project_id, service_type, check_in_time, check_in_lat, check_in_lng, check_out_time, projects(name), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .gte("check_in_time", since)
@@ -4482,17 +4479,62 @@ apiRouter.get(
       .order("check_in_time", { ascending: false });
     if (pingsError) throw pingsError;
 
+    // What each of them is meant to be doing today. Tapping a marker should
+    // answer "and what's next", not just "here is a dot" — and comparing the
+    // two is the only way the map can say somebody is running late.
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+    const { data: todaysWork } = await supabase
+      .from("schedule_events")
+      .select("id, title, type, start_time, end_time, assigned_employee_id, assigned_subcontractor_id, projects(name)")
+      .eq("business_id", req.businessId!)
+      .gte("start_time", dayStart.toISOString())
+      .lt("start_time", dayEnd.toISOString())
+      .order("start_time");
+
+    const now = Date.now();
+    const scheduleFor = (workerId: string | null) => {
+      if (!workerId) return [];
+      return ((todaysWork ?? []) as any[])
+        .filter((e) => e.assigned_employee_id === workerId || e.assigned_subcontractor_id === workerId)
+        .map((e) => ({
+          id: e.id,
+          title: e.title,
+          projectName: e.projects?.name ?? null,
+          startTime: e.start_time,
+          endTime: e.end_time,
+          // Should have started and has not been finished: that is the whole
+          // definition of late that this data can honestly support.
+          late: new Date(e.start_time).getTime() < now && new Date(e.end_time).getTime() > now,
+          done: new Date(e.end_time).getTime() <= now,
+        }));
+    };
+
     res.json({
       workers: [...activeEmployees, ...activeSubcontractors],
-      locations: (pings as any[]).map((p) => ({
-        id: p.id,
-        name: p.employees?.name ?? p.subcontractors?.name ?? null,
-        projectName: p.projects?.name ?? null,
-        lat: Number(p.check_in_lat),
-        lng: Number(p.check_in_lng),
-        checkInTime: p.check_in_time,
-        stillOnSite: !p.check_out_time,
-      })),
+      locations: (pings as any[]).map((p) => {
+        const workerId = p.employee_id ?? p.subcontractor_id ?? null;
+        const schedule = scheduleFor(workerId);
+        const onSite = !p.check_out_time;
+        return {
+          id: p.id,
+          workerId,
+          name: p.employees?.name ?? p.subcontractors?.name ?? null,
+          projectName: p.projects?.name ?? null,
+          serviceType: p.service_type,
+          lat: Number(p.check_in_lat),
+          lng: Number(p.check_in_lng),
+          checkInTime: p.check_in_time,
+          checkOutTime: p.check_out_time,
+          stillOnSite: onSite,
+          // The rest of their day, so the card can say what comes next.
+          schedule,
+          // Late only means something for somebody currently on the clock: a
+          // job that should be under way and a person who is not on it.
+          late: onSite && schedule.some((e) => e.late && e.projectName !== (p.projects?.name ?? null)),
+        };
+      }),
     });
   })
 );
@@ -5064,6 +5106,25 @@ apiRouter.post(
   })
 );
 
+// What was planned for each worker against what they actually did.
+//
+// Deliberately three numbers rather than a score: hours planned, hours worked,
+// and jobs that passed with nobody on them. A single "efficiency %" flattens a
+// crew who worked longer than planned and a crew who skipped a job into the
+// same figure, and those are different conversations.
+apiRouter.get(
+  "/reports/worker-performance",
+  route(async (req, res) => {
+    const from = String(req.query.from ?? "");
+    const to = String(req.query.to ?? "");
+    if (!from || !to) {
+      res.status(400).json({ error: "from and to are required" });
+      return;
+    }
+    res.json({ workers: await workerPerformance(getSupabaseAdmin(), req.businessId!, from, to) });
+  })
+);
+
 // ---------- Payment requests ----------
 // Asking a customer for money inside the conversation they are already in.
 // See server/paymentRequests.ts for why a percentage stays a percentage until
@@ -5348,6 +5409,7 @@ apiRouter.get(
           name: w.name,
           hourlyRate: w.hourlyRate,
           hours: w.hours,
+          overtimeHours: w.overtimeHours,
           // Without a rate there is nothing to compute, and inventing one
           // would put a number in front of somebody that nobody chose.
           breakdown: w.hourlyRate

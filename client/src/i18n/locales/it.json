@@ -911,13 +911,20 @@
     "title": "GPS e percorsi",
     "description": "Posizione in tempo reale di tecnici e subappaltatori attivi",
     "activeNow": "Attivi ora",
-    "mapWaiting": "Mappa in attesa della chiave API",
     "nobodyActive": "Nessuno attivo in questo momento.",
     "noLocations": "Nessuna posizione da mostrare finora",
     "noLocationsHint": "La mappa si basa sulle timbrature delle ultime 24 ore. Non appena qualcuno timbra dal cantiere, comparirà qui.",
     "recentCheckIns": "Timbrature recenti",
     "openMap": "Apri nella mappa",
-    "onRoute": "In viaggio"
+    "onRoute": "In viaggio",
+    "noProject": "Nessun cantiere",
+    "onSite": "In cantiere",
+    "checkedOut": "Uscito",
+    "runningLate": "In ritardo",
+    "elapsed": "Tempo in cantiere",
+    "since": "Dalle",
+    "todaysJobs": "La sua giornata",
+    "nothingScheduled": "Niente in programma oggi."
   },
   "photoGallery": {
     "title": "Galleria foto",
@@ -1130,5 +1137,20 @@
   "estimates": {
     "signedBadge": "Firmato",
     "signedDetail": "Firmato da {{name}} il {{date}} · {{amount}}"
+  },
+  "performance": {
+    "title": "Pianificato vs reale",
+    "note": "Cosa aveva in programma ciascuno rispetto a quanto ha davvero timbrato. Tre numeri, non un voto: ore pianificate, ore lavorate e lavori passati senza nessuno.",
+    "planned": "Pianificato",
+    "actual": "Lavorato",
+    "overtime": "Straordinari",
+    "difference": "Differenza",
+    "adherence": "{{percent}}% del piano",
+    "noPlan": "Niente era in programma",
+    "missed": "{{count}} su {{total}} lavori senza nessuno",
+    "allCovered": "Ha coperto tutti i {{total}} lavori",
+    "empty": "Nessuno ha ore o pianificazione in questo periodo.",
+    "hoursShort": "{{hours}} h",
+    "overtimeExplainer": "La timbratura si divide all'ottava ora del giorno: prima ore normali, dopo straordinari."
   }
 }

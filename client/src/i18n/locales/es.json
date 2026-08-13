@@ -911,13 +911,20 @@
     "title": "GPS y rutas",
     "description": "Ubicación en tiempo real de técnicos y subcontratistas activos",
     "activeNow": "Activos ahora",
-    "mapWaiting": "Mapa en espera de API key",
     "nobodyActive": "Nadie activo en este momento.",
     "noLocations": "Todavía no hay posiciones que mostrar",
     "noLocationsHint": "El mapa se dibuja con los check-in de las últimas 24 horas. En cuanto alguien fiche desde la obra, aparecerá aquí.",
     "recentCheckIns": "Check-in recientes",
     "openMap": "Ver en el mapa",
-    "onRoute": "En ruta"
+    "onRoute": "En ruta",
+    "noProject": "Sin proyecto",
+    "onSite": "En obra",
+    "checkedOut": "Salió",
+    "runningLate": "Va atrasado",
+    "elapsed": "Tiempo en obra",
+    "since": "Desde",
+    "todaysJobs": "Su día",
+    "nothingScheduled": "No tiene nada programado hoy."
   },
   "photoGallery": {
     "title": "Galería de fotos",
@@ -1130,5 +1137,20 @@
   "estimates": {
     "signedBadge": "Firmado",
     "signedDetail": "Firmado por {{name}} el {{date}} · {{amount}}"
+  },
+  "performance": {
+    "title": "Planificado vs. real",
+    "note": "Lo que tenía programado cada persona frente a lo que fichó de verdad. Tres números, no una nota: horas planificadas, horas trabajadas, y trabajos que pasaron sin nadie.",
+    "planned": "Planificado",
+    "actual": "Trabajado",
+    "overtime": "Extra",
+    "difference": "Diferencia",
+    "adherence": "{{percent}}% de lo planificado",
+    "noPlan": "Sin nada programado",
+    "missed": "{{count}} de {{total}} trabajos sin nadie encima",
+    "allCovered": "Cubrió sus {{total}} trabajos",
+    "empty": "Nadie tiene horas ni programación en este periodo.",
+    "hoursShort": "{{hours}} h",
+    "overtimeExplainer": "El fichaje se parte a las 8 h del día: lo anterior son horas normales y lo posterior, extra."
   }
 }

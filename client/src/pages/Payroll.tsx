@@ -50,6 +50,7 @@ interface WorkerRow {
   name: string;
   hourlyRate: number | null;
   hours: number;
+  overtimeHours: number;
   breakdown: Breakdown | null;
 }
 
@@ -189,6 +190,9 @@ export default function Payroll() {
                   <p className="text-sm font-semibold text-foreground">{worker.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {t("payroll.hoursApproved", { hours: worker.hours })}
+                    {worker.overtimeHours > 0
+                      ? ` · ${t("performance.overtime")} ${t("performance.hoursShort", { hours: worker.overtimeHours })}`
+                      : ""}
                     {worker.hourlyRate ? ` · ${formatCurrency(worker.hourlyRate)}/h` : ""}
                   </p>
                 </div>
