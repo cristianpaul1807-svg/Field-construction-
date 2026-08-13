@@ -1189,5 +1189,16 @@
     "toInvoice": "Reste à facturer",
     "outstanding": "En attente de paiement",
     "noLabourRates": "Le coût exclut la main-d'œuvre : aucun taux horaire n'est configuré."
+  },
+  "accountingExport": {
+    "title": "Exporter pour le comptable",
+    "note": "Les livres dans un fichier que tout logiciel comptable importe. Un fichier par type, pour que les colonnes veuillent dire quelque chose.",
+    "failed": "Le fichier n'a pas pu être généré. Réessayez.",
+    "columnsNote": "La TPS et la TVQ sont dans des colonnes séparées, comme elles se déclarent.",
+    "kind": {
+      "invoices": "Factures",
+      "payments": "Paiements",
+      "expenses": "Dépenses"
+    }
   }
 }

@@ -1189,5 +1189,16 @@
     "toInvoice": "Queda por facturar",
     "outstanding": "Pendiente de cobro",
     "noLabourRates": "El coste no incluye mano de obra: no hay tarifas configuradas para los trabajadores."
+  },
+  "accountingExport": {
+    "title": "Exportar para el contable",
+    "note": "Los libros en un fichero que cualquier programa de contabilidad importa. Un fichero por tipo, para que las columnas signifiquen algo.",
+    "failed": "No se pudo generar el fichero. Vuelve a intentarlo.",
+    "columnsNote": "El TPS y el TVQ van en columnas separadas, que es como se declaran.",
+    "kind": {
+      "invoices": "Facturas",
+      "payments": "Pagos",
+      "expenses": "Gastos"
+    }
   }
 }

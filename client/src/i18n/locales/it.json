@@ -1189,5 +1189,16 @@
     "toInvoice": "Ancora da fatturare",
     "outstanding": "In attesa di pagamento",
     "noLabourRates": "Il costo esclude la manodopera: non ci sono tariffe configurate."
+  },
+  "accountingExport": {
+    "title": "Esporta per il commercialista",
+    "note": "I libri in un file che qualsiasi software di contabilità importa. Un file per tipo, così le colonne significano qualcosa.",
+    "failed": "Non è stato possibile generare il file. Riprova.",
+    "columnsNote": "TPS e TVQ sono in colonne separate, come si dichiarano.",
+    "kind": {
+      "invoices": "Fatture",
+      "payments": "Pagamenti",
+      "expenses": "Spese"
+    }
   }
 }

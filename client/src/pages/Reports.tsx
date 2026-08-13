@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { ReceivablesPanel } from "@/components/ReceivablesPanel";
 import { ProfitabilityPanel } from "@/components/ProfitabilityPanel";
+import { AccountingExportCard } from "@/components/AccountingExportCard";
 import { useTranslation } from "react-i18next";
 
 interface ReportsData {
@@ -129,6 +130,7 @@ export default function Reports() {
 
       {/* Outside the loading gate above: it fetches on its own, and money
           owed is the thing on this page somebody actually acts on. */}
+      <AccountingExportCard />
       <ProfitabilityPanel />
       <ReceivablesPanel />
     </div>

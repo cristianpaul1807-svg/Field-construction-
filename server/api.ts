@@ -26,6 +26,7 @@ import { businessCoordinates } from "./geocode";
 import { provisionWebhook, readStoredWebhookSecrets } from "./stripeWebhookSetup";
 import { receivables } from "./receivables";
 import { profitabilityByProject } from "./profitability";
+import { exportAccounting, type ExportKind } from "./accountingExport";
 import {
   annualTotals,
   approvedHours,
@@ -5268,6 +5269,34 @@ apiRouter.post(
       payoutsEnabled: !!remote.payouts_enabled,
       detailsSubmitted: !!remote.details_submitted,
     });
+  })
+);
+
+// The books as a file the accountant can import. One kind per call so the
+// columns stay meaningful — a single sheet mixing invoices, payments and
+// expenses is one nobody can map.
+apiRouter.get(
+  "/reports/accounting-export",
+  route(async (req, res) => {
+    const kind = String(req.query.kind ?? "invoices") as ExportKind;
+    if (!["invoices", "payments", "expenses"].includes(kind)) {
+      res.status(400).json({ error: "kind must be invoices, payments or expenses" });
+      return;
+    }
+    // A year to date by default: the range somebody exporting the books wants
+    // far more often than any other.
+    const year = new Date().getFullYear();
+    const from = String(req.query.from ?? `${year}-01-01`);
+    const to = String(req.query.to ?? new Date().toISOString().slice(0, 10));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      res.status(400).json({ error: "from and to must be YYYY-MM-DD" });
+      return;
+    }
+
+    const result = await exportAccounting(req.supabase! as never, req.businessId!, kind, from, to);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${result.filename}"`);
+    res.send(result.csv);
   })
 );
 

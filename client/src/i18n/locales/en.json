@@ -1189,5 +1189,16 @@
     "toInvoice": "Still to invoice",
     "outstanding": "Awaiting payment",
     "noLabourRates": "Cost excludes labour: no pay rates are set for the workers."
+  },
+  "accountingExport": {
+    "title": "Export for your accountant",
+    "note": "The books in a file any accounting package imports. One file per kind, so the columns mean something.",
+    "failed": "The file could not be generated. Try again.",
+    "columnsNote": "GST and QST are in separate columns, which is how they are filed.",
+    "kind": {
+      "invoices": "Invoices",
+      "payments": "Payments",
+      "expenses": "Expenses"
+    }
   }
 }
