@@ -305,7 +305,9 @@
     "accountMissing": "The Stripe account we had on file no longer exists. We have unlinked it — press Connect Stripe again to create a new one.",
     "feesPaidByAccount": "Stripe's fees come out of this account, not the platform's.",
     "feesPayerWrongTitle": "This account predates the fee setup",
-    "feesPayerWrongBody": "Stripe's fees are being billed to the platform. Who pays them is fixed when the account is created and cannot be changed afterwards, so a new account has to be created. Get in touch before doing it so no received payments are lost."
+    "feesPayerWrongBody": "Stripe's fees are being billed to the platform. Who pays them is fixed when the account is created and cannot be changed afterwards, so a new account has to be created. Get in touch before doing it so no received payments are lost.",
+    "modeManualTitle": "You are working without Stripe",
+    "modeManualBody": "You issue invoices the same way and mark them paid by hand. Connect Stripe whenever you like and your clients can pay from their portal."
   },
   "communication": {
     "title": "Messaging",
@@ -983,5 +985,23 @@
       "al_iniciar": "When the work starts",
       "al_confirmar": "When the work is signed off"
     }
+  },
+  "stripeAlert": {
+    "title": "You cannot get paid through the software yet",
+    "titleUnfinished": "Your Stripe setup is unfinished",
+    "body": "Connect Stripe and your clients pay their invoices from their portal, with the money going straight to your account.",
+    "goConfigure": "Set it up",
+    "decline": "Don't use Stripe",
+    "declineTitle": "Working without Stripe",
+    "declineIntro": "It works, and plenty of people do it. Here is exactly what changes.",
+    "youLose": "What you give up",
+    "loseOnlinePayment": "The pay button in the client portal. You collect the way you do today: transfer, cheque or cash.",
+    "loseAutoStatus": "Invoices marking themselves paid. You mark them when the money lands.",
+    "youKeep": "What stays the same",
+    "keepDocuments": "The estimate and invoice PDFs, with your taxes, your holdback and your registration numbers.",
+    "keepEverythingElse": "Everything else: jobs, scheduling, crew, clock-ins, chat, the client portal and payment schedules.",
+    "keepManualPaid": "Tracking what is owed: you issue the invoice the same way and mark it paid by hand.",
+    "reversible": "You can change your mind any time from Settings → Payments. Nothing is lost.",
+    "declineConfirm": "Got it, carry on without Stripe"
   }
 }

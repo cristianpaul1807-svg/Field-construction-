@@ -305,7 +305,9 @@
     "accountMissing": "La cuenta de Stripe que teníamos guardada ya no existe. La hemos desvinculado: pulsa Conectar Stripe otra vez para crear una nueva.",
     "feesPaidByAccount": "Las comisiones de Stripe se descuentan de esta cuenta, no de la plataforma.",
     "feesPayerWrongTitle": "Esta cuenta se creó antes del ajuste de comisiones",
-    "feesPayerWrongBody": "Las comisiones de Stripe se están cargando a la plataforma. Quién las paga se fija al crear la cuenta y no se puede cambiar después, así que hay que crear una cuenta nueva. Escríbenos antes de hacerlo para no perder los pagos ya recibidos."
+    "feesPayerWrongBody": "Las comisiones de Stripe se están cargando a la plataforma. Quién las paga se fija al crear la cuenta y no se puede cambiar después, así que hay que crear una cuenta nueva. Escríbenos antes de hacerlo para no perder los pagos ya recibidos.",
+    "modeManualTitle": "Estás trabajando sin Stripe",
+    "modeManualBody": "Emites las facturas igual y las marcas pagadas a mano. Conecta Stripe cuando quieras y tus clientes podrán pagar desde su portal."
   },
   "communication": {
     "title": "Mensajería",
@@ -983,5 +985,23 @@
       "al_iniciar": "Al empezar la obra",
       "al_confirmar": "Al confirmar el trabajo"
     }
+  },
+  "stripeAlert": {
+    "title": "Todavía no puedes cobrar por el software",
+    "titleUnfinished": "Te falta terminar el alta de Stripe",
+    "body": "Conecta Stripe y tus clientes pagarán las facturas desde su portal, con el dinero yendo directo a tu cuenta.",
+    "goConfigure": "Ir a configurar",
+    "decline": "No usar Stripe",
+    "declineTitle": "Trabajar sin Stripe",
+    "declineIntro": "Se puede, y mucha gente lo hace. Esto es exactamente lo que cambia.",
+    "youLose": "Lo que dejas de tener",
+    "loseOnlinePayment": "El botón de pagar en el portal del cliente. Tendrás que cobrar como lo hagas ahora: transferencia, cheque o efectivo.",
+    "loseAutoStatus": "La factura marcada como pagada sola. La marcarás tú cuando entre el dinero.",
+    "youKeep": "Lo que sigue igual",
+    "keepDocuments": "Los PDF de presupuestos y facturas, con tus impuestos, tu retención y tus datos fiscales.",
+    "keepEverythingElse": "Todo lo demás del software: obras, agenda, equipo, fichajes, chat, portal del cliente y plan de pagos.",
+    "keepManualPaid": "El control de cobros: emites la factura igual y la marcas pagada a mano.",
+    "reversible": "Puedes cambiar de opinión cuando quieras desde Configuración → Pagos. No se pierde nada.",
+    "declineConfirm": "Entendido, seguir sin Stripe"
   }
 }

@@ -305,7 +305,9 @@
     "accountMissing": "Le compte Stripe enregistré n'existe plus. Nous l'avons dissocié : appuyez de nouveau sur Connecter Stripe pour en créer un nouveau.",
     "feesPaidByAccount": "Les frais de Stripe sont prélevés sur ce compte, pas sur celui de la plateforme.",
     "feesPayerWrongTitle": "Ce compte a été créé avant le réglage des frais",
-    "feesPayerWrongBody": "Les frais de Stripe sont facturés à la plateforme. Le payeur est fixé à la création du compte et ne peut plus être modifié : il faut créer un nouveau compte. Contactez-nous avant, pour ne perdre aucun paiement déjà reçu."
+    "feesPayerWrongBody": "Les frais de Stripe sont facturés à la plateforme. Le payeur est fixé à la création du compte et ne peut plus être modifié : il faut créer un nouveau compte. Contactez-nous avant, pour ne perdre aucun paiement déjà reçu.",
+    "modeManualTitle": "Vous travaillez sans Stripe",
+    "modeManualBody": "Vous émettez les factures pareil et les marquez payées à la main. Connectez Stripe quand vous voulez et vos clients pourront payer depuis leur portail."
   },
   "communication": {
     "title": "Messagerie",
@@ -983,5 +985,23 @@
       "al_iniciar": "Au démarrage des travaux",
       "al_confirmar": "À la validation des travaux"
     }
+  },
+  "stripeAlert": {
+    "title": "Vous ne pouvez pas encore être payé via le logiciel",
+    "titleUnfinished": "Votre inscription Stripe est inachevée",
+    "body": "Connectez Stripe et vos clients paieront leurs factures depuis leur portail, l'argent allant directement sur votre compte.",
+    "goConfigure": "Configurer",
+    "decline": "Ne pas utiliser Stripe",
+    "declineTitle": "Travailler sans Stripe",
+    "declineIntro": "C'est possible, et beaucoup le font. Voici exactement ce qui change.",
+    "youLose": "Ce que vous perdez",
+    "loseOnlinePayment": "Le bouton de paiement dans le portail client. Vous encaissez comme aujourd'hui : virement, chèque ou comptant.",
+    "loseAutoStatus": "Les factures qui se marquent payées seules. Vous les marquerez à réception.",
+    "youKeep": "Ce qui ne change pas",
+    "keepDocuments": "Les PDF de soumissions et de factures, avec vos taxes, votre retenue et vos numéros fiscaux.",
+    "keepEverythingElse": "Tout le reste : chantiers, agenda, équipe, pointages, chat, portail client et échéanciers.",
+    "keepManualPaid": "Le suivi des encaissements : vous émettez la facture pareil et la marquez payée à la main.",
+    "reversible": "Vous pouvez changer d'avis à tout moment depuis Configuration → Paiements. Rien n'est perdu.",
+    "declineConfirm": "Compris, continuer sans Stripe"
   }
 }

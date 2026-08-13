@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
 
 interface ConnectStatus {
+  paymentsMode: "sin_definir" | "stripe" | "manual";
   connected: boolean;
   status: "pending" | "active" | "restricted";
   chargesEnabled: boolean;
@@ -156,6 +157,13 @@ export default function SettingsPayments() {
           <div className="rounded-lg border border-status-warning-fg/30 bg-status-warning-bg/40 p-4 space-y-1.5">
             <p className="text-sm font-medium text-foreground">{t("payments.feesPayerWrongTitle")}</p>
             <p className="text-sm text-muted-foreground">{t("payments.feesPayerWrongBody")}</p>
+          </div>
+        )}
+
+        {!loading && connectStatus?.paymentsMode === "manual" && !connectStatus.chargesEnabled && (
+          <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-1.5">
+            <p className="text-sm font-medium text-foreground">{t("payments.modeManualTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("payments.modeManualBody")}</p>
           </div>
         )}
 

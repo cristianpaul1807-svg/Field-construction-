@@ -4734,7 +4734,13 @@ apiRouter.get(
       .eq("business_id", req.businessId!)
       .maybeSingle();
     if (error) throw error;
+    const { data: business } = await admin
+      .from("businesses")
+      .select("payments_mode")
+      .eq("id", req.businessId!)
+      .maybeSingle();
     res.json({
+      paymentsMode: business?.payments_mode ?? "sin_definir",
       connected: !!data?.stripe_account_id,
       status: data?.status ?? "pending",
       chargesEnabled: data?.charges_enabled ?? false,
@@ -4746,6 +4752,26 @@ apiRouter.get(
       // a Stripe invoice at the end of the month.
       feesPayer: data?.fees_payer ?? null,
     });
+  })
+);
+
+// The business choosing how it gets paid. "manual" is a real answer, not a
+// failure to answer: a contractor who invoices by e-transfer and deposits
+// cheques is running a normal business, and the panel should stop asking.
+apiRouter.post(
+  "/settings/payments-mode",
+  route(async (req, res) => {
+    const mode = req.body?.mode;
+    if (!["sin_definir", "stripe", "manual"].includes(mode)) {
+      res.status(400).json({ error: "invalid mode" });
+      return;
+    }
+    const { error } = await getSupabaseAdmin()
+      .from("businesses")
+      .update({ payments_mode: mode, payments_mode_set_at: new Date().toISOString() })
+      .eq("id", req.businessId!);
+    if (error) throw error;
+    res.json({ ok: true, mode });
   })
 );
 
@@ -4778,6 +4804,12 @@ apiRouter.post(
         }
         throw err;
       }
+      // Starting onboarding answers the question; no need to ask again.
+      await admin
+        .from("businesses")
+        .update({ payments_mode: "stripe", payments_mode_set_at: new Date().toISOString() })
+        .eq("id", req.businessId!);
+
       const { data: inserted, error: insertError } = await admin
         .from("stripe_connected_accounts")
         .upsert(

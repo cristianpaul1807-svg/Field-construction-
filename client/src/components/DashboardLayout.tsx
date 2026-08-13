@@ -41,6 +41,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { ProjectSwitcher } from "@/components/ProjectSwitcher";
 import { AdminAssistantBar } from "@/components/AdminAssistantBar";
 import { useAuth } from "@/contexts/AuthContext";
+import { StripeConnectAlert } from "@/components/StripeConnectAlert";
 import { useApi } from "@/lib/api";
 import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
@@ -396,6 +397,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       </header>
 
+      <StripeConnectAlert />
       <main className="flex-1 w-full">{children}</main>
       <AdminAssistantBar />
     </div>
