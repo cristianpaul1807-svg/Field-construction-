@@ -242,6 +242,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="h-14 px-4 sm:px-6 flex items-center gap-3">
+          {/* El menú abre desde la izquierda, que es donde la mano busca la
+              navegación y donde lo pone cualquier herramienta que se use a
+              diario. Estaba a la derecha, apretado entre el idioma y el
+              avatar, donde parecía un ajuste más. */}
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileNavOpen((open) => !open)}
+              className="text-foreground -ml-2 flex-shrink-0"
+              aria-label="Menu"
+            >
+              {mobileNavOpen ? <X size={18} strokeWidth={1.75} /> : <Menu size={18} strokeWidth={1.75} />}
+            </Button>
+          )}
+
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 min-w-0">
             <div className="w-7 h-7 border border-border rounded-lg flex items-center justify-center text-foreground flex-shrink-0">
               <HardHat size={15} strokeWidth={1.75} />
@@ -316,17 +332,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {isMobile && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileNavOpen((open) => !open)}
-                className="text-foreground"
-                aria-label="Menu"
-              >
-                {mobileNavOpen ? <X size={18} strokeWidth={1.75} /> : <Menu size={18} strokeWidth={1.75} />}
-              </Button>
-            )}
           </div>
         </div>
 

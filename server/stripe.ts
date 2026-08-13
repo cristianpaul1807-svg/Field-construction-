@@ -27,10 +27,37 @@ export function getStripe(): Stripe {
   return client;
 }
 
-export function getStripeWebhookSecret(): string {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!secret) {
+/**
+ * Every signing secret this deployment will accept.
+ *
+ * More than one, because a Connect platform genuinely needs more than one
+ * endpoint: events about a contractor's own payments come from the connected
+ * account and events about the platform come from the platform, and Stripe
+ * gives each scope its own secret. One value here meant only one of the two
+ * could ever be verified, and the other arrived, failed its signature check,
+ * and was dropped — silently, since a rejected webhook looks identical to an
+ * attack.
+ *
+ * It also makes rotation survivable: put both the old and the new secret in
+ * during the changeover instead of choosing which minute to break.
+ *
+ * Comma-separated. Whitespace around each entry is forgiven — these get
+ * pasted into hosting panels by hand.
+ */
+export function getStripeWebhookSecrets(): string[] {
+  const raw = process.env.STRIPE_WEBHOOK_SECRET;
+  const secrets = (raw ?? "")
+    .split(",")
+    .map((secret) => secret.trim())
+    .filter(Boolean);
+  if (secrets.length === 0) {
     throw new StripeNotConfiguredError();
   }
-  return secret;
+  return secrets;
+}
+
+/** The first configured secret. Kept for callers that only need to know one
+ *  exists; verification should use `getStripeWebhookSecrets`. */
+export function getStripeWebhookSecret(): string {
+  return getStripeWebhookSecrets()[0];
 }

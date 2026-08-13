@@ -2,7 +2,7 @@ import express, { Router, type Request, type Response, type NextFunction } from 
 import multer from "multer";
 import { randomUUID, randomBytes } from "crypto";
 import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
-import { getStripe, getStripeWebhookSecret, StripeNotConfiguredError } from "./stripe";
+import { getStripe, getStripeWebhookSecrets, StripeNotConfiguredError } from "./stripe";
 import { flowCopy, normalizeFlowLang, type FlowLang } from "./flowMessages";
 import {
   renderEstimatePdf,
@@ -585,7 +585,20 @@ async function stripeWebhookHandler(req: Request, res: Response) {
     const stripe = getStripe();
     const signature = req.header("stripe-signature");
     if (!signature) throw new Error("Missing stripe-signature header");
-    event = stripe.webhooks.constructEvent(req.body, signature, getStripeWebhookSecret());
+    // Tried against each configured secret: the platform scope and the
+    // connected-accounts scope have different ones, and an event is genuine
+    // if any of them verifies it. Only after all of them fail is it refused.
+    const secrets = getStripeWebhookSecrets();
+    let lastError: unknown;
+    for (const secret of secrets) {
+      try {
+        event = stripe.webhooks.constructEvent(req.body, signature, secret);
+        break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    if (!event) throw lastError ?? new Error("Invalid signature");
   } catch (err) {
     res.status(400).json({ error: err instanceof Error ? err.message : "Invalid signature" });
     return;
@@ -631,6 +644,44 @@ async function stripeWebhookHandler(req: Request, res: Response) {
         }
       }
     }
+  }
+
+  // Stripe telling us what it now knows about a contractor's account.
+  //
+  // Without this the panel only learns the truth when somebody happens to
+  // open Settings → Payments and the page asks. That is how a business that
+  // had finished its onboarding kept being told it still had to finish:
+  // Stripe knew, we did not, and nothing was going to ask. Verification can
+  // also complete or lapse days later, with nobody sitting on the page.
+  if (event.type === "account.updated") {
+    const account = event.data.object as {
+      id: string;
+      charges_enabled?: boolean;
+      payouts_enabled?: boolean;
+      details_submitted?: boolean;
+      requirements?: { disabled_reason?: string | null } | null;
+    };
+    const admin = getSupabaseAdmin();
+    const status = account.charges_enabled
+      ? "active"
+      : account.requirements?.disabled_reason
+        ? "restricted"
+        : "pending";
+
+    // Filtered by the Stripe account id rather than a business: the event
+    // arrives from Stripe with no idea which of our tenants it belongs to,
+    // and this row is the only place that mapping lives.
+    const { error } = await admin
+      .from("stripe_connected_accounts")
+      .update({
+        charges_enabled: !!account.charges_enabled,
+        payouts_enabled: !!account.payouts_enabled,
+        details_submitted: !!account.details_submitted,
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_account_id", account.id);
+    if (error) console.error("[stripe] account.updated could not be stored", account.id, error);
   }
 
   res.json({ received: true });
@@ -762,7 +813,13 @@ apiRouter.get(
     report.stripeKeyIsSecret = /^(sk|rk)_/.test(rawStripeKey);
     report.stripeKeyIsPublishable = rawStripeKey.startsWith("pk_");
     report.stripeKeyMode = rawStripeKey.includes("_live_") ? "live" : rawStripeKey.includes("_test_") ? "test" : null;
-    report.stripeWebhookSecretLooksRight = (process.env.STRIPE_WEBHOOK_SECRET ?? "").trim().startsWith("whsec_");
+    const webhookSecrets = (process.env.STRIPE_WEBHOOK_SECRET ?? "")
+      .split(",")
+      .map((secret) => secret.trim())
+      .filter(Boolean);
+    report.stripeWebhookSecretCount = webhookSecrets.length;
+    report.stripeWebhookSecretLooksRight =
+      webhookSecrets.length > 0 && webhookSecrets.every((secret) => secret.startsWith("whsec_"));
 
     try {
       const admin = getSupabaseAdmin();
@@ -821,7 +878,7 @@ apiRouter.get(
     }
     if (process.env.STRIPE_WEBHOOK_SECRET && !report.stripeWebhookSecretLooksRight) {
       problems.push(
-        "STRIPE_WEBHOOK_SECRET does not start with whsec_, so signature verification will reject every event Stripe sends and no invoice will ever be marked paid."
+        `STRIPE_WEBHOOK_SECRET holds ${report.stripeWebhookSecretCount} value(s) and not all of them start with whsec_. Signature verification will reject the events signed with the bad one, and those invoices will never be marked paid. Several secrets are allowed, separated by commas — one per Stripe endpoint.`
       );
     }
     if (!report.supabaseReachable && problems.length === 0) {
@@ -5079,8 +5136,13 @@ apiRouter.post(
               // for customer-configuration details would be asking for
               // paperwork nothing will ever use.
               configurations: ["merchant"],
-              refresh_url: `${baseUrl}/settings/pagos`,
-              return_url: `${baseUrl}/settings/pagos?onboarding=completo`,
+              // These must be routes that exist in client/src/App.tsx.
+              // They said /settings/pagos while the route is
+              // /settings/payments, so Stripe returned every contractor who
+              // finished onboarding to a 404 — the worst possible moment to
+              // show one, right after they handed over their bank details.
+              refresh_url: `${baseUrl}/settings/payments`,
+              return_url: `${baseUrl}/settings/payments?onboarding=completo`,
             },
           },
         } as never,
