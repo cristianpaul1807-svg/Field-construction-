@@ -83,7 +83,8 @@
     "automations": "Automatisations",
     "askAssistant": "Demandez quelque chose à l'assistant...",
     "assistantTitle": "Assistant de l'entreprise",
-    "assistantHint": "Demandez-lui d'ajouter une projection de travaux, de revoir les soumissions en attente, ou tout ce que vous souhaitez automatiser."
+    "assistantHint": "Demandez-lui d'ajouter une projection de travaux, de revoir les soumissions en attente, ou tout ce que vous souhaitez automatiser.",
+    "payroll": "Paie"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -371,7 +372,9 @@
       "disponible": "Disponible",
       "en_proyecto": "Sur un projet",
       "descanso": "Congé"
-    }
+    },
+    "hourlyRate": "Taux horaire (optionnel)",
+    "hourlyRateHint": "Panneau seulement. Les travailleurs ne voient jamais les taux, ni le leur ni celui des autres."
   },
   "subcontractors": {
     "title": "Sous-traitants",
@@ -1003,5 +1006,38 @@
     "keepManualPaid": "Le suivi des encaissements : vous émettez la facture pareil et la marquez payée à la main.",
     "reversible": "Vous pouvez changer d'avis à tout moment depuis Configuration → Paiements. Rien n'est perdu.",
     "declineConfirm": "Compris, continuer sans Stripe"
+  },
+  "payroll": {
+    "title": "Paie",
+    "description": "Ce que coûte votre équipe, à partir des heures approuvées. Tout est optionnel : sans taux, personne n'apparaît.",
+    "tabPeriod": "Période",
+    "tabIssued": "Émises",
+    "tabRules": "Retenues",
+    "from": "Du",
+    "to": "Au",
+    "recalculate": "Recalculer",
+    "noApprovedHours": "Aucune heure approuvée sur cette période. Approuvez-les dans Terrain → Pointage.",
+    "hoursApproved": "{{hours}} h approuvées",
+    "noRateSet": "Pas de taux horaire. Renseignez-en un sur sa fiche pour suivre ce qu'il coûte.",
+    "gross": "Brut",
+    "employeeSide": "Retenues",
+    "net": "Net à payer",
+    "totalCost": "Coût total",
+    "cappedShort": "plafond atteint",
+    "periodTotalCost": "Coût total de la période",
+    "record": "Émettre la feuille",
+    "noRuns": "Vous n'avez émis aucune feuille de paie.",
+    "costShort": "coût {{amount}}",
+    "filePrefix": "feuille-de-paie",
+    "rulesNote": "Ce sont les lignes appliquées à chaque paie. Elles sont préremplies avec les chiffres publiés pour le Québec en 2026, mais modifiez-les : les taux changent chaque janvier, et la CNESST et le FSS dépendent de votre classification et de votre masse salariale. Confirmez-les auprès de Revenu Québec et de l'ARC avant de vous y fier.",
+    "lineName": "Ligne",
+    "paidBy": "Payé par",
+    "payerEmployee": "Le travailleur",
+    "payerEmployer": "L'entreprise",
+    "ratePercent": "Taux (%)",
+    "annualExemption": "Exemption annuelle",
+    "annualMaximum": "Plafond annuel",
+    "noCeiling": "Sans plafond",
+    "addLine": "Ajouter une ligne"
   }
 }

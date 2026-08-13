@@ -115,6 +115,7 @@ const navSections: NavSection[] = [
     Icon: Wallet,
     items: [
       { id: "invoicing", labelKey: "nav.invoicing", Icon: CreditCard, path: "/invoicing" },
+      { id: "payroll", labelKey: "nav.payroll", Icon: Wallet, path: "/payroll" },
       { id: "reports", labelKey: "nav.reports", Icon: BarChart3, path: "/reports" },
     ],
   },

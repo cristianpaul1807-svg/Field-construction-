@@ -7,6 +7,7 @@ import { flowCopy, normalizeFlowLang, type FlowLang } from "./flowMessages";
 import {
   renderEstimatePdf,
   renderInvoicePdf,
+  renderPayrollPdf,
   documentNumber,
   normalizeDocLang,
   type BusinessIdentity,
@@ -14,6 +15,12 @@ import {
   type DocLine,
   type TaxBreakdown,
 } from "./documents";
+import {
+  approvedHours,
+  computePayroll,
+  labourCostByProject,
+  readDeductions,
+} from "./payroll";
 import {
   billMilestone,
   billMilestonesForTrigger,
@@ -2380,7 +2387,7 @@ apiRouter.get(
         .order("name"),
       supabase
         .from("subcontractors")
-        .select("id, name, trade, phone, rating, access_token_hash")
+        .select("id, name, trade, phone, rating, hourly_rate, access_token_hash")
         .eq("business_id", req.businessId!)
         .order("name"),
     ]);
@@ -2410,6 +2417,7 @@ apiRouter.get(
         trade: s.trade,
         phone: s.phone,
         rating: s.rating,
+        hourlyRate: s.hourly_rate === null ? null : Number(s.hourly_rate),
         // Whether they can actually open the field app — the only "linked or
         // not" state this product really has for a subcontractor.
         hasAccessCode: Boolean(s.access_token_hash),
@@ -3688,6 +3696,13 @@ apiRouter.get(
       return "otros";
     };
 
+    // Hours the crew actually worked, valued at each worker's rate. Until now
+    // the biggest cost on most jobs was invisible here, because only typed-in
+    // expenses counted and nobody types in their own payroll. Workers with no
+    // rate contribute nothing, so a business that does not track pay sees the
+    // same figures it always saw.
+    const labourByProject = await labourCostByProject(getSupabaseAdmin(), req.businessId!);
+
     const result = projects.data.map((project) => {
       const budgeted = new Map<string, number>();
       for (const line of lines) {
@@ -3697,6 +3712,8 @@ apiRouter.get(
       }
 
       const actual = new Map<string, number>();
+      const labour = labourByProject[project.id] ?? 0;
+      if (labour > 0) actual.set("mano_obra", labour);
       for (const expense of expenses.data) {
         if (expense.project_id !== project.id) continue;
         const key = canonical(expense.category);
@@ -4146,7 +4163,7 @@ apiRouter.get(
     const [employees, assignments, timeEntries] = await Promise.all([
       supabase
         .from("employees")
-        .select("id, name, role, phone, status")
+        .select("id, name, role, phone, status, hourly_rate")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -4180,6 +4197,7 @@ apiRouter.get(
           role: e.role,
           phone: e.phone,
           status: e.status,
+          hourlyRate: e.hourly_rate === null ? null : Number(e.hourly_rate),
           currentProject,
           hoursThisPeriod: Math.round(hoursThisPeriod),
         };
@@ -4246,7 +4264,7 @@ apiRouter.get(
     const [subcontractors, assignments] = await Promise.all([
       supabase
         .from("subcontractors")
-        .select("id, name, trade, phone, rating, access_token_hash")
+        .select("id, name, trade, phone, rating, hourly_rate, access_token_hash")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -4266,6 +4284,7 @@ apiRouter.get(
         trade: s.trade,
         phone: s.phone,
         rating: s.rating,
+        hourlyRate: s.hourly_rate === null ? null : Number(s.hourly_rate),
         // Whether they can actually open the field app — the only "linked or
         // not" state this product really has for a subcontractor.
         hasAccessCode: Boolean(s.access_token_hash),
@@ -4961,6 +4980,214 @@ apiRouter.post(
       dueDate: dueDate ?? null,
     });
     res.status(201).json({ id });
+  })
+);
+
+// ---------- Payroll ----------
+// Everything under here is the office's. No /worker/* route reads a rate or a
+// run: what somebody earns is between them and the office, and the field app
+// has no business knowing what the person beside them costs.
+
+apiRouter.get(
+  "/payroll/deductions",
+  route(async (req, res) => {
+    const rules = await readDeductions(getSupabaseAdmin(), req.businessId!);
+    res.json(rules);
+  })
+);
+
+apiRouter.put(
+  "/payroll/deductions",
+  route(async (req, res) => {
+    const rows = Array.isArray(req.body?.deductions) ? req.body.deductions : null;
+    if (!rows) {
+      res.status(400).json({ error: "deductions must be a list" });
+      return;
+    }
+    const cleaned = rows.map((d: Record<string, unknown>, index: number) => ({
+      position: index + 1,
+      code: String(d.code ?? `linea_${index + 1}`).trim() || `linea_${index + 1}`,
+      label: String(d.label ?? "").trim(),
+      paid_by: d.paidBy === "empleador" ? "empleador" : "empleado",
+      rate_percent: Number(d.ratePercent ?? 0),
+      annual_exemption: Number(d.annualExemption ?? 0),
+      annual_maximum:
+        d.annualMaximum === null || d.annualMaximum === undefined || d.annualMaximum === ""
+          ? null
+          : Number(d.annualMaximum),
+      enabled: d.enabled !== false,
+      source_note: d.sourceNote ? String(d.sourceNote) : null,
+    }));
+
+    for (const row of cleaned) {
+      if (!row.label) {
+        res.status(400).json({ error: "every line needs a name" });
+        return;
+      }
+      if (!Number.isFinite(row.rate_percent) || row.rate_percent < 0 || row.rate_percent > 100) {
+        res.status(400).json({ error: "every rate must be between 0 and 100" });
+        return;
+      }
+    }
+
+    const admin = getSupabaseAdmin();
+    const { error: deleteError } = await admin
+      .from("payroll_deductions")
+      .delete()
+      .eq("business_id", req.businessId!);
+    if (deleteError) throw deleteError;
+    if (cleaned.length > 0) {
+      const { error } = await admin
+        .from("payroll_deductions")
+        .insert(cleaned.map((row: (typeof cleaned)[number]) => ({ ...row, business_id: req.businessId! })));
+      if (error) throw error;
+    }
+    res.json({ ok: true });
+  })
+);
+
+// Approved hours per worker for a period, with what each would cost. The
+// preview the admin sees before deciding to record anything.
+apiRouter.get(
+  "/payroll/hours",
+  route(async (req, res) => {
+    const from = String(req.query.from ?? "");
+    const to = String(req.query.to ?? "");
+    if (!from || !to) {
+      res.status(400).json({ error: "from and to are required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const [workers, rules] = await Promise.all([
+      approvedHours(admin, req.businessId!, from, `${to}T23:59:59.999Z`),
+      readDeductions(admin, req.businessId!),
+    ]);
+    const periodDays = Math.max(1, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000) + 1);
+
+    res.json({
+      periodDays,
+      workers: workers
+        .filter((w) => w.hours > 0)
+        .map((w) => ({
+          workerId: w.workerId,
+          kind: w.kind,
+          name: w.name,
+          hourlyRate: w.hourlyRate,
+          hours: w.hours,
+          // Without a rate there is nothing to compute, and inventing one
+          // would put a number in front of somebody that nobody chose.
+          breakdown: w.hourlyRate ? computePayroll(w.hours, w.hourlyRate, rules, periodDays) : null,
+        })),
+    });
+  })
+);
+
+// Recording a breakdown freezes it. Payroll gets argued about months later and
+// "regenerate it from today's rates" is the wrong answer — the rates changed
+// in January.
+apiRouter.post(
+  "/payroll/runs",
+  route(async (req, res) => {
+    const { workerId, kind, from, to } = req.body ?? {};
+    if (!workerId || !["employee", "subcontractor"].includes(kind) || !from || !to) {
+      res.status(400).json({ error: "workerId, kind, from and to are required" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const [workers, rules] = await Promise.all([
+      approvedHours(admin, req.businessId!, from, `${to}T23:59:59.999Z`),
+      readDeductions(admin, req.businessId!),
+    ]);
+    const worker = workers.find((w) => w.workerId === workerId && w.kind === kind);
+    if (!worker) {
+      res.status(404).json({ error: "worker not found for that period" });
+      return;
+    }
+    if (!worker.hourlyRate) {
+      res.status(409).json({ error: "this worker has no hourly rate", code: "no_rate" });
+      return;
+    }
+    if (worker.hours <= 0) {
+      res.status(409).json({ error: "no approved hours in that period", code: "no_hours" });
+      return;
+    }
+
+    const periodDays = Math.max(1, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000) + 1);
+    const breakdown = computePayroll(worker.hours, worker.hourlyRate, rules, periodDays);
+
+    const { data, error } = await admin
+      .from("payroll_runs")
+      .insert({
+        business_id: req.businessId!,
+        employee_id: kind === "employee" ? workerId : null,
+        subcontractor_id: kind === "subcontractor" ? workerId : null,
+        worker_name: worker.name,
+        period_start: from,
+        period_end: to,
+        hours: breakdown.hours,
+        hourly_rate: breakdown.hourlyRate,
+        gross: breakdown.gross,
+        employee_deductions: breakdown.employeeDeductions,
+        employer_contributions: breakdown.employerContributions,
+        net: breakdown.net,
+        total_cost: breakdown.totalCost,
+        lines: breakdown.lines,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id, ...breakdown });
+  })
+);
+
+apiRouter.get(
+  "/payroll/runs",
+  route(async (req, res) => {
+    const { data, error } = await getSupabaseAdmin()
+      .from("payroll_runs")
+      .select("id, worker_name, period_start, period_end, hours, gross, net, total_cost, created_at")
+      .eq("business_id", req.businessId!)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    res.json(
+      (data ?? []).map((r) => ({
+        id: r.id,
+        workerName: r.worker_name,
+        periodStart: r.period_start,
+        periodEnd: r.period_end,
+        hours: Number(r.hours),
+        gross: Number(r.gross),
+        net: Number(r.net),
+        totalCost: Number(r.total_cost),
+        createdAt: r.created_at,
+      }))
+    );
+  })
+);
+
+apiRouter.delete(
+  "/payroll/runs/:id",
+  route(async (req, res) => {
+    const { error } = await getSupabaseAdmin()
+      .from("payroll_runs")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.get(
+  "/payroll/runs/:id/pdf",
+  route(async (req, res) => {
+    const pdf = await buildPayrollPdf(req.businessId!, req.params.id, normalizeDocLang(req.query.lang));
+    if (!pdf) {
+      res.status(404).json({ error: "payroll run not found" });
+      return;
+    }
+    sendPdf(res, pdf, `${documentNumber("payroll", req.params.id)}.pdf`, "attachment");
   })
 );
 
@@ -5736,6 +5963,49 @@ function splitIntoStages(
   });
 }
 
+async function buildPayrollPdf(businessId: string, runId: string, lang: DocLang): Promise<Buffer | null> {
+  const admin = getSupabaseAdmin();
+  const [run, business] = await Promise.all([
+    admin
+      .from("payroll_runs")
+      .select("*")
+      .eq("business_id", businessId)
+      .eq("id", runId)
+      .maybeSingle(),
+    loadBusinessIdentity(admin, businessId),
+  ]);
+  if (run.error) throw run.error;
+  if (!run.data) return null;
+
+  // Rendered from the stored lines, never recomputed: the whole point of
+  // recording a run is that it says what it said on the day it was issued.
+  return renderPayrollPdf(
+    {
+      kind: "payroll",
+      number: documentNumber("payroll", run.data.id),
+      date: new Date(run.data.created_at),
+      business: business.identity,
+      workerName: run.data.worker_name,
+      periodStart: new Date(run.data.period_start),
+      periodEnd: new Date(run.data.period_end),
+      hours: Number(run.data.hours),
+      hourlyRate: Number(run.data.hourly_rate),
+      gross: Number(run.data.gross),
+      lines: ((run.data.lines ?? []) as Array<Record<string, unknown>>).map((l) => ({
+        label: String(l.label),
+        paidBy: l.paidBy === "empleador" ? "empleador" : "empleado",
+        ratePercent: Number(l.ratePercent),
+        amount: Number(l.amount),
+      })),
+      employeeDeductions: Number(run.data.employee_deductions),
+      employerContributions: Number(run.data.employer_contributions),
+      net: Number(run.data.net),
+      totalCost: Number(run.data.total_cost),
+    },
+    lang
+  );
+}
+
 async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocLang): Promise<Buffer | null> {
   const admin = getSupabaseAdmin();
 
@@ -6172,6 +6442,17 @@ apiRouter.patch(
       }
       update.status = body.status;
     }
+    // Optional throughout: null means "we don't track what this person costs",
+    // which is a legitimate way to run a small crew and is the default.
+    if (body.hourlyRate !== undefined) {
+      const rate = body.hourlyRate === null || body.hourlyRate === "" ? null : Number(body.hourlyRate);
+      if (rate !== null && (!Number.isFinite(rate) || rate < 0)) {
+        res.status(400).json({ error: "hourlyRate must be a positive number or null" });
+        return;
+      }
+      update.hourly_rate = rate;
+    }
+    if (body.payNotes !== undefined) update.pay_notes = body.payNotes || null;
     const supabase = req.supabase!;
     const { error } = await supabase
       .from("employees")
@@ -6199,6 +6480,15 @@ apiRouter.patch(
       }
       update.rating = rating;
     }
+    if (body.hourlyRate !== undefined) {
+      const rate = body.hourlyRate === null || body.hourlyRate === "" ? null : Number(body.hourlyRate);
+      if (rate !== null && (!Number.isFinite(rate) || rate < 0)) {
+        res.status(400).json({ error: "hourlyRate must be a positive number or null" });
+        return;
+      }
+      update.hourly_rate = rate;
+    }
+    if (body.payNotes !== undefined) update.pay_notes = body.payNotes || null;
     const supabase = req.supabase!;
     const { error } = await supabase
       .from("subcontractors")

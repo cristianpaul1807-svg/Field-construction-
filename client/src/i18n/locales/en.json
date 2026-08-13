@@ -83,7 +83,8 @@
     "automations": "Automations",
     "askAssistant": "Ask the business assistant...",
     "assistantTitle": "Business assistant",
-    "assistantHint": "Ask it to add a work projection, review pending estimates, or anything else you'd like to automate."
+    "assistantHint": "Ask it to add a work projection, review pending estimates, or anything else you'd like to automate.",
+    "payroll": "Payroll"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -371,7 +372,9 @@
       "disponible": "Available",
       "en_proyecto": "On a project",
       "descanso": "Off"
-    }
+    },
+    "hourlyRate": "Hourly rate (optional)",
+    "hourlyRateHint": "Panel only. Workers never see rates — not theirs, not anyone's."
   },
   "subcontractors": {
     "title": "Subcontractors",
@@ -1003,5 +1006,38 @@
     "keepManualPaid": "Tracking what is owed: you issue the invoice the same way and mark it paid by hand.",
     "reversible": "You can change your mind any time from Settings → Payments. Nothing is lost.",
     "declineConfirm": "Got it, carry on without Stripe"
+  },
+  "payroll": {
+    "title": "Payroll",
+    "description": "What your crew costs, from the hours you approved. All optional: with no rate set, nobody appears.",
+    "tabPeriod": "Period",
+    "tabIssued": "Issued",
+    "tabRules": "Deductions",
+    "from": "From",
+    "to": "To",
+    "recalculate": "Recalculate",
+    "noApprovedHours": "No approved hours in this period. Approve them in Field → Check-in.",
+    "hoursApproved": "{{hours}} h approved",
+    "noRateSet": "No hourly rate. Set one on their record if you want to track what they cost.",
+    "gross": "Gross",
+    "employeeSide": "Deductions",
+    "net": "Net pay",
+    "totalCost": "Total cost",
+    "cappedShort": "ceiling reached",
+    "periodTotalCost": "Total cost for the period",
+    "record": "Issue pay sheet",
+    "noRuns": "You have not issued any pay sheets yet.",
+    "costShort": "cost {{amount}}",
+    "filePrefix": "pay-sheet",
+    "rulesNote": "These are the lines applied to every pay sheet. They come preloaded with the figures published for Quebec in 2026, but change them: rates move every January, and CNESST and the health services fund depend on your classification and your payroll size. Confirm them with Revenu Québec and the CRA before relying on them.",
+    "lineName": "Line",
+    "paidBy": "Paid by",
+    "payerEmployee": "The worker",
+    "payerEmployer": "The business",
+    "ratePercent": "Rate (%)",
+    "annualExemption": "Annual exemption",
+    "annualMaximum": "Annual ceiling",
+    "noCeiling": "No ceiling",
+    "addLine": "Add line"
   }
 }

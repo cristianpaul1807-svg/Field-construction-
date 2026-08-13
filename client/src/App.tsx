@@ -35,6 +35,7 @@ import CheckIn from "@/pages/CheckIn";
 import WorkOrders from "@/pages/WorkOrders";
 import Scheduling from "@/pages/Scheduling";
 import Invoicing from "@/pages/Invoicing";
+import Payroll from "@/pages/Payroll";
 import Reports from "@/pages/Reports";
 import SettingsCompany from "@/pages/SettingsCompany";
 import SettingsPayments from "@/pages/SettingsPayments";
@@ -73,6 +74,7 @@ function BusinessPanel() {
         <Route path={"/work-orders"} component={WorkOrders} />
         <Route path={"/scheduling"} component={Scheduling} />
         <Route path={"/invoicing"} component={Invoicing} />
+        <Route path={"/payroll"} component={Payroll} />
         <Route path={"/reports"} component={Reports} />
         <Route path={"/settings/company"} component={SettingsCompany} />
         <Route path={"/settings/payments"} component={SettingsPayments} />

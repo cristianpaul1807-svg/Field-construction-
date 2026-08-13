@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { RateCell } from "@/components/RateCell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,6 +98,7 @@ interface Employee {
   status: keyof typeof statusTone;
   currentProject: string | null;
   hoursThisPeriod: number;
+  hourlyRate: number | null;
 }
 
 export default function Technicians() {
@@ -140,6 +142,7 @@ export default function Technicians() {
                   <th className="text-left py-2 text-muted-foreground font-medium">{t("common.status")}</th>
                   <th className="text-left py-2 text-muted-foreground font-medium">{t("technicians.currentProject")}</th>
                   <th className="text-right py-2 text-muted-foreground font-medium">{t("technicians.hoursPeriod")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("technicians.hourlyRate")}</th>
                   <th className="text-right py-2 text-muted-foreground font-medium">{t("technicians.pwaAccess")}</th>
                 </tr>
               </thead>
@@ -160,6 +163,15 @@ export default function Technicians() {
                     </td>
                     <td className="py-3 text-muted-foreground">{emp.currentProject ?? "—"}</td>
                     <td className="py-3 text-right text-foreground">{emp.hoursThisPeriod} hrs</td>
+                    <td className="py-3 text-right">
+                      <div className="flex justify-end">
+                        <RateCell
+                          path={`/api/employees/${emp.id}`}
+                          value={emp.hourlyRate}
+                          onSaved={() => setReloadToken((n) => n + 1)}
+                        />
+                      </div>
+                    </td>
                     <td className="py-3 text-right">
                       <Button size="sm" variant="outline" className="gap-1.5" onClick={() => generateToken(emp)}>
                         <KeyRound size={12} /> {t("technicians.generateCode")}

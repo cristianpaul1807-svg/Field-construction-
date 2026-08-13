@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { RateCell } from "@/components/RateCell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ interface Subcontractor {
   rating: number;
   hasAccessCode: boolean;
   assignedProjects: string[];
+  hourlyRate: number | null;
 }
 
 function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
@@ -140,6 +142,14 @@ export default function Subcontractors() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-3">{sub.phone}</p>
+              <div className="flex items-center justify-between gap-2 mt-3">
+                <span className="text-xs text-muted-foreground">{t("technicians.hourlyRate")}</span>
+                <RateCell
+                  path={`/api/subcontractors/${sub.id}`}
+                  value={sub.hourlyRate}
+                  onSaved={() => setReloadToken((n) => n + 1)}
+                />
+              </div>
               <div className="flex items-center justify-between mt-3">
                 <p className="text-xs text-muted-foreground">
                   {sub.assignedProjects.length > 0 ? sub.assignedProjects.join(", ") : t("subcontractors.noProjects")}

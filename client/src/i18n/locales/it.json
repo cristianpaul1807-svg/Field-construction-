@@ -83,7 +83,8 @@
     "automations": "Automazioni",
     "askAssistant": "Chiedi qualcosa all'assistente...",
     "assistantTitle": "Assistente dell'impresa",
-    "assistantHint": "Chiedigli di aggiungere una proiezione di lavoro, rivedere i preventivi in sospeso, o qualsiasi cosa tu voglia automatizzare."
+    "assistantHint": "Chiedigli di aggiungere una proiezione di lavoro, rivedere i preventivi in sospeso, o qualsiasi cosa tu voglia automatizzare.",
+    "payroll": "Buste paga"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -371,7 +372,9 @@
       "disponible": "Disponibile",
       "en_proyecto": "Su un progetto",
       "descanso": "Riposo"
-    }
+    },
+    "hourlyRate": "Tariffa oraria (opzionale)",
+    "hourlyRateHint": "Solo nel pannello. I lavoratori non vedono mai le tariffe, né la propria né quella altrui."
   },
   "subcontractors": {
     "title": "Subappaltatori",
@@ -1003,5 +1006,38 @@
     "keepManualPaid": "Il controllo degli incassi: emetti la fattura allo stesso modo e la segni pagata a mano.",
     "reversible": "Puoi cambiare idea quando vuoi da Configurazione → Pagamenti. Non si perde nulla.",
     "declineConfirm": "Capito, continua senza Stripe"
+  },
+  "payroll": {
+    "title": "Buste paga",
+    "description": "Quanto costa la tua squadra, dalle ore approvate. Tutto opzionale: senza tariffa non compare nessuno.",
+    "tabPeriod": "Periodo",
+    "tabIssued": "Emesse",
+    "tabRules": "Trattenute",
+    "from": "Dal",
+    "to": "Al",
+    "recalculate": "Ricalcola",
+    "noApprovedHours": "Nessuna ora approvata in questo periodo. Approvale in Campo → Timbrature.",
+    "hoursApproved": "{{hours}} h approvate",
+    "noRateSet": "Nessuna tariffa oraria. Impostane una nella sua scheda per seguire quanto costa.",
+    "gross": "Lordo",
+    "employeeSide": "Trattenute",
+    "net": "Netto da pagare",
+    "totalCost": "Costo totale",
+    "cappedShort": "tetto raggiunto",
+    "periodTotalCost": "Costo totale del periodo",
+    "record": "Emetti foglio",
+    "noRuns": "Non hai ancora emesso nessun foglio paga.",
+    "costShort": "costo {{amount}}",
+    "filePrefix": "foglio-paga",
+    "rulesNote": "Queste sono le righe applicate a ogni busta paga. Arrivano precaricate con le cifre pubblicate per il Québec nel 2026, ma modificale: le aliquote cambiano ogni gennaio, e CNESST e FSS dipendono dalla tua classificazione e dal monte salari. Confermale con Revenu Québec e la CRA prima di farci affidamento.",
+    "lineName": "Voce",
+    "paidBy": "Pagato da",
+    "payerEmployee": "Il lavoratore",
+    "payerEmployer": "L'impresa",
+    "ratePercent": "Aliquota (%)",
+    "annualExemption": "Esenzione annua",
+    "annualMaximum": "Tetto annuo",
+    "noCeiling": "Senza tetto",
+    "addLine": "Aggiungi riga"
   }
 }

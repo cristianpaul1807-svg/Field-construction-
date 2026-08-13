@@ -94,6 +94,39 @@ export interface EstimateDoc {
   payments: EstimatePaymentStage[];
 }
 
+/**
+ * A worker's pay for one period.
+ *
+ * A different shape from the two customer documents — nobody is being billed —
+ * so it shares only the letterhead. What it must show is what a payslip shows:
+ * hours and rate, what was taken out and by whom, what the worker receives, and
+ * what the whole thing cost the business.
+ */
+export interface PayrollDoc {
+  kind: "payroll";
+  number: string;
+  date: Date;
+  business: BusinessIdentity;
+  workerName: string;
+  periodStart: Date;
+  periodEnd: Date;
+  hours: number;
+  hourlyRate: number;
+  gross: number;
+  lines: PayrollDocLine[];
+  employeeDeductions: number;
+  employerContributions: number;
+  net: number;
+  totalCost: number;
+}
+
+export interface PayrollDocLine {
+  label: string;
+  paidBy: "empleado" | "empleador";
+  ratePercent: number;
+  amount: number;
+}
+
 export interface InvoiceDoc {
   kind: "invoice";
   number: string;
@@ -145,6 +178,17 @@ interface Copy {
   scheduleDuration: (hours: string) => string;
   paymentsTitle: string;
   paymentsNote: string;
+  payrollTitle: string;
+  payrollWorker: string;
+  payrollPeriod: string;
+  payrollHours: string;
+  payrollRate: string;
+  payrollGross: string;
+  payrollEmployeeSide: string;
+  payrollEmployerSide: string;
+  payrollNet: string;
+  payrollTotalCost: string;
+  payrollDisclaimer: string;
   acceptance: string;
   signature: string;
   signatureDate: string;
@@ -181,6 +225,17 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N.º TPS",
     qstNumber: "N.º TVQ",
     paymentsTitle: "Forma de pago",
+    payrollTitle: "HOJA DE PAGO",
+    payrollWorker: "Trabajador",
+    payrollPeriod: "Periodo",
+    payrollHours: "Horas",
+    payrollRate: "Tarifa por hora",
+    payrollGross: "Bruto",
+    payrollEmployeeSide: "Retenciones del trabajador",
+    payrollEmployerSide: "Aportaciones del empleador",
+    payrollNet: "Neto a pagar",
+    payrollTotalCost: "Coste total para la empresa",
+    payrollDisclaimer: "Documento interno de gestión. No es un comprobante oficial de retenciones: los importes se calculan con las tasas que la empresa tiene configuradas y prorrateadas al periodo, sin acumulado anual por persona.",
     paymentsNote: "Cada pago se factura cuando la obra llega a esa etapa. Los importes incluyen impuestos.",
     holdback: "Retención",
     holdbackNote: (p) => `Se retiene un ${p}% de cada pago parcial hasta la finalización de los trabajos.`,
@@ -223,6 +278,17 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "GST no.",
     qstNumber: "QST no.",
     paymentsTitle: "How this is paid",
+    payrollTitle: "PAY SHEET",
+    payrollWorker: "Worker",
+    payrollPeriod: "Period",
+    payrollHours: "Hours",
+    payrollRate: "Hourly rate",
+    payrollGross: "Gross",
+    payrollEmployeeSide: "Worker deductions",
+    payrollEmployerSide: "Employer contributions",
+    payrollNet: "Net pay",
+    payrollTotalCost: "Total cost to the business",
+    payrollDisclaimer: "Internal management document. Not an official statement of deductions: amounts use the rates this business has configured, prorated over the period, without per-person year-to-date totals.",
     paymentsNote: "Each payment is invoiced when the job reaches that stage. Amounts include tax.",
     holdback: "Holdback",
     holdbackNote: (p) => `${p}% of each progress payment is held back until the work is complete.`,
@@ -265,6 +331,17 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "No TPS",
     qstNumber: "No TVQ",
     paymentsTitle: "Modalités de paiement",
+    payrollTitle: "FEUILLE DE PAIE",
+    payrollWorker: "Travailleur",
+    payrollPeriod: "Période",
+    payrollHours: "Heures",
+    payrollRate: "Taux horaire",
+    payrollGross: "Brut",
+    payrollEmployeeSide: "Retenues du travailleur",
+    payrollEmployerSide: "Cotisations de l'employeur",
+    payrollNet: "Net à payer",
+    payrollTotalCost: "Coût total pour l'entreprise",
+    payrollDisclaimer: "Document interne de gestion. Ce n'est pas un relevé officiel de retenues : les montants utilisent les taux configurés par l'entreprise, au prorata de la période, sans cumul annuel par personne.",
     paymentsNote: "Chaque paiement est facturé lorsque le chantier atteint cette étape. Montants taxes comprises.",
     holdback: "Retenue",
     holdbackNote: (p) => `Une retenue de ${p} % est appliquée à chaque paiement partiel jusqu'à la fin des travaux.`,
@@ -307,6 +384,17 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N. GST",
     qstNumber: "N. QST",
     paymentsTitle: "Modalità di pagamento",
+    payrollTitle: "FOGLIO PAGA",
+    payrollWorker: "Lavoratore",
+    payrollPeriod: "Periodo",
+    payrollHours: "Ore",
+    payrollRate: "Tariffa oraria",
+    payrollGross: "Lordo",
+    payrollEmployeeSide: "Trattenute del lavoratore",
+    payrollEmployerSide: "Contributi del datore di lavoro",
+    payrollNet: "Netto da pagare",
+    payrollTotalCost: "Costo totale per l'impresa",
+    payrollDisclaimer: "Documento interno di gestione. Non è un prospetto ufficiale delle trattenute: gli importi usano le aliquote configurate dall'impresa, ripartite sul periodo, senza cumulo annuo per persona.",
     paymentsNote: "Ogni pagamento viene fatturato quando il cantiere raggiunge quella fase. Importi tasse incluse.",
     holdback: "Ritenuta",
     holdbackNote: (p) => `Viene trattenuto il ${p}% di ogni pagamento parziale fino al completamento dei lavori.`,
@@ -371,7 +459,7 @@ const COL_WIDTH = {
 
 type Doc = PDFKit.PDFDocument;
 
-function header(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocLang) {
+function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Copy, lang: DocLang) {
   const b = data.business;
 
   // A logo replaces the name in the letterhead when there is one, but the
@@ -401,7 +489,8 @@ function header(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocL
   doc.font("Helvetica").fontSize(9).fillColor("#555555");
   identity.forEach((line) => doc.text(line, MARGIN, doc.y, { width: 300 }));
 
-  const title = data.kind === "estimate" ? copy.estimateTitle : copy.invoiceTitle;
+  const title =
+    data.kind === "estimate" ? copy.estimateTitle : data.kind === "payroll" ? copy.payrollTitle : copy.invoiceTitle;
   doc.font("Helvetica-Bold").fontSize(20).fillColor("#111111").text(title, MARGIN, MARGIN, {
     width: CONTENT_WIDTH,
     align: "right",
@@ -742,7 +831,95 @@ export function renderInvoicePdf(data: InvoiceDoc, lang: DocLang): Promise<Buffe
   return render(data, lang);
 }
 
-/** `EST-3F2A91C4` / `INV-3F2A91C4` — short, stable, and unique per row. */
-export function documentNumber(kind: "estimate" | "invoice", id: string) {
-  return `${kind === "estimate" ? "EST" : "INV"}-${id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+export function renderPayrollPdf(data: PayrollDoc, lang: DocLang): Promise<Buffer> {
+  const copy = COPY[lang];
+  const doc = new PDFDocument({ size: "A4", margin: MARGIN, bufferPages: true });
+
+  const chunks: Buffer[] = [];
+  const done = new Promise<Buffer>((resolve, reject) => {
+    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+  });
+
+  header(doc, data, copy, lang);
+
+  const field = (label: string, value: string) => {
+    const y = doc.y;
+    doc.font("Helvetica").fontSize(9).fillColor("#888888").text(label, MARGIN, y, { width: 200 });
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#111111").text(value, MARGIN + 200, y, {
+      width: CONTENT_WIDTH - 200,
+    });
+    doc.y = Math.max(doc.y, y + 15);
+  };
+
+  field(copy.payrollWorker, data.workerName);
+  field(copy.payrollPeriod, `${shortDate(data.periodStart, lang)} — ${shortDate(data.periodEnd, lang)}`);
+  field(copy.payrollHours, String(data.hours));
+  field(copy.payrollRate, money(data.hourlyRate, lang));
+  field(copy.payrollGross, money(data.gross, lang));
+
+  doc.y += 8;
+
+  // Two blocks rather than one list: what comes out of the worker and what the
+  // employer adds on top are different money, and running them together is
+  // exactly how a payslip gets misread.
+  const block = (title: string, side: "empleado" | "empleador", subtotal: number) => {
+    const rows = data.lines.filter((l) => l.paidBy === side);
+    if (rows.length === 0) return;
+    ensureRoom(doc, 40, copy);
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111").text(title, MARGIN, doc.y);
+    doc.y += 4;
+    for (const row of rows) {
+      ensureRoom(doc, 14, copy);
+      const y = doc.y;
+      doc
+        .font("Helvetica")
+        .fontSize(8.5)
+        .fillColor("#333333")
+        .text(`· ${row.label} (${row.ratePercent} %)`, MARGIN + 6, y, { width: CONTENT_WIDTH - 140 });
+      doc
+        .font("Helvetica")
+        .fontSize(8.5)
+        .fillColor("#333333")
+        .text(money(row.amount, lang), MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+      doc.y = Math.max(doc.y, y + 12);
+    }
+    const y = doc.y + 2;
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111");
+    doc.text(money(subtotal, lang), MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+    doc.y = y + 16;
+  };
+
+  block(copy.payrollEmployeeSide, "empleado", data.employeeDeductions);
+  block(copy.payrollEmployerSide, "empleador", data.employerContributions);
+
+  ensureRoom(doc, 60, copy);
+  const lineY = doc.y;
+  doc.moveTo(MARGIN, lineY).lineTo(PAGE_WIDTH - MARGIN, lineY).strokeColor("#111111").lineWidth(1).stroke();
+  doc.y = lineY + 8;
+
+  const bigTotal = (label: string, value: number) => {
+    const y = doc.y;
+    doc.font("Helvetica-Bold").fontSize(11).fillColor("#111111").text(label, MARGIN, y, { width: 300 });
+    doc.text(money(value, lang), MARGIN + CONTENT_WIDTH - 160, y, { width: 160, align: "right" });
+    doc.y = Math.max(doc.y, y + 17);
+  };
+  bigTotal(copy.payrollNet, data.net);
+  bigTotal(copy.payrollTotalCost, data.totalCost);
+
+  doc.y += 8;
+  doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.payrollDisclaimer, MARGIN, doc.y, {
+    width: CONTENT_WIDTH,
+  });
+
+  pageNumbers(doc, copy);
+  doc.end();
+  return done;
+}
+
+/** `EST-3F2A91C4` / `INV-…` / `PAY-…` — short, stable, and unique per row. */
+export function documentNumber(kind: "estimate" | "invoice" | "payroll", id: string) {
+  const prefix = kind === "estimate" ? "EST" : kind === "payroll" ? "PAY" : "INV";
+  return `${prefix}-${id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }

@@ -83,7 +83,8 @@
     "automations": "Automatizaciones",
     "askAssistant": "Pídele algo al asistente del negocio...",
     "assistantTitle": "Asistente del negocio",
-    "assistantHint": "Pídele que agregue una proyección de trabajo, revise presupuestos pendientes, o cualquier cosa que quieras automatizar."
+    "assistantHint": "Pídele que agregue una proyección de trabajo, revise presupuestos pendientes, o cualquier cosa que quieras automatizar.",
+    "payroll": "Nóminas"
   },
   "dashboard": {
     "title": "Panel",
@@ -371,7 +372,9 @@
       "disponible": "Disponible",
       "en_proyecto": "En proyecto",
       "descanso": "Descanso"
-    }
+    },
+    "hourlyRate": "Tarifa por hora (opcional)",
+    "hourlyRateHint": "Solo la ve el panel. El trabajador nunca ve tarifas, ni la suya ni la de nadie."
   },
   "subcontractors": {
     "title": "Subcontratistas",
@@ -1003,5 +1006,38 @@
     "keepManualPaid": "El control de cobros: emites la factura igual y la marcas pagada a mano.",
     "reversible": "Puedes cambiar de opinión cuando quieras desde Configuración → Pagos. No se pierde nada.",
     "declineConfirm": "Entendido, seguir sin Stripe"
+  },
+  "payroll": {
+    "title": "Nóminas",
+    "description": "Lo que cuesta tu equipo, calculado con las horas aprobadas. Todo opcional: sin tarifa, no aparece nadie.",
+    "tabPeriod": "Periodo",
+    "tabIssued": "Emitidas",
+    "tabRules": "Retenciones",
+    "from": "Desde",
+    "to": "Hasta",
+    "recalculate": "Recalcular",
+    "noApprovedHours": "No hay horas aprobadas en este periodo. Apruébalas en Campo → Check-in.",
+    "hoursApproved": "{{hours}} h aprobadas",
+    "noRateSet": "Sin tarifa por hora. Ponle una en su ficha si quieres llevar el control de lo que cuesta.",
+    "gross": "Bruto",
+    "employeeSide": "Retenciones",
+    "net": "Neto a pagar",
+    "totalCost": "Coste total",
+    "cappedShort": "tope alcanzado",
+    "periodTotalCost": "Coste total del periodo",
+    "record": "Emitir hoja",
+    "noRuns": "Todavía no has emitido ninguna hoja de pago.",
+    "costShort": "coste {{amount}}",
+    "filePrefix": "hoja-de-pago",
+    "rulesNote": "Estas son las líneas que se aplican a cada nómina. Vienen precargadas con las cifras publicadas para Quebec en 2026, pero cámbialas: las tasas se actualizan cada enero, y la CNESST y el FSS dependen de tu clasificación y de tu masa salarial. Confírmalas con Revenu Québec y la CRA antes de usarlas en serio.",
+    "lineName": "Concepto",
+    "paidBy": "Lo paga",
+    "payerEmployee": "El trabajador",
+    "payerEmployer": "La empresa",
+    "ratePercent": "Tasa (%)",
+    "annualExemption": "Exención anual",
+    "annualMaximum": "Tope anual",
+    "noCeiling": "Sin tope",
+    "addLine": "Añadir línea"
   }
 }

@@ -76,6 +76,7 @@ directamente al paso a paso.
 | Facturación | [funciones/facturacion.md](funciones/facturacion.md) |
 | *(dentro de Facturación)* Impuestos y retención | [funciones/impuestos-canada.md](funciones/impuestos-canada.md) |
 | *(en varias pantallas)* PDF de presupuesto y factura | [funciones/documentos-pdf.md](funciones/documentos-pdf.md) |
+| Nóminas | [funciones/nominas.md](funciones/nominas.md) |
 | Reportes | [funciones/reportes.md](funciones/reportes.md) |
 
 ### Configuración
