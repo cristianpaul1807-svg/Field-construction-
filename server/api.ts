@@ -22,6 +22,7 @@ import {
   sweepDueRequests,
 } from "./paymentRequests";
 import { closeEntryWithOvertime, workerPerformance } from "./workTime";
+import { businessCoordinates } from "./geocode";
 import {
   annualTotals,
   approvedHours,
@@ -951,6 +952,15 @@ apiRouter.post(
       admin.from("subcontractors").select("id, name, business_id").eq("access_token_hash", hash).maybeSingle(),
     ]);
 
+    // Same distinction as requireWorkerAuth: "we could not ask" must never
+    // reach a worker as "your code is wrong". They would spend the morning
+    // hunting for a card that was fine all along.
+    if (employee.error && subcontractor.error) {
+      console.error("[worker-auth] lookup failed", employee.error);
+      res.status(503).json({ error: "Servicio no disponible", code: "backend_unavailable" });
+      return;
+    }
+
     const worker = employee.data ?? subcontractor.data;
     if (!worker) {
       res.status(401).json({ error: "Código inválido" });
@@ -978,11 +988,17 @@ apiRouter.post(
       return;
     }
     const admin = getSupabaseAdmin();
-    const { data: client } = await admin
+    const { data: client, error } = await admin
       .from("clients")
       .select("id, name, business_id")
       .eq("access_token_hash", hashToken(token))
       .maybeSingle();
+
+    if (error) {
+      console.error("[client-auth] lookup failed", error);
+      res.status(503).json({ error: "Servicio no disponible", code: "backend_unavailable" });
+      return;
+    }
 
     if (!client) {
       res.status(401).json({ error: "Código inválido" });
@@ -4467,17 +4483,45 @@ apiRouter.get(
     // Where people actually are comes from their check-ins, which already
     // record coordinates — so the map plots real positions instead of waiting
     // on a maps API key that was never going to arrive.
+    const positionColumns =
+      "id, employee_id, subcontractor_id, project_id, service_type, check_in_time, check_in_lat, check_in_lng, check_out_time, projects(name), employees(name), subcontractors(name)";
+
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: pings, error: pingsError } = await supabase
+    const { data: recent, error: pingsError } = await supabase
       .from("time_entries")
-      .select(
-        "id, employee_id, subcontractor_id, project_id, service_type, check_in_time, check_in_lat, check_in_lng, check_out_time, projects(name), employees(name), subcontractors(name)"
-      )
+      .select(positionColumns)
       .eq("business_id", req.businessId!)
       .gte("check_in_time", since)
       .not("check_in_lat", "is", null)
       .order("check_in_time", { ascending: false });
     if (pingsError) throw pingsError;
+
+    // Nothing today does not mean nothing to show. Falling back to each
+    // person's last known position keeps the map a map on a Monday morning
+    // instead of an empty box — marked stale, because where somebody was on
+    // Friday is history and must never read as where they are now.
+    let pings = recent ?? [];
+    let stale = false;
+    if (pings.length === 0) {
+      const { data: older } = await supabase
+        .from("time_entries")
+        .select(positionColumns)
+        .eq("business_id", req.businessId!)
+        .not("check_in_lat", "is", null)
+        .order("check_in_time", { ascending: false })
+        .limit(60);
+
+      // One pin per person: their most recent. A trail of last week's
+      // check-ins would be clutter, not information.
+      const seen = new Set<string>();
+      pings = ((older ?? []) as any[]).filter((p) => {
+        const workerId = p.employee_id ?? p.subcontractor_id ?? p.id;
+        if (seen.has(workerId)) return false;
+        seen.add(workerId);
+        return true;
+      });
+      stale = pings.length > 0;
+    }
 
     // What each of them is meant to be doing today. Tapping a marker should
     // answer "and what's next", not just "here is a dot" — and comparing the
@@ -4511,8 +4555,24 @@ apiRouter.get(
         }));
     };
 
+    // Somewhere for the map to open when there is no position at all — the
+    // first morning of using the product, which must not look broken. It is a
+    // nicety, so it is never allowed to take the screen down with it: the
+    // positions are the point, and they came from the query above.
+    let center = null;
+    try {
+      // The caller's own session, not the admin client: this is their own
+      // business row, RLS already lets them read and write it, and one less
+      // service-role dependency is one less thing to misconfigure.
+      center = await businessCoordinates(supabase, req.businessId!);
+    } catch (err) {
+      console.error("[gps] could not resolve the business location", err);
+    }
+
     res.json({
       workers: [...activeEmployees, ...activeSubcontractors],
+      center,
+      stale,
       locations: (pings as any[]).map((p) => {
         const workerId = p.employee_id ?? p.subcontractor_id ?? null;
         const schedule = scheduleFor(workerId);

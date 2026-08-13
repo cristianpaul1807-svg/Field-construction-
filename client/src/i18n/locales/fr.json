@@ -466,7 +466,8 @@
     "switchProject": "Changer de chantier",
     "confirmSwitch": "Confirmer le changement",
     "onSiteSince": "Sur {{project}} depuis {{time}}",
-    "unnamedProject": "le chantier"
+    "unnamedProject": "le chantier",
+    "serviceDown": "Impossible de vérifier votre code pour le moment. Ce n'est pas le code : réessayez dans un instant."
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",
@@ -924,7 +925,10 @@
     "elapsed": "Temps sur place",
     "since": "Depuis",
     "todaysJobs": "Sa journée",
-    "nothingScheduled": "Rien de planifié aujourd'hui."
+    "nothingScheduled": "Rien de planifié aujourd'hui.",
+    "staleNotice": "Personne n'a pointé depuis 24 h. Voici les dernières positions connues, pas où ils se trouvent maintenant.",
+    "noAddressHint": "Ajoutez l'adresse de votre entreprise dans Configuration → Données de l'entreprise et la carte s'ouvrira là tant que personne n'a pointé.",
+    "imageryUnavailable": "Impossible de charger les images de la carte. Les positions restent exactes."
   },
   "photoGallery": {
     "title": "Galerie photos",

@@ -30,7 +30,10 @@ function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) 
         body: JSON.stringify({ token: token.trim() }),
       });
       const body = await readJson(res);
-      if (!res.ok) throw new Error(body?.error || t("worker.invalidCode"));
+      // "We could not check" is not "your code is wrong": one sends them
+      // looking for a card that was never the problem.
+      if (body?.code === "backend_unavailable") throw new Error(t("worker.serviceDown"));
+      if (!res.ok) throw new Error(t("worker.invalidCode"));
       const session: WorkerSession = { token: token.trim(), id: body.id, name: body.name, businessId: body.businessId, kind: body.kind };
       setWorkerSession(session);
       onLoggedIn(session);

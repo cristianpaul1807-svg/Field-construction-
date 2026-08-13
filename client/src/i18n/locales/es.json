@@ -466,7 +466,8 @@
     "switchProject": "Cambiar de proyecto",
     "confirmSwitch": "Confirmar cambio",
     "onSiteSince": "En {{project}} desde las {{time}}",
-    "unnamedProject": "el proyecto"
+    "unnamedProject": "el proyecto",
+    "serviceDown": "No se pudo comprobar tu código ahora mismo. No es culpa del código: vuelve a intentarlo en un momento."
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",
@@ -924,7 +925,10 @@
     "elapsed": "Tiempo en obra",
     "since": "Desde",
     "todaysJobs": "Su día",
-    "nothingScheduled": "No tiene nada programado hoy."
+    "nothingScheduled": "No tiene nada programado hoy.",
+    "staleNotice": "Nadie ha fichado en las últimas 24 h. Estas son las últimas posiciones conocidas, no dónde están ahora.",
+    "noAddressHint": "Añade la dirección de tu empresa en Configuración → Datos de la empresa y el mapa abrirá ahí mientras nadie haya fichado.",
+    "imageryUnavailable": "No se pudieron cargar las imágenes del mapa. Las posiciones son correctas igualmente."
   },
   "photoGallery": {
     "title": "Galería de fotos",

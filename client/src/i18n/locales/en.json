@@ -466,7 +466,8 @@
     "switchProject": "Switch project",
     "confirmSwitch": "Confirm switch",
     "onSiteSince": "On {{project}} since {{time}}",
-    "unnamedProject": "the project"
+    "unnamedProject": "the project",
+    "serviceDown": "We couldn't check your code right now. It's not the code: try again in a moment."
   },
   "publicChat": {
     "chatWithBusiness": "Chat with the business",
@@ -924,7 +925,10 @@
     "elapsed": "Time on site",
     "since": "Since",
     "todaysJobs": "Their day",
-    "nothingScheduled": "Nothing scheduled today."
+    "nothingScheduled": "Nothing scheduled today.",
+    "staleNotice": "Nobody has clocked in for the last 24 hours. These are the last known positions, not where they are now.",
+    "noAddressHint": "Add your company address in Settings → Company details and the map will open there while nobody has clocked in.",
+    "imageryUnavailable": "Map imagery could not be loaded. The positions are still correct."
   },
   "photoGallery": {
     "title": "Photo Gallery",

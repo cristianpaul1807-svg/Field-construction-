@@ -33,7 +33,8 @@ export default function AuthClient() {
         body: JSON.stringify({ token: token.trim() }),
       });
       const body = await readJson(res);
-      if (!res.ok) throw new Error(body?.error || t("worker.invalidCode"));
+      if (body?.code === "backend_unavailable") throw new Error(t("worker.serviceDown"));
+      if (!res.ok) throw new Error(t("worker.invalidCode"));
       const clientSession: ClientSession = {
         token: token.trim(),
         id: body.id,

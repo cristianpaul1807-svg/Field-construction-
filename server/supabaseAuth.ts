@@ -229,6 +229,16 @@ export const requireWorkerAuth = guarded(async (req: Request, res: Response, nex
     admin.from("subcontractors").select("id, business_id").eq("access_token_hash", hash).maybeSingle(),
   ]);
 
+  // A database that did not answer is not a worker with the wrong code. Told
+  // apart because the difference decides what the person on site does next:
+  // one means re-read the card in their wallet, the other means wait, and
+  // sending them after the wrong one wastes a morning.
+  if (employee.error && subcontractor.error) {
+    console.error("[auth] worker lookup failed", employee.error);
+    res.status(503).json({ error: "Worker directory unavailable", code: "backend_unavailable" });
+    return;
+  }
+
   const worker = employee.data ?? subcontractor.data;
   if (!worker) {
     res.status(401).json({ error: "Invalid worker token" });

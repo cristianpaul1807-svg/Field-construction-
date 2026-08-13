@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Minus, Plus, Crosshair } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // A map with no API key and no mapping library: OpenStreetMap serves raster
 // tiles at a fixed URL scheme, so positioning a grid of <img> tiles and
@@ -70,19 +71,32 @@ function fitView(points: MapPoint[], width: number, height: number): View {
 
 export function TileMap({
   points,
+  center,
   className,
   selectedId,
   onSelect,
 }: {
   points: MapPoint[];
+  /**
+   * Where to open when there is nothing to plot — the business's own address.
+   * Without it, a company whose crew has not clocked in yet gets a grey box on
+   * their first morning, which reads as broken rather than as empty.
+   */
+  center?: { lat: number; lng: number } | null;
   className?: string;
   /** Highlighted marker. Drives the card the page shows beside the map. */
   selectedId?: string | null;
   onSelect?: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const container = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [view, setView] = useState<View | null>(null);
+  // Whether any tile has ever loaded. If none has, the imagery is unreachable
+  // — offline, blocked by a network, or OSM refusing us — and saying so is
+  // better than a grey rectangle the user reads as a bug in the positions.
+  const [tilesLoaded, setTilesLoaded] = useState(false);
+  const [tilesFailed, setTilesFailed] = useState(0);
   const drag = useRef<{ pointerId: number; x: number; y: number; moved: boolean } | null>(null);
   // Two fingers on a phone: the distance between them drives the zoom.
   const pinch = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -99,18 +113,27 @@ export function TileMap({
   }, []);
 
   const recenter = useCallback(() => {
-    if (size.width > 0 && points.length > 0) setView(fitView(points, size.width, size.height));
-  }, [points, size.width, size.height]);
+    if (size.width === 0) return;
+    if (points.length > 0) setView(fitView(points, size.width, size.height));
+    else if (center) setView({ centerLat: center.lat, centerLng: center.lng, zoom: 13 });
+  }, [points, center, size.width, size.height]);
 
   // Fit once when the data or the box first arrives. Not on every render: a
   // poll that refreshes the positions must not yank the map back from wherever
   // the user just panned to.
   const fitted = useRef(false);
   useEffect(() => {
-    if (fitted.current || size.width === 0 || points.length === 0) return;
-    fitted.current = true;
-    setView(fitView(points, size.width, size.height));
-  }, [points, size.width, size.height]);
+    if (fitted.current || size.width === 0) return;
+    if (points.length > 0) {
+      fitted.current = true;
+      setView(fitView(points, size.width, size.height));
+    } else if (center) {
+      // The town, not the doorstep: without positions the useful view is the
+      // area the business works in. Not marked as fitted, so the first real
+      // check-in still takes over the view.
+      setView({ centerLat: center.lat, centerLng: center.lng, zoom: 13 });
+    }
+  }, [points, center, size.width, size.height]);
 
   const ready = size.width > 0 && size.height > 0 && view !== null;
 
@@ -225,13 +248,31 @@ export function TileMap({
           draggable={false}
           className="absolute select-none pointer-events-none max-w-none"
           style={{ left: tile.left, top: tile.top }}
+          onLoad={() => setTilesLoaded(true)}
           // A tile that fails (offline, blocked, rate-limited) should leave
-          // plain background, not a row of broken-image icons.
+          // plain background, not a row of broken-image icons. One retry
+          // first, because a single dropped request is the common case and it
+          // costs nothing to ask again.
           onError={(e) => {
-            e.currentTarget.style.visibility = "hidden";
+            const img = e.currentTarget;
+            if (img.dataset.retried) {
+              img.style.visibility = "hidden";
+              setTilesFailed((n) => n + 1);
+              return;
+            }
+            img.dataset.retried = "1";
+            img.src = `${tile.src}?retry=1`;
           }}
         />
       ))}
+
+      {/* Markers stay put and stay right: the coordinates came from the
+          check-ins, not from the tile server. */}
+      {!tilesLoaded && tilesFailed > 2 && (
+        <div className="absolute inset-x-0 top-0 bg-card/90 border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">
+          {t("gps.imageryUnavailable")}
+        </div>
+      )}
 
       {markers.map(({ point, left, top }) => {
         const selected = selectedId === point.id;

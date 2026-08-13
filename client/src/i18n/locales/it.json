@@ -466,7 +466,8 @@
     "switchProject": "Cambia cantiere",
     "confirmSwitch": "Conferma il cambio",
     "onSiteSince": "Su {{project}} dalle {{time}}",
-    "unnamedProject": "il cantiere"
+    "unnamedProject": "il cantiere",
+    "serviceDown": "Non è stato possibile verificare il tuo codice adesso. Non è colpa del codice: riprova tra un momento."
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",
@@ -924,7 +925,10 @@
     "elapsed": "Tempo in cantiere",
     "since": "Dalle",
     "todaysJobs": "La sua giornata",
-    "nothingScheduled": "Niente in programma oggi."
+    "nothingScheduled": "Niente in programma oggi.",
+    "staleNotice": "Nessuno ha timbrato nelle ultime 24 h. Queste sono le ultime posizioni note, non dove si trovano adesso.",
+    "noAddressHint": "Aggiungi l'indirizzo della tua azienda in Configurazione → Dati dell'azienda e la mappa si aprirà lì finché nessuno ha timbrato.",
+    "imageryUnavailable": "Non è stato possibile caricare le immagini della mappa. Le posizioni restano corrette."
   },
   "photoGallery": {
     "title": "Galleria foto",

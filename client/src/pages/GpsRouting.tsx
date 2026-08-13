@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { TileMap, type MapPoint } from "@/components/TileMap";
-import { MapPin } from "lucide-react";
+import { History, MapPin } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -53,6 +53,11 @@ function elapsed(fromIso: string, toIso: string | null) {
 interface GpsResponse {
   workers: ActiveWorker[];
   locations: CheckInLocation[];
+  /** The business's own address, so the map opens somewhere real when nobody
+   *  has clocked in. Null when the address is missing or could not be found. */
+  center: { lat: number; lng: number } | null;
+  /** The positions are the last known ones, not from the last 24 hours. */
+  stale: boolean;
 }
 
 export default function GpsRouting() {
@@ -62,9 +67,22 @@ export default function GpsRouting() {
 
   const active = data?.workers ?? [];
   const locations = data?.locations ?? [];
+  const center = data?.center ?? null;
+  const stale = data?.stale ?? false;
 
-  const time = (iso: string) =>
-    new Date(iso).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" });
+  // A check-in from last Friday shown as "08:10" reads as this morning. Once
+  // it is not today, the day has to come with it.
+  const time = (iso: string) => {
+    const at = new Date(iso);
+    const clock = at.toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" });
+    const today = new Date();
+    const sameDay =
+      at.getFullYear() === today.getFullYear() &&
+      at.getMonth() === today.getMonth() &&
+      at.getDate() === today.getDate();
+    if (sameDay) return clock;
+    return `${at.toLocaleDateString(i18n.language, { day: "numeric", month: "short" })} ${clock}`;
+  };
 
   const points: MapPoint[] = locations.map((l) => ({
     id: l.id,
@@ -74,8 +92,9 @@ export default function GpsRouting() {
     sublabel: [l.projectName, time(l.checkInTime)].filter(Boolean).join(" · "),
     // Someone who already checked out is history, not a live position; someone
     // late is the one thing on this screen worth spotting without tapping.
-    tone: !l.stillOnSite ? "muted" : l.late ? "warning" : "primary",
-    emoji: l.stillOnSite ? "👷" : "📍",
+    // When the whole set is stale nothing is live, whatever the entry says.
+    tone: stale || !l.stillOnSite ? "muted" : l.late ? "warning" : "primary",
+    emoji: !stale && l.stillOnSite ? "👷" : "📍",
   }));
 
   const selected = locations.find((l) => l.id === selectedId) ?? null;
@@ -86,13 +105,37 @@ export default function GpsRouting() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 p-0 overflow-hidden gap-0">
-          {points.length > 0 ? (
-            <TileMap points={points} className="h-96 lg:h-auto lg:flex-1 lg:min-h-96" selectedId={selectedId} onSelect={setSelectedId} />
+          {/* The map is drawn whenever it has anywhere to open — positions, or
+              failing that the business's own address. It only disappears when
+              we genuinely do not know where this company works, because a map
+              of nowhere would be worse than saying so. */}
+          {points.length > 0 || center ? (
+            <>
+              {stale && (
+                <div className="flex items-center gap-2 bg-status-warning-bg/50 border-b border-border px-3 py-2">
+                  <History size={13} className="text-status-warning-fg flex-shrink-0" />
+                  <p className="text-xs text-status-warning-fg">{t("gps.staleNotice")}</p>
+                </div>
+              )}
+              {points.length === 0 && (
+                <div className="flex items-center gap-2 bg-secondary border-b border-border px-3 py-2">
+                  <MapPin size={13} className="text-muted-foreground flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground">{t("gps.noLocationsHint")}</p>
+                </div>
+              )}
+              <TileMap
+                points={points}
+                center={center}
+                className="h-96 lg:h-auto lg:flex-1 lg:min-h-96"
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+              />
+            </>
           ) : (
             <div className="h-96 lg:h-auto lg:flex-1 lg:min-h-96 bg-secondary flex flex-col items-center justify-center gap-2 text-center px-6">
               <MapPin size={28} className="text-muted-foreground" strokeWidth={1.5} />
               <p className="text-sm font-medium text-foreground">{t("gps.noLocations")}</p>
-              <p className="text-xs text-muted-foreground max-w-xs">{t("gps.noLocationsHint")}</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{t("gps.noAddressHint")}</p>
             </div>
           )}
         </Card>

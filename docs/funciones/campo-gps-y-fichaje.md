@@ -53,6 +53,42 @@ A la derecha, **Activos ahora** (quién está en obra según su estado) y
 **Check-in recientes**, con un enlace para abrir cada posición en un mapa
 completo.
 
+### El mapa siempre se ve
+
+Un mapa que desaparece cuando no hay nada que enseñar parece roto. Por eso hay
+tres estados, y sólo el último es una pantalla sin mapa:
+
+| Situación | Qué ves |
+|---|---|
+| Hay fichajes de las últimas 24 h | El mapa encuadrado sobre ellos |
+| No hay ninguno hoy | El mapa con **las últimas posiciones conocidas**, una por persona, en gris y con un aviso de que son historia |
+| Nunca ha fichado nadie | El mapa abierto sobre **la dirección de tu empresa** |
+| No hay dirección guardada | Un aviso pidiéndote que la añadas en Configuración → Datos de la empresa |
+
+Las posiciones antiguas nunca se disfrazan de actuales: salen apagadas, con
+📍 en vez de casco, con la fecha junto a la hora, y con un aviso arriba del
+mapa. Saber dónde estuvo alguien el viernes es útil; creer que está ahí ahora,
+no.
+
+### La dirección de la empresa, en el mapa
+
+La dirección que guardas en Configuración se convierte en coordenadas la
+primera vez que se abre esta pantalla, usando **Nominatim** — el geocodificador
+de OpenStreetMap, sin clave y sin factura, la misma fuente que las teselas. El
+resultado se guarda en tu negocio y no se vuelve a pedir, salvo que cambies la
+dirección.
+
+Si la dirección no se encuentra, no se inventa un punto: el mapa se queda sin
+centro y te lo dice.
+
+### Si no cargan las imágenes
+
+Las teselas vienen de un servidor externo. Cuando no cargan (sin conexión, una
+red que las bloquea, el servidor caído) aparece un aviso en la parte alta del
+mapa diciendo que **las posiciones siguen siendo correctas** — porque lo son:
+salen de los fichajes, no del servidor de mapas. Cada tesela se reintenta una
+vez antes de darse por perdida.
+
 ### De dónde salen las posiciones
 
 De los fichajes de la app del trabajador, que piden la ubicación al fichar.
@@ -72,8 +108,8 @@ Antes esta pantalla era un recuadro gris que prometía funcionar "cuando el
 negocio configure su clave" — es decir, una factura que pagar antes de que la
 pantalla sirviera para algo.
 
-Si una tesela no carga (sin conexión, o el servidor de OSM va lento), esa
-casilla se queda en fondo liso en vez de mostrar un icono de imagen rota.
+Una tesela que no carga se queda en fondo liso en vez de mostrar un icono de
+imagen rota; si no carga ninguna, sale el aviso descrito arriba.
 
 ---
 
