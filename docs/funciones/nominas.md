@@ -118,13 +118,37 @@ equivocarse en una nómina.
 
 ---
 
+## Traspaso: empezar a mitad de año
+
+Pestaña **Traspaso**. Si te pasas al software en junio, escribe una vez por
+persona lo que ya llevaba acumulado ese año: el bruto pagado y cuánto se le
+había retenido de cada concepto.
+
+Sin eso, los topes anuales arrancan de cero y le sigues reteniendo RRQ meses
+después de que ya hubiera alcanzado el máximo — y tendrías que dejar la nómina
+antigua abierta al lado para saberlo. **Esto es lo que hace definitivo dejar el
+sistema anterior.**
+
+Se escribe una vez por persona y por año. A partir de ahí, todo — topes,
+remesas y totales de fin de año — sale completo sin nada de fuera.
+
+---
+
+## El año completo
+
+Pestaña **Año**. Todo el año por persona: lo emitido aquí más el traspaso.
+Bruto, cada retención, aportaciones de la empresa, neto y coste total.
+
+Son exactamente las cifras que piden el **T4** y el **RL-1**. El software no
+presenta esos formularios — tienen sus propias casillas y su propio trámite —
+pero tiene todos los números, que es la parte por la que si no habría que
+reabrir otra nómina en diciembre.
+
+---
+
 ## Lo que este cálculo no es
 
 - **No es una declaración oficial.** El PDF lo dice en su pie.
-- **Lleva el acumulado anual, pero solo de lo que emitiste aquí.** Si parte del
-  año lo llevaste en otro sitio, esas aportaciones no las conoce, y los topes se
-  aplicarán tarde. Emite las hojas del año en el software o ajusta las líneas a
-  mano.
 - **No calcula tramos de IRPF.** Ver arriba.
 - **No presenta ni paga nada.** Las remesas a Revenu Québec y a la CRA las haces
   tú o tu contable. Stripe no interviene: no tiene producto de nómina, y ni
@@ -143,6 +167,8 @@ equivocarse en una nómina.
 | `GET /api/payroll/runs/:id/pdf` | El PDF |
 | `DELETE /api/payroll/runs/:id` | Borrar una emitida |
 | `GET /api/payroll/remittance?from&to` | Totales por destino |
+| `GET/PUT /api/payroll/opening-balances?year` | El traspaso por persona |
+| `GET /api/payroll/annual?year` | El año completo por persona |
 
 Las horas aprobadas también alimentan **mano de obra** en
 [Control de costos](control-de-costos.md), que antes solo contaba gastos

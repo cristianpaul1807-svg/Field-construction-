@@ -1053,6 +1053,22 @@
       "cnesst": "CNESST",
       "otro": "Altro destinatario"
     },
-    "ytdNote": "I tetti annui si applicano su quanto ogni persona ha già versato quest'anno, in base ai fogli già emessi. Per questo una trattenuta si ferma esattamente nel periodo in cui si raggiunge il tetto, e non prima."
+    "ytdNote": "I tetti annui si applicano su quanto ogni persona ha già versato quest'anno, in base ai fogli già emessi. Per questo una trattenuta si ferma esattamente nel periodo in cui si raggiunge il tetto, e non prima.",
+    "tabAnnual": "Anno",
+    "tabOpening": "Riporto",
+    "openingNote": "Se hai iniziato a usare il software a metà anno, inserisci quanto ogni persona aveva già accumulato. Senza questo i tetti annui ripartono da zero e si trattiene troppo per il resto dell'anno.",
+    "openingOnce": "Si inserisce una volta per persona e per anno. Dopo non serve più nulla dall'esterno.",
+    "openingWorker": "Lavoratore",
+    "openingGross": "Lordo già pagato quest'anno",
+    "openingSelect": "Scegli chi",
+    "openingSaved": "Riporto salvato",
+    "openingExisting": "Ha già un riporto per {{year}}",
+    "openingNothing": "Nessuno ha un riporto per quest'anno.",
+    "annualNote": "Tutto l'anno per persona: quanto emesso qui più il riporto. Sono le cifre che chiedono il T4 e l'RL-1.",
+    "annualNotAForm": "Il software non presenta il T4 né l'RL-1 — sono documenti con caselle e procedure proprie. Quello che fa è conservare tutti i numeri che servono, così nessuno riapre un'altra piattaforma a dicembre.",
+    "annualEmpty": "Niente registrato per il {{year}}.",
+    "annualYear": "Anno",
+    "includesCarryIn": "riporto incluso",
+    "hoursHere": "{{hours}} h lavorate qui"
   }
 }

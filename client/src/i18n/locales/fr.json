@@ -1053,6 +1053,22 @@
       "cnesst": "CNESST",
       "otro": "Autre destinataire"
     },
-    "ytdNote": "Les plafonds annuels sont comparés à ce que chaque personne a déjà cotisé cette année, d'après les feuilles déjà émises. C'est pourquoi une retenue s'arrête exactement à la période où le plafond est atteint, et pas avant."
+    "ytdNote": "Les plafonds annuels sont comparés à ce que chaque personne a déjà cotisé cette année, d'après les feuilles déjà émises. C'est pourquoi une retenue s'arrête exactement à la période où le plafond est atteint, et pas avant.",
+    "tabAnnual": "Année",
+    "tabOpening": "Reprise",
+    "openingNote": "Si vous avez commencé à utiliser le logiciel en cours d'année, saisissez ce que chaque personne avait déjà cumulé. Sans cela les plafonds annuels repartent de zéro et vous retenez trop le reste de l'année.",
+    "openingOnce": "Saisi une fois par personne et par année. Ensuite plus rien ne vient de l'extérieur.",
+    "openingWorker": "Travailleur",
+    "openingGross": "Brut déjà versé cette année",
+    "openingSelect": "Choisir qui",
+    "openingSaved": "Reprise enregistrée",
+    "openingExisting": "A déjà une reprise pour {{year}}",
+    "openingNothing": "Personne n'a de reprise pour cette année.",
+    "annualNote": "Toute l'année par personne : ce qui a été émis ici plus la reprise. Ce sont les chiffres que demandent le T4 et le RL-1.",
+    "annualNotAForm": "Le logiciel ne produit ni T4 ni RL-1 — ce sont des documents avec leurs propres cases et leur propre procédure. Ce qu'il fait, c'est conserver tous les chiffres qu'ils demandent, pour ne rouvrir aucune autre plateforme en décembre.",
+    "annualEmpty": "Rien d'enregistré pour {{year}}.",
+    "annualYear": "Année",
+    "includesCarryIn": "reprise incluse",
+    "hoursHere": "{{hours}} h travaillées ici"
   }
 }

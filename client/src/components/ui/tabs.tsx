@@ -24,7 +24,11 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px]",
+        // max-w-full + overflow-x-auto: a tab strip that outgrows the screen
+        // scrolls inside itself instead of pushing the whole page sideways.
+        // Six tabs already do that on a phone, and a page that scrolls
+        // horizontally makes every other screen feel broken too.
+        "bg-muted text-muted-foreground inline-flex h-9 w-fit max-w-full items-center justify-start overflow-x-auto rounded-lg p-[3px]",
         className
       )}
       {...props}

@@ -1053,6 +1053,22 @@
       "cnesst": "CNESST",
       "otro": "Somewhere else"
     },
-    "ytdNote": "Annual ceilings are checked against what each person has already contributed this year, taken from the sheets you already issued. That is why a deduction stops in the exact period the ceiling is reached, and not before."
+    "ytdNote": "Annual ceilings are checked against what each person has already contributed this year, taken from the sheets you already issued. That is why a deduction stops in the exact period the ceiling is reached, and not before.",
+    "tabAnnual": "Year",
+    "tabOpening": "Carry-in",
+    "openingNote": "If you started using the software mid-year, enter what each person had already accumulated. Without it the annual ceilings start from zero and you over-deduct for the rest of the year.",
+    "openingOnce": "Entered once per person per year. After that nothing from outside is needed.",
+    "openingWorker": "Worker",
+    "openingGross": "Gross already paid this year",
+    "openingSelect": "Pick who",
+    "openingSaved": "Carry-in saved",
+    "openingExisting": "Already has a carry-in for {{year}}",
+    "openingNothing": "Nobody has a carry-in for this year.",
+    "annualNote": "The whole year per person: what was issued here plus the carry-in. These are the figures a T4 and an RL-1 ask for.",
+    "annualNotAForm": "The software does not file a T4 or an RL-1 — those are documents with their own boxes and their own process. What it does is hold every number they need, so nobody reopens another platform in December to find them.",
+    "annualEmpty": "Nothing recorded for {{year}}.",
+    "annualYear": "Year",
+    "includesCarryIn": "includes carry-in",
+    "hoursHere": "{{hours}} h worked here"
   }
 }

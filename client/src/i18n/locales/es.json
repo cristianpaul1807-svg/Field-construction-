@@ -1053,6 +1053,22 @@
       "cnesst": "CNESST",
       "otro": "Otro destino"
     },
-    "ytdNote": "Los topes anuales se aplican contra lo que cada persona ya lleva aportado este año, tomado de las hojas que ya emitiste. Por eso una retención se para el periodo exacto en que se alcanza el tope, y no antes."
+    "ytdNote": "Los topes anuales se aplican contra lo que cada persona ya lleva aportado este año, tomado de las hojas que ya emitiste. Por eso una retención se para el periodo exacto en que se alcanza el tope, y no antes.",
+    "tabAnnual": "Año",
+    "tabOpening": "Traspaso",
+    "openingNote": "Si empezaste a usar el software a mitad de año, escribe aquí lo que cada persona ya llevaba acumulado. Sin esto los topes anuales arrancan de cero y se retiene de más el resto del año.",
+    "openingOnce": "Se escribe una vez por persona y por año. Después ya no hace falta nada de fuera.",
+    "openingWorker": "Trabajador",
+    "openingGross": "Bruto ya pagado este año",
+    "openingSelect": "Elige a quién",
+    "openingSaved": "Traspaso guardado",
+    "openingExisting": "Ya tiene traspaso guardado para {{year}}",
+    "openingNothing": "Nadie tiene traspaso guardado para este año.",
+    "annualNote": "Todo el año por persona: lo emitido aquí más el traspaso. Son las cifras que piden el T4 y el RL-1.",
+    "annualNotAForm": "El software no presenta el T4 ni el RL-1 — son documentos con sus propias casillas y su propio trámite. Lo que sí hace es tener todos los números, para que no tengas que abrir otra plataforma en diciembre a buscarlos.",
+    "annualEmpty": "No hay nada registrado para {{year}}.",
+    "annualYear": "Año",
+    "includesCarryIn": "incluye traspaso",
+    "hoursHere": "{{hours}} h trabajadas aquí"
   }
 }

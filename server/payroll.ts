@@ -225,10 +225,12 @@ export async function readDeductions(admin: Admin, businessId: string): Promise<
 /**
  * What each worker has already contributed this calendar year, per rule.
  *
- * Read from the sheets already issued, which is the only record of what was
- * actually withheld. A ceiling is an annual figure, so knowing how close
- * somebody is to it is the difference between stopping their RRQ on the right
- * day and taking money that has to be given back at tax time.
+ * Two sources, summed: the sheets issued here, and the opening balance typed in
+ * when the business moved over mid-year. A ceiling is an annual figure, so a
+ * business that switched in June with no opening balance would keep deducting
+ * RRQ months after the worker actually reached the maximum — and would have to
+ * keep the old payroll open beside this one to know that. The opening balance
+ * is what makes leaving the old system final.
  */
 export async function yearToDate(
   admin: Admin,
@@ -238,22 +240,147 @@ export async function yearToDate(
   year: number
 ): Promise<Record<string, number>> {
   const column = kind === "employee" ? "employee_id" : "subcontractor_id";
-  const { data } = await admin
-    .from("payroll_runs")
-    .select("lines")
-    .eq("business_id", businessId)
-    .eq(column, workerId)
-    .gte("period_end", `${year}-01-01`)
-    .lte("period_end", `${year}-12-31`);
+  const [runs, opening] = await Promise.all([
+    admin
+      .from("payroll_runs")
+      .select("lines")
+      .eq("business_id", businessId)
+      .eq(column, workerId)
+      .gte("period_end", `${year}-01-01`)
+      .lte("period_end", `${year}-12-31`),
+    admin
+      .from("payroll_opening_balances")
+      .select("lines")
+      .eq("business_id", businessId)
+      .eq(column, workerId)
+      .eq("year", year)
+      .maybeSingle(),
+  ]);
 
   const totals: Record<string, number> = {};
-  for (const run of data ?? []) {
-    for (const line of (run.lines ?? []) as Array<{ code?: string; amount?: number }>) {
+  const add = (lines: unknown) => {
+    for (const line of (lines ?? []) as Array<{ code?: string; amount?: number }>) {
       if (!line.code) continue;
       totals[line.code] = round((totals[line.code] ?? 0) + Number(line.amount ?? 0));
     }
-  }
+  };
+  for (const run of runs.data ?? []) add(run.lines);
+  add(opening.data?.lines);
   return totals;
+}
+
+/**
+ * Everything a worker earned and paid in one calendar year — issued sheets plus
+ * the opening balance.
+ *
+ * This is what the year-end forms ask for. The software does not produce a T4
+ * or an RL-1 (those are filed documents with their own rules and their own
+ * boxes) but it does hold every figure they want, which is the part a business
+ * would otherwise reopen another payroll system to recover.
+ */
+export interface AnnualTotals {
+  workerId: string;
+  kind: "employee" | "subcontractor";
+  name: string;
+  gross: number;
+  employeeDeductions: number;
+  employerContributions: number;
+  net: number;
+  totalCost: number;
+  hours: number;
+  byCode: Array<{ code: string; label: string; paidBy: DeductionPayer; amount: number; remitTo: string }>;
+  /** True when part of the year came from a previous system. */
+  includesOpeningBalance: boolean;
+}
+
+export async function annualTotals(admin: Admin, businessId: string, year: number): Promise<AnnualTotals[]> {
+  const [runs, openings, employees, subcontractors] = await Promise.all([
+    admin
+      .from("payroll_runs")
+      .select("employee_id, subcontractor_id, worker_name, hours, gross, lines")
+      .eq("business_id", businessId)
+      .gte("period_end", `${year}-01-01`)
+      .lte("period_end", `${year}-12-31`),
+    admin
+      .from("payroll_opening_balances")
+      .select("employee_id, subcontractor_id, gross, lines")
+      .eq("business_id", businessId)
+      .eq("year", year),
+    admin.from("employees").select("id, name").eq("business_id", businessId),
+    admin.from("subcontractors").select("id, name").eq("business_id", businessId),
+  ]);
+
+  const names = new Map<string, { name: string; kind: "employee" | "subcontractor" }>();
+  for (const e of employees.data ?? []) names.set(e.id, { name: e.name, kind: "employee" });
+  for (const s of subcontractors.data ?? []) names.set(s.id, { name: s.name, kind: "subcontractor" });
+
+  const totals = new Map<string, AnnualTotals>();
+  const bucket = (workerId: string | null, fallbackName: string) => {
+    if (!workerId) return null;
+    let entry = totals.get(workerId);
+    if (!entry) {
+      const known = names.get(workerId);
+      entry = {
+        workerId,
+        kind: known?.kind ?? "employee",
+        name: known?.name ?? fallbackName,
+        gross: 0,
+        employeeDeductions: 0,
+        employerContributions: 0,
+        net: 0,
+        totalCost: 0,
+        hours: 0,
+        byCode: [],
+        includesOpeningBalance: false,
+      };
+      totals.set(workerId, entry);
+    }
+    return entry;
+  };
+
+  const codes = new Map<string, Map<string, { code: string; label: string; paidBy: DeductionPayer; amount: number; remitTo: string }>>();
+  const addLines = (entry: AnnualTotals, lines: unknown) => {
+    const perWorker = codes.get(entry.workerId) ?? new Map();
+    codes.set(entry.workerId, perWorker);
+    for (const raw of (lines ?? []) as Array<Record<string, unknown>>) {
+      const code = String(raw.code ?? "");
+      if (!code) continue;
+      const amount = Number(raw.amount ?? 0);
+      const paidBy: DeductionPayer = raw.paidBy === "empleador" ? "empleador" : "empleado";
+      const existing = perWorker.get(code);
+      perWorker.set(code, {
+        code,
+        label: String(raw.label ?? code),
+        paidBy,
+        remitTo: String(raw.remitTo ?? "otro"),
+        amount: round((existing?.amount ?? 0) + amount),
+      });
+      if (paidBy === "empleado") entry.employeeDeductions = round(entry.employeeDeductions + amount);
+      else entry.employerContributions = round(entry.employerContributions + amount);
+    }
+  };
+
+  for (const run of runs.data ?? []) {
+    const entry = bucket(run.employee_id ?? run.subcontractor_id, run.worker_name);
+    if (!entry) continue;
+    entry.gross = round(entry.gross + Number(run.gross));
+    entry.hours = round(entry.hours + Number(run.hours));
+    addLines(entry, run.lines);
+  }
+  for (const opening of openings.data ?? []) {
+    const entry = bucket(opening.employee_id ?? opening.subcontractor_id, "—");
+    if (!entry) continue;
+    entry.gross = round(entry.gross + Number(opening.gross));
+    entry.includesOpeningBalance = true;
+    addLines(entry, opening.lines);
+  }
+
+  for (const entry of Array.from(totals.values())) {
+    entry.byCode = Array.from(codes.get(entry.workerId)?.values() ?? []);
+    entry.net = round(entry.gross - entry.employeeDeductions);
+    entry.totalCost = round(entry.gross + entry.employerContributions);
+  }
+  return Array.from(totals.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**

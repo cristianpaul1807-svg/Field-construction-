@@ -16,6 +16,7 @@ import {
   type TaxBreakdown,
 } from "./documents";
 import {
+  annualTotals,
   approvedHours,
   computePayroll,
   labourCostByProject,
@@ -5191,6 +5192,103 @@ apiRouter.delete(
       .eq("id", req.params.id);
     if (error) throw error;
     res.json({ ok: true });
+  })
+);
+
+// What a worker already earned and paid this year before arriving here.
+//
+// This is what makes leaving the previous payroll final. Without it a business
+// that switched in June starts every ceiling from zero and has to keep the old
+// system open beside this one to know when someone actually reached their
+// maximum.
+apiRouter.get(
+  "/payroll/opening-balances",
+  route(async (req, res) => {
+    const year = Number(req.query.year ?? new Date().getUTCFullYear());
+    const admin = getSupabaseAdmin();
+    const [balances, rules] = await Promise.all([
+      admin
+        .from("payroll_opening_balances")
+        .select("id, employee_id, subcontractor_id, year, gross, lines, note")
+        .eq("business_id", req.businessId!)
+        .eq("year", year),
+      readDeductions(admin, req.businessId!),
+    ]);
+    if (balances.error) throw balances.error;
+
+    res.json({
+      year,
+      // The same lines the payroll uses, so the form to fill is the payslip
+      // they are copying from rather than a different vocabulary.
+      codes: rules.map((r) => ({ code: r.code, label: r.label, paidBy: r.paidBy, remitTo: r.remitTo })),
+      balances: (balances.data ?? []).map((b) => ({
+        id: b.id,
+        workerId: b.employee_id ?? b.subcontractor_id,
+        kind: b.employee_id ? "employee" : "subcontractor",
+        gross: Number(b.gross),
+        lines: b.lines ?? [],
+        note: b.note,
+      })),
+    });
+  })
+);
+
+apiRouter.put(
+  "/payroll/opening-balances",
+  route(async (req, res) => {
+    const { workerId, kind, year, gross, lines, note } = req.body ?? {};
+    if (!workerId || !["employee", "subcontractor"].includes(kind) || !year) {
+      res.status(400).json({ error: "workerId, kind and year are required" });
+      return;
+    }
+    const grossValue = Number(gross ?? 0);
+    if (!Number.isFinite(grossValue) || grossValue < 0) {
+      res.status(400).json({ error: "gross must be a positive number" });
+      return;
+    }
+    const cleanLines = (Array.isArray(lines) ? lines : [])
+      .map((l: Record<string, unknown>) => ({
+        code: String(l.code ?? ""),
+        label: String(l.label ?? l.code ?? ""),
+        paidBy: l.paidBy === "empleador" ? "empleador" : "empleado",
+        remitTo: String(l.remitTo ?? "otro"),
+        amount: Number(l.amount ?? 0),
+      }))
+      // A zero carries no information and would clutter every year-end total.
+      .filter((l) => l.code && Number.isFinite(l.amount) && l.amount > 0);
+
+    const admin = getSupabaseAdmin();
+    const { error } = await admin.from("payroll_opening_balances").upsert(
+      {
+        business_id: req.businessId!,
+        employee_id: kind === "employee" ? workerId : null,
+        subcontractor_id: kind === "subcontractor" ? workerId : null,
+        year: Number(year),
+        gross: grossValue,
+        lines: cleanLines,
+        note: note || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: kind === "employee" ? "business_id,employee_id,year" : "business_id,subcontractor_id,year" }
+    );
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// The whole year per worker: issued sheets plus whatever they brought with
+// them. These are the figures a T4 and an RL-1 ask for — the software does not
+// file those, but holding the numbers is what stops anyone reopening an old
+// payroll in December to find them.
+apiRouter.get(
+  "/payroll/annual",
+  route(async (req, res) => {
+    const year = Number(req.query.year ?? new Date().getUTCFullYear());
+    if (!Number.isFinite(year)) {
+      res.status(400).json({ error: "invalid year" });
+      return;
+    }
+    res.json({ year, workers: await annualTotals(getSupabaseAdmin(), req.businessId!, year) });
   })
 );
 

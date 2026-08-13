@@ -141,6 +141,8 @@ export default function Payroll() {
           <TabsTrigger value="period">{t("payroll.tabPeriod")}</TabsTrigger>
           <TabsTrigger value="issued">{t("payroll.tabIssued")}</TabsTrigger>
           <TabsTrigger value="remittance">{t("payroll.tabRemittance")}</TabsTrigger>
+          <TabsTrigger value="annual">{t("payroll.tabAnnual")}</TabsTrigger>
+          <TabsTrigger value="opening">{t("payroll.tabOpening")}</TabsTrigger>
           <TabsTrigger value="rules">{t("payroll.tabRules")}</TabsTrigger>
         </TabsList>
 
@@ -287,6 +289,14 @@ export default function Payroll() {
           <RemittanceSummary from={period.from} to={period.to} />
         </TabsContent>
 
+        <TabsContent value="annual" className="mt-4">
+          <AnnualSummary />
+        </TabsContent>
+
+        <TabsContent value="opening" className="mt-4">
+          <OpeningBalances />
+        </TabsContent>
+
         <TabsContent value="rules" className="mt-4">
           <DeductionEditor />
         </TabsContent>
@@ -355,6 +365,243 @@ function RemittanceSummary({ from, to }: { from: string; to: string }) {
           </div>
         </Card>
       ))}
+    </div>
+  );
+}
+
+interface AnnualWorker {
+  workerId: string;
+  kind: "employee" | "subcontractor";
+  name: string;
+  gross: number;
+  employeeDeductions: number;
+  employerContributions: number;
+  net: number;
+  totalCost: number;
+  hours: number;
+  byCode: { code: string; label: string; paidBy: string; amount: number; remitTo: string }[];
+  includesOpeningBalance: boolean;
+}
+
+/**
+ * A whole calendar year per worker.
+ *
+ * The point of this screen is December: without it, closing the year means
+ * reopening whatever payroll ran before this one to find the totals. It states
+ * plainly that it is not a T4 or an RL-1, because claiming to be a filed form
+ * would be a worse lie than being a table of the numbers those forms want.
+ */
+function AnnualSummary() {
+  const { t } = useTranslation();
+  const [year, setYear] = useState(new Date().getFullYear());
+  const { data, loading } = useApi<{ year: number; workers: AnnualWorker[] }>(`/api/payroll/annual?year=${year}`);
+
+  return (
+    <div className="space-y-3">
+      <Card className="p-4 flex-col sm:flex-row sm:items-end gap-3">
+        <div className="space-y-1.5 w-32">
+          <Label className="text-xs">{t("payroll.annualYear")}</Label>
+          <Input type="number" min={2000} max={2100} value={year} onChange={(e) => setYear(Number(e.target.value))} />
+        </div>
+        <div className="flex-1 min-w-0 space-y-1">
+          <p className="text-sm text-muted-foreground">{t("payroll.annualNote")}</p>
+          <p className="text-xs text-muted-foreground">{t("payroll.annualNotAForm")}</p>
+        </div>
+      </Card>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Spinner className="size-4" /> {t("common.loading")}
+        </div>
+      )}
+
+      {!loading && (data?.workers ?? []).length === 0 && (
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">{t("payroll.annualEmpty", { year })}</p>
+        </Card>
+      )}
+
+      {(data?.workers ?? []).map((worker) => (
+        <Card key={worker.workerId} className="p-5 space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div>
+              <p className="text-sm font-semibold text-foreground">{worker.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("payroll.hoursHere", { hours: worker.hours })}
+                {worker.includesOpeningBalance ? ` · ${t("payroll.includesCarryIn")}` : ""}
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Figure label={t("payroll.gross")} value={worker.gross} />
+            <Figure label={t("payroll.employeeSide")} value={-worker.employeeDeductions} />
+            <Figure label={t("payroll.net")} value={worker.net} strong />
+            <Figure label={t("payroll.totalCost")} value={worker.totalCost} strong />
+          </div>
+          <div className="rounded-lg border border-border divide-y divide-border">
+            {worker.byCode.map((line) => (
+              <div key={line.code} className="flex items-center justify-between gap-3 px-3 py-1.5">
+                <span className="text-xs text-muted-foreground min-w-0">{line.label}</span>
+                <span className="text-xs text-foreground flex-shrink-0">
+                  {line.paidBy === "empleado" ? "\u2212" : "+"}
+                  {formatCurrency(line.amount)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+interface OpeningBalance {
+  id: string;
+  workerId: string;
+  kind: "employee" | "subcontractor";
+  gross: number;
+  lines: { code: string; label: string; paidBy: string; amount: number; remitTo: string }[];
+  note: string | null;
+}
+
+interface CrewMember {
+  id: string;
+  name: string;
+}
+
+/**
+ * What a worker brought with them from the previous payroll.
+ *
+ * This is the screen that makes leaving the old system final. Typed once per
+ * person per year; after it, every ceiling and every year-end total is complete
+ * without anything from outside.
+ */
+function OpeningBalances() {
+  const { t } = useTranslation();
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [reloadToken, setReloadToken] = useState(0);
+  const [workerId, setWorkerId] = useState("");
+  const [gross, setGross] = useState("");
+  const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const { data } = useApi<{
+    year: number;
+    codes: { code: string; label: string; paidBy: string; remitTo: string }[];
+    balances: OpeningBalance[];
+  }>(`/api/payroll/opening-balances?year=${year}&_r=${reloadToken}`);
+  const { data: employees } = useApi<CrewMember[]>("/api/employees");
+  const { data: subcontractors } = useApi<CrewMember[]>("/api/subcontractors");
+
+  const crew = [
+    ...(employees ?? []).map((e) => ({ ...e, kind: "employee" as const })),
+    ...(subcontractors ?? []).map((s) => ({ ...s, kind: "subcontractor" as const })),
+  ];
+  const selected = crew.find((c) => c.id === workerId);
+  const existing = (data?.balances ?? []).find((b) => b.workerId === workerId);
+
+  const save = async () => {
+    if (!selected) return;
+    setSaving(true);
+    setSaved(false);
+    try {
+      await apiFetch("/api/payroll/opening-balances", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workerId: selected.id,
+          kind: selected.kind,
+          year,
+          gross: gross === "" ? 0 : Number(gross),
+          lines: (data?.codes ?? []).map((c) => ({ ...c, amount: Number(amounts[c.code] ?? 0) })),
+        }),
+      });
+      setSaved(true);
+      setReloadToken((n) => n + 1);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <Card className="p-4 space-y-1">
+        <p className="text-sm text-muted-foreground">{t("payroll.openingNote")}</p>
+        <p className="text-xs text-muted-foreground">{t("payroll.openingOnce")}</p>
+      </Card>
+
+      <Card className="p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="space-y-1.5 w-full sm:w-28">
+            <Label className="text-xs">{t("payroll.annualYear")}</Label>
+            <Input type="number" min={2000} max={2100} value={year} onChange={(e) => setYear(Number(e.target.value))} />
+          </div>
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <Label className="text-xs">{t("payroll.openingWorker")}</Label>
+            <Select value={workerId} onValueChange={(v) => { setWorkerId(v); setSaved(false); }}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("payroll.openingSelect")} />
+              </SelectTrigger>
+              <SelectContent>
+                {crew.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 w-full sm:w-48">
+            <Label className="text-xs">{t("payroll.openingGross")}</Label>
+            <Input type="number" min={0} step="0.01" value={gross} onChange={(e) => setGross(e.target.value)} />
+          </div>
+        </div>
+
+        {existing && <p className="text-xs text-muted-foreground">{t("payroll.openingExisting", { year })}</p>}
+
+        {workerId && (
+          <div className="space-y-2">
+            {(data?.codes ?? []).map((code) => (
+              <div key={code.code} className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground flex-1 min-w-0">{code.label}</span>
+                <Input
+                  className="h-8 w-32 text-right"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="0"
+                  value={amounts[code.code] ?? ""}
+                  onChange={(e) => { setAmounts((a) => ({ ...a, [code.code]: e.target.value })); setSaved(false); }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <Button onClick={save} disabled={!workerId || saving}>
+            {saving ? <Spinner className="size-4" /> : null}
+            {t("common.save")}
+          </Button>
+          {saved && <span className="text-xs text-muted-foreground">{t("payroll.openingSaved")}</span>}
+        </div>
+      </Card>
+
+      {(data?.balances ?? []).length === 0 ? (
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">{t("payroll.openingNothing")}</p>
+        </Card>
+      ) : (
+        (data?.balances ?? []).map((balance) => (
+          <Card key={balance.id} className="p-4 flex-row items-center justify-between gap-3">
+            <span className="text-sm text-foreground min-w-0">
+              {crew.find((c) => c.id === balance.workerId)?.name ?? balance.workerId}
+            </span>
+            <span className="text-sm text-muted-foreground flex-shrink-0">{formatCurrency(balance.gross)}</span>
+          </Card>
+        ))
+      )}
     </div>
   );
 }
