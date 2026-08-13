@@ -27,6 +27,7 @@ import { provisionWebhook, readStoredWebhookSecrets } from "./stripeWebhookSetup
 import { receivables } from "./receivables";
 import { profitabilityByProject } from "./profitability";
 import { exportAccounting, type ExportKind } from "./accountingExport";
+import { stripeBalance } from "./stripeBalance";
 import {
   annualTotals,
   approvedHours,
@@ -5269,6 +5270,27 @@ apiRouter.post(
       payoutsEnabled: !!remote.payouts_enabled,
       detailsSubmitted: !!remote.details_submitted,
     });
+  })
+);
+
+// What is at Stripe and what has reached the bank. Reads the connected
+// account, never this platform's balance.
+apiRouter.get(
+  "/reports/stripe-balance",
+  route(async (req, res) => {
+    const to = new Date();
+    const from = new Date(to.getTime() - 90 * 86_400_000);
+    try {
+      res.json(await stripeBalance(getSupabaseAdmin(), req.businessId!, from, to));
+    } catch (err) {
+      // Stripe being unreachable must not take down the reports page: the
+      // rest of it is read from our own database and still true.
+      if (err instanceof StripeNotConfiguredError) {
+        res.json({ connected: false, currency: "cad", available: 0, pending: 0, feesInPeriod: 0, chargedInPeriod: 0, deposits: [], payoutsBlockedReason: null });
+        return;
+      }
+      throw err;
+    }
   })
 );
 

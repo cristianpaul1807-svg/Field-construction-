@@ -82,6 +82,7 @@ directamente al paso a paso.
 | Reportes | [funciones/reportes.md](funciones/reportes.md) |
 | *(dentro de Reportes)* Cuentas por cobrar | [funciones/finanzas.md](funciones/finanzas.md#cuentas-por-cobrar) |
 | *(dentro de Reportes)* Rentabilidad por obra | [funciones/finanzas.md](funciones/finanzas.md#rentabilidad-por-obra) |
+| *(dentro de Reportes)* Dinero en Stripe | [funciones/finanzas.md](funciones/finanzas.md#dinero-en-stripe) |
 | *(dentro de Reportes)* Exportar para el contable | [funciones/finanzas.md](funciones/finanzas.md#exportar-para-el-contable) |
 
 ### Configuración

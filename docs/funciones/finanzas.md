@@ -83,6 +83,43 @@ extras acordados, no una deuda al revés.
 
 ---
 
+## Dinero en Stripe
+
+### Para qué sirve
+
+Dónde está el dinero **entre que el cliente paga y el banco lo enseña**. La
+aplicación sabe lo que se facturó y lo que Stripe dice que se pagó; lo que no
+sabía es lo que llegó al banco. Entre las dos cosas están la comisión y el
+calendario de depósitos.
+
+Un contratista que lee "cobrado 10.000 $" y ve 9.600 $ en el extracto necesita
+poder comprobar que la diferencia es normal sin llamar a nadie.
+
+| Número | Qué es |
+|---|---|
+| Liquidándose | Cobrado pero todavía no disponible |
+| Disponible | Listo para salir hacia el banco |
+| Cobrado (90 días) | Lo que pagaron los clientes, antes de comisiones |
+| Comisiones | Lo que se llevó Stripe, del libro mayor de tu cuenta |
+
+Debajo, los depósitos que ya han salido y la fecha en que el banco los tiene.
+
+### De dónde salen las cifras
+
+Del **libro mayor de la cuenta conectada**, que es la única fuente honesta de
+lo que Stripe cobró: la comisión no está en la factura, y reconstruirla a
+partir de las tarifas publicadas se desviaría el día que esas tarifas cambien.
+
+Todo se lee de la cuenta del contratista, que es donde está el dinero. El
+saldo de esta plataforma no interviene en nada.
+
+### Si Stripe retiene los depósitos
+
+Sale dicho en la misma tarjeta que el saldo. Dinero parado en Stripe sin
+explicación es de las cosas que un negocio descubre en el peor momento.
+
+---
+
 ## Exportar para el contable
 
 ### Para qué sirve

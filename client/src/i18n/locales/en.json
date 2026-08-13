@@ -1200,5 +1200,25 @@
       "payments": "Payments",
       "expenses": "Expenses"
     }
+  },
+  "stripeBalance": {
+    "title": "Money at Stripe",
+    "note": "Where the money sits between the customer paying and the bank showing it.",
+    "pending": "Settling",
+    "available": "Available",
+    "charged": "Charged (90 days)",
+    "fees": "Fees",
+    "feesNote": "That fee is why the bank figure never matches the invoiced one. Your Stripe account pays it, not this platform.",
+    "payoutsBlocked": "Stripe is holding deposits until you finish verifying your account.",
+    "deposits": "Bank deposits",
+    "noDeposits": "No deposit has left yet.",
+    "arriving": "Arriving {{date}}",
+    "status": {
+      "paid": "Paid",
+      "pending": "On the way",
+      "in_transit": "On the way",
+      "failed": "Failed",
+      "canceled": "Cancelled"
+    }
   }
 }

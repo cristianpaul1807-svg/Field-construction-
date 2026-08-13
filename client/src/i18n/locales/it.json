@@ -1200,5 +1200,25 @@
       "payments": "Pagamenti",
       "expenses": "Spese"
     }
+  },
+  "stripeBalance": {
+    "title": "Denaro su Stripe",
+    "note": "Dov'è il denaro tra il pagamento del cliente e la sua comparsa in banca.",
+    "pending": "In liquidazione",
+    "available": "Disponibile",
+    "charged": "Incassato (90 giorni)",
+    "fees": "Commissioni",
+    "feesNote": "Quella commissione è il motivo per cui l'importo in banca non coincide mai con il fatturato. La paga il tuo conto Stripe, non questa piattaforma.",
+    "payoutsBlocked": "Stripe trattiene i versamenti finché non completi la verifica del conto.",
+    "deposits": "Versamenti in banca",
+    "noDeposits": "Non è ancora partito nessun versamento.",
+    "arriving": "Arriva il {{date}}",
+    "status": {
+      "paid": "Pagato",
+      "pending": "In arrivo",
+      "in_transit": "In arrivo",
+      "failed": "Fallito",
+      "canceled": "Annullato"
+    }
   }
 }

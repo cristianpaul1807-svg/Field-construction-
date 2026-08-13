@@ -1200,5 +1200,25 @@
       "payments": "Paiements",
       "expenses": "Dépenses"
     }
+  },
+  "stripeBalance": {
+    "title": "Argent chez Stripe",
+    "note": "Où est l'argent entre le paiement du client et son apparition à la banque.",
+    "pending": "En cours de règlement",
+    "available": "Disponible",
+    "charged": "Encaissé (90 jours)",
+    "fees": "Frais",
+    "feesNote": "Ces frais expliquent pourquoi le montant bancaire ne correspond jamais au facturé. C'est votre compte Stripe qui les paie, pas cette plateforme.",
+    "payoutsBlocked": "Stripe retient les versements jusqu'à ce que vous finissiez de vérifier votre compte.",
+    "deposits": "Versements bancaires",
+    "noDeposits": "Aucun versement n'est encore parti.",
+    "arriving": "Arrive le {{date}}",
+    "status": {
+      "paid": "Payé",
+      "pending": "En route",
+      "in_transit": "En route",
+      "failed": "Échoué",
+      "canceled": "Annulé"
+    }
   }
 }
