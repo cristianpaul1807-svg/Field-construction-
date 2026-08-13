@@ -488,6 +488,31 @@ async function createInvoiceRecord(
   const holdbackPercent = input.type === "final" ? 0 : Number(business?.holdback_percent ?? 0);
   const holdbackAmount = Math.round(input.subtotal * (holdbackPercent / 100) * 100) / 100;
 
+  // The final invoice collects everything held back along the way.
+  //
+  // Not doing this was a real hole: each progress invoice subtracted its 10%
+  // and the final one merely stopped subtracting more, so on a $100,000 job
+  // billed 50/25/25 the contractor invoiced $92,500 and never asked for the
+  // rest. Nobody would notice from inside the software — every invoice looked
+  // right on its own.
+  //
+  // It carries no tax. The tax was charged on the full value of the work when
+  // that work was first invoiced; the holdback only ever delayed the payment
+  // of principal, so taxing it here would charge it twice.
+  let holdbackReleased = 0;
+  if (input.type === "final" && input.projectId) {
+    const { data: earlier } = await admin
+      .from("invoices")
+      .select("holdback_amount, holdback_released")
+      .eq("business_id", input.businessId)
+      .eq("project_id", input.projectId);
+    const withheld = (earlier ?? []).reduce((sum, row) => sum + Number(row.holdback_amount ?? 0), 0);
+    const alreadyReleased = (earlier ?? []).reduce((sum, row) => sum + Number(row.holdback_released ?? 0), 0);
+    // Subtracting what was already given back keeps this correct even if a
+    // project somehow ends up with two closing invoices.
+    holdbackReleased = Math.max(0, Math.round((withheld - alreadyReleased) * 100) / 100);
+  }
+
   const { data, error } = await admin
     .from("invoices")
     .insert({
@@ -501,9 +526,11 @@ async function createInvoiceRecord(
       tax_amount: taxAmount,
       tax_breakdown: breakdown,
       holdback_amount: holdbackAmount,
+      holdback_released: holdbackReleased,
       // Tax is charged on the full value of the work; only the payment is
-      // reduced by the holdback, which is why it is subtracted last.
-      amount: Math.round((input.subtotal + taxAmount - holdbackAmount) * 100) / 100,
+      // reduced by the holdback, which is why it is subtracted last. The
+      // release is added after tax for the same reason it carries none.
+      amount: Math.round((input.subtotal + taxAmount - holdbackAmount + holdbackReleased) * 100) / 100,
       status: "pendiente",
       due_date: input.dueDate ?? null,
       charge_kind: input.chargeKind ?? "proyecto",
@@ -5251,7 +5278,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, type, amount, subtotal, tax_amount, tax_breakdown, status, due_date, description, created_at, paid_at, projects(name), clients(name)"
+        "id, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, projects(name), clients(name)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -5266,6 +5293,10 @@ apiRouter.get(
         subtotal: Number(i.subtotal),
         taxAmount: Number(i.tax_amount),
         taxBreakdown: i.tax_breakdown,
+        // The panel already had a line for the withheld amount and it never
+        // appeared: the field was simply not being sent.
+        holdbackAmount: Number(i.holdback_amount ?? 0),
+        holdbackReleased: Number(i.holdback_released ?? 0),
         status: i.status,
         dueDate: i.due_date,
         description: i.description,
@@ -6747,7 +6778,7 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
   const [invoice, business] = await Promise.all([
     admin
       .from("invoices")
-      .select("id, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
+      .select("id, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
       .eq("business_id", businessId)
       .eq("id", invoiceId)
       .maybeSingle(),
@@ -6799,7 +6830,11 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
       taxAmount,
       taxBreakdown: (invoice.data.tax_breakdown as TaxBreakdown) ?? {},
       holdbackAmount: Number(invoice.data.holdback_amount ?? 0),
-      total: Math.round((subtotal + taxAmount - Number(invoice.data.holdback_amount ?? 0)) * 100) / 100,
+      holdbackReleased: Number(invoice.data.holdback_released ?? 0),
+      total:
+        Math.round(
+          (subtotal + taxAmount - Number(invoice.data.holdback_amount ?? 0) + Number(invoice.data.holdback_released ?? 0)) * 100
+        ) / 100,
     },
     lang
   );

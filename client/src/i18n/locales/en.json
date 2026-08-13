@@ -279,7 +279,8 @@
     "cancel": "Cancel invoice",
     "cancelConfirm": "Cancel this invoice? It stays on record as cancelled, it is not deleted.",
     "tabInvoices": "Invoices",
-    "tabRequests": "Chat charges"
+    "tabRequests": "Chat charges",
+    "holdbackReleased": "Includes {{amount}} of holdback released from the earlier invoices"
   },
   "payments": {
     "title": "Payments (Stripe)",

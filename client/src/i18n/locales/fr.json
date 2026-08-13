@@ -279,7 +279,8 @@
     "cancel": "Annuler la facture",
     "cancelConfirm": "Annuler cette facture ? Elle reste enregistrée comme annulée, elle n'est pas supprimée.",
     "tabInvoices": "Factures",
-    "tabRequests": "Demandes par chat"
+    "tabRequests": "Demandes par chat",
+    "holdbackReleased": "Comprend {{amount}} de retenue libérée des factures précédentes"
   },
   "payments": {
     "title": "Paiements (Stripe)",

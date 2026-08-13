@@ -279,7 +279,8 @@
     "cancel": "Annulla fattura",
     "cancelConfirm": "Annullare questa fattura? Resta registrata come annullata, non viene eliminata.",
     "tabInvoices": "Fatture",
-    "tabRequests": "Richieste in chat"
+    "tabRequests": "Richieste in chat",
+    "holdbackReleased": "Include {{amount}} di ritenuta svincolata dalle fatture precedenti"
   },
   "payments": {
     "title": "Pagamenti (Stripe)",

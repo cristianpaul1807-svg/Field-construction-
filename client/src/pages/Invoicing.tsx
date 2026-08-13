@@ -31,6 +31,7 @@ interface Invoice {
   subtotal: number;
   taxAmount: number;
   holdbackAmount: number;
+  holdbackReleased: number;
   status: (typeof INVOICE_STATUSES)[number];
   dueDate: string | null;
   description: string | null;
@@ -288,6 +289,11 @@ export default function Invoicing() {
                   <td className="py-3 text-muted-foreground">{t(`invoicing.type.${invoice.type}`)}</td>
                   <td className="py-3 text-right text-foreground">
                     {formatCurrency(invoice.amount)}
+                    {invoice.holdbackReleased > 0 && (
+                      <p className="text-xs text-status-success-fg mt-0.5">
+                        {t("invoicing.holdbackReleased", { amount: formatCurrency(invoice.holdbackReleased) })}
+                      </p>
+                    )}
                     {invoice.holdbackAmount > 0 && (
                       <span className="block text-xs text-muted-foreground">
                         {t("invoicing.holdbackWithheld", { amount: formatCurrency(invoice.holdbackAmount) })}

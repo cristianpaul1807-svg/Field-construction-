@@ -279,7 +279,8 @@
     "cancel": "Anular factura",
     "cancelConfirm": "¿Anular esta factura? Queda registrada como anulada, no se borra.",
     "tabInvoices": "Facturas",
-    "tabRequests": "Cobros por chat"
+    "tabRequests": "Cobros por chat",
+    "holdbackReleased": "Incluye {{amount}} de retención liberada de las facturas anteriores"
   },
   "payments": {
     "title": "Pagos (Stripe)",

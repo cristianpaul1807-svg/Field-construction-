@@ -154,6 +154,8 @@ export interface InvoiceDoc {
   taxAmount: number;
   taxBreakdown: TaxBreakdown;
   holdbackAmount: number;
+  /** Retención de facturas anteriores que esta cobra. Sin impuesto: ya se pagó. */
+  holdbackReleased: number;
   total: number;
 }
 
@@ -182,6 +184,7 @@ interface Copy {
   gstNumber: string;
   qstNumber: string;
   holdback: string;
+  holdbackRelease: string;
   holdbackNote: (percent: number) => string;
   materialsTitle: string;
   materialsNote: string;
@@ -256,6 +259,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollDisclaimer: "Documento interno de gestión. No es un comprobante oficial de retenciones: los importes se calculan con las tasas que la empresa tiene configuradas y prorrateadas al periodo, sin acumulado anual por persona.",
     paymentsNote: "Cada pago se factura cuando la obra llega a esa etapa. Los importes incluyen impuestos.",
     holdback: "Retención",
+    holdbackRelease: "Liberación de retención",
     holdbackNote: (p) => `Se retiene un ${p}% de cada pago parcial hasta la finalización de los trabajos.`,
     materialsTitle: "Materiales previstos",
     materialsNote: "Cantidades estimadas; cualquier cambio se acuerda por escrito antes de ejecutarlo.",
@@ -312,6 +316,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollDisclaimer: "Internal management document. Not an official statement of deductions: amounts use the rates this business has configured, prorated over the period, without per-person year-to-date totals.",
     paymentsNote: "Each payment is invoiced when the job reaches that stage. Amounts include tax.",
     holdback: "Holdback",
+    holdbackRelease: "Holdback released",
     holdbackNote: (p) => `${p}% of each progress payment is held back until the work is complete.`,
     materialsTitle: "Materials to be used",
     materialsNote: "Estimated quantities; any change is agreed in writing before it is carried out.",
@@ -368,6 +373,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollDisclaimer: "Document interne de gestion. Ce n'est pas un relevé officiel de retenues : les montants utilisent les taux configurés par l'entreprise, au prorata de la période, sans cumul annuel par personne.",
     paymentsNote: "Chaque paiement est facturé lorsque le chantier atteint cette étape. Montants taxes comprises.",
     holdback: "Retenue",
+    holdbackRelease: "Libération de la retenue",
     holdbackNote: (p) => `Une retenue de ${p} % est appliquée à chaque paiement partiel jusqu'à la fin des travaux.`,
     materialsTitle: "Matériaux prévus",
     materialsNote: "Quantités estimées ; tout changement est convenu par écrit avant d'être réalisé.",
@@ -424,6 +430,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollDisclaimer: "Documento interno di gestione. Non è un prospetto ufficiale delle trattenute: gli importi usano le aliquote configurate dall'impresa, ripartite sul periodo, senza cumulo annuo per persona.",
     paymentsNote: "Ogni pagamento viene fatturato quando il cantiere raggiunge quella fase. Importi tasse incluse.",
     holdback: "Ritenuta",
+    holdbackRelease: "Svincolo della ritenuta",
     holdbackNote: (p) => `Viene trattenuto il ${p}% di ogni pagamento parziale fino al completamento dei lavori.`,
     materialsTitle: "Materiali previsti",
     materialsNote: "Quantità stimate; ogni variazione viene concordata per iscritto prima di eseguirla.",
@@ -660,6 +667,12 @@ function totals(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocL
     // Shown as a negative line so the customer can see the invoiced value and
     // the amount actually payable are different, and by exactly how much.
     rows.push([copy.holdback, `-${money(data.holdbackAmount, lang)}`, false]);
+  }
+  if (data.kind === "invoice" && data.holdbackReleased > 0) {
+    // The mirror of those negative lines, arriving on the closing invoice. A
+    // customer who saw money held back on every earlier bill has to see where
+    // it comes back, or the final total looks like an overcharge.
+    rows.push([copy.holdbackRelease, `+${money(data.holdbackReleased, lang)}`, false]);
   }
   rows.push([copy.total, money(data.total, lang), true]);
 
