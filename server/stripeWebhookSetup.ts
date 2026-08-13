@@ -81,7 +81,16 @@ export interface ProvisionResult {
  */
 export async function provisionWebhook(db: Db, baseUrl: string): Promise<ProvisionResult> {
   const stripe = getStripe();
-  const url = `${baseUrl.replace(/\/+$/, "")}/api/public/stripe/webhook`;
+
+  // Forced to https unless it is a local address. A hosting proxy ends the TLS
+  // and forwards plain http, so the server sees "http" and would publish that
+  // as the address Stripe should post payment confirmations to — in the clear,
+  // to a host that only answers over https. Getting this wrong once already
+  // registered an http:// endpoint that had to be thrown away.
+  const normalized = baseUrl.replace(/\/+$/, "");
+  const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(normalized);
+  const secure = isLocal ? normalized : normalized.replace(/^http:\/\//i, "https://");
+  const url = `${secure}/api/public/stripe/webhook`;
 
   const existing = (await stripe.v2.core.eventDestinations.list(
     { limit: 100, include: ["webhook_endpoint.url"] } as never,

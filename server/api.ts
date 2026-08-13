@@ -8322,6 +8322,15 @@ apiRouter.get(
 // *that* both in the Vite dev plugin and the production server, instead
 // of mounting the router directly in either place.
 export const apiApp = express();
+
+// Behind the hosting proxy, req.protocol reports "http" because that is how
+// the request reaches this process — the TLS ended at the proxy. Every URL
+// this server hands to Stripe is built from it: the onboarding return address
+// and the webhook endpoint it registers for itself. Both were being written
+// as http://, which is the wrong address to publish for a site that is only
+// reachable over https. Trusting X-Forwarded-Proto is what makes req.protocol
+// tell the truth about how the person actually arrived.
+apiApp.set("trust proxy", true);
 // Stripe signature verification needs the exact raw bytes of the request
 // body, so this one route is mounted with express.raw() ahead of the
 // JSON parser below — every other route gets a parsed req.body as usual.
