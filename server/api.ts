@@ -732,6 +732,17 @@ apiRouter.get(
     report.serviceRoleKeyLooksLikeSecret = rawKey.trim().startsWith("sb_secret_");
     report.supabaseUrlHasWhitespace = /\s/.test(process.env.SUPABASE_URL ?? "");
 
+    // Same shape-only treatment for the Stripe keys. Both are one paste away
+    // from a key that exists, looks plausible and does nothing: Stripe shows
+    // the publishable and the secret key side by side on the same page, and
+    // the publishable one is the one that copies without a confirmation step.
+    const rawStripeKey = (process.env.STRIPE_SECRET_KEY ?? "").trim();
+    report.stripeKeyPrefix = rawStripeKey.slice(0, 3) || null;
+    report.stripeKeyIsSecret = /^(sk|rk)_/.test(rawStripeKey);
+    report.stripeKeyIsPublishable = rawStripeKey.startsWith("pk_");
+    report.stripeKeyMode = rawStripeKey.includes("_live_") ? "live" : rawStripeKey.includes("_test_") ? "test" : null;
+    report.stripeWebhookSecretLooksRight = (process.env.STRIPE_WEBHOOK_SECRET ?? "").trim().startsWith("whsec_");
+
     try {
       const admin = getSupabaseAdmin();
       const { error } = await admin.from("businesses").select("id", { head: true, count: "exact" }).limit(1);
@@ -774,6 +785,23 @@ apiRouter.get(
     }
     if (report.serviceRoleKeyHasWhitespace) {
       problems.push("SUPABASE_SERVICE_ROLE_KEY contains whitespace — it was probably pasted with a line break.");
+    }
+    // Stripe is optional — a business can run this product without it — so a
+    // missing key is not a problem. A key of the wrong kind is: it means
+    // somebody meant to set it up and every payment screen will fail.
+    if (report.stripeKeyIsPublishable) {
+      problems.push(
+        "STRIPE_SECRET_KEY holds a publishable key (pk_…). That key can only be used from a browser, so every payment call fails. The secret key is on the same Stripe page, behind the reveal button, and starts with sk_."
+      );
+    } else if (process.env.STRIPE_SECRET_KEY && !report.stripeKeyIsSecret) {
+      problems.push(
+        `STRIPE_SECRET_KEY does not look like a Stripe key (starts with "${report.stripeKeyPrefix}"). It should start with sk_ or, for a restricted key, rk_.`
+      );
+    }
+    if (process.env.STRIPE_WEBHOOK_SECRET && !report.stripeWebhookSecretLooksRight) {
+      problems.push(
+        "STRIPE_WEBHOOK_SECRET does not start with whsec_, so signature verification will reject every event Stripe sends and no invoice will ever be marked paid."
+      );
     }
     if (!report.supabaseReachable && problems.length === 0) {
       problems.push("Supabase is configured but did not answer. The credentials may be revoked, or the project paused.");
