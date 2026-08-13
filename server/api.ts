@@ -23,6 +23,7 @@ import {
 } from "./paymentRequests";
 import { closeEntryWithOvertime, workerPerformance } from "./workTime";
 import { businessCoordinates } from "./geocode";
+import { provisionWebhook, readStoredWebhookSecrets } from "./stripeWebhookSetup";
 import {
   annualTotals,
   approvedHours,
@@ -588,7 +589,19 @@ async function stripeWebhookHandler(req: Request, res: Response) {
     // Tried against each configured secret: the platform scope and the
     // connected-accounts scope have different ones, and an event is genuine
     // if any of them verifies it. Only after all of them fail is it refused.
-    const secrets = getStripeWebhookSecrets();
+    //
+    // The environment comes first and the ones the server provisioned for
+    // itself come after, so a value set by hand always decides.
+    const fromEnv = (() => {
+      try {
+        return getStripeWebhookSecrets();
+      } catch {
+        return [];
+      }
+    })();
+    const stored = await readStoredWebhookSecrets(getSupabaseAdmin()).catch(() => []);
+    const secrets = Array.from(new Set([...fromEnv, ...stored]));
+    if (secrets.length === 0) throw new StripeNotConfiguredError();
     let lastError: unknown;
     for (const secret of secrets) {
       try {
@@ -5168,6 +5181,19 @@ apiRouter.post(
     }
 
     res.json({ url: link.url });
+  })
+);
+
+// Sets up this deployment's Stripe webhook without anybody copying a secret.
+//
+// Behind business auth on purpose: it is a platform-wide action, and the only
+// people who reach this router are the ones running the business panel.
+apiRouter.post(
+  "/stripe/webhook/provision",
+  route(async (req, res) => {
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const result = await provisionWebhook(getSupabaseAdmin(), baseUrl);
+    res.json(result);
   })
 );
 
