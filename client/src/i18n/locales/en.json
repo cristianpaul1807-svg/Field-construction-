@@ -1113,5 +1113,22 @@
     },
     "needsStripeTitle": "This needs Stripe connected",
     "needsStripeBody": "A chat charge is a pay button, and without Stripe that button leads nowhere. In the meantime you can issue the invoice normally and send its PDF through the chat; the client pays however they do today and you mark it paid."
+  },
+  "sign": {
+    "title": "Sign the estimate",
+    "intro": "By signing you accept the scope and the amount of this estimate.",
+    "amountLabel": "Amount you are accepting",
+    "nameLabel": "Your full name",
+    "namePlaceholder": "Type it as you would sign it",
+    "nameRequired": "Type your name to sign.",
+    "drawLabel": "Your signature (optional)",
+    "clear": "Clear",
+    "consent": "Your name, the date and the accepted amount are kept as the record of this signature. They appear on the estimate PDF.",
+    "confirm": "Sign and accept",
+    "signedBy": "Signed by {{name}} on {{date}}"
+  },
+  "estimates": {
+    "signedBadge": "Signed",
+    "signedDetail": "Signed by {{name}} on {{date}} · {{amount}}"
   }
 }

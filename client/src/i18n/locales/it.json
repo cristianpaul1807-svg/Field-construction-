@@ -406,7 +406,7 @@
     "projectProgress": "Avanzamento del tuo progetto",
     "noActiveProject": "Non hai ancora un progetto attivo.",
     "estimateNumber": "Preventivo n. {{id}}",
-    "signEstimate": "Firma il preventivo",
+    "signEstimate": "Firma preventivo",
     "payDeposit": "Paga l'acconto",
     "payInvoice": "Paga {{type}} ({{amount}})",
     "sharedPhotos": "Foto condivise dall'impresa",
@@ -1113,5 +1113,22 @@
     },
     "needsStripeTitle": "Serve Stripe collegato",
     "needsStripeBody": "Un addebito in chat è un pulsante di pagamento, e senza Stripe quel pulsante non porta da nessuna parte. Intanto puoi emettere la fattura normalmente e inviarne il PDF in chat; il cliente paga come fa oggi e tu la segni pagata."
+  },
+  "sign": {
+    "title": "Firma il preventivo",
+    "intro": "Firmando accetti l'ambito e l'importo di questo preventivo.",
+    "amountLabel": "Importo che accetti",
+    "nameLabel": "Il tuo nome completo",
+    "namePlaceholder": "Scrivilo come lo firmeresti",
+    "nameRequired": "Scrivi il tuo nome per firmare.",
+    "drawLabel": "La tua firma (opzionale)",
+    "clear": "Cancella",
+    "consent": "Il tuo nome, la data e l'importo accettato vengono conservati come prova della firma. Compaiono nel PDF del preventivo.",
+    "confirm": "Firma e accetta",
+    "signedBy": "Firmato da {{name}} il {{date}}"
+  },
+  "estimates": {
+    "signedBadge": "Firmato",
+    "signedDetail": "Firmato da {{name}} il {{date}} · {{amount}}"
   }
 }

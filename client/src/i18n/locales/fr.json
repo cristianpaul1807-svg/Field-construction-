@@ -1113,5 +1113,22 @@
     },
     "needsStripeTitle": "Ceci nécessite Stripe connecté",
     "needsStripeBody": "Une demande par chat est un bouton de paiement, et sans Stripe ce bouton ne mène nulle part. En attendant, émettez la facture normalement et envoyez son PDF par le chat ; le client paie comme aujourd'hui et vous la marquez payée."
+  },
+  "sign": {
+    "title": "Signer la soumission",
+    "intro": "En signant, vous acceptez la portée et le montant de cette soumission.",
+    "amountLabel": "Montant que vous acceptez",
+    "nameLabel": "Votre nom complet",
+    "namePlaceholder": "Écrivez-le comme vous le signeriez",
+    "nameRequired": "Écrivez votre nom pour signer.",
+    "drawLabel": "Votre signature (optionnel)",
+    "clear": "Effacer",
+    "consent": "Votre nom, la date et le montant accepté sont conservés comme preuve de la signature. Ils apparaissent sur le PDF de la soumission.",
+    "confirm": "Signer et accepter",
+    "signedBy": "Signé par {{name}} le {{date}}"
+  },
+  "estimates": {
+    "signedBadge": "Signée",
+    "signedDetail": "Signé par {{name}} le {{date}} · {{amount}}"
   }
 }

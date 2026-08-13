@@ -1444,6 +1444,18 @@ apiRouter.get(
     if (estimate.error) throw estimate.error;
     if (pendingInvoice.error) throw pendingInvoice.error;
 
+    // What they signed, so the portal can show it back instead of offering to
+    // sign something already signed.
+    const { data: signature } = estimate.data
+      ? await getSupabaseAdmin()
+          .from("estimate_signatures")
+          .select("signed_name, signed_at, signed_total")
+          .eq("estimate_id", estimate.data.id)
+          .order("signed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+
     let visiblePhotos: { id: string }[] = [];
     if (project.data) {
       const { data, error } = await supabase
@@ -1509,7 +1521,14 @@ apiRouter.get(
           }
         : null,
       estimate: estimate.data
-        ? { id: estimate.data.id, status: estimate.data.status, total: Number(estimate.data.total) }
+        ? {
+            id: estimate.data.id,
+            status: estimate.data.status,
+            total: Number(estimate.data.total),
+            signature: signature
+              ? { name: signature.signed_name, signedAt: signature.signed_at, total: Number(signature.signed_total) }
+              : null,
+          }
         : null,
       pendingInvoice: pendingInvoice.data
         ? { id: pendingInvoice.data.id, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
@@ -2233,10 +2252,22 @@ apiRouter.post(
   "/client-portal/estimates/:id/accept",
   requireClientAuth,
   route(async (req, res) => {
+    // A typed name is the signature. Not a formality: the consent sentence is
+    // in front of them when they type it, which is what makes this an act
+    // rather than a click, and it is the part that identifies who signed.
+    const signedName = String(req.body?.signedName ?? "").trim();
+    if (signedName.length < 2) {
+      res.status(400).json({ error: "signedName is required", code: "signature_required" });
+      return;
+    }
+    // A drawn mark is optional and never the proof on its own. Bounded because
+    // a canvas can produce a very large data URI and this row is read often.
+    const signatureImage = String(req.body?.signatureImage ?? "").slice(0, 200_000) || null;
+
     const admin = getSupabaseAdmin();
     const { data: estimate } = await admin
       .from("estimates")
-      .select("id, status, business_id, client_id, project_id, description, clients(name, source)")
+      .select("id, status, business_id, client_id, project_id, description, total, clients(name, source)")
       .eq("id", req.params.id)
       .eq("client_id", req.clientId!)
       .maybeSingle();
@@ -2252,6 +2283,25 @@ apiRouter.post(
       res.status(409).json({ error: "estimate is not awaiting acceptance" });
       return;
     }
+    // Written first: an estimate that reads "accepted" with no signature behind
+    // it is exactly the state this feature exists to remove, so the signature
+    // is what the rest depends on rather than a side effect of it.
+    const { error: signError } = await admin.from("estimate_signatures").insert({
+      business_id: estimate.business_id,
+      estimate_id: estimate.id,
+      client_id: estimate.client_id,
+      signed_name: signedName,
+      signature_image: signatureImage,
+      // The figure agreed, pinned here. Reading it back off the estimate later
+      // would let an edit rewrite what somebody signed.
+      signed_total: Number(estimate.total ?? 0),
+      // Behind a proxy the first hop is the real client; Express gives the
+      // socket address otherwise.
+      ip_address: (String(req.headers["x-forwarded-for"] ?? "").split(",")[0] || req.ip || "").trim() || null,
+      user_agent: String(req.headers["user-agent"] ?? "").slice(0, 500) || null,
+    });
+    if (signError) throw signError;
+
     const { error } = await admin.from("estimates").update({ status: "aceptado" }).eq("id", estimate.id);
     if (error) throw error;
 
@@ -2456,7 +2506,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("estimates")
       .select(
-        "id, client_id, project_id, status, created_by, category_id, description, total, created_at, clients(name), budget_categories(name)"
+        "id, client_id, project_id, status, created_by, category_id, description, total, created_at, clients(name), budget_categories(name), estimate_signatures(signed_name, signed_at, signed_total)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -2468,6 +2518,16 @@ apiRouter.get(
         id: e.id,
         clientId: e.client_id,
         clientName: e.clients?.name ?? null,
+        // The most recent signature. An estimate marked accepted with none is
+        // one the contractor accepted on the client's behalf, and the panel
+        // should not imply otherwise.
+        signature: (() => {
+          const rows = (e.estimate_signatures ?? []) as { signed_name: string; signed_at: string; signed_total: number }[];
+          const latest = rows.slice().sort((a, b) => b.signed_at.localeCompare(a.signed_at))[0];
+          return latest
+            ? { name: latest.signed_name, signedAt: latest.signed_at, total: Number(latest.signed_total) }
+            : null;
+        })(),
         projectId: e.project_id,
         status: e.status,
         createdBy: e.created_by,
@@ -6283,6 +6343,16 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
   // A signed estimate is an agreement to the whole payment schedule, not just
   // to the first cheque, so the stages are priced here and printed on it.
   const plan = await readPlan(admin, businessId);
+
+  // The most recent signature, if any. A revised estimate can be signed again
+  // and the document should show what was last agreed.
+  const { data: signature } = await admin
+    .from("estimate_signatures")
+    .select("signed_name, signature_image, signed_total, signed_at")
+    .eq("estimate_id", estimateId)
+    .order("signed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   const createdAt = new Date(estimate.data.created_at);
   // A construction estimate that never expires is a price the contractor is
   // stuck with when material costs move, so every one carries 30 days.
@@ -6330,6 +6400,14 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       // Against the tax-inclusive total, because that is the figure the
       // customer will actually be asked to pay at each stage.
       payments: splitIntoStages(Math.round((subtotal + taxAmount) * 100) / 100, plan),
+      signature: signature
+        ? {
+            name: signature.signed_name,
+            signedAt: new Date(signature.signed_at),
+            image: signature.signature_image,
+            total: Number(signature.signed_total),
+          }
+        : null,
     },
     lang
   );
@@ -7334,6 +7412,18 @@ apiRouter.get(
     if (estimate.error) throw estimate.error;
     if (pendingInvoice.error) throw pendingInvoice.error;
 
+    // What they signed, so the portal can show it back instead of offering to
+    // sign something already signed.
+    const { data: signature } = estimate.data
+      ? await getSupabaseAdmin()
+          .from("estimate_signatures")
+          .select("signed_name, signed_at, signed_total")
+          .eq("estimate_id", estimate.data.id)
+          .order("signed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+
     let visiblePhotos: { id: string }[] = [];
     if (project.data) {
       const { data, error } = await supabase
@@ -7352,7 +7442,14 @@ apiRouter.get(
         ? { id: project.data.id, name: project.data.name, progressPercent: Number(project.data.progress_percent) }
         : null,
       estimate: estimate.data
-        ? { id: estimate.data.id, status: estimate.data.status, total: Number(estimate.data.total) }
+        ? {
+            id: estimate.data.id,
+            status: estimate.data.status,
+            total: Number(estimate.data.total),
+            signature: signature
+              ? { name: signature.signed_name, signedAt: signature.signed_at, total: Number(signature.signed_total) }
+              : null,
+          }
         : null,
       pendingInvoice: pendingInvoice.data
         ? { id: pendingInvoice.data.id, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }

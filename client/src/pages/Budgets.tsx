@@ -35,6 +35,7 @@ interface EstimateSummary {
   description: string | null;
   total: number;
   createdAt: string;
+  signature: { name: string; signedAt: string; total: number } | null;
 }
 
 interface BudgetCategory {
@@ -336,6 +337,14 @@ export default function Budgets() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{summary.categoryName ?? t("budgets.noCategory")}</p>
+                    {/* Signed by the customer, as opposed to marked accepted
+                        by the office — a distinction worth being able to see
+                        before relying on it. */}
+                    {summary.signature && (
+                      <p className="text-[11px] text-status-success-fg truncate mt-0.5">
+                        {t("estimates.signedBadge")} · {summary.signature.name}
+                      </p>
+                    )}
                     {summary.description && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{summary.description}</p>
                     )}

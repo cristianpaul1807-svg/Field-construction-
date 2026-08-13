@@ -92,6 +92,18 @@ export interface EstimateDoc {
   schedule: EstimateScheduleEntry[];
   /** How it gets paid, in stages. Empty when the business bills in one go. */
   payments: EstimatePaymentStage[];
+  /** Present once the customer has signed. Absent leaves the blank lines. */
+  signature?: EstimateSignature | null;
+}
+
+/** What the customer put their name to, and when. */
+export interface EstimateSignature {
+  name: string;
+  signedAt: Date;
+  /** PNG data URI of a drawn mark. Optional — the typed name is the signature. */
+  image?: string | null;
+  /** The total agreed at that moment, which may differ from today's estimate. */
+  total: number;
 }
 
 /**
@@ -178,6 +190,9 @@ interface Copy {
   scheduleDuration: (hours: string) => string;
   paymentsTitle: string;
   paymentsNote: string;
+  signedBy: string;
+  signedOn: string;
+  signedTotalNote: (amount: string) => string;
   payrollTitle: string;
   payrollWorker: string;
   payrollPeriod: string;
@@ -225,6 +240,9 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N.º TPS",
     qstNumber: "N.º TVQ",
     paymentsTitle: "Forma de pago",
+    signedBy: "Firmado por",
+    signedOn: "Firmado el",
+    signedTotalNote: (a) => `Importe aceptado al firmar: ${a}`,
     payrollTitle: "HOJA DE PAGO",
     payrollWorker: "Trabajador",
     payrollPeriod: "Periodo",
@@ -278,6 +296,9 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "GST no.",
     qstNumber: "QST no.",
     paymentsTitle: "How this is paid",
+    signedBy: "Signed by",
+    signedOn: "Signed on",
+    signedTotalNote: (a) => `Amount accepted at signing: ${a}`,
     payrollTitle: "PAY SHEET",
     payrollWorker: "Worker",
     payrollPeriod: "Period",
@@ -331,6 +352,9 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "No TPS",
     qstNumber: "No TVQ",
     paymentsTitle: "Modalités de paiement",
+    signedBy: "Signé par",
+    signedOn: "Signé le",
+    signedTotalNote: (a) => `Montant accepté à la signature : ${a}`,
     payrollTitle: "FEUILLE DE PAIE",
     payrollWorker: "Travailleur",
     payrollPeriod: "Période",
@@ -384,6 +408,9 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N. GST",
     qstNumber: "N. QST",
     paymentsTitle: "Modalità di pagamento",
+    signedBy: "Firmato da",
+    signedOn: "Firmato il",
+    signedTotalNote: (a) => `Importo accettato alla firma: ${a}`,
     payrollTitle: "FOGLIO PAGA",
     payrollWorker: "Lavoratore",
     payrollPeriod: "Periodo",
@@ -760,6 +787,50 @@ function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) 
     width: CONTENT_WIDTH,
   });
   doc.y += 34;
+
+  // A signed estimate must not print an empty signature line. That was the
+  // old behaviour and it made an accepted document look unsigned to anyone
+  // who read it — including the contractor who was relying on it.
+  if (data.signature) {
+    const sig = data.signature;
+
+    // A drawn mark needs its own band above the rule. Without reserving it the
+    // squiggle lands across the typed name and strikes it through, which is
+    // both ugly and — on the one document that has to be legible years later —
+    // actively unhelpful.
+    if (sig.image) {
+      ensureRoom(doc, 90, copy);
+      doc.y += 34;
+    }
+
+    const signatureY = doc.y;
+    if (sig.image) {
+      try {
+        doc.image(sig.image, MARGIN, signatureY - 48, { fit: [200, 44] });
+      } catch {
+        // A malformed data URI must not take the document down; the typed
+        // name below is the signature that matters anyway.
+      }
+    }
+    doc.moveTo(MARGIN, signatureY).lineTo(MARGIN + 220, signatureY).strokeColor("#999999").lineWidth(0.5).stroke();
+    doc.moveTo(MARGIN + 280, signatureY).lineTo(MARGIN + 440, signatureY).strokeColor("#999999").lineWidth(0.5).stroke();
+
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111");
+    doc.text(sig.name, MARGIN, signatureY + 4, { width: 220 });
+    doc.text(shortDate(sig.signedAt, lang), MARGIN + 280, signatureY + 4, { width: 160 });
+
+    doc.font("Helvetica").fontSize(7.5).fillColor("#888888");
+    doc.text(copy.signedBy, MARGIN, signatureY + 17, { width: 220 });
+    doc.text(copy.signedOn, MARGIN + 280, signatureY + 17, { width: 160 });
+
+    doc.y = signatureY + 30;
+    doc
+      .font("Helvetica")
+      .fontSize(7.5)
+      .fillColor("#888888")
+      .text(copy.signedTotalNote(money(sig.total, lang)), MARGIN, doc.y, { width: CONTENT_WIDTH });
+    return;
+  }
 
   const signatureY = doc.y;
   doc.moveTo(MARGIN, signatureY).lineTo(MARGIN + 220, signatureY).strokeColor("#999999").lineWidth(0.5).stroke();

@@ -180,3 +180,54 @@ presupuestos antiguos aprobados como referencia de márgenes y estructura.
 merma, con la misma fórmula que la vista previa. Si añades otra forma de
 modificar un presupuesto, recalcula también, o el total guardado se queda
 viejo sin que nadie se entere.
+
+---
+
+## La firma del cliente
+
+**Dónde:** portal del cliente → **Firmar presupuesto**
+
+Antes esto era un botón de *Aceptar* que cambiaba el estado y nada más: no se
+guardaba quién, ni cuándo, ni qué importe aceptó, y el PDF seguía imprimiendo la
+línea de firma en blanco. Un presupuesto "aceptado" parecía sin firmar para
+cualquiera que lo leyera, incluido tú.
+
+Ahora el cliente firma de verdad:
+
+1. Ve **el importe otra vez**, grande, justo encima del botón. Lo único que una
+   firma tiene que fijar es qué cifra se acordó.
+2. **Escribe su nombre completo.** Eso es la firma. La frase de consentimiento
+   está delante mientras lo escribe, que es lo que convierte esto en un acto y
+   no en un clic.
+3. **Puede dibujar su firma** con el dedo. Es opcional: queda bonito y en el
+   móvil es lo que la gente espera, pero un garabato no identifica a nadie por
+   sí solo.
+
+### Qué se guarda
+
+| Dato | Para qué |
+|---|---|
+| Nombre escrito | Quién firmó |
+| Fecha y hora | Cuándo |
+| **Importe en ese momento** | Qué se acordó, aunque el presupuesto se edite después |
+| Dibujo (si lo hizo) | Aparece en el PDF |
+| IP y navegador | Constancia del acto, como cualquier servicio de firma |
+
+Se guarda **antes** de marcar el presupuesto como aceptado, para que no pueda
+existir un aceptado sin firma detrás. Y **no se puede editar ni borrar**: no hay
+política de escritura sobre esa tabla, porque una firma que se puede cambiar
+después no prueba nada.
+
+### En el PDF
+
+El bloque de firma deja de estar en blanco: sale el nombre, la fecha, el dibujo
+si lo hay, y una línea con el importe aceptado al firmar.
+
+### En el panel
+
+Los presupuestos firmados lo dicen en su tarjeta, con el nombre. Es la
+diferencia entre *el cliente firmó* y *lo marcamos aceptado nosotros* — que no
+es la misma cosa y conviene poder distinguirla antes de apoyarse en ella.
+
+> Una revisión del presupuesto se puede volver a firmar. La firma anterior se
+> conserva: es lo que prueba qué se acordó la primera vez.

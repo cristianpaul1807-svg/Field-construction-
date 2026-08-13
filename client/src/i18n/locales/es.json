@@ -1113,5 +1113,22 @@
     },
     "needsStripeTitle": "Esto necesita Stripe conectado",
     "needsStripeBody": "Un cobro por el chat es un botón de pagar, y sin Stripe ese botón no lleva a ningún sitio. Mientras tanto puedes emitir la factura normal y enviarle el PDF por el chat; el cliente paga como lo haga ahora y tú la marcas pagada."
+  },
+  "sign": {
+    "title": "Firmar el presupuesto",
+    "intro": "Al firmar aceptas el alcance y el importe de este presupuesto.",
+    "amountLabel": "Importe que aceptas",
+    "nameLabel": "Tu nombre completo",
+    "namePlaceholder": "Escríbelo tal como lo firmarías",
+    "nameRequired": "Escribe tu nombre para firmar.",
+    "drawLabel": "Tu firma (opcional)",
+    "clear": "Borrar",
+    "consent": "Se guarda tu nombre, la fecha y el importe aceptado como constancia de la firma. Aparecerá en el PDF del presupuesto.",
+    "confirm": "Firmar y aceptar",
+    "signedBy": "Firmado por {{name}} el {{date}}"
+  },
+  "estimates": {
+    "signedBadge": "Firmado",
+    "signedDetail": "Firmado por {{name}} el {{date}} · {{amount}}"
   }
 }

@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { clearClientSession } from "@/lib/clientSession";
 import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
+import { SignEstimateDialog } from "@/components/SignEstimateDialog";
 import { PaymentScheduleCard, type PaymentMilestone } from "@/components/PaymentScheduleCard";
 
 interface ClientPortalData {
@@ -25,7 +26,12 @@ interface ClientPortalData {
     lifecycle: Lifecycle | null;
     paymentSchedule: PaymentMilestone[];
   } | null;
-  estimate: { id: string; status: string; total: number } | null;
+  estimate: {
+    id: string;
+    status: string;
+    total: number;
+    signature: { name: string; signedAt: string; total: number } | null;
+  } | null;
   pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
 }
@@ -61,7 +67,7 @@ export default function ClientPortalMe() {
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
-  const [accepting, setAccepting] = useState(false);
+  const [signing, setSigning] = useState(false);
   const [decidingId, setDecidingId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const {
@@ -99,20 +105,6 @@ export default function ClientPortalMe() {
       setPayError(err instanceof Error ? err.message : t("common.genericError"));
     } finally {
       setDownloading(false);
-    }
-  };
-
-  const acceptEstimate = async (estimateId: string) => {
-    setAccepting(true);
-    setPayError(null);
-    try {
-      const res = await apiFetch(`/api/client-portal/estimates/${estimateId}/accept`, { method: "POST" });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
-      reload();
-    } catch (err) {
-      setPayError(err instanceof Error ? err.message : t("common.genericError"));
-    } finally {
-      setAccepting(false);
     }
   };
 
@@ -258,12 +250,12 @@ export default function ClientPortalMe() {
                     {data.estimate.status !== "aceptado" && (
                       <Button
                         className="gap-2 flex-1"
-                        onClick={() => acceptEstimate(data.estimate!.id)}
-                        disabled={accepting || data.estimate.status !== "enviado"}
+                        onClick={() => setSigning(true)}
+                        disabled={data.estimate.status !== "enviado"}
                         title={data.estimate.status !== "enviado" ? t("clientPortal.notSentYet") : undefined}
                       >
-                        {accepting ? <Spinner className="size-4" /> : <FileSignature size={16} />}
-                        {t("clientPortal.acceptEstimate")}
+                        <FileSignature size={16} />
+                        {t("clientPortal.signEstimate")}
                       </Button>
                     )}
                     <Button
@@ -291,6 +283,14 @@ export default function ClientPortalMe() {
                       </Button>
                     )}
                   </div>
+                  {data.estimate.signature && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t("sign.signedBy", {
+                        name: data.estimate.signature.name,
+                        date: new Date(data.estimate.signature.signedAt).toLocaleDateString(i18n.language),
+                      })}
+                    </p>
+                  )}
                   {payError && <p className="text-sm text-status-error-fg mt-2">{payError}</p>}
                 </Card>
               )}
@@ -386,6 +386,17 @@ export default function ClientPortalMe() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {data?.estimate && (
+        <SignEstimateDialog
+          open={signing}
+          onOpenChange={setSigning}
+          estimateId={data.estimate.id}
+          total={data.estimate.total}
+          defaultName={data.client.name}
+          onSigned={reload}
+        />
+      )}
     </div>
   );
 }
