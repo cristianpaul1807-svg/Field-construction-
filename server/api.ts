@@ -20,6 +20,7 @@ import {
   computePayroll,
   labourCostByProject,
   readDeductions,
+  yearToDate,
 } from "./payroll";
 import {
   billMilestone,
@@ -5017,6 +5018,7 @@ apiRouter.put(
           : Number(d.annualMaximum),
       enabled: d.enabled !== false,
       source_note: d.sourceNote ? String(d.sourceNote) : null,
+      remit_to: d.remitTo ? String(d.remitTo) : "otro",
     }));
 
     for (const row of cleaned) {
@@ -5064,11 +5066,11 @@ apiRouter.get(
     ]);
     const periodDays = Math.max(1, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000) + 1);
 
-    res.json({
-      periodDays,
-      workers: workers
+    const year = new Date(to).getUTCFullYear();
+    const rows = await Promise.all(
+      workers
         .filter((w) => w.hours > 0)
-        .map((w) => ({
+        .map(async (w) => ({
           workerId: w.workerId,
           kind: w.kind,
           name: w.name,
@@ -5076,9 +5078,19 @@ apiRouter.get(
           hours: w.hours,
           // Without a rate there is nothing to compute, and inventing one
           // would put a number in front of somebody that nobody chose.
-          breakdown: w.hourlyRate ? computePayroll(w.hours, w.hourlyRate, rules, periodDays) : null,
-        })),
-    });
+          breakdown: w.hourlyRate
+            ? computePayroll(
+                w.hours,
+                w.hourlyRate,
+                rules,
+                periodDays,
+                await yearToDate(admin, req.businessId!, w.workerId, w.kind, year)
+              )
+            : null,
+        }))
+    );
+
+    res.json({ periodDays, workers: rows });
   })
 );
 
@@ -5113,7 +5125,10 @@ apiRouter.post(
     }
 
     const periodDays = Math.max(1, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000) + 1);
-    const breakdown = computePayroll(worker.hours, worker.hourlyRate, rules, periodDays);
+    // Against what this person has already contributed this year, so a ceiling
+    // stops them the period they actually reach it.
+    const ytd = await yearToDate(admin, req.businessId!, workerId, kind, new Date(to).getUTCFullYear());
+    const breakdown = computePayroll(worker.hours, worker.hourlyRate, rules, periodDays, ytd);
 
     const { data, error } = await admin
       .from("payroll_runs")
@@ -5176,6 +5191,76 @@ apiRouter.delete(
       .eq("id", req.params.id);
     if (error) throw error;
     res.json({ ok: true });
+  })
+);
+
+// What has to be remitted, and to whom, for the sheets issued in a period.
+//
+// The money does not go to one place: RRQ, RQAP and Québec tax to Revenu
+// Québec, EI and federal tax to the CRA, CNESST on its own filing. Splitting
+// that by hand every period is exactly the manual step this removes.
+//
+// Built from issued sheets rather than from hours, because a remittance is
+// owed on what was actually withheld — a preview nobody committed to is not a
+// liability.
+apiRouter.get(
+  "/payroll/remittance",
+  route(async (req, res) => {
+    const from = String(req.query.from ?? "");
+    const to = String(req.query.to ?? "");
+    if (!from || !to) {
+      res.status(400).json({ error: "from and to are required" });
+      return;
+    }
+    const { data, error } = await getSupabaseAdmin()
+      .from("payroll_runs")
+      .select("id, worker_name, gross, lines")
+      .eq("business_id", req.businessId!)
+      .gte("period_end", from)
+      .lte("period_end", to);
+    if (error) throw error;
+
+    const runs = data ?? [];
+    const byDestination = new Map<
+      string,
+      { destination: string; employee: number; employer: number; lines: Map<string, { label: string; paidBy: string; amount: number }> }
+    >();
+
+    for (const run of runs) {
+      for (const raw of (run.lines ?? []) as Array<Record<string, unknown>>) {
+        const destination = String(raw.remitTo ?? "otro");
+        const code = String(raw.code ?? "");
+        const amount = Number(raw.amount ?? 0);
+        const paidBy = raw.paidBy === "empleador" ? "empleador" : "empleado";
+
+        let group = byDestination.get(destination);
+        if (!group) {
+          group = { destination, employee: 0, employer: 0, lines: new Map() };
+          byDestination.set(destination, group);
+        }
+        if (paidBy === "empleado") group.employee = Math.round((group.employee + amount) * 100) / 100;
+        else group.employer = Math.round((group.employer + amount) * 100) / 100;
+
+        const existing = group.lines.get(code);
+        group.lines.set(code, {
+          label: String(raw.label ?? code),
+          paidBy,
+          amount: Math.round(((existing?.amount ?? 0) + amount) * 100) / 100,
+        });
+      }
+    }
+
+    res.json({
+      runCount: runs.length,
+      grossTotal: Math.round(runs.reduce((sum, r) => sum + Number(r.gross), 0) * 100) / 100,
+      destinations: Array.from(byDestination.values()).map((g) => ({
+        destination: g.destination,
+        employee: g.employee,
+        employer: g.employer,
+        total: Math.round((g.employee + g.employer) * 100) / 100,
+        lines: Array.from(g.lines.entries()).map(([code, line]) => ({ code, ...line })),
+      })),
+    });
   })
 );
 

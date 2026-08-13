@@ -31,6 +31,8 @@ export interface DeductionRule {
   annualMaximum: number | null;
   enabled: boolean;
   sourceNote: string | null;
+  /** Who this line is remitted to. Free text: the lines belong to the business. */
+  remitTo: string;
 }
 
 export interface PayrollLine {
@@ -39,8 +41,9 @@ export interface PayrollLine {
   paidBy: DeductionPayer;
   ratePercent: number;
   amount: number;
-  /** True when the annual ceiling clipped this line for the period. */
+  /** True when the annual ceiling clipped this line — the worker is done for the year. */
   cappedByMaximum: boolean;
+  remitTo: string;
 }
 
 export interface PayrollBreakdown {
@@ -73,6 +76,7 @@ const round = (value: number) => Math.round(value * 100) / 100;
 export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   {
     code: "rrq",
+    remitTo: "revenu_quebec",
     label: "RRQ — Régie des rentes du Québec",
     paidBy: "empleado",
     ratePercent: 6.3,
@@ -82,6 +86,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "rrq_employeur",
+    remitTo: "revenu_quebec",
     label: "RRQ — part de l'employeur",
     paidBy: "empleador",
     ratePercent: 6.3,
@@ -91,6 +96,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "rqap",
+    remitTo: "revenu_quebec",
     label: "RQAP — Régime québécois d'assurance parentale",
     paidBy: "empleado",
     ratePercent: 0.43,
@@ -100,6 +106,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "rqap_employeur",
+    remitTo: "revenu_quebec",
     label: "RQAP — part de l'employeur",
     paidBy: "empleador",
     ratePercent: 0.602,
@@ -109,6 +116,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "ae",
+    remitTo: "cra",
     label: "AE — Assurance-emploi (taux Québec)",
     paidBy: "empleado",
     ratePercent: 1.3,
@@ -118,6 +126,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "ae_employeur",
+    remitTo: "cra",
     label: "AE — part de l'employeur",
     paidBy: "empleador",
     ratePercent: 1.82,
@@ -127,6 +136,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "impuesto",
+    remitTo: "revenu_quebec",
     label: "Impôt retenu à la source (fédéral + Québec)",
     paidBy: "empleado",
     ratePercent: 0,
@@ -136,6 +146,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "cnesst",
+    remitTo: "cnesst",
     label: "CNESST — santé et sécurité du travail",
     paidBy: "empleador",
     ratePercent: 0,
@@ -145,6 +156,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
   },
   {
     code: "fss",
+    remitTo: "revenu_quebec",
     label: "FSS — Fonds des services de santé",
     paidBy: "empleador",
     ratePercent: 0,
@@ -163,7 +175,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
 export async function readDeductions(admin: Admin, businessId: string): Promise<DeductionRule[]> {
   const { data } = await admin
     .from("payroll_deductions")
-    .select("code, label, paid_by, rate_percent, annual_exemption, annual_maximum, enabled, source_note")
+    .select("code, label, paid_by, rate_percent, annual_exemption, annual_maximum, enabled, source_note, remit_to")
     .eq("business_id", businessId)
     .order("position");
 
@@ -177,6 +189,7 @@ export async function readDeductions(admin: Admin, businessId: string): Promise<
       annualMaximum: d.annual_maximum === null ? null : Number(d.annual_maximum),
       enabled: d.enabled,
       sourceNote: d.source_note,
+      remitTo: d.remit_to ?? "otro",
     }));
   }
 
@@ -202,6 +215,7 @@ export async function readDeductions(admin: Admin, businessId: string): Promise<
       annual_exemption: rule.annualExemption,
       annual_maximum: rule.annualMaximum,
       source_note: rule.sourceNote,
+      remit_to: rule.remitTo,
       enabled: true,
     }))
   );
@@ -209,20 +223,62 @@ export async function readDeductions(admin: Admin, businessId: string): Promise<
 }
 
 /**
+ * What each worker has already contributed this calendar year, per rule.
+ *
+ * Read from the sheets already issued, which is the only record of what was
+ * actually withheld. A ceiling is an annual figure, so knowing how close
+ * somebody is to it is the difference between stopping their RRQ on the right
+ * day and taking money that has to be given back at tax time.
+ */
+export async function yearToDate(
+  admin: Admin,
+  businessId: string,
+  workerId: string,
+  kind: "employee" | "subcontractor",
+  year: number
+): Promise<Record<string, number>> {
+  const column = kind === "employee" ? "employee_id" : "subcontractor_id";
+  const { data } = await admin
+    .from("payroll_runs")
+    .select("lines")
+    .eq("business_id", businessId)
+    .eq(column, workerId)
+    .gte("period_end", `${year}-01-01`)
+    .lte("period_end", `${year}-12-31`);
+
+  const totals: Record<string, number> = {};
+  for (const run of data ?? []) {
+    for (const line of (run.lines ?? []) as Array<{ code?: string; amount?: number }>) {
+      if (!line.code) continue;
+      totals[line.code] = round((totals[line.code] ?? 0) + Number(line.amount ?? 0));
+    }
+  }
+  return totals;
+}
+
+/**
  * Applies the rules to one period's gross pay.
  *
- * The annual exemption and ceiling are annual figures being applied to a slice
- * of the year, so they are prorated by the period's share of it. That is an
- * approximation — real payroll tracks year-to-date contributions per person and
- * stops the moment the ceiling is actually reached — and the UI says so. It is
- * the right approximation for the job it does here, which is telling a
- * contractor what a week of work costs, not filing a T4.
+ * Two different mechanics, because Revenu Québec and the CRA treat them
+ * differently and conflating them is the usual way payroll goes wrong:
+ *
+ * - The **exemption** is spread across the year's pay periods. RRQ's $3,500 is
+ *   not free money in January; each period gets its slice.
+ * - The **ceiling** is annual and hard. It is checked against what this worker
+ *   has already contributed this year, so their RRQ stops the period they
+ *   actually reach the maximum — not gradually, by being clipped in every
+ *   period, which is what prorating the ceiling did and which quietly
+ *   under-deducted all year.
+ *
+ * `ytd` is what they have contributed so far this calendar year, per rule code.
+ * Pass an empty object for a standalone estimate.
  */
 export function computePayroll(
   hours: number,
   hourlyRate: number,
   rules: DeductionRule[],
-  periodDays: number
+  periodDays: number,
+  ytd: Record<string, number> = {}
 ): PayrollBreakdown {
   const gross = round(hours * hourlyRate);
   const yearShare = Math.min(1, Math.max(0, periodDays / 365));
@@ -231,15 +287,16 @@ export function computePayroll(
   for (const rule of rules) {
     if (!rule.enabled || rule.ratePercent === 0) continue;
 
-    const exemption = round(rule.annualExemption * yearShare);
-    const base = Math.max(0, gross - exemption);
-    let amount = round(base * (rule.ratePercent / 100));
+    const periodExemption = round(rule.annualExemption * yearShare);
+    const base = Math.max(0, gross - periodExemption);
+    const raw = round(base * (rule.ratePercent / 100));
 
+    let amount = raw;
     let capped = false;
     if (rule.annualMaximum !== null) {
-      const ceiling = round(rule.annualMaximum * yearShare);
-      if (amount > ceiling) {
-        amount = ceiling;
+      const room = round(Math.max(0, rule.annualMaximum - (ytd[rule.code] ?? 0)));
+      if (raw > room) {
+        amount = room;
         capped = true;
       }
     }
@@ -252,6 +309,7 @@ export function computePayroll(
       ratePercent: rule.ratePercent,
       amount,
       cappedByMaximum: capped,
+      remitTo: rule.remitTo,
     });
   }
 

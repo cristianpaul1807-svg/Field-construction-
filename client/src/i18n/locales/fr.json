@@ -1038,6 +1038,21 @@
     "annualExemption": "Exemption annuelle",
     "annualMaximum": "Plafond annuel",
     "noCeiling": "Sans plafond",
-    "addLine": "Ajouter une ligne"
+    "addLine": "Ajouter une ligne",
+    "tabRemittance": "Versements",
+    "remittanceNote": "Ce qui doit être versé pour les feuilles émises sur cette période, regroupé par destinataire. Recopiez-le dans le formulaire correspondant.",
+    "remittanceEmpty": "Aucune feuille de paie émise sur cette période, donc rien à verser.",
+    "remittanceRuns": "{{count}} feuilles · {{gross}} de masse salariale",
+    "remitEmployeeShare": "Retenu au travailleur",
+    "remitEmployerShare": "Payé par l'entreprise",
+    "remitTotal": "Total à verser",
+    "remitTo": "Versé à",
+    "destinations": {
+      "revenu_quebec": "Revenu Québec",
+      "cra": "ARC — Agence du revenu du Canada",
+      "cnesst": "CNESST",
+      "otro": "Autre destinataire"
+    },
+    "ytdNote": "Les plafonds annuels sont comparés à ce que chaque personne a déjà cotisé cette année, d'après les feuilles déjà émises. C'est pourquoi une retenue s'arrête exactement à la période où le plafond est atteint, et pas avant."
   }
 }

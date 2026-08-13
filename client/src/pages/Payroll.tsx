@@ -53,6 +53,18 @@ interface WorkerRow {
   breakdown: Breakdown | null;
 }
 
+interface Remittance {
+  runCount: number;
+  grossTotal: number;
+  destinations: {
+    destination: string;
+    employee: number;
+    employer: number;
+    total: number;
+    lines: { code: string; label: string; paidBy: string; amount: number }[];
+  }[];
+}
+
 interface Deduction {
   code: string;
   label: string;
@@ -62,6 +74,7 @@ interface Deduction {
   annualMaximum: number | null;
   enabled: boolean;
   sourceNote: string | null;
+  remitTo: string;
 }
 
 interface Run {
@@ -127,6 +140,7 @@ export default function Payroll() {
         <TabsList>
           <TabsTrigger value="period">{t("payroll.tabPeriod")}</TabsTrigger>
           <TabsTrigger value="issued">{t("payroll.tabIssued")}</TabsTrigger>
+          <TabsTrigger value="remittance">{t("payroll.tabRemittance")}</TabsTrigger>
           <TabsTrigger value="rules">{t("payroll.tabRules")}</TabsTrigger>
         </TabsList>
 
@@ -222,7 +236,10 @@ export default function Payroll() {
           ))}
 
           {withRate.length > 0 && (
-            <Card className="p-4 flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">{t("payroll.ytdNote")}</p>
+          )}
+          {withRate.length > 0 && (
+            <Card className="p-4 flex-row items-center justify-between">
               <span className="text-sm text-muted-foreground">{t("payroll.periodTotalCost")}</span>
               <span className="text-lg font-semibold text-foreground">{formatCurrency(totalCost)}</span>
             </Card>
@@ -266,10 +283,78 @@ export default function Payroll() {
           ))}
         </TabsContent>
 
+        <TabsContent value="remittance" className="mt-4">
+          <RemittanceSummary from={period.from} to={period.to} />
+        </TabsContent>
+
         <TabsContent value="rules" className="mt-4">
           <DeductionEditor />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+/**
+ * What has to be remitted for the period, and to whom.
+ *
+ * Built from issued sheets rather than from hours: a remittance is owed on what
+ * was actually withheld, and a preview nobody committed to is not a liability.
+ */
+function RemittanceSummary({ from, to }: { from: string; to: string }) {
+  const { t } = useTranslation();
+  const { data, loading } = useApi<Remittance>(`/api/payroll/remittance?from=${from}&to=${to}`);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Spinner className="size-4" /> {t("common.loading")}
+      </div>
+    );
+  }
+  if (!data || data.runCount === 0) {
+    return (
+      <Card className="p-6">
+        <p className="text-sm text-muted-foreground">{t("payroll.remittanceEmpty")}</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <Card className="p-4 space-y-1">
+        <p className="text-sm text-muted-foreground">{t("payroll.remittanceNote")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("payroll.remittanceRuns", { count: data.runCount, gross: formatCurrency(data.grossTotal) })}
+        </p>
+      </Card>
+
+      {data.destinations.map((group) => (
+        <Card key={group.destination} className="p-5 space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              {t(`payroll.destinations.${group.destination}`, { defaultValue: group.destination })}
+            </h3>
+            <span className="text-lg font-semibold text-foreground">{formatCurrency(group.total)}</span>
+          </div>
+          <div className="rounded-lg border border-border divide-y divide-border">
+            {group.lines.map((line) => (
+              <div key={line.code} className="flex items-center justify-between gap-3 px-3 py-1.5">
+                <span className="text-xs text-muted-foreground min-w-0">{line.label}</span>
+                <span className="text-xs text-foreground flex-shrink-0">{formatCurrency(line.amount)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              {t("payroll.remitEmployeeShare")}: {formatCurrency(group.employee)}
+            </span>
+            <span>
+              {t("payroll.remitEmployerShare")}: {formatCurrency(group.employer)}
+            </span>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
@@ -357,6 +442,21 @@ function DeductionEditor() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="w-full sm:w-52 space-y-1.5">
+              <Label className="text-xs">{t("payroll.remitTo")}</Label>
+              <Select value={row.remitTo} onValueChange={(v) => update(index, { remitTo: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["revenu_quebec", "cra", "cnesst", "otro"].map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {t(`payroll.destinations.${d}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -428,6 +528,7 @@ function DeductionEditor() {
                 annualMaximum: null,
                 enabled: true,
                 sourceNote: null,
+                remitTo: "otro",
               },
             ]);
           }}

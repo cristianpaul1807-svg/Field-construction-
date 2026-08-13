@@ -1038,6 +1038,21 @@
     "annualExemption": "Esenzione annua",
     "annualMaximum": "Tetto annuo",
     "noCeiling": "Senza tetto",
-    "addLine": "Aggiungi riga"
+    "addLine": "Aggiungi riga",
+    "tabRemittance": "Versamenti",
+    "remittanceNote": "Quanto va versato per i fogli emessi in questo periodo, raggruppato per destinatario. Copialo nel modulo corrispondente.",
+    "remittanceEmpty": "Non hai emesso fogli paga in questo periodo, quindi non c'è nulla da versare.",
+    "remittanceRuns": "{{count}} fogli · {{gross}} di monte salari",
+    "remitEmployeeShare": "Trattenuto al lavoratore",
+    "remitEmployerShare": "A carico dell'impresa",
+    "remitTotal": "Totale da versare",
+    "remitTo": "Versato a",
+    "destinations": {
+      "revenu_quebec": "Revenu Québec",
+      "cra": "CRA — Agenzia delle entrate del Canada",
+      "cnesst": "CNESST",
+      "otro": "Altro destinatario"
+    },
+    "ytdNote": "I tetti annui si applicano su quanto ogni persona ha già versato quest'anno, in base ai fogli già emessi. Per questo una trattenuta si ferma esattamente nel periodo in cui si raggiunge il tetto, e non prima."
   }
 }

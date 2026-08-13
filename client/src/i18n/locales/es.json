@@ -1038,6 +1038,21 @@
     "annualExemption": "Exención anual",
     "annualMaximum": "Tope anual",
     "noCeiling": "Sin tope",
-    "addLine": "Añadir línea"
+    "addLine": "Añadir línea",
+    "tabRemittance": "Remesas",
+    "remittanceNote": "Lo que hay que remitir por las hojas emitidas en este periodo, agrupado por a quién se le paga. Cópialo en el formulario que corresponda.",
+    "remittanceEmpty": "No has emitido hojas de pago en este periodo, así que no hay nada que remitir.",
+    "remittanceRuns": "{{count}} hojas · {{gross}} de masa salarial",
+    "remitEmployeeShare": "Retenido al trabajador",
+    "remitEmployerShare": "Aporta la empresa",
+    "remitTotal": "Total a remitir",
+    "remitTo": "Se remite a",
+    "destinations": {
+      "revenu_quebec": "Revenu Québec",
+      "cra": "CRA — Agencia de Ingresos de Canadá",
+      "cnesst": "CNESST",
+      "otro": "Otro destino"
+    },
+    "ytdNote": "Los topes anuales se aplican contra lo que cada persona ya lleva aportado este año, tomado de las hojas que ya emitiste. Por eso una retención se para el periodo exacto en que se alcanza el tope, y no antes."
   }
 }

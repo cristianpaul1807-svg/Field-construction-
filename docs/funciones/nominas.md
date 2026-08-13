@@ -81,14 +81,50 @@ con otro nombre.
 
 ---
 
+## Remesas
+
+Pestaña **Remesas**, sobre el mismo periodo. Suma las hojas **ya emitidas** y
+las agrupa por a quién se le paga, porque el dinero no va todo al mismo sitio:
+
+| Destino | Qué lleva |
+|---|---|
+| Revenu Québec | RRQ (las dos partes), RQAP (las dos partes), impuesto de Quebec, FSS |
+| CRA | AE (las dos partes), impuesto federal |
+| CNESST | Su propia declaración, en su propio calendario |
+
+Cada línea de retención lleva su destino y lo puedes cambiar. Si separas el
+impuesto en dos líneas (federal y Quebec), cada una va a donde le toca.
+
+Sale de las hojas emitidas, no de las horas: una remesa se debe sobre lo que
+realmente se retuvo, y una previsualización que nadie confirmó no es una deuda.
+
+---
+
+## Los topes y el acumulado anual
+
+Un tope es una cifra **anual**, así que se compara con lo que esa persona ya
+lleva aportado este año — leído de las hojas que ya emitiste.
+
+Eso hace que una retención se pare **el periodo exacto** en que se alcanza el
+tope, en lugar de ir recortándose un poco en cada periodo. Prorratear el tope
+era lo que se hacía antes, y retenía de menos todo el año: 26 quincenas de un
+sueldo alto deben llegar justo al máximo del RRQ, y con el prorrateo se
+quedaban por debajo.
+
+La **exención** sí se reparte por periodo, porque así lo hacen Revenu Québec y
+la CRA: los 3 500 $ del RRQ no son dinero libre en enero, cada nómina se lleva
+su parte. Son dos mecánicas distintas y confundirlas es la forma habitual de
+equivocarse en una nómina.
+
+---
+
 ## Lo que este cálculo no es
 
 - **No es una declaración oficial.** El PDF lo dice en su pie.
-- **Prorratea por periodo.** Las exenciones y topes son anuales y aquí se
-  reparten según los días del periodo. La nómina de verdad lleva el acumulado
-  anual de cada persona y para de retener el día exacto en que se alcanza el
-  tope. Para saber lo que cuesta una semana de obra, prorratear vale; para
-  emitir un T4, no.
+- **Lleva el acumulado anual, pero solo de lo que emitiste aquí.** Si parte del
+  año lo llevaste en otro sitio, esas aportaciones no las conoce, y los topes se
+  aplicarán tarde. Emite las hojas del año en el software o ajusta las líneas a
+  mano.
 - **No calcula tramos de IRPF.** Ver arriba.
 - **No presenta ni paga nada.** Las remesas a Revenu Québec y a la CRA las haces
   tú o tu contable. Stripe no interviene: no tiene producto de nómina, y ni
@@ -106,6 +142,7 @@ con otro nombre.
 | `GET /api/payroll/runs` | Las emitidas |
 | `GET /api/payroll/runs/:id/pdf` | El PDF |
 | `DELETE /api/payroll/runs/:id` | Borrar una emitida |
+| `GET /api/payroll/remittance?from&to` | Totales por destino |
 
 Las horas aprobadas también alimentan **mano de obra** en
 [Control de costos](control-de-costos.md), que antes solo contaba gastos

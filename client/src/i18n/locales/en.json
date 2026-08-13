@@ -1038,6 +1038,21 @@
     "annualExemption": "Annual exemption",
     "annualMaximum": "Annual ceiling",
     "noCeiling": "No ceiling",
-    "addLine": "Add line"
+    "addLine": "Add line",
+    "tabRemittance": "Remittances",
+    "remittanceNote": "What has to be remitted for the sheets issued in this period, grouped by who it goes to. Copy it into the matching form.",
+    "remittanceEmpty": "You have issued no pay sheets in this period, so there is nothing to remit.",
+    "remittanceRuns": "{{count}} sheets · {{gross}} in gross pay",
+    "remitEmployeeShare": "Withheld from workers",
+    "remitEmployerShare": "Paid by the business",
+    "remitTotal": "Total to remit",
+    "remitTo": "Remitted to",
+    "destinations": {
+      "revenu_quebec": "Revenu Québec",
+      "cra": "CRA — Canada Revenue Agency",
+      "cnesst": "CNESST",
+      "otro": "Somewhere else"
+    },
+    "ytdNote": "Annual ceilings are checked against what each person has already contributed this year, taken from the sheets you already issued. That is why a deduction stops in the exact period the ceiling is reached, and not before."
   }
 }
