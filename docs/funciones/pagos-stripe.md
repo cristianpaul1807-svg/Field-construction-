@@ -19,22 +19,35 @@ La cuenta conectada, siempre. La plataforma no cobra ninguna comisión propia
 (`application_fee`) y no aparece en la factura de Stripe de nadie.
 
 Esto **no es lo que hace Stripe por defecto** y por eso está escrito así en el
-código. Crear una cuenta con `type: "express"` equivale a
-`controller.fees.payer = "application"`, que pone la comisión de proceso de
-cada cobro a cargo de la plataforma. Las cuentas se crean con las propiedades
-`controller` explícitas:
+código. Las cuentas se crean con la **API Accounts v2**
+(`POST /v2/core/accounts`) y las tres responsabilidades dichas a las claras:
 
 ```
-controller.fees.payer            = "account"   // la cuenta conectada paga
-controller.losses.payments       = "stripe"
-controller.requirement_collection = "stripe"
-controller.stripe_dashboard.type = "express"   // o "full" si Stripe rechaza esa combinación
+defaults.responsibilities.fees_collector   = "stripe"  // Stripe cobra su comisión
+defaults.responsibilities.losses_collector = "stripe"  // directamente de la cuenta
+dashboard                                  = "full"    // conectada, no de nosotros
+configuration.merchant.capabilities.card_payments.requested = true
 ```
+
+`fees_collector: "stripe"` es la línea que importa: Stripe se cobra contra la
+cuenta conectada y esta plataforma no aparece en esa transacción. La
+alternativa, `"application"`, nos pondría la comisión de cada cobro de cada
+contratista.
 
 Ver `createConnectedAccount()` en `server/api.ts`. **No hay respaldo hacia la
-opción por defecto**: si Stripe rechaza todas las combinaciones seguras, la
-conexión falla con un error. Fallar al conectar se arregla; pagar las
-comisiones de otros en silencio, no.
+opción por defecto**: si Stripe rechaza, la conexión falla con un error.
+Fallar al conectar se arregla; pagar las comisiones de otros en silencio, no.
+
+> **Por qué v2 y no v1.** Pedida una cuenta a la manera antigua, Stripe
+> responde *"Stripe no longer recommends Accounts v1 for new Connect
+> integrations"* y se niega. El panel Express tampoco es una opción aquí:
+> Stripe sólo lo ofrece a plataformas que cobran ellas las comisiones, que es
+> justo lo que se evita. Por eso el contratista recibe un panel completo de
+> Stripe propio.
+>
+> La **lectura** sigue siendo v1 (`stripe.accounts.retrieve`): funciona sobre
+> cuentas creadas en v2 — comprobado — y devuelve `charges_enabled`,
+> `payouts_enabled` y `details_submitted` en un solo objeto.
 
 Quién paga se fija al crear la cuenta y **no se puede cambiar después**. Por eso
 se guarda en `stripe_connected_accounts.fees_payer` y la pantalla de Pagos lo

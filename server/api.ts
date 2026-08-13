@@ -348,58 +348,79 @@ async function createBotEstimate(
 // this app. Matching them together is what lets the UI show the actual
 // instruction instead of Stripe's raw English sentence.
 /**
+ * The API version the Accounts v2 calls are pinned to.
+ *
+ * v2 refuses any request without an explicit version header, which is a good
+ * thing: it means a change at Stripe cannot silently reshape what comes back.
+ * Pinned rather than tracking latest, because the field that matters most here
+ * — who collects the fees — must never move by surprise.
+ */
+const STRIPE_V2_VERSION = "2026-06-24.preview";
+
+/**
  * Creates a connected account on which the CONTRACTOR pays Stripe's fees.
  *
- * This is not the default and the difference is money. `type: "express"` is
- * shorthand for `controller.fees.payer = "application"`, which makes this
- * platform liable for the processing fee on every charge every contractor
- * takes — recoverable only through an application fee, which this product
- * does not charge. Left alone it would quietly bill us for our customers'
+ * This is not the default and the difference is money. Left to its defaults,
+ * Stripe makes this platform liable for the processing fee on every charge
+ * every contractor takes — recoverable only through an application fee, which
+ * this product does not charge. It would quietly bill us for our customers'
  * revenue.
  *
- * So the controller properties are set explicitly, and the dashboard is the
- * full one rather than Express. That is not a preference: asked for the
- * Express dashboard together with account-paid fees, Stripe answers
+ * So the three responsibilities are stated outright. `fees_collector: stripe`
+ * is the one that matters: Stripe takes its cut from the connected account
+ * directly and this platform never appears in that transaction.
+ * `losses_collector` keeps disputes off us too, and `requirements_collector`
+ * keeps us out of the contractor's identity paperwork.
  *
- *   When `stripe_dashboard[type]=express`, your platform must collect fees
- *   and be liable for negative balances or refunds and chargebacks.
- *
- * — which is the arrangement this whole function exists to avoid. The two are
- * mutually exclusive, so there is one call and no fallback: failing to connect
- * is recoverable, and silently paying everyone else's Stripe fees is not.
+ * Accounts v1 is not an option any more. Asked to create an account the old
+ * way, Stripe now answers "Stripe no longer recommends Accounts v1 for new
+ * Connect integrations" and refuses, so this goes through v2 — where the same
+ * arrangement is expressed as responsibilities rather than a controller.
  */
 async function createConnectedAccount(
   stripe: ReturnType<typeof getStripe>,
-  businessName: string | null | undefined
+  businessName: string | null | undefined,
+  contactEmail?: string | null
 ): Promise<{ account: { id: string }; feesPayer: "account" }> {
-  const shared = {
-    business_type: "company" as const,
-    company: { name: businessName ?? undefined },
-    business_profile: { name: businessName ?? undefined, mcc: "1520" },
-  };
-
-  const account = await stripe.accounts.create({
-    ...shared,
-    controller: {
-      fees: { payer: "account" as const },
-      // Stripe carries the loss on a disputed payment and collects the
-      // contractor's own details, which is what keeps this platform out of
-      // both the liability and the identity paperwork.
-      losses: { payments: "stripe" as const },
-      requirement_collection: "stripe" as const,
-      stripe_dashboard: { type: "full" as const },
-    },
-    capabilities: {
-      card_payments: { requested: true },
-      transfers: { requested: true },
-    },
-  } as never);
+  const account = await stripe.v2.core.accounts.create(
+    {
+      display_name: businessName ?? undefined,
+      contact_email: contactEmail ?? undefined,
+      // The contractor gets a real Stripe dashboard of their own. Express is
+      // not available in this arrangement: Stripe only offers it to platforms
+      // that collect the fees themselves, which is the thing being avoided.
+      dashboard: "full",
+      identity: { country: "ca", entity_type: "company" },
+      configuration: {
+        merchant: { capabilities: { card_payments: { requested: true } } },
+      },
+      defaults: {
+        currency: "cad",
+        responsibilities: {
+          fees_collector: "stripe",
+          losses_collector: "stripe",
+        },
+      },
+      include: ["configuration.merchant", "identity", "requirements"],
+    } as never,
+    { apiVersion: STRIPE_V2_VERSION } as never
+  );
 
   return { account, feesPayer: "account" };
 }
 
+/**
+ * Whether an error means "this platform has not signed up for Connect".
+ *
+ * Deliberately narrow. It used to match any message containing a link to the
+ * Connect docs, which caught the wrong thing the moment Stripe started
+ * refusing Accounts v1: that refusal links to the v2 migration guide, so a
+ * "your code is out of date" error was being shown to the business as "go and
+ * sign up for Connect" — an instruction that would have sent them to a page
+ * where everything already looked fine.
+ */
 function isConnectNotEnabled(message: string): boolean {
-  return /signed up for Connect|Only Stripe Connect platforms|Connect.*not.*enabled|stripe\.com\/(docs\/)?connect|client_id/i.test(
+  return /signed up for Connect|Only Stripe Connect platforms|Connect.*(is )?not.*enabled|invalid.*client_id/i.test(
     message
   );
 }
@@ -5006,10 +5027,14 @@ apiRouter.post(
       .maybeSingle();
 
     if (!account?.stripe_account_id) {
-      const { data: business } = await admin.from("businesses").select("name").eq("id", req.businessId!).single();
+      const { data: business } = await admin
+        .from("businesses")
+        .select("name, email")
+        .eq("id", req.businessId!)
+        .single();
       let created;
       try {
-        created = await createConnectedAccount(stripe, business?.name);
+        created = await createConnectedAccount(stripe, business?.name, business?.email);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (isConnectNotEnabled(message)) {
@@ -5043,12 +5068,24 @@ apiRouter.post(
 
     let link;
     try {
-      link = await stripe.accountLinks.create({
-        account: account.stripe_account_id!,
-        refresh_url: `${baseUrl}/settings/pagos`,
-        return_url: `${baseUrl}/settings/pagos?onboarding=completo`,
-        type: "account_onboarding",
-      });
+      link = await stripe.v2.core.accountLinks.create(
+        {
+          account: account.stripe_account_id!,
+          use_case: {
+            type: "account_onboarding",
+            account_onboarding: {
+              // Only the merchant configuration is onboarded: this platform
+              // charges no subscription through Stripe, so asking a contractor
+              // for customer-configuration details would be asking for
+              // paperwork nothing will ever use.
+              configurations: ["merchant"],
+              refresh_url: `${baseUrl}/settings/pagos`,
+              return_url: `${baseUrl}/settings/pagos?onboarding=completo`,
+            },
+          },
+        } as never,
+        { apiVersion: STRIPE_V2_VERSION } as never
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (isConnectNotEnabled(message)) {
@@ -5089,6 +5126,10 @@ apiRouter.post(
     }
 
     const stripe = getStripe();
+    // Still the v1 read, on purpose. Accounts must now be *created* through
+    // v2, but v1 keeps answering for them and it is the shape that carries
+    // charges_enabled / payouts_enabled / details_submitted in one object —
+    // checked against a v2-created account, which returns all three.
     const remote = await stripe.accounts.retrieve(account.stripe_account_id);
     const status = remote.charges_enabled ? "active" : remote.requirements?.disabled_reason ? "restricted" : "pending";
 
