@@ -357,13 +357,16 @@ async function createBotEstimate(
  * does not charge. Left alone it would quietly bill us for our customers'
  * revenue.
  *
- * So the controller properties are set explicitly. Stripe accepts several
- * shapes of them and rejects some combinations depending on the platform's
- * own country and settings, so the fee-safe ones are tried in order of how
- * much of the Express experience they keep. Every option in the list has
- * `fees.payer: "account"`; there is deliberately no fallback to the default,
- * because failing to connect is recoverable and silently paying everyone
- * else's Stripe fees is not.
+ * So the controller properties are set explicitly, and the dashboard is the
+ * full one rather than Express. That is not a preference: asked for the
+ * Express dashboard together with account-paid fees, Stripe answers
+ *
+ *   When `stripe_dashboard[type]=express`, your platform must collect fees
+ *   and be liable for negative balances or refunds and chargebacks.
+ *
+ * — which is the arrangement this whole function exists to avoid. The two are
+ * mutually exclusive, so there is one call and no fallback: failing to connect
+ * is recoverable, and silently paying everyone else's Stripe fees is not.
  */
 async function createConnectedAccount(
   stripe: ReturnType<typeof getStripe>,
@@ -375,43 +378,24 @@ async function createConnectedAccount(
     business_profile: { name: businessName ?? undefined, mcc: "1520" },
   };
 
-  // Ordered best-first: keep the Express dashboard the onboarding flow is
-  // built around; fall back to the full dashboard, which is the combination
-  // Stripe has always supported for account-paid fees.
-  const attempts = [
-    {
-      controller: {
-        fees: { payer: "account" as const },
-        losses: { payments: "stripe" as const },
-        requirement_collection: "stripe" as const,
-        stripe_dashboard: { type: "express" as const },
-      },
+  const account = await stripe.accounts.create({
+    ...shared,
+    controller: {
+      fees: { payer: "account" as const },
+      // Stripe carries the loss on a disputed payment and collects the
+      // contractor's own details, which is what keeps this platform out of
+      // both the liability and the identity paperwork.
+      losses: { payments: "stripe" as const },
+      requirement_collection: "stripe" as const,
+      stripe_dashboard: { type: "full" as const },
     },
-    {
-      controller: {
-        fees: { payer: "account" as const },
-        losses: { payments: "stripe" as const },
-        requirement_collection: "stripe" as const,
-        stripe_dashboard: { type: "full" as const },
-      },
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true },
     },
-  ];
+  } as never);
 
-  let lastError: unknown;
-  for (const attempt of attempts) {
-    try {
-      const account = await stripe.accounts.create({ ...shared, ...attempt } as never);
-      return { account, feesPayer: "account" };
-    } catch (err) {
-      // A refusal to create any connected account at all is about Connect not
-      // being enabled, not about this particular parameter shape — retrying
-      // with a different dashboard type would only hide the real reason.
-      const message = err instanceof Error ? err.message : String(err);
-      if (isConnectNotEnabled(message)) throw err;
-      lastError = err;
-    }
-  }
-  throw lastError;
+  return { account, feesPayer: "account" };
 }
 
 function isConnectNotEnabled(message: string): boolean {
