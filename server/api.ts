@@ -1020,6 +1020,7 @@ apiRouter.post(
       const existingUser = listData?.users?.find((u) => u.email?.toLowerCase() === cleanEmail);
       if (existingUser) {
         userId = existingUser.id;
+        await admin.auth.admin.updateUserById(userId, { password: String(password), email_confirm: true });
       } else {
         res.status(400).json({ error: createError.message });
         return;

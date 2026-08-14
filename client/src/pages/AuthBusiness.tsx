@@ -63,19 +63,24 @@ export default function AuthBusiness() {
     setBusy(true);
     try {
       if (mode === "register") {
-        // 1. Initiate Supabase signUp
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        // 1. Register business via backend (uses Supabase Admin API to auto-confirm user & create business DB records)
+        const res = await apiFetch("/api/public/auth/register-business", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
 
-        // 2. Send 8-digit OTP code via resetPasswordForEmail (the verified working email delivery route)
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
-
-        // If both failed, report error
-        if (signUpError && resetError) {
-          throw signUpError || resetError;
+        if (!res.ok) {
+          const body = await readJson(res);
+          throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
         }
 
-        // Always show the 8-digit OTP code entry screen
-        setNeedsCode(true);
+        // 2. Sign in with user credentials
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+
+        await refreshPersona();
+        setLocation("/");
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
@@ -93,7 +98,6 @@ export default function AuthBusiness() {
     setError(null);
     setBusy(true);
     try {
-      // Verify the 8-digit token across recovery, signup, or email types
       let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
       if (verifyRes.error) {
         verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
@@ -104,12 +108,10 @@ export default function AuthBusiness() {
       if (verifyRes.error) throw verifyRes.error;
       if (!verifyRes.data.session) throw new Error(t("worker.invalidCode"));
 
-      // Set user password if needed
       if (password) {
         await supabase.auth.updateUser({ password }).catch(() => null);
       }
 
-      // Bootstrap business record connected to user's UUID
       const res = await apiFetch("/api/auth/register-business", { method: "POST" });
       if (!res.ok) {
         const body = await readJson(res);
