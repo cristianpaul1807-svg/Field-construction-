@@ -41,37 +41,42 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
-      <div className="flex justify-end px-4 py-3">
+    <div className="min-h-screen bg-background flex flex-col pt-[max(2.75rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] px-3 sm:px-6">
+      {/* Top Bar with Language Switcher */}
+      <div className="flex justify-end px-1 py-1">
         <LanguageSwitcher />
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-xl space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 mx-auto bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-semibold shadow-md border border-primary/20">
-              <HardHat size={28} strokeWidth={1.75} />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{t("landing.hubName")}</h1>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+      <div className="flex-1 flex items-center justify-center py-2">
+        <div className="w-full max-w-md space-y-3.5">
+          {/* Header & Logo */}
+          <div className="text-center space-y-1">
+            <img
+              src="/icons/apple-touch-icon.png"
+              alt="Field Construction Logo"
+              className="w-12 h-12 mx-auto rounded-xl shadow-md border border-border/50 object-cover"
+            />
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-none pt-1">
+              {t("landing.hubName")}
+            </h1>
+            <p className="text-[11px] sm:text-xs text-muted-foreground max-w-xs sm:max-w-sm mx-auto leading-tight">
               {t("landing.intro")}
             </p>
           </div>
 
-          {/* Direct Quick Login Card */}
-          <Card className="p-6 space-y-5 shadow-sm border-border">
-            <div className="flex items-center gap-2 border-b border-border pb-3">
-              <LogIn size={18} className="text-primary" />
+          {/* Compact Quick Login Card */}
+          <Card className="p-4 space-y-3 shadow-sm border-border">
+            <div className="flex items-center gap-2 border-b border-border/80 pb-2">
+              <LogIn size={15} className="text-primary" />
               <div>
-                <h2 className="font-semibold text-foreground text-sm">{t("landing.loginQuickTitle")}</h2>
-                <p className="text-xs text-muted-foreground">{t("landing.loginSubtitle")}</p>
+                <h2 className="font-semibold text-foreground text-xs">{t("landing.loginQuickTitle")}</h2>
+                <p className="text-[10px] text-muted-foreground">{t("landing.loginSubtitle")}</p>
               </div>
             </div>
 
-            <form onSubmit={submitLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="quick-email" className="text-xs">{t("common.email")}</Label>
+            <form onSubmit={submitLogin} className="space-y-2.5">
+              <div className="space-y-1">
+                <Label htmlFor="quick-email" className="text-[11px] font-medium">{t("common.email")}</Label>
                 <Input
                   id="quick-email"
                   type="email"
@@ -79,13 +84,14 @@ export default function Landing() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
+                  className="h-8 text-xs"
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="quick-password" className="text-xs">{t("auth.password")}</Label>
-                  <Link href="/recuperar-password" className="text-xs text-primary hover:underline">
+                  <Label htmlFor="quick-password" className="text-[11px] font-medium">{t("auth.password")}</Label>
+                  <Link href="/recuperar-password" className="text-[10px] text-primary hover:underline">
                     {t("landing.forgotPasswordLink")}
                   </Link>
                 </div>
@@ -96,50 +102,49 @@ export default function Landing() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
+                  className="h-8 text-xs"
                 />
               </div>
 
-              {error && <p className="text-xs text-status-error-fg bg-status-error-bg/30 p-2.5 rounded-md">{error}</p>}
+              {error && <p className="text-[11px] text-status-error-fg bg-status-error-bg/30 p-2 rounded-md">{error}</p>}
 
-              <Button type="submit" className="w-full gap-2 font-medium" disabled={!email || !password || busy}>
-                <LogIn size={16} /> {t("auth.loginTitle")}
+              <Button type="submit" size="sm" className="w-full gap-2 h-9 text-xs font-medium" disabled={!email || !password || busy}>
+                <LogIn size={14} /> {t("auth.loginTitle")}
               </Button>
             </form>
 
-            <div className="pt-2 border-t border-border text-center">
-              <Link href="/negocio/acceso" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-medium">
-                <Building2 size={14} className="text-primary" />
+            <div className="pt-2 border-t border-border/80 text-center">
+              <Link href="/negocio/acceso" className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-medium">
+                <Building2 size={13} className="text-primary" />
                 <span>{t("landing.registerBusinessLink")}</span>
-                <ArrowRight size={13} />
+                <ArrowRight size={12} />
               </Link>
             </div>
           </Card>
 
-          {/* Quick Access Doors for Worker & Client */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Quick Access Doors Side-by-Side on Mobile */}
+          <div className="grid grid-cols-2 gap-2.5">
             <Link href="/campo">
-              <Card className="p-4 hover:border-primary/60 transition-colors cursor-pointer flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
-                  <HardHat size={20} />
+              <Card className="p-3 hover:border-primary/60 transition-colors cursor-pointer text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <HardHat size={16} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-foreground text-xs leading-snug">{t("landing.workerDoorTitle")}</h3>
-                  <p className="text-[11px] text-muted-foreground truncate">{t("landing.workerDoorDesc")}</p>
+                <div>
+                  <h3 className="font-semibold text-foreground text-xs leading-tight">{t("landing.workerDoorTitle")}</h3>
+                  <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{t("landing.workerDoorDesc")}</p>
                 </div>
-                <KeyRound size={14} className="text-muted-foreground flex-shrink-0" />
               </Card>
             </Link>
 
             <Link href="/cliente/acceso">
-              <Card className="p-4 hover:border-primary/60 transition-colors cursor-pointer flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
-                  <UserRound size={20} />
+              <Card className="p-3 hover:border-primary/60 transition-colors cursor-pointer text-center space-y-1.5 h-full flex flex-col items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <UserRound size={16} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-foreground text-xs leading-snug">{t("landing.clientDoorTitle")}</h3>
-                  <p className="text-[11px] text-muted-foreground truncate">{t("landing.clientDoorDesc")}</p>
+                <div>
+                  <h3 className="font-semibold text-foreground text-xs leading-tight">{t("landing.clientDoorTitle")}</h3>
+                  <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{t("landing.clientDoorDesc")}</p>
                 </div>
-                <ArrowRight size={14} className="text-muted-foreground flex-shrink-0" />
               </Card>
             </Link>
           </div>
