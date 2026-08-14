@@ -63,29 +63,29 @@ export default function AuthBusiness() {
     setBusy(true);
     try {
       if (mode === "register") {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
-
-        if (signUpError) {
-          const msg = formatError(signUpError, "").toLowerCase();
-          const isAlreadyRegistered = msg.includes("already") || msg.includes("registered") || msg.includes("exists");
-          if (!isAlreadyRegistered) {
-            throw signUpError;
-          }
-        }
-
-        // If Supabase auto-logged in without requiring confirmation, sign out temporary session
-        // to ensure the user completes the 8-digit OTP verification flow.
-        if (data?.session) {
-          await supabase.auth.signOut();
-        }
-
-        // Force sending the 8-digit OTP email
-        await supabase.auth.resend({ type: "signup", email }).catch(async () => {
-          await supabase.auth.resend({ type: "email_change", email }).catch(() => null);
+        // 1. Direct Business Onboarding (guaranteed execution, bypasses default mailer rate limits)
+        const regRes = await apiFetch("/api/public/auth/register-business", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
         });
 
-        // Always show the 8-digit OTP verification screen on registration
-        setNeedsCode(true);
+        if (!regRes.ok) {
+          const body = await readJson(regRes);
+          throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
+        }
+
+        // 2. Sign in with the newly registered/verified business credentials
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          // If password login requires OTP verification, show 8-digit OTP code input
+          await supabase.auth.resend({ type: "signup", email }).catch(() => null);
+          setNeedsCode(true);
+          return;
+        }
+
+        await refreshPersona();
+        setLocation("/");
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
