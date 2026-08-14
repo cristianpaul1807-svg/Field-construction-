@@ -240,7 +240,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // — the page itself scrolls, rather than an inner pane inside a fixed
     // sidebar shell.
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 pt-[env(safe-area-inset-top)]">
         <div className="h-14 px-4 sm:px-6 flex items-center gap-3">
           {/* El menú abre desde la izquierda, que es donde la mano busca la
               navegación y donde lo pone cualquier herramienta que se use a
