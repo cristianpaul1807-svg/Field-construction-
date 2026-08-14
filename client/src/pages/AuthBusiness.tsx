@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ function formatError(err: unknown, fallback: string): string {
 export default function AuthBusiness() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
-  const { session, persona, refreshPersona, signOut } = useAuth();
+  const { session, refreshPersona, signOut } = useAuth();
   const [mode, setMode] = useState<"register" | "login">("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,33 +37,17 @@ export default function AuthBusiness() {
   const [code, setCode] = useState("");
   const [resent, setResent] = useState(false);
 
-  // Safety net: if a session appears without business registration having run
-  useEffect(() => {
-    if (!session || persona !== "none" || needsCode) return;
-    (async () => {
-      setBusy(true);
-      try {
-        const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-        if (!res.ok) {
-          const body = await readJson(res);
-          throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
-        }
-        await refreshPersona();
-        setLocation("/");
-      } catch (err) {
-        setError(formatError(err, t("auth.somethingWentWrong")));
-      } finally {
-        setBusy(false);
-      }
-    })();
-  }, [session, persona, needsCode]);
-
   const submit = async () => {
     setError(null);
     setBusy(true);
     try {
       if (mode === "register") {
-        // Dispatch 8-digit OTP verification email via backend (guaranteed delivery via proven mailer route)
+        // Sign out any active background session so registration strictly requires fresh OTP verification
+        if (session) {
+          await signOut();
+        }
+
+        // Call backend endpoint to trigger 8-digit OTP verification email
         const res = await apiFetch("/api/public/auth/send-registration-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -75,7 +59,7 @@ export default function AuthBusiness() {
           throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
         }
 
-        // Always show the 8-digit OTP code entry screen
+        // MUST open the 8-digit OTP code entry screen
         setNeedsCode(true);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -94,7 +78,7 @@ export default function AuthBusiness() {
     setError(null);
     setBusy(true);
     try {
-      // Verify 8-digit OTP code sent to user's email
+      // Verify 8-digit OTP code sent to user's email inbox
       let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
       if (verifyRes.error) {
         verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
@@ -110,7 +94,7 @@ export default function AuthBusiness() {
         await supabase.auth.updateUser({ password }).catch(() => null);
       }
 
-      // Bootstrap business DB record connected to user's verified UUID
+      // Create business DB record connected to user's verified UUID
       const res = await apiFetch("/api/auth/register-business", { method: "POST" });
       if (!res.ok) {
         const body = await readJson(res);
