@@ -64,16 +64,25 @@ export default function AuthBusiness() {
     try {
       if (mode === "register") {
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
-        if (signUpError) throw signUpError;
+
+        if (signUpError) {
+          const msg = formatError(signUpError, "").toLowerCase();
+          const isAlreadyRegistered = msg.includes("already") || msg.includes("registered") || msg.includes("exists");
+          if (!isAlreadyRegistered) {
+            throw signUpError;
+          }
+        }
 
         // If Supabase auto-logged in without requiring confirmation, sign out temporary session
         // to ensure the user completes the 8-digit OTP verification flow.
-        if (data.session) {
+        if (data?.session) {
           await supabase.auth.signOut();
         }
 
         // Force sending the 8-digit OTP email
-        await supabase.auth.resend({ type: "signup", email }).catch(() => null);
+        await supabase.auth.resend({ type: "signup", email }).catch(async () => {
+          await supabase.auth.resend({ type: "email_change", email }).catch(() => null);
+        });
 
         // Always show the 8-digit OTP verification screen on registration
         setNeedsCode(true);
@@ -97,6 +106,9 @@ export default function AuthBusiness() {
       let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
       if (verifyRes.error) {
         verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+      }
+      if (verifyRes.error) {
+        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
       }
       if (verifyRes.error) throw verifyRes.error;
       if (!verifyRes.data.session) throw new Error(t("worker.invalidCode"));
