@@ -468,7 +468,15 @@
     "confirmSwitch": "Confirm switch",
     "onSiteSince": "On {{project}} since {{time}}",
     "unnamedProject": "the project",
-    "serviceDown": "We couldn't check your code right now. It's not the code: try again in a moment."
+    "serviceDown": "We couldn't check your code right now. It's not the code: try again in a moment.",
+    "shiftSummary": "Shift summary",
+    "checkInTimeLabel": "Check-in time",
+    "checkOutTimeLabel": "Check-out time",
+    "calculatedDuration": "Calculated duration",
+    "regularHours": "Regular hours",
+    "overtimeHours": "Overtime hours",
+    "historyTitle": "Recent timeclock history",
+    "finalizingShift": "Acquiring GPS and closing shift..."
   },
   "publicChat": {
     "chatWithBusiness": "Chat with the business",
@@ -540,18 +548,21 @@
     "serverResponded": "The server responded {{status}}"
   },
   "landing": {
+    "hubName": "Field Construction",
+    "intro": "The operational command center for your construction business — estimates, projects, crew and clients all in one place.",
     "tagline": "The all-in-one system for your construction company",
     "subtitle": "Estimates, projects, crew, clients and payments — all in one place.",
     "startFree": "Start free",
     "businessAccess": "I'm a business",
-    "workerAccess": "I'm a worker",
-    "clientAccess": "I'm a client",
-    "hubName": "FSM & Construction Hub",
-    "intro": "The operations hub for your construction business — estimates, projects, crew and clients all in one place.",
-    "haveAccount": "I already have an account — Sign in",
-    "businessCardDesc": "Manage your projects, estimates, crew and clients.",
-    "clientCardDesc": "Check your project's progress, your estimate and your photos.",
-    "fieldWorkerAccess": "Field worker access"
+    "fieldWorkerAccess": "Field worker access",
+    "loginQuickTitle": "System access",
+    "loginSubtitle": "Sign in with your company account",
+    "forgotPasswordLink": "Forgot password? Reset password",
+    "registerBusinessLink": "No account? Register my business",
+    "workerDoorTitle": "Field worker",
+    "workerDoorDesc": "Access /campo with your PIN code",
+    "clientDoorTitle": "Client portal",
+    "clientDoorDesc": "Review your project progress and estimates"
   },
   "settings": {
     "companyTitle": "Company Data",

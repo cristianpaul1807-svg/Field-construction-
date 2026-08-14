@@ -25,7 +25,7 @@ function CopyField({ label, value }: { label: string; value: string }) {
     <div className="space-y-1.5">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <div className="flex items-start gap-2">
-        <pre className="flex-1 min-w-0 whitespace-pre-wrap break-words rounded-lg border border-border bg-secondary/40 p-3 text-sm text-foreground font-sans">
+        <pre className="flex-1 min-w-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-lg border border-border bg-secondary/40 p-3 text-sm text-foreground font-sans">
           {value}
         </pre>
         <Button variant="outline" size="icon" className="flex-shrink-0" onClick={copy}>

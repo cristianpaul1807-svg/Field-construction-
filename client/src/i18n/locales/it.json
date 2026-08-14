@@ -468,7 +468,15 @@
     "confirmSwitch": "Conferma il cambio",
     "onSiteSince": "Su {{project}} dalle {{time}}",
     "unnamedProject": "il cantiere",
-    "serviceDown": "Non è stato possibile verificare il tuo codice adesso. Non è colpa del codice: riprova tra un momento."
+    "serviceDown": "Non è stato possibile verificare il tuo codice adesso. Non è colpa del codice: riprova tra un momento.",
+    "shiftSummary": "Riepilogo del turno",
+    "checkInTimeLabel": "Ora di entrata",
+    "checkOutTimeLabel": "Ora di uscita",
+    "calculatedDuration": "Tempo calcolato",
+    "regularHours": "Ore ordinarie",
+    "overtimeHours": "Ore straordinarie",
+    "historyTitle": "Cronologia timbrature recenti",
+    "finalizingShift": "Rilevamento posizione GPS e chiusura..."
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",
@@ -540,18 +548,21 @@
     "serverResponded": "Il server ha risposto {{status}}"
   },
   "landing": {
+    "hubName": "Field Construction",
+    "intro": "Il centro operativo della tua impresa edile — preventivi, progetti, squadra e clienti in un unico posto.",
     "tagline": "Il sistema tutto-in-uno per la tua impresa edile",
     "subtitle": "Preventivi, progetti, squadra, clienti e pagamenti — in un unico posto.",
     "startFree": "Inizia gratis",
     "businessAccess": "Sono un'impresa",
-    "workerAccess": "Sono un lavoratore",
-    "clientAccess": "Sono un cliente",
-    "hubName": "FSM & Construction Hub",
-    "intro": "Il centro operativo della tua impresa edile — preventivi, progetti, squadra e clienti in un unico posto.",
-    "haveAccount": "Ho già un account — Accedi",
-    "businessCardDesc": "Gestisci progetti, preventivi, squadra e clienti.",
-    "clientCardDesc": "Controlla l'avanzamento del tuo progetto, il preventivo e le foto.",
-    "fieldWorkerAccess": "Accesso lavoratore di cantiere"
+    "fieldWorkerAccess": "Accesso lavoratore di cantiere",
+    "loginQuickTitle": "Accesso al sistema",
+    "loginSubtitle": "Accedi con l'account della tua impresa",
+    "forgotPasswordLink": "Password dimenticata? Recupera password",
+    "registerBusinessLink": "Non hai un account? Registra la mia impresa",
+    "workerDoorTitle": "Lavoratore di cantiere",
+    "workerDoorDesc": "Accedi con il tuo codice PIN su /campo",
+    "clientDoorTitle": "Portale clienti",
+    "clientDoorDesc": "Controlla l'avanzamento dei progetti e preventivi"
   },
   "settings": {
     "companyTitle": "Dati aziendali",

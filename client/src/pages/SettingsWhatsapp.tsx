@@ -48,8 +48,8 @@ export default function SettingsWhatsapp() {
                 <Spinner className="size-4" /> {t("common.loading")}
               </div>
             ) : link ? (
-              <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                <Input readOnly value={link} className="font-mono text-xs" onFocus={(e) => e.target.select()} />
+              <div className="flex flex-col sm:flex-row gap-2 mt-4 min-w-0">
+                <Input readOnly value={link} className="font-mono text-xs truncate break-all flex-1 min-w-0" onFocus={(e) => e.target.select()} />
                 <Button className="gap-2 flex-shrink-0" onClick={copy}>
                   {copied ? <Check size={15} strokeWidth={1.75} /> : <Copy size={15} strokeWidth={1.75} />}
                   {copied ? t("invoicing.copied") : t("common.copy")}

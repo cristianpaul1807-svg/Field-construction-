@@ -468,7 +468,15 @@
     "confirmSwitch": "Confirmer le changement",
     "onSiteSince": "Sur {{project}} depuis {{time}}",
     "unnamedProject": "le chantier",
-    "serviceDown": "Impossible de vérifier votre code pour le moment. Ce n'est pas le code : réessayez dans un instant."
+    "serviceDown": "Impossible de vérifier votre code pour le moment. Ce n'est pas le code : réessayez dans un instant.",
+    "shiftSummary": "Résumé du quart de travail",
+    "checkInTimeLabel": "Heure d'arrivée",
+    "checkOutTimeLabel": "Heure de départ",
+    "calculatedDuration": "Temps calculé",
+    "regularHours": "Heures régulières",
+    "overtimeHours": "Heures supplémentaires",
+    "historyTitle": "Historique récent des pointages",
+    "finalizingShift": "Obtention de la position GPS et fermeture..."
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",
@@ -540,18 +548,21 @@
     "serverResponded": "Le serveur a répondu {{status}}"
   },
   "landing": {
+    "hubName": "Field Construction",
+    "intro": "Le centre d'opérations pour votre entreprise de construction — soumissions, projets, équipe et clients au même endroit.",
     "tagline": "Le système tout-en-un pour votre entreprise de construction",
     "subtitle": "Soumissions, projets, équipe, clients et paiements — au même endroit.",
     "startFree": "Commencer gratuitement",
     "businessAccess": "Je suis une entreprise",
-    "workerAccess": "Je suis un travailleur",
-    "clientAccess": "Je suis un client",
-    "hubName": "FSM & Construction Hub",
-    "intro": "Le centre d'opérations de votre entreprise de construction — soumissions, projets, équipe et clients au même endroit.",
-    "haveAccount": "J'ai déjà un compte — Se connecter",
-    "businessCardDesc": "Gérez vos projets, soumissions, équipe et clients.",
-    "clientCardDesc": "Suivez l'avancement de votre projet, votre soumission et vos photos.",
-    "fieldWorkerAccess": "Accès travailleur de chantier"
+    "fieldWorkerAccess": "Accès travailleur de chantier",
+    "loginQuickTitle": "Accès au système",
+    "loginSubtitle": "Connectez-vous avec le compte de votre entreprise",
+    "forgotPasswordLink": "Mot de passe oublié ? Réinitialiser",
+    "registerBusinessLink": "Pas de compte ? Inscrire mon entreprise",
+    "workerDoorTitle": "Travailleur de chantier",
+    "workerDoorDesc": "Accédez avec votre code PIN à /campo",
+    "clientDoorTitle": "Portail client",
+    "clientDoorDesc": "Consultez l'avancement de vos projets et soumissions"
   },
   "settings": {
     "companyTitle": "Données de l'entreprise",

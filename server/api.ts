@@ -1314,6 +1314,14 @@ apiRouter.post(
       .single();
     if (error) throw error;
 
+    await admin.from("gps_pings").insert({
+      business_id: req.workerBusinessId!,
+      [column]: req.workerId!,
+      latitude,
+      longitude,
+      timestamp: new Date().toISOString(),
+    });
+
     // Somebody standing on the site is the strongest evidence there is that
     // the job left planning, so the first check-in moves it — nobody in the
     // office has to remember to.
@@ -1339,6 +1347,8 @@ apiRouter.post(
     }
 
     const admin = getSupabaseAdmin();
+    const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+
     // Past the eighth hour of the day the shift is cut in two: the ordinary
     // part ends there and an overtime entry carries on.
     const { overtimeEntryId } = await closeEntryWithOvertime(admin, {
@@ -1350,7 +1360,55 @@ apiRouter.post(
       longitude,
     });
 
+    await admin.from("gps_pings").insert({
+      business_id: req.workerBusinessId!,
+      [column]: req.workerId!,
+      latitude,
+      longitude,
+      timestamp: new Date().toISOString(),
+    });
+
     res.json({ ok: true, overtimeEntryId });
+  })
+);
+
+apiRouter.get(
+  "/worker/time-entries/history",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+
+    const { data, error } = await admin
+      .from("time_entries")
+      .select(
+        "id, project_id, projects(name), check_in_time, check_out_time, check_in_location, check_out_location, check_in_lat, check_in_lng, check_out_lat, check_out_lng, billable, service_type, overtime"
+      )
+      .eq("business_id", req.workerBusinessId!)
+      .eq(column, req.workerId!)
+      .not("check_out_time", "is", null)
+      .order("check_in_time", { ascending: false })
+      .limit(10);
+    if (error) throw error;
+
+    res.json(
+      (data ?? []).map((row: any) => ({
+        id: row.id,
+        projectId: row.project_id,
+        projectName: row.projects?.name ?? null,
+        checkInTime: row.check_in_time,
+        checkOutTime: row.check_out_time,
+        checkInLocation: row.check_in_location,
+        checkOutLocation: row.check_out_location,
+        checkInLat: row.check_in_lat,
+        checkInLng: row.check_in_lng,
+        checkOutLat: row.check_out_lat,
+        checkOutLng: row.check_out_lng,
+        billable: row.billable,
+        serviceType: row.service_type,
+        overtime: row.overtime,
+      }))
+    );
   })
 );
 

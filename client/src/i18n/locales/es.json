@@ -463,12 +463,20 @@
     "selectProject": "Selecciona un proyecto",
     "selectPlaceholder": "Selecciona",
     "clockIn": "Marcar entrada",
-    "clockOut": "Marcar salida",
+    "clockOut": "Marcar salida (Cierre)",
     "switchProject": "Cambiar de proyecto",
     "confirmSwitch": "Confirmar cambio",
     "onSiteSince": "En {{project}} desde las {{time}}",
     "unnamedProject": "el proyecto",
-    "serviceDown": "No se pudo comprobar tu código ahora mismo. No es culpa del código: vuelve a intentarlo en un momento."
+    "serviceDown": "No se pudo comprobar tu código ahora mismo. No es culpa del código: vuelve a intentarlo en un momento.",
+    "shiftSummary": "Resumen del turno",
+    "checkInTimeLabel": "Hora de entrada",
+    "checkOutTimeLabel": "Hora de salida",
+    "calculatedDuration": "Tiempo calculado",
+    "regularHours": "Horas ordinarias",
+    "overtimeHours": "Horas extra",
+    "historyTitle": "Historial reciente de fichajes",
+    "finalizingShift": "Obteniendo GPS y cerrando turno..."
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",
@@ -540,18 +548,21 @@
     "serverResponded": "El servidor respondió {{status}}"
   },
   "landing": {
+    "hubName": "Field Construction",
+    "intro": "El centro de operaciones para tu negocio de construcción: presupuestos, proyectos, equipo y clientes en un solo lugar.",
     "tagline": "El sistema todo-en-uno para tu empresa de construcción",
     "subtitle": "Presupuestos, proyectos, equipo, clientes y pagos — en un solo lugar.",
     "startFree": "Empezar gratis",
     "businessAccess": "Soy un negocio",
-    "workerAccess": "Soy trabajador",
-    "clientAccess": "Soy cliente",
-    "hubName": "FSM & Construction Hub",
-    "intro": "El centro de operaciones para tu negocio de construcción — presupuestos, proyectos, equipo y clientes en un solo lugar.",
-    "haveAccount": "Ya tengo cuenta — Iniciar sesión",
-    "businessCardDesc": "Gestiona tus proyectos, presupuestos, equipo y clientes.",
-    "clientCardDesc": "Revisa el avance de tu proyecto, tu presupuesto y tus fotos.",
-    "fieldWorkerAccess": "Acceso de trabajador de campo"
+    "fieldWorkerAccess": "Acceso de trabajador de campo",
+    "loginQuickTitle": "Acceso al sistema",
+    "loginSubtitle": "Inicia sesión con la cuenta de tu empresa",
+    "forgotPasswordLink": "¿Olvidaste tu contraseña? Recuperar contraseña",
+    "registerBusinessLink": "¿No tienes cuenta? Registrar mi negocio",
+    "workerDoorTitle": "Trabajador de campo",
+    "workerDoorDesc": "Accede con tu código PIN a /campo",
+    "clientDoorTitle": "Portal de clientes",
+    "clientDoorDesc": "Revisa el avance de tu proyecto y presupuestos"
   },
   "settings": {
     "companyTitle": "Datos de la empresa",

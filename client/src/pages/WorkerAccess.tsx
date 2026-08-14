@@ -84,8 +84,8 @@ function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) 
 function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: () => void }) {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-card px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-background pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <div className="border-b border-border bg-card px-4 sm:px-6 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm">
             <HardHat size={16} />

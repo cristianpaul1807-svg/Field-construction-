@@ -541,6 +541,36 @@ export const formatCurrency = (value: number) =>
 export const formatCurrencyRounded = (value: number) =>
   new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(value);
 
+// For compact UI spaces (small screens, summary tiles) where large numbers
+// (e.g. $45,000 or $1,500,000) could overflow or overlap table bounds.
+export const formatCompactNumber = (value: number): string => {
+  if (!Number.isFinite(value)) return "0";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    const formatted = (value / 1_000_000).toFixed(1).replace(/\.0$/, "");
+    return `${formatted}M`;
+  }
+  if (abs >= 1_000) {
+    const formatted = (value / 1_000).toFixed(1).replace(/\.0$/, "");
+    return `${formatted}k`;
+  }
+  return value.toLocaleString();
+};
+
+export const formatCompactCurrency = (value: number): string => {
+  if (!Number.isFinite(value)) return "$0";
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    const formatted = (value / 1_000_000).toFixed(1).replace(/\.0$/, "");
+    return `$${formatted}M`;
+  }
+  if (abs >= 10_000) {
+    const formatted = (value / 1_000).toFixed(1).replace(/\.0$/, "");
+    return `$${formatted}k`;
+  }
+  return formatCurrency(value);
+};
+
 export const leadStatusLabel: Record<LeadStatus, string> = {
   nuevo: "Nuevo",
   cotizado: "Cotizado",
