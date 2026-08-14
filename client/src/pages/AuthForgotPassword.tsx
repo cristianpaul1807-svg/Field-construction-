@@ -104,7 +104,7 @@ export default function AuthForgotPassword() {
               }}
             >
               <div className="flex justify-center">
-                <InputOTP maxLength={8} value={code} onChange={setCode}>
+                <InputOTP maxLength={6} value={code} onChange={setCode}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -112,8 +112,6 @@ export default function AuthForgotPassword() {
                     <InputOTPSlot index={3} />
                     <InputOTPSlot index={4} />
                     <InputOTPSlot index={5} />
-                    <InputOTPSlot index={6} />
-                    <InputOTPSlot index={7} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
@@ -147,7 +145,7 @@ export default function AuthForgotPassword() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={code.length !== 8 || !newPassword || !confirmPassword || busy}
+                disabled={code.length !== 6 || !newPassword || !confirmPassword || busy}
               >
                 {t("auth.changePassword")}
               </Button>
