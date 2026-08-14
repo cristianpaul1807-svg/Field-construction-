@@ -37,9 +37,9 @@ export default function AuthBusiness() {
   const [code, setCode] = useState("");
   const [resent, setResent] = useState(false);
 
-  // Safety net: if a session ever appears without register-business having run.
+  // Safety net: if an existing session appears without business registration having run
   useEffect(() => {
-    if (!session || persona !== "none") return;
+    if (!session || persona !== "none" || needsCode) return;
     (async () => {
       setBusy(true);
       try {
@@ -56,7 +56,7 @@ export default function AuthBusiness() {
         setBusy(false);
       }
     })();
-  }, [session, persona]);
+  }, [session, persona, needsCode]);
 
   const submit = async () => {
     setError(null);
@@ -66,19 +66,17 @@ export default function AuthBusiness() {
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) throw signUpError;
 
-        if (!data.session) {
-          // Email confirmation required — show 8-digit OTP code input
-          setNeedsCode(true);
-          return;
+        // If Supabase auto-logged in without requiring confirmation, sign out temporary session
+        // to ensure the user completes the 8-digit OTP verification flow.
+        if (data.session) {
+          await supabase.auth.signOut();
         }
 
-        const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-        if (!res.ok) {
-          const body = await readJson(res);
-          throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
-        }
-        await refreshPersona();
-        setLocation("/");
+        // Force sending the 8-digit OTP email
+        await supabase.auth.resend({ type: "signup", email }).catch(() => null);
+
+        // Always show the 8-digit OTP verification screen on registration
+        setNeedsCode(true);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
