@@ -997,7 +997,7 @@ apiRouter.post(
 );
 
 apiRouter.post(
-  "/public/auth/register-business",
+  "/public/auth/send-registration-otp",
   route(async (req, res) => {
     const { email, password } = req.body ?? {};
     if (!email || !password) {
@@ -1008,71 +1008,29 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const cleanEmail = String(email).trim().toLowerCase();
 
-    let userId: string | null = null;
+    // 1. Ensure user exists in Supabase auth (create if new)
     const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
       email: cleanEmail,
       password: String(password),
-      email_confirm: true,
+      email_confirm: false,
     });
 
     if (createError) {
       const { data: listData } = await admin.auth.admin.listUsers();
       const existingUser = listData?.users?.find((u) => u.email?.toLowerCase() === cleanEmail);
       if (existingUser) {
-        userId = existingUser.id;
-        await admin.auth.admin.updateUserById(userId, { password: String(password), email_confirm: true });
-      } else {
-        res.status(400).json({ error: createError.message });
-        return;
+        await admin.auth.admin.updateUserById(existingUser.id, { password: String(password) });
       }
-    } else if (createdUser.user) {
-      userId = createdUser.user.id;
     }
 
-    if (!userId) {
-      res.status(400).json({ error: "No se pudo obtener el ID de usuario" });
+    // 2. Dispatch 8-digit OTP verification email via resetPasswordForEmail
+    const { error: resetError } = await admin.auth.resetPasswordForEmail(cleanEmail);
+    if (resetError) {
+      res.status(400).json({ error: resetError.message });
       return;
     }
 
-    const { data: existing } = await admin
-      .from("users")
-      .select("business_id")
-      .eq("auth_user_id", userId)
-      .maybeSingle();
-
-    let businessId = existing?.business_id;
-
-    if (!businessId) {
-      const label = cleanEmail.split("@")[0] || "nuevo";
-      const businessName = `Negocio de ${label}`;
-      const slug = await generateUniqueSlug(admin, businessName);
-
-      const { data: business, error: businessError } = await admin
-        .from("businesses")
-        .insert({ name: businessName, slug })
-        .select("id")
-        .single();
-      if (businessError) throw businessError;
-
-      const [, roleResult] = await Promise.all([
-        admin.from("business_settings").insert({ business_id: business.id }),
-        admin.from("roles").insert({ business_id: business.id, name: "admin" }).select("id").single(),
-      ]);
-      if (roleResult.error) throw roleResult.error;
-
-      const { error: userError } = await admin.from("users").insert({
-        business_id: business.id,
-        auth_user_id: userId,
-        name: label,
-        email: cleanEmail,
-        role_id: roleResult.data.id,
-      });
-      if (userError) throw userError;
-
-      businessId = business.id;
-    }
-
-    res.status(200).json({ businessId, success: true });
+    res.status(200).json({ success: true, needsCode: true });
   })
 );
 

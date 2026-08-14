@@ -63,8 +63,8 @@ export default function AuthBusiness() {
     setBusy(true);
     try {
       if (mode === "register") {
-        // 1. Register business via backend (uses Supabase Admin API to auto-confirm user & create business DB records)
-        const res = await apiFetch("/api/public/auth/register-business", {
+        // Dispatch 8-digit OTP verification email via backend (guaranteed delivery via proven mailer route)
+        const res = await apiFetch("/api/public/auth/send-registration-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -75,12 +75,8 @@ export default function AuthBusiness() {
           throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
         }
 
-        // 2. Sign in with user credentials
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
-
-        await refreshPersona();
-        setLocation("/");
+        // Always show the 8-digit OTP code entry screen
+        setNeedsCode(true);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
@@ -98,9 +94,10 @@ export default function AuthBusiness() {
     setError(null);
     setBusy(true);
     try {
-      let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
+      // Verify 8-digit OTP code sent to user's email
+      let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
       if (verifyRes.error) {
-        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
+        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
       }
       if (verifyRes.error) {
         verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
@@ -108,10 +105,12 @@ export default function AuthBusiness() {
       if (verifyRes.error) throw verifyRes.error;
       if (!verifyRes.data.session) throw new Error(t("worker.invalidCode"));
 
+      // Set user's password once OTP is verified
       if (password) {
         await supabase.auth.updateUser({ password }).catch(() => null);
       }
 
+      // Bootstrap business DB record connected to user's verified UUID
       const res = await apiFetch("/api/auth/register-business", { method: "POST" });
       if (!res.ok) {
         const body = await readJson(res);
@@ -131,12 +130,15 @@ export default function AuthBusiness() {
     setError(null);
     setResent(false);
     try {
-      let { error: resendError } = await supabase.auth.resetPasswordForEmail(email);
-      if (resendError) {
-        const res2 = await supabase.auth.resend({ type: "signup", email });
-        resendError = res2.error;
+      const res = await apiFetch("/api/public/auth/send-registration-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const body = await readJson(res);
+        throw new Error(body?.error || t("auth.couldNotResendCode"));
       }
-      if (resendError) throw resendError;
       setResent(true);
     } catch (err) {
       setError(formatError(err, t("auth.couldNotResendCode")));
