@@ -7,9 +7,22 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { ArrowLeft, Briefcase } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, readJson } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
+
+function formatError(err: unknown, fallback: string): string {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object") {
+    const obj = err as Record<string, unknown>;
+    if (typeof obj.message === "string" && obj.message) return obj.message;
+    if (typeof obj.error_description === "string" && obj.error_description) return obj.error_description;
+    if (typeof obj.error === "string" && obj.error) return obj.error;
+  }
+  return fallback;
+}
 
 export default function AuthBusiness() {
   const { t } = useTranslation();
@@ -24,19 +37,21 @@ export default function AuthBusiness() {
   const [code, setCode] = useState("");
   const [resent, setResent] = useState(false);
 
-  // Safety net: if a session ever appears (e.g. an old confirmation link from
-  // before this code-based flow existed) without register-business having run.
+  // Safety net: if a session ever appears without register-business having run.
   useEffect(() => {
     if (!session || persona !== "none") return;
     (async () => {
       setBusy(true);
       try {
         const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("auth.couldNotCreateBusiness"));
+        if (!res.ok) {
+          const body = await readJson(res);
+          throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
+        }
         await refreshPersona();
         setLocation("/");
       } catch (err) {
-        setError(err instanceof Error ? err.message : t("auth.somethingWentWrong"));
+        setError(formatError(err, t("auth.somethingWentWrong")));
       } finally {
         setBusy(false);
       }
@@ -52,13 +67,16 @@ export default function AuthBusiness() {
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          // Email confirmation required — the user enters the 6-digit code instead of clicking a link.
+          // Email confirmation required — show 8-digit OTP code input
           setNeedsCode(true);
           return;
         }
 
         const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("auth.couldNotCreateBusiness"));
+        if (!res.ok) {
+          const body = await readJson(res);
+          throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
+        }
         await refreshPersona();
         setLocation("/");
       } else {
@@ -68,7 +86,7 @@ export default function AuthBusiness() {
         setLocation("/");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.somethingWentWrong"));
+      setError(formatError(err, t("auth.somethingWentWrong")));
     } finally {
       setBusy(false);
     }
@@ -78,16 +96,22 @@ export default function AuthBusiness() {
     setError(null);
     setBusy(true);
     try {
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
-      if (verifyError) throw verifyError;
-      if (!data.session) throw new Error(t("worker.invalidCode"));
+      let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
+      if (verifyRes.error) {
+        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+      }
+      if (verifyRes.error) throw verifyRes.error;
+      if (!verifyRes.data.session) throw new Error(t("worker.invalidCode"));
 
       const res = await apiFetch("/api/auth/register-business", { method: "POST" });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("auth.couldNotCreateBusiness"));
+      if (!res.ok) {
+        const body = await readJson(res);
+        throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
+      }
       await refreshPersona();
       setLocation("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.invalidOrExpiredCode"));
+      setError(formatError(err, t("auth.invalidOrExpiredCode")));
     } finally {
       setBusy(false);
     }
@@ -101,7 +125,7 @@ export default function AuthBusiness() {
       if (resendError) throw resendError;
       setResent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.couldNotResendCode"));
+      setError(formatError(err, t("auth.couldNotResendCode")));
     }
   };
 
@@ -142,7 +166,7 @@ export default function AuthBusiness() {
               }}
             >
               <div className="flex justify-center">
-                <InputOTP maxLength={6} value={code} onChange={setCode}>
+                <InputOTP maxLength={8} value={code} onChange={setCode}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -150,6 +174,8 @@ export default function AuthBusiness() {
                     <InputOTPSlot index={3} />
                     <InputOTPSlot index={4} />
                     <InputOTPSlot index={5} />
+                    <InputOTPSlot index={6} />
+                    <InputOTPSlot index={7} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
@@ -157,7 +183,7 @@ export default function AuthBusiness() {
               {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
               {resent && !error && <p className="text-sm text-status-success-fg text-center">{t("auth.codeResent")}</p>}
 
-              <Button type="submit" className="w-full" disabled={code.length !== 6 || busy}>
+              <Button type="submit" className="w-full" disabled={code.length !== 8 || busy}>
                 {t("auth.verifyCode")}
               </Button>
               <button

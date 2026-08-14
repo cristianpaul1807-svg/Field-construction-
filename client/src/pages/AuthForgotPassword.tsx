@@ -9,6 +9,19 @@ import { ArrowLeft, KeyRound } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useTranslation } from "react-i18next";
 
+function formatError(err: unknown, fallback: string): string {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object") {
+    const obj = err as Record<string, unknown>;
+    if (typeof obj.message === "string" && obj.message) return obj.message;
+    if (typeof obj.error_description === "string" && obj.error_description) return obj.error_description;
+    if (typeof obj.error === "string" && obj.error) return obj.error;
+  }
+  return fallback;
+}
+
 export default function AuthForgotPassword() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
@@ -29,7 +42,7 @@ export default function AuthForgotPassword() {
       if (resetError) throw resetError;
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.somethingWentWrong"));
+      setError(formatError(err, t("auth.somethingWentWrong")));
     } finally {
       setBusy(false);
     }
@@ -43,7 +56,7 @@ export default function AuthForgotPassword() {
       if (resetError) throw resetError;
       setResent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.couldNotResendCode"));
+      setError(formatError(err, t("auth.couldNotResendCode")));
     }
   };
 
@@ -62,14 +75,10 @@ export default function AuthForgotPassword() {
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
 
-      // Sign back out and send them to a normal login — verifyOtp() leaves a
-      // session behind, but jumping straight into the app from here bypassed
-      // /iniciar-sesion entirely and could land on the business-setup screen
-      // for accounts with no business yet, which read as "reset is broken".
       await supabase.auth.signOut();
       setLocation("/iniciar-sesion");
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("auth.invalidOrExpiredCode"));
+      setError(formatError(err, t("auth.invalidOrExpiredCode")));
     } finally {
       setBusy(false);
     }
@@ -104,7 +113,7 @@ export default function AuthForgotPassword() {
               }}
             >
               <div className="flex justify-center">
-                <InputOTP maxLength={6} value={code} onChange={setCode}>
+                <InputOTP maxLength={8} value={code} onChange={setCode}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -112,6 +121,8 @@ export default function AuthForgotPassword() {
                     <InputOTPSlot index={3} />
                     <InputOTPSlot index={4} />
                     <InputOTPSlot index={5} />
+                    <InputOTPSlot index={6} />
+                    <InputOTPSlot index={7} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
@@ -145,7 +156,7 @@ export default function AuthForgotPassword() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={code.length !== 6 || !newPassword || !confirmPassword || busy}
+                disabled={code.length !== 8 || !newPassword || !confirmPassword || busy}
               >
                 {t("auth.changePassword")}
               </Button>
