@@ -831,6 +831,7 @@ apiRouter.get(
       supabaseAnonKeyConfigured: Boolean(readAnonKey()),
       stripeSecretKeyConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
       stripeWebhookSecretConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      resendApiKeyConfigured: Boolean(process.env.RESEND_API_KEY),
     };
 
     // The project ref is the subdomain, which is already public (the browser

@@ -35,9 +35,9 @@ function generate8DigitCode(): string {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
 }
 
-async function dispatchResendEmail(to: string, code: string): Promise<boolean> {
+async function dispatchResendEmail(to: string, code: string): Promise<{ sent: boolean; reason?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || "Field Construction <onboarding@resend.dev>";
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
   const subject = `Tu código de verificación: ${code}`;
   const html = `
@@ -51,14 +51,16 @@ async function dispatchResendEmail(to: string, code: string): Promise<boolean> {
     </div>
   `;
 
-  let sent = false;
-
-  if (apiKey) {
+  if (!apiKey) {
+    console.warn(`[OTP System] ⚠️ RESEND_API_KEY is not set in .env!`);
+    console.log(`[OTP System] 🔑 8-digit verification code generated for ${to}: [ ${code} ]`);
+  } else {
     try {
+      console.log(`[Resend] Sending 8-digit OTP code to ${to} via Resend API...`);
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey.trim()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -69,39 +71,53 @@ async function dispatchResendEmail(to: string, code: string): Promise<boolean> {
         }),
       });
 
+      const bodyText = await res.text();
       if (res.ok) {
-        sent = true;
+        console.log(`[Resend] ✅ Email successfully dispatched to ${to} via Resend API:`, bodyText);
+        return { sent: true };
       } else {
-        const body = await res.text();
-        console.warn("[Resend] Direct Resend API response error:", res.status, body);
+        console.error(`[Resend] ❌ Resend API returned error ${res.status}:`, bodyText);
       }
     } catch (err) {
-      console.warn("[Resend] Error calling Resend API:", err);
+      console.error("[Resend] Network error calling Resend API:", err);
     }
   }
 
-  // Also trigger Supabase resetPasswordForEmail as secondary channel
+  // Fallback to Supabase resetPasswordForEmail
   try {
     const admin = getSupabaseAdmin();
-    await admin.auth.resetPasswordForEmail(to);
+    const { error: resetErr } = await admin.auth.resetPasswordForEmail(to);
+    if (!resetErr) {
+      console.log(`[Supabase] Sent verification code email to ${to} via Supabase Auth.`);
+      return { sent: true };
+    } else {
+      console.warn(`[Supabase] Could not send via Supabase Auth:`, resetErr.message);
+    }
   } catch (err) {
-    console.warn("[Supabase] Reset password email error:", err);
+    console.warn("[Supabase] Error with resetPasswordForEmail:", err);
   }
 
-  return sent;
+  return { sent: false, reason: apiKey ? "Resend API error" : "RESEND_API_KEY is missing in .env" };
 }
 
-export async function sendRegistrationOTP(email: string, password: string): Promise<{ success: boolean; codeSent: boolean }> {
+export async function sendRegistrationOTP(email: string, password: string): Promise<{ success: boolean; codeSent: boolean; message?: string }> {
   const cleanEmail = email.trim().toLowerCase();
   const code = generate8DigitCode();
   const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes validity
 
   pendingOTPs.set(cleanEmail, { code, password, expiresAt });
 
-  console.log(`[OTP] Generated 8-digit verification code for ${cleanEmail}: ${code}`);
+  console.log(`=======================================================`);
+  console.log(`[OTP REGISTRATION] Email: ${cleanEmail}`);
+  console.log(`[OTP REGISTRATION] 🔑 8-DIGIT CODE: ${code}`);
+  console.log(`=======================================================`);
 
-  const codeSent = await dispatchResendEmail(cleanEmail, code);
-  return { success: true, codeSent };
+  const dispatchResult = await dispatchResendEmail(cleanEmail, code);
+  return {
+    success: true,
+    codeSent: dispatchResult.sent,
+    message: dispatchResult.sent ? "Código enviado a tu correo." : "RESEND_API_KEY no configurada en .env. Revisa la consola o añade RESEND_API_KEY a tu archivo .env.",
+  };
 }
 
 export async function verifyRegistrationOTP(email: string, code: string): Promise<{ success: boolean; businessId?: string; authUserId?: string }> {
@@ -114,7 +130,6 @@ export async function verifyRegistrationOTP(email: string, code: string): Promis
   if (pending && pending.code === code.trim() && pending.expiresAt > Date.now()) {
     isValid = true;
   } else {
-    // Also test Supabase verifyOtp as fallback
     try {
       const admin = getSupabaseAdmin();
       const { data, error } = await admin.auth.verifyOtp({ email: cleanEmail, token: code.trim(), type: "recovery" });
@@ -130,12 +145,10 @@ export async function verifyRegistrationOTP(email: string, code: string): Promis
     throw new Error("Código de verificación incorrecto o expirado.");
   }
 
-  // Clear pending OTP once verified
   pendingOTPs.delete(cleanEmail);
 
   const admin = getSupabaseAdmin();
 
-  // 1. Create/Ensure user in Supabase auth with confirmed email
   let userId: string | null = null;
   const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
     email: cleanEmail,
@@ -160,7 +173,6 @@ export async function verifyRegistrationOTP(email: string, code: string): Promis
     throw new Error("No se pudo obtener la cuenta de usuario.");
   }
 
-  // 2. Create business DB record for the verified user
   const { data: existing } = await admin
     .from("users")
     .select("business_id")
