@@ -28,7 +28,6 @@ import { receivables } from "./receivables";
 import { profitabilityByProject } from "./profitability";
 import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
-import { sendRegistrationOTP, verifyRegistrationOTP } from "./resendOtp";
 import {
   annualTotals,
   approvedHours,
@@ -995,42 +994,6 @@ apiRouter.post(
     if (userError) throw userError;
 
     res.status(201).json({ businessId: business.id });
-  })
-);
-
-apiRouter.post(
-  "/public/auth/send-registration-otp",
-  route(async (req, res) => {
-    const { email, password } = req.body ?? {};
-    if (!email || !password) {
-      res.status(400).json({ error: "Email y contraseña requeridos" });
-      return;
-    }
-
-    try {
-      const result = await sendRegistrationOTP(String(email), String(password));
-      res.status(200).json({ success: true, needsCode: true, codeSent: result.codeSent });
-    } catch (err) {
-      res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
-    }
-  })
-);
-
-apiRouter.post(
-  "/public/auth/verify-registration-otp",
-  route(async (req, res) => {
-    const { email, code } = req.body ?? {};
-    if (!email || !code) {
-      res.status(400).json({ error: "Email y código de 8 dígitos requeridos" });
-      return;
-    }
-
-    try {
-      const result = await verifyRegistrationOTP(String(email), String(code));
-      res.status(200).json({ success: true, businessId: result.businessId, authUserId: result.authUserId });
-    } catch (err) {
-      res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
-    }
   })
 );
 

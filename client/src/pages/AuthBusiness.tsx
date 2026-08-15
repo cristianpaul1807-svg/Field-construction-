@@ -46,19 +46,36 @@ export default function AuthBusiness() {
           await signOut();
         }
 
-        // Call server to generate & send 8-digit OTP verification code via Resend
-        const res = await apiFetch("/api/public/auth/send-registration-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+        // 1. Native Supabase Auth Sign Up (triggers Supabase's configured Resend SMTP email)
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
         });
 
-        if (!res.ok) {
-          const body = await readJson(res);
-          throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
+        if (signUpError) {
+          const msg = formatError(signUpError, "").toLowerCase();
+          const isAlreadyRegistered = msg.includes("already") || msg.includes("registered") || msg.includes("exists");
+
+          if (isAlreadyRegistered) {
+            // Re-send verification code via Supabase Resend SMTP and show OTP screen
+            let resendErr = (await supabase.auth.resend({ type: "signup", email })).error;
+            if (resendErr) {
+              const resetRes = await supabase.auth.resetPasswordForEmail(email);
+              resendErr = resetRes.error;
+            }
+            setNeedsCode(true);
+            return;
+          }
+
+          throw signUpError;
         }
 
-        // Mandatory transition to the 8-digit OTP code entry screen
+        // If data.session was auto-created, sign out temporary session to complete OTP verification
+        if (data?.session) {
+          await supabase.auth.signOut();
+        }
+
+        // Always show the 8-digit OTP code entry screen
         setNeedsCode(true);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -77,27 +94,30 @@ export default function AuthBusiness() {
     setError(null);
     setBusy(true);
     try {
-      // 1. Verify 8-digit OTP code sent to user's email inbox
-      const res = await apiFetch("/api/public/auth/verify-registration-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
-      });
+      // 1. Verify 8-digit OTP code via Supabase Auth
+      let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
+      if (verifyRes.error) {
+        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
+      }
+      if (verifyRes.error) {
+        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+      }
+      if (verifyRes.error) throw verifyRes.error;
+      if (!verifyRes.data.session) throw new Error(t("worker.invalidCode"));
 
+      // Set user's password if needed
+      if (password) {
+        await supabase.auth.updateUser({ password }).catch(() => null);
+      }
+
+      // 2. Create business DB record connected to user's verified UUID
+      const res = await apiFetch("/api/auth/register-business", { method: "POST" });
       if (!res.ok) {
         const body = await readJson(res);
-        throw new Error(body?.error || t("auth.invalidOrExpiredCode"));
+        throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
       }
 
-      // 2. Sign in with the verified credentials to establish browser session
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        // Fallback: refresh persona if session is already active
-        await refreshPersona();
-      } else {
-        await refreshPersona();
-      }
-
+      await refreshPersona();
       setLocation("/");
     } catch (err) {
       setError(formatError(err, t("auth.invalidOrExpiredCode")));
@@ -110,15 +130,12 @@ export default function AuthBusiness() {
     setError(null);
     setResent(false);
     try {
-      const res = await apiFetch("/api/public/auth/send-registration-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const body = await readJson(res);
-        throw new Error(body?.error || t("auth.couldNotResendCode"));
+      let { error: resendError } = await supabase.auth.resend({ type: "signup", email });
+      if (resendError) {
+        const res2 = await supabase.auth.resetPasswordForEmail(email);
+        resendError = res2.error;
       }
+      if (resendError) throw resendError;
       setResent(true);
     } catch (err) {
       setError(formatError(err, t("auth.couldNotResendCode")));
