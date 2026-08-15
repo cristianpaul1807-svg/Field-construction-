@@ -46,7 +46,7 @@ export default function AuthBusiness() {
           await signOut();
         }
 
-        // 1. Native Supabase Auth Sign Up (triggers Supabase's configured Resend SMTP email)
+        // 1. Native Supabase Auth Sign Up
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -54,20 +54,25 @@ export default function AuthBusiness() {
 
         if (signUpError) {
           const msg = formatError(signUpError, "").toLowerCase();
-          const isAlreadyRegistered = msg.includes("already") || msg.includes("registered") || msg.includes("exists");
+          const isAlreadyRegistered =
+            msg.includes("already") ||
+            msg.includes("registered") ||
+            msg.includes("exists") ||
+            msg.includes("in use");
 
           if (isAlreadyRegistered) {
-            // Re-send verification code via Supabase Resend SMTP and show OTP screen
-            let resendErr = (await supabase.auth.resend({ type: "signup", email })).error;
-            if (resendErr) {
-              const resetRes = await supabase.auth.resetPasswordForEmail(email);
-              resendErr = resetRes.error;
-            }
-            setNeedsCode(true);
+            // STOP! Show error that email is already registered and do NOT send any OTP email.
+            setError(t("auth.emailAlreadyInUse"));
             return;
           }
 
           throw signUpError;
+        }
+
+        // Supabase returns user with empty identities array when user email is already registered
+        if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          setError(t("auth.emailAlreadyInUse"));
+          return;
         }
 
         // If data.session was auto-created, sign out temporary session to complete OTP verification
@@ -75,7 +80,7 @@ export default function AuthBusiness() {
           await supabase.auth.signOut();
         }
 
-        // Always show the 8-digit OTP code entry screen
+        // Show the 8-digit OTP code entry screen for brand new business account
         setNeedsCode(true);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -84,7 +89,12 @@ export default function AuthBusiness() {
         setLocation("/");
       }
     } catch (err) {
-      setError(formatError(err, t("auth.somethingWentWrong")));
+      const msg = formatError(err, "").toLowerCase();
+      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists") || msg.includes("in use")) {
+        setError(t("auth.emailAlreadyInUse"));
+      } else {
+        setError(formatError(err, t("auth.somethingWentWrong")));
+      }
     } finally {
       setBusy(false);
     }
@@ -105,7 +115,7 @@ export default function AuthBusiness() {
       if (verifyRes.error) throw verifyRes.error;
       if (!verifyRes.data.session) throw new Error(t("worker.invalidCode"));
 
-      // Set user's password if needed
+      // Set user's password once OTP is verified
       if (password) {
         await supabase.auth.updateUser({ password }).catch(() => null);
       }

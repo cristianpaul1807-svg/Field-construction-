@@ -545,7 +545,8 @@
     "backToSignIn": "Retour à la connexion",
     "noBusinessAccount": "Vous n'avez pas de compte entreprise ?",
     "notYetAccount": "Vous n'avez pas encore de compte ?",
-    "serverResponded": "Le serveur a répondu {{status}}"
+    "serverResponded": "Le serveur a répondu {{status}}",
+    "emailAlreadyInUse": "Cette adresse e-mail est déjà enregistrée. Veuillez vous connecter ou utiliser un e-mail différent."
   },
   "landing": {
     "hubName": "Field Construction",

@@ -545,7 +545,8 @@
     "backToSignIn": "Back to sign in",
     "noBusinessAccount": "Don't have a business account?",
     "notYetAccount": "Don't have an account yet?",
-    "serverResponded": "The server responded {{status}}"
+    "serverResponded": "The server responded {{status}}",
+    "emailAlreadyInUse": "This email address is already registered. Please sign in or use a different email."
   },
   "landing": {
     "hubName": "Field Construction",
