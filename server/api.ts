@@ -28,6 +28,7 @@ import { receivables } from "./receivables";
 import { profitabilityByProject } from "./profitability";
 import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
+import { sendRegistrationOTP, verifyRegistrationOTP } from "./resendOtp";
 import {
   annualTotals,
   approvedHours,
@@ -1005,32 +1006,30 @@ apiRouter.post(
       return;
     }
 
-    const admin = getSupabaseAdmin();
-    const cleanEmail = String(email).trim().toLowerCase();
-
-    // 1. Ensure user exists in Supabase auth (create if new)
-    const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
-      email: cleanEmail,
-      password: String(password),
-      email_confirm: false,
-    });
-
-    if (createError) {
-      const { data: listData } = await admin.auth.admin.listUsers();
-      const existingUser = listData?.users?.find((u) => u.email?.toLowerCase() === cleanEmail);
-      if (existingUser) {
-        await admin.auth.admin.updateUserById(existingUser.id, { password: String(password) });
-      }
+    try {
+      const result = await sendRegistrationOTP(String(email), String(password));
+      res.status(200).json({ success: true, needsCode: true, codeSent: result.codeSent });
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
     }
+  })
+);
 
-    // 2. Dispatch 8-digit OTP verification email via resetPasswordForEmail
-    const { error: resetError } = await admin.auth.resetPasswordForEmail(cleanEmail);
-    if (resetError) {
-      res.status(400).json({ error: resetError.message });
+apiRouter.post(
+  "/public/auth/verify-registration-otp",
+  route(async (req, res) => {
+    const { email, code } = req.body ?? {};
+    if (!email || !code) {
+      res.status(400).json({ error: "Email y código de 8 dígitos requeridos" });
       return;
     }
 
-    res.status(200).json({ success: true, needsCode: true });
+    try {
+      const result = await verifyRegistrationOTP(String(email), String(code));
+      res.status(200).json({ success: true, businessId: result.businessId, authUserId: result.authUserId });
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    }
   })
 );
 

@@ -42,12 +42,11 @@ export default function AuthBusiness() {
     setBusy(true);
     try {
       if (mode === "register") {
-        // Sign out any active background session so registration strictly requires fresh OTP verification
         if (session) {
           await signOut();
         }
 
-        // Call backend endpoint to trigger 8-digit OTP verification email
+        // Call server to generate & send 8-digit OTP verification code via Resend
         const res = await apiFetch("/api/public/auth/send-registration-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -59,7 +58,7 @@ export default function AuthBusiness() {
           throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
         }
 
-        // MUST open the 8-digit OTP code entry screen
+        // Mandatory transition to the 8-digit OTP code entry screen
         setNeedsCode(true);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -78,30 +77,27 @@ export default function AuthBusiness() {
     setError(null);
     setBusy(true);
     try {
-      // Verify 8-digit OTP code sent to user's email inbox
-      let verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
-      if (verifyRes.error) {
-        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
-      }
-      if (verifyRes.error) {
-        verifyRes = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
-      }
-      if (verifyRes.error) throw verifyRes.error;
-      if (!verifyRes.data.session) throw new Error(t("worker.invalidCode"));
+      // 1. Verify 8-digit OTP code sent to user's email inbox
+      const res = await apiFetch("/api/public/auth/verify-registration-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
 
-      // Set user's password once OTP is verified
-      if (password) {
-        await supabase.auth.updateUser({ password }).catch(() => null);
-      }
-
-      // Create business DB record connected to user's verified UUID
-      const res = await apiFetch("/api/auth/register-business", { method: "POST" });
       if (!res.ok) {
         const body = await readJson(res);
-        throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
+        throw new Error(body?.error || t("auth.invalidOrExpiredCode"));
       }
 
-      await refreshPersona();
+      // 2. Sign in with the verified credentials to establish browser session
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        // Fallback: refresh persona if session is already active
+        await refreshPersona();
+      } else {
+        await refreshPersona();
+      }
+
       setLocation("/");
     } catch (err) {
       setError(formatError(err, t("auth.invalidOrExpiredCode")));
