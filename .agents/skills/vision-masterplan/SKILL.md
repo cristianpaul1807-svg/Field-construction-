@@ -50,15 +50,10 @@ Cualquier modelo de IA (Antigravity, Claude Code, etc.) debe leer esta lista par
 
 ---
 
-### [ ] Fase 1: Prueba Operativa V1 en Montreal, Canadá (SIGUIENTE PASO - EN CURSO)
+### [ ] Fase 1: Prueba V1 en Montreal & Inyección Inmediata de IA (SIGUIENTE PASO - EN CURSO)
 - [ ] Desplegar la V1 operativa en terreno con el amigo en Montreal (Canadá).
-- [ ] Validar la captación de leads por enlace público y la generación de presupuestos en el mercado canadiense.
-- [ ] Recopilar datos reales de usabilidad y feedback de campo sin IA aún.
-- [ ] Identificar las 3 "Skills" de automatización más valiosas para los contratistas.
-
----
-
-### [ ] Fase 2: Lanzamiento de la V2 con IA Ejecutora & Telemetría
+- [ ] Validar la captación de leads por enlace público y la generación de presupuestos en terreno.
+- [ ] **Inyección Inmediata de IA**: Tan pronto como la V1 esté probada y funcionando con el amigo, iniciar de inmediato la integración de los Agentes de IA y los Planes High-Ticket (€99, €299, €599, €1,299/mes).
 - [ ] Conectar el chat flotante (`FloatingAssistant.tsx`) con Function Calling (Herramientas de servidor).
 - [ ] Implementar la entrega de PDFs descargables (nóminas y presupuestos) dentro de la ventana de chat.
 - [ ] Implementar el botón **"Tomar / Devolver el Control"** en los chats nativos de Leads, Clientes y Trabajadores.
