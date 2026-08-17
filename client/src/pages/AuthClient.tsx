@@ -52,7 +52,7 @@ export default function AuthClient() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="flex justify-end p-3">
+      <div className="flex justify-end p-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))]">
         <LanguageSwitcher />
       </div>
       <div className="flex-1 flex items-center justify-center p-4">

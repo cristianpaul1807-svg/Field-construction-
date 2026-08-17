@@ -203,3 +203,45 @@
     }
   }
 }
+
+@layer utilities {
+  /**
+   * Las zonas del iPhone que no son nuestras.
+   *
+   * La app se instala en la pantalla de inicio y arranca a pantalla completa
+   * con `viewport-fit=cover` y la barra de estado translúcida — eso es lo que
+   * la hace parecer nativa, y también lo que metía la cabecera por debajo de
+   * la hora y la batería. El sistema publica cuánto mide cada estorbo
+   * (muesca, isla dinámica, barra de inicio, esquinas en horizontal) en
+   * `env(safe-area-inset-*)`; estas utilidades lo reservan.
+   *
+   * Va como padding y no como margen a propósito: el fondo de la barra sube
+   * hasta el borde de la pantalla y el texto empieza por debajo del reloj,
+   * que es exactamente como se ve una app nativa. Con margen quedaría una
+   * franja del color del fondo, que es como se ve una web metida en un marco.
+   *
+   * El 0px de reserva importa: en Android y en escritorio `env()` no existe y
+   * sin él la declaración entera se descarta.
+   */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* En horizontal la muesca se come un lado entero de la pantalla. */
+  .px-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /**
+   * Para una barra que ya trae su propio padding: se queda con el mayor de
+   * los dos en vez de sumarlos, así en un teléfono sin muesca no engorda.
+   */
+  .pb-safe-3 {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+}

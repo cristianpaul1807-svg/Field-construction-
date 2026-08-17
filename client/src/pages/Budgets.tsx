@@ -763,16 +763,19 @@ export default function Budgets() {
             <DialogHeader>
               <DialogTitle>{t("budgets.pdfPreview")}</DialogTitle>
               <DialogDescription>
-                Presupuesto #{draft.id.slice(0, 8).toUpperCase()} para {draft.clientName}
+                {t("budgets.pdfPreviewFor", {
+                  number: draft.id.slice(0, 8).toUpperCase(),
+                  client: draft.clientName,
+                })}
               </DialogDescription>
             </DialogHeader>
             <div className="border border-border rounded-lg p-6 bg-secondary/40 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="font-semibold text-foreground">Presupuesto de reforma</p>
+                <p className="font-semibold text-foreground">{t("budgets.pdfDocTitle")}</p>
                 <p className="text-xs text-muted-foreground">{draft.createdAt}</p>
               </div>
               <div className="text-sm text-muted-foreground">
-                Cliente: {draft.clientName} · {draft.clientAddress}
+                {t("common.client")}: {draft.clientName} · {draft.clientAddress}
               </div>
               <div className="space-y-1 text-sm">
                 {lines.filter((_, i) => visibility[i]).map((line) => (
@@ -783,7 +786,7 @@ export default function Budgets() {
                 ))}
               </div>
               <div className="flex justify-between text-base font-semibold pt-2 border-t border-border">
-                <span>Total</span>
+                <span>{t("common.total")}</span>
                 <span>{formatCurrency(total)}</span>
               </div>
             </div>

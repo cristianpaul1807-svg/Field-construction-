@@ -13,11 +13,21 @@ import { cn } from "@/lib/utils";
 
 export function ProjectSwitcher() {
   const { t } = useTranslation();
-  const { projects, projectsLoading, selectedProjectId, selectedProject, setSelectedProjectId } =
-    useSelectedProject();
+  const {
+    projects,
+    projectsLoading,
+    projectsError,
+    selectedProjectId,
+    selectedProject,
+    setSelectedProjectId,
+    reloadProjects,
+  } = useSelectedProject();
 
   return (
-    <DropdownMenu>
+    // Abrir el selector vuelve a pedir la lista si la anterior falló. Es el
+    // único momento en que alguien mira este control, y es más barato que
+    // pedirle que recargue la página para reintentar.
+    <DropdownMenu onOpenChange={(open) => open && projectsError && reloadProjects()}>
       <DropdownMenuTrigger asChild>
         {/* On a narrow screen the label collapses to just the icon so the
             control still fits beside the rest of the header — it stays
@@ -34,7 +44,14 @@ export function ProjectSwitcher() {
         <DropdownMenuLabel>{t("nav.projectsList")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {projectsLoading && <div className="px-2 py-1.5 text-xs text-muted-foreground">{t("common.loading")}</div>}
-        {!projectsLoading && projects.length === 0 && (
+        {/* "Sin proyectos" y "no pude leer la lista" se veían igual, y el
+            segundo caso mandaba a crear un proyecto que ya existía. */}
+        {!projectsLoading && projectsError && (
+          <div className="px-2 py-1.5 text-xs text-status-error-fg">
+            {t("common.loadError", { message: projectsError })}
+          </div>
+        )}
+        {!projectsLoading && !projectsError && projects.length === 0 && (
           <div className="px-2 py-1.5 text-xs text-muted-foreground">{t("worker.noProjects")}</div>
         )}
         {projects.map((project) => (

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useApi } from "@/lib/api";
+import { useAuth } from "./AuthContext";
 
 const STORAGE_KEY = "fsm-selected-project-id";
 
@@ -11,6 +12,8 @@ interface ProjectOption {
 interface SelectedProjectContextValue {
   projects: ProjectOption[];
   projectsLoading: boolean;
+  /** Set when the list could not be read at all — which is not "no projects". */
+  projectsError: string | null;
   selectedProjectId: string | null;
   selectedProject: ProjectOption | null;
   setSelectedProjectId: (id: string | null) => void;
@@ -20,7 +23,26 @@ interface SelectedProjectContextValue {
 const SelectedProjectContext = createContext<SelectedProjectContextValue | null>(null);
 
 export function SelectedProjectProvider({ children }: { children: ReactNode }) {
-  const { data: projects, loading: projectsLoading, reload: reloadProjects } = useApi<ProjectOption[]>("/api/projects");
+  // This provider sits outside the auth gate, so on a cold start it mounts
+  // before anyone is signed in — and the request went out with no token,
+  // came back 401, and left the switcher saying "no projects yet" for the
+  // rest of the session. On a phone that is permanent: the app opens already
+  // focused, so the focus listener below never fires to correct it.
+  //
+  // Keyed by the session's user so the request is made once there is one, and
+  // made again for whoever signs in next.
+  const { session, loading: authLoading } = useAuth();
+  const userId = session?.user?.id ?? null;
+  const {
+    data: projects,
+    loading: fetching,
+    error: projectsError,
+    reload: reloadProjects,
+  } = useApi<ProjectOption[]>(userId ? `/api/projects?u=${userId}` : null);
+
+  // Still loading while auth is settling: an empty list at that moment is
+  // "we do not know yet", and saying "no projects" would be a guess.
+  const projectsLoading = authLoading || (Boolean(userId) && fetching);
   const [selectedProjectId, setSelectedProjectIdState] = useState<string | null>(() =>
     localStorage.getItem(STORAGE_KEY)
   );
@@ -58,6 +80,7 @@ export function SelectedProjectProvider({ children }: { children: ReactNode }) {
       value={{
         projects: projects ?? [],
         projectsLoading,
+        projectsError,
         selectedProjectId,
         selectedProject,
         setSelectedProjectId,

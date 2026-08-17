@@ -221,7 +221,9 @@ export default function PublicBusinessChat() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="border-b border-border bg-card px-4 py-3 flex items-center gap-2.5">
+      {/* El chat se abre desde un enlace y a veces se guarda en la pantalla de
+          inicio, así que también le toca esquivar la barra de estado. */}
+      <div className="border-b border-border bg-card px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center gap-2.5">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm">
           {business.name.charAt(0)}
         </div>
@@ -258,7 +260,7 @@ export default function PublicBusinessChat() {
         </div>
 
         {lead && (
-          <div className="border-t border-border bg-card p-3 space-y-3">
+          <div className="border-t border-border bg-card p-3 pb-safe-3 space-y-3">
             {!showFreeTextOnly && flow && (flow.kind === "button" || flow.kind === "buttons") && (
               <div className="flex flex-wrap gap-2">
                 {flow.options?.map((option) => (

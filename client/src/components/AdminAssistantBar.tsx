@@ -51,7 +51,9 @@ export function AdminAssistantBar() {
   };
 
   return (
-    <div className="sticky bottom-0 z-30 flex-shrink-0 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    // La barra de inicio del iPhone se dibuja encima de lo último de la
+    // pantalla, que aquí era justo el campo de escribir.
+    <div className="sticky bottom-0 z-30 flex-shrink-0 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 pb-safe px-safe">
       {expanded && (
         <div className="absolute bottom-full left-0 right-0 max-h-80 flex flex-col border-t border-border bg-card shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border">

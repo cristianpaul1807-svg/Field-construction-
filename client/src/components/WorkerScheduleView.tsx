@@ -132,13 +132,13 @@ export function WorkerScheduleView() {
             onClick={() => setView("dia")}
             className={cn("px-3 py-1.5 transition-colors", view === "dia" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
           >
-            Hoy
+            {t("worker.today")}
           </button>
           <button
             onClick={() => setView("semana")}
             className={cn("px-3 py-1.5 transition-colors", view === "semana" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
           >
-            Semana
+            {t("worker.week")}
           </button>
         </div>
       </div>

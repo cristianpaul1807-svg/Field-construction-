@@ -89,7 +89,9 @@ export default function Dashboard() {
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("dashboard.activeProjects")}</p>
               <p className="text-2xl font-semibold text-foreground mt-2">{activeProjects.length}</p>
-              <p className="text-xs text-muted-foreground mt-2">de {projects?.length ?? 0} totales</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {t("dashboard.ofTotal", { count: projects?.length ?? 0 })}
+              </p>
             </Card>
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("dashboard.monthlyBilling")}</p>

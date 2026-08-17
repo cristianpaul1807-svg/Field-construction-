@@ -185,7 +185,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
             {t("budgets.projectionHint")}
           </p>
         </div>
-        {createdBy === "bot" && <StatusBadge tone="info">Generado por IA</StatusBadge>}
+        {createdBy === "bot" && <StatusBadge tone="info">{t("budgets.generatedByAi")}</StatusBadge>}
       </div>
 
       {result ? (
