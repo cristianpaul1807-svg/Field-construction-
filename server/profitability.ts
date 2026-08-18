@@ -108,6 +108,9 @@ export async function profitabilityByProject(
   const collectedTotals: Record<string, number> = {};
   for (const row of (invoices.data ?? []) as any[]) {
     if (!row.project_id) continue;
+    // Una factura anulada no se emitió a efectos de la obra: contarla inflaría
+    // lo facturado y dejaría un "por cobrar" que no existe.
+    if (row.status === "cancelado") continue;
     const amount = Number(row.amount ?? 0);
     invoicedTotals[row.project_id] = (invoicedTotals[row.project_id] ?? 0) + amount;
     if (row.status === "pagado") {

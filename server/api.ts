@@ -1639,7 +1639,9 @@ apiRouter.get(
         .from("invoices")
         .select("id, type, amount, status")
         .eq("client_id", clientId)
-        .neq("status", "pagado")
+        // Una factura anulada no está pendiente de pago: ofrecérsela al cliente
+        // sería pedirle dinero que ya no se le debe.
+        .not("status", "in", "(pagado,cancelado)")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -7512,8 +7514,17 @@ async function ensureClientChannel(
       participant_type: "client",
       participant_id: clientId,
       system: "interno",
+      // Faltaba, y no tiene valor por defecto: la inserción moría en la
+      // restricción de nulos antes de llegar a ninguna otra parte. Con lo cual
+      // esta función nunca creó un canal — sólo devolvía los que ya existían —
+      // y se llevaba por delante el envío del presupuesto al cliente y las
+      // solicitudes de pago por chat, que es justo donde un presupuesto se
+      // convierte en dinero.
+      label: "cliente",
       status: "activo",
-      control_mode: "humano",
+      // control_mode se deja al valor por defecto de la columna ('human'), como
+      // hace el otro sitio que crea este mismo canal. Escribirlo a mano aquí es
+      // lo que metió "humano", que su CHECK no acepta.
     })
     .select("id")
     .single();
@@ -7830,7 +7841,7 @@ apiRouter.get(
         .select("id, type, amount, status")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
-        .neq("status", "pagado")
+        .not("status", "in", "(pagado,cancelado)")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),

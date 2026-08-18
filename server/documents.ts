@@ -523,6 +523,14 @@ function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Cop
   doc.font("Helvetica").fontSize(9).fillColor("#555555");
   identity.forEach((line) => doc.text(line, MARGIN, doc.y, { width: 300 }));
 
+  // Dónde acaba de verdad el membrete, medido antes de escribir nada más: el
+  // título de la derecha se dibuja arriba del todo y devuelve el cursor casi
+  // al margen superior, así que consultarlo después daba una posición más
+  // alta que el bloque de la empresa. Con logo, el membrete crece 52 puntos y
+  // la línea divisoria se quedaba por encima: los datos fiscales acababan
+  // impresos encima del nombre del cliente.
+  const letterheadBottom = doc.y;
+
   const title =
     data.kind === "estimate" ? copy.estimateTitle : data.kind === "payroll" ? copy.payrollTitle : copy.invoiceTitle;
   doc.font("Helvetica-Bold").fontSize(20).fillColor("#111111").text(title, MARGIN, MARGIN, {
@@ -556,7 +564,7 @@ function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Cop
     metaY += 16;
   }
 
-  const y = Math.max(doc.y, metaY) + 14;
+  const y = Math.max(letterheadBottom, doc.y, metaY) + 14;
   doc.moveTo(MARGIN, y).lineTo(PAGE_WIDTH - MARGIN, y).strokeColor("#dddddd").lineWidth(1).stroke();
   doc.y = y + 16;
 }

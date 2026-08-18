@@ -90,7 +90,9 @@ export async function receivables(admin: Admin, businessId: string, asOf = new D
       .from("invoices")
       .select("id, client_id, type, description, amount, created_at, due_date, clients(name, email), projects(name)")
       .eq("business_id", businessId)
-      .neq("status", "pagado")
+      // Anulada no es lo mismo que impagada: una factura cancelada no se le
+      // debe a nadie, y colarla aquí haría perseguir dinero que ya nadie debe.
+      .not("status", "in", "(pagado,cancelado)")
       .order("due_date", { ascending: true, nullsFirst: false }),
     // The holdback sits on invoices that are already settled: the client paid
     // what was asked, and the rest is held by contract until the job closes.
