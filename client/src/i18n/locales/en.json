@@ -48,6 +48,11 @@
     "add": "Add",
     "selectProjectHint": "Use the \"Projects\" picker in the top bar to choose which project you want to see this for.",
     "selectProject": "Select a project",
+    "selectClient": "Select a client",
+    "needsClientFirst": "This is made for a client, and you don't have any yet. Create the client first, then come back.",
+    "needsProjectFirst": "This belongs to a job, and you don't have any yet. Create the job first, then come back.",
+    "goCreateClient": "Create a client",
+    "goCreateProject": "Create a job",
     "clearSelection": "Clear selection"
   },
   "nav": {

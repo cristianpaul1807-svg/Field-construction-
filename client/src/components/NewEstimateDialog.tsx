@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { NeedsFirst } from "@/components/NeedsFirst";
 import {
   Dialog,
   DialogContent,
@@ -36,9 +37,16 @@ interface NewEstimateDialogProps {
 
 export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimateDialogProps) {
   const { t } = useTranslation();
-  const { data: clients } = useApi<Client[]>(open ? "/api/clients" : null);
+  const { data: clients, loading: clientsLoading } = useApi<Client[]>(open ? "/api/clients" : null);
   const { data: projects } = useApi<ProjectOption[]>(open ? "/api/projects" : null);
   const { data: categories } = useApi<Category[]>(open ? "/api/budget-categories" : null);
+
+  // Un presupuesto es para alguien. Un negocio recién abierto no tiene a nadie,
+  // y entonces este diálogo era un callejón sin salida: el desplegable se abría
+  // vacío, sin una sola línea de texto, y el botón de crear nacía deshabilitado
+  // para siempre. Desde fuera no se distingue de una aplicación rota.
+  const hasClients = (clients ?? []).length > 0;
+  const noClients = open && !clientsLoading && !hasClients;
 
   const [clientId, setClientId] = useState("");
   const [projectId, setProjectId] = useState("");
@@ -82,12 +90,22 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
           <DialogDescription>{t("budgets.newEstimateHint")}</DialogDescription>
         </DialogHeader>
 
+        {noClients ? (
+          // Decir qué falta y llevar hasta allí, en vez de dejar un desplegable
+          // vacío y un botón muerto.
+          <NeedsFirst
+            message={t("common.needsClientFirst")}
+            href="/crm"
+            cta={t("common.goCreateClient")}
+            onNavigate={() => onOpenChange(false)}
+          />
+        ) : (
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>{t("common.client")}</Label>
             <Select value={clientId} onValueChange={setClientId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona un cliente" />
+                <SelectValue placeholder={t("common.selectClient")} />
               </SelectTrigger>
               <SelectContent>
                 {(clients ?? []).map((c) => (
@@ -125,10 +143,13 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
             </Select>
           </div>
         </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
-          <Button onClick={create} disabled={!clientId || busy}>{t("budgets.createEstimate")}</Button>
+          {!noClients && (
+            <Button onClick={create} disabled={!clientId || busy}>{t("budgets.createEstimate")}</Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

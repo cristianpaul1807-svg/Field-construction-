@@ -2,6 +2,7 @@ import express, { Router, type Request, type Response, type NextFunction } from 
 import multer from "multer";
 import { randomUUID, randomBytes } from "crypto";
 import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
+import { ensureBucket } from "./storageBuckets";
 import { getStripe, getStripeWebhookSecrets, StripeNotConfiguredError } from "./stripe";
 import { flowCopy, normalizeFlowLang, type FlowLang } from "./flowMessages";
 import {
@@ -2332,6 +2333,7 @@ apiRouter.post(
     }
 
     const storagePath = `${channel.business_id}/${channel.id}/${randomUUID()}-${file.originalname}`;
+    await ensureBucket("chat-attachments");
     const { error: uploadError } = await admin.storage
       .from("chat-attachments")
       .upload(storagePath, file.buffer, { contentType: file.mimetype });
@@ -2420,6 +2422,7 @@ apiRouter.post(
     }
 
     const storagePath = `${channel.business_id}/${channel.id}/${randomUUID()}-${file.originalname}`;
+    await ensureBucket("chat-attachments");
     const { error: uploadError } = await admin.storage
       .from("chat-attachments")
       .upload(storagePath, file.buffer, { contentType: file.mimetype });
@@ -3441,6 +3444,7 @@ apiRouter.post(
     }
 
     const storagePath = `${req.businessId}/${categoryId}/${randomUUID()}-${file.originalname}`;
+    await ensureBucket("estimate-references");
     const { error: uploadError } = await supabase.storage
       .from("estimate-references")
       .upload(storagePath, file.buffer, { contentType: file.mimetype });
@@ -4308,6 +4312,7 @@ apiRouter.post(
 
     const supabase = req.supabase!;
     const storagePath = `${req.businessId}/${projectId}/${randomUUID()}-${file.originalname}`;
+    await ensureBucket("project-documents");
     const { error: uploadError } = await supabase.storage
       .from("project-documents")
       .upload(storagePath, file.buffer, { contentType: file.mimetype });
@@ -4397,6 +4402,7 @@ apiRouter.post(
 
     const supabase = req.supabase!;
     const storagePath = `${req.businessId}/${projectId}/${randomUUID()}-${file.originalname}`;
+    await ensureBucket("project-photos");
     const { error: uploadError } = await supabase.storage
       .from("project-photos")
       .upload(storagePath, file.buffer, { contentType: file.mimetype });
@@ -7613,6 +7619,7 @@ apiRouter.post(
     if (channelError) throw channelError;
 
     const storagePath = `${req.businessId}/${channel.id}/${randomUUID()}-${file.originalname}`;
+    await ensureBucket("chat-attachments");
     const { error: uploadError } = await supabase.storage
       .from("chat-attachments")
       .upload(storagePath, file.buffer, { contentType: file.mimetype });
@@ -8327,6 +8334,7 @@ apiRouter.post(
     // served from a stale cache under the old URL.
     const storagePath = `${req.businessId}/${randomUUID()}.${extension}`;
 
+    await ensureBucket("business-logos");
     const { error: uploadError } = await admin.storage
       .from("business-logos")
       .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: true });

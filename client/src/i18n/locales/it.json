@@ -48,6 +48,11 @@
     "add": "Aggiungi",
     "selectProjectHint": "Usa il selettore \"Progetti\" nella barra in alto per scegliere di quale progetto vedere queste informazioni.",
     "selectProject": "Seleziona un progetto",
+    "selectClient": "Seleziona un cliente",
+    "needsClientFirst": "Questo si fa per un cliente, e non ne hai ancora nessuno. Crea prima il cliente e poi torna qui.",
+    "needsProjectFirst": "Questo appartiene a un cantiere, e non ne hai ancora nessuno. Crea prima il cantiere e poi torna qui.",
+    "goCreateClient": "Crea un cliente",
+    "goCreateProject": "Crea un cantiere",
     "clearSelection": "Rimuovi selezione"
   },
   "nav": {

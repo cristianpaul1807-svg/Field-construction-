@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch } from "@/lib/api";
+import { NeedsFirst } from "@/components/NeedsFirst";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
 
@@ -67,6 +68,16 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>{t("projects.newProject")}</DialogTitle></DialogHeader>
+        {(clients ?? []).length === 0 ? (
+          // Una obra es de alguien: sin clientes esto era un desplegable vacío
+          // y un botón muerto, sin decir qué faltaba.
+          <NeedsFirst
+            message={t("common.needsClientFirst")}
+            href="/crm"
+            cta={t("common.goCreateClient")}
+            onNavigate={() => setOpen(false)}
+          />
+        ) : (
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label>{t("common.client")}</Label>
@@ -100,6 +111,7 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
             {saving ? t("common.creating") : t("projects.createProject")}
           </Button>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );

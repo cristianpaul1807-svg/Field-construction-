@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send, Plus, Copy, Check, Download, Ban } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson } from "@/lib/api";
+import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
 
 const INVOICE_TYPES = ["deposito", "parcial", "final"] as const;
@@ -113,6 +114,15 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
         <DialogHeader>
           <DialogTitle>{t("invoicing.newInvoice")}</DialogTitle>
         </DialogHeader>
+        {(clients ?? []).length === 0 ? (
+          // Una factura se le cobra a alguien.
+          <NeedsFirst
+            message={t("common.needsClientFirst")}
+            href="/crm"
+            cta={t("common.goCreateClient")}
+            onNavigate={() => setOpen(false)}
+          />
+        ) : (
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>{t("common.client")}</Label>
@@ -158,6 +168,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
             {saving ? t("common.creating") : t("invoicing.createInvoice")}
           </Button>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );

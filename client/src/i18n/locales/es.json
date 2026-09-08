@@ -48,6 +48,11 @@
     "add": "Agregar",
     "selectProjectHint": "Usa el selector \"Proyectos\" de la barra superior para elegir de qué proyecto quieres ver esta información.",
     "selectProject": "Selecciona un proyecto",
+    "selectClient": "Selecciona un cliente",
+    "needsClientFirst": "Esto se hace para un cliente, y todavía no tienes ninguno. Crea el cliente primero y vuelve aquí.",
+    "needsProjectFirst": "Esto pertenece a una obra, y todavía no tienes ninguna. Crea la obra primero y vuelve aquí.",
+    "goCreateClient": "Crear un cliente",
+    "goCreateProject": "Crear una obra",
     "clearSelection": "Quitar selección"
   },
   "nav": {

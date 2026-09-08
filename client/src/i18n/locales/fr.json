@@ -48,6 +48,11 @@
     "add": "Ajouter",
     "selectProjectHint": "Utilisez le sélecteur « Projets » de la barre du haut pour choisir le projet à afficher.",
     "selectProject": "Sélectionnez un projet",
+    "selectClient": "Choisissez un client",
+    "needsClientFirst": "Ceci se fait pour un client, et vous n'en avez encore aucun. Créez le client d'abord, puis revenez ici.",
+    "needsProjectFirst": "Ceci appartient à un chantier, et vous n'en avez encore aucun. Créez le chantier d'abord, puis revenez ici.",
+    "goCreateClient": "Créer un client",
+    "goCreateProject": "Créer un chantier",
     "clearSelection": "Effacer la sélection"
   },
   "nav": {
