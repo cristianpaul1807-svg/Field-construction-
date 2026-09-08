@@ -28,7 +28,8 @@ export interface BusinessIdentity {
 }
 
 export interface PartyIdentity {
-  name: string;
+  /** Nulo en una propuesta que todavía no tiene destinatario. */
+  name: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -571,12 +572,18 @@ function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Cop
 
 function parties(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy) {
   const top = doc.y;
-  doc.font("Helvetica-Bold").fontSize(9).fillColor("#888888").text(copy.billTo.toUpperCase(), MARGIN, top);
-  doc.font("Helvetica").fontSize(10).fillColor("#111111").text(data.client.name, MARGIN, doc.y + 2, { width: 250 });
-  doc.fontSize(9).fillColor("#555555");
-  [data.client.address, data.client.phone, data.client.email]
-    .filter(Boolean)
-    .forEach((line) => doc.text(line as string, MARGIN, doc.y, { width: 250 }));
+
+  // Una propuesta en frío todavía no es de nadie. Antes salía un "CLIENTE"
+  // seguido de un guión, que en un documento que se entrega en mano parece un
+  // error de la aplicación; se omite el bloque entero y ya está.
+  if (data.client.name) {
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#888888").text(copy.billTo.toUpperCase(), MARGIN, top);
+    doc.font("Helvetica").fontSize(10).fillColor("#111111").text(data.client.name, MARGIN, doc.y + 2, { width: 250 });
+    doc.fontSize(9).fillColor("#555555");
+    [data.client.address, data.client.phone, data.client.email]
+      .filter(Boolean)
+      .forEach((line) => doc.text(line as string, MARGIN, doc.y, { width: 250 }));
+  }
 
   const leftBottom = doc.y;
 

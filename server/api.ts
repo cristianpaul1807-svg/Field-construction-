@@ -2836,11 +2836,12 @@ async function recalcEstimateTotal(supabase: ReturnType<typeof getSupabaseAdmin>
 apiRouter.post(
   "/estimates",
   route(async (req, res) => {
-    const clientId = req.body?.clientId;
-    if (!clientId) {
-      res.status(400).json({ error: "clientId is required" });
-      return;
-    }
+    // El cliente es opcional a propósito. Un contratista prepara propuestas en
+    // frío —para una obra que ha visto, para alguien que todavía no es nadie en
+    // el CRM— y sólo cuando la cosa cuaja da de alta al cliente y le engancha
+    // el presupuesto que ya tenía hecho. Exigirlo aquí obligaba a inventarse
+    // fichas de clientes que nunca contestaron.
+    const clientId = req.body?.clientId ?? null;
 
     const supabase = req.supabase!;
     const { data: settings } = await supabase
@@ -2880,6 +2881,11 @@ apiRouter.patch(
     if (body.marginType !== undefined) update.margin_type = body.marginType;
     if (body.marginPercent !== undefined) update.margin_percent = body.marginPercent;
     if (body.wastePercent !== undefined) update.waste_percent = body.wastePercent;
+    // La otra mitad de las propuestas en frío: cuando el interesado se decide,
+    // se le da de alta y se le engancha aquí el presupuesto que ya existía, en
+    // vez de rehacerlo. Null vuelve a dejarlo sin dueño.
+    if (body.clientId !== undefined) update.client_id = body.clientId || null;
+    if (body.description !== undefined) update.description = body.description || null;
 
     const supabase = req.supabase!;
     if (Object.keys(update).length > 0) {
@@ -3201,6 +3207,14 @@ apiRouter.post(
       .eq("id", estimateId)
       .single();
     if (estimateError) throw estimateError;
+
+    // Una propuesta en frío puede vivir sin cliente todo lo que haga falta,
+    // pero aceptarla abre una obra, y una obra es de alguien. Aquí es donde
+    // hay que ponerle nombre, no antes.
+    if (!estimate.client_id) {
+      res.status(409).json({ error: "assign a client before accepting this estimate", code: "estimate_has_no_client" });
+      return;
+    }
 
     let projectId = estimate.project_id as string | null;
     if (!projectId) {
@@ -6799,7 +6813,7 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       validUntil,
       business: business.identity,
       client: {
-        name: client?.name ?? "—",
+        name: client?.name ?? null,
         address: client?.address ?? null,
         phone: client?.phone ?? null,
         email: client?.email ?? null,

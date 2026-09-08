@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { NeedsFirst } from "@/components/NeedsFirst";
 import {
   Dialog,
   DialogContent,
@@ -41,12 +40,12 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
   const { data: projects } = useApi<ProjectOption[]>(open ? "/api/projects" : null);
   const { data: categories } = useApi<Category[]>(open ? "/api/budget-categories" : null);
 
-  // Un presupuesto es para alguien. Un negocio recién abierto no tiene a nadie,
-  // y entonces este diálogo era un callejón sin salida: el desplegable se abría
-  // vacío, sin una sola línea de texto, y el botón de crear nacía deshabilitado
-  // para siempre. Desde fuera no se distingue de una aplicación rota.
+  // El cliente es opcional: el contratista prepara propuestas en frío y sólo
+  // cuando la cosa cuaja da de alta al interesado y le engancha el presupuesto
+  // que ya tenía hecho. Antes esto era obligatorio, y en un negocio recién
+  // abierto —sin ningún cliente— el diálogo se abría con el desplegable vacío
+  // y el botón muerto, sin decir por qué.
   const hasClients = (clients ?? []).length > 0;
-  const noClients = open && !clientsLoading && !hasClients;
 
   const [clientId, setClientId] = useState("");
   const [projectId, setProjectId] = useState("");
@@ -60,14 +59,13 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
   };
 
   const create = async () => {
-    if (!clientId) return;
     setBusy(true);
     try {
       const res = await apiFetch("/api/estimates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientId,
+          clientId: clientId || undefined,
           projectId: projectId || undefined,
           categoryId: categoryId || undefined,
         }),
@@ -90,29 +88,25 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
           <DialogDescription>{t("budgets.newEstimateHint")}</DialogDescription>
         </DialogHeader>
 
-        {noClients ? (
-          // Decir qué falta y llevar hasta allí, en vez de dejar un desplegable
-          // vacío y un botón muerto.
-          <NeedsFirst
-            message={t("common.needsClientFirst")}
-            href="/crm"
-            cta={t("common.goCreateClient")}
-            onNavigate={() => onOpenChange(false)}
-          />
-        ) : (
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>{t("common.client")}</Label>
-            <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("common.selectClient")} />
-              </SelectTrigger>
-              <SelectContent>
-                {(clients ?? []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>{t("common.client")} ({t("common.optional")})</Label>
+            {hasClients ? (
+              <Select value={clientId} onValueChange={setClientId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("budgets.noClientYet")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(clients ?? []).map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              !clientsLoading && (
+                <p className="text-xs text-muted-foreground">{t("budgets.noClientsYetHint")}</p>
+              )
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -143,13 +137,10 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
             </Select>
           </div>
         </div>
-        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>{t("common.cancel")}</Button>
-          {!noClients && (
-            <Button onClick={create} disabled={!clientId || busy}>{t("budgets.createEstimate")}</Button>
-          )}
+          <Button onClick={create} disabled={busy}>{t("budgets.createEstimate")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

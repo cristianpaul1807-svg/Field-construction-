@@ -19,6 +19,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Plus, Trash2, Check, Download } from "lucide-react";
 import { AssemblyTemplateDialog } from "@/components/AssemblyTemplateDialog";
+import { AssignClientControl } from "@/components/AssignClientControl";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
@@ -391,10 +392,18 @@ export default function Budgets() {
                         {t("budgets.budgetNumber", { id: draft.id.slice(0, 8).toUpperCase() })}
                       </h2>
                       <p className="text-xs text-muted-foreground">
-                        {draft.clientName}
+                        {draft.clientName ?? t("budgets.noClient")}
                         {draft.clientPhone && ` · ${draft.clientPhone}`}
                         {draft.clientEmail && ` · ${draft.clientEmail}`}
                       </p>
+                      {!draft.clientName && (
+                        <div className="mt-2 max-w-md">
+                          <AssignClientControl
+                            estimateId={draft.id}
+                            onAssigned={() => setReloadToken((t) => t + 1)}
+                          />
+                        </div>
+                      )}
                       {draft.createdBy === "bot" && draft.description && (
                         <p className="text-xs text-foreground bg-secondary/60 rounded-md px-2 py-1 mt-1.5 max-w-md">
                           "{draft.description}"
