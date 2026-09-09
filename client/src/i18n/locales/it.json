@@ -679,9 +679,8 @@
     "showMaterialsHint": "Costruito dalle voci di materiale del preventivo stesso, quindi non può promettere ciò che il prezzo non copre.",
     "showSchedule": "Programmazione prevista dei lavori",
     "showScheduleHint": "Costruita dalla proiezione dei lavori. Sapere quando si inizia e quanto dura è ciò che più rassicura il cliente prima di firmare.",
-    "provincePlaceholder": "Scegli la tua provincia",
     "provinceHint": "Da qui esce l'imposta di ogni fattura. Scegli dove dichiari.",
-    "taxFromProvince": "Le tue fatture porteranno {{taxes}}."
+    "provinceChangeHere": "Cambiala in Impostazioni → Pagamenti"
   },
   "reports": {
     "title": "Report",

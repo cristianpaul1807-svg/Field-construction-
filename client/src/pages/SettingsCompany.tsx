@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 
 interface CompanyData {
   id: string;
@@ -130,7 +130,6 @@ export default function SettingsCompany() {
           name,
           slug,
           licenseNumber: license,
-          province,
           address,
           phone,
           email,
@@ -232,26 +231,20 @@ export default function SettingsCompany() {
                   saca el impuesto de businesses.province contra la tabla de
                   tasas de Canadá. Un contratista de Ontario escribía "Ontario"
                   y "13", se quedaba tranquilo, y sus facturas salían con TPS y
-                  TVQ de Quebec. Ahora se elige la provincia de verdad y se
-                  enseña qué impuesto sale de ella, que es lo que va a acabar
-                  impreso en un documento legal. */}
+                  TVQ de Quebec.
+                  
+                  Se enseña, pero no se edita: la provincia ya se elige en
+                  Ajustes → Pagos, junto al resto de lo que decide cuánto se
+                  cobra. Dos sitios para cambiar un dato que acaba en un
+                  documento legal es uno de más. */}
               <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="province">{t("settings.province")}</Label>
-                <Select value={province} onValueChange={setProvince}>
-                  <SelectTrigger id="province">
-                    <SelectValue placeholder={t("settings.provincePlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(taxRates ?? []).map((r) => (
-                      <SelectItem key={r.province} value={r.province}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  {tasaElegida ? t("settings.taxFromProvince", { taxes: describeTax(tasaElegida) }) : t("settings.provinceHint")}
+                <p className="text-sm font-medium text-foreground">{t("settings.province")}</p>
+                <p className="text-sm text-muted-foreground">
+                  {tasaElegida ? `${tasaElegida.label} — ${describeTax(tasaElegida)}` : t("settings.provinceHint")}
                 </p>
+                <Link href="/settings/payments" className="text-xs text-primary hover:underline">
+                  {t("settings.provinceChangeHere")}
+                </Link>
               </div>
             </div>
           </Card>

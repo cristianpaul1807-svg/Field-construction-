@@ -679,9 +679,8 @@
     "showMaterialsHint": "Construite à partir des postes de matériaux de la soumission, elle ne peut donc jamais promettre ce que le prix ne couvre pas.",
     "showSchedule": "Calendrier prévu des travaux",
     "showScheduleHint": "Construit à partir de la projection des travaux. Savoir quand ça commence et combien de temps ça dure est ce qui rassure le plus avant de signer.",
-    "provincePlaceholder": "Choisissez votre province",
     "provinceHint": "C'est d'ici que vient la taxe de chaque facture. Choisissez où vous déclarez.",
-    "taxFromProvince": "Vos factures porteront {{taxes}}."
+    "provinceChangeHere": "La changer dans Réglages → Paiements"
   },
   "reports": {
     "title": "Rapports",

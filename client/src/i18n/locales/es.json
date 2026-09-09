@@ -679,9 +679,8 @@
     "showMaterialsHint": "Sale de las líneas de materiales del propio presupuesto, así que nunca promete algo que el precio no incluya.",
     "showSchedule": "Programación prevista de los trabajos",
     "showScheduleHint": "Sale de la proyección de trabajo. Saber cuándo empieza y cuánto dura es lo que más tranquiliza al cliente antes de firmar.",
-    "provincePlaceholder": "Elige tu provincia",
     "provinceHint": "De aquí sale el impuesto de cada factura. Elige donde tributas.",
-    "taxFromProvince": "Tus facturas llevarán {{taxes}}."
+    "provinceChangeHere": "Cambiarla en Ajustes → Pagos"
   },
   "reports": {
     "title": "Informes",
