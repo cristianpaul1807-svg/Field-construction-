@@ -420,7 +420,8 @@
     "createError": "No se pudo crear el subcontratista",
     "codeIssued": "Código emitido",
     "noCodeYet": "Sin código",
-    "newPwaCode": "Generar código nuevo"
+    "newPwaCode": "Generar código nuevo",
+    "rateStars": "Valorar con {{count}} estrellas"
   },
   "clientPortal": {
     "title": "Portal del cliente",

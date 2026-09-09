@@ -420,7 +420,8 @@
     "createError": "Impossible de créer le sous-traitant",
     "codeIssued": "Code émis",
     "noCodeYet": "Aucun code",
-    "newPwaCode": "Générer un nouveau code"
+    "newPwaCode": "Générer un nouveau code",
+    "rateStars": "Noter {{count}} étoiles"
   },
   "clientPortal": {
     "title": "Portail client",

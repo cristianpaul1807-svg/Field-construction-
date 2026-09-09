@@ -420,7 +420,8 @@
     "createError": "Impossibile creare il subappaltatore",
     "codeIssued": "Codice emesso",
     "noCodeYet": "Nessun codice",
-    "newPwaCode": "Genera un nuovo codice"
+    "newPwaCode": "Genera un nuovo codice",
+    "rateStars": "Valuta {{count}} stelle"
   },
   "clientPortal": {
     "title": "Portale cliente",

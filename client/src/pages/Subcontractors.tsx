@@ -96,6 +96,65 @@ function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
   );
 }
 
+/**
+ * Con quién repetirías, guardado donde se puede consultar.
+ *
+ * La estrella estaba pintada pero no se podía tocar: el servidor aceptaba
+ * rating desde el principio —validado de 0 a 5— y ninguna pantalla lo mandaba
+ * nunca. Con la columna vacía por defecto, un subcontratista recién dado de
+ * alta enseñaba una estrella sola, sin número, para siempre.
+ *
+ * Se guarda al pulsar. Volver a pulsar la misma estrella lo borra, porque
+ * "todavía no lo sé" es una respuesta legítima sobre alguien con quien sólo
+ * has trabajado una vez.
+ */
+function Valoracion({ subId, valor, onSaved }: { subId: string; valor: number | null; onSaved: () => void }) {
+  const { t } = useTranslation();
+  const [guardando, setGuardando] = useState(false);
+  const [encima, setEncima] = useState<number | null>(null);
+
+  const poner = async (estrellas: number | null) => {
+    setGuardando(true);
+    try {
+      await apiFetch(`/api/subcontractors/${subId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: estrellas ?? 0 }),
+      });
+      onSaved();
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const marcadas = encima ?? Math.round(valor ?? 0);
+
+  return (
+    <div className="flex items-center gap-0.5 flex-shrink-0" onMouseLeave={() => setEncima(null)}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={guardando}
+          aria-label={t("subcontractors.rateStars", { count: n })}
+          onMouseEnter={() => setEncima(n)}
+          onClick={() => poner(Math.round(valor ?? 0) === n ? null : n)}
+          className="p-0.5 disabled:opacity-50"
+        >
+          <Star
+            size={14}
+            className={
+              n <= marcadas
+                ? "fill-status-warning-fg text-status-warning-fg"
+                : "text-muted-foreground/40"
+            }
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Subcontractors() {
   const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
@@ -136,10 +195,11 @@ export default function Subcontractors() {
                   <p className="font-medium text-foreground">{sub.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{sub.trade}</p>
                 </div>
-                <div className="flex items-center gap-1 text-xs text-foreground flex-shrink-0">
-                  <Star size={13} className="fill-status-warning-fg text-status-warning-fg" />
-                  {sub.rating}
-                </div>
+                <Valoracion
+                  subId={sub.id}
+                  valor={sub.rating}
+                  onSaved={() => setReloadToken((n) => n + 1)}
+                />
               </div>
               <p className="text-xs text-muted-foreground mt-3">{sub.phone}</p>
               <div className="flex items-center justify-between gap-2 mt-3">

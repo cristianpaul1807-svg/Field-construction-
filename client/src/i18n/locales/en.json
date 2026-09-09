@@ -420,7 +420,8 @@
     "createError": "Could not create the subcontractor",
     "codeIssued": "Code issued",
     "noCodeYet": "No code yet",
-    "newPwaCode": "Generate a new code"
+    "newPwaCode": "Generate a new code",
+    "rateStars": "Rate {{count}} stars"
   },
   "clientPortal": {
     "title": "Client Portal",
