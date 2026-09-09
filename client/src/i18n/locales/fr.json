@@ -450,7 +450,8 @@
     "acceptEstimate": "Accepter la soumission",
     "notSentYet": "Votre entrepreneur ne vous a pas encore envoyé cette soumission.",
     "yourProject": "Votre projet",
-    "taxIncluded": "{{subtotal}} + {{tax}} de taxes"
+    "taxIncluded": "{{subtotal}} + {{tax}} de taxes",
+    "photoUnavailable": "Impossible à afficher"
   },
   "worker": {
     "accessTitle": "Accès travailleur",

@@ -450,7 +450,8 @@
     "acceptEstimate": "Accept estimate",
     "notSentYet": "Your contractor hasn't sent you this estimate yet.",
     "yourProject": "Your project",
-    "taxIncluded": "{{subtotal}} + {{tax}} tax"
+    "taxIncluded": "{{subtotal}} + {{tax}} tax",
+    "photoUnavailable": "Can't be shown"
   },
   "worker": {
     "accessTitle": "Worker access",

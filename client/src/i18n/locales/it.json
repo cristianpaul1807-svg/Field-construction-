@@ -450,7 +450,8 @@
     "acceptEstimate": "Accetta preventivo",
     "notSentYet": "Il tuo appaltatore non ti ha ancora inviato questo preventivo.",
     "yourProject": "Il tuo progetto",
-    "taxIncluded": "{{subtotal}} + {{tax}} di imposte"
+    "taxIncluded": "{{subtotal}} + {{tax}} di imposte",
+    "photoUnavailable": "Non visualizzabile"
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",

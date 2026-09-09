@@ -1803,6 +1803,42 @@ apiRouter.get(
 );
 
 // Client-side payment: the invoice already exists (the admin created it
+// La foto que el cliente puede ver, firmada para él.
+//
+// El portal enseñaba un cuadrado de color por foto y nunca la foto: el
+// contratista creía estar compartiendo el avance de la obra y su cliente veía
+// tres rectángulos. La ruta del panel (/photos/:id/url) está por debajo de la
+// verja y pide sesión de negocio, así que hacía falta esta.
+//
+// Lo que la hace segura es de quién se fía: la lectura va por req.supabase, que
+// para un cliente con código es el cliente admin, así que la pertenencia se
+// comprueba a mano y entera —la foto tiene que ser de una obra de este cliente
+// y estar marcada como visible—. Sin las dos cosas no hay URL.
+apiRouter.get(
+  "/client-portal/photos/:id/url",
+  requireClientAuth,
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: photo, error } = await supabase
+      .from("photos")
+      .select("url, visible_to_client, projects!inner(client_id)")
+      .eq("id", req.params.id)
+      .eq("visible_to_client", true)
+      .eq("projects.client_id", req.clientId!)
+      .maybeSingle();
+    if (error) throw error;
+    if (!photo?.url) {
+      res.status(404).json({ error: "Foto no encontrada", code: "photo_not_found" });
+      return;
+    }
+    const { data: signed, error: signError } = await supabase.storage
+      .from("project-photos")
+      .createSignedUrl(photo.url, 300);
+    if (signError) throw signError;
+    res.json({ url: signed.signedUrl });
+  })
+);
+
 // from Invoicing.tsx) — this only ever creates the Stripe Checkout Session
 // for it, on the business's own connected account. RLS on the initial read
 // is what proves this invoice really belongs to the calling client before

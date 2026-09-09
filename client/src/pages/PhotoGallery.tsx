@@ -86,20 +86,39 @@ function UploadPhotoDialog({ projectId, onUploaded }: { projectId: string; onUpl
 // Photos live in a private bucket, so each tile resolves its own short-lived
 // signed URL rather than rendering a stored public link.
 function PhotoThumb({ id }: { id: string }) {
+  const { t } = useTranslation();
   const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     let cancelled = false;
     apiFetch(`/api/photos/${id}/url`)
-      .then((r) => r.json())
-      .then((b) => { if (!cancelled && b?.url) setUrl(b.url); })
-      .catch(() => {});
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((b) => { if (!cancelled && b?.url) setUrl(b.url); else if (!cancelled) setFailed(true); })
+      .catch(() => { if (!cancelled) setFailed(true); });
     return () => { cancelled = true; };
   }, [id]);
 
-  return url ? (
-    <img src={url} alt="" className="aspect-square w-full object-cover rounded-lg border border-border" />
-  ) : (
-    <div className="aspect-square rounded-lg border border-border bg-secondary" />
+  if (url) {
+    return (
+      <img
+        src={url}
+        alt=""
+        onError={() => setFailed(true)}
+        className="aspect-square w-full object-cover rounded-lg border border-border"
+      />
+    );
+  }
+
+  // Cargando y rota se pintaban igual: un cuadro gris para siempre, sin manera
+  // de saber si la foto está por llegar o si ya no está.
+  return (
+    <div className="aspect-square rounded-lg border border-border bg-secondary flex items-center justify-center p-2">
+      {failed ? (
+        <span className="text-[10px] text-muted-foreground text-center leading-tight">{t("clientPortal.photoUnavailable")}</span>
+      ) : (
+        <Spinner className="size-4" />
+      )}
+    </div>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -47,6 +47,53 @@ interface ClientChangeOrder {
   amount: number;
   status: "enviado" | "aprobado" | "rechazado";
   createdAt: string;
+}
+
+/**
+ * La foto, de verdad.
+ *
+ * Aquí se pintaba un cuadrado de color por foto —colorForId— y nunca la
+ * imagen: el contratista marcaba fotos como visibles para su cliente y su
+ * cliente veía rectángulos. Viven en un bucket privado, así que cada una pide
+ * su propia URL firmada y de vida corta.
+ *
+ * El color se queda como fondo mientras carga, que es mejor que un hueco
+ * blanco; si no se puede mostrar se dice, en vez de dejar el cuadrado ahí
+ * pareciendo una foto que nunca llega.
+ */
+function PhotoTile({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const [url, setUrl] = useState<string | null>(null);
+  const [fallo, setFallo] = useState(false);
+
+  useEffect(() => {
+    let cancelado = false;
+    apiFetch(`/api/client-portal/photos/${id}/url`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((b) => { if (!cancelado && b?.url) setUrl(b.url); else if (!cancelado) setFallo(true); })
+      .catch(() => { if (!cancelado) setFallo(true); });
+    return () => { cancelado = true; };
+  }, [id]);
+
+  if (url) {
+    return (
+      <img
+        src={url}
+        alt=""
+        onError={() => setFallo(true)}
+        className="aspect-square w-full object-cover rounded-lg border border-border"
+      />
+    );
+  }
+
+  return (
+    <div
+      className="aspect-square rounded-lg border border-border flex items-center justify-center p-2"
+      style={fallo ? undefined : { background: colorForId(id) }}
+    >
+      {fallo && <span className="text-[10px] text-muted-foreground text-center leading-tight">{t("clientPortal.photoUnavailable")}</span>}
+    </div>
+  );
 }
 
 function colorForId(id: string) {
@@ -390,11 +437,7 @@ export default function ClientPortalMe() {
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {data.visiblePhotos.map((photo) => (
-                    <div
-                      key={photo.id}
-                      className="aspect-square rounded-lg border border-border"
-                      style={{ background: colorForId(photo.id) }}
-                    />
+                    <PhotoTile key={photo.id} id={photo.id} />
                   ))}
                   {data.visiblePhotos.length === 0 && (
                     <p className="col-span-3 text-xs text-muted-foreground">

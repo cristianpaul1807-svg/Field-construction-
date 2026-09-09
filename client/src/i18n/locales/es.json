@@ -450,7 +450,8 @@
     "acceptEstimate": "Aceptar presupuesto",
     "notSentYet": "Tu contratista todavía no te ha enviado este presupuesto.",
     "yourProject": "Tu proyecto",
-    "taxIncluded": "{{subtotal}} + {{tax}} de impuestos"
+    "taxIncluded": "{{subtotal}} + {{tax}} de impuestos",
+    "photoUnavailable": "No se puede mostrar"
   },
   "worker": {
     "accessTitle": "Acceso de trabajador",
