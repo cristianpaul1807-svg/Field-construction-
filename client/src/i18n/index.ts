@@ -43,4 +43,14 @@ i18n
     interpolation: { escapeValue: false },
   });
 
+// El index.html se sirve con lang="en" fijo. Un producto en cuatro idiomas que
+// dice ser inglés hace que el lector de pantalla pronuncie el francés con
+// fonética inglesa y que el navegador ofrezca traducir una página que ya está
+// en el idioma del usuario. Se corrige aquí, que es donde se sabe el idioma.
+const marcarIdioma = (lng: string) => {
+  if (typeof document !== "undefined") document.documentElement.lang = lng;
+};
+marcarIdioma(i18n.language);
+i18n.on("languageChanged", marcarIdioma);
+
 export default i18n;

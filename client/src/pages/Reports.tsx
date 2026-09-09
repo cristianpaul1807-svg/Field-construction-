@@ -11,6 +11,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
 } from "recharts";
 import { ReceivablesPanel } from "@/components/ReceivablesPanel";
 import { ProfitabilityPanel } from "@/components/ProfitabilityPanel";
@@ -87,8 +88,13 @@ export default function Reports() {
                     <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={12} />
                     <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "0.5rem", fontSize: 12 }} />
-                    <Bar dataKey="ingresos" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="gastos" fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
+                    {/* Sin nombre, la etiqueta emergente enseñaba la clave cruda
+                        ("ingresos : 45000") y en dos idiomas era además la
+                        palabra equivocada. Y sin leyenda, dos barras de colores
+                        distintos no dicen cuál es cuál. */}
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="ingresos" name={t("dashboard.income")} fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="gastos" name={t("dashboard.expenses")} fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -105,7 +111,7 @@ export default function Reports() {
                     <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={12} />
                     <YAxis stroke="var(--muted-foreground)" fontSize={12} />
                     <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "0.5rem", fontSize: 12 }} />
-                    <Bar dataKey="horas" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="horas" name={t("reports.hours")} fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

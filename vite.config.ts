@@ -217,12 +217,23 @@ function vitePluginApiRouter(): Plugin {
   };
 }
 
+/**
+ * El andamiaje del entorno de desarrollo no tiene por qué viajar al cliente.
+ *
+ * Estos tres son herramientas de edición y depuración: el runtime de Manus
+ * inyectaba 366 kB de HTML en línea (106 kB comprimidos) en cada carga de cada
+ * pantalla, y el marcado de posiciones JSX engorda el paquete con atributos que
+ * sólo sirven para un editor visual. Atados a "serve" siguen intactos mientras
+ * trabajamos y desaparecen de lo que se despliega.
+ */
+const soloEnDesarrollo = (p: Plugin): Plugin => ({ ...p, apply: "serve" });
+
 const plugins = [
   react(),
   tailwindcss(),
-  jsxLocPlugin(),
-  vitePluginManusRuntime(),
-  vitePluginManusDebugCollector(),
+  soloEnDesarrollo(jsxLocPlugin() as Plugin),
+  soloEnDesarrollo(vitePluginManusRuntime() as Plugin),
+  soloEnDesarrollo(vitePluginManusDebugCollector()),
   vitePluginStorageProxy(),
   vitePluginApiRouter(),
 ];

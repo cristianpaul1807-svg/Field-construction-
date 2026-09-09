@@ -20,7 +20,10 @@ export function StatusBadge({ tone, children, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium",
+        // Un estado es una etiqueta, no un párrafo: partido en dos líneas
+        // ("En / progreso") deja de leerse como una insignia y desordena la
+        // fila. Antes se encoge la columna de al lado, que sí sabe recortarse.
+        "inline-flex items-center whitespace-nowrap shrink-0 px-2 py-0.5 rounded-md text-xs font-medium",
         toneClasses[tone],
         className
       )}

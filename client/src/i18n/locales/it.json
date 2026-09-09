@@ -179,7 +179,7 @@
       "rechazado": "Rifiutato"
     },
     "insert": "Inserisci",
-    "templates": "Modelli",
+    "templates": "Modelli di assemblaggio",
     "pdfPreview": "Anteprima PDF",
     "pdfDocTitle": "Preventivo dei lavori",
     "pdfPreviewFor": "Preventivo n. {{number}} per {{client}}",
@@ -363,7 +363,12 @@
     "appointments": {
       "title": "Richieste di appuntamento",
       "description": "Il cliente propone giorno/ora e motivo dalla chat — non viene mai prenotato nulla in automatico. Conferma uno spazio reale o rifiuta la richiesta.",
-      "none": "Nessuna richiesta in sospeso."
+      "none": "Nessuna richiesta in sospeso.",
+      "status": {
+        "pendiente": "In sospeso",
+        "confirmada": "Confermato",
+        "rechazada": "Rifiutato"
+      }
     },
     "attachment": "Allegato",
     "attachFile": "Allega un file",
@@ -680,7 +685,8 @@
     "chargeKind": {
       "proyecto": "Del progetto",
       "extra": "Lavoro extra"
-    }
+    },
+    "hours": "Ore"
   },
   "materials": {
     "title": "Materiali e costi",
@@ -813,7 +819,11 @@
     "pickWorker": "Scegli qualcuno",
     "addToTeam": "Aggiungi",
     "hireSomeoneFirst": "Non hai ancora lavoratori registrati.",
-    "everyoneAssigned": "Tutta la squadra è già su questo cantiere."
+    "everyoneAssigned": "Tutta la squadra è già su questo cantiere.",
+    "types": {
+      "residencial": "Residenziale",
+      "comercial": "Commerciale"
+    }
   },
   "clientDetail": {
     "title": "Scheda cliente",
@@ -903,7 +913,8 @@
     "changeStatus": "Cambia stato",
     "assignedTo": "Assegnato a {{name}}",
     "noWorkOrders": "Non hai ancora ordini di lavoro.",
-    "deleteConfirm": "Eliminare questo ordine di lavoro?"
+    "deleteConfirm": "Eliminare questo ordine di lavoro?",
+    "pageTitle": "Ordini di lavoro"
   },
   "scheduling": {
     "title": "Calendario",

@@ -179,7 +179,7 @@
       "rechazado": "Rechazado"
     },
     "insert": "Insertar",
-    "templates": "Assembly Templates",
+    "templates": "Plantillas de partidas",
     "pdfPreview": "Vista previa del PDF",
     "pdfDocTitle": "Presupuesto de obra",
     "pdfPreviewFor": "Presupuesto #{{number}} para {{client}}",
@@ -363,7 +363,12 @@
     "appointments": {
       "title": "Solicitudes de cita",
       "description": "El cliente propone día/hora y motivo desde el chat — nunca se agenda solo. Confirma un espacio real o rechaza la solicitud.",
-      "none": "Sin solicitudes pendientes."
+      "none": "Sin solicitudes pendientes.",
+      "status": {
+        "pendiente": "Pendiente",
+        "confirmada": "Confirmada",
+        "rechazada": "Rechazada"
+      }
     },
     "attachment": "Adjunto",
     "attachFile": "Adjuntar archivo",
@@ -680,7 +685,8 @@
     "chargeKind": {
       "proyecto": "Del proyecto",
       "extra": "Trabajo extra"
-    }
+    },
+    "hours": "Horas"
   },
   "materials": {
     "title": "Materiales y costos",
@@ -813,7 +819,11 @@
     "pickWorker": "Elige a alguien",
     "addToTeam": "Añadir",
     "hireSomeoneFirst": "Todavía no tienes trabajadores dados de alta.",
-    "everyoneAssigned": "Ya está todo tu equipo en esta obra."
+    "everyoneAssigned": "Ya está todo tu equipo en esta obra.",
+    "types": {
+      "residencial": "Residencial",
+      "comercial": "Comercial"
+    }
   },
   "clientDetail": {
     "title": "Ficha del cliente",
@@ -903,7 +913,8 @@
     "changeStatus": "Cambiar estado",
     "assignedTo": "Asignado a {{name}}",
     "noWorkOrders": "Todavía no tienes órdenes de trabajo.",
-    "deleteConfirm": "¿Eliminar esta orden de trabajo?"
+    "deleteConfirm": "¿Eliminar esta orden de trabajo?",
+    "pageTitle": "Órdenes de trabajo"
   },
   "scheduling": {
     "title": "Agenda",

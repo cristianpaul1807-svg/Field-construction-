@@ -228,7 +228,9 @@ export default function ProjectDetailPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{project.name}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{project.clientName} · {project.type}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {project.clientName} · {t(`projects.types.${project.type?.toLowerCase()}`, { defaultValue: project.type })}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge tone={projectStatusTone[project.status]}>
@@ -482,7 +484,7 @@ export default function ProjectDetailPage() {
                     <p className="text-sm text-foreground">{event.title}</p>
                     <p className="text-xs text-muted-foreground">{event.startTime}</p>
                   </div>
-                  <StatusBadge tone="neutral" className="capitalize">{event.type}</StatusBadge>
+                  <StatusBadge tone="neutral">{t(`scheduling.types.${event.type}`)}</StatusBadge>
                 </div>
               ))}
               {project.scheduleEvents.length === 0 && (

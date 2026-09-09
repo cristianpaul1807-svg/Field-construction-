@@ -363,7 +363,12 @@
     "appointments": {
       "title": "Appointment requests",
       "description": "The client proposes a day/time and reason from the chat — nothing is ever booked automatically. Confirm a real slot or decline the request.",
-      "none": "No pending requests."
+      "none": "No pending requests.",
+      "status": {
+        "pendiente": "Pending",
+        "confirmada": "Confirmed",
+        "rechazada": "Declined"
+      }
     },
     "attachment": "Attachment",
     "attachFile": "Attach a file",
@@ -680,7 +685,8 @@
     "chargeKind": {
       "proyecto": "Project work",
       "extra": "Extra work"
-    }
+    },
+    "hours": "Hours"
   },
   "materials": {
     "title": "Materials & Costs",
@@ -813,7 +819,11 @@
     "pickWorker": "Pick someone",
     "addToTeam": "Add",
     "hireSomeoneFirst": "You have no workers on the books yet.",
-    "everyoneAssigned": "Your whole crew is already on this job."
+    "everyoneAssigned": "Your whole crew is already on this job.",
+    "types": {
+      "residencial": "Residential",
+      "comercial": "Commercial"
+    }
   },
   "clientDetail": {
     "title": "Client record",
@@ -903,7 +913,8 @@
     "changeStatus": "Change status",
     "assignedTo": "Assigned to {{name}}",
     "noWorkOrders": "You don't have any work orders yet.",
-    "deleteConfirm": "Delete this work order?"
+    "deleteConfirm": "Delete this work order?",
+    "pageTitle": "Work orders"
   },
   "scheduling": {
     "title": "Scheduling",

@@ -70,6 +70,10 @@ export default function GpsRouting() {
   const center = data?.center ?? null;
   const stale = data?.stale ?? false;
 
+  // Quién está de verdad en una obra ahora mismo: hay un check-in suyo sin
+  // salida. Es lo que separa "está allí" de "está asignado allí".
+  const enObra = new Set(locations.filter((l) => l.stillOnSite && l.workerId).map((l) => l.workerId as string));
+
   // A check-in from last Friday shown as "08:10" reads as this morning. Once
   // it is not today, the day has to come with it.
   const time = (iso: string) => {
@@ -236,9 +240,17 @@ export default function GpsRouting() {
                       <p className="text-sm text-foreground truncate">{worker.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{worker.currentProject ?? "—"}</p>
                     </div>
-                    <StatusBadge tone={worker.kind === "employee" ? "success" : "info"}>
-                      {worker.kind === "employee" ? t("gps.onRoute") : t("materials.categorySubcontractors")}
-                    </StatusBadge>
+                    {/* "En ruta" es una afirmación sobre dónde está alguien, y
+                        aquí sólo la sostiene un check-in con posición. Sin él
+                        se dice lo único que sabemos —qué es esa persona—, y en
+                        singular: un subcontratista no es "Subcontratistas". */}
+                    {enObra.has(worker.id) ? (
+                      <StatusBadge tone="success">{t("gps.onRoute")}</StatusBadge>
+                    ) : (
+                      <StatusBadge tone="neutral">
+                        {worker.kind === "employee" ? t("worker.employee") : t("worker.subcontractor")}
+                      </StatusBadge>
+                    )}
                   </div>
                 ))}
                 {active.length === 0 && <p className="text-xs text-muted-foreground">{t("gps.nobodyActive")}</p>}

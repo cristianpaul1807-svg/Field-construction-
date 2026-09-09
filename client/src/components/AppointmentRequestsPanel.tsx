@@ -117,7 +117,7 @@ export function AppointmentRequestsPanel() {
                 <p className="text-xs text-muted-foreground mt-0.5">Prefiere: {req.requestedDatetimeText}</p>
                 {req.reasonText && <p className="text-xs text-muted-foreground mt-0.5">Motivo: {req.reasonText}</p>}
               </div>
-              <StatusBadge tone={statusTone[req.status]}>{req.status}</StatusBadge>
+              <StatusBadge tone={statusTone[req.status]}>{t(`communication.appointments.status.${req.status}`)}</StatusBadge>
             </div>
 
             {confirmingId === req.id ? (
@@ -183,7 +183,7 @@ export function AppointmentRequestsPanel() {
           {resolved.map((req) => (
             <div key={req.id} className="flex items-center justify-between gap-3 text-sm">
               <span className="text-muted-foreground truncate">{req.clientName} · {req.requestedDatetimeText}</span>
-              <StatusBadge tone={statusTone[req.status]}>{req.status}</StatusBadge>
+              <StatusBadge tone={statusTone[req.status]}>{t(`communication.appointments.status.${req.status}`)}</StatusBadge>
             </div>
           ))}
         </div>

@@ -35,10 +35,12 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script
-      defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+    <!-- Aquí vivía una etiqueta de analítica con %VITE_ANALYTICS_ENDPOINT% sin
+         sustituir: Vite sólo reemplaza las variables que existen, y esa nunca
+         se configuró. El navegador pedía literalmente "/umami", recibía el
+         index, e intentaba ejecutarlo como JavaScript: un error en la consola
+         en cada carga de cada pantalla. Cuando queramos analítica, se pone con
+         su endpoint de verdad. -->
   </body>
 
 </html>

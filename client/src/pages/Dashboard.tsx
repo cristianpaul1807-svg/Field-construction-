@@ -14,6 +14,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
 } from "recharts";
 import { useTranslation } from "react-i18next";
 
@@ -141,6 +142,9 @@ export default function Dashboard() {
                           fontSize: 12,
                         }}
                       />
+                      {/* Dos líneas que sólo se distinguen por el color no
+                          dicen cuál es cuál hasta que alguien las señala. */}
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
                       <Line type="monotone" dataKey="ingresos" stroke="var(--chart-1)" strokeWidth={2} dot={false} name={t("dashboard.income")} />
                       <Line type="monotone" dataKey="gastos" stroke="var(--muted-foreground)" strokeWidth={2} dot={false} name={t("dashboard.expenses")} />
                     </LineChart>

@@ -158,7 +158,13 @@ export default function Projects() {
               <Card className="p-5 hover:border-primary/40 transition-colors cursor-pointer h-full">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">{project.type}</p>
+                    {/* "Residencial" se guarda ya escrito así, no como slug, y
+                        por eso se baja a minúsculas para buscar su rótulo. El
+                        valor original queda de reserva si algún día hay tipos
+                        que nosotros no conocemos. */}
+                    <p className="text-xs text-muted-foreground">
+                      {t(`projects.types.${project.type?.toLowerCase()}`, { defaultValue: project.type })}
+                    </p>
                     <h3 className="font-semibold text-foreground mt-0.5 truncate">{project.name}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{project.clientName}</p>
                   </div>

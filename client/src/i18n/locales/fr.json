@@ -363,7 +363,12 @@
     "appointments": {
       "title": "Demandes de rendez-vous",
       "description": "Le client propose une date/heure et un motif depuis le clavardage — rien n'est jamais réservé automatiquement. Confirmez une vraie plage ou refusez la demande.",
-      "none": "Aucune demande en attente."
+      "none": "Aucune demande en attente.",
+      "status": {
+        "pendiente": "En attente",
+        "confirmada": "Confirmé",
+        "rechazada": "Refusé"
+      }
     },
     "attachment": "Pièce jointe",
     "attachFile": "Joindre un fichier",
@@ -680,7 +685,8 @@
     "chargeKind": {
       "proyecto": "Du chantier",
       "extra": "Travaux supplémentaires"
-    }
+    },
+    "hours": "Heures"
   },
   "materials": {
     "title": "Matériaux et coûts",
@@ -813,7 +819,11 @@
     "pickWorker": "Choisissez quelqu'un",
     "addToTeam": "Ajouter",
     "hireSomeoneFirst": "Vous n'avez encore aucun travailleur enregistré.",
-    "everyoneAssigned": "Toute votre équipe est déjà sur ce chantier."
+    "everyoneAssigned": "Toute votre équipe est déjà sur ce chantier.",
+    "types": {
+      "residencial": "Résidentiel",
+      "comercial": "Commercial"
+    }
   },
   "clientDetail": {
     "title": "Fiche client",
@@ -903,7 +913,8 @@
     "changeStatus": "Changer le statut",
     "assignedTo": "Assigné à {{name}}",
     "noWorkOrders": "Vous n'avez encore aucun bon de travail.",
-    "deleteConfirm": "Supprimer ce bon de travail ?"
+    "deleteConfirm": "Supprimer ce bon de travail ?",
+    "pageTitle": "Bons de travail"
   },
   "scheduling": {
     "title": "Calendrier",

@@ -239,7 +239,9 @@ export function WorkerScheduleView() {
                   <p className="text-foreground truncate">{w.title}</p>
                   <p className="text-xs text-muted-foreground truncate">{w.projectName}</p>
                 </div>
-                <span className={cn("text-xs font-medium flex-shrink-0", priorityTone[w.priority])}>{w.priority}</span>
+                <span className={cn("text-xs font-medium flex-shrink-0", priorityTone[w.priority])}>
+                  {t(`workOrders.priorities.${w.priority}`)}
+                </span>
               </div>
             ))}
           </div>

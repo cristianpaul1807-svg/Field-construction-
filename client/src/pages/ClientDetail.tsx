@@ -116,7 +116,9 @@ export default function ClientDetail() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-foreground">{formatCurrency(estimate.total)}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{estimate.status}</p>
+                    {/* El estado se guarda en castellano porque ese es el dato;
+                        aquí se traduce, que es donde lo lee una persona. */}
+                    <p className="text-xs text-muted-foreground">{t(`budgets.estimateStatus.${estimate.status}`)}</p>
                   </div>
                 </div>
               ))}

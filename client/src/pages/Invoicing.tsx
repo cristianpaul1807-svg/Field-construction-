@@ -287,8 +287,11 @@ export default function Invoicing() {
                 <th className="text-left py-2 text-muted-foreground font-medium">{t("common.client")}</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">{t("common.description")}</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">{t("common.type")}</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">{t("common.amount")}</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">{t("common.status")}</th>
+                {/* El importe va a la derecha y el estado a la izquierda, así que
+                    sin este hueco los dos rótulos se tocan y se leen como una
+                    sola palabra: "MontoEstado". */}
+                <th className="text-right py-2 pr-6 text-muted-foreground font-medium">{t("common.amount")}</th>
+                <th className="text-left py-2 pl-2 text-muted-foreground font-medium">{t("common.status")}</th>
                 <th className="py-2" />
               </tr>
             </thead>
@@ -298,7 +301,7 @@ export default function Invoicing() {
                   <td className="py-3 text-foreground font-medium">{invoice.clientName ?? invoice.projectName}</td>
                   <td className="py-3 text-muted-foreground">{invoice.description ?? "-"}</td>
                   <td className="py-3 text-muted-foreground">{t(`invoicing.type.${invoice.type}`)}</td>
-                  <td className="py-3 text-right text-foreground">
+                  <td className="py-3 pr-6 text-right text-foreground">
                     {formatCurrency(invoice.amount)}
                     {invoice.holdbackReleased > 0 && (
                       <p className="text-xs text-status-success-fg mt-0.5">
@@ -311,7 +314,7 @@ export default function Invoicing() {
                       </span>
                     )}
                   </td>
-                  <td className="py-3">
+                  <td className="py-3 pl-2">
                     <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{t(`invoicing.status.${invoice.status}`)}</StatusBadge>
                   </td>
                   <td className="py-3 text-right">

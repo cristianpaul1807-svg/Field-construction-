@@ -156,8 +156,10 @@ export default function WorkOrders() {
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
+      {/* workOrders.title es el rótulo del campo "Título" del formulario de más
+          arriba. Reutilizarlo aquí hacía que la página se llamara "Título". */}
       <PageHeader
-        title={t("workOrders.title")}
+        title={t("workOrders.pageTitle")}
         description={t("workOrders.description")}
         action={<NewWorkOrderDialog onCreated={reload} />}
       />
