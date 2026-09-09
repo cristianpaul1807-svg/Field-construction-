@@ -1258,10 +1258,31 @@
     "taxNumbers": "tus números de TPS y TVQ",
     "go": "Completar"
   },
-  "payErrors": {
-    "invoice_not_found": "No encontramos esa factura. Puede que el negocio la haya anulado.",
-    "invoice_already_paid": "Esta factura ya está pagada.",
+  "serverErrors": {
+    "accept_invitation_first": "Acepta la invitación antes de escribir.",
+    "account_has_no_contact": "Esta cuenta no tiene correo ni teléfono.",
+    "business_not_found": "No encontramos ese negocio. Revisa el enlace.",
     "business_stripe_not_ready": "El negocio todavía no tiene los pagos con tarjeta activados. Escríbele para acordar cómo pagar.",
-    "stripe_no_checkout_url": "No pudimos abrir la pasarela de pago. Vuelve a intentarlo en un momento."
+    "chat_not_found": "No encontramos esa conversación.",
+    "conversation_not_found": "No encontramos esa conversación.",
+    "document_not_found": "No encontramos ese documento.",
+    "estimate_has_no_client": "Asigna un cliente al presupuesto antes de enviárselo.",
+    "invalid_access_code": "Ese código no es válido. Revísalo con la oficina.",
+    "invoice_already_paid": "Esta factura ya está pagada.",
+    "invoice_not_found": "No encontramos esa factura. Puede que la hayan anulado.",
+    "logo_wrong_format": "El logo tiene que ser PNG, JPEG, WebP o SVG.",
+    "milestone_not_billable": "No hay nada que facturar en esta etapa todavía.",
+    "no_hours": "No hay horas aprobadas en ese periodo.",
+    "no_rate": "Este trabajador no tiene tarifa por hora. Ponsela en su ficha.",
+    "no_stripe_account": "Este negocio todavía no tiene Stripe conectado.",
+    "not_sendable": "No hay nada que enviar.",
+    "paid_invoice_not_cancellable": "Una factura pagada no se puede anular. Emite una nota de crédito.",
+    "percent_needs_project": "Un porcentaje necesita una obra: se calcula sobre su presupuesto.",
+    "photo_not_found": "No encontramos esa foto.",
+    "pick_one_to_five_chats": "Selecciona entre 1 y 5 conversaciones.",
+    "signature_required": "Hace falta el nombre de quien firma.",
+    "slug_taken": "Ese enlace ya lo usa otro negocio. Elige otro.",
+    "stripe_no_checkout_url": "No pudimos abrir la pasarela de pago. Vuelve a intentarlo en un momento.",
+    "worker_not_in_period": "Ese trabajador no tiene horas en ese periodo."
   }
 }

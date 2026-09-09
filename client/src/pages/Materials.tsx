@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Search, Pencil, Trash2, HardHat } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface MaterialRow {
@@ -119,7 +119,7 @@ export default function Materials() {
           supplier: material.supplier,
         }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       setMaterial(null);
       reload();
     } catch (err) {
@@ -143,7 +143,7 @@ export default function Materials() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: labor.name, hourlyRate: labor.hourlyRate }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       setLabor(null);
       reload();
     } catch (err) {

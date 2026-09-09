@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { ArrowLeft, Briefcase } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { apiFetch, readJson } from "@/lib/api";
+import { apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 
@@ -124,7 +124,7 @@ export default function AuthBusiness() {
       const res = await apiFetch("/api/auth/register-business", { method: "POST" });
       if (!res.ok) {
         const body = await readJson(res);
-        throw new Error(body?.error || t("auth.couldNotCreateBusiness"));
+        throw new Error(serverMessage(body, t, t("auth.couldNotCreateBusiness")));
       }
 
       await refreshPersona();

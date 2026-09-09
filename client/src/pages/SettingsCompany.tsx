@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface CompanyData {
@@ -61,7 +61,7 @@ export default function SettingsCompany() {
       // No Content-Type header: the browser has to set the multipart boundary
       // itself, and naming the type by hand is what breaks these uploads.
       const res = await apiFetch("/api/settings/logo", { method: "POST", body });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       reload();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : t("common.genericError"));
@@ -123,7 +123,7 @@ export default function SettingsCompany() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error || t("common.genericError"));
+        throw new Error(serverMessage(body, t, t("common.genericError")));
       }
       reload();
       setSaved(true);

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface AppUser {
@@ -63,7 +63,7 @@ export default function SettingsUsers() {
           roleId: draft.roleId || null,
         }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       setDraft(null);
       reload();
     } catch (err) {

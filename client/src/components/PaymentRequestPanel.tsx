@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -98,7 +98,7 @@ export function PaymentRequestPanel({ stripeReady }: { stripeReady: boolean }) {
       if (!res.ok) {
         const body = await readJson<{ error?: string; code?: string }>(res);
         throw new Error(
-          body?.code === "percent_needs_project" ? t("paymentRequests.percentNeedsProject") : body?.error || t("common.genericError")
+          body?.code === "percent_needs_project" ? t("paymentRequests.percentNeedsProject") : serverMessage(body, t, t("common.genericError"))
         );
       }
       setValue("");

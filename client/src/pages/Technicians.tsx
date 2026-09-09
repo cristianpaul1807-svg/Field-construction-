@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, KeyRound } from "lucide-react";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
@@ -39,7 +39,7 @@ function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
         body: JSON.stringify({ name: name.trim(), role: role.trim() || undefined, phone: phone.trim() || undefined }),
       });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || t("technicians.createError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("technicians.createError")));
       setOpen(false);
       reset();
       onCreated();

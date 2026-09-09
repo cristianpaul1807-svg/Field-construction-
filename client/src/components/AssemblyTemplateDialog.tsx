@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2 } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
 
@@ -142,7 +142,7 @@ export function AssemblyTemplateDialog({
           body: JSON.stringify({ name, description, items }),
         }
       );
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       onOpenChange(false);
       onSaved();
     } catch (err) {

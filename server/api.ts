@@ -1051,7 +1051,7 @@ apiRouter.post(
     const email = authUser.user?.email ?? null;
     const phone = authUser.user?.phone ?? null;
     if (!email && !phone) {
-      res.status(400).json({ error: "No email or phone on this account" });
+      res.status(400).json({ error: "No email or phone on this account", code: "account_has_no_contact" });
       return;
     }
 
@@ -1128,7 +1128,7 @@ apiRouter.post(
 
     const worker = employee.data ?? subcontractor.data;
     if (!worker) {
-      res.status(401).json({ error: "Código inválido" });
+      res.status(401).json({ error: "Código inválido", code: "invalid_access_code" });
       return;
     }
 
@@ -1166,7 +1166,7 @@ apiRouter.post(
     }
 
     if (!client) {
-      res.status(401).json({ error: "Código inválido" });
+      res.status(401).json({ error: "Código inválido", code: "invalid_access_code" });
       return;
     }
 
@@ -1575,7 +1575,7 @@ apiRouter.get(
       .eq("id", req.params.id)
       .maybeSingle();
     if (!channel) {
-      res.status(404).json({ error: "Chat no encontrado" });
+      res.status(404).json({ error: "Chat no encontrado", code: "chat_not_found" });
       return;
     }
     await purgeExpiredMessages(admin, channel.id);
@@ -1608,11 +1608,11 @@ apiRouter.post(
       .eq("id", req.params.id)
       .maybeSingle();
     if (!channel) {
-      res.status(404).json({ error: "Chat no encontrado" });
+      res.status(404).json({ error: "Chat no encontrado", code: "chat_not_found" });
       return;
     }
     if (channel.status !== "activo") {
-      res.status(403).json({ error: "Acepta la invitación antes de escribir" });
+      res.status(403).json({ error: "Acepta la invitación antes de escribir", code: "accept_invitation_first" });
       return;
     }
 
@@ -1794,7 +1794,7 @@ apiRouter.post(
       .maybeSingle();
     if (error) throw error;
     if (!invoice) {
-      res.status(404).json({ error: "Factura no encontrada" });
+      res.status(404).json({ error: "Factura no encontrada", code: "invoice_not_found" });
       return;
     }
 
@@ -1866,7 +1866,7 @@ apiRouter.get(
       .eq("participant_id", req.clientId!)
       .maybeSingle();
     if (!owned) {
-      res.status(404).json({ error: "Chat no encontrado" });
+      res.status(404).json({ error: "Chat no encontrado", code: "chat_not_found" });
       return;
     }
     await purgeExpiredMessages(supabase, req.params.id);
@@ -1899,7 +1899,7 @@ apiRouter.post(
       .maybeSingle();
     if (channelError) throw channelError;
     if (!channel) {
-      res.status(404).json({ error: "Chat no encontrado" });
+      res.status(404).json({ error: "Chat no encontrado", code: "chat_not_found" });
       return;
     }
 
@@ -1946,7 +1946,7 @@ apiRouter.get(
       .maybeSingle();
     if (error) throw error;
     if (!data) {
-      res.status(404).json({ error: "No encontramos ese negocio" });
+      res.status(404).json({ error: "No encontramos ese negocio", code: "business_not_found" });
       return;
     }
     res.json({ id: data.id, name: data.name });
@@ -1973,7 +1973,7 @@ apiRouter.post(
       .maybeSingle();
     if (businessError) throw businessError;
     if (!business) {
-      res.status(404).json({ error: "No encontramos ese negocio" });
+      res.status(404).json({ error: "No encontramos ese negocio", code: "business_not_found" });
       return;
     }
 
@@ -2025,7 +2025,7 @@ apiRouter.get(
       .maybeSingle();
     if (error) throw error;
     if (!channel) {
-      res.status(404).json({ error: "Conversación no encontrada" });
+      res.status(404).json({ error: "Conversación no encontrada", code: "conversation_not_found" });
       return;
     }
 
@@ -2061,7 +2061,7 @@ apiRouter.post(
       .maybeSingle();
     if (error) throw error;
     if (!channel) {
-      res.status(404).json({ error: "Conversación no encontrada" });
+      res.status(404).json({ error: "Conversación no encontrada", code: "conversation_not_found" });
       return;
     }
 
@@ -2171,7 +2171,7 @@ apiRouter.post(
       .maybeSingle();
     if (channelError) throw channelError;
     if (!channel) {
-      res.status(404).json({ error: "Conversación no encontrada" });
+      res.status(404).json({ error: "Conversación no encontrada", code: "conversation_not_found" });
       return;
     }
 
@@ -2217,7 +2217,7 @@ apiRouter.post(
       .maybeSingle();
     if (channelError) throw channelError;
     if (!channel) {
-      res.status(404).json({ error: "Conversación no encontrada" });
+      res.status(404).json({ error: "Conversación no encontrada", code: "conversation_not_found" });
       return;
     }
 
@@ -2446,7 +2446,7 @@ apiRouter.post(
     // Same gate the text messages use: an invitation that has not been
     // accepted is not yet a conversation.
     if (channel.status !== "activo") {
-      res.status(403).json({ error: "Acepta la invitación antes de escribir" });
+      res.status(403).json({ error: "Acepta la invitación antes de escribir", code: "accept_invitation_first" });
       return;
     }
 
@@ -4397,7 +4397,7 @@ apiRouter.get(
       .maybeSingle();
     if (error) throw error;
     if (!doc?.file_url) {
-      res.status(404).json({ error: "Documento no encontrado" });
+      res.status(404).json({ error: "Documento no encontrado", code: "document_not_found" });
       return;
     }
     const { data: signed, error: signError } = await supabase.storage
@@ -4486,7 +4486,7 @@ apiRouter.get(
       .maybeSingle();
     if (error) throw error;
     if (!photo?.url) {
-      res.status(404).json({ error: "Foto no encontrada" });
+      res.status(404).json({ error: "Foto no encontrada", code: "photo_not_found" });
       return;
     }
     const { data: signed, error: signError } = await supabase.storage
@@ -5356,7 +5356,7 @@ apiRouter.post(
       .eq("business_id", req.businessId!)
       .maybeSingle();
     if (!account?.stripe_account_id) {
-      res.status(404).json({ error: "No hay una cuenta de Stripe para este negocio" });
+      res.status(404).json({ error: "No hay una cuenta de Stripe para este negocio", code: "no_stripe_account" });
       return;
     }
 
@@ -5866,7 +5866,7 @@ apiRouter.post(
     ]);
     const worker = workers.find((w) => w.workerId === workerId && w.kind === kind);
     if (!worker) {
-      res.status(404).json({ error: "worker not found for that period" });
+      res.status(404).json({ error: "worker not found for that period", code: "worker_not_in_period" });
       return;
     }
     if (!worker.hourlyRate) {
@@ -7543,7 +7543,7 @@ apiRouter.patch(
       return;
     }
     if (invoice.status === "pagado") {
-      res.status(409).json({ error: "a paid invoice cannot be cancelled — issue a credit instead" });
+      res.status(409).json({ error: "a paid invoice cannot be cancelled — issue a credit instead", code: "paid_invoice_not_cancellable" });
       return;
     }
     const { error } = await supabase.from("invoices").update({ status: "cancelado" }).eq("id", invoice.id);
@@ -7672,7 +7672,7 @@ apiRouter.post(
       return;
     }
     if (!estimate.client_id) {
-      res.status(409).json({ error: "this estimate has no client to send it to" });
+      res.status(409).json({ error: "this estimate has no client to send it to", code: "estimate_has_no_client" });
       return;
     }
 
@@ -8377,7 +8377,7 @@ apiRouter.post(
   route(async (req, res) => {
     const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
     if (ids.length === 0 || ids.length > 5) {
-      res.status(400).json({ error: "Selecciona entre 1 y 5 chats" });
+      res.status(400).json({ error: "Selecciona entre 1 y 5 chats", code: "pick_one_to_five_chats" });
       return;
     }
     const supabase = req.supabase!;
@@ -8440,7 +8440,7 @@ apiRouter.post(
       return;
     }
     if (!/^image\/(png|jpeg|jpg|webp|svg\+xml)$/.test(file.mimetype)) {
-      res.status(400).json({ error: "the logo must be a PNG, JPEG, WebP or SVG image" });
+      res.status(400).json({ error: "the logo must be a PNG, JPEG, WebP or SVG image", code: "logo_wrong_format" });
       return;
     }
 
@@ -8549,7 +8549,7 @@ apiRouter.patch(
         .neq("id", req.businessId!)
         .maybeSingle();
       if (collision) {
-        res.status(409).json({ error: "Ese link ya está en uso por otro negocio, elige otro." });
+        res.status(409).json({ error: "Ese link ya está en uso por otro negocio, elige otro.", code: "slug_taken" });
         return;
       }
       update.slug = normalized;

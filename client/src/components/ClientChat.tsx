@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
 import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
@@ -41,7 +41,7 @@ export function ClientChat() {
     try {
       const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
       const body = await readJson<{ url?: string; error?: string }>(res);
-      if (!res.ok || !body?.url) throw new Error(body?.error || t("clientPortal.payError"));
+      if (!res.ok || !body?.url) throw new Error(serverMessage(body, t, t("clientPortal.payError")));
       window.location.href = body.url;
     } catch (err) {
       setPayError(err instanceof Error ? err.message : t("clientPortal.payError"));

@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useApi, apiFetch, readJson, downloadFile } from "@/lib/api";
+import { useApi, apiFetch, readJson, downloadFile, serverMessage } from "@/lib/api";
 
 interface ProjectionItem {
   id: string;
@@ -139,7 +139,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: sendMessage.trim() || undefined }),
       });
-      if (!res.ok) throw new Error((await readJson<{ error?: string }>(res))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await readJson(res), t, t("common.genericError")));
       setSendPrompt(false);
       setSentOk(true);
       onChanged();
@@ -166,7 +166,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
         body: JSON.stringify({ projectName: clientName ? t("budgets.projectNameFromClient", { client: clientName }) : undefined }),
       });
       const body = await readJson(res);
-      if (!res.ok) throw new Error(body?.error || t("budgets.acceptError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("budgets.acceptError")));
       setResult(body);
       onChanged();
     } finally {

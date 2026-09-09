@@ -48,6 +48,24 @@ export async function readJson<T = any>(res: Response): Promise<T> {
 }
 
 /**
+ * El mensaje de un fallo del servidor, en el idioma de quien lo lee.
+ *
+ * Los mensajes del servidor estaban escritos en castellano y se enseñaban tal
+ * cual: un cliente francófono pagando una factura, o un trabajador tecleando
+ * mal su código, leían el fallo en español. Ahora el servidor manda un código
+ * estable y aquí se traduce; su texto queda de reserva para los fallos que
+ * todavía no tengan nombre, que siempre es mejor que un mensaje genérico.
+ */
+export function serverMessage(
+  body: { error?: string; code?: string } | null | undefined,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+  fallback: string
+): string {
+  if (body?.code) return t(`serverErrors.${body.code}`, { defaultValue: body.error || fallback });
+  return body?.error || fallback;
+}
+
+/**
  * Saves a file from an authenticated endpoint. A plain <a download> can't be
  * used for these: the bearer token lives in a header, and a link request
  * carries no headers, so the server would answer 401. Fetching the bytes and

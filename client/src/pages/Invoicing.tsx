@@ -18,7 +18,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Plus, Copy, Check, Download, Ban } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, downloadFile, readJson } from "@/lib/api";
+import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
 
@@ -92,7 +92,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
         body: JSON.stringify({ clientId, type, subtotal: subtotalNum, description: description || undefined }),
       });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || t("invoicing.createError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("invoicing.createError")));
       setOpen(false);
       reset();
       onCreated();
@@ -210,7 +210,7 @@ export default function Invoicing() {
     setLinkError(null);
     const res = await apiFetch(`/api/invoices/${invoiceId}/cancel`, { method: "PATCH" });
     if (res.ok) reload();
-    else setLinkError((await res.json().catch(() => null))?.error || t("common.genericError"));
+    else setLinkError(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
   };
 
   const copyLink = async (invoiceId: string) => {
@@ -219,7 +219,7 @@ export default function Invoicing() {
     try {
       const res = await apiFetch(`/api/invoices/${invoiceId}/checkout-link`, { method: "POST" });
       const body = await readJson(res);
-      if (!res.ok) throw new Error(body?.error || t("invoicing.linkError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("invoicing.linkError")));
       await navigator.clipboard.writeText(body.url);
       setCopiedId(invoiceId);
       setTimeout(() => setCopiedId(null), 2000);

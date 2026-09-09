@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 
 const TYPE_OPTIONS = ["visita", "llamada", "reunion", "inicio", "fin"] as const;
 
@@ -97,7 +97,7 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error || t("common.saveError"));
+        throw new Error(serverMessage(body, t, t("common.saveError")));
       }
       onCreated();
       onOpenChange(false);

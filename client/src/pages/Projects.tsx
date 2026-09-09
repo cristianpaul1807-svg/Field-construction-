@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
@@ -54,7 +54,7 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
         body: JSON.stringify({ clientId, name: name.trim(), type, startDate: startDate || undefined, endDate: endDate || undefined }),
       });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || t("projects.createError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("projects.createError")));
       setOpen(false); reset(); onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("projects.createError"));

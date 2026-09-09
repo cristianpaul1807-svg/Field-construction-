@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, ExternalLink, Receipt, ShieldCheck } from "lucide-react";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
 
@@ -81,7 +81,7 @@ export default function SettingsPayments() {
           setConnecting(false);
           return;
         }
-        throw new Error(body?.error || t("payments.connectError"));
+        throw new Error(serverMessage(body, t, t("payments.connectError")));
       }
       window.location.href = body.url;
     } catch (err) {

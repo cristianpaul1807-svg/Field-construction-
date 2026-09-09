@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, FileText, Plus, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, readJson, downloadFile } from "@/lib/api";
+import { useApi, apiFetch, readJson, downloadFile, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -119,7 +119,7 @@ export default function Payroll() {
       });
       if (!res.ok) {
         const body = await readJson<{ error?: string }>(res);
-        throw new Error(body?.error || t("common.genericError"));
+        throw new Error(serverMessage(body, t, t("common.genericError")));
       }
       reloadRuns();
     } catch (err) {

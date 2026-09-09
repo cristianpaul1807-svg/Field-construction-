@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileSignature, CreditCard, CheckCircle2, Download, FilePlus2, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, downloadFile, readJson } from "@/lib/api";
+import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
 import { useTranslation } from "react-i18next";
@@ -84,7 +84,7 @@ export default function ClientPortalMe() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ decision }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       reloadChangeOrders();
     } catch (err) {
       setPayError(err instanceof Error ? err.message : t("common.genericError"));
@@ -117,7 +117,7 @@ export default function ClientPortalMe() {
     setPayError(null);
     try {
       const res = await apiFetch(`/api/client-portal/projects/${projectId}/confirm`, { method: "POST" });
-      if (!res.ok) throw new Error((await readJson<{ error?: string }>(res))?.error || t("portal.progress.confirmError"));
+      if (!res.ok) throw new Error(serverMessage(await readJson(res), t, t("portal.progress.confirmError")));
       reload();
     } catch (err) {
       setPayError(err instanceof Error ? err.message : t("portal.progress.confirmError"));
@@ -132,13 +132,7 @@ export default function ClientPortalMe() {
     try {
       const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
       const body = await readJson(res);
-      // El servidor manda un código estable; el texto que trae es la reserva
-      // para cuando el fallo sea uno que aquí no conocemos todavía.
-      if (!res.ok) {
-        throw new Error(
-          body?.code ? t(`payErrors.${body.code}`, { defaultValue: body.error }) : body?.error || t("clientPortal.payError")
-        );
-      }
+      if (!res.ok) throw new Error(serverMessage(body, t, t("clientPortal.payError")));
       window.location.href = body.url;
     } catch (err) {
       setPayError(err instanceof Error ? err.message : t("clientPortal.payError"));

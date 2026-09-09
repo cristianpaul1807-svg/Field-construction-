@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
 
@@ -46,7 +46,7 @@ function UploadPhotoDialog({ projectId, onUploaded }: { projectId: string; onUpl
       form.append("visibleToClient", String(visibleToClient));
       const res = await apiFetch("/api/photos", { method: "POST", body: form });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || t("photoGallery.uploadError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("photoGallery.uploadError")));
       setOpen(false); reset(); onUploaded();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("photoGallery.uploadError"));

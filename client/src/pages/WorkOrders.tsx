@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
@@ -55,7 +55,7 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
         }),
       });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || t("workOrders.createError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("workOrders.createError")));
       setOpen(false); reset(); onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("workOrders.createError"));

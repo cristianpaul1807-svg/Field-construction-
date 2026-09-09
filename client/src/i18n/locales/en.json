@@ -1258,10 +1258,31 @@
     "taxNumbers": "your GST and QST numbers",
     "go": "Complete"
   },
-  "payErrors": {
-    "invoice_not_found": "We couldn't find that invoice. The business may have cancelled it.",
-    "invoice_already_paid": "This invoice is already paid.",
+  "serverErrors": {
+    "accept_invitation_first": "Accept the invitation before writing.",
+    "account_has_no_contact": "This account has no email or phone.",
+    "business_not_found": "We couldn't find that business. Check the link.",
     "business_stripe_not_ready": "The business hasn't switched on card payments yet. Message them to agree how to pay.",
-    "stripe_no_checkout_url": "We couldn't open the payment page. Please try again in a moment."
+    "chat_not_found": "We couldn't find that conversation.",
+    "conversation_not_found": "We couldn't find that conversation.",
+    "document_not_found": "We couldn't find that document.",
+    "estimate_has_no_client": "Attach a client to the estimate before sending it.",
+    "invalid_access_code": "That code isn't valid. Check it with the office.",
+    "invoice_already_paid": "This invoice is already paid.",
+    "invoice_not_found": "We couldn't find that invoice. It may have been cancelled.",
+    "logo_wrong_format": "The logo must be a PNG, JPEG, WebP or SVG.",
+    "milestone_not_billable": "There's nothing to bill on this stage yet.",
+    "no_hours": "No approved hours in that period.",
+    "no_rate": "This worker has no hourly rate. Set one on their record.",
+    "no_stripe_account": "This business hasn't connected Stripe yet.",
+    "not_sendable": "There's nothing to send.",
+    "paid_invoice_not_cancellable": "A paid invoice can't be cancelled. Issue a credit note instead.",
+    "percent_needs_project": "A percentage needs a job: it's worked out from its estimate.",
+    "photo_not_found": "We couldn't find that photo.",
+    "pick_one_to_five_chats": "Pick between 1 and 5 conversations.",
+    "signature_required": "We need the name of whoever is signing.",
+    "slug_taken": "That link is already used by another business. Pick a different one.",
+    "stripe_no_checkout_url": "We couldn't open the payment page. Please try again in a moment.",
+    "worker_not_in_period": "That worker has no hours in that period."
   }
 }

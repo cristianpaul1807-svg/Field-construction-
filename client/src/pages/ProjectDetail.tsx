@@ -22,7 +22,7 @@ import { PaymentScheduleCard, type PaymentMilestone } from "@/components/Payment
 import { ProjectTeamPanel, type TeamMember } from "@/components/ProjectTeamPanel";
 import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal, Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
-import { useApi, apiFetch, downloadFile } from "@/lib/api";
+import { useApi, apiFetch, downloadFile, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "confirmado", "completado", "pausado"];
@@ -126,7 +126,7 @@ export default function ProjectDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: id, title: coTitle, description: coDescription, amount: coAmount || 0 }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       setChangeOrderOpen(false);
       setCoTitle("");
       setCoDescription("");
@@ -176,7 +176,7 @@ export default function ProjectDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status, progressPercent: progress }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("projects.saveError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("projects.saveError")));
       setEditing(false);
       reload();
     } catch (err) {

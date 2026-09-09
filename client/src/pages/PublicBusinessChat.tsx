@@ -1,4 +1,4 @@
-import { readJson } from "@/lib/api";
+import { readJson, serverMessage } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "wouter";
 import { Card } from "@/components/ui/card";
@@ -95,7 +95,7 @@ export default function PublicBusinessChat() {
     })
       .then(async (res) => {
         const body = await res.json().catch(() => null);
-        if (!res.ok) throw new Error(body?.error || t("publicChat.startError"));
+        if (!res.ok) throw new Error(serverMessage(body, t, t("publicChat.startError")));
         const session: LeadSession = { businessId: body.businessId, clientId: body.clientId, conversationId: body.conversationId };
         localStorage.setItem(storageKey(slug), JSON.stringify(session));
         setLead(session);

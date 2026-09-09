@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -78,7 +78,7 @@ export function PaymentPlanEditor() {
       });
       if (!res.ok) {
         const body = await readJson<{ error?: string; code?: string }>(res);
-        throw new Error(body?.code === "plan_not_100" ? t("paymentPlan.mustTotal100") : body?.error || t("common.genericError"));
+        throw new Error(body?.code === "plan_not_100" ? t("paymentPlan.mustTotal100") : serverMessage(body, t, t("common.genericError")));
       }
       setSaved(true);
     } catch (err) {

@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2 } from "lucide-react";
 import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
 
@@ -81,7 +81,7 @@ export default function CostTracking() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId: selectedProjectId, category, description, amount, date }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       setOpen(false);
       setDescription("");
       setAmount("");

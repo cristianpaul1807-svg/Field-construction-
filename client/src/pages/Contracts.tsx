@@ -10,7 +10,7 @@ import { Search, Upload, FileText, Download } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
 
@@ -39,7 +39,7 @@ function UploadDocumentDialog({ projectId, onUploaded }: { projectId: string; on
       // No Content-Type header: the browser sets the multipart boundary.
       const res = await apiFetch("/api/documents", { method: "POST", body: form });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || t("contracts.uploadError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("contracts.uploadError")));
       setOpen(false); reset(); onUploaded();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("contracts.uploadError"));

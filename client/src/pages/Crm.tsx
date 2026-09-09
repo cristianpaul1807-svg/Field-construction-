@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type LeadStatus } from "@/lib/mockData";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface Client {
@@ -59,7 +59,7 @@ function NewLeadDialog({ onCreated }: { onCreated: () => void }) {
         body: JSON.stringify({ name: name.trim(), phone, email, address }),
       });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(body, t, t("common.genericError")));
       setOpen(false); reset(); onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.genericError"));
@@ -128,7 +128,7 @@ export default function Crm() {
           leadStatus: draft.leadStatus,
         }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       setDraft(null);
       reload();
     } catch (err) {

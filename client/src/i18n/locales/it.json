@@ -1258,10 +1258,31 @@
     "taxNumbers": "i tuoi numeri GST e QST",
     "go": "Completa"
   },
-  "payErrors": {
-    "invoice_not_found": "Non abbiamo trovato questa fattura. L'impresa potrebbe averla annullata.",
-    "invoice_already_paid": "Questa fattura è già pagata.",
+  "serverErrors": {
+    "accept_invitation_first": "Accetta l'invito prima di scrivere.",
+    "account_has_no_contact": "Questo account non ha email né telefono.",
+    "business_not_found": "Non abbiamo trovato questa impresa. Controlla il link.",
     "business_stripe_not_ready": "L'impresa non ha ancora attivato i pagamenti con carta. Scrivile per concordare come pagare.",
-    "stripe_no_checkout_url": "Non siamo riusciti ad aprire la pagina di pagamento. Riprova tra un momento."
+    "chat_not_found": "Non abbiamo trovato questa conversazione.",
+    "conversation_not_found": "Non abbiamo trovato questa conversazione.",
+    "document_not_found": "Non abbiamo trovato questo documento.",
+    "estimate_has_no_client": "Assegna un cliente al preventivo prima di inviarlo.",
+    "invalid_access_code": "Questo codice non è valido. Verificalo con l'ufficio.",
+    "invoice_already_paid": "Questa fattura è già pagata.",
+    "invoice_not_found": "Non abbiamo trovato questa fattura. Potrebbe essere stata annullata.",
+    "logo_wrong_format": "Il logo deve essere PNG, JPEG, WebP o SVG.",
+    "milestone_not_billable": "Non c'è ancora nulla da fatturare in questa fase.",
+    "no_hours": "Nessuna ora approvata in quel periodo.",
+    "no_rate": "Questo lavoratore non ha una tariffa oraria. Impostala nella sua scheda.",
+    "no_stripe_account": "Questa impresa non ha ancora collegato Stripe.",
+    "not_sendable": "Non c'è nulla da inviare.",
+    "paid_invoice_not_cancellable": "Una fattura pagata non si può annullare. Emetti una nota di credito.",
+    "percent_needs_project": "Una percentuale ha bisogno di un cantiere: si calcola sul suo preventivo.",
+    "photo_not_found": "Non abbiamo trovato questa foto.",
+    "pick_one_to_five_chats": "Scegli tra 1 e 5 conversazioni.",
+    "signature_required": "Serve il nome di chi firma.",
+    "slug_taken": "Questo link è già usato da un'altra impresa. Scegline un altro.",
+    "stripe_no_checkout_url": "Non siamo riusciti ad aprire la pagina di pagamento. Riprova tra un momento.",
+    "worker_not_in_period": "Questo lavoratore non ha ore in quel periodo."
   }
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { X, UserPlus } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 
 /**
  * Quién trabaja en esta obra.
@@ -58,7 +58,7 @@ export function ProjectTeamPanel({
     setError(null);
     try {
       const res = await fn();
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.saveError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.saveError")));
       setChoice("");
       onChanged();
     } catch (err) {

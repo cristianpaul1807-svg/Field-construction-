@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface MarginSettings {
@@ -30,7 +30,7 @@ export default function SettingsMargins() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ defaultMarginType: marginType, defaultWastePercent: waste }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || t("common.genericError"));
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       setSaved(true);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : t("common.genericError"));

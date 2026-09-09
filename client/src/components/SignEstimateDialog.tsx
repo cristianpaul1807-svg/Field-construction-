@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Eraser, FileSignature } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { apiFetch, readJson } from "@/lib/api";
+import { apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -110,7 +110,7 @@ export function SignEstimateDialog({
       if (!res.ok) {
         const body = await readJson<{ error?: string; code?: string }>(res);
         throw new Error(
-          body?.code === "signature_required" ? t("sign.nameRequired") : body?.error || t("common.genericError")
+          body?.code === "signature_required" ? t("sign.nameRequired") : serverMessage(body, t, t("common.genericError"))
         );
       }
       onOpenChange(false);
