@@ -955,7 +955,8 @@
     "time": "Ora",
     "notes": "Note",
     "deleteConfirm": "Eliminare questo evento dall'agenda?",
-    "pickProjectToAdd": "Scegli un cantiere qui sopra per aggiungere un appuntamento."
+    "pickProjectToAdd": "Scegli un cantiere qui sopra per aggiungere un appuntamento.",
+    "nothingToday": "Niente in agenda per questo giorno."
   },
   "checkIn": {
     "title": "Timbratura (entrata / uscita)",

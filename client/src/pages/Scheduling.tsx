@@ -209,6 +209,17 @@ export default function Scheduling() {
                     </div>
                   )}
 
+                  {/* Una rejilla de 24 horas vacía y sin una palabra puede
+                      leerse como que todavía está cargando. Un día sin nada es
+                      información, y se dice. */}
+                  {positioned.length === 0 && (
+                    <div className="absolute inset-x-0 top-8 flex justify-center pointer-events-none">
+                      <span className="text-xs text-muted-foreground bg-card/90 rounded-md px-3 py-1.5">
+                        {t("scheduling.nothingToday")}
+                      </span>
+                    </div>
+                  )}
+
                   {positioned.map(({ event, lane, laneCount }) => {
                     const start = new Date(event.startTime);
                     const top = start.getHours() * HOUR_HEIGHT + (start.getMinutes() / 60) * HOUR_HEIGHT;

@@ -955,7 +955,8 @@
     "time": "Time",
     "notes": "Notes",
     "deleteConfirm": "Delete this event from the schedule?",
-    "pickProjectToAdd": "Pick a project above to add an appointment."
+    "pickProjectToAdd": "Pick a project above to add an appointment.",
+    "nothingToday": "Nothing scheduled for this day."
   },
   "checkIn": {
     "title": "Check-in / Check-out",

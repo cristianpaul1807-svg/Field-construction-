@@ -955,7 +955,8 @@
     "time": "Hora",
     "notes": "Notas",
     "deleteConfirm": "¿Eliminar este evento de la agenda?",
-    "pickProjectToAdd": "Elige una obra arriba para añadir una cita."
+    "pickProjectToAdd": "Elige una obra arriba para añadir una cita.",
+    "nothingToday": "No hay nada en la agenda este día."
   },
   "checkIn": {
     "title": "Fichaje (entrada / salida)",
