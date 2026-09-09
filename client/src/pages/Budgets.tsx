@@ -22,6 +22,7 @@ import { AssemblyTemplateDialog } from "@/components/AssemblyTemplateDialog";
 import { AssignClientControl } from "@/components/AssignClientControl";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
+import { previewTax, type TaxRate } from "@/lib/taxes";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
@@ -110,6 +111,11 @@ export default function Budgets() {
   const { data: assemblyTemplates, loading: templatesLoading, error: templatesError } =
     useApi<AssemblyTemplate[]>("/api/assembly-templates");
   const { data: categories } = useApi<BudgetCategory[]>(`/api/budget-categories?_r=${reloadToken}`);
+  // La provincia del negocio y la tabla de tasas de Canadá: las mismas dos
+  // cosas que mira el servidor cuando emite la factura de este presupuesto.
+  const { data: empresa } = useApi<{ province: string }>("/api/settings/company");
+  const { data: tasas } = useApi<TaxRate[]>("/api/canada-tax-rates");
+  const tasaDelNegocio = (tasas ?? []).find((r) => r.province === empresa?.province) ?? null;
 
   const refresh = () => setReloadToken((t) => t + 1);
 
@@ -202,6 +208,11 @@ export default function Budgets() {
   const wasteAmount = subtotal * (wastePercent / 100);
   const marginAmount = (subtotal + wasteAmount) * (marginPercent / 100);
   const total = subtotal + wasteAmount + marginAmount;
+
+  // El impuesto que llevará el PDF, calculado sobre el total que se está
+  // editando ahora mismo. La provincia sale de los ajustes del negocio, que es
+  // de donde la saca el servidor cuando emite la factura.
+  const impuestos = previewTax(total, tasaDelNegocio);
   const zones = Array.from(new Set(lines.map((l) => l.zone)));
 
   const saveLineEdit = async (lineId: string) => {
@@ -663,23 +674,50 @@ export default function Budgets() {
                   </div>
                 </Card>
 
+                {/* Estos cuatro rótulos estaban en castellano fijo dentro de un
+                    producto que se vende en cuatro idiomas. */}
                 <Card className="p-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">{t("common.subtotal")}</span>
                     <span className="text-foreground">{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Merma ({wastePercent}%)</span>
+                    <span className="text-muted-foreground">{t("budgets.waste")} ({wastePercent}%)</span>
                     <span className="text-foreground">{formatCurrency(wasteAmount)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Margen ({marginPercent}%)</span>
+                    <span className="text-muted-foreground">{t("budgets.margin")} ({marginPercent}%)</span>
                     <span className="text-foreground">{formatCurrency(marginAmount)}</span>
                   </div>
+
+                  {/* El total salía sin impuestos, y el PDF que recibe el
+                      cliente sí los lleva. El contratista decía "siete mil
+                      ciento catorce" por teléfono y luego mandaba un papel de
+                      ocho mil ciento setenta y siete. En Quebec son dos
+                      impuestos y se declaran por separado, así que se enseñan
+                      por separado. */}
+                  {impuestos.parts.length > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm pt-2 border-t border-border">
+                        <span className="text-muted-foreground">{t("budgets.beforeTax")}</span>
+                        <span className="text-foreground">{formatCurrency(total)}</span>
+                      </div>
+                      {impuestos.parts.map((parte) => (
+                        <div key={parte.label} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{parte.label}</span>
+                          <span className="text-foreground">{formatCurrency(parte.amount)}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
                   <div className="flex justify-between text-base font-semibold pt-2 border-t border-border">
-                    <span className="text-foreground">Total</span>
-                    <span className="text-foreground">{formatCurrency(total)}</span>
+                    <span className="text-foreground">{t("common.total")}</span>
+                    <span className="text-foreground">{formatCurrency(impuestos.total)}</span>
                   </div>
+                  {impuestos.parts.length > 0 && (
+                    <p className="text-xs text-muted-foreground">{t("budgets.taxNote")}</p>
+                  )}
                 </Card>
 
                 <div className="flex gap-2">

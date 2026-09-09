@@ -250,7 +250,9 @@
     "messageToClientPlaceholder": "Ex. Voici votre soumission. Pour toute question, écrivez-moi ici.",
     "approveWithoutSending": "Approuver sans envoyer",
     "approveAndDeliver": "Approuver et envoyer",
-    "sentToClient": "Envoyé dans le clavardage du client."
+    "sentToClient": "Envoyé dans le clavardage du client.",
+    "beforeTax": "Total avant taxes",
+    "taxNote": "C'est le total qui figure sur le PDF et qui sera facturé. La retenue, si vous en appliquez une, se déduit du paiement, pas du total."
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -443,7 +445,8 @@
     "downloadEstimate": "Télécharger la soumission",
     "acceptEstimate": "Accepter la soumission",
     "notSentYet": "Votre entrepreneur ne vous a pas encore envoyé cette soumission.",
-    "yourProject": "Votre projet"
+    "yourProject": "Votre projet",
+    "taxIncluded": "{{subtotal}} + {{tax}} de taxes"
   },
   "worker": {
     "accessTitle": "Accès travailleur",
@@ -604,7 +607,6 @@
     "businessName": "Nom de l'entreprise",
     "publicLinkAutomations": "Lien public (Automatisations)",
     "province": "Province",
-    "taxRate": "Taux de taxe (%)",
     "marginsDescriptionFull": "Règles de calcul par défaut pour les nouvelles soumissions",
     "defaultMarginType": "Type de marge par défaut",
     "defaultWaste": "Facteur de pertes par défaut",
@@ -672,7 +674,10 @@
     "showMaterials": "Liste des matériaux prévus",
     "showMaterialsHint": "Construite à partir des postes de matériaux de la soumission, elle ne peut donc jamais promettre ce que le prix ne couvre pas.",
     "showSchedule": "Calendrier prévu des travaux",
-    "showScheduleHint": "Construit à partir de la projection des travaux. Savoir quand ça commence et combien de temps ça dure est ce qui rassure le plus avant de signer."
+    "showScheduleHint": "Construit à partir de la projection des travaux. Savoir quand ça commence et combien de temps ça dure est ce qui rassure le plus avant de signer.",
+    "provincePlaceholder": "Choisissez votre province",
+    "provinceHint": "C'est d'ici que vient la taxe de chaque facture. Choisissez où vous déclarez.",
+    "taxFromProvince": "Vos factures porteront {{taxes}}."
   },
   "reports": {
     "title": "Rapports",

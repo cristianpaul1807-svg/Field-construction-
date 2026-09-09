@@ -250,7 +250,9 @@
     "messageToClientPlaceholder": "Ej. Aquí tienes el presupuesto. Cualquier duda, escríbeme por aquí.",
     "approveWithoutSending": "Aprobar sin enviar",
     "approveAndDeliver": "Aprobar y enviar",
-    "sentToClient": "Enviado al chat del cliente."
+    "sentToClient": "Enviado al chat del cliente.",
+    "beforeTax": "Total antes de impuestos",
+    "taxNote": "Es el total que sale en el PDF y el que se facturará. La retención, si la aplicas, se descuenta del pago, no del total."
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -443,7 +445,8 @@
     "downloadEstimate": "Descargar presupuesto",
     "acceptEstimate": "Aceptar presupuesto",
     "notSentYet": "Tu contratista todavía no te ha enviado este presupuesto.",
-    "yourProject": "Tu proyecto"
+    "yourProject": "Tu proyecto",
+    "taxIncluded": "{{subtotal}} + {{tax}} de impuestos"
   },
   "worker": {
     "accessTitle": "Acceso de trabajador",
@@ -604,7 +607,6 @@
     "businessName": "Nombre del negocio",
     "publicLinkAutomations": "Link público (Automatizaciones)",
     "province": "Provincia / Estado",
-    "taxRate": "Tasa de impuesto (%)",
     "marginsDescriptionFull": "Reglas de cálculo por defecto para nuevos presupuestos",
     "defaultMarginType": "Tipo de margen por defecto",
     "defaultWaste": "Factor de merma por defecto",
@@ -672,7 +674,10 @@
     "showMaterials": "Lista de materiales previstos",
     "showMaterialsHint": "Sale de las líneas de materiales del propio presupuesto, así que nunca promete algo que el precio no incluya.",
     "showSchedule": "Programación prevista de los trabajos",
-    "showScheduleHint": "Sale de la proyección de trabajo. Saber cuándo empieza y cuánto dura es lo que más tranquiliza al cliente antes de firmar."
+    "showScheduleHint": "Sale de la proyección de trabajo. Saber cuándo empieza y cuánto dura es lo que más tranquiliza al cliente antes de firmar.",
+    "provincePlaceholder": "Elige tu provincia",
+    "provinceHint": "De aquí sale el impuesto de cada factura. Elige donde tributas.",
+    "taxFromProvince": "Tus facturas llevarán {{taxes}}."
   },
   "reports": {
     "title": "Informes",

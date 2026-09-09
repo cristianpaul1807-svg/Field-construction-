@@ -11,6 +11,7 @@ import {
   renderPayrollPdf,
   documentNumber,
   normalizeDocLang,
+  docCopy,
   type BusinessIdentity,
   type DocLang,
   type DocLine,
@@ -1660,7 +1661,10 @@ apiRouter.get(
         .maybeSingle(),
       supabase
         .from("estimates")
-        .select("id, status, total")
+        // El negocio viene con el presupuesto porque requireClientAuth no pone
+        // req.businessId: un cliente que entra con código no tiene auth.uid()
+        // ni negocio propio, y de ahí sale la provincia del impuesto.
+        .select("id, status, total, business_id")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -1746,6 +1750,23 @@ apiRouter.get(
       };
     });
 
+    // El impuesto de este presupuesto, con el mismo ayudante que emite las
+    // facturas: lo que el cliente lee en su portal y lo que se le va a cobrar
+    // salen de la misma cuenta.
+    const subtotalPresupuesto = estimate.data ? Number(estimate.data.total) : null;
+    const impuestoDelPresupuesto =
+      subtotalPresupuesto === null
+        ? null
+        : await (async () => {
+            const negocio = (estimate.data as any).business_id ?? req.businessId;
+            const { taxAmount, breakdown } = await computeInvoiceTax(getSupabaseAdmin(), negocio, subtotalPresupuesto);
+            return {
+              taxAmount,
+              taxBreakdown: breakdown,
+              totalWithTax: Math.round((subtotalPresupuesto + taxAmount) * 100) / 100,
+            };
+          })();
+
     res.json({
       client: { id: client.data.id, name: client.data.name },
       project: project.data
@@ -1763,6 +1784,11 @@ apiRouter.get(
             id: estimate.data.id,
             status: estimate.data.status,
             total: Number(estimate.data.total),
+            // El cliente veía el total sin impuestos mientras el PDF que se
+            // había descargado sí los llevaba. Se calculan aquí, con el mismo
+            // ayudante que usa la factura, para no tener dos fórmulas de
+            // impuestos que puedan separarse con el tiempo.
+            ...impuestoDelPresupuesto,
             signature: signature
               ? { name: signature.signed_name, signedAt: signature.signed_at, total: Number(signature.signed_total) }
               : null,
@@ -6944,6 +6970,25 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
     };
   });
 
+  // Ocultar una línea escondía también su dinero: el PDF sólo sumaba lo
+  // visible, así que desmarcar "Carpintero (40 h)" —que es justo lo que hace
+  // un contratista para que no se vea su coste de mano de obra— bajaba el
+  // presupuesto un tercio sin decírselo a nadie. El cliente firmaba 4.765 $ y
+  // luego recibía facturas por 8.180 $.
+  //
+  // El desglose interno sigue sin salir. Lo que no puede desaparecer es el
+  // importe: va en un solo concepto, para que lo que el cliente lee sume
+  // exactamente lo que se le va a cobrar.
+  const ocultoTotal =
+    Math.round(
+      lines.data
+        .filter((l) => !l.visible_to_client)
+        .reduce((sum, l) => sum + Number(l.total) * uplift, 0) * 100
+    ) / 100;
+  if (ocultoTotal > 0) {
+    docLines.push({ zone: null, item: docCopy(lang).otherWork, quantity: 1, unitCost: ocultoTotal, total: ocultoTotal });
+  }
+
   const subtotal = Math.round(docLines.reduce((sum, l) => sum + l.total, 0) * 100) / 100;
   const { taxAmount, breakdown } = await computeInvoiceTax(admin, businessId, subtotal);
 
@@ -8014,7 +8059,7 @@ apiRouter.get(
         .maybeSingle(),
       supabase
         .from("estimates")
-        .select("id, status, total")
+        .select("id, status, total, business_id")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .order("created_at", { ascending: false })
@@ -8060,6 +8105,23 @@ apiRouter.get(
       visiblePhotos = data;
     }
 
+    // El impuesto de este presupuesto, con el mismo ayudante que emite las
+    // facturas: lo que el cliente lee en su portal y lo que se le va a cobrar
+    // salen de la misma cuenta.
+    const subtotalPresupuesto = estimate.data ? Number(estimate.data.total) : null;
+    const impuestoDelPresupuesto =
+      subtotalPresupuesto === null
+        ? null
+        : await (async () => {
+            const negocio = (estimate.data as any).business_id ?? req.businessId;
+            const { taxAmount, breakdown } = await computeInvoiceTax(getSupabaseAdmin(), negocio, subtotalPresupuesto);
+            return {
+              taxAmount,
+              taxBreakdown: breakdown,
+              totalWithTax: Math.round((subtotalPresupuesto + taxAmount) * 100) / 100,
+            };
+          })();
+
     res.json({
       client: { id: client.data.id, name: client.data.name },
       project: project.data
@@ -8070,6 +8132,11 @@ apiRouter.get(
             id: estimate.data.id,
             status: estimate.data.status,
             total: Number(estimate.data.total),
+            // El cliente veía el total sin impuestos mientras el PDF que se
+            // había descargado sí los llevaba. Se calculan aquí, con el mismo
+            // ayudante que usa la factura, para no tener dos fórmulas de
+            // impuestos que puedan separarse con el tiempo.
+            ...impuestoDelPresupuesto,
             signature: signature
               ? { name: signature.signed_name, signedAt: signature.signed_at, total: Number(signature.signed_total) }
               : null,

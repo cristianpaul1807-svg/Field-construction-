@@ -29,7 +29,10 @@ interface ClientPortalData {
   estimate: {
     id: string;
     status: string;
+    /** Antes de impuestos, que es lo que se guarda y sobre lo que se factura. */
     total: number;
+    taxAmount?: number;
+    totalWithTax?: number;
     signature: { name: string; signedAt: string; total: number } | null;
   } | null;
   pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
@@ -252,7 +255,22 @@ export default function ClientPortalMe() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">{t("clientPortal.estimateNumber", { id: data.estimate.id.slice(0, 8).toUpperCase() })}</p>
-                      <p className="text-xl font-semibold text-foreground mt-1">{formatCurrency(data.estimate.total)}</p>
+                      {/* El cliente veía el total sin impuestos, y el PDF que
+                          se descarga desde el botón de abajo sí los lleva: dos
+                          cifras distintas para el mismo presupuesto, en la
+                          pantalla donde decide si firma. Manda la de arriba,
+                          que es la que va a pagar. */}
+                      <p className="text-xl font-semibold text-foreground mt-1">
+                        {formatCurrency(data.estimate.totalWithTax ?? data.estimate.total)}
+                      </p>
+                      {data.estimate.taxAmount ? (
+                        <p className="text-xs text-muted-foreground">
+                          {t("clientPortal.taxIncluded", {
+                            subtotal: formatCurrency(data.estimate.total),
+                            tax: formatCurrency(data.estimate.taxAmount),
+                          })}
+                        </p>
+                      ) : null}
                     </div>
                     {/* Se guarda "aceptado" porque ese es el dato, pero esta es
                         la pantalla del cliente que paga: el slug en castellano
@@ -401,11 +419,14 @@ export default function ClientPortalMe() {
       </div>
 
       {data?.estimate && (
+        // "Importe que aceptas" tiene que ser el que va a pagar. Lo que se
+        // guarda al firmar sigue siendo el total sin impuestos, que es el valor
+        // del contrato y sobre lo que se factura: eso no se toca.
         <SignEstimateDialog
           open={signing}
           onOpenChange={setSigning}
           estimateId={data.estimate.id}
-          total={data.estimate.total}
+          total={data.estimate.totalWithTax ?? data.estimate.total}
           defaultName={data.client.name}
           onSigned={reload}
         />

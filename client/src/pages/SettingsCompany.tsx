@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -17,6 +18,7 @@ interface CompanyData {
   slug: string;
   licenseNumber: string;
   taxConfig: { region?: string; rate?: number };
+  province: string;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -29,14 +31,34 @@ interface CompanyData {
   estimateShowSchedule: boolean;
 }
 
+interface TaxRate {
+  province: string;
+  label: string;
+  isHst: boolean;
+  gstRate: number;
+  pstRate: number;
+  hstRate: number;
+}
+
+/** Cómo se llama el impuesto en cada sitio, con el porcentaje que se cobra.
+ *  En Quebec son dos y se declaran por separado; en Ontario es uno solo. */
+function describeTax(r: TaxRate) {
+  const pct = (n: number) => `${Number((n * 100).toFixed(3))} %`;
+  if (r.isHst) return `TVH/HST ${pct(r.hstRate)}`;
+  const partes = [`TPS/GST ${pct(r.gstRate)}`];
+  if (r.pstRate > 0) partes.push(r.province === "QC" ? `TVQ/QST ${pct(r.pstRate)}` : `PST ${pct(r.pstRate)}`);
+  return partes.join(" + ");
+}
+
 export default function SettingsCompany() {
   const { t } = useTranslation();
   const { data, loading, error, reload } = useApi<CompanyData>("/api/settings/company");
+  const { data: taxRates } = useApi<TaxRate[]>("/api/canada-tax-rates");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [license, setLicense] = useState("");
-  const [region, setRegion] = useState("");
-  const [rate, setRate] = useState("");
+  const [province, setProvince] = useState("");
+  const tasaElegida = (taxRates ?? []).find((r) => r.province === province) ?? null;
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -85,8 +107,7 @@ export default function SettingsCompany() {
     setName(data.name);
     setSlug(data.slug ?? "");
     setLicense(data.licenseNumber ?? "");
-    setRegion(data.taxConfig?.region ?? "");
-    setRate(data.taxConfig?.rate ? String(data.taxConfig.rate * 100) : "");
+    setProvince(data.province ?? "");
     setAddress(data.address ?? "");
     setPhone(data.phone ?? "");
     setEmail(data.email ?? "");
@@ -109,7 +130,7 @@ export default function SettingsCompany() {
           name,
           slug,
           licenseNumber: license,
-          taxConfig: { region, rate: rate ? Number(rate) / 100 : undefined },
+          province,
           address,
           phone,
           email,
@@ -206,13 +227,31 @@ export default function SettingsCompany() {
                 <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
                 <p className="text-xs text-status-warning-fg">{t("settings.slugWarning")}</p>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="region">{t("settings.province")}</Label>
-                <Input id="region" value={region} onChange={(e) => setRegion(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="rate">{t("settings.taxRate")}</Label>
-                <Input id="rate" type="number" value={rate} onChange={(e) => setRate(e.target.value)} />
+              {/* Aquí había una casilla de texto libre y un porcentaje a mano
+                  que no leía nadie: vivían en tax_config, mientras la factura
+                  saca el impuesto de businesses.province contra la tabla de
+                  tasas de Canadá. Un contratista de Ontario escribía "Ontario"
+                  y "13", se quedaba tranquilo, y sus facturas salían con TPS y
+                  TVQ de Quebec. Ahora se elige la provincia de verdad y se
+                  enseña qué impuesto sale de ella, que es lo que va a acabar
+                  impreso en un documento legal. */}
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="province">{t("settings.province")}</Label>
+                <Select value={province} onValueChange={setProvince}>
+                  <SelectTrigger id="province">
+                    <SelectValue placeholder={t("settings.provincePlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(taxRates ?? []).map((r) => (
+                      <SelectItem key={r.province} value={r.province}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {tasaElegida ? t("settings.taxFromProvince", { taxes: describeTax(tasaElegida) }) : t("settings.provinceHint")}
+                </p>
               </div>
             </div>
           </Card>

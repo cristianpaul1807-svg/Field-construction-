@@ -250,7 +250,9 @@
     "messageToClientPlaceholder": "e.g. Here's your estimate. Any questions, just write to me here.",
     "approveWithoutSending": "Approve without sending",
     "approveAndDeliver": "Approve and send",
-    "sentToClient": "Sent to the client's chat."
+    "sentToClient": "Sent to the client's chat.",
+    "beforeTax": "Total before tax",
+    "taxNote": "This is the total on the PDF and what will be invoiced. The holdback, if you use one, comes off the payment, not off the total."
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -443,7 +445,8 @@
     "downloadEstimate": "Download estimate",
     "acceptEstimate": "Accept estimate",
     "notSentYet": "Your contractor hasn't sent you this estimate yet.",
-    "yourProject": "Your project"
+    "yourProject": "Your project",
+    "taxIncluded": "{{subtotal}} + {{tax}} tax"
   },
   "worker": {
     "accessTitle": "Worker access",
@@ -604,7 +607,6 @@
     "businessName": "Business name",
     "publicLinkAutomations": "Public link (Automations)",
     "province": "Province / State",
-    "taxRate": "Tax rate (%)",
     "marginsDescriptionFull": "Default calculation rules for new estimates",
     "defaultMarginType": "Default margin type",
     "defaultWaste": "Default waste factor",
@@ -672,7 +674,10 @@
     "showMaterials": "List of materials to be used",
     "showMaterialsHint": "Built from the estimate's own material lines, so it can never promise something the price doesn't cover.",
     "showSchedule": "Planned work schedule",
-    "showScheduleHint": "Built from the work projection. Knowing when it starts and how long it takes is what reassures a client most before signing."
+    "showScheduleHint": "Built from the work projection. Knowing when it starts and how long it takes is what reassures a client most before signing.",
+    "provincePlaceholder": "Choose your province",
+    "provinceHint": "This is where every invoice's tax comes from. Pick where you file.",
+    "taxFromProvince": "Your invoices will carry {{taxes}}."
   },
   "reports": {
     "title": "Reports & Analytics",

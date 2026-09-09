@@ -176,6 +176,8 @@ interface Copy {
   unitPrice: string;
   lineTotal: string;
   subtotal: string;
+  /** Un solo concepto que recoge lo que el negocio no quiso desglosar. */
+  otherWork: string;
   gst: string;
   qst: string;
   pst: string;
@@ -235,6 +237,7 @@ const COPY: Record<DocLang, Copy> = {
     unitPrice: "P. unitario",
     lineTotal: "Importe",
     subtotal: "Subtotal",
+    otherWork: "Otros trabajos y mano de obra",
     gst: "TPS/GST",
     qst: "TVQ/QST",
     pst: "PST",
@@ -292,6 +295,7 @@ const COPY: Record<DocLang, Copy> = {
     unitPrice: "Unit price",
     lineTotal: "Amount",
     subtotal: "Subtotal",
+    otherWork: "Other work and labour",
     gst: "GST",
     qst: "QST",
     pst: "PST",
@@ -349,6 +353,7 @@ const COPY: Record<DocLang, Copy> = {
     unitPrice: "Prix unitaire",
     lineTotal: "Montant",
     subtotal: "Sous-total",
+    otherWork: "Autres travaux et main-d'œuvre",
     gst: "TPS",
     qst: "TVQ",
     pst: "TVP",
@@ -406,6 +411,7 @@ const COPY: Record<DocLang, Copy> = {
     unitPrice: "Prezzo unit.",
     lineTotal: "Importo",
     subtotal: "Subtotale",
+    otherWork: "Altri lavori e manodopera",
     gst: "GST",
     qst: "QST",
     pst: "PST",
@@ -455,6 +461,13 @@ const LOCALE: Record<DocLang, string> = {
   fr: "fr-CA",
   it: "it-CH",
 };
+
+/** Los rótulos de los documentos, para quien arma los datos antes de
+ *  renderizarlos: el nombre de una fila agrupada es copia de documento y tiene
+ *  que salir de la misma tabla que el resto. */
+export function docCopy(lang: DocLang): Copy {
+  return COPY[lang];
+}
 
 export function normalizeDocLang(raw: unknown): DocLang {
   const value = String(raw ?? "").slice(0, 2).toLowerCase();
@@ -894,11 +907,33 @@ function pageNumbers(doc: Doc, copy: Copy) {
   }
 }
 
+/**
+ * Las fuentes estándar de PDF no llevan la ligadura œ y pdfkit la tira sin
+ * avisar: "main-d'œuvre" sale impreso "main-d'uvre" y "cœur", "cur". No es un
+ * problema de nuestra copia —que ya la evitaba— sino de lo que escribe el
+ * contratista: en Quebec, "Main-d'œuvre" es lo primero que teclea en una línea
+ * de presupuesto, y ese texto acaba en el papel que firma su cliente.
+ *
+ * Se cambia por "oe", que es la grafía alternativa aceptada y se lee bien.
+ * Va envuelto sobre el propio documento para que valga para todo lo que se
+ * imprima, venga de nuestra copia o de sus datos.
+ */
+function sinLigaduras<T>(valor: T): T {
+  return typeof valor === "string" ? (valor.replace(/œ/g, "oe").replace(/Œ/g, "OE") as unknown as T) : valor;
+}
+
+function nuevoDocumento(): Doc {
+  // bufferPages guarda cada página en memoria para poder sellar el "Página N"
+  // cuando ya se sabe cuántas hay.
+  const doc: Doc = new PDFDocument({ size: "A4", margin: MARGIN, bufferPages: true });
+  const original = doc.text.bind(doc);
+  (doc as any).text = (texto: unknown, ...resto: unknown[]) => original(sinLigaduras(texto) as string, ...(resto as []));
+  return doc;
+}
+
 function render(data: EstimateDoc | InvoiceDoc, lang: DocLang): Promise<Buffer> {
   const copy = COPY[lang];
-  // bufferPages keeps every page in memory so the "Page N" footer can be
-  // stamped once the final page count is known.
-  const doc = new PDFDocument({ size: "A4", margin: MARGIN, bufferPages: true });
+  const doc = nuevoDocumento();
 
   const chunks: Buffer[] = [];
   const done = new Promise<Buffer>((resolve, reject) => {
