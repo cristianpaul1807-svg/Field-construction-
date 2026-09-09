@@ -2084,6 +2084,43 @@ apiRouter.post(
       return;
     }
 
+    // El correo y el teléfono son la única forma que tiene el contratista de
+    // contestar. Se aceptaba cualquier cosa: escribí "esto-no-es-un-correo" y
+    // llegó al CRM tal cual, y con eso el trabajo está perdido sin que nadie se
+    // entere. Se comprueba aquí, en el servidor, porque el paso siguiente lo
+    // decide el servidor. La vara es baja a propósito —un cliente a medio
+    // capturar vale más que un cliente perdido—: sólo se rechaza lo que no
+    // puede ser un correo o un teléfono de ninguna manera.
+    const copyAviso = flowCopy(lang);
+    const noPuedeSerCorreo = currentStep === "email" && !/^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/.test(value);
+    // Sólo se cuentan los dígitos. Llegué a descartar también lo que llevara
+    // letras, y eso tiraba "+1 514 555 0199 poste 12", que es un teléfono de
+    // Quebec perfectamente normal. Sin letras que valgan, "llámame" y
+    // "no-es-un-telefono" caen igual, porque no tienen dígitos.
+    const noPuedeSerTelefono = currentStep === "phone" && value.replace(/\D/g, "").length < 7;
+    if (noPuedeSerCorreo || noPuedeSerTelefono) {
+      await admin.from("chat_messages").insert([
+        {
+          channel_id: channel.id,
+          business_id: channel.business_id,
+          sender_type: "client",
+          content: value,
+          expires_at: computeExpiresAt(channel.disappearing_duration),
+        },
+        {
+          channel_id: channel.id,
+          business_id: channel.business_id,
+          sender_type: "bot",
+          content: noPuedeSerCorreo ? copyAviso.retryEmail : copyAviso.retryPhone,
+          expires_at: computeExpiresAt(channel.disappearing_duration),
+        },
+      ]);
+      // Se queda en el mismo paso: vuelve a preguntar lo mismo, sin perder nada
+      // de lo ya contestado.
+      res.json({ controlMode: null, ...flowStepView(currentStep, categoryList, lang) });
+      return;
+    }
+
     // Echo what the visitor picked/typed as their own chat bubble — for a
     // button step this is the option's label, not its raw id/value.
     const view = flowStepView(currentStep, categoryList, lang);
@@ -3816,13 +3853,29 @@ apiRouter.get(
   "/clients",
   route(async (req, res) => {
     const supabase = req.supabase!;
-    const { data, error } = await supabase
+    const { data: todos, error } = await supabase
       .from("clients")
       .select("id, name, phone, email, address, lead_status, source, created_at")
       .eq("business_id", req.businessId!)
       .order("name");
 
     if (error) throw error;
+
+    // El chat público crea una ficha en cuanto alguien abre el enlace, antes de
+    // que diga nada, porque la conversación necesita a quién colgarse. El que
+    // mira y se va deja un "Visitante" vacío, y un enlace compartido en redes
+    // entierra los avisos de verdad bajo cientos de ellos.
+    //
+    // Aquí no se borra nada —la conversación sigue viva por si vuelve— pero no
+    // se llama contacto a quien no ha dejado ninguna forma de contactarle. En
+    // cuanto el flujo captura un teléfono, un correo o una dirección, aparece
+    // solo. Se mira si vino por el enlace, no cómo se llama: un cliente que el
+    // contratista apunta a mano sin teléfono todavía sigue siendo suyo.
+    const data = (todos ?? []).filter(
+      (c) =>
+        c.source !== "link_publico" ||
+        Boolean(c.phone?.trim() || c.email?.trim() || c.address?.trim())
+    );
 
     // "Last activity" isn't stored on `clients` itself — derive it from the
     // most recent activities row per client (falls back to created_at).
@@ -8159,7 +8212,7 @@ apiRouter.get(
       channelIds.length
         ? supabase
             .from("chat_messages")
-            .select("channel_id, content, created_at")
+            .select("channel_id, content, created_at, sender_type")
             .in("channel_id", channelIds)
             .order("created_at", { ascending: false })
         : Promise.resolve({ data: [] as any[], error: null }),
@@ -8174,8 +8227,25 @@ apiRouter.get(
       return (pool as any[]).find((p) => p.id === c.participant_id);
     };
 
+    // Abrir el enlace público ya crea una conversación, con el saludo del bot
+    // dentro. Quien mira y se va deja un hilo en el que sólo hemos hablado
+    // nosotros, y con el enlace compartido en redes esos hilos vacíos entierran
+    // los que sí importan.
+    //
+    // La vara aquí es más baja que en el CRM a propósito: basta con que la
+    // persona haya dicho algo. Alguien que empezó el cuestionario y lo dejó a
+    // medias no ha dado su teléfono, pero es un cliente tibio que el
+    // contratista querrá perseguir. Sólo desaparece el hilo donde no ha hablado
+    // nadie más que el bot.
+    const haHabladoAlguien = new Set(
+      (lastMessages.data as any[]).filter((m) => m.sender_type !== "bot").map((m) => m.channel_id)
+    );
+    const visibles = channels.filter(
+      (c) => c.participant_type !== "client" || c.system !== "publico" || haHabladoAlguien.has(c.id)
+    );
+
     res.json(
-      channels.map((c) => {
+      visibles.map((c) => {
         const participant = participantOf(c);
         const lastMessage = (lastMessages.data as any[]).find((m) => m.channel_id === c.id);
         return {

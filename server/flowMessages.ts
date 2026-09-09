@@ -39,6 +39,10 @@ interface FlowCopy {
   namePlaceholder: string;
   phonePlaceholder: string;
   emailPlaceholder: string;
+  /** Cuando lo escrito no puede ser un correo o un teléfono: el contratista
+   *  recibiría un aviso al que no puede contestar. */
+  retryEmail: string;
+  retryPhone: string;
   accountReady: (email: string) => string;
   appointmentSummary: (when: string, reason: string | null) => string;
 }
@@ -70,6 +74,8 @@ export const FLOW_COPY: Record<FlowLang, FlowCopy> = {
     namePlaceholder: "Escribe aquí tu nombre...",
     phonePlaceholder: "Escribe aquí tu teléfono...",
     emailPlaceholder: "Escribe aquí tu correo electrónico...",
+    retryEmail: "Eso no parece un correo electrónico. Escríbelo otra vez, por favor — es por donde te enviaremos el presupuesto.",
+    retryPhone: "Eso no parece un número de teléfono. Escríbelo otra vez, por favor.",
     accountReady: (e) =>
       `¡Tu presupuesto está listo! Ya puedes seguir todo desde la app: inicia sesión como Cliente con ${e}, y usa "¿Olvidaste tu contraseña?" para crear la tuya propia.`,
     appointmentSummary: (w, r) => `Solicitó una cita — ${w}${r ? `: ${r}` : ""}`,
@@ -100,6 +106,8 @@ export const FLOW_COPY: Record<FlowLang, FlowCopy> = {
     namePlaceholder: "Type your name here...",
     phonePlaceholder: "Type your phone number here...",
     emailPlaceholder: "Type your email address here...",
+    retryEmail: "That doesn't look like an email address. Please type it again — it's where we'll send your estimate.",
+    retryPhone: "That doesn't look like a phone number. Please type it again.",
     accountReady: (e) =>
       `Your estimate is ready! You can now follow everything in the app: sign in as a Client with ${e}, and use "Forgot your password?" to set your own.`,
     appointmentSummary: (w, r) => `Requested an appointment — ${w}${r ? `: ${r}` : ""}`,
@@ -130,6 +138,8 @@ export const FLOW_COPY: Record<FlowLang, FlowCopy> = {
     namePlaceholder: "Écrivez ici votre nom...",
     phonePlaceholder: "Écrivez ici votre téléphone...",
     emailPlaceholder: "Écrivez ici votre adresse courriel...",
+    retryEmail: "Cela ne ressemble pas à une adresse courriel. Réécrivez-la, s'il vous plaît — c'est là que nous enverrons votre soumission.",
+    retryPhone: "Cela ne ressemble pas à un numéro de téléphone. Réécrivez-le, s'il vous plaît.",
     accountReady: (e) =>
       `Votre soumission est prête ! Vous pouvez maintenant tout suivre dans l'application : connectez-vous comme Client avec ${e}, et utilisez « Mot de passe oublié ? » pour créer le vôtre.`,
     appointmentSummary: (w, r) => `A demandé un rendez-vous — ${w}${r ? ` : ${r}` : ""}`,
@@ -160,6 +170,8 @@ export const FLOW_COPY: Record<FlowLang, FlowCopy> = {
     namePlaceholder: "Scrivi qui il tuo nome...",
     phonePlaceholder: "Scrivi qui il tuo telefono...",
     emailPlaceholder: "Scrivi qui la tua email...",
+    retryEmail: "Non sembra un indirizzo email. Riscrivilo, per favore — è lì che ti manderemo il preventivo.",
+    retryPhone: "Non sembra un numero di telefono. Riscrivilo, per favore.",
     accountReady: (e) =>
       `Il tuo preventivo è pronto! Ora puoi seguire tutto dall'app: accedi come Cliente con ${e}, e usa "Password dimenticata?" per crearne una tua.`,
     appointmentSummary: (w, r) => `Ha richiesto un appuntamento — ${w}${r ? `: ${r}` : ""}`,
