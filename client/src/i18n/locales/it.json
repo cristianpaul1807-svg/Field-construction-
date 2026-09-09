@@ -442,7 +442,8 @@
     "accessCodeNote": "Condividilo con {{name}} per farlo entrare nel portale cliente. Non servono email né password, e non verrà più mostrato.",
     "downloadEstimate": "Scarica preventivo",
     "acceptEstimate": "Accetta preventivo",
-    "notSentYet": "Il tuo appaltatore non ti ha ancora inviato questo preventivo."
+    "notSentYet": "Il tuo appaltatore non ti ha ancora inviato questo preventivo.",
+    "yourProject": "Il tuo progetto"
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",

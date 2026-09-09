@@ -442,7 +442,8 @@
     "accessCodeNote": "Share it with {{name}} so they can open the client portal. No email or password needed, and it won't be shown again.",
     "downloadEstimate": "Download estimate",
     "acceptEstimate": "Accept estimate",
-    "notSentYet": "Your contractor hasn't sent you this estimate yet."
+    "notSentYet": "Your contractor hasn't sent you this estimate yet.",
+    "yourProject": "Your project"
   },
   "worker": {
     "accessTitle": "Worker access",

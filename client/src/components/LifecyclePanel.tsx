@@ -41,9 +41,12 @@ export function LifecyclePanel({ lifecycle, showHistory = true }: { lifecycle: L
 
   return (
     <Card className="p-6">
-      <div className="flex items-start justify-between gap-4 mb-1">
+      {/* El shrink-0 servía en pantalla ancha y en el móvil empujaba "Creado a
+          mano en el panel" fuera de la tarjeta, donde se cortaba a media
+          palabra. Que baje a su propia línea cuando no quepa al lado. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 mb-1">
         <h3 className="font-semibold text-foreground text-sm">{t("projects.lifecycle.title")}</h3>
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <DoorOpen size={13} />
           {t(`projects.lifecycle.origin.${lifecycle.origin}`)}
         </span>

@@ -151,7 +151,7 @@ export default function ClientPortalMe() {
         </div>
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
-          <Button variant="ghost" size="sm" className="gap-2" onClick={leave}>
+          <Button variant="ghost" size="sm" className="gap-2 min-h-11" onClick={leave}>
             <LogOut size={14} /> {t("common.logout")}
           </Button>
         </div>
@@ -159,12 +159,16 @@ export default function ClientPortalMe() {
 
       <div className="p-4 sm:p-8 max-w-2xl mx-auto space-y-6">
         <Tabs defaultValue="resumen">
-          <TabsList className="w-full">
-            <TabsTrigger value="resumen" className="flex-1 gap-1.5">
-              <LayoutDashboard size={14} /> {t("clientPortal.summary")}
+          {/* El portal se abre en el móvil, igual que el del trabajador, y por
+              el mismo motivo las pestañas necesitan alto de dedo. Aquí además
+              es el cliente quien paga: una pulsación que falla en esta pantalla
+              cuesta más que en ninguna otra. */}
+          <TabsList className="w-full h-auto">
+            <TabsTrigger value="resumen" className="flex-1 gap-1.5 min-h-11">
+              <LayoutDashboard size={16} /> {t("clientPortal.summary")}
             </TabsTrigger>
-            <TabsTrigger value="mensajes" className="flex-1 gap-1.5">
-              <MessageCircle size={14} /> {t("clientPortal.messages")}
+            <TabsTrigger value="mensajes" className="flex-1 gap-1.5 min-h-11">
+              <MessageCircle size={16} /> {t("clientPortal.messages")}
             </TabsTrigger>
           </TabsList>
 
@@ -183,7 +187,13 @@ export default function ClientPortalMe() {
             {!loading && !error && data && (
               <Card className="p-0 overflow-hidden border-2">
             <div className="bg-secondary px-6 py-4 border-b border-border">
-              <p className="text-xs text-muted-foreground">{t("clientPortal.readOnly")}</p>
+              {/* Aquí ponía "Solo lectura", y debajo hay botones para confirmar
+                  que la obra está terminada, aprobar avenants y pagar. El
+                  rótulo es cierto en la vista previa del panel, no aquí: a un
+                  cliente que acaba de pulsar "confirmo" le hace dudar de si su
+                  clic ha servido de algo, y de ese clic cuelga la factura
+                  final. */}
+              <p className="text-xs text-muted-foreground">{t("clientPortal.yourProject")}</p>
               <h2 className="text-lg font-semibold text-foreground mt-0.5">{t("clientPortal.hello", { name: data.client.name.split(" ")[0] })}</h2>
             </div>
 
@@ -217,7 +227,7 @@ export default function ClientPortalMe() {
                     <div className="mt-4">
                       <Button
                         variant="outline"
-                        className="w-full gap-2"
+                        className="w-full gap-2 min-h-11"
                         onClick={() => confirmWork(data.project!.id)}
                         disabled={confirming}
                       >
@@ -244,12 +254,15 @@ export default function ClientPortalMe() {
                       <p className="text-xs text-muted-foreground">{t("clientPortal.estimateNumber", { id: data.estimate.id.slice(0, 8).toUpperCase() })}</p>
                       <p className="text-xl font-semibold text-foreground mt-1">{formatCurrency(data.estimate.total)}</p>
                     </div>
-                    <StatusBadge tone="info">{data.estimate.status}</StatusBadge>
+                    {/* Se guarda "aceptado" porque ese es el dato, pero esta es
+                        la pantalla del cliente que paga: el slug en castellano
+                        salía crudo junto al importe en un portal en francés. */}
+                    <StatusBadge tone="info">{t(`budgets.estimateStatus.${data.estimate.status}`)}</StatusBadge>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 mt-4">
                     {data.estimate.status !== "aceptado" && (
                       <Button
-                        className="gap-2 flex-1"
+                        className="gap-2 flex-1 min-h-11"
                         onClick={() => setSigning(true)}
                         disabled={data.estimate.status !== "enviado"}
                         title={data.estimate.status !== "enviado" ? t("clientPortal.notSentYet") : undefined}
@@ -260,7 +273,7 @@ export default function ClientPortalMe() {
                     )}
                     <Button
                       variant="outline"
-                      className="gap-2 flex-1"
+                      className="gap-2 flex-1 min-h-11"
                       onClick={() => downloadEstimate(data.estimate!.id)}
                       disabled={downloading}
                     >
@@ -270,7 +283,7 @@ export default function ClientPortalMe() {
                     {data.pendingInvoice && (
                       <Button
                         variant="outline"
-                        className="gap-2 flex-1"
+                        className="gap-2 flex-1 min-h-11"
                         onClick={() => pay(data.pendingInvoice!.id)}
                         disabled={payingInvoiceId === data.pendingInvoice.id}
                       >

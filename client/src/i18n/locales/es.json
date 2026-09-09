@@ -442,7 +442,8 @@
     "accessCodeNote": "Compártelo con {{name}} para que entre en el portal del cliente. No necesita correo ni contraseña, y no se volverá a mostrar.",
     "downloadEstimate": "Descargar presupuesto",
     "acceptEstimate": "Aceptar presupuesto",
-    "notSentYet": "Tu contratista todavía no te ha enviado este presupuesto."
+    "notSentYet": "Tu contratista todavía no te ha enviado este presupuesto.",
+    "yourProject": "Tu proyecto"
   },
   "worker": {
     "accessTitle": "Acceso de trabajador",

@@ -442,7 +442,8 @@
     "accessCodeNote": "Partagez-le avec {{name}} pour qu'il accède au portail client. Ni courriel ni mot de passe requis, et il ne sera plus affiché.",
     "downloadEstimate": "Télécharger la soumission",
     "acceptEstimate": "Accepter la soumission",
-    "notSentYet": "Votre entrepreneur ne vous a pas encore envoyé cette soumission."
+    "notSentYet": "Votre entrepreneur ne vous a pas encore envoyé cette soumission.",
+    "yourProject": "Votre projet"
   },
   "worker": {
     "accessTitle": "Accès travailleur",
