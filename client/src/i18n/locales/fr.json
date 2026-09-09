@@ -949,7 +949,8 @@
     },
     "time": "Heure",
     "notes": "Notes",
-    "deleteConfirm": "Supprimer cet événement du calendrier ?"
+    "deleteConfirm": "Supprimer cet événement du calendrier ?",
+    "pickProjectToAdd": "Choisissez un chantier ci-dessus pour ajouter un rendez-vous."
   },
   "checkIn": {
     "title": "Pointage (entrée / sortie)",

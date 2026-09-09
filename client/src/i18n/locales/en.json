@@ -949,7 +949,8 @@
     },
     "time": "Time",
     "notes": "Notes",
-    "deleteConfirm": "Delete this event from the schedule?"
+    "deleteConfirm": "Delete this event from the schedule?",
+    "pickProjectToAdd": "Pick a project above to add an appointment."
   },
   "checkIn": {
     "title": "Check-in / Check-out",

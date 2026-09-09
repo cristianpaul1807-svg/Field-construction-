@@ -949,7 +949,8 @@
     },
     "time": "Hora",
     "notes": "Notas",
-    "deleteConfirm": "¿Eliminar este evento de la agenda?"
+    "deleteConfirm": "¿Eliminar este evento de la agenda?",
+    "pickProjectToAdd": "Elige una obra arriba para añadir una cita."
   },
   "checkIn": {
     "title": "Fichaje (entrada / salida)",

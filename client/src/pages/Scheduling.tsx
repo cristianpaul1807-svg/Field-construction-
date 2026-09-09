@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { ScheduleEventDialog } from "@/components/ScheduleEventDialog";
 import { ChevronLeft, ChevronRight, Plus, StickyNote, X } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
@@ -18,6 +17,8 @@ interface ScheduleEvent {
   endTime: string | null;
   notes: string | null;
   projectId: string | null;
+  /** La API ya lo mandaba; hacía falta desde que la agenda enseña varias obras. */
+  projectName: string | null;
   assignedWorkerId: string | null;
   assignedWorkerName: string | null;
 }
@@ -71,9 +72,15 @@ export default function Scheduling() {
     if (res.ok) reload();
   };
 
+  // Sin obra elegida se ve la semana entera del negocio, que es lo que espera
+  // quien abre "Agenda": antes se le pedía elegir una obra primero y el
+  // calendario del negocio no existía en ninguna pantalla. El selector de
+  // arriba pasa a ser lo que siempre debió ser, un filtro.
   const dayEvents = useMemo(
     () =>
-      (events ?? []).filter((e) => e.projectId === selectedProjectId && isSameDay(e.startTime, currentDate)),
+      (events ?? []).filter(
+        (e) => (!selectedProjectId || e.projectId === selectedProjectId) && isSameDay(e.startTime, currentDate)
+      ),
     [events, selectedProjectId, currentDate]
   );
 
@@ -82,6 +89,18 @@ export default function Scheduling() {
   const now = new Date();
   const isToday = currentDate.toDateString() === now.toDateString();
   const currentTimeTop = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
+
+  // Igual que en el móvil del trabajador: 24 horas de rejilla que se abrían
+  // arriba del todo obligaban a arrastrar la madrugada vacía para llegar al
+  // primer trabajo del día.
+  const rejilla = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const caja = rejilla.current;
+    if (!caja) return;
+    const primero = dayEvents.length ? Math.min(...dayEvents.map((e) => new Date(e.startTime).getHours())) : null;
+    const hora = isToday ? new Date().getHours() : (primero ?? 7);
+    caja.scrollTop = Math.max(0, (hora - 1) * HOUR_HEIGHT);
+  }, [currentDate, dayEvents, isToday]);
 
   const openDialogAt = (hour: number) => {
     const d = new Date(currentDate);
@@ -101,10 +120,7 @@ export default function Scheduling() {
         }
       />
 
-      {!selectedProjectId && <SelectProjectPrompt />}
-
-      {selectedProjectId && (
-        <>
+      <>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-2">
               <Button
@@ -128,15 +144,24 @@ export default function Scheduling() {
                 {t("worker.today")}
               </Button>
             </div>
-            <Button
-              className="gap-2"
-              onClick={() => {
-                setDialogInitialDate(new Date(currentDate));
-                setDialogOpen(true);
-              }}
-            >
-              <Plus size={16} /> {t("common.add")}
-            </Button>
+            {/* Una cita cuelga siempre de una obra. Sin obra elegida el botón
+                no puede hacer nada, así que en vez de dejarlo muerto se dice
+                qué falta y dónde se elige. */}
+            <div className="flex items-center gap-3">
+              {!selectedProjectId && (
+                <span className="text-xs text-muted-foreground">{t("scheduling.pickProjectToAdd")}</span>
+              )}
+              <Button
+                className="gap-2"
+                disabled={!selectedProjectId}
+                onClick={() => {
+                  setDialogInitialDate(new Date(currentDate));
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus size={16} /> {t("common.add")}
+              </Button>
+            </div>
           </div>
 
           {loading && (
@@ -152,7 +177,7 @@ export default function Scheduling() {
 
           {!loading && !error && (
             <div className="rounded-xl border border-border bg-card overflow-hidden">
-              <div className="flex max-h-[70vh] overflow-y-auto">
+              <div ref={rejilla} className="flex max-h-[70vh] overflow-y-auto">
                 {/* Hour rail */}
                 <div className="w-14 flex-shrink-0 border-r border-border bg-secondary/40">
                   {Array.from({ length: 24 }, (_, hour) => (
@@ -240,7 +265,14 @@ export default function Scheduling() {
                         </div>
                         {detail.showSubtitle && (
                           <div className={cn("truncate opacity-80", detail.text)}>
-                            {isNote ? t(`scheduling.types.${event.type}`, { defaultValue: event.type }) : event.assignedWorkerName}
+                            {/* Viendo todas las obras, saber quién va no sirve
+                                de nada si no se sabe adónde. */}
+                            {[
+                              !selectedProjectId ? event.projectName : null,
+                              isNote ? t(`scheduling.types.${event.type}`, { defaultValue: event.type }) : event.assignedWorkerName,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </div>
                         )}
                       </div>
@@ -251,6 +283,7 @@ export default function Scheduling() {
             </div>
           )}
 
+          {selectedProjectId && (
           <ScheduleEventDialog
             open={dialogOpen}
             onOpenChange={setDialogOpen}
@@ -258,8 +291,8 @@ export default function Scheduling() {
             initialDate={dialogInitialDate}
             onCreated={() => reload()}
           />
+          )}
         </>
-      )}
     </div>
   );
 }
