@@ -184,8 +184,13 @@ export default function Projects() {
                 </div>
 
                 <div className="flex items-center justify-between mt-4 text-sm">
+                  {/* "$154.500,00 / $195.273,20" no dice qué es cada número, y
+                      una obra sin presupuesto enseñaba "$0,00 / $0,00", que no
+                      es información sino ruido. */}
                   <span className="text-muted-foreground">
-                    {formatCurrency(project.budgetUsed)} / {formatCurrency(project.budgetTotal)}
+                    {project.budgetTotal > 0
+                      ? `${formatCurrency(project.budgetUsed)} / ${formatCurrency(project.budgetTotal)}`
+                      : t("projects.spentOfContract", { spent: formatCurrency(project.budgetUsed) })}
                   </span>
                   <div className="flex -space-x-2">
                     {project.team.slice(0, 3).map((member) => (

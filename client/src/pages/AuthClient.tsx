@@ -88,6 +88,12 @@ export default function AuthClient() {
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                   autoFocus
+                  // Mismo cuidado que en el acceso del trabajador: el código
+                  // distingue mayúsculas y el teclado del móvil no lo sabe.
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  autoComplete="off"
+                  spellCheck={false}
                   className="font-mono"
                 />
               </div>

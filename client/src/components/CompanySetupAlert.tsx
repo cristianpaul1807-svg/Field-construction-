@@ -38,12 +38,16 @@ export function CompanySetupAlert() {
 
   return (
     <div className="border-b border-status-info-fg/25 bg-status-info-bg/40">
-      <div className="px-4 sm:px-8 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+      {/* En el móvil esta tira se apilaba y, con la de Stripe debajo, se comía
+          media pantalla del teléfono antes de que se viera nada. Ahí queda en
+          una línea: el titular y el botón. El porqué se explica donde hay sitio
+          para leerlo, y de todas formas está en la propia pantalla de ajustes. */}
+      <div className="px-4 sm:px-8 py-2.5 flex items-center gap-3 sm:gap-4">
         <div className="flex items-start gap-2.5 flex-1 min-w-0">
           <Building2 size={16} strokeWidth={1.75} className="text-foreground mt-0.5 flex-shrink-0" />
           <div className="min-w-0">
             <p className="text-sm font-medium text-foreground">{t("setupAlert.title")}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="hidden sm:block text-xs text-muted-foreground">
               {t("setupAlert.body", { missing: falta.join(", ") })}
             </p>
           </div>

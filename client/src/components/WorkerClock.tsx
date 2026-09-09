@@ -166,6 +166,14 @@ export function WorkerClock() {
   const regularHours = Math.min(8.0, elapsedTotalHours);
   const overtimeHours = Math.max(0.0, elapsedTotalHours - 8.0);
 
+  // Nadie trabaja un turno de dieciséis horas seguidas: pasado ese punto, lo
+  // que hay no es una jornada larga sino una salida sin fichar del viernes. El
+  // contador seguía sumando y le enseñaba a Carlos "1016 h, de ellas 1008 de
+  // horas extra". La nómina no lo cobra —una entrada sin salida cuenta cero—,
+  // pero un reloj que dice un disparate deja de ser un reloj en el que fiar.
+  const OLVIDADO_H = 16;
+  const turnoOlvidado = elapsedTotalHours > OLVIDADO_H;
+
   return (
     <div className="space-y-6">
       {/* Shift Summary Card */}
@@ -213,24 +221,43 @@ export function WorkerClock() {
             </div>
 
             {/* Time calculation & Hours breakdown */}
-            <div className="rounded-lg border border-border/80 p-3 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{t("worker.calculatedDuration")}:</span>
-                <span className="font-bold text-foreground text-base">{formatHours(elapsedMs)}</span>
+            {turnoOlvidado ? (
+              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-1">
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                  {t("worker.forgottenShiftTitle")}
+                </p>
+                <p className="text-xs text-amber-700/90 dark:text-amber-300/90">
+                  {t("worker.forgottenShiftBody", {
+                    since: new Date(active.checkInTime).toLocaleString(i18n.language, {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }),
+                  })}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50 text-xs">
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t("worker.regularHours")}</span>
-                  <span className="font-semibold text-foreground">{regularHours.toFixed(1)} hrs</span>
+            ) : (
+              <div className="rounded-lg border border-border/80 p-3 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t("worker.calculatedDuration")}:</span>
+                  <span className="font-bold text-foreground text-base">{formatHours(elapsedMs)}</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-muted-foreground">{t("worker.overtimeHours")}</span>
-                  <span className={`font-semibold ${overtimeHours > 0 ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground"}`}>
-                    {overtimeHours.toFixed(1)} hrs
-                  </span>
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50 text-xs">
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">{t("worker.regularHours")}</span>
+                    <span className="font-semibold text-foreground">{regularHours.toFixed(1)} hrs</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground">{t("worker.overtimeHours")}</span>
+                    <span className={`font-semibold ${overtimeHours > 0 ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground"}`}>
+                      {overtimeHours.toFixed(1)} hrs
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-2">{t("worker.noActiveEntry")}</p>

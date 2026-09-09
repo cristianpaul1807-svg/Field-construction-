@@ -33,6 +33,7 @@ interface ProjectDetailResponse {
   clientName: string | null;
   clientAddress: string | null;
   estimateId: string | null;
+  estimateTotal: number;
   name: string;
   type: string;
   status: ProjectStatus;
@@ -208,7 +209,14 @@ export default function ProjectDetailPage() {
   const approvedChanges = project.changeOrders
     .filter((c) => c.status === "aprobado")
     .reduce((sum, c) => sum + c.amount, 0);
-  const budgetTotal = project.estimateLines.reduce((sum, l) => sum + l.total, 0) + approvedChanges;
+  // El total del presupuesto, no la suma de sus líneas: esta obra valía
+  // $195.273 en el listado y $151.000 aquí, con el mismo rótulo, porque la
+  // suma de líneas es el coste antes del margen. Lo que se enseña es lo que
+  // el cliente aceptó pagar.
+  // El ?? 0 no sobra: entre que sale este código y se despliega el servidor
+  // que manda el campo, la ficha seguiría pintando un total, y "NaN $" es peor
+  // que un cero.
+  const budgetTotal = (project.estimateTotal ?? 0) + approvedChanges;
   const budgetUsed = project.expenses.reduce((sum, e) => sum + e.amount, 0);
 
   const expensesByCategory = ["Materiales", "Mano de obra", "Subcontratistas"]
@@ -274,9 +282,12 @@ export default function ProjectDetailPage() {
             </div>
             <div className="space-y-4">
               <Card className="p-4">
-                <p className="text-xs text-muted-foreground">{t("projects.estimate")}</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {formatCurrency(budgetUsed)} / {formatCurrency(budgetTotal)}
+                {/* Dos cifras separadas por una barra no dicen cuál es cuál.
+                    Delante va lo gastado, que es lo que se mira. */}
+                <p className="text-xs text-muted-foreground">{t("projects.contractValue")}</p>
+                <p className="text-lg font-semibold text-foreground">{formatCurrency(budgetTotal)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("projects.spentOfContract", { spent: formatCurrency(budgetUsed) })}
                 </p>
               </Card>
               <Card className="p-4">

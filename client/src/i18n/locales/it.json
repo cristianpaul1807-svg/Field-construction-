@@ -495,7 +495,9 @@
     "overtimeHours": "Ore straordinarie",
     "historyTitle": "Cronologia timbrature recenti",
     "finalizingShift": "Rilevamento posizione GPS e chiusura...",
-    "noProjectsAssigned": "Non ti è ancora stato assegnato nessun cantiere. Chiedi all'ufficio di aggiungerti e potrai timbrare."
+    "noProjectsAssigned": "Non ti è ancora stato assegnato nessun cantiere. Chiedi all'ufficio di aggiungerti e potrai timbrare.",
+    "forgottenShiftTitle": "Questo turno è rimasto aperto",
+    "forgottenShiftBody": "Hai timbrato l'entrata il {{since}} e non c'è uscita. Timbra l'uscita adesso, oppure di' all'ufficio a che ora hai finito perché lo corregga. Fino ad allora non si contano ore."
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",
@@ -823,7 +825,9 @@
     "types": {
       "residencial": "Residenziale",
       "comercial": "Commerciale"
-    }
+    },
+    "spentOfContract": "Speso: {{spent}}",
+    "contractValue": "Valore del contratto"
   },
   "clientDetail": {
     "title": "Scheda cliente",
@@ -949,7 +953,8 @@
     "out": "Uscita",
     "inProgress": "In corso",
     "approveHours": "Approva ore",
-    "noEntries": "Nessuna timbratura registrata finora."
+    "noEntries": "Nessuna timbratura registrata finora.",
+    "stillOnSite": "Ancora in cantiere"
   },
   "gps": {
     "title": "GPS e percorsi",

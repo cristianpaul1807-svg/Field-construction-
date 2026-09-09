@@ -495,7 +495,9 @@
     "overtimeHours": "Heures supplémentaires",
     "historyTitle": "Historique récent des pointages",
     "finalizingShift": "Obtention de la position GPS et fermeture...",
-    "noProjectsAssigned": "Aucun chantier ne vous a encore été assigné. Demandez au bureau de vous ajouter et vous pourrez pointer."
+    "noProjectsAssigned": "Aucun chantier ne vous a encore été assigné. Demandez au bureau de vous ajouter et vous pourrez pointer.",
+    "forgottenShiftTitle": "Ce quart n'a jamais été fermé",
+    "forgottenShiftBody": "Vous avez pointé l'arrivée le {{since}} et il n'y a pas de départ. Pointez le départ maintenant, ou dites au bureau à quelle heure vous avez fini pour qu'il corrige. Aucune heure n'est comptée d'ici là."
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",
@@ -823,7 +825,9 @@
     "types": {
       "residencial": "Résidentiel",
       "comercial": "Commercial"
-    }
+    },
+    "spentOfContract": "Dépensé : {{spent}}",
+    "contractValue": "Valeur du contrat"
   },
   "clientDetail": {
     "title": "Fiche client",
@@ -949,7 +953,8 @@
     "out": "Sortie",
     "inProgress": "En cours",
     "approveHours": "Approuver les heures",
-    "noEntries": "Aucun pointage enregistré pour l'instant."
+    "noEntries": "Aucun pointage enregistré pour l'instant.",
+    "stillOnSite": "Encore sur le chantier"
   },
   "gps": {
     "title": "GPS et itinéraires",

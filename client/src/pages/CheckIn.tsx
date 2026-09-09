@@ -111,7 +111,14 @@ export default function CheckIn() {
                         </p>
                       )}
                     </div>
-                    {isApproved ? (
+                    {/* Un fichaje sin salida no tiene horas que aprobar: la
+                        nómina cuenta cero mientras la entrada siga abierta. El
+                        botón estaba ahí y no hacía nada, así que ahora se dice
+                        lo que pasa de verdad —sigue en la obra— y se aprueba
+                        cuando fiche la salida. */}
+                    {!entry.checkOutTime ? (
+                      <StatusBadge tone="info">{t("checkIn.stillOnSite")}</StatusBadge>
+                    ) : isApproved ? (
                       <StatusBadge tone="success">{t("checkIn.approved")}</StatusBadge>
                     ) : (
                       <Button size="sm" variant="outline" className="gap-1.5" onClick={() => approve(entry.id)}>

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
@@ -98,6 +98,22 @@ export function WorkerScheduleView() {
   const isToday = currentDate.toDateString() === now.toDateString();
   const currentTimeTop = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
 
+  // La rejilla del día son 24 horas y se abría arriba del todo: el trabajador
+  // veía la madrugada vacía y tenía que arrastrar seis horas de noche para
+  // llegar a su primer trabajo. Se coloca sola donde está el día: en la hora
+  // actual si es hoy, si no en el primer evento, y si no hay nada, a las siete.
+  const rejilla = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const caja = rejilla.current;
+    if (!caja || view !== "dia") return;
+    const primero = dayEvents.length
+      ? Math.min(...dayEvents.map((e) => new Date(e.startTime).getHours()))
+      : null;
+    const hora = isToday ? new Date().getHours() : (primero ?? 7);
+    // Una hora de margen por arriba, para que se vea que hay algo antes.
+    caja.scrollTop = Math.max(0, (hora - 1) * HOUR_HEIGHT);
+  }, [view, currentDate, dayEvents, isToday]);
+
   const weekStart = useMemo(() => startOfWeek(currentDate), [currentDate]);
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => new Date(weekStart.getTime() + i * 86400000)), [weekStart]);
 
@@ -127,16 +143,17 @@ export function WorkerScheduleView() {
             <ChevronRight size={16} />
           </Button>
         </div>
+        {/* Día/Semana también se tocan con guantes: alto de dedo, no de ratón. */}
         <div className="flex rounded-lg border border-border overflow-hidden text-sm">
           <button
             onClick={() => setView("dia")}
-            className={cn("px-3 py-1.5 transition-colors", view === "dia" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
+            className={cn("px-4 min-h-11 transition-colors", view === "dia" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
           >
             {t("worker.today")}
           </button>
           <button
             onClick={() => setView("semana")}
-            className={cn("px-3 py-1.5 transition-colors", view === "semana" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
+            className={cn("px-4 min-h-11 transition-colors", view === "semana" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
           >
             {t("worker.week")}
           </button>
@@ -145,7 +162,7 @@ export function WorkerScheduleView() {
 
       {view === "dia" && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="flex max-h-[55vh] overflow-y-auto">
+          <div ref={rejilla} className="flex max-h-[55vh] overflow-y-auto">
             <div className="w-12 flex-shrink-0 border-r border-border bg-secondary/40">
               {Array.from({ length: 24 }, (_, hour) => (
                 <div key={hour} style={{ height: HOUR_HEIGHT }} className="relative text-right pr-1.5">

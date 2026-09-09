@@ -68,6 +68,14 @@ function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) 
               onChange={(e) => setToken(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
               autoFocus
+              // El código distingue mayúsculas de minúsculas ("JO8drBvK59v2") y
+              // iOS, por su cuenta, pone mayúscula en la primera letra y pasa
+              // el autocorrector. El trabajador teclearía el código bien y le
+              // saldría "código inválido" sin entender por qué.
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="off"
+              spellCheck={false}
               className="font-mono"
             />
           </div>
@@ -99,23 +107,28 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
         </div>
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
-          <Button variant="ghost" size="sm" className="gap-2" onClick={onLogout}>
-            <LogOut size={14} /> {t("worker.exit")}
+          <Button variant="ghost" size="sm" className="gap-2 min-h-11" onClick={onLogout}>
+            <LogOut size={16} /> {t("worker.exit")}
           </Button>
         </div>
       </div>
 
       <div className="p-4 sm:p-6 max-w-2xl mx-auto">
         <Tabs defaultValue="agenda">
-          <TabsList className="w-full">
-            <TabsTrigger value="agenda" className="flex-1 gap-1.5">
-              <CalendarDays size={14} /> {t("worker.schedule")}
+          {/* Estas tres pestañas son toda la navegación del trabajador y se
+              tocan con guantes, de pie y con prisa. Medían 29 px de alto:
+              Apple pide 44 y Google 48, y por debajo de eso el dedo falla y hay
+              que repetir. Es la única pantalla del producto donde el tamaño del
+              dedo es un requisito, no un detalle. */}
+          <TabsList className="w-full h-auto">
+            <TabsTrigger value="agenda" className="flex-1 gap-1.5 min-h-11">
+              <CalendarDays size={16} /> {t("worker.schedule")}
             </TabsTrigger>
-            <TabsTrigger value="timbrado" className="flex-1 gap-1.5">
-              <Clock size={14} /> {t("worker.timeclock")}
+            <TabsTrigger value="timbrado" className="flex-1 gap-1.5 min-h-11">
+              <Clock size={16} /> {t("worker.timeclock")}
             </TabsTrigger>
-            <TabsTrigger value="mensajes" className="flex-1 gap-1.5">
-              <MessageCircle size={14} /> {t("worker.messages")}
+            <TabsTrigger value="mensajes" className="flex-1 gap-1.5 min-h-11">
+              <MessageCircle size={16} /> {t("worker.messages")}
             </TabsTrigger>
           </TabsList>
 

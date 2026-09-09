@@ -495,7 +495,9 @@
     "overtimeHours": "Overtime hours",
     "historyTitle": "Recent timeclock history",
     "finalizingShift": "Acquiring GPS and closing shift...",
-    "noProjectsAssigned": "You haven't been assigned to a job yet. Ask the office to add you and you'll be able to clock in."
+    "noProjectsAssigned": "You haven't been assigned to a job yet. Ask the office to add you and you'll be able to clock in.",
+    "forgottenShiftTitle": "This shift was never closed",
+    "forgottenShiftBody": "You clocked in on {{since}} and never clocked out. Clock out now, or tell the office what time you finished so they can correct it. No hours are counted until then."
   },
   "publicChat": {
     "chatWithBusiness": "Chat with the business",
@@ -823,7 +825,9 @@
     "types": {
       "residencial": "Residential",
       "comercial": "Commercial"
-    }
+    },
+    "spentOfContract": "Spent: {{spent}}",
+    "contractValue": "Contract value"
   },
   "clientDetail": {
     "title": "Client record",
@@ -949,7 +953,8 @@
     "out": "Out",
     "inProgress": "In progress",
     "approveHours": "Approve hours",
-    "noEntries": "No time entries recorded yet."
+    "noEntries": "No time entries recorded yet.",
+    "stillOnSite": "Still on site"
   },
   "gps": {
     "title": "GPS & Routing",

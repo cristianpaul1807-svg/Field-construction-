@@ -495,7 +495,9 @@
     "overtimeHours": "Horas extra",
     "historyTitle": "Historial reciente de fichajes",
     "finalizingShift": "Obteniendo GPS y cerrando turno...",
-    "noProjectsAssigned": "Todavía no te han asignado ninguna obra. Avisa a la oficina para que te añadan y podrás fichar."
+    "noProjectsAssigned": "Todavía no te han asignado ninguna obra. Avisa a la oficina para que te añadan y podrás fichar.",
+    "forgottenShiftTitle": "Este turno quedó sin cerrar",
+    "forgottenShiftBody": "Fichaste la entrada el {{since}} y no hay salida. Ficha la salida ahora, o dile a la oficina qué hora era para que lo corrija. Hasta entonces no se cuentan horas."
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",
@@ -823,7 +825,9 @@
     "types": {
       "residencial": "Residencial",
       "comercial": "Comercial"
-    }
+    },
+    "spentOfContract": "Gastado: {{spent}}",
+    "contractValue": "Valor del contrato"
   },
   "clientDetail": {
     "title": "Ficha del cliente",
@@ -949,7 +953,8 @@
     "out": "Salida",
     "inProgress": "En curso",
     "approveHours": "Aprobar horas",
-    "noEntries": "Todavía no hay fichajes registrados."
+    "noEntries": "Todavía no hay fichajes registrados.",
+    "stillOnSite": "Sigue en la obra"
   },
   "gps": {
     "title": "GPS y rutas",

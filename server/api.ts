@@ -4148,7 +4148,13 @@ apiRouter.get(
     const [project, estimateLines, expenses, documents, photos, scheduleEvents, assignments, changeOrders] = await Promise.all([
       supabase
         .from("projects")
-        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address)")
+        // El total del presupuesto viaja con el proyecto porque es lo que vale
+        // el contrato: la suma de las líneas es el coste antes del margen, y
+        // usar una en el listado y la otra en la ficha hacía que la misma obra
+        // enseñara dos cifras distintas con el mismo rótulo.
+        .select(
+          "id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address), estimates!projects_estimate_id_fkey(total)"
+        )
         .eq("business_id", req.businessId!)
         .eq("id", projectId)
         .single(),
@@ -4213,6 +4219,8 @@ apiRouter.get(
       // a map, so it needs the ids and the address to build those links.
       clientAddress: client?.address ?? null,
       estimateId: project.data.estimate_id ?? null,
+      // Lo que vale el contrato, la misma cifra que enseña el listado de obras.
+      estimateTotal: Number((project.data as any).estimates?.total ?? 0),
       name: project.data.name,
       type: project.data.type,
       status: project.data.status,

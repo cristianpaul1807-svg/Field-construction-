@@ -62,14 +62,18 @@ export function StripeConnectAlert() {
   return (
     <>
       <div className="border-b border-status-warning-fg/25 bg-status-warning-bg/50">
-        <div className="px-4 sm:px-8 py-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        {/* Igual que la tira de datos de la empresa: en el teléfono, sólo el
+            titular y la acción. Renunciar a Stripe no es algo que se decida
+            de pie en una obra, así que ese botón se queda para la pantalla
+            grande — sigue estando en Ajustes → Pagos. */}
+        <div className="px-4 sm:px-8 py-2.5 flex items-center gap-3 sm:gap-4">
           <div className="flex items-start gap-2.5 flex-1 min-w-0">
             <CreditCard size={16} strokeWidth={1.75} className="text-foreground mt-0.5 flex-shrink-0" />
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground">
                 {data.connected ? t("stripeAlert.titleUnfinished") : t("stripeAlert.title")}
               </p>
-              <p className="text-xs text-muted-foreground">{t("stripeAlert.body")}</p>
+              <p className="hidden sm:block text-xs text-muted-foreground">{t("stripeAlert.body")}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -78,7 +82,7 @@ export function StripeConnectAlert() {
                 {t("stripeAlert.goConfigure")} <ExternalLink size={13} strokeWidth={1.75} />
               </Button>
             </Link>
-            <Button size="sm" variant="ghost" onClick={() => setConfirming(true)}>
+            <Button size="sm" variant="ghost" className="hidden sm:inline-flex" onClick={() => setConfirming(true)}>
               {t("stripeAlert.decline")}
             </Button>
           </div>
