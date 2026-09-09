@@ -1251,5 +1251,11 @@
       "failed": "Failed",
       "canceled": "Cancelled"
     }
+  },
+  "setupAlert": {
+    "title": "Finish setting up your company",
+    "body": "Missing {{missing}}. It prints on every estimate and invoice, and in Quebec the invoice is required to carry it.",
+    "taxNumbers": "your GST and QST numbers",
+    "go": "Complete"
   }
 }

@@ -968,7 +968,14 @@ apiRouter.post(
     const email = authUser.user?.email ?? null;
     const phone = authUser.user?.phone ?? null;
     const label = email ? email.split("@")[0] : phone ?? "nuevo";
-    const businessName = `Negocio de ${label}`;
+    // Sin "Negocio de": ese prefijo en castellano acababa impreso en el
+    // presupuesto de un contratista de Montreal y, peor, en el enlace público
+    // que le pasa a sus clientes (/c/negocio-de-loquesea). El producto habla
+    // cuatro idiomas; su primer rótulo no puede estar fijado en uno.
+    //
+    // Queda el nombre de su correo como marcador provisional, y el panel le
+    // pide de entrada que ponga el de verdad.
+    const businessName = label.charAt(0).toUpperCase() + label.slice(1);
     const slug = await generateUniqueSlug(admin, businessName);
 
     const { data: business, error: businessError } = await admin

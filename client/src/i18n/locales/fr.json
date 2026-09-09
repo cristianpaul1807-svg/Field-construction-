@@ -1251,5 +1251,11 @@
       "failed": "Échoué",
       "canceled": "Annulé"
     }
+  },
+  "setupAlert": {
+    "title": "Terminez la configuration de votre entreprise",
+    "body": "Il manque {{missing}}. Cela s'imprime sur chaque soumission et chaque facture, et au Québec la facture doit le porter.",
+    "taxNumbers": "vos numéros de TPS et TVQ",
+    "go": "Compléter"
   }
 }

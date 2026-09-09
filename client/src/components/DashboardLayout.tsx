@@ -42,6 +42,7 @@ import { ProjectSwitcher } from "@/components/ProjectSwitcher";
 import { AdminAssistantBar } from "@/components/AdminAssistantBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { StripeConnectAlert } from "@/components/StripeConnectAlert";
+import { CompanySetupAlert } from "@/components/CompanySetupAlert";
 import { useApi } from "@/lib/api";
 import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
@@ -407,6 +408,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       </header>
 
+      <CompanySetupAlert />
       <StripeConnectAlert />
       <main className="flex-1 w-full">{children}</main>
       <AdminAssistantBar />

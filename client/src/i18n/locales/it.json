@@ -1251,5 +1251,11 @@
       "failed": "Fallito",
       "canceled": "Annullato"
     }
+  },
+  "setupAlert": {
+    "title": "Completa la configurazione della tua impresa",
+    "body": "Manca {{missing}}. Viene stampato su ogni preventivo e ogni fattura, e in Québec la fattura deve riportarlo.",
+    "taxNumbers": "i tuoi numeri GST e QST",
+    "go": "Completa"
   }
 }

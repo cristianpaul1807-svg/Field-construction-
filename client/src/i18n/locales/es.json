@@ -1251,5 +1251,11 @@
       "failed": "Fallido",
       "canceled": "Cancelado"
     }
+  },
+  "setupAlert": {
+    "title": "Termina de configurar tu empresa",
+    "body": "Falta {{missing}}. Se imprime en cada presupuesto y en cada factura, y en Quebec la factura tiene que llevarlo.",
+    "taxNumbers": "tus números de TPS y TVQ",
+    "go": "Completar"
   }
 }
