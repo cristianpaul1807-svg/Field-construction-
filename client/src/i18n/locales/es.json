@@ -53,7 +53,11 @@
     "needsProjectFirst": "Esto pertenece a una obra, y todavía no tienes ninguna. Crea la obra primero y vuelve aquí.",
     "goCreateClient": "Crear un cliente",
     "goCreateProject": "Crear una obra",
-    "clearSelection": "Quitar selección"
+    "clearSelection": "Quitar selección",
+    "selectProjectHere": "Elige de cuál quieres ver esta información.",
+    "noProjectsYet": "Todavía no tienes obras",
+    "noProjectsYetHint": "Esta pantalla se llena en cuanto tengas una. Se crean al aceptar un presupuesto, o a mano.",
+    "goToProjects": "Ir a Proyectos"
   },
   "nav": {
     "home": "INICIO",

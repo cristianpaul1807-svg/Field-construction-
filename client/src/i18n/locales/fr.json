@@ -53,7 +53,11 @@
     "needsProjectFirst": "Ceci appartient à un chantier, et vous n'en avez encore aucun. Créez le chantier d'abord, puis revenez ici.",
     "goCreateClient": "Créer un client",
     "goCreateProject": "Créer un chantier",
-    "clearSelection": "Effacer la sélection"
+    "clearSelection": "Effacer la sélection",
+    "selectProjectHere": "Choisissez celui dont vous voulez voir ces informations.",
+    "noProjectsYet": "Vous n'avez pas encore de chantier",
+    "noProjectsYetHint": "Cet écran se remplit dès que vous en avez un. Ils se créent en acceptant une soumission, ou à la main.",
+    "goToProjects": "Aller aux Chantiers"
   },
   "nav": {
     "home": "ACCUEIL",

@@ -53,7 +53,11 @@
     "needsProjectFirst": "Questo appartiene a un cantiere, e non ne hai ancora nessuno. Crea prima il cantiere e poi torna qui.",
     "goCreateClient": "Crea un cliente",
     "goCreateProject": "Crea un cantiere",
-    "clearSelection": "Rimuovi selezione"
+    "clearSelection": "Rimuovi selezione",
+    "selectProjectHere": "Scegli di quale vuoi vedere queste informazioni.",
+    "noProjectsYet": "Non hai ancora cantieri",
+    "noProjectsYetHint": "Questa schermata si riempie appena ne hai uno. Si creano accettando un preventivo, o a mano.",
+    "goToProjects": "Vai a Progetti"
   },
   "nav": {
     "home": "HOME",
