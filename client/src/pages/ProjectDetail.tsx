@@ -19,6 +19,7 @@ import {
 import { StatusBadge, projectStatusTone } from "@/components/StatusBadge";
 import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
 import { PaymentScheduleCard, type PaymentMilestone } from "@/components/PaymentScheduleCard";
+import { ProjectTeamPanel, type TeamMember } from "@/components/ProjectTeamPanel";
 import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal, Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile } from "@/lib/api";
@@ -39,7 +40,7 @@ interface ProjectDetailResponse {
   progressPercent: number;
   startDate: string;
   endDate: string;
-  team: string[];
+  team: TeamMember[];
   estimateLines: { id: string; zone: string; category: string; item: string; total: number }[];
   expenses: { id: string; category: string; description: string; amount: number; date: string }[];
   documents: { id: string; name: string; tag: string; uploadedAt: string }[];
@@ -267,22 +268,7 @@ export default function ProjectDetailPage() {
                 billingId={billingId}
               />
               {billError && <p className="text-sm text-status-error-fg">{billError}</p>}
-              <Card className="p-6">
-                <h3 className="font-semibold text-foreground mb-3 text-sm">{t("projects.assignedTeam")}</h3>
-                <div className="space-y-2">
-                  {project.team.map((member) => (
-                    <div key={member} className="flex items-center gap-2 text-sm text-foreground">
-                      <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-                        {member.charAt(0)}
-                      </div>
-                      <span>{member}</span>
-                    </div>
-                  ))}
-                  {project.team.length === 0 && (
-                    <p className="text-xs text-muted-foreground">{t("projects.noTeamYet")}</p>
-                  )}
-                </div>
-              </Card>
+              <ProjectTeamPanel projectId={project.id} team={project.team} onChanged={reload} />
             </div>
             <div className="space-y-4">
               <Card className="p-4">

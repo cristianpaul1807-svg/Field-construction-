@@ -489,7 +489,8 @@
     "regularHours": "Ore ordinarie",
     "overtimeHours": "Ore straordinarie",
     "historyTitle": "Cronologia timbrature recenti",
-    "finalizingShift": "Rilevamento posizione GPS e chiusura..."
+    "finalizingShift": "Rilevamento posizione GPS e chiusura...",
+    "noProjectsAssigned": "Non ti è ancora stato assegnato nessun cantiere. Chiedi all'ufficio di aggiungerti e potrai timbrare."
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",
@@ -807,7 +808,12 @@
         "factura_final_pagada": "Fattura finale incassata",
         "cambio_manual": "Cambio manuale"
       }
-    }
+    },
+    "teamEnablesClockIn": "Chi è in questo elenco potrà timbrare in questo cantiere dal telefono.",
+    "pickWorker": "Scegli qualcuno",
+    "addToTeam": "Aggiungi",
+    "hireSomeoneFirst": "Non hai ancora lavoratori registrati.",
+    "everyoneAssigned": "Tutta la squadra è già su questo cantiere."
   },
   "clientDetail": {
     "title": "Scheda cliente",

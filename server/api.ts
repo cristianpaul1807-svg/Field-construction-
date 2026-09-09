@@ -4150,7 +4150,7 @@ apiRouter.get(
         .eq("project_id", projectId),
       supabase
         .from("assignments")
-        .select("employees(name), subcontractors(name)")
+        .select("id, employee_id, subcontractor_id, employees(name), subcontractors(name)")
         .eq("business_id", req.businessId!)
         .eq("project_id", projectId),
       supabase
@@ -4191,9 +4191,15 @@ apiRouter.get(
       progressPercent: Number(project.data.progress_percent),
       startDate: project.data.start_date,
       endDate: project.data.end_date,
+      // Con identificador, porque ahora se puede quitar a alguien del equipo y
+      // no basta con saber cómo se llama.
       team: (assignments.data as any[])
-        .map((a) => a.employees?.name ?? a.subcontractors?.name)
-        .filter(Boolean),
+        .filter((a) => a.employees?.name || a.subcontractors?.name)
+        .map((a) => ({
+          id: a.id,
+          name: a.employees?.name ?? a.subcontractors?.name,
+          kind: a.employee_id ? "employee" : "subcontractor",
+        })),
       estimateLines: estimateLines.data.map((l: any) => ({
         id: l.id,
         zone: l.zone,
@@ -6417,6 +6423,73 @@ apiRouter.delete(
       .delete()
       .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+// ---------- El equipo de la obra ----------
+// Hasta ahora las asignaciones sólo nacían de la proyección de trabajo de un
+// presupuesto. Una obra creada al aceptar un presupuesto sin proyección —que
+// es el caso normal— nacía sin nadie, y no había forma de poner a nadie: la
+// pantalla de la obra enseñaba el equipo pero no dejaba tocarlo.
+//
+// La consecuencia caía al otro lado del producto y era grave: el trabajador
+// sólo ve en su móvil las obras a las que está enganchado, así que abría la
+// aplicación, no encontraba ninguna, y no podía fichar. El fichaje alimenta
+// las horas, las extra, la nómina y el coste de mano de obra; sin él la mitad
+// del producto no arranca.
+
+apiRouter.post(
+  "/projects/:id/team",
+  route(async (req, res) => {
+    const employeeId = req.body?.employeeId ?? null;
+    const subcontractorId = req.body?.subcontractorId ?? null;
+    if (!employeeId && !subcontractorId) {
+      res.status(400).json({ error: "employeeId or subcontractorId is required" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    // Sin duplicados: añadir dos veces a la misma persona no es un error que
+    // merezca un mensaje, simplemente ya estaba.
+    const { data: already } = await supabase
+      .from("assignments")
+      .select("id")
+      .eq("business_id", req.businessId!)
+      .eq("project_id", req.params.id)
+      .eq(employeeId ? "employee_id" : "subcontractor_id", employeeId ?? subcontractorId)
+      .maybeSingle();
+    if (already) {
+      res.json({ id: already.id, alreadyThere: true });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("assignments")
+      .insert({
+        business_id: req.businessId!,
+        project_id: req.params.id,
+        employee_id: employeeId,
+        subcontractor_id: subcontractorId,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.delete(
+  "/projects/:id/team/:assignmentId",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("assignments")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("project_id", req.params.id)
+      .eq("id", req.params.assignmentId);
     if (error) throw error;
     res.json({ ok: true });
   })

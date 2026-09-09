@@ -489,7 +489,8 @@
     "regularHours": "Heures régulières",
     "overtimeHours": "Heures supplémentaires",
     "historyTitle": "Historique récent des pointages",
-    "finalizingShift": "Obtention de la position GPS et fermeture..."
+    "finalizingShift": "Obtention de la position GPS et fermeture...",
+    "noProjectsAssigned": "Aucun chantier ne vous a encore été assigné. Demandez au bureau de vous ajouter et vous pourrez pointer."
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",
@@ -807,7 +808,12 @@
         "factura_final_pagada": "Facture finale encaissée",
         "cambio_manual": "Changement manuel"
       }
-    }
+    },
+    "teamEnablesClockIn": "Toute personne listée ici pourra pointer sur ce chantier depuis son téléphone.",
+    "pickWorker": "Choisissez quelqu'un",
+    "addToTeam": "Ajouter",
+    "hireSomeoneFirst": "Vous n'avez encore aucun travailleur enregistré.",
+    "everyoneAssigned": "Toute votre équipe est déjà sur ce chantier."
   },
   "clientDetail": {
     "title": "Fiche client",

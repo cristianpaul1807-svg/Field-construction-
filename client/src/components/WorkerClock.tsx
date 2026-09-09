@@ -248,16 +248,26 @@ export function WorkerClock() {
         <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
           <div className="space-y-1.5">
             <Label className="text-xs">{t("common.project")}</Label>
-            <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("worker.selectProject")} />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {projects.length === 0 ? (
+              // Sin obras asignadas el desplegable se abría vacío y el botón de
+              // fichar no llevaba a ninguna parte: desde el andamio eso se lee
+              // como que la aplicación está rota, no como que falta un paso en
+              // la oficina.
+              <p className="text-sm text-muted-foreground rounded-lg border border-border bg-secondary/40 p-3">
+                {t("worker.noProjectsAssigned")}
+              </p>
+            ) : (
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("worker.selectProject")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

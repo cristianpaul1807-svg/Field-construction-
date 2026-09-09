@@ -489,7 +489,8 @@
     "regularHours": "Regular hours",
     "overtimeHours": "Overtime hours",
     "historyTitle": "Recent timeclock history",
-    "finalizingShift": "Acquiring GPS and closing shift..."
+    "finalizingShift": "Acquiring GPS and closing shift...",
+    "noProjectsAssigned": "You haven't been assigned to a job yet. Ask the office to add you and you'll be able to clock in."
   },
   "publicChat": {
     "chatWithBusiness": "Chat with the business",
@@ -807,7 +808,12 @@
         "factura_final_pagada": "Final invoice paid",
         "cambio_manual": "Changed by hand"
       }
-    }
+    },
+    "teamEnablesClockIn": "Anyone listed here can clock in to this job from their phone.",
+    "pickWorker": "Pick someone",
+    "addToTeam": "Add",
+    "hireSomeoneFirst": "You have no workers on the books yet.",
+    "everyoneAssigned": "Your whole crew is already on this job."
   },
   "clientDetail": {
     "title": "Client record",

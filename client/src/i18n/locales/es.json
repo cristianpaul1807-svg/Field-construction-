@@ -489,7 +489,8 @@
     "regularHours": "Horas ordinarias",
     "overtimeHours": "Horas extra",
     "historyTitle": "Historial reciente de fichajes",
-    "finalizingShift": "Obteniendo GPS y cerrando turno..."
+    "finalizingShift": "Obteniendo GPS y cerrando turno...",
+    "noProjectsAssigned": "Todavía no te han asignado ninguna obra. Avisa a la oficina para que te añadan y podrás fichar."
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",
@@ -807,7 +808,12 @@
         "factura_final_pagada": "Factura final cobrada",
         "cambio_manual": "Cambio manual"
       }
-    }
+    },
+    "teamEnablesClockIn": "Quien esté aquí podrá fichar en esta obra desde su móvil.",
+    "pickWorker": "Elige a alguien",
+    "addToTeam": "Añadir",
+    "hireSomeoneFirst": "Todavía no tienes trabajadores dados de alta.",
+    "everyoneAssigned": "Ya está todo tu equipo en esta obra."
   },
   "clientDetail": {
     "title": "Ficha del cliente",
