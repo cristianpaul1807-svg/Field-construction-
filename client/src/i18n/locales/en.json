@@ -1257,5 +1257,11 @@
     "body": "Missing {{missing}}. It prints on every estimate and invoice, and in Quebec the invoice is required to carry it.",
     "taxNumbers": "your GST and QST numbers",
     "go": "Complete"
+  },
+  "payErrors": {
+    "invoice_not_found": "We couldn't find that invoice. The business may have cancelled it.",
+    "invoice_already_paid": "This invoice is already paid.",
+    "business_stripe_not_ready": "The business hasn't switched on card payments yet. Message them to agree how to pay.",
+    "stripe_no_checkout_url": "We couldn't open the payment page. Please try again in a moment."
   }
 }

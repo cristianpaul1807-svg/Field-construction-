@@ -563,8 +563,11 @@ async function createInvoiceCheckoutSession(
     .eq("id", invoiceId)
     .maybeSingle();
   if (invoiceError) throw invoiceError;
-  if (!invoice) throw new Error("Factura no encontrada");
-  if (invoice.status === "pagado") throw new Error("Esta factura ya está pagada");
+  // Con código: quien paga puede estar leyendo la aplicación en francés, y
+  // hasta ahora estos mensajes salían en castellano pasara lo que pasara.
+  // El texto se queda como reserva para los registros.
+  if (!invoice) throw new CodedError("invoice_not_found", "Factura no encontrada");
+  if (invoice.status === "pagado") throw new CodedError("invoice_already_paid", "Esta factura ya está pagada");
 
   const { data: account, error: accountError } = await admin
     .from("stripe_connected_accounts")
@@ -573,7 +576,7 @@ async function createInvoiceCheckoutSession(
     .maybeSingle();
   if (accountError) throw accountError;
   if (!account?.stripe_account_id || !account.charges_enabled) {
-    throw new Error("El negocio todavía no tiene Stripe conectado y activo");
+    throw new CodedError("business_stripe_not_ready", "El negocio todavía no tiene Stripe conectado y activo");
   }
 
   const stripe = getStripe();
@@ -603,7 +606,7 @@ async function createInvoiceCheckoutSession(
   );
 
   await admin.from("invoices").update({ stripe_checkout_session_id: session.id }).eq("id", invoiceId);
-  if (!session.url) throw new Error("Stripe no devolvió una URL de pago");
+  if (!session.url) throw new CodedError("stripe_no_checkout_url", "Stripe no devolvió una URL de pago");
   return session.url;
 }
 
@@ -770,11 +773,30 @@ async function advanceAndBill(
 
 // Wraps a handler so any thrown error (including a missing service-role key)
 // becomes a clean JSON response instead of crashing the dev/prod server.
+/**
+ * Un error con nombre estable, para que el cliente lo traduzca.
+ *
+ * El producto habla cuatro idiomas pero los mensajes del servidor estaban
+ * escritos en castellano, y se le enseñaban tal cual a quien fuera: un cliente
+ * francófono pagando una factura leía el fallo en español. El texto se queda
+ * como reserva legible en los registros; lo que viaja y manda es el código.
+ */
+class CodedError extends Error {
+  constructor(public readonly code: string, message: string) {
+    super(message);
+    this.name = "CodedError";
+  }
+}
+
 function route(handler: Handler) {
   return (req: Request, res: Response, next: NextFunction) => {
     handler(req, res).catch((err) => {
       if (err instanceof SupabaseNotConfiguredError || err instanceof StripeNotConfiguredError) {
         res.status(503).json({ error: err.message });
+        return;
+      }
+      if (err instanceof CodedError) {
+        res.status(400).json({ error: err.message, code: err.code });
         return;
       }
       next(err);

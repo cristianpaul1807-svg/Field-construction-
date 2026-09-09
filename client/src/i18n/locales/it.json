@@ -1257,5 +1257,11 @@
     "body": "Manca {{missing}}. Viene stampato su ogni preventivo e ogni fattura, e in Québec la fattura deve riportarlo.",
     "taxNumbers": "i tuoi numeri GST e QST",
     "go": "Completa"
+  },
+  "payErrors": {
+    "invoice_not_found": "Non abbiamo trovato questa fattura. L'impresa potrebbe averla annullata.",
+    "invoice_already_paid": "Questa fattura è già pagata.",
+    "business_stripe_not_ready": "L'impresa non ha ancora attivato i pagamenti con carta. Scrivile per concordare come pagare.",
+    "stripe_no_checkout_url": "Non siamo riusciti ad aprire la pagina di pagamento. Riprova tra un momento."
   }
 }

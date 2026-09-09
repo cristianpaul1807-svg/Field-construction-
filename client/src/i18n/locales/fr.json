@@ -1257,5 +1257,11 @@
     "body": "Il manque {{missing}}. Cela s'imprime sur chaque soumission et chaque facture, et au Québec la facture doit le porter.",
     "taxNumbers": "vos numéros de TPS et TVQ",
     "go": "Compléter"
+  },
+  "payErrors": {
+    "invoice_not_found": "Nous n'avons pas trouvé cette facture. L'entreprise l'a peut-être annulée.",
+    "invoice_already_paid": "Cette facture est déjà payée.",
+    "business_stripe_not_ready": "L'entreprise n'a pas encore activé le paiement par carte. Écrivez-lui pour convenir du mode de paiement.",
+    "stripe_no_checkout_url": "Nous n'avons pas pu ouvrir la page de paiement. Réessayez dans un instant."
   }
 }

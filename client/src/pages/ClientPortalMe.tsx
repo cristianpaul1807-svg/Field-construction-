@@ -132,7 +132,13 @@ export default function ClientPortalMe() {
     try {
       const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
       const body = await readJson(res);
-      if (!res.ok) throw new Error(body?.error || t("clientPortal.payError"));
+      // El servidor manda un código estable; el texto que trae es la reserva
+      // para cuando el fallo sea uno que aquí no conocemos todavía.
+      if (!res.ok) {
+        throw new Error(
+          body?.code ? t(`payErrors.${body.code}`, { defaultValue: body.error }) : body?.error || t("clientPortal.payError")
+        );
+      }
       window.location.href = body.url;
     } catch (err) {
       setPayError(err instanceof Error ? err.message : t("clientPortal.payError"));

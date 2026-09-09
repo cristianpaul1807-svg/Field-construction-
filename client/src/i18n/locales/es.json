@@ -1257,5 +1257,11 @@
     "body": "Falta {{missing}}. Se imprime en cada presupuesto y en cada factura, y en Quebec la factura tiene que llevarlo.",
     "taxNumbers": "tus números de TPS y TVQ",
     "go": "Completar"
+  },
+  "payErrors": {
+    "invoice_not_found": "No encontramos esa factura. Puede que el negocio la haya anulado.",
+    "invoice_already_paid": "Esta factura ya está pagada.",
+    "business_stripe_not_ready": "El negocio todavía no tiene los pagos con tarjeta activados. Escríbele para acordar cómo pagar.",
+    "stripe_no_checkout_url": "No pudimos abrir la pasarela de pago. Vuelve a intentarlo en un momento."
   }
 }
