@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus } from "lucide-react";
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
+import { previewTax, type TaxRate } from "@/lib/taxes";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
@@ -119,6 +120,11 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
 
 export default function Projects() {
   const { t } = useTranslation();
+  // La provincia del negocio y sus tasas, para poder decir qué paga el cliente
+  // sin recalcular el impuesto en cada tarjeta.
+  const { data: tasas } = useApi<TaxRate[]>("/api/canada-tax-rates");
+  const { data: empresa } = useApi<{ province: string }>("/api/settings/company");
+  const tasaDelNegocio = tasas?.find((r) => r.province === empresa?.province) ?? null;
   const { reloadProjects } = useSelectedProject();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: projects, loading, error } = useApi<Project[]>(`/api/projects?_r=${reloadToken}`);
@@ -209,6 +215,28 @@ export default function Projects() {
                     )}
                   </div>
                 </div>
+
+                {/* Arriba, la cifra que dice si la obra gana dinero: contrato y
+                    gasto, los dos sin impuestos. Los impuestos no son del
+                    negocio —se cobran y se remiten—, así que mezclarlos ahí
+                    daría un margen falso.
+                    Aquí debajo, lo que el cliente va a pagar, desglosado como
+                    lo verá en su factura. */}
+                {project.budgetTotal > 0 && tasaDelNegocio && (
+                  <div className="mt-3 pt-3 border-t border-border space-y-0.5 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground/70">{t("projects.clientPays")}</p>
+                    {previewTax(project.budgetTotal, tasaDelNegocio).parts.map((parte) => (
+                      <div key={parte.label} className="flex justify-between gap-3">
+                        <span>{parte.label}</span>
+                        <span>{formatCurrency(parte.amount)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between gap-3 text-foreground font-medium">
+                      <span>{t("common.total")}</span>
+                      <span>{formatCurrency(previewTax(project.budgetTotal, tasaDelNegocio).total)}</span>
+                    </div>
+                  </div>
+                )}
               </Card>
             </Link>
           ))}

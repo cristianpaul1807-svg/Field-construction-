@@ -846,7 +846,8 @@
       "comercial": "Commerciale"
     },
     "spentOfContract": "Speso: {{spent}}",
-    "contractValue": "Valore del contratto"
+    "contractValue": "Valore del contratto",
+    "clientPays": "Quanto paga il cliente"
   },
   "clientDetail": {
     "title": "Scheda cliente",
