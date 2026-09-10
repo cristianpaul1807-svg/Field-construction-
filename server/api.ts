@@ -4,7 +4,13 @@ import { randomUUID, randomBytes } from "crypto";
 import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
 import { ensureBucket } from "./storageBuckets";
 import { getStripe, getStripeWebhookSecrets, StripeNotConfiguredError } from "./stripe";
-import { flowCopy, normalizeFlowLang, type FlowLang } from "./flowMessages";
+import {
+  flowCopy,
+  flowMessageContent,
+  normalizeFlowLang,
+  renderFlowMessage,
+  type FlowLang,
+} from "./flowMessages";
 import {
   renderEstimatePdf,
   renderInvoicePdf,
@@ -178,7 +184,7 @@ async function ensureClientAccount(businessId: string, clientId: string) {
       channel_id: channelId,
       business_id: businessId,
       sender_type: "bot",
-      content: flowCopy(channelLang).accountReady(client.email),
+      content: flowMessageContent("accountReady", { email: client.email }),
     });
   }
 }
@@ -273,44 +279,48 @@ function flowStepView(step: FlowStepId, categories: FlowCategory[], lang: FlowLa
   }
 }
 
+/**
+ * Lo que se guarda de un mensaje del bot: la clave y sus datos, nunca el texto
+ * ya traducido. El idioma se decide al pintarlo, así que cambiarlo reescribe
+ * la conversación entera en vez de dejarla a trozos.
+ */
 function flowBotMessage(
   step: FlowStepId,
   businessName: string,
   categories: FlowCategory[],
-  answers: Record<string, string>,
-  lang: FlowLang
+  answers: Record<string, string>
 ): string {
-  const copy = flowCopy(lang);
   switch (step) {
     case "welcome":
-      return copy.welcome(businessName);
+      return flowMessageContent("welcome", { business: businessName });
     case "select_service":
-      return copy.selectService;
+      return flowMessageContent("selectService");
     case "describe_project":
-      return copy.describeProject;
+      return flowMessageContent("describeProject");
     case "address":
-      return copy.address;
+      return flowMessageContent("address");
     case "name":
-      return copy.name;
+      return flowMessageContent("name");
     case "phone":
-      return copy.phone;
+      return flowMessageContent("phone");
     case "email":
-      return copy.email;
+      return flowMessageContent("email");
     case "summary": {
-      const categoryName = categories.find((c) => c.id === answers.categoryId)?.name ?? copy.otherService;
-      return [
-        copy.summaryHeader,
-        `\u2022 ${copy.summaryService}: ${categoryName}`,
-        `\u2022 ${copy.summaryProject}: ${answers.description ?? "-"}`,
-        `\u2022 ${copy.summaryAddress}: ${answers.address ?? "-"}`,
-        `\u2022 ${copy.summaryName}: ${answers.name ?? "-"}`,
-        `\u2022 ${copy.summaryPhone}: ${answers.phone ?? "-"}`,
-        `\u2022 ${copy.summaryEmail}: ${answers.email ?? "-"}`,
-        copy.summaryConfirm,
-      ].join("\n");
+      // El nombre de la categoría es dato del negocio y va tal cual; que no
+      // hubiera ninguna es una clave, porque "Otro" sí se traduce.
+      const categoria = categories.find((c) => c.id === answers.categoryId)?.name ?? null;
+      return flowMessageContent("summary", {
+        service: categoria,
+        serviceOther: categoria ? null : "1",
+        description: answers.description ?? null,
+        address: answers.address ?? null,
+        name: answers.name ?? null,
+        phone: answers.phone ?? null,
+        email: answers.email ?? null,
+      });
     }
     case "done":
-      return copy.done(answers.name ?? "", businessName);
+      return flowMessageContent("done", { name: answers.name ?? "", business: businessName });
   }
 }
 
@@ -2170,7 +2180,7 @@ apiRouter.post(
       channel_id: channel.id,
       business_id: business.id,
       sender_type: "bot",
-      content: flowBotMessage("welcome", business.name, [], {}, lang),
+      content: flowBotMessage("welcome", business.name, [], {}),
     });
 
     res.status(201).json({ businessId: business.id, clientId: client.id, conversationId: channel.id });
@@ -2202,7 +2212,9 @@ apiRouter.get(
       .order("name");
 
     const step = (channel.flow_state as any)?.step ?? "welcome";
-    const lang = normalizeFlowLang((channel.flow_state as any)?.lang);
+    // El idioma de quien está mirando ahora mismo manda sobre el guardado:
+    // si acaba de cambiarlo, los botones tienen que venir ya en el nuevo.
+    const lang = normalizeFlowLang(req.query.lang ?? (channel.flow_state as any)?.lang);
     res.json({ controlMode: channel.control_mode, ...flowStepView(step, categories ?? [], lang) });
   })
 );
@@ -2277,7 +2289,7 @@ apiRouter.post(
           channel_id: channel.id,
           business_id: channel.business_id,
           sender_type: "bot",
-          content: noPuedeSerCorreo ? copyAviso.retryEmail : copyAviso.retryPhone,
+          content: flowMessageContent(noPuedeSerCorreo ? "retryEmail" : "retryPhone"),
           expires_at: computeExpiresAt(channel.disappearing_duration),
         },
       ]);
@@ -2287,13 +2299,24 @@ apiRouter.post(
       return;
     }
 
-    // Echo what the visitor picked/typed as their own chat bubble — for a
-    // button step this is the option's label, not its raw id/value.
+    // La burbuja del propio visitante. Lo que escribió va tal cual — es suyo,
+    // y además ya está en su idioma. Lo que pulsó se guarda por lo que era:
+    // "Empezar" en castellano y "Iniziamo" en italiano son el mismo botón, y
+    // guardar la etiqueta congelaba la conversación en trozos.
     const view = flowStepView(currentStep, categoryList, lang);
-    const echoLabel =
-      view.kind === "buttons" || view.kind === "button"
-        ? view.options.find((o) => o.value === value)?.label ?? value
-        : value;
+    const esBoton = view.kind === "buttons" || view.kind === "button";
+    const CLAVE_DE_BOTON: Record<string, string> = {
+      empezar: "startButton",
+      otro: "otherOption",
+      enviar: "sendButton",
+    };
+    const echoLabel = !esBoton
+      ? value
+      : CLAVE_DE_BOTON[value]
+      ? flowMessageContent(CLAVE_DE_BOTON[value])
+      : // Una categoría de presupuesto: es el nombre que puso el negocio y no
+        // se traduce, igual que en el resumen.
+        view.options.find((o) => o.value === value)?.label ?? value;
     await admin.from("chat_messages").insert({
       channel_id: channel.id,
       business_id: channel.business_id,
@@ -2324,7 +2347,7 @@ apiRouter.post(
       channel_id: channel.id,
       business_id: channel.business_id,
       sender_type: "bot",
-      content: flowBotMessage(newStep, businessName, categoryList, answers, lang),
+      content: flowBotMessage(newStep, businessName, categoryList, answers),
       expires_at: computeExpiresAt(channel.disappearing_duration),
     });
 
@@ -2346,11 +2369,14 @@ apiRouter.get(
       .eq("channel_id", req.params.id)
       .order("created_at");
     if (error) throw error;
+    // El idioma que pide quien está leyendo, no el que hubiera cuando se
+    // escribió: al cambiarlo, la conversación entera cambia con él.
+    const lang = normalizeFlowLang(req.query.lang);
     res.json(
       data.map((m) => ({
         id: m.id,
         direction: m.sender_type === "client" ? "in" : "out",
-        content: m.content,
+        content: renderFlowMessage(m.content, lang),
         sentBy: m.sender_type === "bot" ? "bot" : "human",
         timestamp: m.created_at,
       }))
@@ -2440,7 +2466,7 @@ apiRouter.post(
       channel_id: channel.id,
       business_id: channel.business_id,
       sender_type: "client",
-      content: flowCopy((channel.flow_state as any)?.lang).appointmentSummary(requestedDatetimeText, reasonText),
+      content: flowMessageContent("appointmentSummary", { when: requestedDatetimeText, reason: reasonText }),
       expires_at: computeExpiresAt(channel.disappearing_duration),
     });
 
@@ -8690,7 +8716,10 @@ apiRouter.get(
         id: m.id,
         senderType: m.sender_type,
         senderId: m.sender_id,
-        content: m.content,
+        // El contratista lee la conversación en SU idioma, aunque el
+        // visitante la tuviera en otro: los mensajes del bot se guardan
+        // por su clave, no por cómo se veían aquel día.
+        content: renderFlowMessage(m.content, req.query.lang),
         timestamp: m.created_at,
         attachment: m.attachment_kind
           ? {

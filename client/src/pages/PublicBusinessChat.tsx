@@ -106,14 +106,14 @@ export default function PublicBusinessChat() {
 
   const loadMessages = () => {
     if (!lead) return;
-    fetch(`/api/public/conversations/${lead.conversationId}/messages`)
+    fetch(`/api/public/conversations/${lead.conversationId}/messages?lang=${i18n.resolvedLanguage}`)
       .then((res) => res.json())
       .then(setMessages);
   };
 
   const loadFlow = () => {
     if (!lead) return;
-    fetch(`/api/public/conversations/${lead.conversationId}/flow`)
+    fetch(`/api/public/conversations/${lead.conversationId}/flow?lang=${i18n.resolvedLanguage}`)
       .then((res) => res.json())
       .then(setFlow);
   };
@@ -123,11 +123,12 @@ export default function PublicBusinessChat() {
     loadFlow();
   }, [lead]);
 
-  // Switching languages re-fetches the current step so its buttons and
-  // placeholder come back in the newly chosen language. Messages already in
-  // the transcript keep the language they were written in, like any real
-  // conversation.
+  // Al cambiar de idioma se recarga la conversación entera, no sólo los
+  // botones. Los mensajes del bot se guardan por su clave, así que vuelven
+  // traducidos; lo que el visitante escribió con sus manos vuelve tal cual,
+  // que es lo único que no debe tocarse.
   useEffect(() => {
+    loadMessages();
     loadFlow();
   }, [i18n.resolvedLanguage]);
 

@@ -181,3 +181,86 @@ export const FLOW_COPY: Record<FlowLang, FlowCopy> = {
 export function flowCopy(lang: unknown): FlowCopy {
   return FLOW_COPY[normalizeFlowLang(lang)];
 }
+
+/**
+ * Un mensaje del bot guardado como lo que es: una clave y sus datos.
+ *
+ * Antes se guardaba el texto ya traducido, y el resultado era una conversación
+ * a trozos — el saludo en italiano, la pregunta siguiente en castellano y la
+ * de después en inglés, según en qué idioma estuviera el visitante en cada
+ * momento. Un humano cambiando de idioma a media frase tendría sentido; una
+ * máquina, no: parece rota.
+ *
+ * Así que se guarda la clave, como se guardan los estados, y se traduce al
+ * pintarla. Cambiar de idioma reescribe la conversación entera. Lo único que
+ * no se toca es lo que el cliente escribió con sus manos, que se guarda tal
+ * cual y se enseña tal cual.
+ *
+ * Efecto secundario bueno: el contratista lee la misma conversación en SU
+ * idioma, no en el del visitante.
+ */
+export interface FlowMessageRef {
+  k: string;
+  p?: Record<string, string | null>;
+}
+
+/** El texto guardado de un mensaje de bot. Es JSON, y se reconoce por serlo. */
+export function flowMessageContent(k: string, p?: Record<string, string | null>): string {
+  return JSON.stringify(p && Object.keys(p).length ? { k, p } : { k });
+}
+
+/** Lo contrario: null cuando el contenido es texto de una persona. */
+export function parseFlowMessage(content: string): FlowMessageRef | null {
+  if (!content || content[0] !== "{") return null;
+  try {
+    const v = JSON.parse(content);
+    return v && typeof v.k === "string" ? { k: v.k, p: v.p ?? {} } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * La clave, pintada en un idioma. Devuelve el contenido tal cual si la clave
+ * no se reconoce: una conversación vieja, guardada como texto plano, se sigue
+ * leyendo igual en vez de convertirse en un jeroglífico.
+ */
+export function renderFlowMessage(content: string, lang: unknown): string {
+  const ref = parseFlowMessage(content);
+  if (!ref) return content;
+  const c = flowCopy(lang);
+  const p = ref.p ?? {};
+  switch (ref.k) {
+    case "welcome":
+      return c.welcome(p.business ?? "");
+    case "done":
+      return c.done(p.name ?? "", p.business ?? "");
+    case "accountReady":
+      return c.accountReady(p.email ?? "");
+    case "appointmentSummary":
+      return c.appointmentSummary(p.when ?? "", p.reason ?? null);
+    case "summary":
+      return [
+        c.summaryHeader,
+        `• ${c.summaryService}: ${p.serviceOther ? c.otherService : p.service ?? "-"}`,
+        `• ${c.summaryProject}: ${p.description || "-"}`,
+        `• ${c.summaryAddress}: ${p.address || "-"}`,
+        `• ${c.summaryName}: ${p.name || "-"}`,
+        `• ${c.summaryPhone}: ${p.phone || "-"}`,
+        `• ${c.summaryEmail}: ${p.email || "-"}`,
+        c.summaryConfirm,
+      ].join("\n");
+    // Las respuestas por botón del visitante: se guardan por lo que son, no
+    // por cómo estaban escritas en ese momento.
+    case "startButton":
+      return c.startButton;
+    case "otherOption":
+      return c.otherOption;
+    case "sendButton":
+      return c.sendButton;
+    default: {
+      const directo = (c as unknown as Record<string, unknown>)[ref.k];
+      return typeof directo === "string" ? directo : content;
+    }
+  }
+}

@@ -97,7 +97,9 @@ export default function Communication() {
 
   const { data: channels, loading, error } = useApi<ChatChannel[]>(`/api/chat/channels?${query.toString()}&_r=${reloadToken}`);
   const { data: messages, reload: reloadMessages } = useApi<ChatMessage[]>(
-    activeId ? `/api/chat/channels/${activeId}/messages?_r=${reloadToken}` : null
+    // El idioma va en la petición: los mensajes del bot se guardan por su
+    // clave y se pintan en el idioma de quien los lee.
+    activeId ? `/api/chat/channels/${activeId}/messages?lang=${i18n.language}&_r=${reloadToken}` : null
   );
 
   const activeChannel = channels?.find((c) => c.id === activeId) ?? null;
