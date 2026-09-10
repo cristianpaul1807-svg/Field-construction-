@@ -81,8 +81,17 @@ const navSections: NavSection[] = [
     items: [
       { id: "crm", labelKey: "nav.crm", Icon: Contact, path: "/crm" },
       { id: "client-portal", labelKey: "nav.clientPortal", Icon: Globe, path: "/client-portal" },
-      { id: "communication", labelKey: "nav.communication", Icon: MessageSquare, path: "/communication" },
     ],
+  },
+  {
+    // Vivía dentro de Clientes, y ahí sólo cabía la mitad de lo que hace: el
+    // chat interno es con los trabajadores y los subcontratistas, que no son
+    // clientes de nadie. Buscar los mensajes del equipo dentro de "Clientes"
+    // es no encontrarlos. Sección propia, al mismo nivel que el resto.
+    id: "communication",
+    titleKey: "nav.communication",
+    Icon: MessageSquare,
+    items: [{ id: "communication", labelKey: "nav.communication", Icon: MessageSquare, path: "/communication" }],
   },
   {
     id: "projects",
