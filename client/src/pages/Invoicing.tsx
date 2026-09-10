@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send, Plus, Copy, Check, Download, Ban } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
+import { previewTax, type TaxRate } from "@/lib/taxes";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
 
@@ -45,14 +46,6 @@ interface ClientOption {
   name: string;
 }
 
-interface TaxRate {
-  province: string;
-  isHst: boolean;
-  gstRate: number;
-  pstRate: number;
-  hstRate: number;
-}
-
 function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -69,9 +62,12 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 
   const rate = rates?.find((r) => r.province === company?.province);
   const subtotalNum = Number(subtotal) || 0;
-  const taxRate = rate ? (rate.isHst ? rate.hstRate : rate.gstRate + rate.pstRate) : 0;
-  const taxAmount = subtotalNum * taxRate;
-  const total = subtotalNum + taxAmount;
+  // Se usa el mismo cálculo que el presupuesto y que el servidor. Antes aquí
+  // se sumaban las dos tasas y se aplicaba de golpe (5 % + 9,975 % = 14,975 %),
+  // y el servidor redondea cada impuesto por su cuenta: el total que se veía
+  // al crear la factura podía no ser el de la factura, por un céntimo.
+  const impuestos = previewTax(subtotalNum, rate ?? null);
+  const total = impuestos.total;
 
   const reset = () => {
     setClientId("");
@@ -157,9 +153,14 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
           {subtotalNum > 0 && (
             <div className="rounded-lg bg-secondary/60 p-3 text-sm space-y-1">
               <div className="flex justify-between text-muted-foreground"><span>{t("common.subtotal")}</span><span>{formatCurrency(subtotalNum)}</span></div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>{t("invoicing.tax", { rate: (taxRate * 100).toFixed(3) })}</span><span>{formatCurrency(taxAmount)}</span>
-              </div>
+              {/* En Quebec son dos impuestos y se declaran por separado, así
+                  que se enseñan por separado: una sola línea de "impuestos" no
+                  le sirve a su contable ni cuadra con la factura en papel. */}
+              {impuestos.parts.map((parte) => (
+                <div key={parte.label} className="flex justify-between text-muted-foreground">
+                  <span>{parte.label}</span><span>{formatCurrency(parte.amount)}</span>
+                </div>
+              ))}
               <div className="flex justify-between font-medium text-foreground pt-1 border-t border-border"><span>{t("common.total")}</span><span>{formatCurrency(total)}</span></div>
             </div>
           )}

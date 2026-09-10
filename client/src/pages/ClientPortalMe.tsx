@@ -33,6 +33,8 @@ interface ClientPortalData {
     total: number;
     taxAmount?: number;
     totalWithTax?: number;
+    /** Cada impuesto por su cuenta. En Quebec son dos y se declaran aparte. */
+    taxBreakdown?: { province?: string; hst?: number; gst?: number; pst?: number };
     signature: { name: string; signedAt: string; total: number } | null;
   } | null;
   pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
@@ -100,6 +102,25 @@ function colorForId(id: string) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   return `oklch(0.74 0.07 ${hash % 360})`;
+}
+
+/**
+ * Las líneas de impuesto del desglose que manda el servidor.
+ *
+ * Los nombres son los que el cliente ve en cualquier otra factura de su
+ * provincia: en Quebec, TPS y TVQ. El importe llega ya calculado y redondeado
+ * — aquí no se recalcula nada, que es como se acaba enseñando una cifra
+ * distinta de la del papel.
+ */
+function lineasDeImpuesto(tb: { province?: string; hst?: number; gst?: number; pst?: number } | undefined) {
+  const lineas: { label: string; amount: number }[] = [];
+  if (!tb) return lineas;
+  if (tb.hst !== undefined) lineas.push({ label: "TVH/HST", amount: tb.hst });
+  if (tb.gst !== undefined) lineas.push({ label: "TPS/GST", amount: tb.gst });
+  if (tb.pst !== undefined) {
+    lineas.push({ label: tb.province === "QC" ? "TVQ/QST" : "PST", amount: tb.pst });
+  }
+  return lineas;
 }
 
 export default function ClientPortalMe() {
@@ -310,13 +331,24 @@ export default function ClientPortalMe() {
                       <p className="text-xl font-semibold text-foreground mt-1">
                         {formatCurrency(data.estimate.totalWithTax ?? data.estimate.total)}
                       </p>
+                      {/* El desglose y no una suma: el cliente de Quebec ve
+                          TPS y TVQ separadas en cualquier factura que reciba, y
+                          una sola línea de "impuestos" le hace dudar de la
+                          cifra justo antes de firmarla. Es lo mismo que ya sale
+                          en el PDF. */}
                       {data.estimate.taxAmount ? (
-                        <p className="text-xs text-muted-foreground">
-                          {t("clientPortal.taxIncluded", {
-                            subtotal: formatCurrency(data.estimate.total),
-                            tax: formatCurrency(data.estimate.taxAmount),
-                          })}
-                        </p>
+                        <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                          <div className="flex justify-between gap-4">
+                            <span>{t("budgets.beforeTax")}</span>
+                            <span>{formatCurrency(data.estimate.total)}</span>
+                          </div>
+                          {lineasDeImpuesto(data.estimate.taxBreakdown).map((linea) => (
+                            <div key={linea.label} className="flex justify-between gap-4">
+                              <span>{linea.label}</span>
+                              <span>{formatCurrency(linea.amount)}</span>
+                            </div>
+                          ))}
+                        </div>
                       ) : null}
                     </div>
                     {/* Se guarda "aceptado" porque ese es el dato, pero esta es
