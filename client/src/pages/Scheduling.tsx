@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ScheduleEventDialog } from "@/components/ScheduleEventDialog";
-import { ChevronLeft, ChevronRight, Plus, StickyNote, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Plus, StickyNote, X } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
 import { MonthGrid, claveDia, type DiaMarcado } from "@/components/MonthGrid";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
@@ -12,8 +12,14 @@ import { useTranslation } from "react-i18next";
 
 interface ScheduleEvent {
   id: string;
+  /** Una cita de la agenda o una orden de trabajo con fecha: se pintan igual
+   *  pero no se borran igual, y no viven en la misma tabla. */
+  kind: "cita" | "orden";
   title: string;
-  type: string;
+  type: string | null;
+  priority: string | null;
+  status: string | null;
+  serviceType: string | null;
   startTime: string;
   endTime: string | null;
   notes: string | null;
@@ -68,9 +74,13 @@ export default function Scheduling() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogInitialDate, setDialogInitialDate] = useState(new Date());
 
-  const removeEvent = async (id: string) => {
-    if (!window.confirm(t("scheduling.deleteConfirm"))) return;
-    const res = await apiFetch(`/api/schedule-events/${id}`, { method: "DELETE" });
+  // Cada cosa se borra donde vive: una orden de trabajo no es una cita, y
+  // mandarla a /schedule-events daría un 404 silencioso que deja el bloque en
+  // pantalla como si nada hubiera pasado.
+  const removeEvent = async (id: string, kind: "cita" | "orden") => {
+    if (!window.confirm(t(kind === "orden" ? "scheduling.deleteOrderConfirm" : "scheduling.deleteConfirm"))) return;
+    const ruta = kind === "orden" ? `/api/work-orders/${id}` : `/api/schedule-events/${id}`;
+    const res = await apiFetch(ruta, { method: "DELETE" });
     if (res.ok) reload();
   };
 
@@ -321,13 +331,17 @@ export default function Scheduling() {
                           className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-status-error-fg"
                           onClick={(e) => {
                             e.stopPropagation();
-                            removeEvent(event.id);
+                            removeEvent(event.id, event.kind);
                           }}
                         >
                           <X size={11} strokeWidth={2} />
                         </button>
                         <div className={cn("font-semibold truncate leading-tight flex items-center gap-1 pr-3", detail.text, isNote ? "text-foreground" : "text-foreground")}>
                           {isNote && <StickyNote size={10} className="flex-shrink-0" />}
+                          {/* Una orden de trabajo y una cita se pintan en la
+                              misma rejilla, así que hace falta saber cuál es
+                              cuál sin abrirla. */}
+                          {event.kind === "orden" && <ClipboardList size={10} className="flex-shrink-0" />}
                           {event.title}
                         </div>
                         {detail.showSubtitle && (

@@ -937,7 +937,9 @@
     "assignedTo": "Assigné à {{name}}",
     "noWorkOrders": "Vous n'avez encore aucun bon de travail.",
     "deleteConfirm": "Supprimer ce bon de travail ?",
-    "pageTitle": "Bons de travail"
+    "pageTitle": "Bons de travail",
+    "scheduleFor": "Date et heure ({{opt}})",
+    "durationLabel": "Durée approximative (minutes)"
   },
   "scheduling": {
     "title": "Calendrier",
@@ -976,7 +978,8 @@
     "previousMonth": "Mois précédent",
     "nextMonth": "Mois suivant",
     "countThatDay": "{{count}} rendez-vous",
-    "countThatDay_other": "{{count}} rendez-vous"
+    "countThatDay_other": "{{count}} rendez-vous",
+    "deleteOrderConfirm": "Supprimer ce bon de travail ? Il disparaît de la liste des bons, pas seulement du calendrier."
   },
   "checkIn": {
     "title": "Pointage (entrée / sortie)",

@@ -5170,7 +5170,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("work_orders")
-      .select("id, title, description, priority, status, service_type, projects(name), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+      .select("id, title, description, priority, status, service_type, scheduled_start, duration_minutes, projects(name), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
       .eq("business_id", req.businessId!);
 
     if (error) throw error;
@@ -5183,6 +5183,8 @@ apiRouter.get(
         priority: w.priority,
         status: w.status,
         serviceType: w.service_type ?? null,
+        scheduledStart: w.scheduled_start ?? null,
+        durationMinutes: w.duration_minutes ?? null,
         projectName: w.projects?.name ?? null,
         assignedTo: w.employees?.name ?? w.subcontractors?.name ?? null,
       }))
@@ -5193,7 +5195,7 @@ apiRouter.get(
 apiRouter.post(
   "/work-orders",
   route(async (req, res) => {
-    const { projectId, title, description, priority, assignedEmployeeId, assignedSubcontractorId, serviceType } = req.body ?? {};
+    const { projectId, title, description, priority, assignedEmployeeId, assignedSubcontractorId, serviceType, scheduledStart, durationMinutes } = req.body ?? {};
     if (!projectId || !title?.trim()) {
       res.status(400).json({ error: "projectId and title are required" });
       return;
@@ -5221,6 +5223,10 @@ apiRouter.post(
         status: "pendiente",
         // Qué clase de trabajo es, dicho al asignarlo: lo hereda quien fiche.
         service_type: serviceType || null,
+        // Sin fecha sigue siendo una orden válida —"hay que hacer esto en algún
+        // momento"—; simplemente no sale en la agenda hasta que se decida.
+        scheduled_start: scheduledStart || null,
+        duration_minutes: scheduledStart ? Number(durationMinutes) || 60 : null,
         assigned_employee_id: assignedEmployeeId || null,
         assigned_subcontractor_id: assignedSubcontractorId || null,
       })
@@ -5233,33 +5239,82 @@ apiRouter.post(
 
 // ---------- Scheduling ----------
 
+/**
+ * La agenda: las citas y las órdenes de trabajo, en la misma rejilla.
+ *
+ * Estaban separadas y por eso una orden asignada a alguien para el martes no
+ * aparecía el martes en ninguna parte — había que acordarse de mirar otra
+ * pantalla. Se devuelven juntas y con su clase, para que el calendario pueda
+ * distinguirlas sin tener que adivinar.
+ *
+ * Una orden sin fecha no entra: no es que se pierda, es que todavía no tiene
+ * cuándo, y sigue en su lista de pendientes hasta que alguien se lo ponga.
+ */
 apiRouter.get(
   "/schedule-events",
   route(async (req, res) => {
     const supabase = req.supabase!;
-    const { data, error } = await supabase
-      .from("schedule_events")
-      .select(
-        "id, title, type, start_time, end_time, notes, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
-      )
-      .eq("business_id", req.businessId!)
-      .order("start_time");
+    const [citas, ordenes] = await Promise.all([
+      supabase
+        .from("schedule_events")
+        .select(
+          "id, title, type, start_time, end_time, notes, service_type, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
+        )
+        .eq("business_id", req.businessId!)
+        .order("start_time"),
+      supabase
+        .from("work_orders")
+        .select(
+          "id, title, description, priority, status, service_type, scheduled_start, duration_minutes, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
+        )
+        .eq("business_id", req.businessId!)
+        .not("scheduled_start", "is", null),
+    ]);
+    if (citas.error) throw citas.error;
+    if (ordenes.error) throw ordenes.error;
 
-    if (error) throw error;
+    const deCitas = (citas.data as any[]).map((s) => ({
+      id: s.id,
+      kind: "cita" as const,
+      title: s.title,
+      type: s.type,
+      startTime: s.start_time,
+      endTime: s.end_time,
+      notes: s.notes,
+      serviceType: s.service_type ?? null,
+      priority: null as string | null,
+      status: null as string | null,
+      projectId: s.project_id,
+      projectName: s.projects?.name ?? null,
+      assignedWorkerId: s.employees?.id ?? s.subcontractors?.id ?? null,
+      assignedWorkerName: s.employees?.name ?? s.subcontractors?.name ?? null,
+    }));
+
+    const deOrdenes = (ordenes.data as any[]).map((w) => ({
+      id: w.id,
+      kind: "orden" as const,
+      title: w.title,
+      type: null,
+      startTime: w.scheduled_start,
+      // La agenda dibuja bloques entre dos horas; una orden guarda cuánto dura,
+      // así que el final se calcula aquí y no en cada pantalla que la use.
+      endTime: new Date(
+        new Date(w.scheduled_start).getTime() + (Number(w.duration_minutes) || 60) * 60000
+      ).toISOString(),
+      notes: w.description,
+      serviceType: w.service_type ?? null,
+      priority: w.priority as string | null,
+      status: w.status as string | null,
+      projectId: w.project_id,
+      projectName: w.projects?.name ?? null,
+      assignedWorkerId: w.employees?.id ?? w.subcontractors?.id ?? null,
+      assignedWorkerName: w.employees?.name ?? w.subcontractors?.name ?? null,
+    }));
 
     res.json(
-      data.map((s: any) => ({
-        id: s.id,
-        title: s.title,
-        type: s.type,
-        startTime: s.start_time,
-        endTime: s.end_time,
-        notes: s.notes,
-        projectId: s.project_id,
-        projectName: s.projects?.name ?? null,
-        assignedWorkerId: s.employees?.id ?? s.subcontractors?.id ?? null,
-        assignedWorkerName: s.employees?.name ?? s.subcontractors?.name ?? null,
-      }))
+      [...deCitas, ...deOrdenes].sort(
+        (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+      )
     );
   })
 );

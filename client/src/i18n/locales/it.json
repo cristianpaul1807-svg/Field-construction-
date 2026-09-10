@@ -937,7 +937,9 @@
     "assignedTo": "Assegnato a {{name}}",
     "noWorkOrders": "Non hai ancora ordini di lavoro.",
     "deleteConfirm": "Eliminare questo ordine di lavoro?",
-    "pageTitle": "Ordini di lavoro"
+    "pageTitle": "Ordini di lavoro",
+    "scheduleFor": "Data e ora ({{opt}})",
+    "durationLabel": "Durata approssimativa (minuti)"
   },
   "scheduling": {
     "title": "Calendario",
@@ -976,7 +978,8 @@
     "previousMonth": "Mese precedente",
     "nextMonth": "Mese successivo",
     "countThatDay": "{{count}} appuntamento",
-    "countThatDay_other": "{{count}} appuntamenti"
+    "countThatDay_other": "{{count}} appuntamenti",
+    "deleteOrderConfirm": "Rimuovere questo ordine di lavoro? Sparisce dall'elenco degli ordini, non solo dal calendario."
   },
   "checkIn": {
     "title": "Timbratura (entrata / uscita)",

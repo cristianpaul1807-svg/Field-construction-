@@ -32,6 +32,11 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
   const [priority, setPriority] = useState<string>("media");
   const [assignee, setAssignee] = useState("");
   const [serviceType, setServiceType] = useState<string>(SIN_ESPECIFICAR);
+  // Opcionales: una orden sin fecha sigue siendo una orden ("hay que hacer
+  // esto"), sólo que no sale en la agenda hasta que se decida cuándo.
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("09:00");
+  const [durationMinutes, setDurationMinutes] = useState(60);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +44,7 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
   const { data: employees } = useApi<AssigneeOption[]>(open ? "/api/employees" : null);
   const { data: subcontractors } = useApi<AssigneeOption[]>(open ? "/api/subcontractors" : null);
 
-  const reset = () => { setProjectId(""); setTitle(""); setDescription(""); setPriority("media"); setAssignee(""); setServiceType(SIN_ESPECIFICAR); setError(null); };
+  const reset = () => { setProjectId(""); setTitle(""); setDescription(""); setPriority("media"); setAssignee(""); setServiceType(SIN_ESPECIFICAR); setDate(""); setTime("09:00"); setDurationMinutes(60); setError(null); };
 
   const create = async () => {
     if (!projectId || !title.trim()) return;
@@ -59,6 +64,8 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
           assignedEmployeeId: kind === "emp" ? id : undefined,
           assignedSubcontractorId: kind === "sub" ? id : undefined,
           serviceType: serviceType === SIN_ESPECIFICAR ? null : serviceType,
+          scheduledStart: date ? new Date(`${date}T${time}:00`).toISOString() : null,
+          durationMinutes: date ? durationMinutes : null,
         }),
       });
       const body = await res.json().catch(() => null);
@@ -125,6 +132,27 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
               </SelectContent>
             </Select>
           </div>
+          {/* Ponerle fecha es lo que la hace aparecer en la agenda. Sin ella
+              se queda en la lista de pendientes, que es un sitio legítimo. */}
+          <div className="space-y-1.5">
+            <Label>{t("workOrders.scheduleFor", { opt: t("common.optional") })}</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} disabled={!date} />
+            </div>
+          </div>
+          {date && (
+            <div className="space-y-1.5">
+              <Label>{t("workOrders.durationLabel")}</Label>
+              <Input
+                type="number"
+                min={15}
+                step={15}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(Number(e.target.value) || 60)}
+              />
+            </div>
+          )}
           {error && <p className="text-sm text-status-error-fg">{error}</p>}
           <Button className="w-full" onClick={create} disabled={!projectId || !title.trim() || saving}>
             {saving ? t("common.creating") : t("workOrders.createWorkOrder")}

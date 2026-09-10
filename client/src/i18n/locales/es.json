@@ -937,7 +937,9 @@
     "assignedTo": "Asignado a {{name}}",
     "noWorkOrders": "Todavía no tienes órdenes de trabajo.",
     "deleteConfirm": "¿Eliminar esta orden de trabajo?",
-    "pageTitle": "Órdenes de trabajo"
+    "pageTitle": "Órdenes de trabajo",
+    "scheduleFor": "Fecha y hora ({{opt}})",
+    "durationLabel": "Duración aproximada (minutos)"
   },
   "scheduling": {
     "title": "Agenda",
@@ -976,7 +978,8 @@
     "previousMonth": "Mes anterior",
     "nextMonth": "Mes siguiente",
     "countThatDay": "{{count}} cita",
-    "countThatDay_other": "{{count}} citas"
+    "countThatDay_other": "{{count}} citas",
+    "deleteOrderConfirm": "¿Quitar esta orden de trabajo? Se borra de la lista de órdenes, no sólo del calendario."
   },
   "checkIn": {
     "title": "Fichaje (entrada / salida)",

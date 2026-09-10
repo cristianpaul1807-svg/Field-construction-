@@ -937,7 +937,9 @@
     "assignedTo": "Assigned to {{name}}",
     "noWorkOrders": "You don't have any work orders yet.",
     "deleteConfirm": "Delete this work order?",
-    "pageTitle": "Work orders"
+    "pageTitle": "Work orders",
+    "scheduleFor": "Date and time ({{opt}})",
+    "durationLabel": "Approximate duration (minutes)"
   },
   "scheduling": {
     "title": "Scheduling",
@@ -976,7 +978,8 @@
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
     "countThatDay": "{{count}} appointment",
-    "countThatDay_other": "{{count}} appointments"
+    "countThatDay_other": "{{count}} appointments",
+    "deleteOrderConfirm": "Remove this work order? It is deleted from the orders list, not just from the calendar."
   },
   "checkIn": {
     "title": "Check-in / Check-out",
