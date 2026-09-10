@@ -19,6 +19,8 @@ interface TimeEntry {
   checkOutTime: string | null;
   /** Nulo cuando el trabajador fichó sin decir qué hizo. */
   serviceType: string | null;
+  /** De qué trabajo son estas horas, cuando fichó sobre uno de la agenda. */
+  jobTitle: string | null;
   approved: boolean;
 }
 
@@ -98,7 +100,9 @@ export default function CheckIn() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">{entry.workerName}</p>
                       <p className="text-xs text-muted-foreground">
-                        {entry.projectName}
+                        {/* Dos citas del mismo sitio el mismo día ya no se
+                            confunden: se dice cuál era. */}
+                        {entry.jobTitle ? `${entry.jobTitle} · ${entry.projectName}` : entry.projectName}
                         {/* Qué se hizo en esas horas. Cuando el trabajador no
                             lo dijo se escribe, en vez de dejar el hueco: un
                             hueco no se distingue de un dato que no se pidió, y

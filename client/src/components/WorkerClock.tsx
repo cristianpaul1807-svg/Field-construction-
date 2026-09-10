@@ -15,13 +15,18 @@ interface ActiveEntry {
   serviceType: string | null;
 }
 
-interface Project {
-  id: string;
+/** Una opción del desplegable: o un trabajo concreto de hoy, o una obra suelta. */
+interface Opcion {
+  /** Identifica la opción, no la obra: dos trabajos del mismo sitio son dos. */
+  key: string;
+  projectId: string;
   name: string;
-  /** Si le toca hoy según la agenda. */
-  hoy?: boolean;
+  hoy: boolean;
   /** El título del trabajo de hoy, cuando lo hay. */
-  tarea?: string | null;
+  tarea: string | null;
+  scheduleEventId: string | null;
+  /** Lo que la oficina dijo que era este trabajo, si lo dijo. */
+  serviceType: string | null;
 }
 
 interface TimeHistoryEntry {
@@ -72,9 +77,9 @@ function getLocation(): Promise<{ latitude: number; longitude: number }> {
 export function WorkerClock() {
   const { t, i18n } = useTranslation();
   const [active, setActive] = useState<ActiveEntry | null | undefined>(undefined);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [opciones, setOpciones] = useState<Opcion[]>([]);
   const [history, setHistory] = useState<TimeHistoryEntry[]>([]);
-  const [projectId, setProjectId] = useState("");
+  const [elegida, setElegida] = useState("");
   const [serviceType, setServiceType] = useState("");
   const [switching, setSwitching] = useState(false);
   const [nowMs, setNowMs] = useState<number>(Date.now());
@@ -87,7 +92,7 @@ export function WorkerClock() {
       .then(setActive);
     workerApiFetch("/api/worker/projects")
       .then((res) => res.json())
-      .then(setProjects);
+      .then((d) => setOpciones(Array.isArray(d) ? d : []));
     workerApiFetch("/api/worker/time-entries/history")
       .then((res) => res.json())
       .then((data) => setHistory(Array.isArray(data) ? data : []));
@@ -95,11 +100,24 @@ export function WorkerClock() {
 
   useEffect(load, []);
 
-  const hoy = projects.filter((p) => p.hoy);
-  const otras = projects.filter((p) => !p.hoy);
+  const hoy = opciones.filter((o) => o.hoy);
+  const otras = opciones.filter((o) => !o.hoy);
+  const trabajo = opciones.find((o) => o.key === elegida) ?? null;
 
-  /** Lo que se guarda: nulo cuando no lo ha dicho. */
+  /** Lo que se guarda: nulo cuando no lo ha dicho. El servidor rellena
+   *  entonces con lo que la oficina puso al programar el trabajo. */
   const tipoElegido = () => (serviceType && serviceType !== SIN_ESPECIFICAR ? serviceType : null);
+
+  // Al elegir un trabajo que ya viene clasificado desde la oficina, el
+  // desplegable se pone solo en eso: el trabajador no tiene que repetir lo que
+  // ya se sabe, y si el día se tuerce puede cambiarlo.
+  //
+  // Y al cambiar a otro trabajo se vuelve a lo que diga ese: si no se limpia,
+  // el tipo del anterior se queda pegado y las horas de un trabajo sin
+  // clasificar acaban etiquetadas con lo que era el de antes.
+  useEffect(() => {
+    setServiceType(trabajo?.serviceType ?? "");
+  }, [trabajo?.key]);
 
   // Update current clock time every minute for continuous calculation
   useEffect(() => {
@@ -129,7 +147,12 @@ export function WorkerClock() {
       await workerApiFetch("/api/worker/time-entries/check-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, serviceType: tipoElegido(), ...loc }),
+        body: JSON.stringify({
+          projectId: trabajo?.projectId,
+          scheduleEventId: trabajo?.scheduleEventId ?? null,
+          serviceType: tipoElegido(),
+          ...loc,
+        }),
       });
       load();
     });
@@ -152,7 +175,8 @@ export function WorkerClock() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           activeEntryId: active!.id,
-          projectId,
+          projectId: trabajo?.projectId,
+          scheduleEventId: trabajo?.scheduleEventId ?? null,
           serviceType: tipoElegido(),
           ...loc,
         }),
@@ -285,7 +309,7 @@ export function WorkerClock() {
         <div className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
           <div className="space-y-1.5">
             <Label className="text-xs">{t("common.project")}</Label>
-            {projects.length === 0 ? (
+            {opciones.length === 0 ? (
               // Sin obras asignadas el desplegable se abría vacío y el botón de
               // fichar no llevaba a ninguna parte: desde el andamio eso se lee
               // como que la aplicación está rota, no como que falta un paso en
@@ -294,7 +318,7 @@ export function WorkerClock() {
                 {t("worker.noProjectsAssigned")}
               </p>
             ) : (
-              <Select value={projectId} onValueChange={setProjectId}>
+              <Select value={elegida} onValueChange={setElegida}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={t("worker.selectProject")} />
                 </SelectTrigger>
@@ -307,9 +331,9 @@ export function WorkerClock() {
                   {hoy.length > 0 && (
                     <SelectGroup>
                       <SelectLabel>{t("worker.todaysJobs")}</SelectLabel>
-                      {hoy.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.tarea ? `${p.tarea} · ${p.name}` : p.name}
+                      {hoy.map((o) => (
+                        <SelectItem key={o.key} value={o.key}>
+                          {o.tarea ? `${o.tarea} · ${o.name}` : o.name}
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -317,8 +341,8 @@ export function WorkerClock() {
                   {otras.length > 0 && (
                     <SelectGroup>
                       {hoy.length > 0 && <SelectLabel>{t("worker.otherProjects")}</SelectLabel>}
-                      {otras.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      {otras.map((o) => (
+                        <SelectItem key={o.key} value={o.key}>{o.name}</SelectItem>
                       ))}
                     </SelectGroup>
                   )}
@@ -356,13 +380,13 @@ export function WorkerClock() {
 
           {switching ? (
             <div className="flex gap-2">
-              <Button className="flex-1" size="lg" onClick={confirmSwitch} disabled={!projectId || busy}>
+              <Button className="flex-1" size="lg" onClick={confirmSwitch} disabled={!trabajo || busy}>
                 {busy ? <Spinner className="size-4" /> : t("worker.confirmSwitch")}
               </Button>
               <Button variant="outline" size="lg" onClick={() => setSwitching(false)}>{t("common.cancel")}</Button>
             </div>
           ) : (
-            <Button className="w-full gap-2" size="lg" onClick={checkIn} disabled={!projectId || busy}>
+            <Button className="w-full gap-2" size="lg" onClick={checkIn} disabled={!trabajo || busy}>
               {busy ? <Spinner className="size-4" /> : <><MapPin size={16} /> {t("worker.clockIn")}</>}
             </Button>
           )}

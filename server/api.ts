@@ -1274,7 +1274,7 @@ apiRouter.get(
       // ("Instalar cableado planta 3"), no el nombre de la obra a secas.
       admin
         .from("schedule_events")
-        .select("title, start_time, projects(id, name, status)")
+        .select("id, title, start_time, service_type, projects(id, name, status)")
         .eq("business_id", req.workerBusinessId!)
         .eq(assignedColumn, req.workerId!)
         .gte("start_time", desde)
@@ -1295,22 +1295,52 @@ apiRouter.get(
     // el 95 % de las veces. El resto sigue estando: filtrar por hoy a secas
     // dejaría sin fichar a quien tiene obra asignada pero nadie le puso cita
     // en la agenda, que es la mitad de los negocios pequeños.
-    const seen = new Set<string>();
-    const projects: { id: string; name: string; hoy: boolean; tarea: string | null }[] = [];
+    //
+    // Cada trabajo de hoy es su propia opción, aunque dos caigan en la misma
+    // obra: "Instalar cableado" y "Rematar azulejo" en el mismo edificio son
+    // dos cosas distintas, y agruparlas por obra hacía desaparecer una.
+    const opciones: {
+      key: string;
+      projectId: string;
+      name: string;
+      hoy: boolean;
+      tarea: string | null;
+      scheduleEventId: string | null;
+      serviceType: string | null;
+    }[] = [];
 
     for (const row of hoyEnAgenda.data as any[]) {
-      if (row.projects && !seen.has(row.projects.id) && CLOCKABLE.has(row.projects.status)) {
-        seen.add(row.projects.id);
-        projects.push({ id: row.projects.id, name: row.projects.name, hoy: true, tarea: row.title ?? null });
+      if (row.projects && CLOCKABLE.has(row.projects.status)) {
+        opciones.push({
+          key: `cita:${row.id}`,
+          projectId: row.projects.id,
+          name: row.projects.name,
+          hoy: true,
+          tarea: row.title ?? null,
+          scheduleEventId: row.id,
+          serviceType: row.service_type ?? null,
+        });
       }
     }
+
+    // Las obras sueltas se siguen ofreciendo una vez cada una, y sólo si no
+    // salieron ya como trabajo de hoy.
+    const yaEstan = new Set(opciones.map((o) => o.projectId));
     for (const row of [...(assignments.data as any[]), ...(events.data as any[]), ...(orders.data as any[])]) {
-      if (row.projects && !seen.has(row.projects.id) && CLOCKABLE.has(row.projects.status)) {
-        seen.add(row.projects.id);
-        projects.push({ id: row.projects.id, name: row.projects.name, hoy: false, tarea: null });
+      if (row.projects && !yaEstan.has(row.projects.id) && CLOCKABLE.has(row.projects.status)) {
+        yaEstan.add(row.projects.id);
+        opciones.push({
+          key: `obra:${row.projects.id}`,
+          projectId: row.projects.id,
+          name: row.projects.name,
+          hoy: false,
+          tarea: null,
+          scheduleEventId: null,
+          serviceType: null,
+        });
       }
     }
-    res.json(projects);
+    res.json(opciones);
   })
 );
 
@@ -1347,11 +1377,38 @@ apiRouter.get(
   })
 );
 
+/**
+ * La cita que el trabajador dice estar fichando, sólo si de verdad es suya.
+ *
+ * El id del trabajo llega del móvil, así que no vale fiarse: se comprueba que
+ * la cita es de su negocio, que está asignada a él y que es de la obra que
+ * dice. Sin esto, cualquiera con un código de acceso podría colgar sus horas
+ * del trabajo de otro.
+ */
+async function trabajoDelDia(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  req: Request,
+  scheduleEventId: unknown,
+  projectId: string
+): Promise<{ id: string; service_type: string | null } | null> {
+  if (typeof scheduleEventId !== "string" || !scheduleEventId) return null;
+  const assignedColumn = req.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
+  const { data } = await admin
+    .from("schedule_events")
+    .select("id, service_type")
+    .eq("id", scheduleEventId)
+    .eq("business_id", req.workerBusinessId!)
+    .eq(assignedColumn, req.workerId!)
+    .eq("project_id", projectId)
+    .maybeSingle();
+  return data ?? null;
+}
+
 apiRouter.post(
   "/worker/time-entries/check-in",
   requireWorkerAuth,
   route(async (req, res) => {
-    const { projectId, billable, serviceType, latitude, longitude } = req.body ?? {};
+    const { projectId, billable, serviceType, scheduleEventId, latitude, longitude } = req.body ?? {};
     if (!projectId || latitude === undefined || longitude === undefined) {
       res.status(400).json({ error: "projectId, latitude and longitude are required" });
       return;
@@ -1360,6 +1417,12 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
 
+    const trabajo = await trabajoDelDia(admin, req, scheduleEventId, projectId);
+    if (scheduleEventId && !trabajo) {
+      res.status(403).json({ error: "that job is not yours" });
+      return;
+    }
+
     const { data, error } = await admin
       .from("time_entries")
       .insert({
@@ -1367,7 +1430,11 @@ apiRouter.post(
         project_id: projectId,
         [column]: req.workerId!,
         billable: billable ?? true,
-        service_type: serviceType ?? null,
+        schedule_event_id: trabajo?.id ?? null,
+        // Lo que dijo el trabajador manda; si no dijo nada, hereda lo que la
+        // oficina puso al programar el trabajo. Sólo queda nulo cuando nadie
+        // lo ha dicho en ningún momento.
+        service_type: serviceType ?? trabajo?.service_type ?? null,
         check_in_location: `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`,
         check_in_lat: latitude,
         check_in_lng: longitude,
@@ -1480,7 +1547,7 @@ apiRouter.post(
   "/worker/time-entries/switch-project",
   requireWorkerAuth,
   route(async (req, res) => {
-    const { activeEntryId, projectId, billable, serviceType, latitude, longitude } = req.body ?? {};
+    const { activeEntryId, projectId, billable, serviceType, scheduleEventId, latitude, longitude } = req.body ?? {};
     if (!activeEntryId || !projectId || latitude === undefined || longitude === undefined) {
       res.status(400).json({ error: "activeEntryId, projectId, latitude and longitude are required" });
       return;
@@ -1489,6 +1556,12 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
     const locationStr = `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`;
+
+    const trabajo = await trabajoDelDia(admin, req, scheduleEventId, projectId);
+    if (scheduleEventId && !trabajo) {
+      res.status(403).json({ error: "that job is not yours" });
+      return;
+    }
 
     await closeEntryWithOvertime(admin, {
       businessId: req.workerBusinessId!,
@@ -1506,7 +1579,8 @@ apiRouter.post(
         project_id: projectId,
         [column]: req.workerId!,
         billable: billable ?? true,
-        service_type: serviceType ?? null,
+        schedule_event_id: trabajo?.id ?? null,
+        service_type: serviceType ?? trabajo?.service_type ?? null,
         check_in_location: locationStr,
         check_in_lat: latitude,
         check_in_lng: longitude,
@@ -5011,7 +5085,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_location, check_out_time, approved, service_type, projects(name), employees(name), subcontractors(name)"
+        "id, check_in_time, check_in_location, check_out_time, approved, service_type, schedule_events(title), projects(name), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
@@ -5029,6 +5103,9 @@ apiRouter.get(
         // Sin esto la oficina no sabe qué se hizo en esas horas, que es justo
         // lo que se le pide al trabajador que diga.
         serviceType: t.service_type,
+        // Y de qué trabajo concreto son: dos citas del mismo sitio el mismo
+        // día ya no se confunden en la hoja de horas.
+        jobTitle: t.schedule_events?.title ?? null,
         approved: t.approved,
       }))
     );
@@ -5171,6 +5248,9 @@ apiRouter.post(
         project_id: body.projectId,
         title: body.title,
         type: body.type ?? "reunion",
+        // Qué clase de trabajo es, dicho aquí y no a pie de obra: el
+        // trabajador lo hereda al fichar en esta cita.
+        service_type: body.serviceType ?? null,
         start_time: body.startTime,
         end_time: body.endTime,
         notes: body.notes ?? null,

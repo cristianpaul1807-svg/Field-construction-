@@ -17,6 +17,11 @@ import { useApi, apiFetch, serverMessage } from "@/lib/api";
 
 const TYPE_OPTIONS = ["visita", "llamada", "reunion", "inicio", "fin"] as const;
 
+// La clase de cita (arriba) y la clase de trabajo (esto) son ejes distintos:
+// una "visita" puede ser una reparación o una inspección.
+const SERVICE_TYPES = ["instalacion", "mantenimiento", "reparacion", "inspeccion", "otro"] as const;
+const SIN_ESPECIFICAR = "sin_especificar";
+
 interface WorkerOption {
   id: string;
   name: string;
@@ -42,6 +47,7 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
   const [time, setTime] = useState("09:00");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [workerId, setWorkerId] = useState<string>("");
+  const [serviceType, setServiceType] = useState<string>(SIN_ESPECIFICAR);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +94,7 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
           projectId,
           title,
           type,
+          serviceType: mode === "trabajo" && serviceType !== SIN_ESPECIFICAR ? serviceType : null,
           startTime: startTime.toISOString(),
           endTime: endTime.toISOString(),
           notes: notes || null,
@@ -154,6 +161,22 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
                 <SelectContent>
                   {workers.map((w) => (
                     <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Dicho aquí, el trabajador ya no tiene que contestarlo a pie
+                  de obra: lo hereda al fichar en este trabajo. Y si se deja
+                  sin decir, sigue pudiendo decirlo él. */}
+              <Label className="pt-1.5 block">{t("worker.serviceType")}</Label>
+              <Select value={serviceType} onValueChange={setServiceType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SIN_ESPECIFICAR}>{t("worker.serviceTypes.sin_especificar")}</SelectItem>
+                  {SERVICE_TYPES.map((o) => (
+                    <SelectItem key={o} value={o}>{t(`worker.serviceTypes.${o}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
