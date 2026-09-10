@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { TileMap, type MapPoint } from "@/components/TileMap";
 import { History, MapPin } from "lucide-react";
 import { useApi } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
 interface ActiveWorker {
@@ -62,11 +63,17 @@ interface GpsResponse {
 
 export default function GpsRouting() {
   const { t, i18n } = useTranslation();
-  const { data, loading, error } = useApi<GpsResponse>("/api/gps");
   // Se llega aquí desde la lista de fichajes con ?entry=<id>, para abrir ese
   // fichaje concreto en el mapa en vez de tener que buscarlo entre los puntos.
   // El id es el mismo en las dos pantallas: es la fila del fichaje.
   const pedido = new URLSearchParams(window.location.search).get("entry");
+
+  // El mapa nace en "hoy", que es para lo que se abre normalmente: dónde está
+  // la gente ahora. Pero si se llega desde un fichaje concreto, ese fichaje
+  // puede ser de la semana pasada — y llegar a un mapa que no lo tiene es
+  // llegar a nada. En ese caso se abre ya en un rango que lo alcanza.
+  const [dias, setDias] = useState<number>(pedido ? 30 : 1);
+  const { data, loading, error } = useApi<GpsResponse>(`/api/gps?days=${dias}`);
   const [selectedId, setSelectedId] = useState<string | null>(pedido);
 
   const active = data?.workers ?? [];
@@ -110,6 +117,7 @@ export default function GpsRouting() {
   // aquí, y sin decirlo la pantalla parecería rota: se pidió algo y no pasó
   // nada.
   const pedidoNoEstá = Boolean(pedido) && !loading && !locations.some((l) => l.id === pedido);
+  const RANGOS = [1, 7, 30] as const;
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
@@ -117,7 +125,27 @@ export default function GpsRouting() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 p-0 overflow-hidden gap-0">
-          {pedidoNoEstá && (
+          {/* Las coordenadas de cada fichaje se guardan para siempre; esto sólo
+          decide cuánto se dibuja. */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-muted-foreground">{t("gps.rangeLabel")}</span>
+        <div className="flex rounded-lg border border-border overflow-hidden text-sm">
+          {RANGOS.map((d) => (
+            <button
+              key={d}
+              onClick={() => setDias(d)}
+              className={cn(
+                "px-3 min-h-11 transition-colors",
+                dias === d ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"
+              )}
+            >
+              {t(`gps.range.${d}`)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {pedidoNoEstá && (
         <div className="rounded-lg border border-border bg-status-warning-bg/40 p-3 text-sm text-status-warning-fg">
           {t("gps.entryTooOld")}
         </div>

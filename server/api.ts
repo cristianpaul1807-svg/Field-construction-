@@ -4989,7 +4989,13 @@ apiRouter.get(
     const positionColumns =
       "id, employee_id, subcontractor_id, project_id, service_type, check_in_time, check_in_lat, check_in_lng, check_out_time, projects(name), employees(name), subcontractors(name)";
 
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // Cuánto hacia atrás dibuja el mapa. Las coordenadas se guardan para
+    // siempre en el fichaje —nunca se borran—, así que la ventana es sólo una
+    // decisión de qué enseñar: un día para "dónde está mi gente ahora", más
+    // para revisar la semana. Se limita a 90 días para que nadie pida por
+    // accidente el histórico entero y el mapa tarde en abrir.
+    const dias = Math.min(Math.max(Number(req.query.days) || 1, 1), 90);
+    const since = new Date(Date.now() - dias * 24 * 60 * 60 * 1000).toISOString();
     const { data: recent, error: pingsError } = await supabase
       .from("time_entries")
       .select(positionColumns)

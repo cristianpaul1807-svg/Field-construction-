@@ -1017,7 +1017,13 @@
     "staleNotice": "Nadie ha fichado en las últimas 24 h. Estas son las últimas posiciones conocidas, no dónde están ahora.",
     "noAddressHint": "Añade la dirección de tu empresa en Configuración → Datos de la empresa y el mapa abrirá ahí mientras nadie haya fichado.",
     "imageryUnavailable": "No se pudieron cargar las imágenes del mapa. Las posiciones son correctas igualmente.",
-    "entryTooOld": "Ese fichaje ya no está en el mapa: sólo se dibujan las últimas 24 horas. Las coordenadas de la lista de fichajes siguen abriendo el punto exacto."
+    "entryTooOld": "Ese fichaje no aparece ni siquiera en 30 días. Las coordenadas de la lista de fichajes siguen abriendo el punto exacto.",
+    "rangeLabel": "Mostrar",
+    "range": {
+      "1": "Hoy",
+      "7": "7 días",
+      "30": "30 días"
+    }
   },
   "photoGallery": {
     "title": "Galería de fotos",

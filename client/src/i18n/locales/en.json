@@ -1017,7 +1017,13 @@
     "staleNotice": "Nobody has clocked in for the last 24 hours. These are the last known positions, not where they are now.",
     "noAddressHint": "Add your company address in Settings → Company details and the map will open there while nobody has clocked in.",
     "imageryUnavailable": "Map imagery could not be loaded. The positions are still correct.",
-    "entryTooOld": "That entry is no longer on the map: only the last 24 hours are drawn. The coordinates in the time-entry list still open the exact spot."
+    "entryTooOld": "That entry doesn't show up even within 30 days. The coordinates in the time-entry list still open the exact spot.",
+    "rangeLabel": "Show",
+    "range": {
+      "1": "Today",
+      "7": "7 days",
+      "30": "30 days"
+    }
   },
   "photoGallery": {
     "title": "Photo Gallery",

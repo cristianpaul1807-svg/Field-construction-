@@ -1017,7 +1017,13 @@
     "staleNotice": "Personne n'a pointé depuis 24 h. Voici les dernières positions connues, pas où ils se trouvent maintenant.",
     "noAddressHint": "Ajoutez l'adresse de votre entreprise dans Configuration → Données de l'entreprise et la carte s'ouvrira là tant que personne n'a pointé.",
     "imageryUnavailable": "Impossible de charger les images de la carte. Les positions restent exactes.",
-    "entryTooOld": "Ce pointage n'est plus sur la carte : seules les 24 dernières heures sont affichées. Les coordonnées dans la liste des pointages ouvrent toujours l'endroit exact."
+    "entryTooOld": "Ce pointage n'apparaît même pas sur 30 jours. Les coordonnées dans la liste des pointages ouvrent toujours l'endroit exact.",
+    "rangeLabel": "Afficher",
+    "range": {
+      "1": "Aujourd'hui",
+      "7": "7 jours",
+      "30": "30 jours"
+    }
   },
   "photoGallery": {
     "title": "Galerie photos",

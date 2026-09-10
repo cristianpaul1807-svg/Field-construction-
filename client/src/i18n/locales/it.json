@@ -1017,7 +1017,13 @@
     "staleNotice": "Nessuno ha timbrato nelle ultime 24 h. Queste sono le ultime posizioni note, non dove si trovano adesso.",
     "noAddressHint": "Aggiungi l'indirizzo della tua azienda in Configurazione → Dati dell'azienda e la mappa si aprirà lì finché nessuno ha timbrato.",
     "imageryUnavailable": "Non è stato possibile caricare le immagini della mappa. Le posizioni restano corrette.",
-    "entryTooOld": "Quella timbratura non è più sulla mappa: si disegnano solo le ultime 24 ore. Le coordinate nell'elenco delle timbrature aprono ancora il punto esatto."
+    "entryTooOld": "Quella timbratura non compare nemmeno in 30 giorni. Le coordinate nell'elenco aprono ancora il punto esatto.",
+    "rangeLabel": "Mostra",
+    "range": {
+      "1": "Oggi",
+      "7": "7 giorni",
+      "30": "30 giorni"
+    }
   },
   "photoGallery": {
     "title": "Galleria foto",
