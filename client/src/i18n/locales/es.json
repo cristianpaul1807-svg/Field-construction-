@@ -463,7 +463,11 @@
     "notSentYet": "Tu contratista todavía no te ha enviado este presupuesto.",
     "yourProject": "Tu proyecto",
     "taxIncluded": "{{subtotal}} + {{tax}} de impuestos",
-    "photoUnavailable": "No se puede mostrar"
+    "photoUnavailable": "No se puede mostrar",
+    "accessTitle": "Accesos de tus clientes",
+    "searchPlaceholder": "Buscar cliente…",
+    "noMatches": "Ningún cliente coincide con «{{query}}».",
+    "previewOf": "Vista previa de lo que ve {{name}}"
   },
   "worker": {
     "accessTitle": "Acceso de trabajador",

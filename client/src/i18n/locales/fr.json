@@ -463,7 +463,11 @@
     "notSentYet": "Votre entrepreneur ne vous a pas encore envoyé cette soumission.",
     "yourProject": "Votre projet",
     "taxIncluded": "{{subtotal}} + {{tax}} de taxes",
-    "photoUnavailable": "Impossible à afficher"
+    "photoUnavailable": "Impossible à afficher",
+    "accessTitle": "Les accès de vos clients",
+    "searchPlaceholder": "Chercher un client…",
+    "noMatches": "Aucun client ne correspond à « {{query}} ».",
+    "previewOf": "Aperçu de ce que voit {{name}}"
   },
   "worker": {
     "accessTitle": "Accès travailleur",

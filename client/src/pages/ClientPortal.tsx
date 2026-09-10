@@ -4,8 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { FileSignature, CreditCard, Image as ImageIcon, KeyRound } from "lucide-react";
+import { FileSignature, CreditCard, Image as ImageIcon, KeyRound, Search } from "lucide-react";
 import { AccessCode } from "@/components/AccessCode";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, readJson } from "@/lib/api";
@@ -34,26 +36,39 @@ function colorForId(id: string) {
 
 export default function ClientPortal() {
   const { t } = useTranslation();
-  const { data: clients } = useApi<ClientOption[]>("/api/clients");
+  const { data: clients, reload: recargarClientes } = useApi<ClientOption[]>("/api/clients");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const clientId = selectedClientId ?? clients?.[0]?.id ?? null;
   const clientElegido = clients?.find((c) => c.id === clientId) ?? null;
 
   const { data, loading, error } = useApi<ClientPortalData>(clientId ? `/api/client-portal/${clientId}` : null);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
-  const [issuing, setIssuing] = useState(false);
+  const [issuing, setIssuing] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+
+  // Sin acentos ni mayúsculas, igual que en fichajes: quien busca escribe
+  // "tremblay" con el teclado que tenga a mano.
+  const sinAcentos = (v: string) =>
+    v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const aguja = sinAcentos(busqueda.trim());
+  const visibles = (clients ?? []).filter((c) => !aguja || sinAcentos(c.name).includes(aguja));
 
   // The business hands this code to the client however they already talk —
   // it's what replaces the old email + password-reset round trip.
-  const generateCode = async () => {
-    if (!clientId || !data) return;
-    setIssuing(true);
+  // Se genera para el cliente de esa fila, no para "el elegido": con la lista
+  // entera a la vista, pulsar en una fila y que le cambie el código a otro
+  // sería el peor fallo posible aquí.
+  const generateCode = async (id: string, nombre: string) => {
+    setIssuing(id);
     try {
-      const res = await apiFetch(`/api/clients/${clientId}/access-token`, { method: "POST" });
+      const res = await apiFetch(`/api/clients/${id}/access-token`, { method: "POST" });
       const body = await readJson(res);
-      if (res.ok) setNewToken({ name: data.client.name, token: body.token });
+      if (res.ok) {
+        setNewToken({ name: nombre, token: body.token });
+        recargarClientes();
+      }
     } finally {
-      setIssuing(false);
+      setIssuing(null);
     }
   };
 
@@ -64,28 +79,70 @@ export default function ClientPortal() {
         description={t("clientPortal.previewDescription")}
       />
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">{t("clientPortal.previewAs")}</span>
-        <select
-          value={clientId ?? ""}
-          onChange={(e) => setSelectedClientId(e.target.value)}
-          className="text-sm border border-input rounded-md px-2 py-1 bg-card"
-        >
-          {clients?.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <Button size="sm" variant="outline" className="gap-1.5 ml-auto" onClick={generateCode} disabled={!clientId || issuing}>
-          <KeyRound size={13} /> {t("clientPortal.generateAccessCode")}
-        </Button>
-      </div>
+      {/* Antes esto era un desplegable llamado "Previsualizar como" que sólo
+          enseñaba un cliente a la vez. Con veinte, responder "¿a quién le falta
+          código?" obligaba a abrirlos de uno en uno. Ahora están todos a la
+          vista, con su estado, y elegir uno es lo que cambia la vista previa
+          de abajo. */}
+      <Card className="p-4 space-y-3">
+        <p className="text-sm font-medium text-foreground">{t("clientPortal.accessTitle")}</p>
 
-      {/* El código del cliente elegido, a la vista y copiable. Si lo pierde,
-          se le reenvía el mismo en vez de generar otro y romperle el que ya
-          tenía guardado. */}
-      {clientElegido?.accessCode && (
-        <AccessCode code={clientElegido.accessCode} />
-      )}
+        {(clients?.length ?? 0) > 5 && (
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder={t("clientPortal.searchPlaceholder")}
+              className="pl-9"
+              aria-label={t("clientPortal.searchPlaceholder")}
+            />
+          </div>
+        )}
+
+        <div className="divide-y divide-border max-h-72 overflow-y-auto">
+          {visibles.map((c) => (
+            <div
+              key={c.id}
+              className={cn(
+                "py-2.5 first:pt-0 space-y-2",
+                c.id === clientId && "bg-secondary/40 -mx-4 px-4"
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  onClick={() => setSelectedClientId(c.id)}
+                  className="text-sm text-left text-foreground hover:underline truncate min-w-0"
+                >
+                  {c.name}
+                </button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 flex-shrink-0"
+                  onClick={() => generateCode(c.id, c.name)}
+                  disabled={issuing === c.id}
+                >
+                  <KeyRound size={13} />
+                  {c.accessCode ? t("technicians.regenerateCode") : t("clientPortal.generateAccessCode")}
+                </Button>
+              </div>
+              {c.accessCode
+                ? <AccessCode code={c.accessCode} />
+                : <span className="text-xs text-muted-foreground">{t("technicians.noAccessCode")}</span>}
+            </div>
+          ))}
+          {visibles.length === 0 && (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              {t("clientPortal.noMatches", { query: busqueda.trim() })}
+            </p>
+          )}
+        </div>
+      </Card>
+
+      <p className="text-xs text-muted-foreground">
+        {t("clientPortal.previewOf", { name: clientElegido?.name ?? "—" })}
+      </p>
 
       <Dialog open={!!newToken} onOpenChange={(open) => !open && setNewToken(null)}>
         <DialogContent className="sm:max-w-sm">

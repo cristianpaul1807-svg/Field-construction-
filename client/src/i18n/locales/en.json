@@ -463,7 +463,11 @@
     "notSentYet": "Your contractor hasn't sent you this estimate yet.",
     "yourProject": "Your project",
     "taxIncluded": "{{subtotal}} + {{tax}} tax",
-    "photoUnavailable": "Can't be shown"
+    "photoUnavailable": "Can't be shown",
+    "accessTitle": "Your clients' access",
+    "searchPlaceholder": "Search client…",
+    "noMatches": "No client matches “{{query}}”.",
+    "previewOf": "Preview of what {{name}} sees"
   },
   "worker": {
     "accessTitle": "Worker access",

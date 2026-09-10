@@ -463,7 +463,11 @@
     "notSentYet": "Il tuo appaltatore non ti ha ancora inviato questo preventivo.",
     "yourProject": "Il tuo progetto",
     "taxIncluded": "{{subtotal}} + {{tax}} di imposte",
-    "photoUnavailable": "Non visualizzabile"
+    "photoUnavailable": "Non visualizzabile",
+    "accessTitle": "Gli accessi dei tuoi clienti",
+    "searchPlaceholder": "Cerca cliente…",
+    "noMatches": "Nessun cliente corrisponde a «{{query}}».",
+    "previewOf": "Anteprima di ciò che vede {{name}}"
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",
