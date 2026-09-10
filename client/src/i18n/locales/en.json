@@ -993,7 +993,7 @@
     "approveHours": "Approve hours",
     "noEntries": "No time entries recorded yet.",
     "stillOnSite": "Still on site",
-    "openInMap": "See where this was clocked in",
+    "openInMap": "Open in the maps app",
     "noLocation": "No location"
   },
   "gps": {

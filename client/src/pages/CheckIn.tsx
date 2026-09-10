@@ -10,6 +10,7 @@ import { MapPin, Check, Clock } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
+import { enlaceDeMapa } from "@/lib/mapaExterno";
 
 interface TimeEntry {
   id: string;
@@ -31,7 +32,7 @@ interface TimeEntry {
 }
 
 /** El punto donde se pulsó el botón, abrible en un mapa. */
-function Punto({ etiqueta, texto, lat, lng }: { etiqueta: string; texto: string | null; lat: number | null; lng: number | null }) {
+function Punto({ etiqueta, texto, lat, lng, obra }: { etiqueta: string; texto: string | null; lat: number | null; lng: number | null; obra?: string | null }) {
   const { t } = useTranslation();
   if (lat === null || lng === null) {
     return <span className="text-muted-foreground">{etiqueta}: {texto ?? t("checkIn.noLocation")}</span>;
@@ -40,7 +41,7 @@ function Punto({ etiqueta, texto, lat, lng }: { etiqueta: string; texto: string 
     <span>
       {etiqueta}:{" "}
       <a
-        href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`}
+        href={enlaceDeMapa(lat, lng, obra ?? undefined)}
         target="_blank"
         rel="noreferrer"
         className="underline hover:text-foreground"
@@ -150,11 +151,11 @@ export default function CheckIn() {
                           nada a nadie, por eso se abren en el mapa. */}
                       <div className="flex items-start gap-1 text-xs text-muted-foreground mt-0.5 flex-wrap">
                         <MapPin size={11} className="flex-shrink-0 mt-0.5" />
-                        <Punto etiqueta={t("checkIn.in")} texto={entry.checkInLocation} lat={entry.checkInLat} lng={entry.checkInLng} />
+                        <Punto etiqueta={t("checkIn.in")} texto={entry.checkInLocation} lat={entry.checkInLat} lng={entry.checkInLng} obra={entry.projectName} />
                         {entry.checkOutTime && (
                           <>
                             <span aria-hidden>·</span>
-                            <Punto etiqueta={t("checkIn.out")} texto={entry.checkOutLocation} lat={entry.checkOutLat} lng={entry.checkOutLng} />
+                            <Punto etiqueta={t("checkIn.out")} texto={entry.checkOutLocation} lat={entry.checkOutLat} lng={entry.checkOutLng} obra={entry.projectName} />
                           </>
                         )}
                         {/* Las coordenadas abren el punto exacto fuera; esto

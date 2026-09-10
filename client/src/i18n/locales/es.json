@@ -993,7 +993,7 @@
     "approveHours": "Aprobar horas",
     "noEntries": "Todavía no hay fichajes registrados.",
     "stillOnSite": "Sigue en la obra",
-    "openInMap": "Ver en el mapa dónde se fichó",
+    "openInMap": "Abrir en la aplicación de mapas",
     "noLocation": "Sin ubicación"
   },
   "gps": {

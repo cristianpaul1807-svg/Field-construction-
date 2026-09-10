@@ -993,7 +993,7 @@
     "approveHours": "Approuver les heures",
     "noEntries": "Aucun pointage enregistré pour l'instant.",
     "stillOnSite": "Encore sur le chantier",
-    "openInMap": "Voir où le pointage a eu lieu",
+    "openInMap": "Ouvrir dans l'application Plans",
     "noLocation": "Sans position"
   },
   "gps": {
