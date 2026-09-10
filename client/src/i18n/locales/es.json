@@ -960,7 +960,15 @@
     "previousDay": "Día anterior",
     "nextDay": "Día siguiente",
     "previousWeek": "Semana anterior",
-    "nextWeek": "Semana siguiente"
+    "nextWeek": "Semana siguiente",
+    "view": {
+      "dia": "Día",
+      "mes": "Mes"
+    },
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "countThatDay": "{{count}} cita",
+    "countThatDay_other": "{{count}} citas"
   },
   "checkIn": {
     "title": "Fichaje (entrada / salida)",

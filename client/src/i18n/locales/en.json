@@ -960,7 +960,15 @@
     "previousDay": "Previous day",
     "nextDay": "Next day",
     "previousWeek": "Previous week",
-    "nextWeek": "Next week"
+    "nextWeek": "Next week",
+    "view": {
+      "dia": "Day",
+      "mes": "Month"
+    },
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "countThatDay": "{{count}} appointment",
+    "countThatDay_other": "{{count}} appointments"
   },
   "checkIn": {
     "title": "Check-in / Check-out",

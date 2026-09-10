@@ -960,7 +960,15 @@
     "previousDay": "Giorno precedente",
     "nextDay": "Giorno successivo",
     "previousWeek": "Settimana precedente",
-    "nextWeek": "Settimana successiva"
+    "nextWeek": "Settimana successiva",
+    "view": {
+      "dia": "Giorno",
+      "mes": "Mese"
+    },
+    "previousMonth": "Mese precedente",
+    "nextMonth": "Mese successivo",
+    "countThatDay": "{{count}} appuntamento",
+    "countThatDay_other": "{{count}} appuntamenti"
   },
   "checkIn": {
     "title": "Timbratura (entrata / uscita)",

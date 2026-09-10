@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ScheduleEventDialog } from "@/components/ScheduleEventDialog";
 import { ChevronLeft, ChevronRight, Plus, StickyNote, X } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
+import { MonthGrid, claveDia, type DiaMarcado } from "@/components/MonthGrid";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { hashColor, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -63,6 +64,7 @@ export default function Scheduling() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const { data: events, loading, error, reload } = useApi<ScheduleEvent[]>("/api/schedule-events");
 
+  const [vista, setVista] = useState<"dia" | "mes">("dia");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogInitialDate, setDialogInitialDate] = useState(new Date());
 
@@ -86,6 +88,18 @@ export default function Scheduling() {
 
   const positioned = useMemo(() => layoutEvents(dayEvents), [dayEvents]);
 
+  // Cuántas cosas hay cada día, para las marcas del mes. Se cuenta sobre lo
+  // mismo que se ve: con obra elegida, sólo la suya.
+  const marcas = useMemo(() => {
+    const mapa = new Map<string, DiaMarcado>();
+    for (const e of events ?? []) {
+      if (selectedProjectId && e.projectId !== selectedProjectId) continue;
+      const clave = claveDia(new Date(e.startTime));
+      mapa.set(clave, { cuantas: (mapa.get(clave)?.cuantas ?? 0) + 1 });
+    }
+    return mapa;
+  }, [events, selectedProjectId]);
+
   const now = new Date();
   const isToday = currentDate.toDateString() === now.toDateString();
   const currentTimeTop = now.getHours() * HOUR_HEIGHT + (now.getMinutes() / 60) * HOUR_HEIGHT;
@@ -101,6 +115,16 @@ export default function Scheduling() {
     const hora = isToday ? new Date().getHours() : (primero ?? 7);
     caja.scrollTop = Math.max(0, (hora - 1) * HOUR_HEIGHT);
   }, [currentDate, dayEvents, isToday]);
+
+  // Un día o un mes, según lo que se esté mirando. Sumar 30 días para "mes
+  // siguiente" se desalinearía en febrero y en los meses de 31.
+  const mover = (d: Date, pasos: number) => {
+    if (vista === "dia") return new Date(d.getTime() + pasos * 86400000);
+    const f = new Date(d);
+    f.setDate(1);
+    f.setMonth(f.getMonth() + pasos);
+    return f;
+  };
 
   const openDialogAt = (hour: number) => {
     const d = new Date(currentDate);
@@ -126,23 +150,42 @@ export default function Scheduling() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentDate((d) => new Date(d.getTime() - 86400000))}
-               aria-label={t("scheduling.previousDay")}>
+                onClick={() => setCurrentDate((d) => mover(d, -1))}
+               aria-label={vista === "dia" ? t("scheduling.previousDay") : t("scheduling.previousMonth")}>
                 <ChevronLeft size={16} />
               </Button>
               <div className="text-sm font-medium text-foreground min-w-[9rem] text-center">
-                {currentDate.toLocaleDateString(i18n.language, { day: "numeric", month: "long", year: "numeric" })}
+                {vista === "dia"
+                  ? currentDate.toLocaleDateString(i18n.language, { day: "numeric", month: "long", year: "numeric" })
+                  : currentDate.toLocaleDateString(i18n.language, { month: "long", year: "numeric" })}
               </div>
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentDate((d) => new Date(d.getTime() + 86400000))}
-               aria-label={t("scheduling.nextDay")}>
+                onClick={() => setCurrentDate((d) => mover(d, 1))}
+               aria-label={vista === "dia" ? t("scheduling.nextDay") : t("scheduling.nextMonth")}>
                 <ChevronRight size={16} />
               </Button>
               <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
                 {t("worker.today")}
               </Button>
+
+              {/* Un mes de un vistazo: para saber si hay algo el jueves que
+                  viene no debería hacer falta pulsar la flecha ocho veces. */}
+              <div className="flex rounded-lg border border-border overflow-hidden text-sm ml-1">
+                {(["dia", "mes"] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setVista(v)}
+                    className={cn(
+                      "px-3 min-h-9 transition-colors",
+                      vista === v ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary"
+                    )}
+                  >
+                    {t(`scheduling.view.${v}`)}
+                  </button>
+                ))}
+              </div>
             </div>
             {/* Una cita cuelga siempre de una obra. Sin obra elegida el botón
                 no puede hacer nada, así que en vez de dejarlo muerto se dice
@@ -175,7 +218,20 @@ export default function Scheduling() {
             </div>
           )}
 
-          {!loading && !error && (
+          {!loading && !error && vista === "mes" && (
+            <MonthGrid
+              mes={currentDate}
+              seleccionado={currentDate}
+              marcas={marcas}
+              onElegir={(fecha) => {
+                // Pulsar un día es querer verlo, no sólo señalarlo.
+                setCurrentDate(fecha);
+                setVista("dia");
+              }}
+            />
+          )}
+
+          {!loading && !error && vista === "dia" && (
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <div ref={rejilla} className="flex max-h-[70vh] overflow-y-auto">
                 {/* Hour rail */}

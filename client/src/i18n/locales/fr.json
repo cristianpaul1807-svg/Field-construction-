@@ -960,7 +960,15 @@
     "previousDay": "Jour précédent",
     "nextDay": "Jour suivant",
     "previousWeek": "Semaine précédente",
-    "nextWeek": "Semaine suivante"
+    "nextWeek": "Semaine suivante",
+    "view": {
+      "dia": "Jour",
+      "mes": "Mois"
+    },
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "countThatDay": "{{count}} rendez-vous",
+    "countThatDay_other": "{{count}} rendez-vous"
   },
   "checkIn": {
     "title": "Pointage (entrée / sortie)",

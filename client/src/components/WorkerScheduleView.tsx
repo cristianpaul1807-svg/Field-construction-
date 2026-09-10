@@ -5,6 +5,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
 import { hashColor, cn } from "@/lib/utils";
 import { workerApiFetch } from "@/lib/workerSession";
+import { MonthGrid, claveDia, type DiaMarcado } from "@/components/MonthGrid";
 
 interface ScheduleEvent {
   id: string;
@@ -72,7 +73,7 @@ export function WorkerScheduleView() {
   const [events, setEvents] = useState<ScheduleEvent[] | null>(null);
   const [workOrders, setWorkOrders] = useState<WorkOrder[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<"dia" | "semana">("dia");
+  const [view, setView] = useState<"dia" | "semana" | "mes">("dia");
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
@@ -114,8 +115,28 @@ export function WorkerScheduleView() {
     caja.scrollTop = Math.max(0, (hora - 1) * HOUR_HEIGHT);
   }, [view, currentDate, dayEvents, isToday]);
 
+  // Los días con algo, para las marcas del mes.
+  const marcas = useMemo(() => {
+    const mapa = new Map<string, DiaMarcado>();
+    for (const e of events ?? []) {
+      const clave = claveDia(new Date(e.startTime));
+      mapa.set(clave, { cuantas: (mapa.get(clave)?.cuantas ?? 0) + 1 });
+    }
+    return mapa;
+  }, [events]);
+
   const weekStart = useMemo(() => startOfWeek(currentDate), [currentDate]);
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => new Date(weekStart.getTime() + i * 86400000)), [weekStart]);
+
+  // Un día, una semana o un mes, según lo que se esté mirando.
+  const mover = (d: Date, pasos: number) => {
+    if (view === "dia") return new Date(d.getTime() + pasos * 86400000);
+    if (view === "semana") return new Date(d.getTime() + pasos * 7 * 86400000);
+    const f = new Date(d);
+    f.setDate(1);
+    f.setMonth(f.getMonth() + pasos);
+    return f;
+  };
 
   if (loading) {
     return (
@@ -129,19 +150,28 @@ export function WorkerScheduleView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => new Date(d.getTime() - (view === "dia" ? 86400000 : 7 * 86400000)))} aria-label={view === "dia" ? t("scheduling.previousDay") : t("scheduling.previousWeek")}>
+          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => mover(d, -1))} aria-label={t(view === "dia" ? "scheduling.previousDay" : view === "semana" ? "scheduling.previousWeek" : "scheduling.previousMonth")}>
             <ChevronLeft size={16} />
           </Button>
           <div className="text-sm font-medium text-foreground min-w-[8rem] text-center">
-            {view === "dia"
+            {view === "mes"
+              ? currentDate.toLocaleDateString(i18n.language, { month: "long", year: "numeric" })
+              : view === "dia"
               ? currentDate.toLocaleDateString(i18n.language, { day: "numeric", month: "long" })
               : t("worker.weekOf", {
                   date: weekStart.toLocaleDateString(i18n.language, { day: "numeric", month: "short" }),
                 })}
           </div>
-          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => new Date(d.getTime() + (view === "dia" ? 86400000 : 7 * 86400000)))} aria-label={view === "dia" ? t("scheduling.nextDay") : t("scheduling.nextWeek")}>
+          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => mover(d, 1))} aria-label={t(view === "dia" ? "scheduling.nextDay" : view === "semana" ? "scheduling.nextWeek" : "scheduling.nextMonth")}>
             <ChevronRight size={16} />
           </Button>
+          {/* Sin esto, quien se va tres meses adelante vuelve a hoy a base de
+              flechas. Sólo aparece cuando hace falta. */}
+          {!isToday && (
+            <Button variant="outline" size="sm" className="min-h-11" onClick={() => setCurrentDate(new Date())}>
+              {t("worker.today")}
+            </Button>
+          )}
         </div>
         {/* Día/Semana también se tocan con guantes: alto de dedo, no de ratón. */}
         <div className="flex rounded-lg border border-border overflow-hidden text-sm">
@@ -149,7 +179,7 @@ export function WorkerScheduleView() {
             onClick={() => setView("dia")}
             className={cn("px-4 min-h-11 transition-colors", view === "dia" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
           >
-            {t("worker.today")}
+            {t("scheduling.view.dia")}
           </button>
           <button
             onClick={() => setView("semana")}
@@ -157,8 +187,26 @@ export function WorkerScheduleView() {
           >
             {t("worker.week")}
           </button>
+          <button
+            onClick={() => setView("mes")}
+            className={cn("px-4 min-h-11 transition-colors", view === "mes" ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-secondary")}
+          >
+            {t("scheduling.view.mes")}
+          </button>
         </div>
       </div>
+
+      {view === "mes" && (
+        <MonthGrid
+          mes={currentDate}
+          seleccionado={currentDate}
+          marcas={marcas}
+          onElegir={(fecha) => {
+            setCurrentDate(fecha);
+            setView("dia");
+          }}
+        />
+      )}
 
       {view === "dia" && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -212,14 +260,41 @@ export function WorkerScheduleView() {
         </div>
       )}
 
+      {/* La semana entera es la respuesta a "¿qué me toca esta semana?", pero
+          también es el camino a un día concreto: cada día se pulsa y se entra
+          en él. Los días sin nada se apagan en vez de ocupar lo mismo que los
+          llenos, que era lo que obligaba a leer siete tarjetas para encontrar
+          las dos que importan. */}
       {view === "semana" && (
         <div className="space-y-2">
           {weekDays.map((day) => {
             const items = (events ?? []).filter((e) => isSameDay(e.startTime, day));
+            const esHoy = day.toDateString() === now.toDateString();
             return (
-              <div key={day.toISOString()} className="rounded-lg border border-border bg-card p-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                  {day.toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "short" })}
+              <button
+                key={day.toISOString()}
+                onClick={() => {
+                  setCurrentDate(day);
+                  setView("dia");
+                }}
+                aria-label={`${day.toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "long" })} — ${
+                  items.length ? t("scheduling.countThatDay", { count: items.length }) : t("worker.noJobsAssigned")
+                }`}
+                className={cn(
+                  "w-full text-left rounded-lg border p-3 transition-colors hover:bg-secondary",
+                  esHoy ? "border-primary" : "border-border",
+                  items.length ? "bg-card" : "bg-card/50"
+                )}
+              >
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase mb-2">
+                  <span className={cn(items.length ? "text-foreground" : "text-muted-foreground")}>
+                    {day.toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "short" })}
+                  </span>
+                  {items.length > 0 && (
+                    <span className="rounded-full bg-primary/10 text-primary px-1.5 py-0.5 text-[10px] leading-none">
+                      {items.length}
+                    </span>
+                  )}
                 </p>
                 {items.length === 0 && <p className="text-xs text-muted-foreground">{t("worker.noJobsAssigned")}</p>}
                 <div className="space-y-1.5">
@@ -237,7 +312,7 @@ export function WorkerScheduleView() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
