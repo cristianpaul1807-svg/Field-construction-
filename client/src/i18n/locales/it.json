@@ -411,7 +411,11 @@
     "deleteEmployee": "Elimina dipendente",
     "deleteEmployeeConfirm": "Rimuovere {{name}} dalla squadra? Non si può annullare.",
     "cannotDeleteHistory": "{{name}} non si può eliminare: ha {{entries}} timbrature e {{payrolls}} buste paga. Quelle ore e quei pagamenti sono la prova di ciò che ha lavorato e di quanto ha ricevuto, ed eliminarli lascerebbe la contabilità senza giustificativi. Metti il suo stato su Riposo così smette di risultare disponibile.",
-    "noEmployees": "Ancora nessuno nella squadra."
+    "noEmployees": "Ancora nessuno nella squadra.",
+    "noAccessCode": "Ancora nessun codice",
+    "showCode": "Vedi il codice",
+    "hideCode": "Nascondi il codice",
+    "regenerateCode": "Genera un altro codice"
   },
   "subcontractors": {
     "title": "Subappaltatori",

@@ -411,7 +411,11 @@
     "deleteEmployee": "Delete employee",
     "deleteEmployeeConfirm": "Remove {{name}} from the team? This cannot be undone.",
     "cannotDeleteHistory": "{{name}} can't be deleted: they have {{entries}} time entries and {{payrolls}} payroll runs. Those hours and payments are the record of what they worked and what they were paid, and deleting them would leave your books unsupported. Set their status to On leave so they stop showing as available.",
-    "noEmployees": "Nobody on the team yet."
+    "noEmployees": "Nobody on the team yet.",
+    "noAccessCode": "No code yet",
+    "showCode": "Show the code",
+    "hideCode": "Hide the code",
+    "regenerateCode": "Generate a new code"
   },
   "subcontractors": {
     "title": "Subcontractors",

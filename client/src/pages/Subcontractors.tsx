@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Star, KeyRound } from "lucide-react";
+import { AccessCode } from "@/components/AccessCode";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
@@ -19,6 +20,8 @@ interface Subcontractor {
   phone: string;
   rating: number;
   hasAccessCode: boolean;
+  /** El código en claro, para poder reenviarlo. */
+  accessCode: string | null;
   assignedProjects: string[];
   hourlyRate: number | null;
 }
@@ -218,6 +221,11 @@ export default function Subcontractors() {
                   {sub.hasAccessCode ? t("subcontractors.codeIssued") : t("subcontractors.noCodeYet")}
                 </StatusBadge>
               </div>
+              {/* El código a la vista, para poder reenviárselo. Generar otro
+                  sigue estando, pero ya no es la única forma de recuperarlo:
+                  antes, dárselo de nuevo a uno se lo rompía al que ya lo tenía
+                  funcionando. */}
+              {sub.accessCode && <AccessCode code={sub.accessCode} className="mt-3" />}
               <div className="flex gap-2 mt-3">
                 <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => generateToken(sub)}>
                   <KeyRound size={14} /> {sub.hasAccessCode ? t("subcontractors.newPwaCode") : t("subcontractors.pwaCode")}

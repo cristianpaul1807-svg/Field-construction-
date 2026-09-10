@@ -411,7 +411,11 @@
     "deleteEmployee": "Supprimer l'employé",
     "deleteEmployeeConfirm": "Retirer {{name}} de l'équipe ? Cette action est irréversible.",
     "cannotDeleteHistory": "Impossible de supprimer {{name}} : cette personne a {{entries}} pointages et {{payrolls}} paies. Ces heures et ces paiements sont la preuve de ce qu'elle a travaillé et de ce qu'elle a reçu, et les effacer laisserait votre comptabilité sans pièce justificative. Mettez son statut à Repos pour qu'elle cesse d'apparaître comme disponible.",
-    "noEmployees": "Personne dans l'équipe pour l'instant."
+    "noEmployees": "Personne dans l'équipe pour l'instant.",
+    "noAccessCode": "Pas encore de code",
+    "showCode": "Voir le code",
+    "hideCode": "Masquer le code",
+    "regenerateCode": "Générer un autre code"
   },
   "subcontractors": {
     "title": "Sous-traitants",

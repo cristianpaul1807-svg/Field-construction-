@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
+import { AccessCode } from "@/components/AccessCode";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, KeyRound, Pencil, Trash2 } from "lucide-react";
@@ -229,6 +230,8 @@ interface Employee {
   name: string;
   role: string;
   phone: string | null;
+  /** El código de la PWA, para poder reenviarlo sin invalidar el que ya tiene. */
+  accessCode: string | null;
   status: keyof typeof statusTone;
   currentProject: string | null;
   hoursThisPeriod: number;
@@ -292,6 +295,7 @@ export default function Technicians() {
                   <span>{t("technicians.currentProject")}: {emp.currentProject ?? "—"}</span>
                   <span className="text-right">{emp.hoursThisPeriod} hrs</span>
                 </div>
+                <AccessCode code={emp.accessCode} />
                 {/* Se parte en dos líneas antes que apretar los botones: en un
                     móvil estrecho "Generar código" empuja a la papelera contra
                     el borde y se falla la pulsación. */}
@@ -299,7 +303,7 @@ export default function Technicians() {
                   <RateCell path={`/api/employees/${emp.id}`} value={emp.hourlyRate} onSaved={recargar} />
                   <div className="flex gap-2 ml-auto">
                     <Button size="sm" variant="outline" className="min-h-11 gap-1.5" onClick={() => generateToken(emp)}>
-                      <KeyRound size={14} /> {t("technicians.generateCode")}
+                      <KeyRound size={14} /> {emp.accessCode ? t("technicians.regenerateCode") : t("technicians.generateCode")}
                     </Button>
                     <Button size="sm" variant="outline" className="min-h-11" aria-label={t("technicians.editEmployee")} onClick={() => setEditando(emp)}>
                       <Pencil size={14} />
@@ -359,9 +363,12 @@ export default function Technicians() {
                       </div>
                     </td>
                     <td className="py-3 text-right">
-                      <Button size="sm" variant="outline" className="gap-1.5" onClick={() => generateToken(emp)}>
-                        <KeyRound size={12} /> {t("technicians.generateCode")}
-                      </Button>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <AccessCode code={emp.accessCode} />
+                        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => generateToken(emp)}>
+                          <KeyRound size={12} /> {emp.accessCode ? t("technicians.regenerateCode") : t("technicians.generateCode")}
+                        </Button>
+                      </div>
                     </td>
                     <td className="py-3 text-right whitespace-nowrap">
                       <Button size="sm" variant="ghost" aria-label={t("technicians.editEmployee")} onClick={() => setEditando(emp)}>

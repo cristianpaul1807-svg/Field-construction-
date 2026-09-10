@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { FileSignature, CreditCard, Image as ImageIcon, KeyRound } from "lucide-react";
+import { AccessCode } from "@/components/AccessCode";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, readJson } from "@/lib/api";
@@ -13,6 +14,8 @@ import { useTranslation } from "react-i18next";
 interface ClientOption {
   id: string;
   name: string;
+  /** Su código del portal, para poder reenviárselo sin invalidar el suyo. */
+  accessCode: string | null;
 }
 
 interface ClientPortalData {
@@ -34,6 +37,7 @@ export default function ClientPortal() {
   const { data: clients } = useApi<ClientOption[]>("/api/clients");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const clientId = selectedClientId ?? clients?.[0]?.id ?? null;
+  const clientElegido = clients?.find((c) => c.id === clientId) ?? null;
 
   const { data, loading, error } = useApi<ClientPortalData>(clientId ? `/api/client-portal/${clientId}` : null);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
@@ -75,6 +79,13 @@ export default function ClientPortal() {
           <KeyRound size={13} /> {t("clientPortal.generateAccessCode")}
         </Button>
       </div>
+
+      {/* El código del cliente elegido, a la vista y copiable. Si lo pierde,
+          se le reenvía el mismo en vez de generar otro y romperle el que ya
+          tenía guardado. */}
+      {clientElegido?.accessCode && (
+        <AccessCode code={clientElegido.accessCode} />
+      )}
 
       <Dialog open={!!newToken} onOpenChange={(open) => !open && setNewToken(null)}>
         <DialogContent className="sm:max-w-sm">

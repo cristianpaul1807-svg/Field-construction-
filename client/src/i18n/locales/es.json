@@ -411,7 +411,11 @@
     "deleteEmployee": "Eliminar empleado",
     "deleteEmployeeConfirm": "¿Eliminar a {{name}} del equipo? No se puede deshacer.",
     "cannotDeleteHistory": "{{name}} no se puede eliminar: tiene {{entries}} fichajes y {{payrolls}} nóminas. Esas horas y esos pagos son la prueba de lo que trabajó y de lo que se le pagó, y borrarlas dejaría tu contabilidad sin respaldo. Cámbiale el estado a Descanso para que deje de aparecer como disponible.",
-    "noEmployees": "Todavía no hay nadie en el equipo."
+    "noEmployees": "Todavía no hay nadie en el equipo.",
+    "noAccessCode": "Sin código todavía",
+    "showCode": "Ver el código",
+    "hideCode": "Ocultar el código",
+    "regenerateCode": "Generar otro código"
   },
   "subcontractors": {
     "title": "Subcontratistas",

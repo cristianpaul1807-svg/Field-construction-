@@ -2927,7 +2927,7 @@ apiRouter.get(
         .order("name"),
       supabase
         .from("subcontractors")
-        .select("id, name, trade, phone, rating, hourly_rate, access_token_hash")
+        .select("id, name, trade, phone, rating, hourly_rate, access_token, access_token_hash")
         .eq("business_id", req.businessId!)
         .order("name"),
     ]);
@@ -2961,6 +2961,7 @@ apiRouter.get(
         // Whether they can actually open the field app — the only "linked or
         // not" state this product really has for a subcontractor.
         hasAccessCode: Boolean(s.access_token_hash),
+        accessCode: s.access_token ?? null,
       })),
     });
   })
@@ -4047,7 +4048,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data: todos, error } = await supabase
       .from("clients")
-      .select("id, name, phone, email, address, lead_status, source, created_at")
+      .select("id, name, phone, email, address, lead_status, source, created_at, access_token")
       .eq("business_id", req.businessId!)
       .order("name");
 
@@ -4096,6 +4097,8 @@ apiRouter.get(
         source: c.source,
         createdAt: c.created_at,
         lastActivity: lastActivityByClient.get(c.id) ?? c.created_at,
+        // Para poder reenviárselo sin invalidar el que ya tenga.
+        accessCode: c.access_token ?? null,
       }))
     );
   })
@@ -4110,7 +4113,7 @@ apiRouter.get(
     const [client, activities, estimates, projects] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, name, phone, email, address, lead_status, source, created_at")
+        .select("id, name, phone, email, address, lead_status, source, created_at, access_token")
         .eq("business_id", req.businessId!)
         .eq("id", clientId)
         .single(),
@@ -4196,9 +4199,10 @@ apiRouter.post(
 );
 
 // Issues a fresh access code for the Client Portal — only the hash is
-// stored, so the raw code is shown to the admin exactly once here, then
-// handed to the client however they already talk (in person, phone, chat).
-// This is what lets a client in with no email and no password.
+// Se guarda el código además de su hash, así que se puede volver a enseñar y
+// reenviar tantas veces como haga falta. Generar otro sólo se hace a propósito,
+// y entonces el anterior deja de valer. Esto es lo que deja entrar a un cliente
+// sin correo y sin contraseña.
 apiRouter.post(
   "/clients/:id/access-token",
   route(async (req, res) => {
@@ -4206,7 +4210,10 @@ apiRouter.post(
     const token = randomBytes(9).toString("base64url");
     const { error } = await supabase
       .from("clients")
-      .update({ access_token_hash: hashToken(token) })
+      // El código se guarda además del hash para poder reenviarlo cuando
+      // alguien lo pierda, en vez de tener que generar otro y dejar sin
+      // acceso al que ya lo tenía.
+      .update({ access_token: token, access_token_hash: hashToken(token) })
       .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
     if (error) throw error;
@@ -4760,7 +4767,7 @@ apiRouter.get(
     const [employees, assignments, timeEntries] = await Promise.all([
       supabase
         .from("employees")
-        .select("id, name, role, phone, status, hourly_rate")
+        .select("id, name, role, phone, status, hourly_rate, access_token")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -4794,6 +4801,8 @@ apiRouter.get(
           role: e.role,
           phone: e.phone,
           status: e.status,
+          // Para poder reenviarlo sin invalidar el que ya tiene.
+          accessCode: e.access_token ?? null,
           hourlyRate: e.hourly_rate === null ? null : Number(e.hourly_rate),
           currentProject,
           hoursThisPeriod: Math.round(hoursThisPeriod),
@@ -4843,7 +4852,10 @@ apiRouter.post(
     const token = randomBytes(9).toString("base64url");
     const { error } = await supabase
       .from("employees")
-      .update({ access_token_hash: hashToken(token) })
+      // El código se guarda además del hash para poder reenviarlo cuando
+      // alguien lo pierda, en vez de tener que generar otro y dejar sin
+      // acceso al que ya lo tenía.
+      .update({ access_token: token, access_token_hash: hashToken(token) })
       .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
     if (error) throw error;
@@ -4861,7 +4873,7 @@ apiRouter.get(
     const [subcontractors, assignments] = await Promise.all([
       supabase
         .from("subcontractors")
-        .select("id, name, trade, phone, rating, hourly_rate, access_token_hash")
+        .select("id, name, trade, phone, rating, hourly_rate, access_token, access_token_hash")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -4885,6 +4897,7 @@ apiRouter.get(
         // Whether they can actually open the field app — the only "linked or
         // not" state this product really has for a subcontractor.
         hasAccessCode: Boolean(s.access_token_hash),
+        accessCode: s.access_token ?? null,
         assignedProjects: (assignments.data as any[])
           .filter((a) => a.subcontractor_id === s.id)
           .map((a) => a.projects?.name)
@@ -4931,7 +4944,10 @@ apiRouter.post(
     const token = randomBytes(9).toString("base64url");
     const { error } = await supabase
       .from("subcontractors")
-      .update({ access_token_hash: hashToken(token) })
+      // El código se guarda además del hash para poder reenviarlo cuando
+      // alguien lo pierda, en vez de tener que generar otro y dejar sin
+      // acceso al que ya lo tenía.
+      .update({ access_token: token, access_token_hash: hashToken(token) })
       .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
     if (error) throw error;
