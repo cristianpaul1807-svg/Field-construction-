@@ -4,10 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, FileText, Plus, Trash2 } from "lucide-react";
+import { Download, FileText, Plus, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, readJson, downloadFile, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
@@ -74,6 +75,8 @@ interface Deduction {
   annualExemption: number;
   annualMaximum: number | null;
   enabled: boolean;
+  /** A quién alcanza. Por defecto sólo al empleado. */
+  appliesTo: "empleado" | "ambos";
   sourceNote: string | null;
   remitTo: string;
 }
@@ -96,6 +99,14 @@ function defaultPeriod() {
   return { from: start.toISOString().slice(0, 10), to: end.toISOString().slice(0, 10) };
 }
 
+/** Una fila de ajuste mientras se escribe: el importe es texto hasta que se
+ *  manda, porque "-" y "-2" son estados intermedios de teclear "-200". */
+interface Ajuste {
+  label: string;
+  amount: string;
+  taxable: boolean;
+}
+
 export default function Payroll() {
   const { t, i18n } = useTranslation();
   const [period, setPeriod] = useState(defaultPeriod);
@@ -108,6 +119,20 @@ export default function Payroll() {
   );
   const { data: runs, reload: reloadRuns } = useApi<Run[]>(`/api/payroll/runs?_r=${reloadToken}`);
 
+  // Lo puntual de esta quincena, por persona. Vive aquí y no en el servidor
+  // hasta que se emite: mientras se está preparando no es todavía una nómina.
+  const [ajustes, setAjustes] = useState<Record<string, Ajuste[]>>({});
+  const ajustesDe = (id: string) => ajustes[id] ?? [];
+  const cambiarAjuste = (id: string, i: number, cambio: Partial<Ajuste>) =>
+    setAjustes((prev) => ({
+      ...prev,
+      [id]: (prev[id] ?? []).map((a, k) => (k === i ? { ...a, ...cambio } : a)),
+    }));
+  const añadirAjuste = (id: string) =>
+    setAjustes((prev) => ({ ...prev, [id]: [...(prev[id] ?? []), { label: "", amount: "", taxable: false }] }));
+  const quitarAjuste = (id: string, i: number) =>
+    setAjustes((prev) => ({ ...prev, [id]: (prev[id] ?? []).filter((_, k) => k !== i) }));
+
   const record = async (worker: WorkerRow) => {
     setBusyId(worker.workerId);
     setError(null);
@@ -115,12 +140,21 @@ export default function Payroll() {
       const res = await apiFetch("/api/payroll/runs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workerId: worker.workerId, kind: worker.kind, from: period.from, to: period.to }),
+        body: JSON.stringify({
+          workerId: worker.workerId,
+          kind: worker.kind,
+          from: period.from,
+          to: period.to,
+          adjustments: ajustesDe(worker.workerId)
+            .filter((a) => a.label.trim() && a.amount.trim())
+            .map((a) => ({ label: a.label.trim(), amount: Number(a.amount), taxable: a.taxable })),
+        }),
       });
       if (!res.ok) {
         const body = await readJson<{ error?: string }>(res);
         throw new Error(serverMessage(body, t, t("common.genericError")));
       }
+      setAjustes((prev) => ({ ...prev, [worker.workerId]: [] }));
       reloadRuns();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.genericError"));
@@ -216,6 +250,62 @@ export default function Payroll() {
                     <Figure label={t("payroll.net")} value={worker.breakdown.net} strong />
                     <Figure label={t("payroll.totalCost")} value={worker.breakdown.totalCost} strong />
                   </div>
+                  {/* Lo que pasó esta quincena y no la siguiente: un adelanto
+                      que se recupera, la gasolina que puso él, una prima, la
+                      broca que rompió.
+
+                      Marcar "tributa" no es un detalle: una prima es salario y
+                      paga retenciones, devolverle un gasto de su bolsillo no.
+                      Sin esa distinción, el trabajador pagaría RRQ por su
+                      propia gasolina. */}
+                  <div className="rounded-lg border border-dashed border-border p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-foreground">{t("payroll.adjustments")}</span>
+                      <Button size="sm" variant="ghost" className="gap-1.5 h-7" onClick={() => añadirAjuste(worker.workerId)}>
+                        <Plus size={13} /> {t("common.add")}
+                      </Button>
+                    </div>
+
+                    {ajustesDe(worker.workerId).length === 0 ? (
+                      <p className="text-xs text-muted-foreground">{t("payroll.adjustmentsHint")}</p>
+                    ) : (
+                      ajustesDe(worker.workerId).map((ajuste, i) => (
+                        <div key={i} className="flex flex-wrap items-center gap-2">
+                          <Input
+                            className="h-8 text-sm flex-1 min-w-[10rem]"
+                            placeholder={t("payroll.adjustmentLabelPlaceholder")}
+                            value={ajuste.label}
+                            onChange={(e) => cambiarAjuste(worker.workerId, i, { label: e.target.value })}
+                          />
+                          <Input
+                            className="h-8 text-sm w-28"
+                            inputMode="decimal"
+                            placeholder="-200"
+                            value={ajuste.amount}
+                            onChange={(e) => cambiarAjuste(worker.workerId, i, { amount: e.target.value })}
+                          />
+                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Checkbox
+                              checked={ajuste.taxable}
+                              onCheckedChange={(v) => cambiarAjuste(worker.workerId, i, { taxable: v === true })}
+                            />
+                            {t("payroll.adjustmentTaxable")}
+                          </label>
+                          <button
+                            aria-label={t("common.delete")}
+                            onClick={() => quitarAjuste(worker.workerId, i)}
+                            className="text-muted-foreground hover:text-status-error-fg"
+                          >
+                            <X size={14} strokeWidth={2} />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                    {ajustesDe(worker.workerId).some((a) => a.amount.trim() && !Number.isFinite(Number(a.amount))) && (
+                      <p className="text-xs text-status-error-fg">{t("payroll.adjustmentBadAmount")}</p>
+                    )}
+                  </div>
+
                   <div className="rounded-lg border border-border divide-y divide-border">
                     {worker.breakdown.lines.map((line) => (
                       <div key={line.code} className="flex items-center justify-between gap-3 px-3 py-1.5">
@@ -693,6 +783,29 @@ function DeductionEditor() {
                 </SelectContent>
               </Select>
             </div>
+            {/* En Canadá un subcontratista factura: no lleva retención en la
+                fuente, así que RRQ, RQAP y AE no son suyas. La CNESST sí puede
+                serlo, porque el contratista responde por un subcontratista sin
+                cobertura propia. No lo decidimos nosotros: se elige por
+                retención, y por defecto sólo alcanza al empleado. */}
+            <div className="w-full sm:w-52 space-y-1.5">
+              <Label className="text-xs">{t("payroll.appliesTo")}</Label>
+              <Select
+                value={row.appliesTo ?? "empleado"}
+                onValueChange={(v) => update(index, { appliesTo: v as Deduction["appliesTo"] })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["empleado", "ambos"].map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {t(`payroll.scopes.${a}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="w-full sm:w-52 space-y-1.5">
               <Label className="text-xs">{t("payroll.remitTo")}</Label>
               <Select value={row.remitTo} onValueChange={(v) => update(index, { remitTo: v })}>
@@ -774,6 +887,7 @@ function DeductionEditor() {
                 code: `linea_${(current?.length ?? 0) + 1}`,
                 label: "",
                 paidBy: "empleado",
+                appliesTo: "empleado",
                 ratePercent: 0,
                 annualExemption: 0,
                 annualMaximum: null,

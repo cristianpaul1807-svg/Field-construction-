@@ -1150,7 +1150,17 @@
     "annualEmpty": "Rien d'enregistré pour {{year}}.",
     "annualYear": "Année",
     "includesCarryIn": "reprise incluse",
-    "hoursHere": "{{hours}} h travaillées ici"
+    "hoursHere": "{{hours}} h travaillées ici",
+    "adjustments": "Ajustements de cette période",
+    "adjustmentsHint": "Une avance, une prime, des dépenses qu'il a payées, l'outil qu'il a cassé. En négatif, ça se déduit.",
+    "adjustmentLabelPlaceholder": "Ex. Avance du 3 mai",
+    "adjustmentTaxable": "Imposable",
+    "adjustmentBadAmount": "Un des montants n'est pas un nombre.",
+    "appliesTo": "S'applique à",
+    "scopes": {
+      "empleado": "Employés seulement",
+      "ambos": "Employés et sous-traitants"
+    }
   },
   "paymentRequests": {
     "newTitle": "Demander un paiement par le chat",

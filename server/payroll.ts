@@ -22,6 +22,28 @@ import type { getSupabaseAdmin } from "./supabaseAdmin";
 
 export type DeductionPayer = "empleado" | "empleador";
 
+/** A quién alcanza una retención. Por defecto sólo al empleado. */
+export type DeductionScope = "empleado" | "ambos";
+
+/**
+ * Algo que pasó esta quincena y no la siguiente.
+ *
+ * Un adelanto que se recupera, la gasolina que puso el trabajador, una prima,
+ * la broca que rompió, una corrección de la nómina anterior. Positivo suma,
+ * negativo resta.
+ *
+ * `taxable` no es un detalle: una prima es salario y tributa, así que entra en
+ * el bruto antes de calcular las retenciones. Devolverle un gasto que adelantó
+ * de su bolsillo no es salario y no tributa: se suma al neto y ya está.
+ * Meterlas todas en el mismo saco haría que el trabajador pagara RRQ por su
+ * propia gasolina.
+ */
+export interface PayrollAdjustment {
+  label: string;
+  amount: number;
+  taxable: boolean;
+}
+
 export interface DeductionRule {
   code: string;
   label: string;
@@ -30,6 +52,8 @@ export interface DeductionRule {
   annualExemption: number;
   annualMaximum: number | null;
   enabled: boolean;
+  /** Si alcanza sólo al empleado o también al subcontratista. */
+  appliesTo: DeductionScope;
   sourceNote: string | null;
   /** Who this line is remitted to. Free text: the lines belong to the business. */
   remitTo: string;
@@ -57,6 +81,8 @@ export interface PayrollBreakdown {
   net: number;
   /** What the job actually costs the business: gross plus employer side. */
   totalCost: number;
+  /** Lo puntual de esta nómina, tal y como se aplicó. */
+  adjustments: PayrollAdjustment[];
 }
 
 type Admin = ReturnType<typeof getSupabaseAdmin>;
@@ -79,6 +105,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "revenu_quebec",
     label: "RRQ — Régie des rentes du Québec",
     paidBy: "empleado",
+    appliesTo: "empleado",
     ratePercent: 6.3,
     annualExemption: 3500,
     annualMaximum: 4479.3,
@@ -89,6 +116,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "revenu_quebec",
     label: "RRQ — part de l'employeur",
     paidBy: "empleador",
+    appliesTo: "empleado",
     ratePercent: 6.3,
     annualExemption: 3500,
     annualMaximum: 4479.3,
@@ -99,6 +127,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "revenu_quebec",
     label: "RQAP — Régime québécois d'assurance parentale",
     paidBy: "empleado",
+    appliesTo: "empleado",
     ratePercent: 0.43,
     annualExemption: 0,
     annualMaximum: 442.9,
@@ -109,6 +138,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "revenu_quebec",
     label: "RQAP — part de l'employeur",
     paidBy: "empleador",
+    appliesTo: "empleado",
     ratePercent: 0.602,
     annualExemption: 0,
     annualMaximum: 620.06,
@@ -119,6 +149,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "cra",
     label: "AE — Assurance-emploi (taux Québec)",
     paidBy: "empleado",
+    appliesTo: "empleado",
     ratePercent: 1.3,
     annualExemption: 0,
     annualMaximum: 895.7,
@@ -129,6 +160,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "cra",
     label: "AE — part de l'employeur",
     paidBy: "empleador",
+    appliesTo: "empleado",
     ratePercent: 1.82,
     annualExemption: 0,
     annualMaximum: 1253.98,
@@ -139,6 +171,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "revenu_quebec",
     label: "Impôt retenu à la source (fédéral + Québec)",
     paidBy: "empleado",
+    appliesTo: "empleado",
     ratePercent: 0,
     annualExemption: 0,
     annualMaximum: null,
@@ -149,6 +182,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "cnesst",
     label: "CNESST — santé et sécurité du travail",
     paidBy: "empleador",
+    appliesTo: "empleado",
     ratePercent: 0,
     annualExemption: 0,
     annualMaximum: null,
@@ -159,6 +193,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
     remitTo: "revenu_quebec",
     label: "FSS — Fonds des services de santé",
     paidBy: "empleador",
+    appliesTo: "empleado",
     ratePercent: 0,
     annualExemption: 0,
     annualMaximum: null,
@@ -175,7 +210,7 @@ export const QUEBEC_2026_DEDUCTIONS: Omit<DeductionRule, "enabled">[] = [
 export async function readDeductions(admin: Admin, businessId: string): Promise<DeductionRule[]> {
   const { data } = await admin
     .from("payroll_deductions")
-    .select("code, label, paid_by, rate_percent, annual_exemption, annual_maximum, enabled, source_note, remit_to")
+    .select("code, label, paid_by, rate_percent, annual_exemption, annual_maximum, enabled, source_note, remit_to, applies_to")
     .eq("business_id", businessId)
     .order("position");
 
@@ -188,6 +223,9 @@ export async function readDeductions(admin: Admin, businessId: string): Promise<
       annualExemption: Number(d.annual_exemption),
       annualMaximum: d.annual_maximum === null ? null : Number(d.annual_maximum),
       enabled: d.enabled,
+      // Una fila anterior a esta columna no alcanza al subcontratista, que es
+      // lo cierto para todas las que vienen sembradas.
+      appliesTo: (d.applies_to ?? "empleado") as DeductionScope,
       sourceNote: d.source_note,
       remitTo: d.remit_to ?? "otro",
     }));
@@ -405,14 +443,28 @@ export function computePayroll(
   hourlyRate: number,
   rules: DeductionRule[],
   periodDays: number,
-  ytd: Record<string, number> = {}
+  ytd: Record<string, number> = {},
+  opciones: { kind?: "employee" | "subcontractor"; adjustments?: PayrollAdjustment[] } = {}
 ): PayrollBreakdown {
-  const gross = round(hours * hourlyRate);
+  const kind = opciones.kind ?? "employee";
+  const adjustments = opciones.adjustments ?? [];
+
+  // Una prima es salario: entra en el bruto y paga retenciones como el resto.
+  // Un gasto devuelto no lo es, y se aplica después.
+  const sumaGravable = round(adjustments.filter((a) => a.taxable).reduce((s, a) => s + a.amount, 0));
+  const sumaNoGravable = round(adjustments.filter((a) => !a.taxable).reduce((s, a) => s + a.amount, 0));
+
+  // Un ajuste negativo grande no puede dejar el bruto por debajo de cero y
+  // convertir una retención en una devolución.
+  const gross = round(Math.max(0, hours * hourlyRate + sumaGravable));
   const yearShare = Math.min(1, Math.max(0, periodDays / 365));
 
   const lines: PayrollLine[] = [];
   for (const rule of rules) {
     if (!rule.enabled || rule.ratePercent === 0) continue;
+    // Un subcontratista factura: no lleva retención en la fuente salvo que la
+    // empresa haya marcado esa regla como suya también.
+    if (kind === "subcontractor" && rule.appliesTo !== "ambos") continue;
 
     const periodExemption = round(rule.annualExemption * yearShare);
     const base = Math.max(0, gross - periodExemption);
@@ -454,8 +506,9 @@ export function computePayroll(
     lines,
     employeeDeductions,
     employerContributions,
-    net: round(gross - employeeDeductions),
-    totalCost: round(gross + employerContributions),
+    net: round(gross - employeeDeductions + sumaNoGravable),
+    totalCost: round(gross + employerContributions + sumaNoGravable),
+    adjustments,
   };
 }
 

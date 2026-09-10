@@ -1150,7 +1150,17 @@
     "annualEmpty": "No hay nada registrado para {{year}}.",
     "annualYear": "Año",
     "includesCarryIn": "incluye traspaso",
-    "hoursHere": "{{hours}} h trabajadas aquí"
+    "hoursHere": "{{hours}} h trabajadas aquí",
+    "adjustments": "Ajustes de este periodo",
+    "adjustmentsHint": "Un adelanto, una prima, gastos que puso él, la herramienta que rompió. En negativo se descuenta.",
+    "adjustmentLabelPlaceholder": "Ej. Adelanto del 3 de mayo",
+    "adjustmentTaxable": "Tributa",
+    "adjustmentBadAmount": "Hay un importe que no es un número.",
+    "appliesTo": "Se aplica a",
+    "scopes": {
+      "empleado": "Sólo empleados",
+      "ambos": "Empleados y subcontratistas"
+    }
   },
   "paymentRequests": {
     "newTitle": "Pedir un cobro por el chat",

@@ -37,6 +37,7 @@ import {
   labourCostByProject,
   readDeductions,
   yearToDate,
+  type PayrollAdjustment,
 } from "./payroll";
 import {
   billMilestone,
@@ -5886,6 +5887,8 @@ apiRouter.put(
       code: String(d.code ?? `linea_${index + 1}`).trim() || `linea_${index + 1}`,
       label: String(d.label ?? "").trim(),
       paid_by: d.paidBy === "empleador" ? "empleador" : "empleado",
+      // Cualquier cosa que no sea "ambos" cae del lado seguro: sólo empleados.
+      applies_to: d.appliesTo === "ambos" ? "ambos" : "empleado",
       rate_percent: Number(d.ratePercent ?? 0),
       annual_exemption: Number(d.annualExemption ?? 0),
       annual_maximum:
@@ -5961,7 +5964,11 @@ apiRouter.get(
                 w.hourlyRate,
                 rules,
                 periodDays,
-                await yearToDate(admin, req.businessId!, w.workerId, w.kind, year)
+                await yearToDate(admin, req.businessId!, w.workerId, w.kind, year),
+                // La vista previa tiene que decir lo mismo que la nómina que se
+                // acabe emitiendo: un subcontratista no lleva las retenciones
+                // del empleado aquí tampoco.
+                { kind: w.kind }
               )
             : null,
         }))
@@ -5981,6 +5988,29 @@ apiRouter.post(
     if (!workerId || !["employee", "subcontractor"].includes(kind) || !from || !to) {
       res.status(400).json({ error: "workerId, kind, from and to are required" });
       return;
+    }
+
+    // Lo puntual de esta quincena: un adelanto, una prima, la gasolina que
+    // puso él. Se valida entero antes de tocar nada, porque acaba en el papel
+    // que se le entrega y en lo que se le paga.
+    const ajustesCrudos = Array.isArray(req.body?.adjustments) ? req.body.adjustments : [];
+    if (ajustesCrudos.length > 20) {
+      res.status(400).json({ error: "Demasiados ajustes en una sola nómina", code: "too_many_adjustments" });
+      return;
+    }
+    const adjustments: PayrollAdjustment[] = [];
+    for (const bruto of ajustesCrudos) {
+      const label = String(bruto?.label ?? "").trim();
+      const amount = Number(bruto?.amount);
+      if (!label) {
+        res.status(400).json({ error: "Cada ajuste necesita un concepto", code: "adjustment_needs_label" });
+        return;
+      }
+      if (!Number.isFinite(amount) || amount === 0) {
+        res.status(400).json({ error: "Cada ajuste necesita un importe", code: "adjustment_needs_amount" });
+        return;
+      }
+      adjustments.push({ label: label.slice(0, 120), amount: Math.round(amount * 100) / 100, taxable: Boolean(bruto?.taxable) });
     }
     const admin = getSupabaseAdmin();
     const [workers, rules] = await Promise.all([
@@ -6005,7 +6035,10 @@ apiRouter.post(
     // Against what this person has already contributed this year, so a ceiling
     // stops them the period they actually reach it.
     const ytd = await yearToDate(admin, req.businessId!, workerId, kind, new Date(to).getUTCFullYear());
-    const breakdown = computePayroll(worker.hours, worker.hourlyRate, rules, periodDays, ytd);
+    const breakdown = computePayroll(worker.hours, worker.hourlyRate, rules, periodDays, ytd, {
+      kind,
+      adjustments,
+    });
 
     const { data, error } = await admin
       .from("payroll_runs")
@@ -6024,6 +6057,7 @@ apiRouter.post(
         net: breakdown.net,
         total_cost: breakdown.totalCost,
         lines: breakdown.lines,
+        adjustments: breakdown.adjustments,
       })
       .select("id")
       .single();
@@ -7164,6 +7198,11 @@ async function buildPayrollPdf(businessId: string, runId: string, lang: DocLang)
       employerContributions: Number(run.data.employer_contributions),
       net: Number(run.data.net),
       totalCost: Number(run.data.total_cost),
+      adjustments: ((run.data.adjustments ?? []) as Array<Record<string, unknown>>).map((a) => ({
+        label: String(a.label ?? ""),
+        amount: Number(a.amount ?? 0),
+        taxable: Boolean(a.taxable),
+      })),
     },
     lang
   );

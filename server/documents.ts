@@ -131,6 +131,8 @@ export interface PayrollDoc {
   employerContributions: number;
   net: number;
   totalCost: number;
+  /** Lo puntual de esta nómina. Sin esto, el neto del papel no cuadra. */
+  adjustments?: { label: string; amount: number; taxable: boolean }[];
 }
 
 export interface PayrollDocLine {
@@ -209,6 +211,7 @@ interface Copy {
   payrollEmployerSide: string;
   payrollNet: string;
   payrollTotalCost: string;
+  payrollAdjustments: string;
   payrollDisclaimer: string;
   acceptance: string;
   signature: string;
@@ -260,6 +263,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollEmployerSide: "Aportaciones del empleador",
     payrollNet: "Neto a pagar",
     payrollTotalCost: "Coste total para la empresa",
+    payrollAdjustments: "Ajustes de este periodo",
     payrollDisclaimer: "Documento interno de gestión. No es un comprobante oficial de retenciones: los importes se calculan con las tasas que la empresa tiene configuradas y prorrateadas al periodo, sin acumulado anual por persona.",
     paymentsNote: "Cada pago se factura cuando la obra llega a esa etapa. Los importes incluyen impuestos.",
     holdback: "Retención",
@@ -318,6 +322,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollEmployerSide: "Employer contributions",
     payrollNet: "Net pay",
     payrollTotalCost: "Total cost to the business",
+    payrollAdjustments: "Adjustments this period",
     payrollDisclaimer: "Internal management document. Not an official statement of deductions: amounts use the rates this business has configured, prorated over the period, without per-person year-to-date totals.",
     paymentsNote: "Each payment is invoiced when the job reaches that stage. Amounts include tax.",
     holdback: "Holdback",
@@ -376,6 +381,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollEmployerSide: "Cotisations de l'employeur",
     payrollNet: "Net à payer",
     payrollTotalCost: "Coût total pour l'entreprise",
+    payrollAdjustments: "Ajustements de cette période",
     payrollDisclaimer: "Document interne de gestion. Ce n'est pas un relevé officiel de retenues : les montants utilisent les taux configurés par l'entreprise, au prorata de la période, sans cumul annuel par personne.",
     paymentsNote: "Chaque paiement est facturé lorsque le chantier atteint cette étape. Montants taxes comprises.",
     holdback: "Retenue",
@@ -434,6 +440,7 @@ const COPY: Record<DocLang, Copy> = {
     payrollEmployerSide: "Contributi del datore di lavoro",
     payrollNet: "Netto da pagare",
     payrollTotalCost: "Costo totale per l'impresa",
+    payrollAdjustments: "Rettifiche di questo periodo",
     payrollDisclaimer: "Documento interno di gestione. Non è un prospetto ufficiale delle trattenute: gli importi usano le aliquote configurate dall'impresa, ripartite sul periodo, senza cumulo annuo per persona.",
     paymentsNote: "Ogni pagamento viene fatturato quando il cantiere raggiunge quella fase. Importi tasse incluse.",
     holdback: "Ritenuta",
@@ -1027,6 +1034,33 @@ export function renderPayrollPdf(data: PayrollDoc, lang: DocLang): Promise<Buffe
 
   block(copy.payrollEmployeeSide, "empleado", data.employeeDeductions);
   block(copy.payrollEmployerSide, "empleador", data.employerContributions);
+
+  // Sin esto, quien recibe el papel ve un neto que no sale de las cuentas de
+  // arriba y no tiene forma de saber de dónde vienen los 200 $ que faltan.
+  const ajustes = data.adjustments ?? [];
+  if (ajustes.length > 0) {
+    ensureRoom(doc, 24 + ajustes.length * 14, copy);
+    doc.font("Helvetica-Bold").fontSize(9).fillColor("#111111").text(copy.payrollAdjustments, MARGIN, doc.y);
+    doc.y += 4;
+    for (const ajuste of ajustes) {
+      const y = doc.y;
+      doc
+        .font("Helvetica")
+        .fontSize(8.5)
+        .fillColor("#333333")
+        .text(`· ${ajuste.label}`, MARGIN + 6, y, { width: CONTENT_WIDTH - 140 });
+      doc
+        .font("Helvetica")
+        .fontSize(8.5)
+        .fillColor("#333333")
+        .text(`${ajuste.amount > 0 ? "+" : "−"}${money(Math.abs(ajuste.amount), lang)}`, MARGIN + CONTENT_WIDTH - 130, y, {
+          width: 130,
+          align: "right",
+        });
+      doc.y = Math.max(doc.y, y + 12);
+    }
+    doc.y += 6;
+  }
 
   ensureRoom(doc, 60, copy);
   const lineY = doc.y;

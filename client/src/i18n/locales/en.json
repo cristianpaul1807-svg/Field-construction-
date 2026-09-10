@@ -1150,7 +1150,17 @@
     "annualEmpty": "Nothing recorded for {{year}}.",
     "annualYear": "Year",
     "includesCarryIn": "includes carry-in",
-    "hoursHere": "{{hours}} h worked here"
+    "hoursHere": "{{hours}} h worked here",
+    "adjustments": "Adjustments this period",
+    "adjustmentsHint": "An advance, a bonus, expenses they paid, the tool they broke. Negative takes it off.",
+    "adjustmentLabelPlaceholder": "e.g. Advance of May 3rd",
+    "adjustmentTaxable": "Taxable",
+    "adjustmentBadAmount": "One of the amounts is not a number.",
+    "appliesTo": "Applies to",
+    "scopes": {
+      "empleado": "Employees only",
+      "ambos": "Employees and subcontractors"
+    }
   },
   "paymentRequests": {
     "newTitle": "Ask for a payment through the chat",

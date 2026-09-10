@@ -1150,7 +1150,17 @@
     "annualEmpty": "Niente registrato per il {{year}}.",
     "annualYear": "Anno",
     "includesCarryIn": "riporto incluso",
-    "hoursHere": "{{hours}} h lavorate qui"
+    "hoursHere": "{{hours}} h lavorate qui",
+    "adjustments": "Rettifiche di questo periodo",
+    "adjustmentsHint": "Un anticipo, un premio, spese che ha pagato lui, l'attrezzo che ha rotto. In negativo si detrae.",
+    "adjustmentLabelPlaceholder": "Es. Anticipo del 3 maggio",
+    "adjustmentTaxable": "Imponibile",
+    "adjustmentBadAmount": "Uno degli importi non è un numero.",
+    "appliesTo": "Si applica a",
+    "scopes": {
+      "empleado": "Solo dipendenti",
+      "ambos": "Dipendenti e subappaltatori"
+    }
   },
   "paymentRequests": {
     "newTitle": "Chiedi un pagamento in chat",
