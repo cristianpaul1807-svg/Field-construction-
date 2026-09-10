@@ -1016,7 +1016,8 @@
     "nothingScheduled": "Niente in programma oggi.",
     "staleNotice": "Nessuno ha timbrato nelle ultime 24 h. Queste sono le ultime posizioni note, non dove si trovano adesso.",
     "noAddressHint": "Aggiungi l'indirizzo della tua azienda in Configurazione → Dati dell'azienda e la mappa si aprirà lì finché nessuno ha timbrato.",
-    "imageryUnavailable": "Non è stato possibile caricare le immagini della mappa. Le posizioni restano corrette."
+    "imageryUnavailable": "Non è stato possibile caricare le immagini della mappa. Le posizioni restano corrette.",
+    "entryTooOld": "Quella timbratura non è più sulla mappa: si disegnano solo le ultime 24 ore. Le coordinate nell'elenco delle timbrature aprono ancora il punto esatto."
   },
   "photoGallery": {
     "title": "Galleria foto",

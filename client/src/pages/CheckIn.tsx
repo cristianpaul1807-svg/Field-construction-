@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { MapPin, Check, Clock } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 
 interface TimeEntry {
   id: string;
@@ -154,6 +155,18 @@ export default function CheckIn() {
                           <>
                             <span aria-hidden>·</span>
                             <Punto etiqueta={t("checkIn.out")} texto={entry.checkOutLocation} lat={entry.checkOutLat} lng={entry.checkOutLng} />
+                          </>
+                        )}
+                        {/* Las coordenadas abren el punto exacto fuera; esto
+                            lleva al mapa del propio producto, que es donde se
+                            ve junto al resto de la cuadrilla y con lo que le
+                            queda del día. */}
+                        {entry.checkInLat !== null && (
+                          <>
+                            <span aria-hidden>·</span>
+                            <Link href={`/gps-routing?entry=${entry.id}`} className="underline hover:text-foreground">
+                              {t("gps.openMap")}
+                            </Link>
                           </>
                         )}
                       </div>

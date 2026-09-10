@@ -63,7 +63,11 @@ interface GpsResponse {
 export default function GpsRouting() {
   const { t, i18n } = useTranslation();
   const { data, loading, error } = useApi<GpsResponse>("/api/gps");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Se llega aquí desde la lista de fichajes con ?entry=<id>, para abrir ese
+  // fichaje concreto en el mapa en vez de tener que buscarlo entre los puntos.
+  // El id es el mismo en las dos pantallas: es la fila del fichaje.
+  const pedido = new URLSearchParams(window.location.search).get("entry");
+  const [selectedId, setSelectedId] = useState<string | null>(pedido);
 
   const active = data?.workers ?? [];
   const locations = data?.locations ?? [];
@@ -102,6 +106,10 @@ export default function GpsRouting() {
   }));
 
   const selected = locations.find((l) => l.id === selectedId) ?? null;
+  // El mapa sólo dibuja las últimas 24 horas. Un fichaje más viejo no está
+  // aquí, y sin decirlo la pantalla parecería rota: se pidió algo y no pasó
+  // nada.
+  const pedidoNoEstá = Boolean(pedido) && !loading && !locations.some((l) => l.id === pedido);
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
@@ -109,7 +117,13 @@ export default function GpsRouting() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 p-0 overflow-hidden gap-0">
-          {/* The map is drawn whenever it has anywhere to open — positions, or
+          {pedidoNoEstá && (
+        <div className="rounded-lg border border-border bg-status-warning-bg/40 p-3 text-sm text-status-warning-fg">
+          {t("gps.entryTooOld")}
+        </div>
+      )}
+
+      {/* The map is drawn whenever it has anywhere to open — positions, or
               failing that the business's own address. It only disappears when
               we genuinely do not know where this company works, because a map
               of nowhere would be worse than saying so. */}
