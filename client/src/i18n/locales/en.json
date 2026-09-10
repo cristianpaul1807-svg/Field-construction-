@@ -500,7 +500,7 @@
     "clockOut": "Clock out",
     "switchProject": "Switch project",
     "confirmSwitch": "Confirm switch",
-    "onSiteSince": "On {{project}} since {{time}}",
+    "onSiteSince": "Clocked in on {{project}} since {{time}}",
     "unnamedProject": "the project",
     "serviceDown": "We couldn't check your code right now. It's not the code: try again in a moment.",
     "shiftSummary": "Shift summary",
@@ -516,7 +516,8 @@
     "forgottenShiftBody": "You clocked in on {{since}} and never clocked out. Clock out now, or tell the office what time you finished so they can correct it. No hours are counted until then.",
     "todaysJobs": "Today's jobs",
     "otherProjects": "Other projects",
-    "optional": "(optional)"
+    "optional": "(optional)",
+    "locationRecorded": "Your location was recorded at check-in."
   },
   "publicChat": {
     "chatWithBusiness": "Chat with the business",
@@ -986,7 +987,9 @@
     "inProgress": "In progress",
     "approveHours": "Approve hours",
     "noEntries": "No time entries recorded yet.",
-    "stillOnSite": "Still on site"
+    "stillOnSite": "Still on site",
+    "openInMap": "See where this was clocked in",
+    "noLocation": "No location"
   },
   "gps": {
     "title": "GPS & Routing",

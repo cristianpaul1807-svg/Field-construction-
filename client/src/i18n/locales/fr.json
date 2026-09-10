@@ -500,7 +500,7 @@
     "clockOut": "Pointer le départ",
     "switchProject": "Changer de chantier",
     "confirmSwitch": "Confirmer le changement",
-    "onSiteSince": "Sur {{project}} depuis {{time}}",
+    "onSiteSince": "Pointé sur {{project}} depuis {{time}}",
     "unnamedProject": "le chantier",
     "serviceDown": "Impossible de vérifier votre code pour le moment. Ce n'est pas le code : réessayez dans un instant.",
     "shiftSummary": "Résumé du quart de travail",
@@ -516,7 +516,8 @@
     "forgottenShiftBody": "Vous avez pointé l'arrivée le {{since}} et il n'y a pas de départ. Pointez le départ maintenant, ou dites au bureau à quelle heure vous avez fini pour qu'il corrige. Aucune heure n'est comptée d'ici là.",
     "todaysJobs": "Aujourd'hui",
     "otherProjects": "Autres chantiers",
-    "optional": "(facultatif)"
+    "optional": "(facultatif)",
+    "locationRecorded": "Votre position a été enregistrée au pointage."
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",
@@ -986,7 +987,9 @@
     "inProgress": "En cours",
     "approveHours": "Approuver les heures",
     "noEntries": "Aucun pointage enregistré pour l'instant.",
-    "stillOnSite": "Encore sur le chantier"
+    "stillOnSite": "Encore sur le chantier",
+    "openInMap": "Voir où le pointage a eu lieu",
+    "noLocation": "Sans position"
   },
   "gps": {
     "title": "GPS et itinéraires",

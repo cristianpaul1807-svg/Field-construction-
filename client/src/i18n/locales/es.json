@@ -500,7 +500,7 @@
     "clockOut": "Marcar salida (Cierre)",
     "switchProject": "Cambiar de proyecto",
     "confirmSwitch": "Confirmar cambio",
-    "onSiteSince": "En {{project}} desde las {{time}}",
+    "onSiteSince": "Fichado en {{project}} desde las {{time}}",
     "unnamedProject": "el proyecto",
     "serviceDown": "No se pudo comprobar tu código ahora mismo. No es culpa del código: vuelve a intentarlo en un momento.",
     "shiftSummary": "Resumen del turno",
@@ -516,7 +516,8 @@
     "forgottenShiftBody": "Fichaste la entrada el {{since}} y no hay salida. Ficha la salida ahora, o dile a la oficina qué hora era para que lo corrija. Hasta entonces no se cuentan horas.",
     "todaysJobs": "Hoy te toca",
     "otherProjects": "Otras obras",
-    "optional": "(opcional)"
+    "optional": "(opcional)",
+    "locationRecorded": "Se guardó tu ubicación al fichar."
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",
@@ -986,7 +987,9 @@
     "inProgress": "En curso",
     "approveHours": "Aprobar horas",
     "noEntries": "Todavía no hay fichajes registrados.",
-    "stillOnSite": "Sigue en la obra"
+    "stillOnSite": "Sigue en la obra",
+    "openInMap": "Ver en el mapa dónde se fichó",
+    "noLocation": "Sin ubicación"
   },
   "gps": {
     "title": "GPS y rutas",

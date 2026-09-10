@@ -500,7 +500,7 @@
     "clockOut": "Timbra uscita",
     "switchProject": "Cambia cantiere",
     "confirmSwitch": "Conferma il cambio",
-    "onSiteSince": "Su {{project}} dalle {{time}}",
+    "onSiteSince": "Timbrato su {{project}} dalle {{time}}",
     "unnamedProject": "il cantiere",
     "serviceDown": "Non è stato possibile verificare il tuo codice adesso. Non è colpa del codice: riprova tra un momento.",
     "shiftSummary": "Riepilogo del turno",
@@ -516,7 +516,8 @@
     "forgottenShiftBody": "Hai timbrato l'entrata il {{since}} e non c'è uscita. Timbra l'uscita adesso, oppure di' all'ufficio a che ora hai finito perché lo corregga. Fino ad allora non si contano ore.",
     "todaysJobs": "Oggi tocca a te",
     "otherProjects": "Altri cantieri",
-    "optional": "(facoltativo)"
+    "optional": "(facoltativo)",
+    "locationRecorded": "La tua posizione è stata registrata alla timbratura."
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",
@@ -986,7 +987,9 @@
     "inProgress": "In corso",
     "approveHours": "Approva ore",
     "noEntries": "Nessuna timbratura registrata finora.",
-    "stillOnSite": "Ancora in cantiere"
+    "stillOnSite": "Ancora in cantiere",
+    "openInMap": "Vedi dove è stata fatta la timbratura",
+    "noLocation": "Senza posizione"
   },
   "gps": {
     "title": "GPS e percorsi",

@@ -5085,7 +5085,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_location, check_out_time, approved, service_type, schedule_events(title), projects(name), employees(name), subcontractors(name)"
+        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, approved, service_type, schedule_events(title), projects(name), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
@@ -5099,6 +5099,10 @@ apiRouter.get(
         workerName: t.employees?.name ?? t.subcontractors?.name ?? null,
         checkInTime: t.check_in_time,
         checkInLocation: t.check_in_location,
+        // En crudo para poder abrirlas en un mapa: el texto guardado es sólo
+        // una copia legible de estas dos.
+        checkInLat: t.check_in_lat === null ? null : Number(t.check_in_lat),
+        checkInLng: t.check_in_lng === null ? null : Number(t.check_in_lng),
         checkOutTime: t.check_out_time,
         // Sin esto la oficina no sabe qué se hizo en esas horas, que es justo
         // lo que se le pide al trabajador que diga.

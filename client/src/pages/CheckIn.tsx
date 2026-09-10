@@ -16,6 +16,8 @@ interface TimeEntry {
   workerName: string | null;
   checkInTime: string;
   checkInLocation: string | null;
+  checkInLat: number | null;
+  checkInLng: number | null;
   checkOutTime: string | null;
   /** Nulo cuando el trabajador fichó sin decir qué hizo. */
   serviceType: string | null;
@@ -114,8 +116,27 @@ export default function CheckIn() {
                             : t("worker.serviceTypes.sin_especificar")}
                         </span>
                       </p>
+                      {/* Dónde estaba la persona al fichar, no dónde está la
+                          obra: son cosas distintas y esta es la que importa.
+                          Se puede elegir una obra y fichar desde cualquier
+                          sitio, así que estas coordenadas son la única prueba
+                          de dónde se pulsó el botón — y en crudo no le dicen
+                          nada a nadie, por eso se abren en el mapa. */}
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                        <MapPin size={11} /> {entry.checkInLocation ?? "—"}
+                        <MapPin size={11} className="flex-shrink-0" />
+                        {entry.checkInLat !== null && entry.checkInLng !== null ? (
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${entry.checkInLat}&mlon=${entry.checkInLng}#map=17/${entry.checkInLat}/${entry.checkInLng}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline hover:text-foreground"
+                            title={t("checkIn.openInMap")}
+                          >
+                            {entry.checkInLocation}
+                          </a>
+                        ) : (
+                          (entry.checkInLocation ?? t("checkIn.noLocation"))
+                        )}
                       </div>
                     </div>
                   </div>
