@@ -18,12 +18,37 @@ interface TimeEntry {
   checkInLocation: string | null;
   checkInLat: number | null;
   checkInLng: number | null;
+  checkOutLocation: string | null;
+  checkOutLat: number | null;
+  checkOutLng: number | null;
   checkOutTime: string | null;
   /** Nulo cuando el trabajador fichó sin decir qué hizo. */
   serviceType: string | null;
   /** De qué trabajo son estas horas, cuando fichó sobre uno de la agenda. */
   jobTitle: string | null;
   approved: boolean;
+}
+
+/** El punto donde se pulsó el botón, abrible en un mapa. */
+function Punto({ etiqueta, texto, lat, lng }: { etiqueta: string; texto: string | null; lat: number | null; lng: number | null }) {
+  const { t } = useTranslation();
+  if (lat === null || lng === null) {
+    return <span className="text-muted-foreground">{etiqueta}: {texto ?? t("checkIn.noLocation")}</span>;
+  }
+  return (
+    <span>
+      {etiqueta}:{" "}
+      <a
+        href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`}
+        target="_blank"
+        rel="noreferrer"
+        className="underline hover:text-foreground"
+        title={t("checkIn.openInMap")}
+      >
+        {texto}
+      </a>
+    </span>
+  );
 }
 
 export default function CheckIn() {
@@ -122,20 +147,14 @@ export default function CheckIn() {
                           sitio, así que estas coordenadas son la única prueba
                           de dónde se pulsó el botón — y en crudo no le dicen
                           nada a nadie, por eso se abren en el mapa. */}
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                        <MapPin size={11} className="flex-shrink-0" />
-                        {entry.checkInLat !== null && entry.checkInLng !== null ? (
-                          <a
-                            href={`https://www.openstreetmap.org/?mlat=${entry.checkInLat}&mlon=${entry.checkInLng}#map=17/${entry.checkInLat}/${entry.checkInLng}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="underline hover:text-foreground"
-                            title={t("checkIn.openInMap")}
-                          >
-                            {entry.checkInLocation}
-                          </a>
-                        ) : (
-                          (entry.checkInLocation ?? t("checkIn.noLocation"))
+                      <div className="flex items-start gap-1 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                        <MapPin size={11} className="flex-shrink-0 mt-0.5" />
+                        <Punto etiqueta={t("checkIn.in")} texto={entry.checkInLocation} lat={entry.checkInLat} lng={entry.checkInLng} />
+                        {entry.checkOutTime && (
+                          <>
+                            <span aria-hidden>·</span>
+                            <Punto etiqueta={t("checkIn.out")} texto={entry.checkOutLocation} lat={entry.checkOutLat} lng={entry.checkOutLng} />
+                          </>
                         )}
                       </div>
                     </div>

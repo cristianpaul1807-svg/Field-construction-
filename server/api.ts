@@ -5085,7 +5085,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, approved, service_type, schedule_events(title), projects(name), employees(name), subcontractors(name)"
+        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, check_out_location, check_out_lat, check_out_lng, approved, service_type, schedule_events(title), projects(name), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
@@ -5103,6 +5103,11 @@ apiRouter.get(
         // una copia legible de estas dos.
         checkInLat: t.check_in_lat === null ? null : Number(t.check_in_lat),
         checkInLng: t.check_in_lng === null ? null : Number(t.check_in_lng),
+        // Y dónde estaba al cerrar. Se puede fichar la entrada en la obra y la
+        // salida desde casa: sin este par, esas horas parecen impecables.
+        checkOutLocation: t.check_out_location,
+        checkOutLat: t.check_out_lat === null ? null : Number(t.check_out_lat),
+        checkOutLng: t.check_out_lng === null ? null : Number(t.check_out_lng),
         checkOutTime: t.check_out_time,
         // Sin esto la oficina no sabe qué se hizo en esas horas, que es justo
         // lo que se le pide al trabajador que diga.
