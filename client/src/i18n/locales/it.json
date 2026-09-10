@@ -563,7 +563,7 @@
     "signInClient": "Accedi — Cliente",
     "enterCodeAndNewPassword": "Inserisci il codice e la tua nuova password",
     "recoverPassword": "Recupera password",
-    "recoverPasswordHint": "Ti abbiamo inviato un codice per creare una nuova password.",
+    "recoverPasswordHint": "Scrivi la tua email e ti mandiamo un codice per creare una nuova password.",
     "clientAccessDescription": "Inserisci il codice che ti ha dato il tuo appaltatore — non servono email né password.",
     "serverUnreachable": "Non siamo riusciti a caricare il tuo account",
     "serverUnreachableHint": "La tua sessione è valida, ma il server non ha risposto. Il tuo account e i tuoi dati sono intatti.",
@@ -579,7 +579,8 @@
     "noBusinessAccount": "Non hai un account aziendale?",
     "notYetAccount": "Non hai ancora un account?",
     "serverResponded": "Il server ha risposto {{status}}",
-    "emailAlreadyInUse": "Questo indirizzo email è già registrato. Accedi o usa un'email diversa."
+    "emailAlreadyInUse": "Questo indirizzo email è già registrato. Accedi o usa un'email diversa.",
+    "emailNotSending": "Non siamo riusciti a inviare il codice: l'email dell'app non è configurata. Avvisa chi la amministra — riprovare non servirà."
   },
   "landing": {
     "hubName": "Field Construction",

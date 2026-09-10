@@ -563,7 +563,7 @@
     "signInClient": "Sign in — Client",
     "enterCodeAndNewPassword": "Enter the code and your new password",
     "recoverPassword": "Recover password",
-    "recoverPasswordHint": "We've sent you a code to create a new password.",
+    "recoverPasswordHint": "Enter your email and we'll send you a code to set a new password.",
     "clientAccessDescription": "Enter the code your contractor gave you — no email or password needed.",
     "serverUnreachable": "We couldn't load your account",
     "serverUnreachableHint": "Your session is valid, but the server didn't answer. Your account and data are intact.",
@@ -579,7 +579,8 @@
     "noBusinessAccount": "Don't have a business account?",
     "notYetAccount": "Don't have an account yet?",
     "serverResponded": "The server responded {{status}}",
-    "emailAlreadyInUse": "This email address is already registered. Please sign in or use a different email."
+    "emailAlreadyInUse": "This email address is already registered. Please sign in or use a different email.",
+    "emailNotSending": "We couldn't send the code: the app's email isn't set up. Tell whoever administers it — retrying won't help."
   },
   "landing": {
     "hubName": "Field Construction",

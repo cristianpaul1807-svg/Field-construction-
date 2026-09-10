@@ -563,7 +563,7 @@
     "signInClient": "Connexion — Client",
     "enterCodeAndNewPassword": "Entrez le code et votre nouveau mot de passe",
     "recoverPassword": "Récupérer le mot de passe",
-    "recoverPasswordHint": "Nous vous avons envoyé un code pour créer un nouveau mot de passe.",
+    "recoverPasswordHint": "Entrez votre courriel et nous vous enverrons un code pour créer un nouveau mot de passe.",
     "clientAccessDescription": "Entrez le code que votre entrepreneur vous a donné — ni courriel ni mot de passe requis.",
     "serverUnreachable": "Impossible de charger votre compte",
     "serverUnreachableHint": "Votre session est valide, mais le serveur n'a pas répondu. Votre compte et vos données sont intacts.",
@@ -579,7 +579,8 @@
     "noBusinessAccount": "Vous n'avez pas de compte entreprise ?",
     "notYetAccount": "Vous n'avez pas encore de compte ?",
     "serverResponded": "Le serveur a répondu {{status}}",
-    "emailAlreadyInUse": "Cette adresse e-mail est déjà enregistrée. Veuillez vous connecter ou utiliser un e-mail différent."
+    "emailAlreadyInUse": "Cette adresse e-mail est déjà enregistrée. Veuillez vous connecter ou utiliser un e-mail différent.",
+    "emailNotSending": "Impossible d'envoyer le code : le courriel de l'application n'est pas configuré. Prévenez la personne qui l'administre — réessayer ne changera rien."
   },
   "landing": {
     "hubName": "Field Construction",

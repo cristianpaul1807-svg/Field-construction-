@@ -9,17 +9,56 @@ import { ArrowLeft, KeyRound } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useTranslation } from "react-i18next";
 
+/** Un mensaje que no le dice nada a nadie. En la pantalla salía literalmente
+ *  "{}" cuando el servidor de correo fallaba: el error venía con el cuerpo de
+ *  la respuesta serializado y sin texto dentro. */
+function inservible(texto: string) {
+  const t = texto.trim();
+  return !t || t === "{}" || t === "[object Object]" || t === "null" || t === "undefined";
+}
+
 function formatError(err: unknown, fallback: string): string {
   if (!err) return fallback;
-  if (typeof err === "string") return err;
-  if (err instanceof Error) return err.message;
-  if (typeof err === "object") {
-    const obj = err as Record<string, unknown>;
-    if (typeof obj.message === "string" && obj.message) return obj.message;
-    if (typeof obj.error_description === "string" && obj.error_description) return obj.error_description;
-    if (typeof obj.error === "string" && obj.error) return obj.error;
-  }
-  return fallback;
+  const bruto =
+    typeof err === "string"
+      ? err
+      : err instanceof Error
+      ? err.message
+      : typeof err === "object"
+      ? (() => {
+          const obj = err as Record<string, unknown>;
+          for (const clave of ["message", "msg", "error_description", "error"]) {
+            const v = obj[clave];
+            if (typeof v === "string" && v) return v;
+          }
+          return "";
+        })()
+      : "";
+  return inservible(bruto) ? fallback : bruto;
+}
+
+/**
+ * Cuando el fallo es que el correo no sale.
+ *
+ * Supabase contesta 500 "Error sending recovery email" si el proyecto no tiene
+ * servidor de correo configurado. Eso, tal cual, deja al usuario pulsando el
+ * botón otra vez para siempre: no es un código mal escrito ni una espera, es
+ * que no le va a llegar nada nunca. Merece decirse con esas palabras.
+ */
+function esFalloDeCorreo(err: unknown): boolean {
+  const obj = (typeof err === "object" && err ? err : {}) as Record<string, unknown>;
+  // El 500 se mira además del texto porque el cliente no siempre deja pasar el
+  // "msg" del servidor: a veces sólo llega el estado y un mensaje vacío, que
+  // es exactamente el caso que pintaba "{}".
+  if (Number(obj.status) === 500 || String(obj.code) === "unexpected_failure") return true;
+  const texto = [
+    err instanceof Error ? err.message : "",
+    String(obj.msg ?? ""),
+    String(obj.error_description ?? ""),
+  ]
+    .join(" ")
+    .toLowerCase();
+  return texto.includes("sending") && texto.includes("email");
 }
 
 export default function AuthForgotPassword() {
@@ -42,7 +81,7 @@ export default function AuthForgotPassword() {
       if (resetError) throw resetError;
       setSent(true);
     } catch (err) {
-      setError(formatError(err, t("auth.somethingWentWrong")));
+      setError(esFalloDeCorreo(err) ? t("auth.emailNotSending") : formatError(err, t("auth.somethingWentWrong")));
     } finally {
       setBusy(false);
     }
@@ -56,7 +95,7 @@ export default function AuthForgotPassword() {
       if (resetError) throw resetError;
       setResent(true);
     } catch (err) {
-      setError(formatError(err, t("auth.couldNotResendCode")));
+      setError(esFalloDeCorreo(err) ? t("auth.emailNotSending") : formatError(err, t("auth.couldNotResendCode")));
     }
   };
 

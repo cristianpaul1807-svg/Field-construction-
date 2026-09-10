@@ -563,7 +563,7 @@
     "signInClient": "Inicia sesión — Cliente",
     "enterCodeAndNewPassword": "Ingresa el código y tu nueva contraseña",
     "recoverPassword": "Recuperar contraseña",
-    "recoverPasswordHint": "Te mandamos un código para crear una contraseña nueva.",
+    "recoverPasswordHint": "Escribe tu correo y te mandamos un código para crear una contraseña nueva.",
     "clientAccessDescription": "Ingresa el código que te dio tu contratista — no necesitas correo ni contraseña.",
     "serverUnreachable": "No pudimos cargar tu cuenta",
     "serverUnreachableHint": "Tu sesión es válida, pero el servidor no respondió. Tu cuenta y tus datos están intactos.",
@@ -579,7 +579,8 @@
     "noBusinessAccount": "¿No tienes cuenta de negocio?",
     "notYetAccount": "¿Todavía no tienes cuenta?",
     "serverResponded": "El servidor respondió {{status}}",
-    "emailAlreadyInUse": "Este correo electrónico ya está registrado. Inicia sesión o utiliza otro correo."
+    "emailAlreadyInUse": "Este correo electrónico ya está registrado. Inicia sesión o utiliza otro correo.",
+    "emailNotSending": "No pudimos enviarte el código: el correo de la aplicación no está configurado. Avisa a quien la administra — reintentar no va a servir."
   },
   "landing": {
     "hubName": "Field Construction",
