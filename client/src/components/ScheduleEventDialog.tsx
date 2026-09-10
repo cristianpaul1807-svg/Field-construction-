@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { mensajeDeChoque } from "@/lib/conflicto";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -36,7 +37,7 @@ interface ScheduleEventDialogProps {
 }
 
 export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate, onCreated }: ScheduleEventDialogProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: employees } = useApi<WorkerOption[]>(open ? "/api/employees" : null);
   const { data: subcontractors } = useApi<WorkerOption[]>(open ? "/api/subcontractors" : null);
 
@@ -104,7 +105,9 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(serverMessage(body, t, t("common.saveError")));
+        // El choque de agenda se cuenta con nombre, hora y obra; el resto de
+        // errores siguen su camino de siempre.
+        throw new Error(mensajeDeChoque(body, t, i18n.language) ?? serverMessage(body, t, t("common.saveError")));
       }
       onCreated();
       onOpenChange(false);

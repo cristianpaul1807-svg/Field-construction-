@@ -979,7 +979,8 @@
     "nextMonth": "Mois suivant",
     "countThatDay": "{{count}} rendez-vous",
     "countThatDay_other": "{{count}} rendez-vous",
-    "deleteOrderConfirm": "Supprimer ce bon de travail ? Il disparaît de la liste des bons, pas seulement du calendrier."
+    "deleteOrderConfirm": "Supprimer ce bon de travail ? Il disparaît de la liste des bons, pas seulement du calendrier.",
+    "workerBusy": "Cette personne a déjà « {{title}} » de {{from}} à {{to}} sur {{project}}. Personne ne peut être à deux endroits à la fois : changez l'heure, ou confiez-le à quelqu'un d'autre."
   },
   "checkIn": {
     "title": "Pointage (entrée / sortie)",

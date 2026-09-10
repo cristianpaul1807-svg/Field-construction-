@@ -979,7 +979,8 @@
     "nextMonth": "Next month",
     "countThatDay": "{{count}} appointment",
     "countThatDay_other": "{{count}} appointments",
-    "deleteOrderConfirm": "Remove this work order? It is deleted from the orders list, not just from the calendar."
+    "deleteOrderConfirm": "Remove this work order? It is deleted from the orders list, not just from the calendar.",
+    "workerBusy": "That person already has “{{title}}” from {{from}} to {{to}} at {{project}}. Nobody can be in two places at once: change the time, or assign it to someone else."
   },
   "checkIn": {
     "title": "Check-in / Check-out",

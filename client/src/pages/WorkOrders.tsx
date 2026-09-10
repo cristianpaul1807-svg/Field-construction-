@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { mensajeDeChoque } from "@/lib/conflicto";
 
 const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
 // La misma lista que la agenda: una orden de trabajo y un trabajo asignado
@@ -24,7 +25,7 @@ interface ProjectOption { id: string; name: string }
 interface AssigneeOption { id: string; name: string }
 
 function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [projectId, setProjectId] = useState("");
   const [title, setTitle] = useState("");
@@ -69,7 +70,9 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
         }),
       });
       const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(serverMessage(body, t, t("workOrders.createError")));
+      if (!res.ok) {
+        throw new Error(mensajeDeChoque(body, t, i18n.language) ?? serverMessage(body, t, t("workOrders.createError")));
+      }
       setOpen(false); reset(); onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("workOrders.createError"));

@@ -5212,6 +5212,25 @@ apiRouter.post(
     }
 
     const supabase = req.supabase!;
+    if (scheduledStart) {
+      const choque = await choqueDeAgenda(supabase, req.businessId!, {
+        employeeId: assignedEmployeeId || null,
+        subcontractorId: assignedSubcontractorId || null,
+        startTime: scheduledStart,
+        endTime: new Date(
+          new Date(scheduledStart).getTime() + (Number(durationMinutes) || 60) * 60000
+        ).toISOString(),
+      });
+      if (choque) {
+        res.status(409).json({
+          error: "worker already booked",
+          code: "worker_double_booked",
+          conflict: choque,
+        });
+        return;
+      }
+    }
+
     const { data, error } = await supabase
       .from("work_orders")
       .insert({
@@ -5238,6 +5257,112 @@ apiRouter.post(
 );
 
 // ---------- Scheduling ----------
+
+/**
+ * Nadie puede estar en dos sitios a la vez.
+ *
+ * Se comprueba contra las dos tablas porque un trabajador choca igual con una
+ * cita que con una orden de trabajo: para él es la misma hora del mismo día, y
+ * mirar sólo una de las dos dejaría pasar la mitad de los choques.
+ *
+ * Devuelve con qué choca, no un sí/no. Un "no se pudo guardar" a secas obliga a
+ * salir de la pantalla, buscar el calendario de esa persona y adivinar cuál era
+ * el problema; sabiendo que ya tiene "Instalar cableado" de 9:00 a 11:00 en tal
+ * obra, se decide en el sitio.
+ *
+ * Las notas de agenda no cuentan: no tienen a nadie asignado, así que no
+ * ocupan el tiempo de nadie.
+ */
+interface ChoqueDeAgenda {
+  title: string;
+  startTime: string;
+  endTime: string;
+  projectName: string | null;
+  kind: "cita" | "orden";
+}
+
+/** Una hora de duración cuando no se dijo cuánto: es lo que asume el resto de
+ *  la agenda al dibujar un bloque sin final. */
+const DURACION_POR_DEFECTO_MS = 60 * 60000;
+
+async function choqueDeAgenda(
+  supabase: NonNullable<Request["supabase"]>,
+  businessId: string,
+  opciones: {
+    employeeId: string | null;
+    subcontractorId: string | null;
+    startTime: string;
+    endTime: string | null;
+    /** Al editar, la propia fila no choca consigo misma. */
+    excluirCita?: string;
+    excluirOrden?: string;
+  }
+): Promise<ChoqueDeAgenda | null> {
+  const { employeeId, subcontractorId, startTime } = opciones;
+  if (!employeeId && !subcontractorId) return null;
+  const inicio = new Date(startTime).getTime();
+  if (Number.isNaN(inicio)) return null;
+  const fin = opciones.endTime
+    ? new Date(opciones.endTime).getTime()
+    : inicio + DURACION_POR_DEFECTO_MS;
+
+  // Se traen sólo los del mismo día: dos cosas que se solapan empiezan como
+  // mucho a un día de distancia, y así no se recorre la agenda entera.
+  const desde = new Date(inicio - 24 * 3600_000).toISOString();
+  const hasta = new Date(fin + 24 * 3600_000).toISOString();
+  const columna = employeeId ? "assigned_employee_id" : "assigned_subcontractor_id";
+  const quien = employeeId ?? subcontractorId!;
+
+  const [citas, ordenes] = await Promise.all([
+    supabase
+      .from("schedule_events")
+      .select("id, title, start_time, end_time, projects(name)")
+      .eq("business_id", businessId)
+      .eq(columna, quien)
+      .gte("start_time", desde)
+      .lte("start_time", hasta),
+    supabase
+      .from("work_orders")
+      .select("id, title, scheduled_start, duration_minutes, projects(name)")
+      .eq("business_id", businessId)
+      .eq(columna, quien)
+      .not("scheduled_start", "is", null)
+      .gte("scheduled_start", desde)
+      .lte("scheduled_start", hasta),
+  ]);
+
+  const seSolapan = (a1: number, a2: number) => a1 < fin && a2 > inicio;
+
+  for (const c of (citas.data ?? []) as any[]) {
+    if (c.id === opciones.excluirCita) continue;
+    const cIni = new Date(c.start_time).getTime();
+    const cFin = c.end_time ? new Date(c.end_time).getTime() : cIni + DURACION_POR_DEFECTO_MS;
+    if (seSolapan(cIni, cFin)) {
+      return {
+        title: c.title,
+        startTime: new Date(cIni).toISOString(),
+        endTime: new Date(cFin).toISOString(),
+        projectName: c.projects?.name ?? null,
+        kind: "cita",
+      };
+    }
+  }
+  for (const o of (ordenes.data ?? []) as any[]) {
+    if (o.id === opciones.excluirOrden) continue;
+    const oIni = new Date(o.scheduled_start).getTime();
+    const oFin = oIni + (Number(o.duration_minutes) || 60) * 60000;
+    if (seSolapan(oIni, oFin)) {
+      return {
+        title: o.title,
+        startTime: new Date(oIni).toISOString(),
+        endTime: new Date(oFin).toISOString(),
+        projectName: o.projects?.name ?? null,
+        kind: "orden",
+      };
+    }
+  }
+  return null;
+}
 
 /**
  * La agenda: las citas y las órdenes de trabajo, en la misma rejilla.
@@ -5331,6 +5456,21 @@ apiRouter.post(
     }
     if (body.assignedEmployeeId && body.assignedSubcontractorId) {
       res.status(400).json({ error: "Assign to only one worker, not both" });
+      return;
+    }
+
+    const choque = await choqueDeAgenda(supabase, req.businessId!, {
+      employeeId: body.assignedEmployeeId ?? null,
+      subcontractorId: body.assignedSubcontractorId ?? null,
+      startTime: body.startTime,
+      endTime: body.endTime ?? null,
+    });
+    if (choque) {
+      res.status(409).json({
+        error: "worker already booked",
+        code: "worker_double_booked",
+        conflict: choque,
+      });
       return;
     }
 
@@ -7731,6 +7871,41 @@ apiRouter.patch(
       update.assigned_subcontractor_id = body.assignedSubcontractorId || null;
     }
     const supabase = req.supabase!;
+
+    // Mover una cita de hora o pasarla a otra persona puede crear el choque
+    // igual que crearla de cero, así que se comprueba contra cómo va a quedar
+    // la fila y no contra cómo estaba.
+    if (
+      update.start_time !== undefined ||
+      update.end_time !== undefined ||
+      update.assigned_employee_id !== undefined
+    ) {
+      const { data: actual } = await supabase
+        .from("schedule_events")
+        .select("start_time, end_time, assigned_employee_id, assigned_subcontractor_id")
+        .eq("business_id", req.businessId!)
+        .eq("id", req.params.id)
+        .maybeSingle();
+      if (actual) {
+        const choque = await choqueDeAgenda(supabase, req.businessId!, {
+          employeeId: (update.assigned_employee_id as string | null) ?? actual.assigned_employee_id,
+          subcontractorId:
+            (update.assigned_subcontractor_id as string | null) ?? actual.assigned_subcontractor_id,
+          startTime: (update.start_time as string) ?? actual.start_time,
+          endTime: (update.end_time as string | null) ?? actual.end_time,
+          excluirCita: req.params.id,
+        });
+        if (choque) {
+          res.status(409).json({
+            error: "worker already booked",
+            code: "worker_double_booked",
+            conflict: choque,
+          });
+          return;
+        }
+      }
+    }
+
     const { error } = await supabase
       .from("schedule_events")
       .update(update)

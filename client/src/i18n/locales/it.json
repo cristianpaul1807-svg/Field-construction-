@@ -979,7 +979,8 @@
     "nextMonth": "Mese successivo",
     "countThatDay": "{{count}} appuntamento",
     "countThatDay_other": "{{count}} appuntamenti",
-    "deleteOrderConfirm": "Rimuovere questo ordine di lavoro? Sparisce dall'elenco degli ordini, non solo dal calendario."
+    "deleteOrderConfirm": "Rimuovere questo ordine di lavoro? Sparisce dall'elenco degli ordini, non solo dal calendario.",
+    "workerBusy": "Quella persona ha già «{{title}}» dalle {{from}} alle {{to}} su {{project}}. Nessuno può stare in due posti insieme: cambia l'ora, o assegnalo a un'altra persona."
   },
   "checkIn": {
     "title": "Timbratura (entrata / uscita)",
