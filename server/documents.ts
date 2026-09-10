@@ -925,8 +925,22 @@ function pageNumbers(doc: Doc, copy: Copy) {
  * Va envuelto sobre el propio documento para que valga para todo lo que se
  * imprima, venga de nuestra copia o de sus datos.
  */
-function sinLigaduras<T>(valor: T): T {
-  return typeof valor === "string" ? (valor.replace(/œ/g, "oe").replace(/Œ/g, "OE") as unknown as T) : valor;
+/**
+ * El unico caracter que estas fuentes no saben escribir.
+ *
+ * Medido byte a byte antes de tocar nada, porque la primera vez me equivoque:
+ * crei que se comian la ligadura oe y no era cierto —la escriben como 0x9C, que
+ * es lo correcto en WinAnsi—; lo que pasaba es que mi propio extractor pintaba
+ * ese byte como un caracter invisible y yo leia "main-d'uvre". El guion largo,
+ * los puntos suspensivos y las comillas curvas tambien salen bien.
+ *
+ * El que no sale es el menos tipografico U+2212: pdfkit escupe sus dos bytes en
+ * crudo y en el papel aparece una comilla. Lo escribi yo en la linea de ajustes
+ * de una hoja de pago, y salia «"50,00 $» justo en el renglon que le resta
+ * dinero a alguien.
+ */
+function sinCaracteresQueNoSabeEscribir(valor: unknown): unknown {
+  return typeof valor === "string" ? valor.replace(/\u2212/g, "-") : valor;
 }
 
 function nuevoDocumento(): Doc {
@@ -934,7 +948,7 @@ function nuevoDocumento(): Doc {
   // cuando ya se sabe cuántas hay.
   const doc: Doc = new PDFDocument({ size: "A4", margin: MARGIN, bufferPages: true });
   const original = doc.text.bind(doc);
-  (doc as any).text = (texto: unknown, ...resto: unknown[]) => original(sinLigaduras(texto) as string, ...(resto as []));
+  (doc as any).text = (texto: unknown, ...resto: unknown[]) => original(sinCaracteresQueNoSabeEscribir(texto) as string, ...(resto as []));
   return doc;
 }
 
@@ -974,7 +988,8 @@ export function renderInvoicePdf(data: InvoiceDoc, lang: DocLang): Promise<Buffe
 
 export function renderPayrollPdf(data: PayrollDoc, lang: DocLang): Promise<Buffer> {
   const copy = COPY[lang];
-  const doc = new PDFDocument({ size: "A4", margin: MARGIN, bufferPages: true });
+  // La hoja de pago se creaba su propio documento y se saltaba la guarda.
+  const doc = nuevoDocumento();
 
   const chunks: Buffer[] = [];
   const done = new Promise<Buffer>((resolve, reject) => {
@@ -1053,7 +1068,7 @@ export function renderPayrollPdf(data: PayrollDoc, lang: DocLang): Promise<Buffe
         .font("Helvetica")
         .fontSize(8.5)
         .fillColor("#333333")
-        .text(`${ajuste.amount > 0 ? "+" : "−"}${money(Math.abs(ajuste.amount), lang)}`, MARGIN + CONTENT_WIDTH - 130, y, {
+        .text(`${ajuste.amount > 0 ? "+" : "-"}${money(Math.abs(ajuste.amount), lang)}`, MARGIN + CONTENT_WIDTH - 130, y, {
           width: 130,
           align: "right",
         });
