@@ -956,7 +956,11 @@
     "notes": "Notes",
     "deleteConfirm": "Delete this event from the schedule?",
     "pickProjectToAdd": "Pick a project above to add an appointment.",
-    "nothingToday": "Nothing scheduled for this day."
+    "nothingToday": "Nothing scheduled for this day.",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week"
   },
   "checkIn": {
     "title": "Check-in / Check-out",

@@ -127,7 +127,7 @@ export default function Scheduling() {
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentDate((d) => new Date(d.getTime() - 86400000))}
-              >
+               aria-label={t("scheduling.previousDay")}>
                 <ChevronLeft size={16} />
               </Button>
               <div className="text-sm font-medium text-foreground min-w-[9rem] text-center">
@@ -137,7 +137,7 @@ export default function Scheduling() {
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentDate((d) => new Date(d.getTime() + 86400000))}
-              >
+               aria-label={t("scheduling.nextDay")}>
                 <ChevronRight size={16} />
               </Button>
               <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>

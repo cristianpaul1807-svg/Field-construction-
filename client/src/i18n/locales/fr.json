@@ -956,7 +956,11 @@
     "notes": "Notes",
     "deleteConfirm": "Supprimer cet événement du calendrier ?",
     "pickProjectToAdd": "Choisissez un chantier ci-dessus pour ajouter un rendez-vous.",
-    "nothingToday": "Rien de prévu pour cette journée."
+    "nothingToday": "Rien de prévu pour cette journée.",
+    "previousDay": "Jour précédent",
+    "nextDay": "Jour suivant",
+    "previousWeek": "Semaine précédente",
+    "nextWeek": "Semaine suivante"
   },
   "checkIn": {
     "title": "Pointage (entrée / sortie)",

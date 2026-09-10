@@ -129,7 +129,7 @@ export function WorkerScheduleView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => new Date(d.getTime() - (view === "dia" ? 86400000 : 7 * 86400000)))}>
+          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => new Date(d.getTime() - (view === "dia" ? 86400000 : 7 * 86400000)))} aria-label={view === "dia" ? t("scheduling.previousDay") : t("scheduling.previousWeek")}>
             <ChevronLeft size={16} />
           </Button>
           <div className="text-sm font-medium text-foreground min-w-[8rem] text-center">
@@ -139,7 +139,7 @@ export function WorkerScheduleView() {
                   date: weekStart.toLocaleDateString(i18n.language, { day: "numeric", month: "short" }),
                 })}
           </div>
-          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => new Date(d.getTime() + (view === "dia" ? 86400000 : 7 * 86400000)))}>
+          <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => new Date(d.getTime() + (view === "dia" ? 86400000 : 7 * 86400000)))} aria-label={view === "dia" ? t("scheduling.nextDay") : t("scheduling.nextWeek")}>
             <ChevronRight size={16} />
           </Button>
         </div>
