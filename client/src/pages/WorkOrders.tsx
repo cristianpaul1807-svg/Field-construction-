@@ -13,6 +13,11 @@ import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
+// La misma lista que la agenda: una orden de trabajo y un trabajo asignado
+// son la misma cosa vista desde dos sitios, así que se clasifican igual.
+const SERVICE_TYPES = ["instalacion", "mantenimiento", "reparacion", "inspeccion", "otro"] as const;
+const SIN_ESPECIFICAR = "sin_especificar";
+
 const PRIORITIES = ["baja", "media", "alta"] as const;
 
 interface ProjectOption { id: string; name: string }
@@ -26,6 +31,7 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<string>("media");
   const [assignee, setAssignee] = useState("");
+  const [serviceType, setServiceType] = useState<string>(SIN_ESPECIFICAR);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +39,7 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
   const { data: employees } = useApi<AssigneeOption[]>(open ? "/api/employees" : null);
   const { data: subcontractors } = useApi<AssigneeOption[]>(open ? "/api/subcontractors" : null);
 
-  const reset = () => { setProjectId(""); setTitle(""); setDescription(""); setPriority("media"); setAssignee(""); setError(null); };
+  const reset = () => { setProjectId(""); setTitle(""); setDescription(""); setPriority("media"); setAssignee(""); setServiceType(SIN_ESPECIFICAR); setError(null); };
 
   const create = async () => {
     if (!projectId || !title.trim()) return;
@@ -52,6 +58,7 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
           priority,
           assignedEmployeeId: kind === "emp" ? id : undefined,
           assignedSubcontractorId: kind === "sub" ? id : undefined,
+          serviceType: serviceType === SIN_ESPECIFICAR ? null : serviceType,
         }),
       });
       const body = await res.json().catch(() => null);
@@ -106,6 +113,18 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
               </SelectContent>
             </Select>
           </div>
+          {/* Dicho aquí, el trabajador lo hereda al fichar esta orden en vez de
+              tener que contestarlo a pie de obra. Igual que en la agenda. */}
+          <div className="space-y-1.5">
+            <Label>{t("worker.serviceType")} ({t("common.optional")})</Label>
+            <Select value={serviceType} onValueChange={setServiceType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SIN_ESPECIFICAR}>{t("worker.serviceTypes.sin_especificar")}</SelectItem>
+                {SERVICE_TYPES.map((v) => <SelectItem key={v} value={v}>{t(`worker.serviceTypes.${v}`)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           {error && <p className="text-sm text-status-error-fg">{error}</p>}
           <Button className="w-full" onClick={create} disabled={!projectId || !title.trim() || saving}>
             {saving ? t("common.creating") : t("workOrders.createWorkOrder")}
@@ -122,6 +141,7 @@ interface WorkOrder {
   description: string;
   priority: (typeof PRIORITIES)[number];
   status: (typeof STATUSES)[number];
+  serviceType: string | null;
   projectName: string | null;
   assignedTo: string | null;
 }
@@ -185,6 +205,12 @@ export default function WorkOrders() {
                   <p className="text-sm text-muted-foreground mt-1">{order.description}</p>
                   <p className="text-xs text-muted-foreground mt-2">
                     {order.projectName} · {t("workOrders.assignedTo", { name: order.assignedTo ?? t("workOrders.unassigned") })}
+                    {" · "}
+                    <span className={order.serviceType ? undefined : "italic"}>
+                      {order.serviceType
+                        ? t(`worker.serviceTypes.${order.serviceType}`, { defaultValue: order.serviceType })
+                        : t("worker.serviceTypes.sin_especificar")}
+                    </span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">

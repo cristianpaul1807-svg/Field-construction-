@@ -5170,7 +5170,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("work_orders")
-      .select("id, title, description, priority, status, projects(name), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+      .select("id, title, description, priority, status, service_type, projects(name), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
       .eq("business_id", req.businessId!);
 
     if (error) throw error;
@@ -5182,6 +5182,7 @@ apiRouter.get(
         description: w.description,
         priority: w.priority,
         status: w.status,
+        serviceType: w.service_type ?? null,
         projectName: w.projects?.name ?? null,
         assignedTo: w.employees?.name ?? w.subcontractors?.name ?? null,
       }))
@@ -5192,7 +5193,7 @@ apiRouter.get(
 apiRouter.post(
   "/work-orders",
   route(async (req, res) => {
-    const { projectId, title, description, priority, assignedEmployeeId, assignedSubcontractorId } = req.body ?? {};
+    const { projectId, title, description, priority, assignedEmployeeId, assignedSubcontractorId, serviceType } = req.body ?? {};
     if (!projectId || !title?.trim()) {
       res.status(400).json({ error: "projectId and title are required" });
       return;
@@ -5218,6 +5219,8 @@ apiRouter.post(
         description: description?.trim() || null,
         priority: priority || "media",
         status: "pendiente",
+        // Qué clase de trabajo es, dicho al asignarlo: lo hereda quien fiche.
+        service_type: serviceType || null,
         assigned_employee_id: assignedEmployeeId || null,
         assigned_subcontractor_id: assignedSubcontractorId || null,
       })
