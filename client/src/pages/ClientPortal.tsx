@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { FileSignature, CreditCard, Image as ImageIcon, KeyRound, Search } from "lucide-react";
+import { FileSignature, CreditCard, Image as ImageIcon, KeyRound, Search, Check } from "lucide-react";
 import { AccessCode } from "@/components/AccessCode";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -87,7 +87,7 @@ export default function ClientPortal() {
       <Card className="p-4 space-y-3">
         <p className="text-sm font-medium text-foreground">{t("clientPortal.accessTitle")}</p>
 
-        {(clients?.length ?? 0) > 5 && (
+        {(clients?.length ?? 0) > 1 && (
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
@@ -101,37 +101,72 @@ export default function ClientPortal() {
         )}
 
         <div className="divide-y divide-border max-h-72 overflow-y-auto">
-          {visibles.map((c) => (
-            <div
-              key={c.id}
-              className={cn(
-                "py-2.5 first:pt-0 space-y-2",
-                c.id === clientId && "bg-secondary/40 -mx-4 px-4"
-              )}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <button
-                  onClick={() => setSelectedClientId(c.id)}
-                  className="text-sm text-left text-foreground hover:underline truncate min-w-0"
-                >
-                  {c.name}
-                </button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-1.5 flex-shrink-0"
-                  onClick={() => generateCode(c.id, c.name)}
-                  disabled={issuing === c.id}
-                >
-                  <KeyRound size={13} />
-                  {c.accessCode ? t("technicians.regenerateCode") : t("clientPortal.generateAccessCode")}
-                </Button>
+          {visibles.map((c) => {
+            const elegido = c.id === clientId;
+            return (
+              // La fila entera selecciona. No es un <button> porque dentro hay
+              // otro —generar el código— y un botón dentro de otro no es HTML
+              // válido: el navegador decide por su cuenta cuál se pulsa.
+              <div
+                key={c.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={elegido}
+                onClick={() => setSelectedClientId(c.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedClientId(c.id);
+                  }
+                }}
+                className={cn(
+                  "-mx-4 px-4 py-3 cursor-pointer transition-colors space-y-2",
+                  elegido ? "bg-secondary" : "hover:bg-secondary/50"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0",
+                      elegido ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                    )}
+                  >
+                    {c.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={cn("text-sm truncate", elegido ? "font-medium text-foreground" : "text-foreground")}>
+                      {c.name}
+                    </p>
+                    {!c.accessCode && (
+                      <p className="text-xs text-muted-foreground">{t("technicians.noAccessCode")}</p>
+                    )}
+                  </div>
+                  {elegido && <Check size={16} className="text-primary flex-shrink-0" />}
+                </div>
+
+                <div className="flex items-center justify-between gap-2 flex-wrap pl-11">
+                  {c.accessCode ? <AccessCode code={c.accessCode} /> : <span />}
+                  {/* Sólo este botón se aparta de la fila: generar un código no
+                      debe cambiar de quién es la vista previa. Todo lo demás,
+                      incluido el hueco de al lado, sigue seleccionando — si no,
+                      hay zonas de la fila que parecen pulsables y no lo son. */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 flex-shrink-0 ml-auto"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      generateCode(c.id, c.name);
+                    }}
+                    disabled={issuing === c.id}
+                  >
+                    <KeyRound size={13} />
+                    {c.accessCode ? t("technicians.regenerateCode") : t("clientPortal.generateAccessCode")}
+                  </Button>
+                </div>
               </div>
-              {c.accessCode
-                ? <AccessCode code={c.accessCode} />
-                : <span className="text-xs text-muted-foreground">{t("technicians.noAccessCode")}</span>}
-            </div>
-          ))}
+            );
+          })}
           {visibles.length === 0 && (
             <p className="text-sm text-muted-foreground py-6 text-center">
               {t("clientPortal.noMatches", { query: busqueda.trim() })}

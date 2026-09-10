@@ -397,7 +397,7 @@
     "pwaAccess": "Accès PWA",
     "generateCode": "Générer un code",
     "accessCodeFor": "Code d'accès pour {{name}}",
-    "accessCodeNote": "Partagez-le avec {{name}} pour qu'il se connecte sur /campo. Il ne sera plus affiché.",
+    "accessCodeNote": "Partagez-le avec {{name}} pour qu'il ouvre /campo. Il reste dans sa fiche : vous pourrez le recopier s'il le perd.",
     "createEmployee": "Créer l'employé",
     "createError": "Impossible de créer l'employé",
     "status": {
@@ -457,7 +457,7 @@
     "previewDisabled": "Aperçu — non interactif ici",
     "generateAccessCode": "Générer un code d'accès",
     "accessCodeFor": "Code d'accès pour {{name}}",
-    "accessCodeNote": "Partagez-le avec {{name}} pour qu'il accède au portail client. Ni courriel ni mot de passe requis, et il ne sera plus affiché.",
+    "accessCodeNote": "Partagez-le avec {{name}} pour qu'il ouvre le portail client. Ni courriel ni mot de passe. Il reste dans sa fiche : vous pourrez le recopier s'il le perd.",
     "downloadEstimate": "Télécharger la soumission",
     "acceptEstimate": "Accepter la soumission",
     "notSentYet": "Votre entrepreneur ne vous a pas encore envoyé cette soumission.",

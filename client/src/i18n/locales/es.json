@@ -397,7 +397,7 @@
     "pwaAccess": "Acceso PWA",
     "generateCode": "Generar código",
     "accessCodeFor": "Código de acceso para {{name}}",
-    "accessCodeNote": "Compártelo con {{name}} para que entre en /campo. No se volverá a mostrar.",
+    "accessCodeNote": "Compártelo con {{name}} para que entre en /campo. Queda guardado en su ficha, así que puedes volver a copiarlo cuando lo pierda.",
     "createEmployee": "Crear empleado",
     "createError": "No se pudo crear el empleado",
     "status": {
@@ -457,7 +457,7 @@
     "previewDisabled": "Vista previa — no interactivo aquí",
     "generateAccessCode": "Generar código de acceso",
     "accessCodeFor": "Código de acceso para {{name}}",
-    "accessCodeNote": "Compártelo con {{name}} para que entre en el portal del cliente. No necesita correo ni contraseña, y no se volverá a mostrar.",
+    "accessCodeNote": "Compártelo con {{name}} para que entre en el portal del cliente. No necesita correo ni contraseña. Queda guardado en su ficha, así que puedes volver a copiarlo cuando lo pierda.",
     "downloadEstimate": "Descargar presupuesto",
     "acceptEstimate": "Aceptar presupuesto",
     "notSentYet": "Tu contratista todavía no te ha enviado este presupuesto.",

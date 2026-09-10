@@ -397,7 +397,7 @@
     "pwaAccess": "Accesso PWA",
     "generateCode": "Genera codice",
     "accessCodeFor": "Codice di accesso per {{name}}",
-    "accessCodeNote": "Condividilo con {{name}} per farlo entrare su /campo. Non verrà più mostrato.",
+    "accessCodeNote": "Condividilo con {{name}} così entra in /campo. Resta nella sua scheda, così puoi ricopiarlo se lo perde.",
     "createEmployee": "Crea dipendente",
     "createError": "Impossibile creare il dipendente",
     "status": {
@@ -457,7 +457,7 @@
     "previewDisabled": "Anteprima — non interattivo qui",
     "generateAccessCode": "Genera codice di accesso",
     "accessCodeFor": "Codice di accesso per {{name}}",
-    "accessCodeNote": "Condividilo con {{name}} per farlo entrare nel portale cliente. Non servono email né password, e non verrà più mostrato.",
+    "accessCodeNote": "Condividilo con {{name}} così entra nel portale cliente. Niente email né password. Resta nella sua scheda, così puoi ricopiarlo se lo perde.",
     "downloadEstimate": "Scarica preventivo",
     "acceptEstimate": "Accetta preventivo",
     "notSentYet": "Il tuo appaltatore non ti ha ancora inviato questo preventivo.",

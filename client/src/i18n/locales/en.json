@@ -397,7 +397,7 @@
     "pwaAccess": "PWA access",
     "generateCode": "Generate code",
     "accessCodeFor": "Access code for {{name}}",
-    "accessCodeNote": "Share it with {{name}} so they can sign in at /campo. It won't be shown again.",
+    "accessCodeNote": "Share it with {{name}} so they can open /campo. It stays on their record, so you can copy it again whenever they lose it.",
     "createEmployee": "Create employee",
     "createError": "Could not create the employee",
     "status": {
@@ -457,7 +457,7 @@
     "previewDisabled": "Preview — not interactive here",
     "generateAccessCode": "Generate access code",
     "accessCodeFor": "Access code for {{name}}",
-    "accessCodeNote": "Share it with {{name}} so they can open the client portal. No email or password needed, and it won't be shown again.",
+    "accessCodeNote": "Share it with {{name}} so they can open the client portal. No email and no password needed. It stays on their record, so you can copy it again whenever they lose it.",
     "downloadEstimate": "Download estimate",
     "acceptEstimate": "Accept estimate",
     "notSentYet": "Your contractor hasn't sent you this estimate yet.",
