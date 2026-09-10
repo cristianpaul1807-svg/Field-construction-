@@ -57,7 +57,9 @@
     "selectProjectHere": "Scegli di quale vuoi vedere queste informazioni.",
     "noProjectsYet": "Non hai ancora cantieri",
     "noProjectsYetHint": "Questa schermata si riempie appena ne hai uno. Si creano accettando un preventivo, o a mano.",
-    "goToProjects": "Vai a Progetti"
+    "goToProjects": "Vai a Progetti",
+    "actions": "Azioni",
+    "deleteError": "Impossibile eliminare"
   },
   "nav": {
     "home": "HOME",
@@ -403,7 +405,12 @@
       "descanso": "Riposo"
     },
     "hourlyRate": "Tariffa oraria (opzionale)",
-    "hourlyRateHint": "Solo nel pannello. I lavoratori non vedono mai le tariffe, né la propria né quella altrui."
+    "hourlyRateHint": "Solo nel pannello. I lavoratori non vedono mai le tariffe, né la propria né quella altrui.",
+    "editEmployee": "Modifica dipendente",
+    "deleteEmployee": "Elimina dipendente",
+    "deleteEmployeeConfirm": "Rimuovere {{name}} dalla squadra? Non si può annullare.",
+    "cannotDeleteHistory": "{{name}} non si può eliminare: ha {{entries}} timbrature e {{payrolls}} buste paga. Quelle ore e quei pagamenti sono la prova di ciò che ha lavorato e di quanto ha ricevuto, ed eliminarli lascerebbe la contabilità senza giustificativi. Metti il suo stato su Riposo così smette di risultare disponibile.",
+    "noEmployees": "Ancora nessuno nella squadra."
   },
   "subcontractors": {
     "title": "Subappaltatori",

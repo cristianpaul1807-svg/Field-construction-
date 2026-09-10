@@ -57,7 +57,9 @@
     "selectProjectHere": "Pick which one you want to see this for.",
     "noProjectsYet": "You don't have any projects yet",
     "noProjectsYetHint": "This screen fills up as soon as you have one. They're created when an estimate is accepted, or by hand.",
-    "goToProjects": "Go to Projects"
+    "goToProjects": "Go to Projects",
+    "actions": "Actions",
+    "deleteError": "Could not delete"
   },
   "nav": {
     "home": "HOME",
@@ -403,7 +405,12 @@
       "descanso": "Off"
     },
     "hourlyRate": "Hourly rate (optional)",
-    "hourlyRateHint": "Panel only. Workers never see rates — not theirs, not anyone's."
+    "hourlyRateHint": "Panel only. Workers never see rates — not theirs, not anyone's.",
+    "editEmployee": "Edit employee",
+    "deleteEmployee": "Delete employee",
+    "deleteEmployeeConfirm": "Remove {{name}} from the team? This cannot be undone.",
+    "cannotDeleteHistory": "{{name}} can't be deleted: they have {{entries}} time entries and {{payrolls}} payroll runs. Those hours and payments are the record of what they worked and what they were paid, and deleting them would leave your books unsupported. Set their status to On leave so they stop showing as available.",
+    "noEmployees": "Nobody on the team yet."
   },
   "subcontractors": {
     "title": "Subcontractors",

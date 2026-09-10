@@ -57,7 +57,9 @@
     "selectProjectHere": "Elige de cuál quieres ver esta información.",
     "noProjectsYet": "Todavía no tienes obras",
     "noProjectsYetHint": "Esta pantalla se llena en cuanto tengas una. Se crean al aceptar un presupuesto, o a mano.",
-    "goToProjects": "Ir a Proyectos"
+    "goToProjects": "Ir a Proyectos",
+    "actions": "Acciones",
+    "deleteError": "No se pudo eliminar"
   },
   "nav": {
     "home": "INICIO",
@@ -403,7 +405,12 @@
       "descanso": "Descanso"
     },
     "hourlyRate": "Tarifa por hora (opcional)",
-    "hourlyRateHint": "Solo la ve el panel. El trabajador nunca ve tarifas, ni la suya ni la de nadie."
+    "hourlyRateHint": "Solo la ve el panel. El trabajador nunca ve tarifas, ni la suya ni la de nadie.",
+    "editEmployee": "Editar empleado",
+    "deleteEmployee": "Eliminar empleado",
+    "deleteEmployeeConfirm": "¿Eliminar a {{name}} del equipo? No se puede deshacer.",
+    "cannotDeleteHistory": "{{name}} no se puede eliminar: tiene {{entries}} fichajes y {{payrolls}} nóminas. Esas horas y esos pagos son la prueba de lo que trabajó y de lo que se le pagó, y borrarlas dejaría tu contabilidad sin respaldo. Cámbiale el estado a Descanso para que deje de aparecer como disponible.",
+    "noEmployees": "Todavía no hay nadie en el equipo."
   },
   "subcontractors": {
     "title": "Subcontratistas",

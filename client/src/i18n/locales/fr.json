@@ -57,7 +57,9 @@
     "selectProjectHere": "Choisissez celui dont vous voulez voir ces informations.",
     "noProjectsYet": "Vous n'avez pas encore de chantier",
     "noProjectsYetHint": "Cet écran se remplit dès que vous en avez un. Ils se créent en acceptant une soumission, ou à la main.",
-    "goToProjects": "Aller aux Chantiers"
+    "goToProjects": "Aller aux Chantiers",
+    "actions": "Actions",
+    "deleteError": "Suppression impossible"
   },
   "nav": {
     "home": "ACCUEIL",
@@ -403,7 +405,12 @@
       "descanso": "Congé"
     },
     "hourlyRate": "Taux horaire (optionnel)",
-    "hourlyRateHint": "Panneau seulement. Les travailleurs ne voient jamais les taux, ni le leur ni celui des autres."
+    "hourlyRateHint": "Panneau seulement. Les travailleurs ne voient jamais les taux, ni le leur ni celui des autres.",
+    "editEmployee": "Modifier l'employé",
+    "deleteEmployee": "Supprimer l'employé",
+    "deleteEmployeeConfirm": "Retirer {{name}} de l'équipe ? Cette action est irréversible.",
+    "cannotDeleteHistory": "Impossible de supprimer {{name}} : cette personne a {{entries}} pointages et {{payrolls}} paies. Ces heures et ces paiements sont la preuve de ce qu'elle a travaillé et de ce qu'elle a reçu, et les effacer laisserait votre comptabilité sans pièce justificative. Mettez son statut à Repos pour qu'elle cesse d'apparaître comme disponible.",
+    "noEmployees": "Personne dans l'équipe pour l'instant."
   },
   "subcontractors": {
     "title": "Sous-traitants",

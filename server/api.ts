@@ -7782,6 +7782,70 @@ apiRouter.patch(
   })
 );
 
+/**
+ * Borrar a alguien del equipo.
+ *
+ * Con una condición que no se negocia: si esa persona tiene horas fichadas o
+ * nóminas emitidas, no se borra. Esas filas son la prueba de lo que trabajó y
+ * de lo que se le pagó — en Quebec hay que poder enseñarlas años después—, y
+ * un borrado en cascada las llevaría por delante sin que nadie se enterase
+ * hasta que hiciera falta.
+ *
+ * Lo que sí se limpia es lo que mira hacia adelante: sus citas de agenda y sus
+ * órdenes se quedan sin asignar, y sus asignaciones y rastros de GPS se van.
+ * Nada de eso es prueba de nada.
+ */
+apiRouter.delete(
+  "/employees/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const id = req.params.id;
+
+    const { data: empleado } = await supabase
+      .from("employees")
+      .select("id, name")
+      .eq("business_id", req.businessId!)
+      .eq("id", id)
+      .maybeSingle();
+    if (!empleado) {
+      res.status(404).json({ error: "employee not found" });
+      return;
+    }
+
+    const [fichajes, nominas] = await Promise.all([
+      supabase.from("time_entries").select("id", { count: "exact", head: true })
+        .eq("business_id", req.businessId!).eq("employee_id", id),
+      supabase.from("payroll_runs").select("id", { count: "exact", head: true })
+        .eq("business_id", req.businessId!).eq("employee_id", id),
+    ]);
+    const horas = fichajes.count ?? 0;
+    const pagas = nominas.count ?? 0;
+    if (horas > 0 || pagas > 0) {
+      res.status(409).json({
+        error: "employee has history",
+        code: "employee_has_history",
+        entries: horas,
+        payrolls: pagas,
+      });
+      return;
+    }
+
+    await supabase.from("schedule_events").update({ assigned_employee_id: null })
+      .eq("business_id", req.businessId!).eq("assigned_employee_id", id);
+    await supabase.from("work_orders").update({ assigned_employee_id: null })
+      .eq("business_id", req.businessId!).eq("assigned_employee_id", id);
+    await supabase.from("assignments").delete()
+      .eq("business_id", req.businessId!).eq("employee_id", id);
+    await supabase.from("gps_pings").delete()
+      .eq("business_id", req.businessId!).eq("employee_id", id);
+
+    const { error } = await supabase.from("employees").delete()
+      .eq("business_id", req.businessId!).eq("id", id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 apiRouter.patch(
   "/subcontractors/:id",
   route(async (req, res) => {
