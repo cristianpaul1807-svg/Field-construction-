@@ -59,7 +59,8 @@
     "noProjectsYetHint": "This screen fills up as soon as you have one. They're created when an estimate is accepted, or by hand.",
     "goToProjects": "Go to Projects",
     "actions": "Actions",
-    "deleteError": "Could not delete"
+    "deleteError": "Could not delete",
+    "lessThanAMinute": "less than 1 min"
   },
   "nav": {
     "home": "HOME",

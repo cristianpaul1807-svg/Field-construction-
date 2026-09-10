@@ -11,6 +11,7 @@ import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
+import { duracionDeTurno } from "@/lib/duracion";
 
 interface TimeEntry {
   id: string;
@@ -61,16 +62,12 @@ export default function CheckIn() {
   const time = (iso: string | null) =>
     iso ? new Date(iso).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" }) : null;
 
-  // Approving hours is a payroll decision, so the duration has to be on
-  // screen — reading it off two timestamps is the manager's job otherwise.
-  const duration = (entry: TimeEntry) => {
-    if (!entry.checkOutTime) return null;
-    const minutes = Math.round(
-      (new Date(entry.checkOutTime).getTime() - new Date(entry.checkInTime).getTime()) / 60000
-    );
-    if (minutes <= 0) return null;
-    return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")}`;
-  };
+  // Aprobar horas es una decisión de nómina, así que la duración tiene que
+  // estar en pantalla — si no, el encargado la calcula de cabeza a partir de
+  // dos marcas. Se cuenta en el mismo sitio que el mapa para que las dos
+  // pantallas no digan cosas distintas del mismo turno.
+  const duration = (entry: TimeEntry) =>
+    entry.checkOutTime ? duracionDeTurno(entry.checkInTime, entry.checkOutTime, t) : null;
 
   const approve = async (id: string) => {
     setLocallyApproved((prev) => new Set(prev).add(id));

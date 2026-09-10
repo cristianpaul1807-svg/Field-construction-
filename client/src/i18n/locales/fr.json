@@ -59,7 +59,8 @@
     "noProjectsYetHint": "Cet écran se remplit dès que vous en avez un. Ils se créent en acceptant une soumission, ou à la main.",
     "goToProjects": "Aller aux Chantiers",
     "actions": "Actions",
-    "deleteError": "Suppression impossible"
+    "deleteError": "Suppression impossible",
+    "lessThanAMinute": "moins d'une minute"
   },
   "nav": {
     "home": "ACCUEIL",

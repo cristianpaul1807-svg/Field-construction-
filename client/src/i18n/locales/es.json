@@ -59,7 +59,8 @@
     "noProjectsYetHint": "Esta pantalla se llena en cuanto tengas una. Se crean al aceptar un presupuesto, o a mano.",
     "goToProjects": "Ir a Proyectos",
     "actions": "Acciones",
-    "deleteError": "No se pudo eliminar"
+    "deleteError": "No se pudo eliminar",
+    "lessThanAMinute": "menos de 1 min"
   },
   "nav": {
     "home": "INICIO",

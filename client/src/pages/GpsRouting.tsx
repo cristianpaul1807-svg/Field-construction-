@@ -7,6 +7,7 @@ import { TileMap, type MapPoint } from "@/components/TileMap";
 import { History, MapPin } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { duracionDeTurno } from "@/lib/duracion";
 import { useTranslation } from "react-i18next";
 
 interface ActiveWorker {
@@ -43,14 +44,6 @@ interface CheckInLocation {
 
 /** hh:mm since the check-in, recomputed on render — good enough for a panel
  *  somebody glances at, and one less timer running all day. */
-function elapsed(fromIso: string, toIso: string | null) {
-  const ms = (toIso ? new Date(toIso).getTime() : Date.now()) - new Date(fromIso).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return "0:00";
-  const hours = Math.floor(ms / 3_600_000);
-  const minutes = Math.floor((ms % 3_600_000) / 60_000);
-  return `${hours}:${String(minutes).padStart(2, "0")}`;
-}
-
 interface GpsResponse {
   workers: ActiveWorker[];
   locations: CheckInLocation[];
@@ -209,7 +202,7 @@ export default function GpsRouting() {
                 <div>
                   <p className="text-xs text-muted-foreground">{t("gps.elapsed")}</p>
                   <p className="text-lg font-semibold text-foreground tabular-nums">
-                    {elapsed(selected.checkInTime, selected.checkOutTime)}
+                    {duracionDeTurno(selected.checkInTime, selected.checkOutTime, t) ?? "—"}
                   </p>
                 </div>
                 <div>

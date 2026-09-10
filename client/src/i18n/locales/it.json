@@ -59,7 +59,8 @@
     "noProjectsYetHint": "Questa schermata si riempie appena ne hai uno. Si creano accettando un preventivo, o a mano.",
     "goToProjects": "Vai a Progetti",
     "actions": "Azioni",
-    "deleteError": "Impossibile eliminare"
+    "deleteError": "Impossibile eliminare",
+    "lessThanAMinute": "meno di 1 min"
   },
   "nav": {
     "home": "HOME",
