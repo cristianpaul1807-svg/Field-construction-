@@ -193,10 +193,17 @@ export default function Projects() {
                   {/* "$154.500,00 / $195.273,20" no dice qué es cada número, y
                       una obra sin presupuesto enseñaba "$0,00 / $0,00", que no
                       es información sino ruido. */}
+                  {/* Dos cifras sueltas no dicen que sean sin impuestos, y
+                      alguien puede leer el contrato como lo que se factura.
+                      El impuesto se cobra aparte y encima, y eso hay que verlo
+                      escrito para no dudarlo. */}
                   <span className="text-muted-foreground">
                     {project.budgetTotal > 0
                       ? `${formatCurrency(project.budgetUsed)} / ${formatCurrency(project.budgetTotal)}`
                       : t("projects.spentOfContract", { spent: formatCurrency(project.budgetUsed) })}
+                    {project.budgetTotal > 0 && (
+                      <span className="block text-[11px] opacity-70">{t("budgets.beforeTax")}</span>
+                    )}
                   </span>
                   <div className="flex -space-x-2">
                     {project.team.slice(0, 3).map((member) => (
