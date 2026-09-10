@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { HardHat, LogIn, UserRound, ArrowRight, Building2, KeyRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Logo } from "@/components/Logo";
 import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -51,11 +52,7 @@ export default function Landing() {
         <div className="w-full max-w-md space-y-3.5">
           {/* Header & Logo */}
           <div className="text-center space-y-1">
-            <img
-              src="/icons/apple-touch-icon.png"
-              alt="Field Construction Logo"
-              className="w-12 h-12 mx-auto rounded-xl shadow-md border border-border/50 object-cover"
-            />
+            <Logo size={48} className="mx-auto shadow-md" />
             <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-none pt-1">
               {t("landing.hubName")}
             </h1>

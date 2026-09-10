@@ -13,6 +13,7 @@ import { WorkerClock } from "@/components/WorkerClock";
 import { WorkerChat } from "@/components/WorkerChat";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { Logo } from "@/components/Logo";
 
 function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) => void }) {
   const { t } = useTranslation();
@@ -52,7 +53,7 @@ function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) 
         </Link>
 
         <div className="text-center space-y-2">
-          <HardHat className="mx-auto text-foreground" size={28} strokeWidth={1.5} />
+          <Logo size={44} className="mx-auto" />
           <h1 className="text-xl font-semibold text-foreground">{t("worker.accessTitle")}</h1>
           <p className="text-sm text-muted-foreground">
             {t("worker.accessDescription")}
