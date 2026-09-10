@@ -995,7 +995,9 @@
     "noEntries": "Aucun pointage enregistré pour l'instant.",
     "stillOnSite": "Encore sur le chantier",
     "openInMap": "Ouvrir dans l'application Plans",
-    "noLocation": "Sans position"
+    "noLocation": "Sans position",
+    "searchPlaceholder": "Chercher par travailleur, chantier ou tâche…",
+    "noMatches": "Aucun pointage ne correspond à « {{query}} »."
   },
   "gps": {
     "title": "GPS et itinéraires",

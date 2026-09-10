@@ -995,7 +995,9 @@
     "noEntries": "No time entries recorded yet.",
     "stillOnSite": "Still on site",
     "openInMap": "Open in the maps app",
-    "noLocation": "No location"
+    "noLocation": "No location",
+    "searchPlaceholder": "Search by worker, project or job…",
+    "noMatches": "No time entries match “{{query}}”."
   },
   "gps": {
     "title": "GPS & Routing",

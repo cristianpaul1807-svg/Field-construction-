@@ -995,7 +995,9 @@
     "noEntries": "Nessuna timbratura registrata finora.",
     "stillOnSite": "Ancora in cantiere",
     "openInMap": "Apri nell'app mappe",
-    "noLocation": "Senza posizione"
+    "noLocation": "Senza posizione",
+    "searchPlaceholder": "Cerca per lavoratore, cantiere o lavoro…",
+    "noMatches": "Nessuna timbratura corrisponde a «{{query}}»."
   },
   "gps": {
     "title": "GPS e percorsi",

@@ -995,7 +995,9 @@
     "noEntries": "Todavía no hay fichajes registrados.",
     "stillOnSite": "Sigue en la obra",
     "openInMap": "Abrir en la aplicación de mapas",
-    "noLocation": "Sin ubicación"
+    "noLocation": "Sin ubicación",
+    "searchPlaceholder": "Buscar por trabajador, obra o trabajo…",
+    "noMatches": "Ningún fichaje coincide con «{{query}}»."
   },
   "gps": {
     "title": "GPS y rutas",

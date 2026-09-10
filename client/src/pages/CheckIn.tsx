@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { MapPin, Check, Clock } from "lucide-react";
+import { MapPin, Check, Clock, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
@@ -58,6 +59,23 @@ export default function CheckIn() {
   const { t, i18n } = useTranslation();
   const { data: entries, loading, error } = useApi<TimeEntry[]>("/api/time-entries");
   const [locallyApproved, setLocallyApproved] = useState<Set<string>>(new Set());
+  const [busqueda, setBusqueda] = useState("");
+
+  // Sin acentos y sin mayúsculas: en Quebec media plantilla se llama Étienne o
+  // Gagné, y quien busca escribe "etienne" con el teclado que tenga a mano.
+  // U+0300–U+036F son las marcas que NFD separa de la letra. Se usa el rango y
+  // no \p{Diacritic} porque esa forma pide un objetivo de compilación más nuevo
+  // del que tiene el proyecto.
+  const sinAcentos = (v: string) =>
+    v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  // Se busca por persona, por obra y por trabajo: quien revisa horas llega con
+  // una de las tres en la cabeza, no siempre con el nombre.
+  const aguja = sinAcentos(busqueda.trim());
+  const visibles = (entries ?? []).filter((e) =>
+    !aguja ||
+    sinAcentos([e.workerName, e.projectName, e.jobTitle].filter(Boolean).join(" ")).includes(aguja)
+  );
 
   const time = (iso: string | null) =>
     iso ? new Date(iso).toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" }) : null;
@@ -100,7 +118,21 @@ export default function CheckIn() {
           <WorkerPerformancePanel />
         </TabsContent>
 
-        <TabsContent value="entries" className="mt-4">
+        <TabsContent value="entries" className="mt-4 space-y-4">
+      {/* Con una cuadrilla de seis la lista ya no se recorre a ojo. */}
+      {(entries?.length ?? 0) > 0 && (
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder={t("checkIn.searchPlaceholder")}
+            className="pl-9"
+            aria-label={t("checkIn.searchPlaceholder")}
+          />
+        </div>
+      )}
+
       <Card className="p-6">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
@@ -113,9 +145,15 @@ export default function CheckIn() {
           </div>
         )}
 
+        {!loading && !error && aguja && visibles.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            {t("checkIn.noMatches", { query: busqueda.trim() })}
+          </p>
+        )}
+
         {!loading && !error && (
           <div className="space-y-3">
-            {entries?.map((entry) => {
+            {visibles.map((entry) => {
               const isApproved = entry.approved || locallyApproved.has(entry.id);
               return (
                 <div key={entry.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-border last:border-0">
