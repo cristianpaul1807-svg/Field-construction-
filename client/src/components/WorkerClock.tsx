@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Clock, MapPin, RefreshCw, Calendar, CheckCircle2, History } from "lucide-react";
 import { workerApiFetch } from "@/lib/workerSession";
@@ -12,13 +12,16 @@ interface ActiveEntry {
   projectId: string;
   projectName: string | null;
   checkInTime: string;
-  billable: boolean;
   serviceType: string | null;
 }
 
 interface Project {
   id: string;
   name: string;
+  /** Si le toca hoy según la agenda. */
+  hoy?: boolean;
+  /** El título del trabajo de hoy, cuando lo hay. */
+  tarea?: string | null;
 }
 
 interface TimeHistoryEntry {
@@ -33,12 +36,15 @@ interface TimeHistoryEntry {
   checkInLng: number | null;
   checkOutLat: number | null;
   checkOutLng: number | null;
-  billable: boolean;
   serviceType: string | null;
   overtime: boolean;
 }
 
 const SERVICE_TYPES = ["instalacion", "mantenimiento", "reparacion", "inspeccion", "otro"] as const;
+
+/** Radix no admite un SelectItem con valor vacío, así que "no lo he dicho"
+ *  necesita un valor propio en la pantalla. A la base sigue yendo nulo. */
+const SIN_ESPECIFICAR = "sin_especificar";
 
 function formatHours(ms: number) {
   const hours = ms / 3_600_000;
@@ -69,7 +75,6 @@ export function WorkerClock() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [history, setHistory] = useState<TimeHistoryEntry[]>([]);
   const [projectId, setProjectId] = useState("");
-  const [billable, setBillable] = useState(true);
   const [serviceType, setServiceType] = useState("");
   const [switching, setSwitching] = useState(false);
   const [nowMs, setNowMs] = useState<number>(Date.now());
@@ -89,6 +94,12 @@ export function WorkerClock() {
   };
 
   useEffect(load, []);
+
+  const hoy = projects.filter((p) => p.hoy);
+  const otras = projects.filter((p) => !p.hoy);
+
+  /** Lo que se guarda: nulo cuando no lo ha dicho. */
+  const tipoElegido = () => (serviceType && serviceType !== SIN_ESPECIFICAR ? serviceType : null);
 
   // Update current clock time every minute for continuous calculation
   useEffect(() => {
@@ -118,7 +129,7 @@ export function WorkerClock() {
       await workerApiFetch("/api/worker/time-entries/check-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, billable, serviceType: serviceType || null, ...loc }),
+        body: JSON.stringify({ projectId, serviceType: tipoElegido(), ...loc }),
       });
       load();
     });
@@ -142,8 +153,7 @@ export function WorkerClock() {
         body: JSON.stringify({
           activeEntryId: active!.id,
           projectId,
-          billable,
-          serviceType: serviceType || null,
+          serviceType: tipoElegido(),
           ...loc,
         }),
       });
@@ -289,39 +299,59 @@ export function WorkerClock() {
                   <SelectValue placeholder={t("worker.selectProject")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
+                  {/* Lo de hoy arriba y con su título: el trabajador reconoce
+                      "Instalar cableado planta 3" antes que el nombre de la
+                      obra, y es lo que va a pulsar casi siempre. Las demás
+                      siguen debajo porque hay negocios que no usan la agenda,
+                      y filtrar por hoy a secas los dejaría sin fichar. */}
+                  {hoy.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>{t("worker.todaysJobs")}</SelectLabel>
+                      {hoy.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.tarea ? `${p.tarea} · ${p.name}` : p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
+                  {otras.length > 0 && (
+                    <SelectGroup>
+                      {hoy.length > 0 && <SelectLabel>{t("worker.otherProjects")}</SelectLabel>}
+                      {otras.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
                 </SelectContent>
               </Select>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t("worker.billable")}</Label>
-              <Select value={billable ? "si" : "no"} onValueChange={(v) => setBillable(v === "si")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="si">{t("common.yes")}</SelectItem>
-                  <SelectItem value="no">{t("common.no")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t("worker.serviceType")}</Label>
-              <Select value={serviceType} onValueChange={setServiceType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("worker.selectPlaceholder")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {SERVICE_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>{t(`worker.serviceTypes.${type}`)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
+          {/* "Facturable" se lo preguntábamos al obrero y no lo leía nadie:
+              ni la nómina, ni los costes, ni las facturas. Decidir si una hora
+              se cobra es de la oficina, y la columna sigue ahí con su valor
+              por defecto para cuando el panel sepa usarla.
+
+              El tipo de servicio se queda, y sin obligar: nace sin elegir, y
+              si el trabajador no lo toca el fichaje entra igual y en el panel
+              se ve "sin especificar". Así se sabe que trabajó y que no dijo
+              qué hizo, en vez de bloquearle el fichaje a pie de obra. */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">
+              {t("worker.serviceType")}{" "}
+              <span className="font-normal text-muted-foreground">{t("worker.optional")}</span>
+            </Label>
+            <Select value={serviceType || SIN_ESPECIFICAR} onValueChange={setServiceType}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SIN_ESPECIFICAR}>{t("worker.serviceTypes.sin_especificar")}</SelectItem>
+                {SERVICE_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>{t(`worker.serviceTypes.${type}`)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {switching ? (

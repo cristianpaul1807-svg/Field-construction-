@@ -1247,7 +1247,14 @@ apiRouter.get(
     // calendar, or a work order. Reading only `assignments` meant a project
     // created by accepting an estimate — which schedules work but writes no
     // assignment — was invisible to the very people scheduled on it.
-    const [assignments, events, orders] = await Promise.all([
+    // El día del trabajador, en su huso y no en UTC: quien ficha a las 6 de la
+    // mañana en Montreal ya va por el día siguiente si esto se calcula en UTC,
+    // y no vería ninguno de sus trabajos.
+    const ahora = new Date();
+    const desde = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()).toISOString();
+    const hasta = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1).toISOString();
+
+    const [assignments, events, orders, hoyEnAgenda] = await Promise.all([
       admin
         .from("assignments")
         .select("projects(id, name, status)")
@@ -1263,22 +1270,44 @@ apiRouter.get(
         .select("projects(id, name, status)")
         .eq("business_id", req.workerBusinessId!)
         .eq(assignedColumn, req.workerId!),
+      // Lo que le toca hoy, con su título: es lo que el trabajador reconoce
+      // ("Instalar cableado planta 3"), no el nombre de la obra a secas.
+      admin
+        .from("schedule_events")
+        .select("title, start_time, projects(id, name, status)")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(assignedColumn, req.workerId!)
+        .gte("start_time", desde)
+        .lt("start_time", hasta)
+        .order("start_time"),
     ]);
     if (assignments.error) throw assignments.error;
     if (events.error) throw events.error;
     if (orders.error) throw orders.error;
+    if (hoyEnAgenda.error) throw hoyEnAgenda.error;
 
     // Finished and paused jobs come off the clock-in list. A worker scrolling
     // past last spring's kitchen to find today's site is how hours end up
     // booked to the wrong project, and those hours become an invoice.
     const CLOCKABLE = new Set(["planificacion", "en_progreso", "confirmado"]);
 
+    // Lo de hoy va primero y marcado, que es lo que el trabajador va a pulsar
+    // el 95 % de las veces. El resto sigue estando: filtrar por hoy a secas
+    // dejaría sin fichar a quien tiene obra asignada pero nadie le puso cita
+    // en la agenda, que es la mitad de los negocios pequeños.
     const seen = new Set<string>();
-    const projects = [];
+    const projects: { id: string; name: string; hoy: boolean; tarea: string | null }[] = [];
+
+    for (const row of hoyEnAgenda.data as any[]) {
+      if (row.projects && !seen.has(row.projects.id) && CLOCKABLE.has(row.projects.status)) {
+        seen.add(row.projects.id);
+        projects.push({ id: row.projects.id, name: row.projects.name, hoy: true, tarea: row.title ?? null });
+      }
+    }
     for (const row of [...(assignments.data as any[]), ...(events.data as any[]), ...(orders.data as any[])]) {
       if (row.projects && !seen.has(row.projects.id) && CLOCKABLE.has(row.projects.status)) {
         seen.add(row.projects.id);
-        projects.push({ id: row.projects.id, name: row.projects.name });
+        projects.push({ id: row.projects.id, name: row.projects.name, hoy: false, tarea: null });
       }
     }
     res.json(projects);
@@ -4982,7 +5011,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_location, check_out_time, approved, projects(name), employees(name), subcontractors(name)"
+        "id, check_in_time, check_in_location, check_out_time, approved, service_type, projects(name), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
@@ -4997,6 +5026,9 @@ apiRouter.get(
         checkInTime: t.check_in_time,
         checkInLocation: t.check_in_location,
         checkOutTime: t.check_out_time,
+        // Sin esto la oficina no sabe qué se hizo en esas horas, que es justo
+        // lo que se le pide al trabajador que diga.
+        serviceType: t.service_type,
         approved: t.approved,
       }))
     );

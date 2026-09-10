@@ -478,13 +478,13 @@
       "mantenimiento": "Mantenimiento",
       "reparacion": "Reparación",
       "inspeccion": "Inspección",
-      "otro": "Otro"
+      "otro": "Otro",
+      "sin_especificar": "Sin especificar"
     },
     "noGeolocation": "Este dispositivo no soporta geolocalización",
     "locationNeeded": "Se necesita tu ubicación para registrar la entrada o la salida.",
     "locationError": "No se pudo obtener tu ubicación",
     "noActiveEntry": "Sin entrada activa",
-    "billable": "Facturable",
     "serviceType": "Tipo de servicio",
     "noProjects": "Sin proyectos todavía.",
     "selectProject": "Selecciona un proyecto",
@@ -506,7 +506,10 @@
     "finalizingShift": "Obteniendo GPS y cerrando turno...",
     "noProjectsAssigned": "Todavía no te han asignado ninguna obra. Avisa a la oficina para que te añadan y podrás fichar.",
     "forgottenShiftTitle": "Este turno quedó sin cerrar",
-    "forgottenShiftBody": "Fichaste la entrada el {{since}} y no hay salida. Ficha la salida ahora, o dile a la oficina qué hora era para que lo corrija. Hasta entonces no se cuentan horas."
+    "forgottenShiftBody": "Fichaste la entrada el {{since}} y no hay salida. Ficha la salida ahora, o dile a la oficina qué hora era para que lo corrija. Hasta entonces no se cuentan horas.",
+    "todaysJobs": "Hoy te toca",
+    "otherProjects": "Otras obras",
+    "optional": "(opcional)"
   },
   "publicChat": {
     "chatWithBusiness": "Chat con el negocio",

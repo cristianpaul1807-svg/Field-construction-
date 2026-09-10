@@ -478,13 +478,13 @@
       "mantenimiento": "Manutenzione",
       "reparacion": "Riparazione",
       "inspeccion": "Ispezione",
-      "otro": "Altro"
+      "otro": "Altro",
+      "sin_especificar": "Non specificato"
     },
     "noGeolocation": "Questo dispositivo non supporta la geolocalizzazione",
     "locationNeeded": "La tua posizione serve per timbrare entrata o uscita.",
     "locationError": "Impossibile ottenere la tua posizione",
     "noActiveEntry": "Nessuna timbratura attiva",
-    "billable": "Fatturabile",
     "serviceType": "Tipo di servizio",
     "noProjects": "Nessun progetto finora.",
     "selectProject": "Scegli un cantiere",
@@ -506,7 +506,10 @@
     "finalizingShift": "Rilevamento posizione GPS e chiusura...",
     "noProjectsAssigned": "Non ti è ancora stato assegnato nessun cantiere. Chiedi all'ufficio di aggiungerti e potrai timbrare.",
     "forgottenShiftTitle": "Questo turno è rimasto aperto",
-    "forgottenShiftBody": "Hai timbrato l'entrata il {{since}} e non c'è uscita. Timbra l'uscita adesso, oppure di' all'ufficio a che ora hai finito perché lo corregga. Fino ad allora non si contano ore."
+    "forgottenShiftBody": "Hai timbrato l'entrata il {{since}} e non c'è uscita. Timbra l'uscita adesso, oppure di' all'ufficio a che ora hai finito perché lo corregga. Fino ad allora non si contano ore.",
+    "todaysJobs": "Oggi tocca a te",
+    "otherProjects": "Altri cantieri",
+    "optional": "(facoltativo)"
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",

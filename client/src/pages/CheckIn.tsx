@@ -17,6 +17,8 @@ interface TimeEntry {
   checkInTime: string;
   checkInLocation: string | null;
   checkOutTime: string | null;
+  /** Nulo cuando el trabajador fichó sin decir qué hizo. */
+  serviceType: string | null;
   approved: boolean;
 }
 
@@ -95,7 +97,19 @@ export default function CheckIn() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">{entry.workerName}</p>
-                      <p className="text-xs text-muted-foreground">{entry.projectName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {entry.projectName}
+                        {/* Qué se hizo en esas horas. Cuando el trabajador no
+                            lo dijo se escribe, en vez de dejar el hueco: un
+                            hueco no se distingue de un dato que no se pidió, y
+                            aquí la diferencia importa para reclamárselo. */}
+                        {" · "}
+                        <span className={entry.serviceType ? undefined : "italic"}>
+                          {entry.serviceType
+                            ? t(`worker.serviceTypes.${entry.serviceType}`, { defaultValue: entry.serviceType })
+                            : t("worker.serviceTypes.sin_especificar")}
+                        </span>
+                      </p>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                         <MapPin size={11} /> {entry.checkInLocation ?? "—"}
                       </div>

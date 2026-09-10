@@ -478,13 +478,13 @@
       "mantenimiento": "Entretien",
       "reparacion": "Réparation",
       "inspeccion": "Inspection",
-      "otro": "Autre"
+      "otro": "Autre",
+      "sin_especificar": "Non précisé"
     },
     "noGeolocation": "Cet appareil ne prend pas en charge la géolocalisation",
     "locationNeeded": "Votre position est nécessaire pour pointer l'entrée ou la sortie.",
     "locationError": "Impossible d'obtenir votre position",
     "noActiveEntry": "Aucun pointage actif",
-    "billable": "Facturable",
     "serviceType": "Type de service",
     "noProjects": "Aucun projet pour l'instant.",
     "selectProject": "Choisis un chantier",
@@ -506,7 +506,10 @@
     "finalizingShift": "Obtention de la position GPS et fermeture...",
     "noProjectsAssigned": "Aucun chantier ne vous a encore été assigné. Demandez au bureau de vous ajouter et vous pourrez pointer.",
     "forgottenShiftTitle": "Ce quart n'a jamais été fermé",
-    "forgottenShiftBody": "Vous avez pointé l'arrivée le {{since}} et il n'y a pas de départ. Pointez le départ maintenant, ou dites au bureau à quelle heure vous avez fini pour qu'il corrige. Aucune heure n'est comptée d'ici là."
+    "forgottenShiftBody": "Vous avez pointé l'arrivée le {{since}} et il n'y a pas de départ. Pointez le départ maintenant, ou dites au bureau à quelle heure vous avez fini pour qu'il corrige. Aucune heure n'est comptée d'ici là.",
+    "todaysJobs": "Aujourd'hui",
+    "otherProjects": "Autres chantiers",
+    "optional": "(facultatif)"
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",
