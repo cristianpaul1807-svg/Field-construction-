@@ -27,7 +27,6 @@ import {
   Percent,
   UserCog,
   Smartphone,
-  Zap,
   Home,
   FolderKanban,
   HardHat,
@@ -131,7 +130,6 @@ const navSections: NavSection[] = [
       { id: "margins-rules", labelKey: "nav.margins", Icon: Percent, path: "/settings/margins" },
       { id: "users-roles", labelKey: "nav.users", Icon: UserCog, path: "/settings/users" },
       { id: "whatsapp-connection", labelKey: "nav.whatsapp", Icon: Smartphone, path: "/settings/whatsapp" },
-      { id: "automations", labelKey: "nav.automations", Icon: Zap, path: "/settings/automations" },
     ],
   },
 ];

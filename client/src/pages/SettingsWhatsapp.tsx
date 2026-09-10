@@ -1,38 +1,86 @@
 import { useState } from "react";
-import { Link } from "wouter";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { MessageCircle, Copy, Check, ArrowRight } from "lucide-react";
+import { MessageCircle, Copy, Check } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
-// This page used to offer a "Start Embedded Signup" button that did nothing:
-// a direct WhatsApp Business connection needs a verified Meta Business
-// Manager account and an approved app, neither of which this product can
-// create on the business's behalf. So instead of a button that can't work,
-// the page hands over the thing that does — the business's own public chat
-// link, which a customer reaches from a WhatsApp welcome message, a website,
-// an ad or a QR code, with no Meta approval and no per-message fee.
+/**
+ * WhatsApp, entero: el link público, el texto que lo lleva, dónde ponerlo y
+ * por qué la conexión directa con Meta no se puede hacer desde aquí.
+ *
+ * Esto eran dos pantallas —"Conexión WhatsApp" y "Automatizaciones"— que
+ * pedían los mismos datos al mismo sitio y enseñaban el mismo link con su
+ * mismo botón de copiar, cada una en un apartado del menú. Y la segunda no
+ * automatizaba nada: era ese link y un texto sugerido. Separadas obligaban a
+ * ir y volver para hacer una sola cosa, que es pegar el link en el mensaje de
+ * bienvenida de WhatsApp Business.
+ *
+ * El orden es el del trabajo: esto es lo que tienes, esto es lo que mandas,
+ * aquí lo pones, y esto es lo que haría falta para ir más allá.
+ *
+ * La conexión directa sigue explicada y sin botón: la API de WhatsApp Business
+ * exige que el negocio complete su propia verificación con Meta, y un botón
+ * que no puede funcionar es peor que no tenerlo.
+ */
+
+interface CompanyData {
+  name: string;
+  slug: string;
+}
+
+function CampoCopiable({ label, value }: { label: string; value: string }) {
+  const { t } = useTranslation();
+  const [copiado, setCopiado] = useState(false);
+
+  const copiar = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 1500);
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <div className="flex items-start gap-2">
+        <pre className="flex-1 min-w-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-lg border border-border bg-secondary/40 p-3 text-sm text-foreground font-sans">
+          {value}
+        </pre>
+        <Button variant="outline" size="icon" className="flex-shrink-0" onClick={copiar} aria-label={t("common.copy")}>
+          {copiado ? <Check size={16} /> : <Copy size={16} />}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsWhatsapp() {
   const { t } = useTranslation();
-  const { data, loading } = useApi<{ slug: string }>("/api/settings/company");
-  const [copied, setCopied] = useState(false);
+  const { data, loading, error } = useApi<CompanyData>("/api/settings/company");
+  const [copiado, setCopiado] = useState(false);
 
   const link = data?.slug ? `${window.location.origin}/c/${data.slug}` : "";
+  const bienvenida = data && link ? t("settings.suggestedWelcomeText", { business: data.name, link }) : "";
 
-  const copy = async () => {
+  const copiarLink = async () => {
     if (!link) return;
     await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
   };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
       <PageHeader title={t("settings.whatsappTitle")} description={t("settings.whatsappDescription")} />
+
+      {error && (
+        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
+          {t("common.loadError", { message: error })}
+        </div>
+      )}
 
       <Card className="p-6">
         <div className="flex items-start gap-4">
@@ -49,18 +97,36 @@ export default function SettingsWhatsapp() {
               </div>
             ) : link ? (
               <div className="flex flex-col sm:flex-row gap-2 mt-4 min-w-0">
-                <Input readOnly value={link} className="font-mono text-xs truncate break-all flex-1 min-w-0" onFocus={(e) => e.target.select()} />
-                <Button className="gap-2 flex-shrink-0" onClick={copy}>
-                  {copied ? <Check size={15} strokeWidth={1.75} /> : <Copy size={15} strokeWidth={1.75} />}
-                  {copied ? t("invoicing.copied") : t("common.copy")}
+                <Input
+                  readOnly
+                  value={link}
+                  aria-label={t("settings.yourLinkLabel")}
+                  className="font-mono text-xs truncate break-all flex-1 min-w-0"
+                  onFocus={(e) => e.target.select()}
+                />
+                <Button className="gap-2 flex-shrink-0" onClick={copiarLink}>
+                  {copiado ? <Check size={15} strokeWidth={1.75} /> : <Copy size={15} strokeWidth={1.75} />}
+                  {copiado ? t("invoicing.copied") : t("common.copy")}
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-status-warning-fg mt-4">{t("settings.noSlugYet")}</p>
+              !error && <p className="text-sm text-status-warning-fg mt-4">{t("settings.noSlugYet")}</p>
             )}
           </div>
         </div>
       </Card>
+
+      {/* El texto ya trae el link dentro, así que sin link no hay nada que
+          pegar y la tarjeta sobra en vez de salir a medias. */}
+      {!loading && bienvenida && (
+        <Card className="p-6 space-y-4">
+          <div>
+            <p className="font-medium text-foreground">{t("settings.suggestedWelcome")}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t("settings.pasteInWhatsapp")}</p>
+          </div>
+          <CampoCopiable label={t("settings.suggestedMessageLabel")} value={bienvenida} />
+        </Card>
+      )}
 
       <Card className="p-6">
         <h3 className="font-semibold text-foreground mb-3 text-sm">{t("settings.howToUseLink")}</h3>
@@ -69,11 +135,6 @@ export default function SettingsWhatsapp() {
           <li>{t("settings.howToUseStep2")}</li>
           <li>{t("settings.howToUseStep3")}</li>
         </ol>
-        <Link href="/settings/automations">
-          <Button variant="outline" size="sm" className="gap-2 mt-4">
-            {t("settings.openAutomations")} <ArrowRight size={14} strokeWidth={1.75} />
-          </Button>
-        </Link>
       </Card>
 
       <Card className="p-6">

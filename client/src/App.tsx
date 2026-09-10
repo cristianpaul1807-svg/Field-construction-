@@ -42,7 +42,6 @@ import SettingsPayments from "@/pages/SettingsPayments";
 import SettingsMargins from "@/pages/SettingsMargins";
 import SettingsUsers from "@/pages/SettingsUsers";
 import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
-import SettingsAutomations from "@/pages/SettingsAutomations";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -81,7 +80,10 @@ function BusinessPanel() {
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
         <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
-        <Route path={"/settings/automations"} component={SettingsAutomations} />
+        {/* Era una pantalla aparte que enseñaba el mismo link que la de
+            WhatsApp. Al fusionarlas, quien tuviera esto guardado o llegara
+            desde un enlace viejo aterrizaría en el 404. */}
+        <Route path={"/settings/automations"}>{() => <Redirect to="/settings/whatsapp" />}</Route>
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
