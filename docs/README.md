@@ -95,6 +95,7 @@ directamente al paso a paso.
 | Menú | Guía |
 |---|---|
 | Datos de la empresa | [funciones/configuracion.md](funciones/configuracion.md#datos-de-la-empresa) |
+| Tipos de trabajo | [funciones/control-de-trabajo.md](funciones/control-de-trabajo.md#por-dentro) |
 | Pagos (Stripe) | [funciones/pagos-stripe.md](funciones/pagos-stripe.md) |
 | *(dentro de Pagos)* Plan de pagos por etapas | [funciones/facturacion.md](funciones/facturacion.md#el-plan-de-pagos) |
 | Márgenes y reglas | [funciones/configuracion.md](funciones/configuracion.md#márgenes-y-reglas) |
