@@ -1447,7 +1447,12 @@
       "entrada": "Entrata",
       "salida": "Uscita",
       "aprobado": "Approvato"
-    }
+    },
+    "exportarCsv": "Foglio di calcolo (CSV)",
+    "exportarCsvHint": "Per lavorarci in Excel",
+    "exportarPdf": "PDF con intestazione",
+    "exportarPdfHint": "Con i dati dell'azienda, da consegnare o archiviare",
+    "errorPdf": "Non è stato possibile generare il PDF"
   },
   "scope": {
     "seeAll": "Vedi tutto",

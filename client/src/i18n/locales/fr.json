@@ -1447,7 +1447,12 @@
       "entrada": "Entrée",
       "salida": "Sortie",
       "aprobado": "Approuvé"
-    }
+    },
+    "exportarCsv": "Tableur (CSV)",
+    "exportarCsvHint": "Pour le travailler dans Excel",
+    "exportarPdf": "PDF à en-tête",
+    "exportarPdfHint": "Avec les coordonnées de l'entreprise, à remettre ou à classer",
+    "errorPdf": "Le PDF n'a pas pu être généré"
   },
   "scope": {
     "seeAll": "Tout voir",

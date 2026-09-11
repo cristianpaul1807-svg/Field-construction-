@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Search, ArrowUp, ArrowDown, Download, Columns3 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Search, ArrowUp, ArrowDown, Download, Columns3, FileSpreadsheet, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { apiFetch, serverMessage } from "@/lib/api";
+import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 
 /**
  * Qué clase de dato hay en la columna. Decide tres cosas a la vez: cómo se
@@ -37,6 +39,8 @@ interface Props<T> {
   alPulsar?: (fila: T) => void;
   /** Nombre del archivo al exportar, sin extensión. */
   nombreExport: string;
+  /** Cómo se llama esta tabla en el papel. */
+  titulo: string;
   vacio?: string;
 }
 
@@ -73,9 +77,13 @@ export function TablaDatos<T>({
   clave,
   alPulsar,
   nombreExport,
+  titulo,
   vacio,
 }: Props<T>) {
   const { t, i18n } = useTranslation();
+  const { selectedProject } = useSelectedProject();
+  const [exportando, setExportando] = useState(false);
+  const [errorExport, setErrorExport] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [orden, setOrden] = useState<{ id: string; desc: boolean } | null>(null);
   const [ocultas, setOcultas] = useState<Set<string>>(
@@ -163,13 +171,86 @@ export function TablaDatos<T>({
     // El BOM es lo que hace que Excel lea el archivo como UTF-8. Sin él,
     // "Gagné" se abre como "GagnÃ©" y el jefe cree que el dato está mal.
     const blob = new Blob(["\uFEFF" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    descargar(blob, `${nombreExport}-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
+  const descargar = (blob: Blob, nombre: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${nombreExport}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = nombre;
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  /**
+   * El PDF lo compone el servidor porque el membrete es suyo: nombre,
+   * logotipo, licencia RBQ y números fiscales salen del negocio de la sesión
+   * y no de lo que diga el navegador. De aquí sólo van la tabla y sus
+   * columnas, ya formateadas en el idioma de quien exporta.
+   */
+  const exportarPdf = async () => {
+    setExportando(true);
+    setErrorExport(null);
+    try {
+      const res = await apiFetch(`/api/export/pdf?lang=${i18n.language.slice(0, 2)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: titulo,
+          // De qué obra es lo que se está enseñando. Sin esto, dos informes
+          // del mismo día no se distinguen al archivarlos.
+          scope: selectedProject ? `${t("scope.label")} ${selectedProject.name}` : null,
+          columns: visibles.map((c) => ({ label: c.cabecera, align: alineaDerecha(c) ? "right" : "left" })),
+          rows: procesadas.map((f) => visibles.map((c) => textoDeCelda(c, f))),
+          totals: totales.size > 0 ? filaDeTotales() : null,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(serverMessage(await res.json().catch(() => null), t, t("tabla.errorPdf")));
+      }
+      descargar(await res.blob(), `${nombreExport}-${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (err) {
+      setErrorExport(err instanceof Error ? err.message : t("tabla.errorPdf"));
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  /**
+   * La celda como texto, tal y como se lee en pantalla.
+   *
+   * No es lo mismo que lo que va al CSV: ahí los números van en crudo para
+   * que Excel los sume, y aquí van con su moneda y sus horas en "8 h 30",
+   * porque un papel se lee, no se recalcula.
+   */
+  const textoDeCelda = (c: Columna<T>, f: T): string => {
+    const v = c.valor(f);
+    if (v === null || v === "") return "";
+    if (c.tipo === "dinero") return formatoDinero(Number(v), i18n.language);
+    if (c.tipo === "numero") return formatoNumero(Number(v), i18n.language);
+    if (c.tipo === "horas") return formatoHoras(Number(v));
+    if (c.tipo === "fecha") {
+      const d = new Date(String(v));
+      return Number.isNaN(d.getTime())
+        ? String(v)
+        : d.toLocaleDateString(i18n.language, { day: "numeric", month: "short", year: "2-digit" });
+    }
+    return String(v);
+  };
+
+  /** La misma fila de totales que se ve al pie, en texto. */
+  const filaDeTotales = (): string[] =>
+    visibles.map((c, i) => {
+      if (i === 0) return t("tabla.filas", { count: procesadas.length });
+      if (!totales.has(c.id)) return "";
+      const total = totales.get(c.id)!;
+      return c.tipo === "dinero"
+        ? formatoDinero(total, i18n.language)
+        : c.tipo === "horas"
+          ? formatoHoras(total)
+          : formatoNumero(total, i18n.language);
+    });
 
   const pintarCelda = (c: Columna<T>, f: T) => {
     if (c.pintar) return c.pintar(f);
@@ -232,10 +313,39 @@ export function TablaDatos<T>({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={exportar} disabled={procesadas.length === 0}>
-          <Download size={14} /> {t("tabla.exportar")}
-        </Button>
+        {/* Dos cosas distintas y por eso dos opciones: el CSV se abre en
+            Excel para trabajarlo, el PDF lleva el membrete de la empresa y
+            es lo que se entrega o se archiva. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5" disabled={procesadas.length === 0 || exportando}>
+              {exportando ? <Spinner className="size-3.5" /> : <Download size={14} />} {t("tabla.exportar")}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuItem onClick={exportar} className="gap-2">
+              <FileSpreadsheet size={15} className="flex-shrink-0 text-muted-foreground" />
+              <div>
+                <p className="text-sm">{t("tabla.exportarCsv")}</p>
+                <p className="text-xs text-muted-foreground">{t("tabla.exportarCsvHint")}</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportarPdf} className="gap-2">
+              <FileText size={15} className="flex-shrink-0 text-muted-foreground" />
+              <div>
+                <p className="text-sm">{t("tabla.exportarPdf")}</p>
+                <p className="text-xs text-muted-foreground">{t("tabla.exportarPdfHint")}</p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      {errorExport && (
+        <div className="rounded-lg border border-border bg-status-error-bg/40 p-3 text-sm text-status-error-fg">
+          {errorExport}
+        </div>
+      )}
 
       {cargando && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">

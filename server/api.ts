@@ -14,6 +14,7 @@ import {
 import {
   renderEstimatePdf,
   renderInvoicePdf,
+  renderReportPdf,
   renderPayrollPdf,
   documentNumber,
   normalizeDocLang,
@@ -8114,6 +8115,83 @@ apiRouter.get(
       return;
     }
     sendPdf(res, pdf, `${documentNumber("invoice", req.params.id)}.pdf`, req.query.download ? "attachment" : "inline");
+  })
+);
+
+/**
+ * Cualquier tabla del panel, en papel con el membrete de la empresa.
+ *
+ * Las tablas se exportaban a CSV, que vale para trabajarlas en Excel pero no
+ * para entregar ni archivar: un archivo con nombres y horas y ni una palabra
+ * de quién lo emite no es un documento. Esto es el mismo dato con el mismo
+ * membrete que llevan la factura y el presupuesto — nombre, logotipo,
+ * dirección, licencia RBQ y los números de TPS y TVQ.
+ *
+ * Las columnas y los valores vienen de la pantalla porque cada tabla tiene
+ * las suyas, el jefe elige cuáles enseña y el formato de cada cifra depende
+ * de su idioma. El membrete no viene de la pantalla: lo pone el servidor con
+ * el negocio de la sesión, así que el navegador no puede firmar un papel a
+ * nombre de otro.
+ */
+const MAX_FILAS_PDF = 5000;
+const MAX_COLUMNAS_PDF = 30;
+
+apiRouter.post(
+  "/export/pdf",
+  // Una tabla de mil líneas no cabe en los 100 kB que Express admite por
+  // defecto, y el navegador recibía un 413 sin explicación.
+  express.json({ limit: "8mb" }),
+  route(async (req, res) => {
+    const { title, columns, rows, totals, scope } = req.body ?? {};
+
+    if (typeof title !== "string" || !title.trim() || !Array.isArray(columns) || !Array.isArray(rows)) {
+      res.status(400).json({ error: "title, columns and rows are required" });
+      return;
+    }
+    if (columns.length === 0 || columns.length > MAX_COLUMNAS_PDF) {
+      res.status(400).json({ error: `columns must be between 1 and ${MAX_COLUMNAS_PDF}` });
+      return;
+    }
+    if (rows.length > MAX_FILAS_PDF) {
+      res.status(413).json({ error: "too many rows", code: "export_too_large", limit: MAX_FILAS_PDF });
+      return;
+    }
+
+    const texto = (v: unknown) => (v === null || v === undefined ? "" : String(v).slice(0, 300));
+    const cols = (columns as any[]).map((c) => ({
+      label: texto(c?.label),
+      align: c?.align === "right" ? ("right" as const) : ("left" as const),
+    }));
+
+    const admin = getSupabaseAdmin();
+    const business = await loadBusinessIdentity(admin, req.businessId!);
+    const lang = normalizeDocLang(req.query.lang);
+
+    const pdf = await renderReportPdf(
+      {
+        kind: "report",
+        title: title.trim().slice(0, 120),
+        business: business.identity,
+        scope: typeof scope === "string" && scope.trim() ? scope.trim().slice(0, 160) : null,
+        generatedAt: new Date(),
+        columns: cols,
+        rows: (rows as any[]).map((fila) =>
+          cols.map((_, i) => texto(Array.isArray(fila) ? fila[i] : undefined))
+        ),
+        totals: Array.isArray(totals) ? cols.map((_, i) => texto(totals[i])) : null,
+      },
+      lang
+    );
+
+    // El nombre del archivo sale del título, sin acentos ni espacios: un
+    // "Nº de obra.pdf" llega con el nombre roto a según qué sistema.
+    const limpio = title
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase() || "informe";
+    sendPdf(res, pdf, `${limpio}-${new Date().toISOString().slice(0, 10)}.pdf`, "attachment");
   })
 );
 

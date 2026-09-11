@@ -122,6 +122,7 @@ export function TablaObras() {
       error={error}
       clave={(o) => o.id}
       nombreExport="obras"
+      titulo={t("crm.tabs.obras")}
       vacio={t("tabla.vacia")}
     />
   );
@@ -176,6 +177,7 @@ export function TablaCommessas() {
       error={error}
       clave={(c) => `${c.kind}-${c.id}`}
       nombreExport="commessas"
+      titulo={t("crm.tabs.commessas")}
       vacio={t("workLog.empty")}
     />
   );
@@ -219,6 +221,7 @@ export function TablaFacturas() {
       error={error}
       clave={(f) => f.id}
       nombreExport="facturas"
+      titulo={t("crm.tabs.facturas")}
       vacio={t("tabla.vacia")}
     />
   );
@@ -264,6 +267,7 @@ export function TablaFichajes() {
       error={error}
       clave={(f) => f.id}
       nombreExport="fichajes"
+      titulo={t("crm.tabs.fichajes")}
       vacio={t("checkIn.noEntries")}
     />
   );

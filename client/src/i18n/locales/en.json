@@ -1447,7 +1447,12 @@
       "entrada": "In",
       "salida": "Out",
       "aprobado": "Approved"
-    }
+    },
+    "exportarCsv": "Spreadsheet (CSV)",
+    "exportarCsvHint": "To work on it in Excel",
+    "exportarPdf": "PDF on letterhead",
+    "exportarPdfHint": "With the company details, to hand over or file",
+    "errorPdf": "The PDF could not be generated"
   },
   "scope": {
     "seeAll": "See everything",

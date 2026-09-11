@@ -188,6 +188,8 @@ interface Copy {
   license: string;
   gstNumber: string;
   qstNumber: string;
+  /** Cuántas líneas lleva un informe exportado. */
+  reportRows: (count: number) => string;
   holdback: string;
   holdbackRelease: string;
   holdbackNote: (percent: number) => string;
@@ -247,6 +249,7 @@ const COPY: Record<DocLang, Copy> = {
     hst: "HST",
     total: "TOTAL",
     license: "Licencia",
+    reportRows: (n: number) => (n === 1 ? "1 línea" : `${n} líneas`),
     gstNumber: "N.º TPS",
     qstNumber: "N.º TVQ",
     paymentsTitle: "Forma de pago",
@@ -306,6 +309,7 @@ const COPY: Record<DocLang, Copy> = {
     hst: "HST",
     total: "TOTAL",
     license: "Licence",
+    reportRows: (n: number) => (n === 1 ? "1 row" : `${n} rows`),
     gstNumber: "GST no.",
     qstNumber: "QST no.",
     paymentsTitle: "How this is paid",
@@ -365,6 +369,7 @@ const COPY: Record<DocLang, Copy> = {
     hst: "TVH",
     total: "TOTAL",
     license: "Licence RBQ",
+    reportRows: (n: number) => (n === 1 ? "1 ligne" : `${n} lignes`),
     gstNumber: "No TPS",
     qstNumber: "No TVQ",
     paymentsTitle: "Modalités de paiement",
@@ -424,6 +429,7 @@ const COPY: Record<DocLang, Copy> = {
     hst: "HST",
     total: "TOTALE",
     license: "Licenza",
+    reportRows: (n: number) => (n === 1 ? "1 riga" : `${n} righe`),
     gstNumber: "N. GST",
     qstNumber: "N. QST",
     paymentsTitle: "Modalità di pagamento",
@@ -514,9 +520,17 @@ const COL_WIDTH = {
 
 type Doc = PDFKit.PDFDocument;
 
-function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Copy, lang: DocLang) {
-  const b = data.business;
-
+/**
+ * El membrete: quién emite este papel.
+ *
+ * Está aparte porque lo llevan todos los documentos que salen de la empresa,
+ * no sólo los tres que había. Un papel que se entrega o se archiva sin decir
+ * de qué empresa es, con su licencia y sus números fiscales, no vale como
+ * documento — y el trabajo de acordarse no puede ser de cada pantalla.
+ *
+ * Devuelve dónde termina, medido de verdad.
+ */
+function letterhead(doc: Doc, b: BusinessIdentity, copy: Copy): number {
   // A logo replaces the name in the letterhead when there is one, but the
   // name still has to appear somewhere legible — a logo whose wordmark is
   // unreadable at 40 points would otherwise leave the document unattributed.
@@ -544,13 +558,19 @@ function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Cop
   doc.font("Helvetica").fontSize(9).fillColor("#555555");
   identity.forEach((line) => doc.text(line, MARGIN, doc.y, { width: 300 }));
 
+  return doc.y;
+}
+
+function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Copy, lang: DocLang) {
+  const b = data.business;
+
   // Dónde acaba de verdad el membrete, medido antes de escribir nada más: el
   // título de la derecha se dibuja arriba del todo y devuelve el cursor casi
   // al margen superior, así que consultarlo después daba una posición más
   // alta que el bloque de la empresa. Con logo, el membrete crece 52 puntos y
   // la línea divisoria se quedaba por encima: los datos fiscales acababan
   // impresos encima del nombre del cliente.
-  const letterheadBottom = doc.y;
+  const letterheadBottom = letterhead(doc, b, copy);
 
   const title =
     data.kind === "estimate" ? copy.estimateTitle : data.kind === "payroll" ? copy.payrollTitle : copy.invoiceTitle;
@@ -974,6 +994,151 @@ function render(data: EstimateDoc | InvoiceDoc, lang: DocLang): Promise<Buffer> 
   else invoiceFooter(doc, data, copy);
   pageNumbers(doc, copy);
 
+  doc.end();
+  return done;
+}
+
+/**
+ * Un informe: cualquiera de las tablas del panel, en papel con membrete.
+ *
+ * Las tablas se exportaban a CSV, que sirve para trabajarlas en Excel pero no
+ * para entregarlas ni archivarlas: un archivo con nombres y horas y ni una
+ * palabra de qué empresa lo emitió no es un documento. Esto es el mismo
+ * dato con el membrete que llevan la factura y el presupuesto.
+ *
+ * Las columnas vienen de la pantalla porque cada tabla tiene las suyas y el
+ * jefe además elige cuáles enseña. El membrete no viene de la pantalla: lo
+ * pone el servidor con los datos del negocio de la sesión.
+ */
+export interface ReportDoc {
+  kind: "report";
+  title: string;
+  business: BusinessIdentity;
+  /** Sale bajo el título: de qué obra es, si se exportó con filtro. */
+  scope: string | null;
+  generatedAt: Date;
+  columns: { label: string; align: "left" | "right" }[];
+  rows: string[][];
+  /** La fila de totales, si la tabla tenía. */
+  totals: string[] | null;
+}
+
+export function renderReportPdf(data: ReportDoc, lang: DocLang): Promise<Buffer> {
+  const copy = COPY[lang];
+  // Apaisado: una tabla de diez columnas en vertical deja las últimas en un
+  // hilo. El membrete es el mismo, sólo que más ancho.
+  const doc = new PDFDocument({ size: "A4", layout: "landscape", margin: MARGIN, bufferPages: true });
+  const anchoPagina = 841.89;
+  const anchoUtil = anchoPagina - MARGIN * 2;
+
+  const chunks: Buffer[] = [];
+  const done = new Promise<Buffer>((resolve, reject) => {
+    doc.on("data", (c: Buffer) => chunks.push(c));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+  });
+
+  const finMembrete = letterhead(doc, data.business, copy);
+
+  doc.font("Helvetica-Bold").fontSize(18).fillColor("#111111")
+    .text(data.title, MARGIN, MARGIN, { width: anchoUtil, align: "right" });
+
+  const meta = [
+    data.scope,
+    `${copy.date}: ${shortDate(data.generatedAt, lang)}`,
+    copy.reportRows(data.rows.length),
+  ].filter(Boolean) as string[];
+
+  let metaY = MARGIN + 26;
+  doc.font("Helvetica").fontSize(9).fillColor("#555555");
+  for (const linea of meta) {
+    doc.text(linea, MARGIN, metaY, { width: anchoUtil, align: "right" });
+    metaY += 13;
+  }
+
+  let y = Math.max(finMembrete, metaY) + 14;
+  doc.moveTo(MARGIN, y).lineTo(anchoPagina - MARGIN, y).strokeColor("#dddddd").lineWidth(1).stroke();
+  y += 14;
+
+  // El ancho se reparte por lo que ocupa cada columna de verdad —cabecera y
+  // contenido—, no a partes iguales: con diez columnas, "Sí/No" no necesita
+  // lo mismo que el nombre de una obra.
+  // La cabecera se mide tal y como se dibuja —en mayúsculas y negrita—, que
+  // es más ancho que el rótulo tal cual: midiéndolo en minúscula, "TIPO DE
+  // SERVICIO" no cabía, se partía en dos líneas y pisaba la primera fila.
+  const rotulos = data.columns.map((c) => c.label.toUpperCase());
+  const anchoDe = (i: number) => {
+    doc.font("Helvetica-Bold").fontSize(8);
+    let max = doc.widthOfString(rotulos[i]);
+    doc.font("Helvetica").fontSize(8);
+    for (const fila of data.rows) max = Math.max(max, doc.widthOfString(fila[i] ?? ""));
+    return Math.min(Math.max(max, 30), 200);
+  };
+  const brutos = data.columns.map((_, i) => anchoDe(i));
+  const suma = brutos.reduce((a, b) => a + b, 0) + data.columns.length * 8;
+  const escala = suma > anchoUtil ? (anchoUtil - data.columns.length * 8) / (suma - data.columns.length * 8) : 1;
+  const anchos = brutos.map((b) => b * escala);
+
+  const equis: number[] = [];
+  let acumulado = MARGIN;
+  for (const a of anchos) {
+    equis.push(acumulado);
+    acumulado += a + 8;
+  }
+
+  const cabeceraTabla = () => {
+    doc.font("Helvetica-Bold").fontSize(8).fillColor("#555555");
+    // Si al repartir el ancho alguna cabecera se queda corta y se parte en
+    // dos líneas, la fila crece: es preferible a que se coma la de abajo.
+    const alto = Math.max(...rotulos.map((r, i) => doc.heightOfString(r, { width: anchos[i] })));
+    data.columns.forEach((c, i) => {
+      doc.text(rotulos[i], equis[i], y, { width: anchos[i], align: c.align });
+    });
+    y += alto + 5;
+    doc.moveTo(MARGIN, y - 3).lineTo(anchoPagina - MARGIN, y - 3).strokeColor("#dddddd").lineWidth(0.5).stroke();
+  };
+
+  cabeceraTabla();
+
+  const fondoPagina = 595.28 - MARGIN - 24;
+  for (const fila of data.rows) {
+    doc.font("Helvetica").fontSize(8).fillColor("#111111");
+    // Lo alto que hay que dejar es lo que ocupe la celda más alta: con el
+    // alto fijo, un nombre largo se comía la fila de debajo.
+    const alto = Math.max(
+      ...data.columns.map((c, i) => doc.heightOfString(fila[i] ?? "", { width: anchos[i] }))
+    );
+    if (y + alto > fondoPagina) {
+      doc.addPage({ size: "A4", layout: "landscape", margin: MARGIN });
+      y = MARGIN;
+      cabeceraTabla();
+    }
+    // Después del salto y no antes: dibujar la cabecera deja la fuente en
+    // negrita, y la primera fila de cada página salía en negrita y más ancha
+    // de lo medido, así que se partía encima de la siguiente.
+    doc.font("Helvetica").fontSize(8).fillColor("#111111");
+    data.columns.forEach((c, i) => {
+      doc.text(fila[i] ?? "", equis[i], y, { width: anchos[i], align: c.align });
+    });
+    y += alto + 6;
+    doc.moveTo(MARGIN, y - 3).lineTo(anchoPagina - MARGIN, y - 3).strokeColor("#eeeeee").lineWidth(0.5).stroke();
+  }
+
+  if (data.totals) {
+    if (y + 20 > fondoPagina) {
+      doc.addPage({ size: "A4", layout: "landscape", margin: MARGIN });
+      y = MARGIN;
+      cabeceraTabla();
+    }
+    y += 2;
+    doc.font("Helvetica-Bold").fontSize(8).fillColor("#111111");
+    data.columns.forEach((c, i) => {
+      doc.text(data.totals![i] ?? "", equis[i], y, { width: anchos[i], align: c.align, lineBreak: false });
+    });
+    y += 16;
+  }
+
+  pageNumbers(doc, copy);
   doc.end();
   return done;
 }

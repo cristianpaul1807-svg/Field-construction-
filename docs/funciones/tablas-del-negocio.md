@@ -40,11 +40,28 @@ apagar: una tabla sin columnas no enseña nada.
 cliente. Las personas no suman, porque el mismo trabajador en dos trabajos no
 son dos personas.
 
-**Exportar** a CSV.
+**Exportar**, en dos formas, porque sirven para cosas distintas:
+
+- **Hoja de cálculo (CSV)** — para trabajarlo en Excel.
+- **PDF con membrete** — con el logotipo, el nombre, la dirección, la licencia
+  RBQ y los números de TPS y TVQ de la empresa. Es el mismo membrete que
+  llevan la factura y el presupuesto. Es lo que se entrega o se archiva: un
+  archivo con nombres y horas y ni una palabra de quién lo emite no es un
+  documento.
+
+El PDF lleva además el título de la tabla, la obra por la que está filtrado
+—si lo está—, la fecha y cuántas líneas trae. Sale apaisado, con la cabecera
+repetida en cada página y la fila de totales al final.
+
+El membrete lo pone el servidor con el negocio de la sesión, no el navegador:
+así nadie puede firmar un papel a nombre de otra empresa. Del navegador van
+sólo la tabla y sus columnas.
+
+Tope: 5.000 líneas por PDF. Por encima de eso el CSV sigue sirviendo.
 
 ---
 
-## Sobre el archivo que sale
+## Sobre el archivo CSV que sale
 
 Está pensado para abrirse en Excel sin tener que arreglar nada:
 
@@ -59,8 +76,10 @@ Está pensado para abrirse en Excel sin tener que arreglar nada:
   "14,5". Sin separador de millares, por la misma razón.
 - El nombre lleva la fecha: `commessas-2026-09-11.csv`.
 
-Se exporta **lo que se está viendo**: con el filtro puesto y con las columnas
-encendidas en ese momento.
+Los dos exportan **lo que se está viendo**: con el filtro puesto y con las
+columnas encendidas en ese momento. La diferencia está en los números: en el
+CSV van en crudo para que Excel los sume; en el PDF van como en pantalla
+—"8 h 30", "30.000,00 CAD"— porque un papel se lee, no se recalcula.
 
 ---
 

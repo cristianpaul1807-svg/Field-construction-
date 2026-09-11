@@ -1447,7 +1447,12 @@
       "entrada": "Entrada",
       "salida": "Salida",
       "aprobado": "Aprobado"
-    }
+    },
+    "exportarCsv": "Hoja de cálculo (CSV)",
+    "exportarCsvHint": "Para trabajarlo en Excel",
+    "exportarPdf": "PDF con membrete",
+    "exportarPdfHint": "Con los datos de la empresa, para entregar o archivar",
+    "errorPdf": "No se pudo generar el PDF"
   },
   "scope": {
     "seeAll": "Ver todo",
