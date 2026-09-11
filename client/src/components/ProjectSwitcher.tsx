@@ -32,7 +32,7 @@ export function ProjectSwitcher() {
         {/* On a narrow screen the label collapses to just the icon so the
             control still fits beside the rest of the header — it stays
             reachable rather than disappearing. */}
-        <button className="flex items-center gap-2 px-2 sm:px-3 h-8 rounded-lg border border-border bg-card hover:bg-secondary transition-colors text-sm max-w-[9rem] sm:max-w-[220px]">
+        <button className="flex items-center gap-2 px-2 sm:px-3 h-8 rounded-lg border border-border bg-card hover:bg-secondary transition-colors text-sm max-w-[9rem] sm:max-w-[150px]">
           <FolderKanban size={15} className="text-muted-foreground flex-shrink-0" />
           <span className={cn("truncate hidden sm:inline", !selectedProject && "text-muted-foreground")}>
             {selectedProject ? selectedProject.name : t("common.selectProject")}

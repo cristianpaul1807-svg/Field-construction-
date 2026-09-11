@@ -1893,7 +1893,7 @@ apiRouter.get(
         .maybeSingle(),
       supabase
         .from("invoices")
-        .select("id, type, amount, status")
+        .select("id, number, type, amount, status")
         .eq("client_id", clientId)
         // Una factura anulada no está pendiente de pago: ofrecérsela al cliente
         // sería pedirle dinero que ya no se le debe.
@@ -2017,7 +2017,7 @@ apiRouter.get(
           }
         : null,
       pendingInvoice: pendingInvoice.data
-        ? { id: pendingInvoice.data.id, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
+        ? { id: pendingInvoice.data.id, number: pendingInvoice.data.number ?? null, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
         : null,
       visiblePhotos,
     });
@@ -6319,7 +6319,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, projects(name), clients(name)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, projects(name), clients(name)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -6329,6 +6329,9 @@ apiRouter.get(
     res.json(
       data.map((i: any) => ({
         id: i.id,
+        // El número con el que existe la factura fuera del software: es lo que
+        // el cliente pone en la transferencia y lo que pide el contable.
+        number: i.number ?? null,
         type: i.type,
         amount: Number(i.amount),
         subtotal: Number(i.subtotal),
@@ -8014,7 +8017,7 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
   const [invoice, business] = await Promise.all([
     admin
       .from("invoices")
-      .select("id, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
+      .select("id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
       .eq("business_id", businessId)
       .eq("id", invoiceId)
       .maybeSingle(),
@@ -8038,7 +8041,12 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
   return renderInvoicePdf(
     {
       kind: "invoice",
-      number: documentNumber("invoice", invoice.data.id),
+      // El número de verdad, correlativo y sin huecos. Antes se imprimía
+      // INV-1BE0A42A, los primeros dígitos del uuid: único, sí, pero no
+      // correlativo — y una factura de Quebec tiene que serlo. El recurso al
+      // uuid queda sólo por si alguna fila se quedara sin número, para que el
+      // documento no salga con el hueco en blanco.
+      number: invoice.data.number ?? documentNumber("invoice", invoice.data.id),
       date: new Date(invoice.data.created_at),
       dueDate: invoice.data.due_date ? new Date(`${invoice.data.due_date}T00:00:00`) : null,
       paidAt: invoice.data.paid_at ? new Date(invoice.data.paid_at) : null,
@@ -9041,7 +9049,7 @@ apiRouter.get(
         .maybeSingle(),
       supabase
         .from("invoices")
-        .select("id, type, amount, status")
+        .select("id, number, type, amount, status")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .not("status", "in", "(pagado,cancelado)")
@@ -9117,7 +9125,7 @@ apiRouter.get(
           }
         : null,
       pendingInvoice: pendingInvoice.data
-        ? { id: pendingInvoice.data.id, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
+        ? { id: pendingInvoice.data.id, number: pendingInvoice.data.number ?? null, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
         : null,
       visiblePhotos,
     });

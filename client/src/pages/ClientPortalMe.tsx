@@ -37,7 +37,7 @@ interface ClientPortalData {
     taxBreakdown?: { province?: string; hst?: number; gst?: number; pst?: number };
     signature: { name: string; signedAt: string; total: number } | null;
   } | null;
-  pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
+  pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
 }
 
@@ -393,6 +393,14 @@ export default function ClientPortalMe() {
                       </Button>
                     )}
                   </div>
+                  {/* Cuál es la factura que va a pagar. Es el número que lleva
+                      el PDF y el que pondrá en la transferencia; sin él, quien
+                      tiene dos facturas abiertas no sabe cuál está pagando. */}
+                  {data.pendingInvoice?.number && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t("clientPortal.invoiceNumber", { number: data.pendingInvoice.number })}
+                    </p>
+                  )}
                   {data.estimate.signature && (
                     <p className="text-xs text-muted-foreground mt-2">
                       {t("sign.signedBy", {

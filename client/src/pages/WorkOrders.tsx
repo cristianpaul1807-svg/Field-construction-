@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { mensajeDeChoque } from "@/lib/conflicto";
-import { Commessa } from "@/components/Commessa";
+import { Codigo } from "@/components/Codigo";
 import { useTiposDeTrabajo, nombreDeTipo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
 
 const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
@@ -356,7 +356,7 @@ export default function WorkOrders() {
                   {/* El número va encima del título y no al lado: es por lo
                       que se pregunta el trabajo, y se lee antes que el
                       nombre que alguien le puso aquel día. */}
-                  <Commessa code={order.commessa} className="mb-1" />
+                  <Codigo code={order.commessa} className="mb-1" />
                   <p className="font-medium text-foreground">{order.title}</p>
                   <p className="text-sm text-muted-foreground mt-1">{order.description}</p>
                   <p className="text-xs text-muted-foreground mt-2">

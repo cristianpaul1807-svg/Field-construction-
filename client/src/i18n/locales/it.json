@@ -64,7 +64,6 @@
   },
   "nav": {
     "home": "HOME",
-    "clients": "CLIENTI",
     "projects": "PROGETTI",
     "field": "CANTIERE",
     "finance": "FINANZE",
@@ -96,7 +95,8 @@
     "assistantTitle": "Assistente dell'impresa",
     "assistantHint": "Chiedigli di aggiungere una proiezione di lavoro, rivedere i preventivi in sospeso, o qualsiasi cosa tu voglia automatizzare.",
     "payroll": "Buste paga",
-    "workLog": "Controllo lavori"
+    "workLog": "Controllo lavori",
+    "clientPortalShort": "Portale"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -302,7 +302,8 @@
     "cancelConfirm": "Annullare questa fattura? Resta registrata come annullata, non viene eliminata.",
     "tabInvoices": "Fatture",
     "tabRequests": "Richieste in chat",
-    "holdbackReleased": "Include {{amount}} di ritenuta svincolata dalle fatture precedenti"
+    "holdbackReleased": "Include {{amount}} di ritenuta svincolata dalle fatture precedenti",
+    "number": "N."
   },
   "payments": {
     "title": "Pagamenti (Stripe)",
@@ -468,7 +469,8 @@
     "accessTitle": "Gli accessi dei tuoi clienti",
     "searchPlaceholder": "Cerca cliente…",
     "noMatches": "Nessun cliente corrisponde a «{{query}}».",
-    "previewOf": "Anteprima di ciò che vede {{name}}"
+    "previewOf": "Anteprima di ciò che vede {{name}}",
+    "invoiceNumber": "Fattura {{number}}"
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",

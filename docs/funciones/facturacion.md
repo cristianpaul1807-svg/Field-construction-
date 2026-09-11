@@ -31,6 +31,30 @@ facturas**.
 6. Antes de guardar ves el desglose: subtotal, impuesto y total.
 7. **Crear factura**.
 
+El número se pone solo. No hay que escribirlo ni se puede cambiar.
+
+---
+
+## El número de factura
+
+Formato **`2026-0001`**: año completo y correlativo de cuatro cifras, por
+negocio, reiniciando cada 1 de enero.
+
+Una factura de Quebec tiene que llevar número, y la serie tiene que ser
+correlativa y sin huecos — es de lo primero que mira Revenu Québec. Antes no
+había ninguno: el PDF imprimía `INV-1BE0A42A`, los primeros dígitos del
+identificador interno. Único sí, correlativo no.
+
+- Se emite **al crear la factura**, desde un disparador de la base, y ya no se
+  mueve. Sale en la lista, en el PDF y en el portal del cliente, y es el número
+  que el cliente pone en la transferencia.
+- **No hay huecos** porque una factura no se borra nunca: anular pone el estado
+  en *cancelado* y la fila se queda donde está, con su número. Una factura que
+  desaparece de la serie es exactamente lo que un inspector va a preguntar.
+- Cada negocio tiene su propia serie. Los presupuestos siguen usando el número
+  derivado del identificador (`EST-…`): un presupuesto no es un documento
+  fiscal y no tiene que ser correlativo.
+
 ---
 
 ## Impuestos y retención, en una línea

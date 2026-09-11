@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, invoiceStatusTone } from "@/components/StatusBadge";
+import { Codigo } from "@/components/Codigo";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,8 @@ const INVOICE_STATUSES = ["pendiente", "pagado", "vencido", "cancelado"] as cons
 
 interface Invoice {
   id: string;
+  /** El número correlativo con el que la factura existe fuera del software. */
+  number: string | null;
   type: (typeof INVOICE_TYPES)[number];
   amount: number;
   subtotal: number;
@@ -285,6 +288,7 @@ export default function Invoicing() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
+                <th className="text-left py-2 text-muted-foreground font-medium">{t("invoicing.number")}</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">{t("common.client")}</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">{t("common.description")}</th>
                 <th className="text-left py-2 text-muted-foreground font-medium">{t("common.type")}</th>
@@ -299,6 +303,9 @@ export default function Invoicing() {
             <tbody>
               {invoices?.map((invoice) => (
                 <tr key={invoice.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
+                  {/* Primera columna: es por lo que el cliente pregunta al
+                      llamar, y lo que el contable busca. */}
+                  <td className="py-3"><Codigo code={invoice.number} /></td>
                   <td className="py-3 text-foreground font-medium">{invoice.clientName ?? invoice.projectName}</td>
                   <td className="py-3 text-muted-foreground">{invoice.description ?? "-"}</td>
                   <td className="py-3 text-muted-foreground">{t(`invoicing.type.${invoice.type}`)}</td>

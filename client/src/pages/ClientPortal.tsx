@@ -24,7 +24,7 @@ interface ClientPortalData {
   client: { id: string; name: string };
   project: { id: string; name: string; progressPercent: number } | null;
   estimate: { id: string; status: string; total: number } | null;
-  pendingInvoice: { id: string; type: string; amount: number; status: string } | null;
+  pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string } | null;
   visiblePhotos: { id: string }[];
 }
 

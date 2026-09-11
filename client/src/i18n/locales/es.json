@@ -64,7 +64,6 @@
   },
   "nav": {
     "home": "INICIO",
-    "clients": "CLIENTES",
     "projects": "PROYECTOS",
     "field": "CAMPO",
     "finance": "FINANZAS",
@@ -96,7 +95,8 @@
     "assistantTitle": "Asistente del negocio",
     "assistantHint": "Pídele que agregue una proyección de trabajo, revise presupuestos pendientes, o cualquier cosa que quieras automatizar.",
     "payroll": "Nóminas",
-    "workLog": "Control de trabajo"
+    "workLog": "Control de trabajo",
+    "clientPortalShort": "Portal"
   },
   "dashboard": {
     "title": "Panel",
@@ -302,7 +302,8 @@
     "cancelConfirm": "¿Anular esta factura? Queda registrada como anulada, no se borra.",
     "tabInvoices": "Facturas",
     "tabRequests": "Cobros por chat",
-    "holdbackReleased": "Incluye {{amount}} de retención liberada de las facturas anteriores"
+    "holdbackReleased": "Incluye {{amount}} de retención liberada de las facturas anteriores",
+    "number": "Nº"
   },
   "payments": {
     "title": "Pagos (Stripe)",
@@ -468,7 +469,8 @@
     "accessTitle": "Accesos de tus clientes",
     "searchPlaceholder": "Buscar cliente…",
     "noMatches": "Ningún cliente coincide con «{{query}}».",
-    "previewOf": "Vista previa de lo que ve {{name}}"
+    "previewOf": "Vista previa de lo que ve {{name}}",
+    "invoiceNumber": "Factura {{number}}"
   },
   "worker": {
     "accessTitle": "Acceso de trabajador",

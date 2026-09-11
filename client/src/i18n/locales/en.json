@@ -64,7 +64,6 @@
   },
   "nav": {
     "home": "HOME",
-    "clients": "CLIENTS",
     "projects": "PROJECTS",
     "field": "FIELD",
     "finance": "FINANCE",
@@ -96,7 +95,8 @@
     "assistantTitle": "Business assistant",
     "assistantHint": "Ask it to add a work projection, review pending estimates, or anything else you'd like to automate.",
     "payroll": "Payroll",
-    "workLog": "Work log"
+    "workLog": "Work log",
+    "clientPortalShort": "Portal"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -302,7 +302,8 @@
     "cancelConfirm": "Cancel this invoice? It stays on record as cancelled, it is not deleted.",
     "tabInvoices": "Invoices",
     "tabRequests": "Chat charges",
-    "holdbackReleased": "Includes {{amount}} of holdback released from the earlier invoices"
+    "holdbackReleased": "Includes {{amount}} of holdback released from the earlier invoices",
+    "number": "No."
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -468,7 +469,8 @@
     "accessTitle": "Your clients' access",
     "searchPlaceholder": "Search client…",
     "noMatches": "No client matches “{{query}}”.",
-    "previewOf": "Preview of what {{name}} sees"
+    "previewOf": "Preview of what {{name}} sees",
+    "invoiceNumber": "Invoice {{number}}"
   },
   "worker": {
     "accessTitle": "Worker access",

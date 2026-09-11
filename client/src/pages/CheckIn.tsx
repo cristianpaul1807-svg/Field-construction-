@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
-import { Commessa } from "@/components/Commessa";
+import { Codigo } from "@/components/Codigo";
 
 interface TimeEntry {
   id: string;
@@ -168,7 +168,7 @@ export default function CheckIn() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-medium text-foreground">{entry.workerName}</p>
-                        {entry.commessa && <Commessa code={entry.commessa} copiable={false} />}
+                        {entry.commessa && <Codigo code={entry.commessa} copiable={false} />}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {/* Dos citas del mismo sitio el mismo día ya no se

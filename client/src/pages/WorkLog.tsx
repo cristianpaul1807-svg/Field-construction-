@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Search, Clock, Users, CalendarClock, MapPin, AlertCircle } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
-import { Commessa } from "@/components/Commessa";
+import { Codigo } from "@/components/Codigo";
 import { useTiposDeTrabajo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
@@ -86,7 +86,7 @@ function DetalleDialog({ commessa, onClose }: { commessa: string | null; onClose
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
-            <Commessa code={commessa} />
+            <Codigo code={commessa} />
             <span className="text-base font-medium">{data?.title}</span>
           </DialogTitle>
         </DialogHeader>
@@ -243,7 +243,7 @@ export default function WorkLog() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Commessa code={l.commessa} />
+                    <Codigo code={l.commessa} />
                     <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       {t(`workLog.kind.${l.kind}`)}
                     </span>

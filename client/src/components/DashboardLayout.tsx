@@ -76,13 +76,21 @@ const navSections: NavSection[] = [
     items: [{ id: "dashboard", labelKey: "nav.dashboard", Icon: LayoutDashboard, path: "/" }],
   },
   {
+    // El CRM estaba metido dentro de "Clientes" junto al portal, y son dos
+    // trabajos distintos: aquí se persiguen clientes que todavía no lo son, y
+    // allí se le da acceso a los que ya firmaron. Abrir un menú para elegir
+    // entre dos cosas que no se parecen es un paso de más en lo que se usa
+    // todos los días. Sección propia, como la mensajería.
+    id: "crm",
+    titleKey: "nav.crm",
+    Icon: Contact,
+    items: [{ id: "crm", labelKey: "nav.crm", Icon: Contact, path: "/crm" }],
+  },
+  {
     id: "clients",
-    titleKey: "nav.clients",
-    Icon: Users,
-    items: [
-      { id: "crm", labelKey: "nav.crm", Icon: Contact, path: "/crm" },
-      { id: "client-portal", labelKey: "nav.clientPortal", Icon: Globe, path: "/client-portal" },
-    ],
+    titleKey: "nav.clientPortal",
+    Icon: Globe,
+    items: [{ id: "client-portal", labelKey: "nav.clientPortalShort", Icon: Globe, path: "/client-portal" }],
   },
   {
     // Vivía dentro de Clientes, y ahí sólo cabía la mitad de lo que hace: el
@@ -204,7 +212,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Link
           href={only.path}
           className={cn(
-            "h-8 px-3 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
+            "h-8 px-2.5 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
             active ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
           )}
         >
@@ -219,7 +227,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <DropdownMenuTrigger asChild>
           <button
             className={cn(
-              "h-8 px-3 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
+              "h-8 px-2.5 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
               active ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
             )}
           >
@@ -277,7 +285,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               already truncates; it just needed permission to. */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
             <Logo size={28} className="rounded-lg flex-shrink-0" />
-            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] sm:max-w-none">
+            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] sm:max-w-[10rem]">
               {company?.name ?? t("common.loading")}
             </span>
           </Link>
