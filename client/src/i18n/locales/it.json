@@ -1450,9 +1450,12 @@
     }
   },
   "scope": {
-    "filteredBy": "Filtrato per cantiere:",
     "seeAll": "Vedi tutto",
     "pickToUpload": "Scegli un cantiere nel selettore in alto per caricare.",
-    "pickToRecord": "Scegli un cantiere nel selettore in alto per registrare una spesa."
+    "pickToRecord": "Scegli un cantiere nel selettore in alto per registrare una spesa.",
+    "label": "Cantiere:",
+    "searchProject": "Cerca un cantiere",
+    "noMatches": "Nessun cantiere corrisponde a «{{query}}».",
+    "filterByProject": "Filtra per cantiere"
   }
 }

@@ -1450,9 +1450,12 @@
     }
   },
   "scope": {
-    "filteredBy": "Filtered by site:",
     "seeAll": "See everything",
     "pickToUpload": "Pick a site in the selector above to upload.",
-    "pickToRecord": "Pick a site in the selector above to record an expense."
+    "pickToRecord": "Pick a site in the selector above to record an expense.",
+    "label": "Site:",
+    "searchProject": "Search a site",
+    "noMatches": "No site matches “{{query}}”.",
+    "filterByProject": "Filter by site"
   }
 }

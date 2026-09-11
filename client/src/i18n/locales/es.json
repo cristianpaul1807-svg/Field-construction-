@@ -1450,9 +1450,12 @@
     }
   },
   "scope": {
-    "filteredBy": "Filtrado por obra:",
     "seeAll": "Ver todo",
     "pickToUpload": "Elige una obra en el selector de arriba para poder subir.",
-    "pickToRecord": "Elige una obra en el selector de arriba para poder anotar un gasto."
+    "pickToRecord": "Elige una obra en el selector de arriba para poder anotar un gasto.",
+    "label": "Obra:",
+    "searchProject": "Busca una obra",
+    "noMatches": "Ninguna obra coincide con «{{query}}».",
+    "filterByProject": "Filtrar por obra"
   }
 }

@@ -16,7 +16,7 @@ import { previewTax, type TaxRate } from "@/lib/taxes";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
 
 interface Project {
@@ -151,7 +151,7 @@ export default function Projects() {
         }
       />
 
-      <FiltradoPorObra />
+      <SelectorDeObra />
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">

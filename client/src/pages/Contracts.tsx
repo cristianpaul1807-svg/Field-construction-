@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useTranslation } from "react-i18next";
 
 const DOCUMENT_TAGS = ["contrato", "permiso", "plano", "garantia"] as const;
@@ -152,7 +152,7 @@ export default function Contracts() {
         }
       />
 
-      <FiltradoPorObra />
+      <SelectorDeObra />
 
       {!selectedProjectId && (
         <p className="text-sm text-muted-foreground">{t("scope.pickToUpload")}</p>

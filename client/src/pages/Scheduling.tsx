@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, ClipboardList, Plus, StickyNote, X } from "l
 import { useApi, apiFetch } from "@/lib/api";
 import { MonthGrid, claveDia, type DiaMarcado } from "@/components/MonthGrid";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { hashColor, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -153,6 +154,8 @@ export default function Scheduling() {
             : t("scheduling.description")
         }
       />
+
+      <SelectorDeObra />
 
       <>
           <div className="flex items-center justify-between flex-wrap gap-3">

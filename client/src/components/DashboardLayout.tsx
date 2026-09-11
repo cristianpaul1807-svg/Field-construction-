@@ -38,7 +38,6 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
-import { ProjectSwitcher } from "@/components/ProjectSwitcher";
 import { AdminAssistantBar } from "@/components/AdminAssistantBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { StripeConnectAlert } from "@/components/StripeConnectAlert";
@@ -285,7 +284,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               already truncates; it just needed permission to. */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
             <Logo size={28} className="rounded-lg flex-shrink-0" />
-            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] sm:max-w-[10rem]">
+            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] sm:max-w-[8rem] 2xl:max-w-[12rem]">
               {company?.name ?? t("common.loading")}
             </span>
           </Link>
@@ -303,7 +302,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               on a phone meant the field user could read those screens but
               never change which project they were reading. */}
           <div className="flex items-center gap-1.5 ml-auto flex-shrink-0 min-w-0">
-            <ProjectSwitcher />
             <LanguageSwitcher />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

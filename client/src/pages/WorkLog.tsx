@@ -12,7 +12,7 @@ import { Codigo } from "@/components/Codigo";
 import { useTiposDeTrabajo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
 
 interface Linea {
@@ -207,7 +207,7 @@ export default function WorkLog() {
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader title={t("workLog.title")} description={t("workLog.description")} />
 
-      <FiltradoPorObra />
+      <SelectorDeObra />
 
       {deLaObra.length > 0 && (
         <div className="relative">

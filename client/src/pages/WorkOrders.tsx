@@ -13,7 +13,7 @@ import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { mensajeDeChoque } from "@/lib/conflicto";
 import { Codigo } from "@/components/Codigo";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
 import { useTiposDeTrabajo, nombreDeTipo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
 
@@ -352,7 +352,7 @@ export default function WorkOrders() {
         </div>
       )}
 
-      <FiltradoPorObra />
+      <SelectorDeObra />
 
       {!loading && !error && (
         <div className="space-y-3">

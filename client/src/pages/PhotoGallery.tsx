@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useTranslation } from "react-i18next";
 
 interface Photo {
@@ -170,7 +170,7 @@ export default function PhotoGallery() {
         }
       />
 
-      <FiltradoPorObra />
+      <SelectorDeObra />
 
       {!selectedProjectId && (
         <p className="text-sm text-muted-foreground">{t("scope.pickToUpload")}</p>

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, invoiceStatusTone } from "@/components/StatusBadge";
 import { Codigo } from "@/components/Codigo";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
 import {
   Dialog,
@@ -261,7 +261,7 @@ export default function Invoicing() {
         </TabsContent>
 
         <TabsContent value="invoices" className="mt-4 space-y-6">
-      <FiltradoPorObra />
+      <SelectorDeObra />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">{t("invoicing.collected")}</p>

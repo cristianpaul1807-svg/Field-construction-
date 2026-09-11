@@ -14,7 +14,7 @@ import { type LeadStatus } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TablaObras, TablaCommessas, TablaFacturas, TablaFichajes } from "@/components/crm/TablasDelNegocio";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useTranslation } from "react-i18next";
 
 interface Client {
@@ -176,10 +176,10 @@ export default function Crm() {
           <TabsTrigger value="fichajes">{t("crm.tabs.fichajes")}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="obras" className="mt-4 space-y-3"><FiltradoPorObra /><TablaObras /></TabsContent>
-        <TabsContent value="commessas" className="mt-4 space-y-3"><FiltradoPorObra /><TablaCommessas /></TabsContent>
-        <TabsContent value="facturas" className="mt-4 space-y-3"><FiltradoPorObra /><TablaFacturas /></TabsContent>
-        <TabsContent value="fichajes" className="mt-4 space-y-3"><FiltradoPorObra /><TablaFichajes /></TabsContent>
+        <TabsContent value="obras" className="mt-4 space-y-3"><SelectorDeObra /><TablaObras /></TabsContent>
+        <TabsContent value="commessas" className="mt-4 space-y-3"><SelectorDeObra /><TablaCommessas /></TabsContent>
+        <TabsContent value="facturas" className="mt-4 space-y-3"><SelectorDeObra /><TablaFacturas /></TabsContent>
+        <TabsContent value="fichajes" className="mt-4 space-y-3"><SelectorDeObra /><TablaFichajes /></TabsContent>
 
         <TabsContent value="contactos" className="mt-4 space-y-6">
 

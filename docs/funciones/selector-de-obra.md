@@ -1,11 +1,36 @@
 # El selector de obra
 
-**Dónde:** arriba a la derecha, en la cabecera, en todas las pantallas del panel.
+**Dónde:** dentro de cada pantalla que filtra, justo encima de los datos.
 
 Elegir una obra ahí filtra el panel entero a esa obra. Sin elegir nada pone
 **General**, que es ver el negocio completo — y es lo que hay por defecto.
 
 ---
+
+## Por qué no está en la cabecera
+
+Vivía arriba a la derecha, pequeño y lejos de las listas. Tres problemas:
+
+1. **No se veía.** Quien dejaba una obra elegida un martes, el jueves abría
+   Facturación, veía tres facturas donde hay veinte y creía que se habían
+   perdido. Un filtro que no se ve no se distingue de un fallo.
+2. **Ocupaba sitio del menú.** Se reservaba 270 px en la barra, que es
+   justamente lo que le faltaba a las secciones para caber en un portátil.
+3. **Aparecía en pantallas que no filtran.** En Nóminas o en Materiales no
+   hacía nada, y un control que a veces no hace nada enseña a ignorarlo.
+
+Ahora está dentro de cada pantalla que filtra, encima de los datos que filtra.
+No hay estado escondido: lo que se ve y por qué se leen de un vistazo. Y donde
+no filtra, no está.
+
+## Una sola obra elegida, no una por pantalla
+
+El control está repetido, la elección no. Se elige una obra en Facturación, se
+pasa a Fichajes y a Control de trabajo, y sigue puesta. Quien pasa la mañana
+con una obra no tiene que elegirla nueve veces.
+
+Se guarda en el navegador, así que sobrevive a recargar. Si esa obra deja de
+existir, la selección se cae sola a General.
 
 ## General no es "sin elegir"
 
@@ -34,7 +59,7 @@ lista y la de arranque.
 | Galería de fotos | Sí |
 | Control de costos | Sí — en General, una tabla por obra |
 | CRM › Obras, Nº de obra, Facturas, Fichajes | Sí |
-| CRM › Contactos | **No.** Un cliente no es de una obra; suele tener varias, y las que todavía no son nada no tienen ninguna |
+| CRM › Contactos | **No**, y por eso esa pestaña no lleva selector. Un cliente no es de una obra; suele tener varias, y los que todavía no son nada no tienen ninguna |
 | Presupuestos | **No.** Un presupuesto existe *antes* que la obra. Filtrarlos por obra escondería justo los que están sin aceptar, que son los que hay que perseguir |
 | Materiales, Nóminas, Técnicos, Subcontratistas, Informes | **No.** No son datos de una obra: el catálogo, las personas y los agregados del negocio son transversales |
 
@@ -42,15 +67,12 @@ lista y la de arranque.
 
 ## Que se vea que hay filtro
 
-Cada pantalla filtrada enseña un aviso mientras haya una obra elegida:
+Con una obra elegida, el propio selector se marca —borde de color y el nombre
+en negrita— y aparece un **Ver todo** al lado. No hace falta un aviso aparte:
+el control está encima de la lista y dice lo que está pasando.
 
-> 📁 Filtrado por obra: **426 boulevard Saint Josef** · ✕ Ver todo
-
-No es decoración. El selector vive en la cabecera, pequeño y lejos de la
-lista; quien deja una obra elegida y al día siguiente abre Facturación ve tres
-facturas donde hay veinte y piensa que se han perdido. **Un filtro que no se
-ve es indistinguible de un fallo.** En General no se pinta nada, porque no hay
-nada que avisar.
+Con más de ocho obras, el desplegable trae buscador. Ignora los acentos, como
+el resto de buscadores del panel.
 
 Donde crear algo necesita saber a qué obra va —subir una foto, subir un
 documento, anotar un gasto—, en General el botón no está, y en su sitio se
@@ -72,12 +94,11 @@ cada pantalla porque la regla tiene que ser idéntica en las catorce: una
 pantalla que filtrara al revés, o que exigiera elegir, convertiría el selector
 en algo en lo que no se puede confiar.
 
-`client/src/components/FiltradoPorObra.tsx` es el aviso, y no pinta nada
-cuando no hay filtro.
+`client/src/components/SelectorDeObra.tsx` es el control. Se pone en la
+pantalla y ya: lee y escribe la misma selección compartida, así que no hay
+nada que pasarle ni que sincronizar entre pantallas.
 
-La obra elegida vive en `SelectedProjectContext` y se guarda en el navegador,
-así que sobrevive a recargar la página. Si esa obra deja de existir, la
-selección se cae sola a General.
+La obra elegida vive en `SelectedProjectContext`.
 
 **El filtrado es del lado del cliente** en todas las pantallas menos gastos,
 donde la ruta ya aceptaba `?projectId=`. Con los volúmenes de un contratista
@@ -88,8 +109,9 @@ paginación en el servidor y el filtro se va con ella.
 
 ## Qué suele salir mal
 
-**"Faltan datos."** Mira el aviso de arriba de la lista: casi siempre hay una
-obra elegida de otro día. *Ver todo* lo devuelve.
+**"Faltan datos."** Mira el selector de arriba de la lista: casi siempre hay
+una obra elegida de otro día, y se nota porque el control está marcado. *Ver
+todo* lo devuelve.
 
 **Una fila sin obra no sale nunca con filtro puesto.** Es correcto: una cita
 suelta sin obra, o una factura sin proyecto, no son de ninguna obra. Aparecen

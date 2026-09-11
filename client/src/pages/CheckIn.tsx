@@ -14,7 +14,7 @@ import { Link } from "wouter";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
 import { Codigo } from "@/components/Codigo";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
 
 interface TimeEntry {
@@ -131,7 +131,7 @@ export default function CheckIn() {
         </TabsContent>
 
         <TabsContent value="entries" className="mt-4 space-y-4">
-      <FiltradoPorObra />
+      <SelectorDeObra />
       {/* Con una cuadrilla de seis la lista ya no se recorre a ojo. */}
       {deLaObra.length > 0 && (
         <div className="relative">

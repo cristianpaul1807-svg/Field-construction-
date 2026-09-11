@@ -1450,9 +1450,12 @@
     }
   },
   "scope": {
-    "filteredBy": "Filtré par chantier :",
     "seeAll": "Tout voir",
     "pickToUpload": "Choisissez un chantier dans le sélecteur en haut pour téléverser.",
-    "pickToRecord": "Choisissez un chantier dans le sélecteur en haut pour saisir une dépense."
+    "pickToRecord": "Choisissez un chantier dans le sélecteur en haut pour saisir une dépense.",
+    "label": "Chantier :",
+    "searchProject": "Chercher un chantier",
+    "noMatches": "Aucun chantier ne correspond à « {{query}} ».",
+    "filterByProject": "Filtrer par chantier"
   }
 }

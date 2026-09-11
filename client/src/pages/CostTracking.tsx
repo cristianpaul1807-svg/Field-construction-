@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
-import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
@@ -127,7 +127,7 @@ export default function CostTracking() {
         }
       />
 
-      <FiltradoPorObra />
+      <SelectorDeObra />
 
       {!selectedProjectId && (
         <p className="text-sm text-muted-foreground">{t("scope.pickToRecord")}</p>
