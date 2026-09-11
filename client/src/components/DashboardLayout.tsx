@@ -39,7 +39,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
-import { AdminAssistantBar } from "@/components/AdminAssistantBar";
+import { BotDeAyuda } from "@/components/ayuda/BotDeAyuda";
 import { useAuth } from "@/contexts/AuthContext";
 import { StripeConnectAlert } from "@/components/StripeConnectAlert";
 import { CompanySetupAlert } from "@/components/CompanySetupAlert";
@@ -431,7 +431,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <CompanySetupAlert />
       <StripeConnectAlert />
       <main className="flex-1 w-full">{children}</main>
-      <AdminAssistantBar />
+      <BotDeAyuda />
     </div>
   );
 }

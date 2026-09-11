@@ -90,9 +90,6 @@
     "margins": "Margins & Rules",
     "users": "Users & Roles",
     "whatsapp": "WhatsApp",
-    "askAssistant": "Ask the business assistant...",
-    "assistantTitle": "Business assistant",
-    "assistantHint": "Ask it to add a work projection, review pending estimates, or anything else you'd like to automate.",
     "payroll": "Payroll",
     "workLog": "Work log",
     "clientPortalShort": "Portal",
@@ -1482,5 +1479,194 @@
     "deleteConfirm": "Delete the type “{{name}}”?",
     "inUse": "Cannot delete: {{count}} jobs are classified this way. They would be labelled with something that no longer exists.",
     "empty": "No types yet."
+  },
+  "help": {
+    "title": "Help",
+    "openHelp": "Not sure how to do something? Tap here",
+    "intro": "Hi. I'll tell you where things are and how they work. Pick where to start.",
+    "pickSection": "Which part do you need help with?",
+    "pickTopic": "{{section}}. What do you need to do?",
+    "back": "Back",
+    "restart": "Start over",
+    "goThere": "Take me there",
+    "otherQuestion": "Another question about this",
+    "thisScreen": "(this screen)",
+    "section": {
+      "empezar": "Getting started",
+      "clientes": "Clients and messages",
+      "presupuestos": "Estimates",
+      "trabajo": "Projects and work",
+      "dinero": "Money",
+      "problemas": "Something isn't working"
+    },
+    "topic": {
+      "empezar": {
+        "datosEmpresa": {
+          "title": "Fill in my company details",
+          "p1": "Go to SETTINGS → Company details. Two cards: your identity up top (name, RBQ licence, province and your public link), and below it what gets printed on every document.",
+          "p2": "Fill in address, phone, GST number and QST number. That's what appears in the header of every estimate and every invoice.",
+          "p3": "Further down you set your default deposit, your holdback (10% in Quebec) and the legal text that goes at the foot of your estimates.",
+          "nota": "In Quebec, an invoice without GST and QST numbers comes straight back from your client's accountant. The banner at the top of the panel clears itself once you fill them in."
+        },
+        "accesoTrabajador": {
+          "title": "Give a worker access",
+          "p1": "First add them: FIELD → Technicians → New technician, with their name, phone and trade.",
+          "p2": "On their card, press PWA code. A code appears.",
+          "p3": "Send it however you already talk. They open /campo on their phone, type the code, and they're in — no email, no password.",
+          "nota": "The code is shown once only. Generating another cancels the previous one — that's how you cut off access for someone who no longer works with you."
+        },
+        "accesoCliente": {
+          "title": "Give a client access",
+          "p1": "CRM → open the client's record → Generate access code.",
+          "p2": "Copy it and send it. They go to /portal and type it in.",
+          "p3": "There they see their project's progress, their estimate, their invoices and a chat with you. They don't see your costs or your margins.",
+          "nota": "Generating a new code cancels the previous one."
+        },
+        "idioma": {
+          "title": "Change the language",
+          "p1": "Top right there's a languages icon. Español, English, français and italiano.",
+          "p2": "It only changes your own panel. Everyone on your team can have theirs in their own, and documents come out in the language you generate them in."
+        }
+      },
+      "clientes": {
+        "nuevoContacto": {
+          "title": "Add a client by hand",
+          "p1": "CRM → New contact. The name is enough; phone, email and address can wait.",
+          "p2": "Creating them opens a message channel with you, so you can write to them from the start."
+        },
+        "enlacePublico": {
+          "title": "My link for incoming requests",
+          "p1": "It's a chat anyone can open without signing up. Your address is your panel's, followed by /c/ and your link.",
+          "p2": "The bot asks a few questions — which service, what they want done, the address and how to reach them — and leaves you a draft estimate with it all filled in.",
+          "p3": "You change it in SETTINGS → Company details, in the Public link field.",
+          "nota": "If you change it, every link you've already handed out stops working: the QR on the truck, your bio, your WhatsApp greeting. Change it early or not at all."
+        },
+        "queVeElCliente": {
+          "title": "What my client sees in their portal",
+          "p1": "Open Portal from your menu: it's exactly what they see, so you can check it before handing over the code.",
+          "p2": "They see the project's progress, their estimate as a PDF, their invoices, the photos you mark as visible, and a chat with you.",
+          "p3": "They don't see your costs, your margins, your suppliers, or the estimate lines you marked as internal."
+        },
+        "exportar": {
+          "title": "Export my data to Excel or PDF",
+          "p1": "In CRM, the tabs across the top are your business tables: projects, jobs and billing.",
+          "p2": "Each table sorts and filters, and you can hide the columns you don't care about.",
+          "p3": "The download button gives it to you as Excel or PDF. The PDF comes out with your logo and company details in the header."
+        }
+      },
+      "presupuestos": {
+        "crear": {
+          "title": "Build an estimate",
+          "p1": "Usually it's already started: whatever comes in through your public link shows up under Requests and estimates, with the client and description already filled in.",
+          "p2": "From scratch: New estimate → pick the client → Create estimate.",
+          "p3": "Then you add lines. Each line lives in a zone (Kitchen, Bathroom 2) and a category (Materials, Labour, Subcontractors). They save when you leave the field — there's no per-line save button."
+        },
+        "visibilidad": {
+          "title": "Hide a line from the client",
+          "p1": "Next to each line there's a checkbox. Ticked, the client sees it in their portal and on the PDF; unticked, they don't.",
+          "p2": "It lets you break your real cost down for yourself — three kinds of screw, the helper's hours — and show them one clean line.",
+          "nota": "The price doesn't change. What you hide is added up into a single line item, so what they read adds up to exactly what they'll pay."
+        },
+        "margenYmerma": {
+          "title": "Margin and waste",
+          "p1": "They're in the panel on the right. Waste is the material lost to cuts, breakage and offcuts; margin is your cut.",
+          "p2": "Drag the sliders and the total recalculates immediately. Your defaults live in SETTINGS → Margins and rules."
+        },
+        "enviarYaceptar": {
+          "title": "Send it and get it accepted",
+          "p1": "From the estimate you send it to their portal. It arrives with your logo, your RBQ licence and your tax numbers in the header.",
+          "p2": "They download it as a PDF and can sign it from their phone.",
+          "p3": "Once accepted, it turns into a project with its client, its dates and its work plan already inside.",
+          "nota": "They can only accept one you've marked as sent. A draft you're still tuning can't be accepted behind your back."
+        }
+      },
+      "trabajo": {
+        "crearOrden": {
+          "title": "Send someone a job",
+          "p1": "FIELD → Work orders → New work order. Pick the project and write the title the way you'd say it to the person: \"Tile the bathroom\", not \"carry on with the bathroom\".",
+          "p2": "Set the priority and who it goes to. It can stay unassigned if you don't know yet.",
+          "p3": "The moment you assign it, it shows up in their field app without you having to tell them."
+        },
+        "numeroDeObra": {
+          "title": "What Aa-26-0001 means",
+          "p1": "It's that job's number. The capital is the project, the lowercase is the type of work, then the year and that year's running number.",
+          "p2": "It's issued when the job is created and never changes, even if you later move the date or change the type.",
+          "p3": "With that number, FIELD → Work log tells you who was there, how many hours, and how many are still unapproved.",
+          "nota": "An appointment with no project attached carries no number, on purpose: it isn't project work. If you attach a project later, it takes a number then."
+        },
+        "tiposDeTrabajo": {
+          "title": "Create my own job types",
+          "p1": "SETTINGS → Job types. Five come built in; if you invoice Toiture or Filage, create them with their own letter instead of lumping everything into \"Other\".",
+          "p2": "You can't delete one that has already classified work, nor change its letter: that letter sits inside numbers already issued."
+        },
+        "comoFicha": {
+          "title": "How my crew clocks in",
+          "p1": "They open /campo on their phone with their code, pick the project and press Check in.",
+          "p2": "The phone asks for their location and it's required: that's what turns the entry into proof they were there.",
+          "p3": "They mark whether the hours are billable and the type of work. When they're done, Check out.",
+          "nota": "If they move site mid-shift, Switch project closes the previous entry and opens the new one in one go."
+        },
+        "verHoras": {
+          "title": "See the hours on a project",
+          "p1": "FIELD → Work log: one line per job number, with the hours, how many people were on it, and how many hours are still unapproved.",
+          "p2": "If what you want is everyone's individual entries, that's in FIELD → Check-in."
+        }
+      },
+      "dinero": {
+        "crearFactura": {
+          "title": "Issue an invoice",
+          "p1": "FINANCE → Billing and payments → New invoice. Pick the client, the project and the type: deposit, partial payment or final payment.",
+          "p2": "You type the amount before tax. The system adds the tax.",
+          "p3": "Before saving you see the breakdown: subtotal, tax and total.",
+          "nota": "The number is assigned automatically. You don't type it and you can't change it."
+        },
+        "impuestos": {
+          "title": "How the taxes are worked out",
+          "p1": "They come from the province set in SETTINGS → Company details. In Quebec, GST 5% and QST 9.975%.",
+          "p2": "They're worked out on the full value of the work, and each is rounded separately, because they're declared separately.",
+          "p3": "The holdback (10% in Quebec) comes off deposits and partial payments, never the final one: the final payment is exactly where the holdback is released."
+        },
+        "numeroFactura": {
+          "title": "My invoice numbers",
+          "p1": "Format 2026-0001: the year plus a four-digit running number, per business, restarting every 1 January.",
+          "p2": "There are no gaps because an invoice is never deleted: voiding it marks it cancelled and the row keeps its number. An invoice missing from the series is the first thing an inspector asks about."
+        },
+        "cobrar": {
+          "title": "Take card payments",
+          "p1": "SETTINGS → Payments (Stripe) → connect. You complete the sign-up with your own details and your bank.",
+          "p2": "The account is in your business's name and on your email, and the money goes straight to your account.",
+          "p3": "After that, your client pays their invoice from their portal.",
+          "nota": "If the platform is still in test mode, a real card won't go through no matter how complete your sign-up is. Ask whoever administers the installation."
+        },
+        "contable": {
+          "title": "Get the data to my accountant",
+          "p1": "FINANCE → Reports. That's where receivables, profitability by project and the accountant export live.",
+          "p2": "You can also download any CRM table as Excel or as a PDF on your letterhead."
+        }
+      },
+      "problemas": {
+        "noVeObras": {
+          "title": "My worker sees no projects when clocking in",
+          "p1": "Only open projects show up for them. If the project is paused or closed, it won't appear.",
+          "p2": "Check in PROJECTS that the project exists and what state it's in.",
+          "nota": "It may also be that the code you gave them is no longer valid, because another was generated afterwards. Generate a fresh one from their card in Technicians."
+        },
+        "horasEnCero": {
+          "title": "A job that was done shows zero hours",
+          "p1": "The entry was made against the project alone, without picking the day's job. Those hours exist and show up in Check-in, but they aren't charged to any job number.",
+          "p2": "For them to count, the worker has to clock in with the job selected. They aren't attributed to a job nobody picked."
+        },
+        "noSeCobra": {
+          "title": "It won't let me take payment",
+          "p1": "Check SETTINGS → Payments (Stripe). If the sign-up is half done, you can't take payment yet: it has to be finished.",
+          "p2": "If the platform is in test mode, no real card will go through however complete your sign-up is. That's changed by whoever administers the installation."
+        },
+        "noLlegaCorreo": {
+          "title": "My client isn't getting any email",
+          "p1": "Email sending isn't configured yet on this installation.",
+          "p2": "In the meantime, anything you need to get to them goes through their portal and the chat. Both work."
+        }
+      }
+    }
   }
 }

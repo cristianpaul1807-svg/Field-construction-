@@ -15,6 +15,7 @@ la plataforma para gestionar su empresa, y quien va a extender el código.
 | Si quieres… | Abre |
 |---|---|
 | Entender cómo encaja todo | [arquitectura.md](arquitectura.md) |
+| Añadir un tema al bot de ayuda del panel | [funciones/ayuda.md](funciones/ayuda.md#añadir-un-tema) |
 | Saber qué hace el selector de obra de la cabecera | [funciones/selector-de-obra.md](funciones/selector-de-obra.md) |
 | Añadir una función nueva de principio a fin | [desarrollo/anadir-una-funcion.md](desarrollo/anadir-una-funcion.md) |
 | Añadir o corregir textos en los cuatro idiomas | [desarrollo/idiomas.md](desarrollo/idiomas.md) |
@@ -34,6 +35,7 @@ directamente al paso a paso.
 | Menú | Guía |
 |---|---|
 | Panel | [funciones/panel.md](funciones/panel.md) |
+| *(en todas las pantallas)* El bot de ayuda | [funciones/ayuda.md](funciones/ayuda.md) |
 
 ### Clientes
 
