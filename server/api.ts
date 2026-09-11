@@ -7223,7 +7223,78 @@ apiRouter.patch(
     }
     if (body.title !== undefined) update.title = String(body.title).trim();
     if (body.description !== undefined) update.description = body.description || null;
+    if (body.serviceType !== undefined) update.service_type = body.serviceType || null;
+
     const supabase = req.supabase!;
+
+    // Poner o mover la fecha se hace desde aquí, no sólo al crear. Las órdenes
+    // que ya existían nacieron sin fecha, y sin esto no había forma de dársela:
+    // quedaban fuera de la agenda para siempre salvo borrándolas y rehaciendo
+    // el trabajo a mano.
+    const tocaAgenda =
+      body.scheduledStart !== undefined ||
+      body.durationMinutes !== undefined ||
+      body.assignedEmployeeId !== undefined ||
+      body.assignedSubcontractorId !== undefined;
+
+    if (tocaAgenda) {
+      if (body.assignedEmployeeId && body.assignedSubcontractorId) {
+        res.status(400).json({ error: "Assign either an employee or a subcontractor, not both" });
+        return;
+      }
+
+      // Lo que va a quedar en la fila, no lo que llega: un cambio de hora a
+      // secas tiene que comprobarse contra el trabajador que ya tenía puesto.
+      const { data: actual } = await supabase
+        .from("work_orders")
+        .select("scheduled_start, duration_minutes, assigned_employee_id, assigned_subcontractor_id")
+        .eq("business_id", req.businessId!)
+        .eq("id", req.params.id)
+        .maybeSingle();
+      if (!actual) {
+        res.status(404).json({ error: "work order not found" });
+        return;
+      }
+
+      const asignaCambia = body.assignedEmployeeId !== undefined || body.assignedSubcontractorId !== undefined;
+      const empleado = asignaCambia ? body.assignedEmployeeId || null : actual.assigned_employee_id;
+      const subcontratista = asignaCambia ? body.assignedSubcontractorId || null : actual.assigned_subcontractor_id;
+      const inicio = body.scheduledStart !== undefined ? body.scheduledStart || null : actual.scheduled_start;
+      const minutos = body.durationMinutes !== undefined
+        ? Number(body.durationMinutes) || 60
+        : Number(actual.duration_minutes) || 60;
+
+      if (inicio && (empleado || subcontratista)) {
+        const choque = await choqueDeAgenda(supabase, req.businessId!, {
+          employeeId: empleado,
+          subcontractorId: subcontratista,
+          startTime: inicio,
+          endTime: new Date(new Date(inicio).getTime() + minutos * 60000).toISOString(),
+          // La propia orden no choca consigo misma al moverla media hora.
+          excluirOrden: req.params.id,
+        });
+        if (choque) {
+          res.status(409).json({
+            error: "worker already booked",
+            code: "worker_double_booked",
+            conflict: choque,
+          });
+          return;
+        }
+      }
+
+      if (body.scheduledStart !== undefined) update.scheduled_start = inicio;
+      // Quitarle la fecha a una orden le quita también la duración: una orden
+      // sin cuándo no dura una hora, no dura nada todavía.
+      if (body.scheduledStart !== undefined || body.durationMinutes !== undefined) {
+        update.duration_minutes = inicio ? minutos : null;
+      }
+      if (asignaCambia) {
+        update.assigned_employee_id = empleado;
+        update.assigned_subcontractor_id = subcontratista;
+      }
+    }
+
     const { data: updated, error } = await supabase
       .from("work_orders")
       .update(update)

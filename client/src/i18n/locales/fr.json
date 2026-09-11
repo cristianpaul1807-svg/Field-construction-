@@ -949,7 +949,14 @@
     "deleteConfirm": "Supprimer ce bon de travail ?",
     "pageTitle": "Bons de travail",
     "scheduleFor": "Date et heure ({{opt}})",
-    "durationLabel": "Durée approximative (minutes)"
+    "durationLabel": "Durée approximative (minutes)",
+    "schedule": "Planifier",
+    "reschedule": "Replanifier",
+    "notScheduled": "Sans date",
+    "clearSchedule": "Retirer la date",
+    "scheduleError": "La date n'a pas pu être enregistrée",
+    "scheduleHint": "Avec une date, l'ordre apparaît à l'agenda et {{name}} le voit en pointant ce jour-là.",
+    "scheduleHintUnassigned": "Avec une date, l'ordre apparaît à l'agenda. Assignez-le à quelqu'un pour qu'il le voie aussi en pointant."
   },
   "scheduling": {
     "title": "Calendrier",

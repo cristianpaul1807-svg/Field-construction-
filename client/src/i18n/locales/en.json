@@ -949,7 +949,14 @@
     "deleteConfirm": "Delete this work order?",
     "pageTitle": "Work orders",
     "scheduleFor": "Date and time ({{opt}})",
-    "durationLabel": "Approximate duration (minutes)"
+    "durationLabel": "Approximate duration (minutes)",
+    "schedule": "Schedule",
+    "reschedule": "Reschedule",
+    "notScheduled": "No date yet",
+    "clearSchedule": "Remove the date",
+    "scheduleError": "The date could not be saved",
+    "scheduleHint": "With a date, the order shows on the calendar and {{name}} sees it when clocking in that day.",
+    "scheduleHintUnassigned": "With a date, the order shows on the calendar. Assign it to someone so they also see it when clocking in."
   },
   "scheduling": {
     "title": "Scheduling",

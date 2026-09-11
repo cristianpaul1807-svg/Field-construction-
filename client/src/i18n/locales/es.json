@@ -949,7 +949,14 @@
     "deleteConfirm": "¿Eliminar esta orden de trabajo?",
     "pageTitle": "Órdenes de trabajo",
     "scheduleFor": "Fecha y hora ({{opt}})",
-    "durationLabel": "Duración aproximada (minutos)"
+    "durationLabel": "Duración aproximada (minutos)",
+    "schedule": "Programar",
+    "reschedule": "Reprogramar",
+    "notScheduled": "Sin fecha",
+    "clearSchedule": "Quitar la fecha",
+    "scheduleError": "No se pudo guardar la fecha",
+    "scheduleHint": "Con fecha, la orden sale en la agenda y {{name}} la ve al fichar ese día.",
+    "scheduleHintUnassigned": "Con fecha, la orden sale en la agenda. Asígnala a alguien para que además la vea al fichar."
   },
   "scheduling": {
     "title": "Agenda",

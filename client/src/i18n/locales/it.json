@@ -949,7 +949,14 @@
     "deleteConfirm": "Eliminare questo ordine di lavoro?",
     "pageTitle": "Ordini di lavoro",
     "scheduleFor": "Data e ora ({{opt}})",
-    "durationLabel": "Durata approssimativa (minuti)"
+    "durationLabel": "Durata approssimativa (minuti)",
+    "schedule": "Pianifica",
+    "reschedule": "Ripianifica",
+    "notScheduled": "Senza data",
+    "clearSchedule": "Togli la data",
+    "scheduleError": "Non è stato possibile salvare la data",
+    "scheduleHint": "Con una data, l'ordine compare in agenda e {{name}} lo vede timbrando quel giorno.",
+    "scheduleHintUnassigned": "Con una data, l'ordine compare in agenda. Assegnalo a qualcuno perché lo veda anche timbrando."
   },
   "scheduling": {
     "title": "Calendario",
