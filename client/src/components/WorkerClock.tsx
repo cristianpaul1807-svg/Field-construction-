@@ -29,6 +29,15 @@ interface Opcion {
   workOrderId: string | null;
   /** Lo que la oficina dijo que era este trabajo, si lo dijo. */
   serviceType: string | null;
+  /** El número de obra. Es por lo que se le va a preguntar mañana. */
+  commessa: string | null;
+}
+
+/** Un tipo de trabajo del negocio, con su letra. */
+interface TipoDeTrabajo {
+  slug: string;
+  letter: string;
+  name: string | null;
 }
 
 interface TimeHistoryEntry {
@@ -47,7 +56,6 @@ interface TimeHistoryEntry {
   overtime: boolean;
 }
 
-const SERVICE_TYPES = ["instalacion", "mantenimiento", "reparacion", "inspeccion", "otro"] as const;
 
 /** Radix no admite un SelectItem con valor vacío, así que "no lo he dicho"
  *  necesita un valor propio en la pantalla. A la base sigue yendo nulo. */
@@ -80,6 +88,7 @@ export function WorkerClock() {
   const { t, i18n } = useTranslation();
   const [active, setActive] = useState<ActiveEntry | null | undefined>(undefined);
   const [opciones, setOpciones] = useState<Opcion[]>([]);
+  const [tipos, setTipos] = useState<TipoDeTrabajo[]>([]);
   const [history, setHistory] = useState<TimeHistoryEntry[]>([]);
   const [elegida, setElegida] = useState("");
   const [serviceType, setServiceType] = useState("");
@@ -100,6 +109,11 @@ export function WorkerClock() {
     workerApiFetch("/api/worker/time-entries/history")
       .then((res) => res.json())
       .then((data) => setHistory(Array.isArray(data) ? data : []));
+    // Los tipos son del negocio, no una lista fija: si el jefe da de alta
+    // "Toiture", el que está en el tejado tiene que poder decir eso.
+    workerApiFetch("/api/worker/service-types")
+      .then((res) => res.json())
+      .then((d) => setTipos(Array.isArray(d) ? d : []));
   };
 
   useEffect(load, []);
@@ -355,6 +369,12 @@ export function WorkerClock() {
                 </SelectContent>
               </Select>
             )}
+            {/* El número del trabajo elegido. Es por lo que se le va a
+                preguntar mañana en la oficina, así que lo ve antes de fichar
+                y no después. */}
+            {trabajo?.commessa && (
+              <p className="text-xs text-muted-foreground font-mono pt-0.5">{trabajo.commessa}</p>
+            )}
           </div>
 
           {/* "Facturable" se lo preguntábamos al obrero y no lo leía nadie:
@@ -377,8 +397,10 @@ export function WorkerClock() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={SIN_ESPECIFICAR}>{t("worker.serviceTypes.sin_especificar")}</SelectItem>
-                {SERVICE_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>{t(`worker.serviceTypes.${type}`)}</SelectItem>
+                {tipos.map((type) => (
+                  <SelectItem key={type.slug} value={type.slug}>
+                    {type.name ?? t(`worker.serviceTypes.${type.slug}`, { defaultValue: type.slug })}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

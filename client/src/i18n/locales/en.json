@@ -95,7 +95,8 @@
     "askAssistant": "Ask the business assistant...",
     "assistantTitle": "Business assistant",
     "assistantHint": "Ask it to add a work projection, review pending estimates, or anything else you'd like to automate.",
-    "payroll": "Payroll"
+    "payroll": "Payroll",
+    "workLog": "Work log"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1375,5 +1376,26 @@
     "slug_taken": "That link is already used by another business. Pick a different one.",
     "stripe_no_checkout_url": "We couldn't open the payment page. Please try again in a moment.",
     "worker_not_in_period": "That worker has no hours in that period."
+  },
+  "workLog": {
+    "title": "Work log",
+    "description": "Every job number with what actually happened on it: who, when and how many hours.",
+    "searchPlaceholder": "Search by number, site, job or person",
+    "noMatches": "Nothing matches “{{query}}”.",
+    "empty": "No numbered jobs yet. As soon as you create a work order or schedule work on a site, it shows up here.",
+    "noCommessa": "no number",
+    "noHours": "no hours",
+    "totalHours": "Hours",
+    "entries": "Clock-ins",
+    "peopleCount": "{{count}} person",
+    "peopleCount_other": "{{count}} people",
+    "pendingApproval": "{{count}} unapproved",
+    "whoWorked": "Who was there",
+    "noEntriesYet": "Nobody has clocked into this job yet.",
+    "notApproved": "Hours awaiting approval",
+    "kind": {
+      "orden": "Work order",
+      "cita": "Schedule"
+    }
   }
 }

@@ -69,6 +69,8 @@ directamente al paso a paso.
 | *(dentro de Check-in)* Las 8 horas y las extra | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#las-8-horas-y-las-extra) |
 | *(dentro de Check-in)* Planificado vs. real | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#planificado-vs-real) |
 | Órdenes de trabajo | [funciones/ordenes-de-trabajo.md](funciones/ordenes-de-trabajo.md) |
+| Control de trabajo | [funciones/control-de-trabajo.md](funciones/control-de-trabajo.md) |
+| *(dentro de Control de trabajo)* El número de obra | [funciones/control-de-trabajo.md](funciones/control-de-trabajo.md#el-número-de-obra) |
 | Agenda | [funciones/agenda.md](funciones/agenda.md) |
 
 ### Finanzas

@@ -95,7 +95,8 @@
     "askAssistant": "Pídele algo al asistente del negocio...",
     "assistantTitle": "Asistente del negocio",
     "assistantHint": "Pídele que agregue una proyección de trabajo, revise presupuestos pendientes, o cualquier cosa que quieras automatizar.",
-    "payroll": "Nóminas"
+    "payroll": "Nóminas",
+    "workLog": "Control de trabajo"
   },
   "dashboard": {
     "title": "Panel",
@@ -1375,5 +1376,26 @@
     "slug_taken": "Ese enlace ya lo usa otro negocio. Elige otro.",
     "stripe_no_checkout_url": "No pudimos abrir la pasarela de pago. Vuelve a intentarlo en un momento.",
     "worker_not_in_period": "Ese trabajador no tiene horas en ese periodo."
+  },
+  "workLog": {
+    "title": "Control de trabajo",
+    "description": "Cada número de obra con lo que de verdad pasó en ella: quién, cuándo y cuántas horas.",
+    "searchPlaceholder": "Busca por número, obra, trabajo o persona",
+    "noMatches": "Nada que coincida con «{{query}}».",
+    "empty": "Todavía no hay trabajos con número. En cuanto crees una orden o programes un trabajo en una obra, aparecerá aquí.",
+    "noCommessa": "sin número",
+    "noHours": "sin horas",
+    "totalHours": "Horas",
+    "entries": "Fichajes",
+    "peopleCount": "{{count}} persona",
+    "peopleCount_other": "{{count}} personas",
+    "pendingApproval": "{{count}} sin aprobar",
+    "whoWorked": "Quién estuvo",
+    "noEntriesYet": "Nadie ha fichado todavía en este trabajo.",
+    "notApproved": "Horas por aprobar",
+    "kind": {
+      "orden": "Orden de trabajo",
+      "cita": "Agenda"
+    }
   }
 }

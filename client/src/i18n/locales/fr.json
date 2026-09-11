@@ -95,7 +95,8 @@
     "askAssistant": "Demandez quelque chose à l'assistant...",
     "assistantTitle": "Assistant de l'entreprise",
     "assistantHint": "Demandez-lui d'ajouter une projection de travaux, de revoir les soumissions en attente, ou tout ce que vous souhaitez automatiser.",
-    "payroll": "Paie"
+    "payroll": "Paie",
+    "workLog": "Suivi des travaux"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1375,5 +1376,26 @@
     "slug_taken": "Ce lien est déjà utilisé par une autre entreprise. Choisissez-en un autre.",
     "stripe_no_checkout_url": "Nous n'avons pas pu ouvrir la page de paiement. Réessayez dans un instant.",
     "worker_not_in_period": "Ce travailleur n'a aucune heure sur cette période."
+  },
+  "workLog": {
+    "title": "Suivi des travaux",
+    "description": "Chaque numéro de chantier avec ce qui s'y est vraiment passé : qui, quand et combien d'heures.",
+    "searchPlaceholder": "Chercher par numéro, chantier, travail ou personne",
+    "noMatches": "Rien ne correspond à « {{query}} ».",
+    "empty": "Aucun travail numéroté pour l'instant. Dès que vous créez un ordre de travail ou planifiez un travail sur un chantier, il apparaît ici.",
+    "noCommessa": "sans numéro",
+    "noHours": "aucune heure",
+    "totalHours": "Heures",
+    "entries": "Pointages",
+    "peopleCount": "{{count}} personne",
+    "peopleCount_other": "{{count}} personnes",
+    "pendingApproval": "{{count}} à approuver",
+    "whoWorked": "Qui était là",
+    "noEntriesYet": "Personne n'a encore pointé sur ce travail.",
+    "notApproved": "Heures à approuver",
+    "kind": {
+      "orden": "Ordre de travail",
+      "cita": "Agenda"
+    }
   }
 }

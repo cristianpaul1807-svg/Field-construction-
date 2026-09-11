@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
+import { Commessa } from "@/components/Commessa";
 
 interface TimeEntry {
   id: string;
@@ -30,6 +31,8 @@ interface TimeEntry {
   serviceType: string | null;
   /** De qué trabajo son estas horas, cuando fichó sobre uno de la agenda. */
   jobTitle: string | null;
+  /** El número de obra de esas horas. */
+  commessa: string | null;
   approved: boolean;
 }
 
@@ -69,12 +72,13 @@ export default function CheckIn() {
   const sinAcentos = (v: string) =>
     v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-  // Se busca por persona, por obra y por trabajo: quien revisa horas llega con
-  // una de las tres en la cabeza, no siempre con el nombre.
+  // Se busca por persona, por obra, por trabajo y por número: quien revisa
+  // horas llega con una de esas cuatro en la cabeza, y el número es la que
+  // trae quien viene de un albarán o de una factura.
   const aguja = sinAcentos(busqueda.trim());
   const visibles = (entries ?? []).filter((e) =>
     !aguja ||
-    sinAcentos([e.workerName, e.projectName, e.jobTitle].filter(Boolean).join(" ")).includes(aguja)
+    sinAcentos([e.workerName, e.projectName, e.jobTitle, e.commessa].filter(Boolean).join(" ")).includes(aguja)
   );
 
   const time = (iso: string | null) =>
@@ -162,7 +166,10 @@ export default function CheckIn() {
                       {entry.workerName?.charAt(0)}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">{entry.workerName}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-foreground">{entry.workerName}</p>
+                        {entry.commessa && <Commessa code={entry.commessa} copiable={false} />}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {/* Dos citas del mismo sitio el mismo día ya no se
                             confunden: se dice cuál era. */}

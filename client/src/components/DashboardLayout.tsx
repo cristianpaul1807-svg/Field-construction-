@@ -20,6 +20,7 @@ import {
   MapPin,
   Clock,
   ClipboardList,
+  ListChecks,
   Calendar,
   CreditCard,
   BarChart3,
@@ -116,6 +117,9 @@ const navSections: NavSection[] = [
       { id: "gps-routing", labelKey: "nav.gpsRouting", Icon: MapPin, path: "/gps-routing" },
       { id: "check-in", labelKey: "nav.checkIn", Icon: Clock, path: "/check-in" },
       { id: "work-orders", labelKey: "nav.workOrders", Icon: ClipboardList, path: "/work-orders" },
+      // Justo debajo de las órdenes, porque es lo que se mira después de
+      // crearlas: qué ha pasado de verdad en cada número de obra.
+      { id: "work-log", labelKey: "nav.workLog", Icon: ListChecks, path: "/work-log" },
       { id: "scheduling", labelKey: "nav.scheduling", Icon: Calendar, path: "/scheduling" },
     ],
   },

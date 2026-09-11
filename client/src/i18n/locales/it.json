@@ -95,7 +95,8 @@
     "askAssistant": "Chiedi qualcosa all'assistente...",
     "assistantTitle": "Assistente dell'impresa",
     "assistantHint": "Chiedigli di aggiungere una proiezione di lavoro, rivedere i preventivi in sospeso, o qualsiasi cosa tu voglia automatizzare.",
-    "payroll": "Buste paga"
+    "payroll": "Buste paga",
+    "workLog": "Controllo lavori"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1375,5 +1376,26 @@
     "slug_taken": "Questo link è già usato da un'altra impresa. Scegline un altro.",
     "stripe_no_checkout_url": "Non siamo riusciti ad aprire la pagina di pagamento. Riprova tra un momento.",
     "worker_not_in_period": "Questo lavoratore non ha ore in quel periodo."
+  },
+  "workLog": {
+    "title": "Controllo lavori",
+    "description": "Ogni numero di commessa con quello che è successo davvero: chi, quando e quante ore.",
+    "searchPlaceholder": "Cerca per numero, cantiere, lavoro o persona",
+    "noMatches": "Nessun risultato per «{{query}}».",
+    "empty": "Non ci sono ancora lavori con numero. Appena crei un ordine di lavoro o pianifichi un lavoro su un cantiere, comparirà qui.",
+    "noCommessa": "senza numero",
+    "noHours": "nessuna ora",
+    "totalHours": "Ore",
+    "entries": "Timbrature",
+    "peopleCount": "{{count}} persona",
+    "peopleCount_other": "{{count}} persone",
+    "pendingApproval": "{{count}} da approvare",
+    "whoWorked": "Chi c'era",
+    "noEntriesYet": "Nessuno ha ancora timbrato su questo lavoro.",
+    "notApproved": "Ore da approvare",
+    "kind": {
+      "orden": "Ordine di lavoro",
+      "cita": "Agenda"
+    }
   }
 }

@@ -15,12 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
+import { useTiposDeTrabajo, nombreDeTipo } from "@/lib/tiposDeTrabajo";
 
 const TYPE_OPTIONS = ["visita", "llamada", "reunion", "inicio", "fin"] as const;
 
 // La clase de cita (arriba) y la clase de trabajo (esto) son ejes distintos:
 // una "visita" puede ser una reparación o una inspección.
-const SERVICE_TYPES = ["instalacion", "mantenimiento", "reparacion", "inspeccion", "otro"] as const;
 const SIN_ESPECIFICAR = "sin_especificar";
 
 interface WorkerOption {
@@ -49,6 +49,7 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [workerId, setWorkerId] = useState<string>("");
   const [serviceType, setServiceType] = useState<string>(SIN_ESPECIFICAR);
+  const { data: tipos } = useTiposDeTrabajo();
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,8 +179,11 @@ export function ScheduleEventDialog({ open, onOpenChange, projectId, initialDate
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={SIN_ESPECIFICAR}>{t("worker.serviceTypes.sin_especificar")}</SelectItem>
-                  {SERVICE_TYPES.map((o) => (
-                    <SelectItem key={o} value={o}>{t(`worker.serviceTypes.${o}`)}</SelectItem>
+                  {/* Con su letra, que es la que entrará en el número de obra. */}
+                  {(tipos ?? []).map((o) => (
+                    <SelectItem key={o.slug} value={o.slug}>
+                      {o.letter} · {nombreDeTipo(o, t)}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -12,11 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { mensajeDeChoque } from "@/lib/conflicto";
+import { Commessa } from "@/components/Commessa";
+import { useTiposDeTrabajo, nombreDeTipo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
 
 const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
-// La misma lista que la agenda: una orden de trabajo y un trabajo asignado
-// son la misma cosa vista desde dos sitios, así que se clasifican igual.
-const SERVICE_TYPES = ["instalacion", "mantenimiento", "reparacion", "inspeccion", "otro"] as const;
 const SIN_ESPECIFICAR = "sin_especificar";
 
 const PRIORITIES = ["baja", "media", "alta"] as const;
@@ -44,6 +43,7 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
   const { data: projects } = useApi<ProjectOption[]>(open ? "/api/projects" : null);
   const { data: employees } = useApi<AssigneeOption[]>(open ? "/api/employees" : null);
   const { data: subcontractors } = useApi<AssigneeOption[]>(open ? "/api/subcontractors" : null);
+  const { data: tipos } = useTiposDeTrabajo();
 
   const reset = () => { setProjectId(""); setTitle(""); setDescription(""); setPriority("media"); setAssignee(""); setServiceType(SIN_ESPECIFICAR); setDate(""); setTime("09:00"); setDurationMinutes(60); setError(null); };
 
@@ -131,7 +131,14 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={SIN_ESPECIFICAR}>{t("worker.serviceTypes.sin_especificar")}</SelectItem>
-                {SERVICE_TYPES.map((v) => <SelectItem key={v} value={v}>{t(`worker.serviceTypes.${v}`)}</SelectItem>)}
+                {/* Con su letra delante: es la que va a acabar dentro del
+                    número de obra, y verla aquí es lo que hace que el número
+                    se entienda en vez de parecer una matrícula. */}
+                {(tipos ?? []).map((v) => (
+                  <SelectItem key={v.slug} value={v.slug}>
+                    {v.letter} · {nombreDeTipo(v, t)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -175,6 +182,8 @@ interface WorkOrder {
   serviceType: string | null;
   projectName: string | null;
   assignedTo: string | null;
+  /** El número de obra, emitido al crearla. Nulo sólo si nació sin obra. */
+  commessa: string | null;
   /** Nulo mientras nadie haya decidido cuándo. Sin esto no sale en la agenda. */
   scheduledStart: string | null;
   durationMinutes: number | null;
@@ -291,6 +300,7 @@ function ScheduleDialog({ order, onSaved }: { order: WorkOrder; onSaved: () => v
 export default function WorkOrders() {
   const { t, i18n } = useTranslation();
   const { data: orders, loading, error, reload } = useApi<WorkOrder[]>("/api/work-orders");
+  const { data: tipos } = useTiposDeTrabajo();
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Status is edited straight from the card rather than behind a dialog:
@@ -343,6 +353,10 @@ export default function WorkOrders() {
             <Card key={order.id} className="p-5">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="min-w-0">
+                  {/* El número va encima del título y no al lado: es por lo
+                      que se pregunta el trabajo, y se lee antes que el
+                      nombre que alguien le puso aquel día. */}
+                  <Commessa code={order.commessa} className="mb-1" />
                   <p className="font-medium text-foreground">{order.title}</p>
                   <p className="text-sm text-muted-foreground mt-1">{order.description}</p>
                   <p className="text-xs text-muted-foreground mt-2">
@@ -352,9 +366,7 @@ export default function WorkOrders() {
                     {order.assignedTo ? t("workOrders.assignedTo", { name: order.assignedTo }) : t("workOrders.unassigned")}
                     {" · "}
                     <span className={order.serviceType ? undefined : "italic"}>
-                      {order.serviceType
-                        ? t(`worker.serviceTypes.${order.serviceType}`, { defaultValue: order.serviceType })
-                        : t("worker.serviceTypes.sin_especificar")}
+                      {nombreDeSlug(order.serviceType, tipos, t)}
                     </span>
                   </p>
                   {/* Cuándo. Es lo que decide si la orden sale en la agenda y

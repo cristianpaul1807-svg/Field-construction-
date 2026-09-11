@@ -1293,7 +1293,7 @@ apiRouter.get(
       // ("Instalar cableado planta 3"), no el nombre de la obra a secas.
       admin
         .from("schedule_events")
-        .select("id, title, start_time, service_type, projects(id, name, status)")
+        .select("id, title, start_time, service_type, commessa, projects(id, name, status)")
         .eq("business_id", req.workerBusinessId!)
         .eq(assignedColumn, req.workerId!)
         .gte("start_time", desde)
@@ -1306,7 +1306,7 @@ apiRouter.get(
       // pelado de la obra, sin su título y sin su tipo de servicio.
       admin
         .from("work_orders")
-        .select("id, title, service_type, scheduled_start, status, projects(id, name, status)")
+        .select("id, title, service_type, scheduled_start, status, commessa, projects(id, name, status)")
         .eq("business_id", req.workerBusinessId!)
         .eq(assignedColumn, req.workerId!)
         .gte("scheduled_start", desde)
@@ -1341,6 +1341,8 @@ apiRouter.get(
       scheduleEventId: string | null;
       workOrderId: string | null;
       serviceType: string | null;
+      /** El número de obra, para que el trabajador sepa qué está fichando. */
+      commessa: string | null;
     }[] = [];
 
     for (const row of hoyEnAgenda.data as any[]) {
@@ -1354,6 +1356,7 @@ apiRouter.get(
           scheduleEventId: row.id,
           workOrderId: null,
           serviceType: row.service_type ?? null,
+          commessa: row.commessa ?? null,
         });
       }
     }
@@ -1371,6 +1374,7 @@ apiRouter.get(
           scheduleEventId: null,
           workOrderId: row.id,
           serviceType: row.service_type ?? null,
+          commessa: row.commessa ?? null,
         });
       }
     }
@@ -1390,10 +1394,34 @@ apiRouter.get(
           scheduleEventId: null,
           workOrderId: null,
           serviceType: null,
+          commessa: null,
         });
       }
     }
     res.json(opciones);
+  })
+);
+
+/**
+ * Los tipos de trabajo, para el desplegable del móvil.
+ *
+ * Van por aquí y no con la lista escrita a mano que había, porque el negocio
+ * puede tener los suyos: si el jefe da de alta "Toiture", el que está en el
+ * tejado tiene que poder decir que eso es lo que hizo.
+ */
+apiRouter.get(
+  "/worker/service-types",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("service_types")
+      .select("slug, letter, name")
+      .eq("business_id", req.workerBusinessId!)
+      .neq("slug", "sin_especificar")
+      .order("sort");
+    if (error) throw error;
+    res.json(data.map((t: any) => ({ slug: t.slug, letter: t.letter, name: t.name ?? null })));
   })
 );
 
@@ -5213,7 +5241,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, check_out_location, check_out_lat, check_out_lng, approved, service_type, schedule_events(title), work_orders(title), projects(name), employees(name), subcontractors(name)"
+        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, check_out_location, check_out_lat, check_out_lng, approved, service_type, schedule_events(title, commessa), work_orders(title, commessa), projects(name, code), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
@@ -5244,6 +5272,9 @@ apiRouter.get(
         // día ya no se confunden en la hoja de horas. Un fichaje cuelga de una
         // cita o de una orden, nunca de las dos, así que se enseña la que haya.
         jobTitle: t.schedule_events?.title ?? t.work_orders?.title ?? null,
+        // El número de obra de esas horas. Es lo que permite mirar mañana un
+        // trabajo y ver quién estuvo, cuándo y cuánto, sin cruzar pantallas.
+        commessa: t.schedule_events?.commessa ?? t.work_orders?.commessa ?? null,
         approved: t.approved,
       }))
     );
@@ -5265,6 +5296,42 @@ apiRouter.patch(
   })
 );
 
+// ---------- Service types ----------
+
+/**
+ * Los tipos de trabajo del negocio, con la letra que cada uno pone en el
+ * código de obra.
+ *
+ * Estaban escritos a mano en el cliente, en cuatro sitios distintos. Ahora
+ * son datos, porque la letra tiene que salir de la misma tabla que usa la
+ * base al emitir el código: si el desplegable dijera una letra y el
+ * disparador escribiera otra, el jefe no volvería a fiarse de un código.
+ *
+ * `name` nulo es uno de los de casa y se traduce en pantalla; con nombre
+ * escrito es del negocio y se enseña tal cual, porque nadie va a traducir a
+ * cuatro idiomas lo que escriba un contratista a las siete de la mañana.
+ */
+apiRouter.get(
+  "/service-types",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("service_types")
+      .select("id, slug, letter, name, builtin")
+      .eq("business_id", req.businessId!)
+      .order("sort");
+    if (error) throw error;
+
+    res.json(
+      data
+        // "sin_especificar" tiene letra porque el código la necesita, pero no
+        // es algo que se elija: es lo que queda cuando no se eligió nada.
+        .filter((t: any) => t.slug !== "sin_especificar")
+        .map((t: any) => ({ id: t.id, slug: t.slug, letter: t.letter, name: t.name ?? null, builtin: t.builtin }))
+    );
+  })
+);
+
 // ---------- Work Orders ----------
 
 apiRouter.get(
@@ -5273,7 +5340,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("work_orders")
-      .select("id, title, description, priority, status, service_type, scheduled_start, duration_minutes, projects(name), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+      .select("id, title, description, priority, status, service_type, scheduled_start, duration_minutes, commessa, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
       .eq("business_id", req.businessId!);
 
     if (error) throw error;
@@ -5288,10 +5355,222 @@ apiRouter.get(
         serviceType: w.service_type ?? null,
         scheduledStart: w.scheduled_start ?? null,
         durationMinutes: w.duration_minutes ?? null,
+        // El número de obra, emitido al crearla y ya inamovible.
+        commessa: w.commessa ?? null,
         projectName: w.projects?.name ?? null,
+        projectCode: w.projects?.code ?? null,
         assignedTo: w.employees?.name ?? w.subcontractors?.name ?? null,
       }))
     );
+  })
+);
+
+// ---------- Control de trabajo ----------
+
+/** Las horas de un turno, en horas decimales. Un turno abierto no cuenta. */
+function horasDeTurno(entrada: string, salida: string | null): number {
+  if (!salida) return 0;
+  const ms = new Date(salida).getTime() - new Date(entrada).getTime();
+  return ms > 0 ? ms / 3_600_000 : 0;
+}
+
+/**
+ * El registro de trabajo: una línea por número de obra, con lo que pasó en
+ * ella.
+ *
+ * Hasta ahora el trabajo vivía repartido —la orden en su lista, la cita en el
+ * calendario, las horas en fichajes— y para saber qué costó un trabajo había
+ * que cruzar tres pantallas a mano. Aquí sale junto y ordenado por su número,
+ * que es como se pregunta en una obra: "¿qué llevamos gastado en el Bc-26-0007?".
+ *
+ * Las horas se suman en memoria y no en la base porque los fichajes de un
+ * negocio caben de sobra en una respuesta; el día que no quepan, esto pide un
+ * agregado en SQL y no un remiendo aquí.
+ */
+apiRouter.get(
+  "/work-log",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const [ordenes, citas, fichajes, tipos] = await Promise.all([
+      supabase
+        .from("work_orders")
+        .select("id, commessa, title, status, priority, service_type, scheduled_start, duration_minutes, project_id, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+        .eq("business_id", req.businessId!)
+        .not("commessa", "is", null),
+      supabase
+        .from("schedule_events")
+        .select("id, commessa, title, type, start_time, end_time, service_type, project_id, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+        .eq("business_id", req.businessId!)
+        .not("commessa", "is", null),
+      supabase
+        .from("time_entries")
+        .select("schedule_event_id, work_order_id, check_in_time, check_out_time, approved, employees(name), subcontractors(name)")
+        .eq("business_id", req.businessId!),
+      supabase
+        .from("service_types")
+        .select("slug, letter, name")
+        .eq("business_id", req.businessId!),
+    ]);
+    if (ordenes.error) throw ordenes.error;
+    if (citas.error) throw citas.error;
+    if (fichajes.error) throw fichajes.error;
+    if (tipos.error) throw tipos.error;
+
+    const letraDe = new Map((tipos.data as any[]).map((t) => [t.slug, t.letter]));
+
+    // Las horas, agrupadas por el trabajo del que cuelgan. Un fichaje sin
+    // trabajo (se fichó sobre la obra a secas) no entra en ninguna línea:
+    // no sería honrado cargárselo a un trabajo que nadie eligió.
+    const porTrabajo = new Map<string, { horas: number; fichajes: number; gente: Set<string>; desde: string | null; hasta: string | null; sinAprobar: number }>();
+    for (const f of fichajes.data as any[]) {
+      const clave = f.schedule_event_id ?? f.work_order_id;
+      if (!clave) continue;
+      let acc = porTrabajo.get(clave);
+      if (!acc) {
+        acc = { horas: 0, fichajes: 0, gente: new Set(), desde: null, hasta: null, sinAprobar: 0 };
+        porTrabajo.set(clave, acc);
+      }
+      acc.horas += horasDeTurno(f.check_in_time, f.check_out_time);
+      acc.fichajes += 1;
+      const quien = f.employees?.name ?? f.subcontractors?.name;
+      if (quien) acc.gente.add(quien);
+      if (!acc.desde || f.check_in_time < acc.desde) acc.desde = f.check_in_time;
+      if (f.check_out_time && (!acc.hasta || f.check_out_time > acc.hasta)) acc.hasta = f.check_out_time;
+      if (f.check_out_time && !f.approved) acc.sinAprobar += 1;
+    }
+
+    const linea = <T,>(id: string, base: T) => {
+      const acc = porTrabajo.get(id);
+      return {
+        ...base,
+        horas: acc ? Math.round(acc.horas * 100) / 100 : 0,
+        fichajes: acc?.fichajes ?? 0,
+        personas: acc ? acc.gente.size : 0,
+        primerFichaje: acc?.desde ?? null,
+        ultimoCierre: acc?.hasta ?? null,
+        horasSinAprobar: acc?.sinAprobar ?? 0,
+      };
+    };
+
+    const deOrdenes = (ordenes.data as any[]).map((w) =>
+      linea(w.id, {
+        id: w.id,
+        kind: "orden" as const,
+        commessa: w.commessa,
+        title: w.title,
+        projectId: w.project_id,
+        projectName: w.projects?.name ?? null,
+        projectCode: w.projects?.code ?? null,
+        serviceType: w.service_type ?? null,
+        serviceLetter: letraDe.get(w.service_type ?? "sin_especificar") ?? null,
+        status: w.status as string | null,
+        priority: w.priority as string | null,
+        scheduledStart: w.scheduled_start ?? null,
+        scheduledEnd: w.scheduled_start
+          ? new Date(new Date(w.scheduled_start).getTime() + (Number(w.duration_minutes) || 60) * 60000).toISOString()
+          : null,
+        assignedTo: w.employees?.name ?? w.subcontractors?.name ?? null,
+      })
+    );
+
+    const deCitas = (citas.data as any[]).map((s) =>
+      linea(s.id, {
+        id: s.id,
+        kind: "cita" as const,
+        commessa: s.commessa,
+        title: s.title,
+        projectId: s.project_id,
+        projectName: s.projects?.name ?? null,
+        projectCode: s.projects?.code ?? null,
+        serviceType: s.service_type ?? null,
+        serviceLetter: letraDe.get(s.service_type ?? "sin_especificar") ?? null,
+        status: null as string | null,
+        priority: null as string | null,
+        scheduledStart: s.start_time,
+        scheduledEnd: s.end_time,
+        assignedTo: s.employees?.name ?? s.subcontractors?.name ?? null,
+      })
+    );
+
+    // Por número y del más nuevo al más viejo: el número lleva el año dentro,
+    // así que ordenar por él al revés pone arriba lo de ahora.
+    res.json([...deOrdenes, ...deCitas].sort((a, b) => String(b.commessa).localeCompare(String(a.commessa))));
+  })
+);
+
+/** Todo lo que pasó en un número de obra: cada fichaje, con su gente. */
+apiRouter.get(
+  "/work-log/:commessa",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const commessa = req.params.commessa;
+
+    const [orden, cita] = await Promise.all([
+      supabase
+        .from("work_orders")
+        .select("id, commessa, title, description, status, priority, service_type, scheduled_start, duration_minutes, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+        .eq("business_id", req.businessId!)
+        .eq("commessa", commessa)
+        .maybeSingle(),
+      supabase
+        .from("schedule_events")
+        .select("id, commessa, title, notes, type, start_time, end_time, service_type, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+        .eq("business_id", req.businessId!)
+        .eq("commessa", commessa)
+        .maybeSingle(),
+    ]);
+
+    const w = orden.data as any;
+    const s = cita.data as any;
+    if (!w && !s) {
+      res.status(404).json({ error: "no such commessa" });
+      return;
+    }
+
+    const trabajoId = w?.id ?? s.id;
+    const columna = w ? "work_order_id" : "schedule_event_id";
+    const { data: fichajes, error } = await supabase
+      .from("time_entries")
+      .select("id, check_in_time, check_out_time, check_in_location, check_out_location, check_in_lat, check_in_lng, approved, service_type, employees(name), subcontractors(name)")
+      .eq("business_id", req.businessId!)
+      .eq(columna, trabajoId)
+      .order("check_in_time");
+    if (error) throw error;
+
+    const entradas = (fichajes ?? []).map((f: any) => ({
+      id: f.id,
+      workerName: f.employees?.name ?? f.subcontractors?.name ?? null,
+      checkInTime: f.check_in_time,
+      checkOutTime: f.check_out_time,
+      checkInLocation: f.check_in_location,
+      checkOutLocation: f.check_out_location,
+      checkInLat: f.check_in_lat === null ? null : Number(f.check_in_lat),
+      checkInLng: f.check_in_lng === null ? null : Number(f.check_in_lng),
+      approved: f.approved,
+      serviceType: f.service_type ?? null,
+      horas: Math.round(horasDeTurno(f.check_in_time, f.check_out_time) * 100) / 100,
+    }));
+
+    res.json({
+      commessa,
+      kind: w ? "orden" : "cita",
+      title: w?.title ?? s.title,
+      notes: w?.description ?? s?.notes ?? null,
+      projectName: (w ?? s).projects?.name ?? null,
+      projectCode: (w ?? s).projects?.code ?? null,
+      serviceType: (w ?? s).service_type ?? null,
+      status: w?.status ?? null,
+      priority: w?.priority ?? null,
+      scheduledStart: w ? w.scheduled_start ?? null : s.start_time,
+      scheduledEnd: w
+        ? w.scheduled_start
+          ? new Date(new Date(w.scheduled_start).getTime() + (Number(w.duration_minutes) || 60) * 60000).toISOString()
+          : null
+        : s.end_time,
+      assignedTo: (w ?? s).employees?.name ?? (w ?? s).subcontractors?.name ?? null,
+      horas: Math.round(entradas.reduce((t, e) => t + e.horas, 0) * 100) / 100,
+      entradas,
+    });
   })
 );
 
@@ -5486,14 +5765,14 @@ apiRouter.get(
       supabase
         .from("schedule_events")
         .select(
-          "id, title, type, start_time, end_time, notes, service_type, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
+          "id, title, type, start_time, end_time, notes, service_type, commessa, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
         )
         .eq("business_id", req.businessId!)
         .order("start_time"),
       supabase
         .from("work_orders")
         .select(
-          "id, title, description, priority, status, service_type, scheduled_start, duration_minutes, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
+          "id, title, description, priority, status, service_type, scheduled_start, duration_minutes, commessa, project_id, projects(name), employees:assigned_employee_id(id, name), subcontractors:assigned_subcontractor_id(id, name)"
         )
         .eq("business_id", req.businessId!)
         .not("scheduled_start", "is", null),
@@ -5510,6 +5789,7 @@ apiRouter.get(
       endTime: s.end_time,
       notes: s.notes,
       serviceType: s.service_type ?? null,
+      commessa: s.commessa ?? null,
       priority: null as string | null,
       status: null as string | null,
       projectId: s.project_id,
@@ -5531,6 +5811,7 @@ apiRouter.get(
       ).toISOString(),
       notes: w.description,
       serviceType: w.service_type ?? null,
+      commessa: w.commessa ?? null,
       priority: w.priority as string | null,
       status: w.status as string | null,
       projectId: w.project_id,
