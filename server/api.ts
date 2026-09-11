@@ -4448,7 +4448,7 @@ apiRouter.get(
     const [projects, expenses, assignments] = await Promise.all([
       supabase
         .from("projects")
-        .select("id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address)")
+        .select("id, code, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address)")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase.from("expenses").select("project_id, amount").eq("business_id", req.businessId!),
@@ -4478,6 +4478,8 @@ apiRouter.get(
     res.json(
       projects.data.map((p: any) => ({
         id: p.id,
+        // La letra con la que empiezan todos los números de esta obra.
+        code: p.code ?? null,
         clientId: p.client_id,
         clientName: p.clients?.name ?? null,
         name: p.name,
@@ -5394,12 +5396,12 @@ apiRouter.get(
     const [ordenes, citas, fichajes, tipos] = await Promise.all([
       supabase
         .from("work_orders")
-        .select("id, commessa, title, status, priority, service_type, scheduled_start, duration_minutes, project_id, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+        .select("id, commessa, title, status, priority, service_type, scheduled_start, duration_minutes, project_id, projects(name, code, clients(name)), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
         .eq("business_id", req.businessId!)
         .not("commessa", "is", null),
       supabase
         .from("schedule_events")
-        .select("id, commessa, title, type, start_time, end_time, service_type, project_id, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+        .select("id, commessa, title, type, start_time, end_time, service_type, project_id, projects(name, code, clients(name)), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
         .eq("business_id", req.businessId!)
         .not("commessa", "is", null),
       supabase
@@ -5461,6 +5463,7 @@ apiRouter.get(
         projectId: w.project_id,
         projectName: w.projects?.name ?? null,
         projectCode: w.projects?.code ?? null,
+        clientName: w.projects?.clients?.name ?? null,
         serviceType: w.service_type ?? null,
         serviceLetter: letraDe.get(w.service_type ?? "sin_especificar") ?? null,
         status: w.status as string | null,
@@ -5482,6 +5485,7 @@ apiRouter.get(
         projectId: s.project_id,
         projectName: s.projects?.name ?? null,
         projectCode: s.projects?.code ?? null,
+        clientName: s.projects?.clients?.name ?? null,
         serviceType: s.service_type ?? null,
         serviceLetter: letraDe.get(s.service_type ?? "sin_especificar") ?? null,
         status: null as string | null,

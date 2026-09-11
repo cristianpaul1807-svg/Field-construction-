@@ -144,7 +144,14 @@
     "descriptionFull": "Manage leads and client relationships",
     "newLeadName": "Client name",
     "editClient": "Edit client",
-    "editClientHint": "The lead status moves this client along your sales pipeline."
+    "editClientHint": "The lead status moves this client along your sales pipeline.",
+    "tabs": {
+      "contactos": "Contacts",
+      "obras": "Sites",
+      "commessas": "Job numbers",
+      "facturas": "Invoices",
+      "fichajes": "Clock-ins"
+    }
   },
   "budgets": {
     "title": "Budgets & Estimates",
@@ -1398,6 +1405,47 @@
     "kind": {
       "orden": "Work order",
       "cita": "Schedule"
+    }
+  },
+  "tabla": {
+    "buscar": "Search the table",
+    "columnas": "Columns",
+    "columnasVisibles": "Which columns show",
+    "exportar": "Export",
+    "ordenarPor": "Sort by {{columna}}",
+    "filas": "{{count}} row",
+    "filas_other": "{{count}} rows",
+    "sinCoincidencias": "Nothing matches “{{query}}”.",
+    "vacia": "Nothing to show here yet.",
+    "col": {
+      "letra": "Letter",
+      "obra": "Site",
+      "avance": "Progress",
+      "inicio": "Start",
+      "fin": "End",
+      "presupuesto": "Budget",
+      "gastado": "Spent",
+      "equipo": "Crew",
+      "numero": "Job no.",
+      "trabajo": "Job",
+      "origen": "Source",
+      "asignado": "Assigned to",
+      "programado": "Scheduled",
+      "horas": "Hours",
+      "personas": "People",
+      "sinAprobar": "Unapproved",
+      "factura": "Invoice no.",
+      "subtotal": "Subtotal",
+      "impuesto": "Tax",
+      "retencion": "Holdback",
+      "total": "Total",
+      "emitida": "Issued",
+      "vence": "Due",
+      "pagada": "Paid",
+      "trabajador": "Worker",
+      "entrada": "In",
+      "salida": "Out",
+      "aprobado": "Approved"
     }
   }
 }

@@ -39,6 +39,7 @@ directamente al paso a paso.
 | Menú | Guía |
 |---|---|
 | CRM | [funciones/clientes.md](funciones/clientes.md#crm) |
+| *(dentro de CRM)* Las tablas del negocio | [funciones/tablas-del-negocio.md](funciones/tablas-del-negocio.md) |
 | Portal del cliente | [funciones/clientes.md](funciones/clientes.md#portal-del-cliente) |
 | Comunicación | [funciones/comunicacion.md](funciones/comunicacion.md) |
 | *(sin menú)* Chat público `/c/tu-negocio` | [funciones/chat-publico.md](funciones/chat-publico.md) |

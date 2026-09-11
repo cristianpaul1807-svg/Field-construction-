@@ -144,7 +144,14 @@
     "descriptionFull": "Gérez vos prospects et vos relations clients",
     "newLeadName": "Nom du client",
     "editClient": "Modifier le client",
-    "editClientHint": "Le statut du prospect fait avancer ce client dans votre entonnoir de vente."
+    "editClientHint": "Le statut du prospect fait avancer ce client dans votre entonnoir de vente.",
+    "tabs": {
+      "contactos": "Contacts",
+      "obras": "Chantiers",
+      "commessas": "Nº de chantier",
+      "facturas": "Factures",
+      "fichajes": "Pointages"
+    }
   },
   "budgets": {
     "title": "Soumissions",
@@ -1398,6 +1405,47 @@
     "kind": {
       "orden": "Ordre de travail",
       "cita": "Agenda"
+    }
+  },
+  "tabla": {
+    "buscar": "Chercher dans le tableau",
+    "columnas": "Colonnes",
+    "columnasVisibles": "Colonnes affichées",
+    "exportar": "Exporter",
+    "ordenarPor": "Trier par {{columna}}",
+    "filas": "{{count}} ligne",
+    "filas_other": "{{count}} lignes",
+    "sinCoincidencias": "Rien ne correspond à « {{query}} ».",
+    "vacia": "Rien à afficher ici pour l'instant.",
+    "col": {
+      "letra": "Lettre",
+      "obra": "Chantier",
+      "avance": "Avancement",
+      "inicio": "Début",
+      "fin": "Fin",
+      "presupuesto": "Budget",
+      "gastado": "Dépensé",
+      "equipo": "Équipe",
+      "numero": "Nº de chantier",
+      "trabajo": "Travail",
+      "origen": "Origine",
+      "asignado": "Assigné à",
+      "programado": "Planifié",
+      "horas": "Heures",
+      "personas": "Personnes",
+      "sinAprobar": "À approuver",
+      "factura": "Nº de facture",
+      "subtotal": "Sous-total",
+      "impuesto": "Taxes",
+      "retencion": "Retenue",
+      "total": "Total",
+      "emitida": "Émise",
+      "vence": "Échéance",
+      "pagada": "Payée",
+      "trabajador": "Travailleur",
+      "entrada": "Entrée",
+      "salida": "Sortie",
+      "aprobado": "Approuvé"
     }
   }
 }

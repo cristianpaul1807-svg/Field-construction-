@@ -144,7 +144,14 @@
     "descriptionFull": "Gestiona leads y relaciones con clientes",
     "newLeadName": "Nombre del cliente",
     "editClient": "Editar cliente",
-    "editClientHint": "El estado del lead mueve al cliente por tu embudo de ventas."
+    "editClientHint": "El estado del lead mueve al cliente por tu embudo de ventas.",
+    "tabs": {
+      "contactos": "Contactos",
+      "obras": "Obras",
+      "commessas": "Nº de obra",
+      "facturas": "Facturas",
+      "fichajes": "Fichajes"
+    }
   },
   "budgets": {
     "title": "Presupuestos",
@@ -1398,6 +1405,47 @@
     "kind": {
       "orden": "Orden de trabajo",
       "cita": "Agenda"
+    }
+  },
+  "tabla": {
+    "buscar": "Busca en la tabla",
+    "columnas": "Columnas",
+    "columnasVisibles": "Qué columnas se ven",
+    "exportar": "Exportar",
+    "ordenarPor": "Ordenar por {{columna}}",
+    "filas": "{{count}} fila",
+    "filas_other": "{{count}} filas",
+    "sinCoincidencias": "Nada que coincida con «{{query}}».",
+    "vacia": "Todavía no hay nada que enseñar aquí.",
+    "col": {
+      "letra": "Letra",
+      "obra": "Obra",
+      "avance": "Avance",
+      "inicio": "Inicio",
+      "fin": "Fin",
+      "presupuesto": "Presupuesto",
+      "gastado": "Gastado",
+      "equipo": "Equipo",
+      "numero": "Nº de obra",
+      "trabajo": "Trabajo",
+      "origen": "Origen",
+      "asignado": "Asignado a",
+      "programado": "Programado",
+      "horas": "Horas",
+      "personas": "Personas",
+      "sinAprobar": "Sin aprobar",
+      "factura": "Nº de factura",
+      "subtotal": "Subtotal",
+      "impuesto": "Impuesto",
+      "retencion": "Retención",
+      "total": "Total",
+      "emitida": "Emitida",
+      "vence": "Vence",
+      "pagada": "Pagada",
+      "trabajador": "Trabajador",
+      "entrada": "Entrada",
+      "salida": "Salida",
+      "aprobado": "Aprobado"
     }
   }
 }

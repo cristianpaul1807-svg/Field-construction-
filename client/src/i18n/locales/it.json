@@ -144,7 +144,14 @@
     "descriptionFull": "Gestisci contatti e relazioni con i clienti",
     "newLeadName": "Nome del cliente",
     "editClient": "Modifica cliente",
-    "editClientHint": "Lo stato del lead fa avanzare il cliente nel tuo funnel di vendita."
+    "editClientHint": "Lo stato del lead fa avanzare il cliente nel tuo funnel di vendita.",
+    "tabs": {
+      "contactos": "Contatti",
+      "obras": "Cantieri",
+      "commessas": "N. commessa",
+      "facturas": "Fatture",
+      "fichajes": "Timbrature"
+    }
   },
   "budgets": {
     "title": "Preventivi",
@@ -1398,6 +1405,47 @@
     "kind": {
       "orden": "Ordine di lavoro",
       "cita": "Agenda"
+    }
+  },
+  "tabla": {
+    "buscar": "Cerca nella tabella",
+    "columnas": "Colonne",
+    "columnasVisibles": "Colonne visibili",
+    "exportar": "Esporta",
+    "ordenarPor": "Ordina per {{columna}}",
+    "filas": "{{count}} riga",
+    "filas_other": "{{count}} righe",
+    "sinCoincidencias": "Nessun risultato per «{{query}}».",
+    "vacia": "Non c'è ancora nulla da mostrare qui.",
+    "col": {
+      "letra": "Lettera",
+      "obra": "Cantiere",
+      "avance": "Avanzamento",
+      "inicio": "Inizio",
+      "fin": "Fine",
+      "presupuesto": "Preventivo",
+      "gastado": "Speso",
+      "equipo": "Squadra",
+      "numero": "N. commessa",
+      "trabajo": "Lavoro",
+      "origen": "Origine",
+      "asignado": "Assegnato a",
+      "programado": "Pianificato",
+      "horas": "Ore",
+      "personas": "Persone",
+      "sinAprobar": "Da approvare",
+      "factura": "N. fattura",
+      "subtotal": "Imponibile",
+      "impuesto": "Imposte",
+      "retencion": "Ritenuta",
+      "total": "Totale",
+      "emitida": "Emessa",
+      "vence": "Scadenza",
+      "pagada": "Pagata",
+      "trabajador": "Lavoratore",
+      "entrada": "Entrata",
+      "salida": "Uscita",
+      "aprobado": "Approvato"
     }
   }
 }

@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type LeadStatus } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TablaObras, TablaCommessas, TablaFacturas, TablaFichajes } from "@/components/crm/TablasDelNegocio";
 import { useTranslation } from "react-i18next";
 
 interface Client {
@@ -150,13 +152,35 @@ export default function Crm() {
   const countFor = (status: LeadStatus | "all") =>
     !clients ? 0 : status === "all" ? clients.length : clients.filter((c) => c.leadStatus === status).length;
 
+  // Los contactos son la pestaña de entrada porque es donde se trabaja; las
+  // demás son para mirar el negocio entero, y a esas se va a propósito.
+  const [pestana, setPestana] = useState("contactos");
+
   return (
-    <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-8 space-y-6 max-w-7xl mx-auto">
       <PageHeader
         title={t("crm.title")}
         description={t("crm.descriptionFull")}
-        action={<NewLeadDialog onCreated={reload} />}
+        action={pestana === "contactos" ? <NewLeadDialog onCreated={reload} /> : undefined}
       />
+
+      <Tabs value={pestana} onValueChange={setPestana}>
+        {/* En móvil no caben cinco, así que la fila se desplaza en vez de
+            apretarlas hasta que no se lean. */}
+        <TabsList className="w-full sm:w-auto overflow-x-auto justify-start">
+          <TabsTrigger value="contactos">{t("crm.tabs.contactos")}</TabsTrigger>
+          <TabsTrigger value="obras">{t("crm.tabs.obras")}</TabsTrigger>
+          <TabsTrigger value="commessas">{t("crm.tabs.commessas")}</TabsTrigger>
+          <TabsTrigger value="facturas">{t("crm.tabs.facturas")}</TabsTrigger>
+          <TabsTrigger value="fichajes">{t("crm.tabs.fichajes")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="obras" className="mt-4"><TablaObras /></TabsContent>
+        <TabsContent value="commessas" className="mt-4"><TablaCommessas /></TabsContent>
+        <TabsContent value="facturas" className="mt-4"><TablaFacturas /></TabsContent>
+        <TabsContent value="fichajes" className="mt-4"><TablaFichajes /></TabsContent>
+
+        <TabsContent value="contactos" className="mt-4 space-y-6">
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <button
@@ -263,6 +287,8 @@ export default function Crm() {
           </div>
         )}
       </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={draft !== null} onOpenChange={(open) => !open && setDraft(null)}>
         <DialogContent className="sm:max-w-md">
