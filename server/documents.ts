@@ -537,8 +537,12 @@ function letterhead(doc: Doc, b: BusinessIdentity, copy: Copy): number {
   let nameY = MARGIN;
   if (b.logo) {
     try {
-      doc.image(b.logo, MARGIN, MARGIN, { fit: [150, 45] });
-      nameY = MARGIN + 52;
+      // La caja estaba pensada para un logotipo alargado y ahogaba a los
+      // cuadrados, que son la mayoría en este oficio: el de un contratista
+      // salía a 45 px, más pequeño que su propio nombre al lado. Cabe hasta
+      // 150 de ancho igual, así que un logotipo apaisado no cambia.
+      doc.image(b.logo, MARGIN, MARGIN, { fit: [150, 58] });
+      nameY = MARGIN + 64;
     } catch {
       // A corrupt or unsupported image must not take the whole document down;
       // falling through leaves the plain text letterhead.
