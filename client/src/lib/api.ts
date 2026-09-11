@@ -66,6 +66,20 @@ export function serverMessage(
 }
 
 /**
+ * El `filename="…"` de un Content-Disposition, si viene.
+ *
+ * Se le quita todo lo que sea separador de carpetas: el navegador ya lo
+ * sanea, pero el nombre entra desde una cabecera y no cuesta nada no
+ * confiarse.
+ */
+function nombreDeLaCabecera(cabecera: string | null): string | null {
+  if (!cabecera) return null;
+  const encontrado = /filename\s*=\s*"([^"]+)"|filename\s*=\s*([^;]+)/i.exec(cabecera);
+  const nombre = (encontrado?.[1] ?? encontrado?.[2] ?? "").trim().replace(/[/\\]/g, "");
+  return nombre || null;
+}
+
+/**
  * Saves a file from an authenticated endpoint. A plain <a download> can't be
  * used for these: the bearer token lives in a header, and a link request
  * carries no headers, so the server would answer 401. Fetching the bytes and
@@ -81,7 +95,12 @@ export async function downloadFile(path: string, filename: string): Promise<void
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = filename;
+  // El nombre bueno lo sabe el servidor: es el número correlativo que lleva
+  // impreso el documento, y aquí sólo se tiene el uuid. Así la factura
+  // «2026-0004» se guarda como 2026-0004.pdf en vez de INV-1BE0A42A.pdf, que
+  // era imposible de emparejar en la carpeta del contable. El nombre que llega
+  // por parámetro queda de reserva para las descargas que no lo declaren.
+  link.download = nombreDeLaCabecera(res.headers.get("content-disposition")) ?? filename;
   document.body.appendChild(link);
   link.click();
   link.remove();

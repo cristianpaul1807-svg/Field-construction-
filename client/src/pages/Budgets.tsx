@@ -30,6 +30,7 @@ import { useTranslation } from "react-i18next";
 
 interface EstimateSummary {
   id: string;
+  number: string | null;
   clientName: string | null;
   status: string;
   createdBy: "bot" | "human";
@@ -57,6 +58,7 @@ interface EstimateLine {
 
 interface EstimateDetail {
   id: string;
+  number: string | null;
   clientName: string | null;
   clientAddress: string | null;
   clientPhone: string | null;
@@ -129,7 +131,9 @@ export default function Budgets() {
     try {
       await downloadFile(
         `/api/estimates/${draftId}/pdf?download=1&lang=${i18n.language.slice(0, 2)}`,
-        `${t("budgets.estimateFilePrefix")}-${draftId.slice(0, 8).toUpperCase()}.pdf`
+        // El archivo se llama como el número que lleva impreso, para que en la
+        // carpeta del contable se emparejen sin abrirlos.
+        `${draft?.number ?? `${t("budgets.estimateFilePrefix")}-${draftId.slice(0, 8).toUpperCase()}`}.pdf`
       );
       setPdfOpen(false);
     } catch (err) {
@@ -348,6 +352,12 @@ export default function Budgets() {
                         </span>
                       )}
                     </div>
+                    {/* El número, que es por el que se le nombra fuera de
+                        aquí: en el PDF, en el correo y en lo que el cliente
+                        cita al llamar. */}
+                    {summary.number && (
+                      <p className="text-[11px] font-mono text-muted-foreground truncate">{summary.number}</p>
+                    )}
                     <p className="text-xs text-muted-foreground truncate">{summary.categoryName ?? t("budgets.noCategory")}</p>
                     {/* Signed by the customer, as opposed to marked accepted
                         by the office — a distinction worth being able to see
@@ -400,7 +410,7 @@ export default function Budgets() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="text-base font-semibold text-foreground">
-                        {t("budgets.budgetNumber", { id: draft.id.slice(0, 8).toUpperCase() })}
+                        {t("budgets.budgetNumber", { id: draft.number ?? draft.id.slice(0, 8).toUpperCase() })}
                       </h2>
                       <p className="text-xs text-muted-foreground">
                         {draft.clientName ?? t("budgets.noClient")}
@@ -810,8 +820,12 @@ export default function Budgets() {
             <DialogHeader>
               <DialogTitle>{t("budgets.pdfPreview")}</DialogTitle>
               <DialogDescription>
+                {/* El mismo número que va impreso. La vista previa enseñaba
+                    los ocho primeros dígitos del uuid, así que anunciaba un
+                    documento que luego se descargaba llamándose de otra
+                    forma. */}
                 {t("budgets.pdfPreviewFor", {
-                  number: draft.id.slice(0, 8).toUpperCase(),
+                  number: draft.number ?? draft.id.slice(0, 8).toUpperCase(),
                   client: draft.clientName,
                 })}
               </DialogDescription>

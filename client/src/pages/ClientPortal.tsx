@@ -23,7 +23,7 @@ interface ClientOption {
 interface ClientPortalData {
   client: { id: string; name: string };
   project: { id: string; name: string; progressPercent: number } | null;
-  estimate: { id: string; status: string; total: number } | null;
+  estimate: { id: string; number: string | null; status: string; total: number } | null;
   pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string } | null;
   /** De quién es el portal. Nulo sólo si al cliente le falta el negocio. */
   business: { name: string; logoUrl: string | null } | null;
@@ -232,7 +232,11 @@ export default function ClientPortal() {
               <Card className="p-4 bg-secondary border-none">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">{t("clientPortal.estimateNumber", { id: data.estimate.id.slice(0, 8).toUpperCase() })}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("clientPortal.estimateNumber", {
+                        id: data.estimate.number ?? data.estimate.id.slice(0, 8).toUpperCase(),
+                      })}
+                    </p>
                     <p className="text-xl font-semibold text-foreground mt-1">{formatCurrency(data.estimate.total)}</p>
                   </div>
                   <StatusBadge tone="info">{data.estimate.status}</StatusBadge>

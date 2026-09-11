@@ -51,9 +51,26 @@ identificador interno. Único sí, correlativo no.
 - **No hay huecos** porque una factura no se borra nunca: anular pone el estado
   en *cancelado* y la fila se queda donde está, con su número. Una factura que
   desaparece de la serie es exactamente lo que un inspector va a preguntar.
-- Cada negocio tiene su propia serie. Los presupuestos siguen usando el número
-  derivado del identificador (`EST-…`): un presupuesto no es un documento
-  fiscal y no tiene que ser correlativo.
+- Cada negocio tiene su propia serie.
+
+### Y el del presupuesto
+
+Formato **`EST-2026-0001`**, con la misma mecánica: contador por negocio y
+año, puesto por un disparador al crear la fila, y ya inamovible.
+
+Un presupuesto no es un documento fiscal y nadie obliga a numerarlo. Se hace
+igualmente porque la factura que sale de él sí lo lleva, y tener los dos
+documentos del mismo trato numerados con criterios distintos —uno correlativo,
+el otro derivado del identificador— convierte en trabajo manual algo tan
+corriente como *"mándame otra vez el presupuesto que te acepté"*.
+
+El prefijo `EST-` no es adorno: sin él, el presupuesto y la factura del mismo
+año se llamarían los dos `2026-0004`.
+
+**El archivo se llama como el número.** El PDF de la `2026-0004` se guardaba
+como `INV-1BE0A42A.pdf`, y en la carpeta del contable no había forma de
+emparejarlos sin abrirlos uno por uno. Ahora el nombre lo dicta el servidor
+—que es quien conoce el número— y el navegador lo respeta.
 
 ---
 
@@ -247,3 +264,19 @@ En `invoices`: `subtotal`, `tax_amount`, `tax_breakdown` (jsonb con el
 desglose por impuesto), `holdback_amount`, y `amount` — que es **lo que
 realmente se cobra**, ya neto de retención. Si añades otro camino para emitir
 facturas, respeta esa relación o el cobro dejará de cuadrar con el documento.
+
+Los números viven en la base, no en las rutas — igual que los de obra, y por
+la misma razón: se factura desde más de un sitio (a mano, por etapa, por
+cobro programado) y una fila creada por un camino nuevo se quedaría sin número
+sin que nadie lo notara hasta que faltara en la serie.
+
+| Objeto | Qué hace |
+|---|---|
+| `pon_numero_factura()` | `before insert` en `invoices` → `2026-0001` |
+| `pon_numero_presupuesto()` | `before insert` en `estimates` → `EST-2026-0001` |
+| `siguiente_numero(negocio, serie)` | El contador, en una sola sentencia |
+
+Las series son `'factura-<año>'` y `'presupuesto-<año>'` en `numero_counters`.
+A las dos funciones se les ha retirado el `EXECUTE` de `anon` y
+`authenticated`: tienen privilegios y quedarían llamables por REST. El
+disparador se ejecuta igual, que no pasa por ahí.

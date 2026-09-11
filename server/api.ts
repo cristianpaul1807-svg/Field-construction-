@@ -1926,7 +1926,7 @@ apiRouter.get(
         // El negocio viene con el presupuesto porque requireClientAuth no pone
         // req.businessId: un cliente que entra con código no tiene auth.uid()
         // ni negocio propio, y de ahí sale la provincia del impuesto.
-        .select("id, status, total, business_id")
+        .select("id, number, status, total, business_id")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -2045,6 +2045,7 @@ apiRouter.get(
       estimate: estimate.data
         ? {
             id: estimate.data.id,
+            number: estimate.data.number ?? null,
             status: estimate.data.status,
             total: Number(estimate.data.total),
             // El cliente veía el total sin impuestos mientras el PDF que se
@@ -3020,7 +3021,7 @@ apiRouter.get(
       res.status(404).json({ error: "estimate not found" });
       return;
     }
-    sendPdf(res, pdf, `${documentNumber("estimate", owned.id)}.pdf`, "attachment");
+    sendPdf(res, pdf, await nombreDeDocumento("estimate", owned.business_id, owned.id), "attachment");
   })
 );
 
@@ -3044,7 +3045,7 @@ apiRouter.get(
       res.status(404).json({ error: "invoice not found" });
       return;
     }
-    sendPdf(res, pdf, `${documentNumber("invoice", owned.id)}.pdf`, "attachment");
+    sendPdf(res, pdf, await nombreDeDocumento("invoice", owned.business_id, owned.id), "attachment");
   })
 );
 
@@ -3126,7 +3127,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("estimates")
       .select(
-        "id, client_id, project_id, status, created_by, category_id, description, total, created_at, clients(name), budget_categories(name), estimate_signatures(signed_name, signed_at, signed_total)"
+        "id, number, client_id, project_id, status, created_by, category_id, description, total, created_at, clients(name), budget_categories(name), estimate_signatures(signed_name, signed_at, signed_total)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -3136,6 +3137,7 @@ apiRouter.get(
     res.json(
       data.map((e: any) => ({
         id: e.id,
+        number: e.number ?? null,
         clientId: e.client_id,
         clientName: e.clients?.name ?? null,
         // The most recent signature. An estimate marked accepted with none is
@@ -3170,7 +3172,7 @@ apiRouter.get(
       supabase
         .from("estimates")
         .select(
-          "id, client_id, project_id, status, created_by, category_id, description, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address, phone, email), budget_categories(name)"
+          "id, number, client_id, project_id, status, created_by, category_id, description, margin_type, margin_percent, waste_percent, total, created_at, clients(name, address, phone, email), budget_categories(name)"
         )
         .eq("business_id", req.businessId!)
         .eq("id", req.params.id)
@@ -3190,6 +3192,7 @@ apiRouter.get(
 
     res.json({
       id: estimate.data.id,
+      number: estimate.data.number ?? null,
       clientId: estimate.data.client_id,
       clientName: client?.name ?? null,
       clientAddress: client?.address ?? null,
@@ -4275,7 +4278,7 @@ apiRouter.get(
         .order("created_at", { ascending: false }),
       supabase
         .from("estimates")
-        .select("id, status, total, created_at")
+        .select("id, number, status, total, created_at")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .order("created_at", { ascending: false }),
@@ -4310,6 +4313,7 @@ apiRouter.get(
       })),
       estimates: estimates.data.map((e) => ({
         id: e.id,
+        number: e.number ?? null,
         status: e.status,
         total: Number(e.total),
         createdAt: e.created_at,
@@ -6626,6 +6630,9 @@ function paymentRequestDeps(admin: ReturnType<typeof getSupabaseAdmin>) {
       }),
     postToChat: async (args: { businessId: string; clientId: string; invoiceId: string; content: string }) => {
       const channelId = await ensureClientChannel(admin, args.businessId, args.clientId);
+      // El cliente ve el número en el mensaje y otro distinto en el adjunto si
+      // esto no sale del mismo sitio que el documento.
+      const nombre = await nombreDeDocumento("invoice", args.businessId, args.invoiceId);
       const { data: channel } = await admin
         .from("chat_channels")
         .select("disappearing_duration")
@@ -6638,10 +6645,10 @@ function paymentRequestDeps(admin: ReturnType<typeof getSupabaseAdmin>) {
           business_id: args.businessId,
           sender_type: "admin",
           sender_id: null,
-          content: args.content || documentNumber("invoice", args.invoiceId),
+          content: args.content || nombre.replace(/\.pdf$/, ""),
           attachment_kind: "invoice",
           attachment_id: args.invoiceId,
-          attachment_name: `${documentNumber("invoice", args.invoiceId)}.pdf`,
+          attachment_name: nombre,
           attachment_mime: "application/pdf",
           expires_at: computeExpiresAt(channel?.disappearing_duration ?? null),
         })
@@ -7980,6 +7987,24 @@ function sendPdf(res: express.Response, pdf: Buffer, filename: string, dispositi
   res.end(pdf);
 }
 
+/**
+ * Cómo se llama el archivo que se descarga.
+ *
+ * Tiene que ser el número que lleva impreso el documento. Quien archiva una
+ * factura la busca después por su número, y hasta ahora el PDF de la
+ * «2026-0004» se guardaba como `INV-1BE0A42A.pdf`: dentro de la carpeta del
+ * contable no había forma de emparejarlos sin abrir uno por uno.
+ */
+async function nombreDeDocumento(tipo: "estimate" | "invoice", businessId: string, id: string) {
+  const { data } = await getSupabaseAdmin()
+    .from(tipo === "estimate" ? "estimates" : "invoices")
+    .select("number")
+    .eq("business_id", businessId)
+    .eq("id", id)
+    .maybeSingle();
+  return `${data?.number ?? documentNumber(tipo, id)}.pdf`;
+}
+
 // Shared by the business panel and (via the client portal) the customer, so
 // it takes the ids rather than reading them off the request.
 async function buildEstimatePdf(businessId: string, estimateId: string, lang: DocLang): Promise<Buffer | null> {
@@ -7993,7 +8018,7 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
         // between these tables — estimates.project_id and
         // projects.estimate_id — and PostgREST refuses to guess which one
         // a bare `projects(name)` means.
-        "id, status, margin_percent, waste_percent, description, created_at, clients(name, address, phone, email), projects!estimates_project_id_fkey(name)"
+        "id, number, status, margin_percent, waste_percent, description, created_at, clients(name, address, phone, email), projects!estimates_project_id_fkey(name)"
       )
       .eq("business_id", businessId)
       .eq("id", estimateId)
@@ -8085,7 +8110,10 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
   return renderEstimatePdf(
     {
       kind: "estimate",
-      number: documentNumber("estimate", estimate.data.id),
+      // Correlativo, como la factura que saldrá de él. El uuid queda sólo de
+      // reserva por si alguna fila se hubiera quedado sin número: mejor un
+      // número raro que un documento con el hueco en blanco.
+      number: estimate.data.number ?? documentNumber("estimate", estimate.data.id),
       date: createdAt,
       validUntil,
       business: business.identity,
@@ -8289,7 +8317,12 @@ apiRouter.get(
       res.status(404).json({ error: "estimate not found" });
       return;
     }
-    sendPdf(res, pdf, `${documentNumber("estimate", req.params.id)}.pdf`, req.query.download ? "attachment" : "inline");
+    sendPdf(
+      res,
+      pdf,
+      await nombreDeDocumento("estimate", req.businessId!, req.params.id),
+      req.query.download ? "attachment" : "inline"
+    );
   })
 );
 
@@ -8302,7 +8335,12 @@ apiRouter.get(
       res.status(404).json({ error: "invoice not found" });
       return;
     }
-    sendPdf(res, pdf, `${documentNumber("invoice", req.params.id)}.pdf`, req.query.download ? "attachment" : "inline");
+    sendPdf(
+      res,
+      pdf,
+      await nombreDeDocumento("invoice", req.businessId!, req.params.id),
+      req.query.download ? "attachment" : "inline"
+    );
   })
 );
 
@@ -9055,6 +9093,7 @@ apiRouter.post(
       .eq("id", channelId)
       .single();
 
+    const nombre = await nombreDeDocumento("estimate", req.businessId!, estimate.id);
     const { data: message, error } = await admin
       .from("chat_messages")
       .insert({
@@ -9062,10 +9101,10 @@ apiRouter.post(
         business_id: req.businessId!,
         sender_type: "admin",
         sender_id: req.authUserId ?? null,
-        content: String(req.body?.message ?? "").trim() || documentNumber("estimate", estimate.id),
+        content: String(req.body?.message ?? "").trim() || nombre.replace(/\.pdf$/, ""),
         attachment_kind: "estimate",
         attachment_id: estimate.id,
-        attachment_name: `${documentNumber("estimate", estimate.id)}.pdf`,
+        attachment_name: nombre,
         attachment_mime: "application/pdf",
         expires_at: computeExpiresAt(channel?.disappearing_duration ?? null),
       })
@@ -9314,7 +9353,7 @@ apiRouter.get(
         .maybeSingle(),
       supabase
         .from("estimates")
-        .select("id, status, total, business_id")
+        .select("id, number, status, total, business_id")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
         .order("created_at", { ascending: false })
@@ -9386,6 +9425,7 @@ apiRouter.get(
       estimate: estimate.data
         ? {
             id: estimate.data.id,
+            number: estimate.data.number ?? null,
             status: estimate.data.status,
             total: Number(estimate.data.total),
             // El cliente veía el total sin impuestos mientras el PDF que se

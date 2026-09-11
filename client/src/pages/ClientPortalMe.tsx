@@ -29,6 +29,7 @@ interface ClientPortalData {
   } | null;
   estimate: {
     id: string;
+    number: string | null;
     status: string;
     /** Antes de impuestos, que es lo que se guarda y sobre lo que se factura. */
     total: number;
@@ -167,13 +168,15 @@ export default function ClientPortalMe() {
     }
   };
 
-  const downloadEstimate = async (estimateId: string) => {
+  const downloadEstimate = async (estimateId: string, numero: string | null) => {
     setDownloading(true);
     setPayError(null);
     try {
       await downloadFile(
         `/api/client-portal/estimates/${estimateId}/pdf?lang=${i18n.language.slice(0, 2)}`,
-        `${t("budgets.estimateFilePrefix")}-${estimateId.slice(0, 8).toUpperCase()}.pdf`
+        // El archivo se llama como el número impreso dentro. El cliente lo
+        // guarda y luego lo cita por ese número; con el uuid no coincidía.
+        `${numero ?? `${t("budgets.estimateFilePrefix")}-${estimateId.slice(0, 8).toUpperCase()}`}.pdf`
       );
     } catch (err) {
       setPayError(err instanceof Error ? err.message : t("common.genericError"));
@@ -331,7 +334,11 @@ export default function ClientPortalMe() {
                 <Card className="p-4 bg-secondary border-none">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-muted-foreground">{t("clientPortal.estimateNumber", { id: data.estimate.id.slice(0, 8).toUpperCase() })}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("clientPortal.estimateNumber", {
+                          id: data.estimate.number ?? data.estimate.id.slice(0, 8).toUpperCase(),
+                        })}
+                      </p>
                       {/* El cliente veía el total sin impuestos, y el PDF que
                           se descarga desde el botón de abajo sí los lleva: dos
                           cifras distintas para el mismo presupuesto, en la
@@ -380,7 +387,7 @@ export default function ClientPortalMe() {
                     <Button
                       variant="outline"
                       className="gap-2 flex-1 min-h-11"
-                      onClick={() => downloadEstimate(data.estimate!.id)}
+                      onClick={() => downloadEstimate(data.estimate!.id, data.estimate!.number)}
                       disabled={downloading}
                     >
                       {downloading ? <Spinner className="size-4" /> : <Download size={16} />}

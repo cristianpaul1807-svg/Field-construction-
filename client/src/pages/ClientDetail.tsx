@@ -31,7 +31,7 @@ interface ClientDetailResponse {
     createdBy: string;
     createdAt: string;
   }[];
-  estimates: { id: string; status: string; total: number; createdAt: string }[];
+  estimates: { id: string; number: string | null; status: string; total: number; createdAt: string }[];
   projects: { id: string; name: string }[];
 }
 
@@ -111,7 +111,9 @@ export default function ClientDetail() {
               {client.estimates.map((estimate) => (
                 <div key={estimate.id} className="flex items-center justify-between pb-3 border-b border-border last:border-0">
                   <div>
-                    <p className="text-sm font-medium text-foreground">#{estimate.id.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-sm font-medium text-foreground font-mono">
+                      {estimate.number ?? `#${estimate.id.slice(0, 8).toUpperCase()}`}
+                    </p>
                     <p className="text-xs text-muted-foreground">{estimate.createdAt}</p>
                   </div>
                   <div className="text-right">
