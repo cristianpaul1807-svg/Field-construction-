@@ -180,9 +180,35 @@ solo tocas tu propia fila.
 Se sube en **Configuración → Datos de la empresa**, en la tarjeta de arriba.
 
 1. **Cambiar logo** → elige el archivo (PNG, JPG, WebP o SVG).
-2. Aparece al momento, y desde ese instante encabeza cada presupuesto y cada
-   factura que generes.
+2. Aparece al momento, y desde ese instante encabeza cada documento que
+   generes y cada pantalla que vea alguien de fuera.
 3. **Eliminar** vuelve a la inicial del nombre.
+
+### Dónde sale, y de quién es la marca en cada sitio
+
+Hay dos reglas y no son la misma:
+
+| Dónde | Con logo del negocio | Sin logo del negocio |
+|---|---|---|
+| Cabecera del panel | El suyo | **El nuestro** |
+| Presupuestos, facturas, hojas de pago, informes en PDF | El suyo | Sólo texto: nombre, dirección, licencia y números fiscales |
+| Portal del cliente | El suyo | Su inicial |
+| Chat público `/c/tu-negocio` | El suyo | Su inicial |
+| App del trabajador, ya dentro | El suyo | Su inicial |
+| Página de entrada y pantalla del código de acceso | — | **El nuestro** |
+
+**Dentro del panel** enseñamos nuestra marca mientras el negocio no tenga la
+suya: un hueco gris en la esquina de su propia herramienta el primer día no
+ayuda a nadie.
+
+**Hacia fuera, nunca.** El cliente entra al portal a ver a *su* contratista, y
+el trabajador abre la app de *su* empresa. Poner ahí nuestra marca sería
+hacerles creer que el trabajo lo hace otro. Sin logo se enseña la inicial del
+negocio, que al menos es suya.
+
+En los PDF no hay recurso ninguno: sin logo, el membrete se queda en texto —
+nombre, dirección, licencia RBQ y los números de TPS y TVQ. Eso es lo que hace
+que el papel valga; el dibujo es lo de menos.
 
 El nombre del negocio sigue apareciendo debajo del logo, siempre. Un logo cuyo
 texto no se lee a tamaño pequeño dejaría el documento sin identificar, y un

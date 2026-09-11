@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 import { clearClientSession } from "@/lib/clientSession";
 import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
 import { SignEstimateDialog } from "@/components/SignEstimateDialog";
@@ -38,6 +39,8 @@ interface ClientPortalData {
     signature: { name: string; signedAt: string; total: number } | null;
   } | null;
   pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string } | null;
+  /** De quién es el portal. Nulo sólo si al cliente le falta el negocio. */
+  business: { name: string; logoUrl: string | null } | null;
   visiblePhotos: { id: string }[];
 }
 
@@ -214,11 +217,17 @@ export default function ClientPortalMe() {
   return (
     <div className="min-h-screen bg-background pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div className="border-b border-border bg-card px-4 sm:px-8 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm">
-            R
+        {/* Arriba va el contratista, no nosotros: el cliente entra aquí a ver
+            su obra, y la "R" que había —del negocio de demostración— no era de
+            nadie. Sin logotipo se enseña su inicial, nunca nuestra marca. */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <MarcaDelNegocio logoUrl={data?.business?.logoUrl} name={data?.business?.name} size={32} recurso="inicial" />
+          <div className="min-w-0">
+            <p className="font-semibold text-foreground text-sm leading-tight truncate">
+              {data?.business?.name ?? t("clientPortal.title")}
+            </p>
+            <p className="text-xs text-muted-foreground leading-tight">{t("clientPortal.title")}</p>
           </div>
-          <span className="font-semibold text-foreground text-sm">{t("clientPortal.title")}</span>
         </div>
         <div className="flex items-center gap-1">
           <LanguageSwitcher />

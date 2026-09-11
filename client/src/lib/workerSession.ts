@@ -5,6 +5,10 @@ export interface WorkerSession {
   id: string;
   name: string;
   businessId: string;
+  /** De quién es la empresa para la que trabaja. Puede faltar en sesiones
+   *  guardadas antes de que esto existiera. */
+  businessName?: string | null;
+  businessLogoUrl?: string | null;
   kind: "employee" | "subcontractor";
 }
 

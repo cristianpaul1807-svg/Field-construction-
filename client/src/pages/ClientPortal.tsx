@@ -25,6 +25,8 @@ interface ClientPortalData {
   project: { id: string; name: string; progressPercent: number } | null;
   estimate: { id: string; status: string; total: number } | null;
   pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string } | null;
+  /** De quién es el portal. Nulo sólo si al cliente le falta el negocio. */
+  business: { name: string; logoUrl: string | null } | null;
   visiblePhotos: { id: string }[];
 }
 

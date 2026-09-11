@@ -10,6 +10,7 @@ import { Send, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 
 interface LeadSession {
   businessId: string;
@@ -55,7 +56,7 @@ function loadLeadSession(slug: string): LeadSession | null {
 export default function PublicBusinessChat() {
   const { t, i18n } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
-  const [business, setBusiness] = useState<{ id: string; name: string } | null | undefined>(undefined);
+  const [business, setBusiness] = useState<{ id: string; name: string; logoUrl: string | null } | null | undefined>(undefined);
   const [lead, setLead] = useState<LeadSession | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -225,9 +226,7 @@ export default function PublicBusinessChat() {
       {/* El chat se abre desde un enlace y a veces se guarda en la pantalla de
           inicio, así que también le toca esquivar la barra de estado. */}
       <div className="border-b border-border bg-card px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center gap-2.5">
-        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm">
-          {business.name.charAt(0)}
-        </div>
+        <MarcaDelNegocio logoUrl={business.logoUrl} name={business.name} size={32} recurso="inicial" />
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground text-sm leading-tight truncate">{business.name}</p>
           <p className="text-xs text-muted-foreground leading-tight">{t("publicChat.chatWithBusiness")}</p>

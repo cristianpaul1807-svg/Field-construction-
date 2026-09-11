@@ -46,7 +46,7 @@ import { useApi } from "@/lib/api";
 import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { Logo } from "@/components/Logo";
+import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 
 // Monochrome line icons only — no emoji, no fills, no per-item colour. The
 // icon inherits the surrounding text colour so the whole chrome reads as one
@@ -179,7 +179,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isMobile = useIsMobile();
   const { t } = useTranslation();
   const { signOut } = useAuth();
-  const { data: company } = useApi<{ name: string }>("/api/settings/company");
+  const { data: company } = useApi<{ name: string; logoUrl: string | null }>("/api/settings/company");
   const { data: notifications } = useApi<NotificationFeed>("/api/notifications");
   const [location] = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -283,7 +283,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               give and pushed the avatar three pixels off the screen. The name
               already truncates; it just needed permission to. */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
-            <Logo size={28} className="rounded-lg flex-shrink-0" />
+            <MarcaDelNegocio logoUrl={company?.logoUrl} name={company?.name} size={28} recurso="plataforma" className="flex-shrink-0" />
             <span className="font-medium text-foreground text-sm truncate max-w-[9rem] sm:max-w-[8rem] 2xl:max-w-[12rem]">
               {company?.name ?? t("common.loading")}
             </span>

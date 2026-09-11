@@ -1145,10 +1145,21 @@ apiRouter.post(
       return;
     }
 
+    // El trabajador abre esto para trabajar para alguien, y arriba llevaba un
+    // casco genérico. Va el logotipo de su empresa, que es de quien es la
+    // herramienta; sin logotipo, su inicial. Nuestra marca ahí no dice nada.
+    const { data: negocio } = await admin
+      .from("businesses")
+      .select("name, logo_url")
+      .eq("id", worker.business_id)
+      .maybeSingle();
+
     res.json({
       id: worker.id,
       name: worker.name,
       businessId: worker.business_id,
+      businessName: negocio?.name ?? null,
+      businessLogoUrl: negocio?.logo_url ?? null,
       kind: employee.data ? "employee" : "subcontractor",
     });
   })
@@ -1867,6 +1878,24 @@ apiRouter.post(
 
 // ---------- Client Portal (self-service, client-authenticated) ----------
 
+
+/**
+ * Quién emite lo que el cliente está mirando.
+ *
+ * El portal enseñaba una letra escrita a mano —una "R" del negocio de
+ * demostración— y ni el nombre ni el logotipo de la empresa. El cliente entra
+ * ahí a ver a SU contratista: el que tiene que estar arriba es él, no
+ * nosotros y desde luego no otro.
+ */
+async function negocioDelCliente(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string | null | undefined
+): Promise<{ name: string; logoUrl: string | null } | null> {
+  if (!businessId) return null;
+  const { data } = await admin.from("businesses").select("name, logo_url").eq("id", businessId).maybeSingle();
+  return data ? { name: data.name, logoUrl: data.logo_url ?? null } : null;
+}
+
 apiRouter.get(
   "/client-portal/me",
   requireClientAuth,
@@ -1875,7 +1904,7 @@ apiRouter.get(
     const clientId = req.clientId!;
 
     const [client, project, estimate, pendingInvoice] = await Promise.all([
-      supabase.from("clients").select("id, name").eq("id", clientId).single(),
+      supabase.from("clients").select("id, name, business_id").eq("id", clientId).single(),
       supabase
         .from("projects")
         .select("id, name, progress_percent, business_id, status")
@@ -1905,6 +1934,7 @@ apiRouter.get(
     ]);
 
     if (client.error) throw client.error;
+    const negocio = await negocioDelCliente(getSupabaseAdmin(), (client.data as any)?.business_id);
     if (project.error) throw project.error;
     if (estimate.error) throw estimate.error;
     if (pendingInvoice.error) throw pendingInvoice.error;
@@ -2020,6 +2050,7 @@ apiRouter.get(
       pendingInvoice: pendingInvoice.data
         ? { id: pendingInvoice.data.id, number: pendingInvoice.data.number ?? null, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
         : null,
+      business: negocio,
       visiblePhotos,
     });
   })
@@ -2226,7 +2257,7 @@ apiRouter.get(
     const admin = getSupabaseAdmin();
     const { data, error } = await admin
       .from("businesses")
-      .select("id, name")
+      .select("id, name, logo_url")
       .eq("slug", req.params.slug)
       .maybeSingle();
     if (error) throw error;
@@ -2234,7 +2265,7 @@ apiRouter.get(
       res.status(404).json({ error: "No encontramos ese negocio", code: "business_not_found" });
       return;
     }
-    res.json({ id: data.id, name: data.name });
+    res.json({ id: data.id, name: data.name, logoUrl: data.logo_url ?? null });
   })
 );
 
@@ -9113,7 +9144,7 @@ apiRouter.get(
     const [client, project, estimate, pendingInvoice] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, name")
+        .select("id, name, business_id")
         .eq("business_id", req.businessId!)
         .eq("id", clientId)
         .single(),
@@ -9144,6 +9175,7 @@ apiRouter.get(
     ]);
 
     if (client.error) throw client.error;
+    const negocio = await negocioDelCliente(getSupabaseAdmin(), req.businessId!);
     if (project.error) throw project.error;
     if (estimate.error) throw estimate.error;
     if (pendingInvoice.error) throw pendingInvoice.error;
@@ -9212,6 +9244,7 @@ apiRouter.get(
       pendingInvoice: pendingInvoice.data
         ? { id: pendingInvoice.data.id, number: pendingInvoice.data.number ?? null, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
         : null,
+      business: negocio,
       visiblePhotos,
     });
   })

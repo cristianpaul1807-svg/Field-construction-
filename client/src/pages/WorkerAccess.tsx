@@ -14,6 +14,7 @@ import { WorkerChat } from "@/components/WorkerChat";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
+import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 
 function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) => void }) {
   const { t } = useTranslation();
@@ -95,14 +96,30 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
   return (
     <div className="min-h-screen bg-background pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div className="border-b border-border bg-card px-4 sm:px-6 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm">
-            <HardHat size={16} />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground text-sm leading-tight">{session.name}</p>
-            <p className="text-xs text-muted-foreground leading-tight">
-              {session.kind === "employee" ? t("worker.employee") : t("worker.subcontractor")}
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* El logotipo de su empresa, no el nuestro: esta app se la da su
+              jefe. Sin logotipo, la inicial del negocio; si la sesión es de
+              antes de que esto existiera, el casco de siempre. */}
+          {session.businessName ? (
+            <MarcaDelNegocio
+              logoUrl={session.businessLogoUrl}
+              name={session.businessName}
+              size={32}
+              recurso="inicial"
+            />
+          ) : (
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-semibold text-sm flex-shrink-0">
+              <HardHat size={16} />
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="font-semibold text-foreground text-sm leading-tight truncate">{session.name}</p>
+            <p className="text-xs text-muted-foreground leading-tight truncate">
+              {session.businessName
+                ? `${session.businessName} · ${session.kind === "employee" ? t("worker.employee") : t("worker.subcontractor")}`
+                : session.kind === "employee"
+                  ? t("worker.employee")
+                  : t("worker.subcontractor")}
             </p>
           </div>
         </div>
