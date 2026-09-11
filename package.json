@@ -1,6 +1,9 @@
 {
   "name": "fsm_construction_hub",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=22.12"
+  },
   "type": "module",
   "license": "MIT",
   "scripts": {
