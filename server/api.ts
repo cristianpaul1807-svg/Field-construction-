@@ -6279,6 +6279,44 @@ apiRouter.post(
   })
 );
 
+/**
+ * Da de alta la cuenta conectada del negocio y la guarda.
+ *
+ * Sale del flujo principal porque se llama desde dos sitios: al conectar por
+ * primera vez, y al rehacerla cuando la que había guardada ya no existe en
+ * Stripe.
+ *
+ * La cuenta queda colgada del **correo del negocio**, no del de quien pulsa el
+ * botón. Ahí es donde Stripe escribe al titular —verificaciones, disputas,
+ * avisos de pago—, y esos correos tienen que llegarle a quien cobra, que no
+ * siempre es quien administra el panel.
+ */
+async function altaDeCuentaConectada(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  stripe: ReturnType<typeof getStripe>,
+  businessId: string
+): Promise<string> {
+  const { data: business } = await admin
+    .from("businesses")
+    .select("name, email")
+    .eq("id", businessId)
+    .single();
+
+  const creada = await createConnectedAccount(stripe, business?.name, business?.email);
+
+  const { error } = await admin.from("stripe_connected_accounts").upsert(
+    {
+      business_id: businessId,
+      stripe_account_id: creada.account.id,
+      status: "pending",
+      fees_payer: creada.feesPayer,
+    },
+    { onConflict: "business_id" }
+  );
+  if (error) throw error;
+  return creada.account.id;
+}
+
 // Creates the Express account on first call (idempotent afterward) and
 // always returns a fresh onboarding link — Stripe's account links expire
 // quickly and are meant to be requested right before redirecting the user.
@@ -6296,14 +6334,9 @@ apiRouter.post(
       .maybeSingle();
 
     if (!account?.stripe_account_id) {
-      const { data: business } = await admin
-        .from("businesses")
-        .select("name, email")
-        .eq("id", req.businessId!)
-        .single();
-      let created;
+      let creada;
       try {
-        created = await createConnectedAccount(stripe, business?.name, business?.email);
+        creada = await altaDeCuentaConectada(admin, stripe, req.businessId!);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (isConnectNotEnabled(message)) {
@@ -6317,29 +6350,14 @@ apiRouter.post(
         .from("businesses")
         .update({ payments_mode: "stripe", payments_mode_set_at: new Date().toISOString() })
         .eq("id", req.businessId!);
-
-      const { data: inserted, error: insertError } = await admin
-        .from("stripe_connected_accounts")
-        .upsert(
-          {
-            business_id: req.businessId!,
-            stripe_account_id: created.account.id,
-            status: "pending",
-            fees_payer: created.feesPayer,
-          },
-          { onConflict: "business_id" }
-        )
-        .select("stripe_account_id")
-        .single();
-      if (insertError) throw insertError;
-      account = inserted;
+      account = { stripe_account_id: creada };
     }
 
-    let link;
-    try {
-      link = await stripe.v2.core.accountLinks.create(
+    // Se pide dos veces en el peor de los casos, así que se escribe una.
+    const enlaceDeAlta = (accountId: string) =>
+      stripe.v2.core.accountLinks.create(
         {
-          account: account.stripe_account_id!,
+          account: accountId,
           use_case: {
             type: "account_onboarding",
             account_onboarding: {
@@ -6360,23 +6378,43 @@ apiRouter.post(
         } as never,
         { apiVersion: STRIPE_V2_VERSION } as never
       );
+
+    let link;
+    try {
+      link = await enlaceDeAlta(account.stripe_account_id!);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (isConnectNotEnabled(message)) {
         res.status(409).json({ error: message, code: "stripe_connect_not_enabled" });
         return;
       }
-      // The id we stored no longer exists at Stripe — the account was deleted
-      // there, or it belongs to a different Stripe key than the one now
-      // configured. Left alone the business is stuck forever: our row says
-      // connected, Stripe says no such account, and every retry repeats it.
-      // Dropping the row lets the next attempt create a fresh one.
-      if (/No such account|resource_missing/i.test(message)) {
-        await admin.from("stripe_connected_accounts").delete().eq("business_id", req.businessId!);
-        res.status(409).json({ error: message, code: "stripe_account_missing" });
+      // La cuenta guardada no existe en Stripe. Lo normal no es que la hayan
+      // borrado allí: es que la plataforma ha pasado de clave de prueba a
+      // clave real, y una cuenta creada en pruebas no existe en real.
+      //
+      // Antes esto se resolvía tirando la fila y contestando "pulsa otra vez".
+      // Funcionaba, pero el contratista se encontraba un mensaje rojo justo
+      // cuando iba a dar sus datos bancarios, que es el momento en el que
+      // menos hay que hacerle dudar. Se rehace aquí mismo: fuera la fila
+      // muerta, cuenta nueva con la clave de ahora, y sigue su camino sin
+      // enterarse.
+      if (!/No such account|resource_missing/i.test(message)) throw err;
+
+      await admin.from("stripe_connected_accounts").delete().eq("business_id", req.businessId!);
+      try {
+        link = await enlaceDeAlta(await altaDeCuentaConectada(admin, stripe, req.businessId!));
+      } catch (err2) {
+        const message2 = err2 instanceof Error ? err2.message : String(err2);
+        if (isConnectNotEnabled(message2)) {
+          res.status(409).json({ error: message2, code: "stripe_connect_not_enabled" });
+          return;
+        }
+        // Si tampoco se puede rehacer, la fila muerta ya está fuera: el
+        // siguiente intento arranca limpio, y eso es justo lo que dice el
+        // mensaje que ve.
+        res.status(409).json({ error: message2, code: "stripe_account_missing" });
         return;
       }
-      throw err;
     }
 
     res.json({ url: link.url });
