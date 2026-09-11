@@ -1257,14 +1257,23 @@ apiRouter.get(
     // calendar, or a work order. Reading only `assignments` meant a project
     // created by accepting an estimate — which schedules work but writes no
     // assignment — was invisible to the very people scheduled on it.
-    // El día del trabajador, en su huso y no en UTC: quien ficha a las 6 de la
-    // mañana en Montreal ya va por el día siguiente si esto se calcula en UTC,
-    // y no vería ninguno de sus trabajos.
-    const ahora = new Date();
-    const desde = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()).toISOString();
-    const hasta = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1).toISOString();
+    // El día del trabajador es el de su móvil, no el del servidor. Esto se
+    // calculaba con la hora local del proceso, y el contenedor corre en UTC:
+    // en Montreal el día de UTC cambia a las ocho de la tarde, así que a esa
+    // hora al trabajador le desaparecía lo que le quedaba por fichar y le
+    // salía lo de mañana. El móvil manda su desfase y aquí se recorta el día
+    // por donde de verdad lo tiene él.
+    //
+    // Sin el parámetro se sigue usando UTC, que es lo que había: un móvil
+    // viejo que no lo mande no se queda sin lista.
+    const enviado = Number(req.query.tzOffset);
+    const desfase = Number.isFinite(enviado) && Math.abs(enviado) <= 840 ? enviado : 0;
+    const suAhora = new Date(Date.now() - desfase * 60_000);
+    const suMedianoche = Date.UTC(suAhora.getUTCFullYear(), suAhora.getUTCMonth(), suAhora.getUTCDate());
+    const desde = new Date(suMedianoche + desfase * 60_000).toISOString();
+    const hasta = new Date(suMedianoche + 86_400_000 + desfase * 60_000).toISOString();
 
-    const [assignments, events, orders, hoyEnAgenda] = await Promise.all([
+    const [assignments, events, orders, hoyEnAgenda, ordenesDeHoy] = await Promise.all([
       admin
         .from("assignments")
         .select("projects(id, name, status)")
@@ -1290,11 +1299,25 @@ apiRouter.get(
         .gte("start_time", desde)
         .lt("start_time", hasta)
         .order("start_time"),
+      // Y las órdenes de trabajo con fecha de hoy. Salen aquí por la misma
+      // razón por la que salen en la agenda: para el trabajador es un trabajo
+      // de hoy, no importa desde qué pantalla lo creó la oficina. Sin esto,
+      // una orden programada para esta mañana sólo aparecía como el nombre
+      // pelado de la obra, sin su título y sin su tipo de servicio.
+      admin
+        .from("work_orders")
+        .select("id, title, service_type, scheduled_start, status, projects(id, name, status)")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(assignedColumn, req.workerId!)
+        .gte("scheduled_start", desde)
+        .lt("scheduled_start", hasta)
+        .order("scheduled_start"),
     ]);
     if (assignments.error) throw assignments.error;
     if (events.error) throw events.error;
     if (orders.error) throw orders.error;
     if (hoyEnAgenda.error) throw hoyEnAgenda.error;
+    if (ordenesDeHoy.error) throw ordenesDeHoy.error;
 
     // Finished and paused jobs come off the clock-in list. A worker scrolling
     // past last spring's kitchen to find today's site is how hours end up
@@ -1316,6 +1339,7 @@ apiRouter.get(
       hoy: boolean;
       tarea: string | null;
       scheduleEventId: string | null;
+      workOrderId: string | null;
       serviceType: string | null;
     }[] = [];
 
@@ -1328,6 +1352,24 @@ apiRouter.get(
           hoy: true,
           tarea: row.title ?? null,
           scheduleEventId: row.id,
+          workOrderId: null,
+          serviceType: row.service_type ?? null,
+        });
+      }
+    }
+
+    // Una orden ya cerrada no se ficha: las horas que se le cuelguen después
+    // de darla por terminada no las va a mirar nadie.
+    for (const row of ordenesDeHoy.data as any[]) {
+      if (row.projects && CLOCKABLE.has(row.projects.status) && row.status !== "completada") {
+        opciones.push({
+          key: `orden:${row.id}`,
+          projectId: row.projects.id,
+          name: row.projects.name,
+          hoy: true,
+          tarea: row.title ?? null,
+          scheduleEventId: null,
+          workOrderId: row.id,
           serviceType: row.service_type ?? null,
         });
       }
@@ -1346,6 +1388,7 @@ apiRouter.get(
           hoy: false,
           tarea: null,
           scheduleEventId: null,
+          workOrderId: null,
           serviceType: null,
         });
       }
@@ -1388,37 +1431,60 @@ apiRouter.get(
 );
 
 /**
- * La cita que el trabajador dice estar fichando, sólo si de verdad es suya.
+ * El trabajo que el trabajador dice estar fichando, sólo si de verdad es suyo.
  *
- * El id del trabajo llega del móvil, así que no vale fiarse: se comprueba que
- * la cita es de su negocio, que está asignada a él y que es de la obra que
- * dice. Sin esto, cualquiera con un código de acceso podría colgar sus horas
- * del trabajo de otro.
+ * El id llega del móvil, así que no vale fiarse: se comprueba que es de su
+ * negocio, que está asignado a él y que es de la obra que dice. Sin esto,
+ * cualquiera con un código de acceso podría colgar sus horas del trabajo de
+ * otro.
+ *
+ * Vale igual para una cita de la agenda que para una orden de trabajo, porque
+ * desde el andamio son la misma cosa —lo que toca hacer hoy— y sólo se
+ * diferencian por la pantalla desde la que las creó la oficina.
  */
+type TrabajoFichado = { scheduleEventId: string | null; workOrderId: string | null; serviceType: string | null };
+
 async function trabajoDelDia(
   admin: ReturnType<typeof getSupabaseAdmin>,
   req: Request,
   scheduleEventId: unknown,
+  workOrderId: unknown,
   projectId: string
-): Promise<{ id: string; service_type: string | null } | null> {
-  if (typeof scheduleEventId !== "string" || !scheduleEventId) return null;
+): Promise<TrabajoFichado | null> {
   const assignedColumn = req.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
-  const { data } = await admin
-    .from("schedule_events")
-    .select("id, service_type")
-    .eq("id", scheduleEventId)
-    .eq("business_id", req.workerBusinessId!)
-    .eq(assignedColumn, req.workerId!)
-    .eq("project_id", projectId)
-    .maybeSingle();
-  return data ?? null;
+
+  if (typeof scheduleEventId === "string" && scheduleEventId) {
+    const { data } = await admin
+      .from("schedule_events")
+      .select("id, service_type")
+      .eq("id", scheduleEventId)
+      .eq("business_id", req.workerBusinessId!)
+      .eq(assignedColumn, req.workerId!)
+      .eq("project_id", projectId)
+      .maybeSingle();
+    return data ? { scheduleEventId: data.id, workOrderId: null, serviceType: data.service_type ?? null } : null;
+  }
+
+  if (typeof workOrderId === "string" && workOrderId) {
+    const { data } = await admin
+      .from("work_orders")
+      .select("id, service_type")
+      .eq("id", workOrderId)
+      .eq("business_id", req.workerBusinessId!)
+      .eq(assignedColumn, req.workerId!)
+      .eq("project_id", projectId)
+      .maybeSingle();
+    return data ? { scheduleEventId: null, workOrderId: data.id, serviceType: data.service_type ?? null } : null;
+  }
+
+  return null;
 }
 
 apiRouter.post(
   "/worker/time-entries/check-in",
   requireWorkerAuth,
   route(async (req, res) => {
-    const { projectId, billable, serviceType, scheduleEventId, latitude, longitude } = req.body ?? {};
+    const { projectId, billable, serviceType, scheduleEventId, workOrderId, latitude, longitude } = req.body ?? {};
     if (!projectId || latitude === undefined || longitude === undefined) {
       res.status(400).json({ error: "projectId, latitude and longitude are required" });
       return;
@@ -1427,8 +1493,8 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
 
-    const trabajo = await trabajoDelDia(admin, req, scheduleEventId, projectId);
-    if (scheduleEventId && !trabajo) {
+    const trabajo = await trabajoDelDia(admin, req, scheduleEventId, workOrderId, projectId);
+    if ((scheduleEventId || workOrderId) && !trabajo) {
       res.status(403).json({ error: "that job is not yours" });
       return;
     }
@@ -1440,11 +1506,12 @@ apiRouter.post(
         project_id: projectId,
         [column]: req.workerId!,
         billable: billable ?? true,
-        schedule_event_id: trabajo?.id ?? null,
+        schedule_event_id: trabajo?.scheduleEventId ?? null,
+        work_order_id: trabajo?.workOrderId ?? null,
         // Lo que dijo el trabajador manda; si no dijo nada, hereda lo que la
         // oficina puso al programar el trabajo. Sólo queda nulo cuando nadie
         // lo ha dicho en ningún momento.
-        service_type: serviceType ?? trabajo?.service_type ?? null,
+        service_type: serviceType ?? trabajo?.serviceType ?? null,
         check_in_location: `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`,
         check_in_lat: latitude,
         check_in_lng: longitude,
@@ -1460,6 +1527,18 @@ apiRouter.post(
       longitude,
       timestamp: new Date().toISOString(),
     });
+
+    // Y por lo mismo, la orden que acaba de fichar deja de estar pendiente:
+    // alguien está en ella. Sólo se mueve desde "pendiente", para no pisar
+    // una que la oficina ya haya marcado de otra forma.
+    if (trabajo?.workOrderId) {
+      await admin
+        .from("work_orders")
+        .update({ status: "en_progreso" })
+        .eq("business_id", req.workerBusinessId!)
+        .eq("id", trabajo.workOrderId)
+        .eq("status", "pendiente");
+    }
 
     // Somebody standing on the site is the strongest evidence there is that
     // the job left planning, so the first check-in moves it — nobody in the
@@ -1557,7 +1636,7 @@ apiRouter.post(
   "/worker/time-entries/switch-project",
   requireWorkerAuth,
   route(async (req, res) => {
-    const { activeEntryId, projectId, billable, serviceType, scheduleEventId, latitude, longitude } = req.body ?? {};
+    const { activeEntryId, projectId, billable, serviceType, scheduleEventId, workOrderId, latitude, longitude } = req.body ?? {};
     if (!activeEntryId || !projectId || latitude === undefined || longitude === undefined) {
       res.status(400).json({ error: "activeEntryId, projectId, latitude and longitude are required" });
       return;
@@ -1567,8 +1646,8 @@ apiRouter.post(
     const column = req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
     const locationStr = `${Number(latitude).toFixed(5)}, ${Number(longitude).toFixed(5)}`;
 
-    const trabajo = await trabajoDelDia(admin, req, scheduleEventId, projectId);
-    if (scheduleEventId && !trabajo) {
+    const trabajo = await trabajoDelDia(admin, req, scheduleEventId, workOrderId, projectId);
+    if ((scheduleEventId || workOrderId) && !trabajo) {
       res.status(403).json({ error: "that job is not yours" });
       return;
     }
@@ -1589,8 +1668,9 @@ apiRouter.post(
         project_id: projectId,
         [column]: req.workerId!,
         billable: billable ?? true,
-        schedule_event_id: trabajo?.id ?? null,
-        service_type: serviceType ?? trabajo?.service_type ?? null,
+        schedule_event_id: trabajo?.scheduleEventId ?? null,
+        work_order_id: trabajo?.workOrderId ?? null,
+        service_type: serviceType ?? trabajo?.serviceType ?? null,
         check_in_location: locationStr,
         check_in_lat: latitude,
         check_in_lng: longitude,
@@ -5133,7 +5213,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, check_out_location, check_out_lat, check_out_lng, approved, service_type, schedule_events(title), projects(name), employees(name), subcontractors(name)"
+        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, check_out_location, check_out_lat, check_out_lng, approved, service_type, schedule_events(title), work_orders(title), projects(name), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
@@ -5161,8 +5241,9 @@ apiRouter.get(
         // lo que se le pide al trabajador que diga.
         serviceType: t.service_type,
         // Y de qué trabajo concreto son: dos citas del mismo sitio el mismo
-        // día ya no se confunden en la hoja de horas.
-        jobTitle: t.schedule_events?.title ?? null,
+        // día ya no se confunden en la hoja de horas. Un fichaje cuelga de una
+        // cita o de una orden, nunca de las dos, así que se enseña la que haya.
+        jobTitle: t.schedule_events?.title ?? t.work_orders?.title ?? null,
         approved: t.approved,
       }))
     );

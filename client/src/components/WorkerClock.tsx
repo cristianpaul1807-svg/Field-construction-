@@ -24,7 +24,9 @@ interface Opcion {
   hoy: boolean;
   /** El título del trabajo de hoy, cuando lo hay. */
   tarea: string | null;
+  /** Un trabajo de hoy viene de la agenda o de una orden, nunca de las dos. */
   scheduleEventId: string | null;
+  workOrderId: string | null;
   /** Lo que la oficina dijo que era este trabajo, si lo dijo. */
   serviceType: string | null;
 }
@@ -90,7 +92,9 @@ export function WorkerClock() {
     workerApiFetch("/api/worker/time-entries/active")
       .then((res) => res.json())
       .then(setActive);
-    workerApiFetch("/api/worker/projects")
+    // El desfase del móvil va en la pregunta: "lo de hoy" tiene que ser el hoy
+    // de quien está mirando la pantalla, y el servidor corre en UTC.
+    workerApiFetch(`/api/worker/projects?tzOffset=${new Date().getTimezoneOffset()}`)
       .then((res) => res.json())
       .then((d) => setOpciones(Array.isArray(d) ? d : []));
     workerApiFetch("/api/worker/time-entries/history")
@@ -150,6 +154,7 @@ export function WorkerClock() {
         body: JSON.stringify({
           projectId: trabajo?.projectId,
           scheduleEventId: trabajo?.scheduleEventId ?? null,
+          workOrderId: trabajo?.workOrderId ?? null,
           serviceType: tipoElegido(),
           ...loc,
         }),
@@ -177,6 +182,7 @@ export function WorkerClock() {
           activeEntryId: active!.id,
           projectId: trabajo?.projectId,
           scheduleEventId: trabajo?.scheduleEventId ?? null,
+          workOrderId: trabajo?.workOrderId ?? null,
           serviceType: tipoElegido(),
           ...loc,
         }),
