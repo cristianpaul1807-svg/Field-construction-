@@ -76,6 +76,18 @@ registro.
 | `pon_commessa()` | `before insert` en `work_orders` y `schedule_events`, y `before update of project_id` en `schedule_events`. |
 | `siembra_tipos_de_servicio()` | `after insert` en `businesses`: un negocio nuevo nace con sus tipos y sus letras. |
 
+A las cuatro funciones de disparador se les ha retirado el permiso `EXECUTE`
+de `anon` y `authenticated`. Quedaban llamables por REST
+(`/rest/v1/rpc/pon_commessa`) y con privilegios elevados; fuera de su
+disparador fallarían —se apoyan en `NEW`—, pero una función con privilegios no
+se deja abierta porque hoy no se sepa romper. Un disparador se ejecuta igual:
+no pasa por el `EXECUTE` de quien provoca el INSERT.
+
+`numero_counters` tiene RLS activado **sin ninguna política**, y es
+deliberado: eso deniega todo salvo a la clave de servicio y a la función
+`siguiente_numero`, que es exactamente quién debe tocarlo. El analizador de
+Supabase lo marca como aviso informativo; no es un descuido.
+
 **Rutas**
 
 | Ruta | Devuelve |
