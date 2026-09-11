@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ChevronDown, FolderKanban } from "lucide-react";
+import { ChevronDown, FolderKanban, Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,8 +34,12 @@ export function ProjectSwitcher() {
             reachable rather than disappearing. */}
         <button className="flex items-center gap-2 px-2 sm:px-3 h-8 rounded-lg border border-border bg-card hover:bg-secondary transition-colors text-sm max-w-[9rem] sm:max-w-[150px]">
           <FolderKanban size={15} className="text-muted-foreground flex-shrink-0" />
+          {/* Sin obra elegida pone "General", no "Selecciona un proyecto":
+              no hay nada que seleccionar para que el panel funcione, y
+              "General" dice lo que de verdad está pasando — se está viendo
+              todo. Lo otro se leía como un paso pendiente. */}
           <span className={cn("truncate hidden sm:inline", !selectedProject && "text-muted-foreground")}>
-            {selectedProject ? selectedProject.name : t("common.selectProject")}
+            {selectedProject ? selectedProject.name : t("common.generalScope")}
           </span>
           <ChevronDown size={14} className="text-muted-foreground flex-shrink-0" />
         </button>
@@ -54,23 +58,27 @@ export function ProjectSwitcher() {
         {!projectsLoading && !projectsError && projects.length === 0 && (
           <div className="px-2 py-1.5 text-xs text-muted-foreground">{t("worker.noProjects")}</div>
         )}
+        {/* "General" arriba y siempre, no un "quitar selección" escondido
+            abajo que sólo aparecía si ya habías elegido algo: volver a verlo
+            todo es una opción por derecho propio, no deshacer un error. */}
+        <DropdownMenuItem
+          onClick={() => setSelectedProjectId(null)}
+          className={cn("gap-2", !selectedProjectId && "bg-secondary")}
+        >
+          <Check size={14} className={cn("flex-shrink-0", selectedProjectId && "opacity-0")} />
+          {t("common.generalScope")}
+        </DropdownMenuItem>
+        {projects.length > 0 && <DropdownMenuSeparator />}
         {projects.map((project) => (
           <DropdownMenuItem
             key={project.id}
             onClick={() => setSelectedProjectId(project.id)}
-            className={cn(selectedProjectId === project.id && "bg-secondary")}
+            className={cn("gap-2", selectedProjectId === project.id && "bg-secondary")}
           >
-            {project.name}
+            <Check size={14} className={cn("flex-shrink-0", selectedProjectId !== project.id && "opacity-0")} />
+            <span className="truncate">{project.name}</span>
           </DropdownMenuItem>
         ))}
-        {selectedProjectId && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setSelectedProjectId(null)} className="text-muted-foreground">
-              {t("common.clearSelection")}
-            </DropdownMenuItem>
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

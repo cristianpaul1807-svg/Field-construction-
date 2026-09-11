@@ -15,6 +15,7 @@ la plataforma para gestionar su empresa, y quien va a extender el código.
 | Si quieres… | Abre |
 |---|---|
 | Entender cómo encaja todo | [arquitectura.md](arquitectura.md) |
+| Saber qué hace el selector de obra de la cabecera | [funciones/selector-de-obra.md](funciones/selector-de-obra.md) |
 | Añadir una función nueva de principio a fin | [desarrollo/anadir-una-funcion.md](desarrollo/anadir-una-funcion.md) |
 | Añadir o corregir textos en los cuatro idiomas | [desarrollo/idiomas.md](desarrollo/idiomas.md) |
 | Cambiar el esquema de la base de datos | [desarrollo/base-de-datos.md](desarrollo/base-de-datos.md) |

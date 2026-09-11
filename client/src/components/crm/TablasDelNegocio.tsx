@@ -3,6 +3,7 @@ import { useApi } from "@/lib/api";
 import { TablaDatos, type Columna } from "@/components/TablaDatos";
 import { StatusBadge, invoiceStatusTone, workOrderStatusTone, projectStatusTone } from "@/components/StatusBadge";
 import { useTiposDeTrabajo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
+import { useFiltroDeObra } from "@/lib/filtroDeObra";
 
 /**
  * Las tablas del negocio.
@@ -30,6 +31,7 @@ interface Obra {
 
 interface Commessa {
   id: string;
+  projectId: string | null;
   kind: "orden" | "cita";
   commessa: string;
   title: string;
@@ -46,6 +48,7 @@ interface Commessa {
 
 interface Factura {
   id: string;
+  projectId: string | null;
   number: string | null;
   type: string;
   status: string;
@@ -62,6 +65,7 @@ interface Factura {
 
 interface Fichaje {
   id: string;
+  projectId: string | null;
   workerName: string | null;
   projectName: string | null;
   jobTitle: string | null;
@@ -82,6 +86,10 @@ function horasDe(entrada: string, salida: string | null) {
 export function TablaObras() {
   const { t } = useTranslation();
   const { data, loading, error } = useApi<Obra[]>("/api/projects");
+  // La obra elegida arriba filtra aquí también, aunque aquí deje una sola
+  // fila: si esta tabla ignorara el selector, sería la única que lo hace.
+  const { filtrar } = useFiltroDeObra();
+  const filas = filtrar(data, (o) => o.id);
 
   const columnas: Columna<Obra>[] = [
     { id: "code", cabecera: t("tabla.col.letra"), tipo: "codigo", valor: (o) => o.code },
@@ -108,7 +116,7 @@ export function TablaObras() {
 
   return (
     <TablaDatos
-      filas={data}
+      filas={filas}
       columnas={columnas}
       cargando={loading}
       error={error}
@@ -122,6 +130,8 @@ export function TablaObras() {
 export function TablaCommessas() {
   const { t } = useTranslation();
   const { data, loading, error } = useApi<Commessa[]>("/api/work-log");
+  const { filtrar } = useFiltroDeObra();
+  const filas = filtrar(data, (c) => c.projectId);
   const { data: tipos } = useTiposDeTrabajo();
 
   const columnas: Columna<Commessa>[] = [
@@ -160,7 +170,7 @@ export function TablaCommessas() {
 
   return (
     <TablaDatos
-      filas={data}
+      filas={filas}
       columnas={columnas}
       cargando={loading}
       error={error}
@@ -174,6 +184,8 @@ export function TablaCommessas() {
 export function TablaFacturas() {
   const { t } = useTranslation();
   const { data, loading, error } = useApi<Factura[]>("/api/invoices");
+  const { filtrar } = useFiltroDeObra();
+  const filas = filtrar(data, (f) => f.projectId);
 
   const columnas: Columna<Factura>[] = [
     { id: "number", cabecera: t("tabla.col.factura"), tipo: "codigo", valor: (f) => f.number },
@@ -201,7 +213,7 @@ export function TablaFacturas() {
 
   return (
     <TablaDatos
-      filas={data}
+      filas={filas}
       columnas={columnas}
       cargando={loading}
       error={error}
@@ -215,6 +227,8 @@ export function TablaFacturas() {
 export function TablaFichajes() {
   const { t, i18n } = useTranslation();
   const { data, loading, error } = useApi<Fichaje[]>("/api/time-entries");
+  const { filtrar } = useFiltroDeObra();
+  const filas = filtrar(data, (f) => f.projectId);
   const { data: tipos } = useTiposDeTrabajo();
 
   const momento = (iso: string | null) =>
@@ -244,7 +258,7 @@ export function TablaFichajes() {
 
   return (
     <TablaDatos
-      filas={data}
+      filas={filas}
       columnas={columnas}
       cargando={loading}
       error={error}

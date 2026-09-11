@@ -13,6 +13,8 @@ import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { mensajeDeChoque } from "@/lib/conflicto";
 import { Codigo } from "@/components/Codigo";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { useFiltroDeObra } from "@/lib/filtroDeObra";
 import { useTiposDeTrabajo, nombreDeTipo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
 
 const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
@@ -175,6 +177,7 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
 
 interface WorkOrder {
   id: string;
+  projectId: string | null;
   title: string;
   description: string;
   priority: (typeof PRIORITIES)[number];
@@ -301,6 +304,8 @@ export default function WorkOrders() {
   const { t, i18n } = useTranslation();
   const { data: orders, loading, error, reload } = useApi<WorkOrder[]>("/api/work-orders");
   const { data: tipos } = useTiposDeTrabajo();
+  const { filtrar } = useFiltroDeObra();
+  const visibles = filtrar(orders, (o) => o.projectId);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Status is edited straight from the card rather than behind a dialog:
@@ -347,9 +352,11 @@ export default function WorkOrders() {
         </div>
       )}
 
+      <FiltradoPorObra />
+
       {!loading && !error && (
         <div className="space-y-3">
-          {orders?.map((order) => (
+          {visibles.map((order) => (
             <Card key={order.id} className="p-5">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -424,7 +431,7 @@ export default function WorkOrders() {
               </div>
             </Card>
           ))}
-          {orders?.length === 0 && (
+          {visibles.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">{t("workOrders.noWorkOrders")}</p>
           )}
         </div>

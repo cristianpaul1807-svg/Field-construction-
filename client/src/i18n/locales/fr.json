@@ -47,20 +47,19 @@
     "no": "Non",
     "add": "Ajouter",
     "selectProjectHint": "Utilisez le sélecteur « Projets » de la barre du haut pour choisir le projet à afficher.",
-    "selectProject": "Sélectionnez un projet",
     "selectClient": "Choisissez un client",
     "needsClientFirst": "Ceci se fait pour un client, et vous n'en avez encore aucun. Créez le client d'abord, puis revenez ici.",
     "needsProjectFirst": "Ceci appartient à un chantier, et vous n'en avez encore aucun. Créez le chantier d'abord, puis revenez ici.",
     "goCreateClient": "Créer un client",
     "goCreateProject": "Créer un chantier",
-    "clearSelection": "Effacer la sélection",
     "selectProjectHere": "Choisissez celui dont vous voulez voir ces informations.",
     "noProjectsYet": "Vous n'avez pas encore de chantier",
     "noProjectsYetHint": "Cet écran se remplit dès que vous en avez un. Ils se créent en acceptant une soumission, ou à la main.",
     "goToProjects": "Aller aux Chantiers",
     "actions": "Actions",
     "deleteError": "Suppression impossible",
-    "lessThanAMinute": "moins d'une minute"
+    "lessThanAMinute": "moins d'une minute",
+    "generalScope": "Général"
   },
   "nav": {
     "home": "ACCUEIL",
@@ -1066,7 +1065,9 @@
     "uploadError": "Impossible de téléverser la photo",
     "uploadedBy": "Téléversée par {{name}}",
     "deleteConfirm": "Supprimer cette photo ? Le fichier est également effacé.",
-    "toggleVisibility": "Basculer la visibilité pour le client"
+    "toggleVisibility": "Basculer la visibilité pour le client",
+    "descriptionForProject": "Photos de {{project}}, par date et zone",
+    "descriptionAll": "Par date et zone, avec la visibilité côté client"
   },
   "changeOrders": {
     "tab": "Avenants",
@@ -1447,5 +1448,11 @@
       "salida": "Sortie",
       "aprobado": "Approuvé"
     }
+  },
+  "scope": {
+    "filteredBy": "Filtré par chantier :",
+    "seeAll": "Tout voir",
+    "pickToUpload": "Choisissez un chantier dans le sélecteur en haut pour téléverser.",
+    "pickToRecord": "Choisissez un chantier dans le sélecteur en haut pour saisir une dépense."
   }
 }

@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { Search, Upload, FileText, Download } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
 import { useTranslation } from "react-i18next";
 
 const DOCUMENT_TAGS = ["contrato", "permiso", "plano", "garantia"] as const;
@@ -117,10 +117,13 @@ export default function Contracts() {
   const { data: documents, loading, error, reload } = useApi<Document[]>("/api/documents");
   const [query, setQuery] = useState("");
 
+  // En General se ven los documentos de todas las obras. Exigir elegir una
+  // para poder mirar era pedirle al jefe que supiera de antemano dónde está
+  // lo que busca, que es justo lo que viene a averiguar.
   const filtered = useMemo(
     () =>
       (documents ?? [])
-        .filter((d) => d.projectId === selectedProjectId)
+        .filter((d) => !selectedProjectId || d.projectId === selectedProjectId)
         .filter((d) => d.name.toLowerCase().includes(query.toLowerCase())),
     [documents, selectedProjectId, query]
   );
@@ -140,6 +143,8 @@ export default function Contracts() {
             ? t("contracts.descriptionForProject", { project: selectedProject.name })
             : t("contracts.descriptionAll")
         }
+        /* Subir sí necesita saber a qué obra va. En General no se esconde el
+           botón: se dice por qué no está y qué hacer para tenerlo. */
         action={
           selectedProjectId ? (
             <UploadDocumentDialog projectId={selectedProjectId} onUploaded={() => reload()} />
@@ -147,9 +152,13 @@ export default function Contracts() {
         }
       />
 
-      {!selectedProjectId && <SelectProjectPrompt />}
+      <FiltradoPorObra />
 
-      {selectedProjectId && (
+      {!selectedProjectId && (
+        <p className="text-sm text-muted-foreground">{t("scope.pickToUpload")}</p>
+      )}
+
+      {(
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Search size={16} className="text-muted-foreground" />
@@ -176,7 +185,10 @@ export default function Contracts() {
                     <FileText size={18} className="text-muted-foreground flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-sm text-foreground truncate">{doc.name}</p>
-                      <p className="text-xs text-muted-foreground">{doc.uploadedAt?.slice(0, 10)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {doc.uploadedAt?.slice(0, 10)}
+                        {!selectedProjectId && doc.projectName ? ` · ${doc.projectName}` : ""}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">

@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, invoiceStatusTone } from "@/components/StatusBadge";
 import { Codigo } from "@/components/Codigo";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { useFiltroDeObra } from "@/lib/filtroDeObra";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,7 @@ const INVOICE_STATUSES = ["pendiente", "pagado", "vencido", "cancelado"] as cons
 
 interface Invoice {
   id: string;
+  projectId: string | null;
   /** El número correlativo con el que la factura existe fuera del software. */
   number: string | null;
   type: (typeof INVOICE_TYPES)[number];
@@ -189,8 +192,13 @@ export default function Invoicing() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
 
-  const totalPending = (invoices ?? []).filter((i) => i.status === "pendiente" || i.status === "vencido").reduce((s, i) => s + i.amount, 0);
-  const totalPaid = (invoices ?? []).filter((i) => i.status === "pagado").reduce((s, i) => s + i.amount, 0);
+  // Las sumas de arriba cuentan lo mismo que enseña la tabla de abajo. Si la
+  // tabla filtrara y los totales no, la pantalla se contradiría a sí misma.
+  const { filtrar } = useFiltroDeObra();
+  const visibles = filtrar(invoices, (i) => i.projectId);
+
+  const totalPending = visibles.filter((i) => i.status === "pendiente" || i.status === "vencido").reduce((s, i) => s + i.amount, 0);
+  const totalPaid = visibles.filter((i) => i.status === "pagado").reduce((s, i) => s + i.amount, 0);
 
   const downloadInvoice = async (invoiceId: string) => {
     setPdfBusyId(invoiceId);
@@ -253,6 +261,7 @@ export default function Invoicing() {
         </TabsContent>
 
         <TabsContent value="invoices" className="mt-4 space-y-6">
+      <FiltradoPorObra />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">{t("invoicing.collected")}</p>
@@ -264,7 +273,7 @@ export default function Invoicing() {
         </Card>
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">{t("invoicing.totalInvoices")}</p>
-          <p className="text-2xl font-semibold text-foreground mt-2">{invoices?.length ?? 0}</p>
+          <p className="text-2xl font-semibold text-foreground mt-2">{visibles.length}</p>
         </Card>
       </div>
 
@@ -301,7 +310,7 @@ export default function Invoicing() {
               </tr>
             </thead>
             <tbody>
-              {invoices?.map((invoice) => (
+              {visibles.map((invoice) => (
                 <tr key={invoice.id} className="border-b border-border last:border-0 hover:bg-secondary transition-colors">
                   {/* Primera columna: es por lo que el cliente pregunta al
                       llamar, y lo que el contable busca. */}

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
-import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
@@ -56,7 +56,9 @@ export default function CostTracking() {
     data: expenses,
     loading: expensesLoading,
     reload: reloadExpenses,
-  } = useApi<Expense[]>(selectedProjectId ? `/api/expenses?projectId=${selectedProjectId}` : null);
+    // En General se piden todos los gastos, no ninguno: la ruta ya acepta que
+    // no venga obra, y una pantalla en blanco no es "ver el negocio entero".
+  } = useApi<Expense[]>(selectedProjectId ? `/api/expenses?projectId=${selectedProjectId}` : "/api/expenses");
 
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string>("materiales");
@@ -66,7 +68,8 @@ export default function CostTracking() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const project = (data ?? []).find((p) => p.projectId === selectedProjectId);
+  // Con una obra elegida se ve la suya; en General, la de cada una.
+  const obras = (data ?? []).filter((p) => !selectedProjectId || p.projectId === selectedProjectId);
 
   const save = async () => {
     if (!amount || Number(amount) <= 0) {
@@ -124,23 +127,28 @@ export default function CostTracking() {
         }
       />
 
-      {!selectedProjectId && <SelectProjectPrompt />}
+      <FiltradoPorObra />
 
-      {selectedProjectId && loading && (
+      {!selectedProjectId && (
+        <p className="text-sm text-muted-foreground">{t("scope.pickToRecord")}</p>
+      )}
+
+      {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
           <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
 
-      {selectedProjectId && error && (
+      {error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
           {t("common.loadError", { message: error })}
         </div>
       )}
 
-      {selectedProjectId && !loading && !error && (
-        project ? (
-          <Card className="p-6 overflow-x-auto">
+      {!loading && !error && (
+        obras.length > 0 ? (
+          <div className="space-y-6">{obras.map((project) => (
+          <Card key={project.projectId} className="p-6 overflow-x-auto">
             <h2 className="text-base font-semibold text-foreground mb-4">{project.projectName}</h2>
             <table className="w-full text-sm">
               <thead>
@@ -192,6 +200,7 @@ export default function CostTracking() {
               </tbody>
             </table>
           </Card>
+          ))}</div>
         ) : (
           <p className="text-sm text-muted-foreground py-8 text-center">
             {t("costTracking.noBudgetLinked")}
@@ -199,7 +208,7 @@ export default function CostTracking() {
         )
       )}
 
-      {selectedProjectId && (
+      {(
         <Card className="p-6">
           <h2 className="text-base font-semibold text-foreground mb-4">{t("costTracking.expensesTitle")}</h2>
           {expensesLoading && (
@@ -217,6 +226,9 @@ export default function CostTracking() {
                   <tr className="border-b border-border">
                     <th className="text-left py-2 text-muted-foreground font-medium">{t("common.date")}</th>
                     <th className="text-left py-2 text-muted-foreground font-medium">{t("common.category")}</th>
+                    {!selectedProjectId && (
+                      <th className="text-left py-2 text-muted-foreground font-medium">{t("common.project")}</th>
+                    )}
                     <th className="text-left py-2 text-muted-foreground font-medium">{t("common.description")}</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">{t("common.amount")}</th>
                     <th className="w-10" />
@@ -229,6 +241,9 @@ export default function CostTracking() {
                         {new Date(`${e.date}T00:00:00`).toLocaleDateString(i18n.language)}
                       </td>
                       <td className="py-3 text-foreground">{categoryLabel(e.category)}</td>
+                      {!selectedProjectId && (
+                        <td className="py-3 text-muted-foreground">{e.projectName ?? "—"}</td>
+                      )}
                       <td className="py-3 text-muted-foreground">{e.description || "—"}</td>
                       <td className="py-3 text-right text-foreground font-medium">{formatCurrency(e.amount)}</td>
                       <td className="py-3 text-right">

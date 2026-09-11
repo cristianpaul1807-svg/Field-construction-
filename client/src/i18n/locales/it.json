@@ -47,20 +47,19 @@
     "no": "No",
     "add": "Aggiungi",
     "selectProjectHint": "Usa il selettore \"Progetti\" nella barra in alto per scegliere di quale progetto vedere queste informazioni.",
-    "selectProject": "Seleziona un progetto",
     "selectClient": "Seleziona un cliente",
     "needsClientFirst": "Questo si fa per un cliente, e non ne hai ancora nessuno. Crea prima il cliente e poi torna qui.",
     "needsProjectFirst": "Questo appartiene a un cantiere, e non ne hai ancora nessuno. Crea prima il cantiere e poi torna qui.",
     "goCreateClient": "Crea un cliente",
     "goCreateProject": "Crea un cantiere",
-    "clearSelection": "Rimuovi selezione",
     "selectProjectHere": "Scegli di quale vuoi vedere queste informazioni.",
     "noProjectsYet": "Non hai ancora cantieri",
     "noProjectsYetHint": "Questa schermata si riempie appena ne hai uno. Si creano accettando un preventivo, o a mano.",
     "goToProjects": "Vai a Progetti",
     "actions": "Azioni",
     "deleteError": "Impossibile eliminare",
-    "lessThanAMinute": "meno di 1 min"
+    "lessThanAMinute": "meno di 1 min",
+    "generalScope": "Generale"
   },
   "nav": {
     "home": "HOME",
@@ -1066,7 +1065,9 @@
     "uploadError": "Impossibile caricare la foto",
     "uploadedBy": "Caricata da {{name}}",
     "deleteConfirm": "Eliminare questa foto? Viene rimosso anche il file.",
-    "toggleVisibility": "Cambia se il cliente la vede"
+    "toggleVisibility": "Cambia se il cliente la vede",
+    "descriptionForProject": "Foto di {{project}}, per data e zona",
+    "descriptionAll": "Per data e zona, con visibilità al cliente"
   },
   "changeOrders": {
     "tab": "Varianti",
@@ -1447,5 +1448,11 @@
       "salida": "Uscita",
       "aprobado": "Approvato"
     }
+  },
+  "scope": {
+    "filteredBy": "Filtrato per cantiere:",
+    "seeAll": "Vedi tutto",
+    "pickToUpload": "Scegli un cantiere nel selettore in alto per caricare.",
+    "pickToRecord": "Scegli un cantiere nel selettore in alto per registrare una spesa."
   }
 }

@@ -16,6 +16,8 @@ import { previewTax, type TaxRate } from "@/lib/taxes";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { useFiltroDeObra } from "@/lib/filtroDeObra";
 
 interface Project {
   id: string;
@@ -128,6 +130,10 @@ export default function Projects() {
   const { reloadProjects } = useSelectedProject();
   const [reloadToken, setReloadToken] = useState(0);
   const { data: projects, loading, error } = useApi<Project[]>(`/api/projects?_r=${reloadToken}`);
+  // Aquí el filtro deja una sola tarjeta, y aun así se aplica: una pantalla
+  // que ignorara el selector haría dudar de si filtra en las demás.
+  const { filtrar } = useFiltroDeObra();
+  const visibles = filtrar(projects, (p) => p.id);
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
@@ -145,6 +151,8 @@ export default function Projects() {
         }
       />
 
+      <FiltradoPorObra />
+
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
           <Spinner className="size-4" /> {t("common.loading")}
@@ -159,7 +167,7 @@ export default function Projects() {
 
       {!loading && !error && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects?.map((project) => (
+          {visibles.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`}>
               <Card className="p-5 hover:border-primary/40 transition-colors cursor-pointer h-full">
                 <div className="flex items-start justify-between gap-2">
@@ -168,9 +176,11 @@ export default function Projects() {
                         por eso se baja a minúsculas para buscar su rótulo. El
                         valor original queda de reserva si algún día hay tipos
                         que nosotros no conocemos. */}
-                    <p className="text-xs text-muted-foreground">
-                      {t(`projects.types.${project.type?.toLowerCase()}`, { defaultValue: project.type })}
-                    </p>
+                    {project.type && (
+                      <p className="text-xs text-muted-foreground">
+                        {t(`projects.types.${project.type.toLowerCase()}`, { defaultValue: project.type })}
+                      </p>
+                    )}
                     <h3 className="font-semibold text-foreground mt-0.5 truncate">{project.name}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{project.clientName}</p>
                   </div>

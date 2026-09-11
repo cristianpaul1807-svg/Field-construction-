@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { SelectProjectPrompt } from "@/components/SelectProjectPrompt";
 import { Upload, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
 import { useTranslation } from "react-i18next";
 
 interface Photo {
@@ -133,7 +133,9 @@ export default function PhotoGallery() {
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const { data: photos, loading, error, reload } = useApi<Photo[]>("/api/photos");
 
-  const filtered = (photos ?? []).filter((p) => p.projectId === selectedProjectId);
+  // En General se ven las fotos de todas las obras. Obligar a elegir una para
+  // poder mirar era pedirle al jefe que ya supiera dónde está la foto.
+  const filtered = (photos ?? []).filter((p) => !selectedProjectId || p.projectId === selectedProjectId);
 
   const removePhoto = async (id: string) => {
     if (!window.confirm(t("photoGallery.deleteConfirm"))) return;
@@ -158,8 +160,8 @@ export default function PhotoGallery() {
         title={t("photoGallery.title")}
         description={
           selectedProject
-            ? `Fotos de ${selectedProject.name}, organizadas por fecha y zona`
-            : "Organizada por fecha y zona, con visibilidad al cliente"
+            ? t("photoGallery.descriptionForProject", { project: selectedProject.name })
+            : t("photoGallery.descriptionAll")
         }
         action={
           selectedProjectId ? (
@@ -168,27 +170,34 @@ export default function PhotoGallery() {
         }
       />
 
-      {!selectedProjectId && <SelectProjectPrompt />}
+      <FiltradoPorObra />
 
-      {selectedProjectId && loading && (
+      {!selectedProjectId && (
+        <p className="text-sm text-muted-foreground">{t("scope.pickToUpload")}</p>
+      )}
+
+      {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
           <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
 
-      {selectedProjectId && error && (
+      {error && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
           {t("common.loadError", { message: error })}
         </div>
       )}
 
-      {selectedProjectId && !loading && !error && (
+      {!loading && !error && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((photo) => (
             <Card key={photo.id} className="p-3 space-y-2">
               <PhotoThumb id={photo.id} />
               <div>
-                <p className="text-xs text-muted-foreground">{photo.zone} · {photo.timestamp?.slice(0, 10)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {photo.zone} · {photo.timestamp?.slice(0, 10)}
+                  {!selectedProjectId && photo.projectName ? ` · ${photo.projectName}` : ""}
+                </p>
                 <p className="text-xs text-muted-foreground">{t("photoGallery.uploadedBy", { name: photo.uploadedBy ?? "—" })}</p>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">

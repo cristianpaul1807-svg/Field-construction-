@@ -47,20 +47,19 @@
     "no": "No",
     "add": "Agregar",
     "selectProjectHint": "Usa el selector \"Proyectos\" de la barra superior para elegir de qué proyecto quieres ver esta información.",
-    "selectProject": "Selecciona un proyecto",
     "selectClient": "Selecciona un cliente",
     "needsClientFirst": "Esto se hace para un cliente, y todavía no tienes ninguno. Crea el cliente primero y vuelve aquí.",
     "needsProjectFirst": "Esto pertenece a una obra, y todavía no tienes ninguna. Crea la obra primero y vuelve aquí.",
     "goCreateClient": "Crear un cliente",
     "goCreateProject": "Crear una obra",
-    "clearSelection": "Quitar selección",
     "selectProjectHere": "Elige de cuál quieres ver esta información.",
     "noProjectsYet": "Todavía no tienes obras",
     "noProjectsYetHint": "Esta pantalla se llena en cuanto tengas una. Se crean al aceptar un presupuesto, o a mano.",
     "goToProjects": "Ir a Proyectos",
     "actions": "Acciones",
     "deleteError": "No se pudo eliminar",
-    "lessThanAMinute": "menos de 1 min"
+    "lessThanAMinute": "menos de 1 min",
+    "generalScope": "General"
   },
   "nav": {
     "home": "INICIO",
@@ -1066,7 +1065,9 @@
     "uploadError": "No se pudo subir la foto",
     "uploadedBy": "Subida por {{name}}",
     "deleteConfirm": "¿Eliminar esta foto? También se borra el archivo.",
-    "toggleVisibility": "Cambiar si el cliente la ve"
+    "toggleVisibility": "Cambiar si el cliente la ve",
+    "descriptionForProject": "Fotos de {{project}}, organizadas por fecha y zona",
+    "descriptionAll": "Organizada por fecha y zona, con visibilidad al cliente"
   },
   "changeOrders": {
     "tab": "Órdenes de cambio",
@@ -1447,5 +1448,11 @@
       "salida": "Salida",
       "aprobado": "Aprobado"
     }
+  },
+  "scope": {
+    "filteredBy": "Filtrado por obra:",
+    "seeAll": "Ver todo",
+    "pickToUpload": "Elige una obra en el selector de arriba para poder subir.",
+    "pickToRecord": "Elige una obra en el selector de arriba para poder anotar un gasto."
   }
 }

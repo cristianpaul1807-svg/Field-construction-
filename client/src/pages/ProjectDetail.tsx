@@ -237,7 +237,8 @@ export default function ProjectDetailPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{project.name}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {project.clientName} · {t(`projects.types.${project.type?.toLowerCase()}`, { defaultValue: project.type })}
+            {project.clientName}
+            {project.type ? ` · ${t(`projects.types.${project.type.toLowerCase()}`, { defaultValue: project.type })}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-3">

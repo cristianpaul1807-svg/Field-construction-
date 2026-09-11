@@ -47,20 +47,19 @@
     "no": "No",
     "add": "Add",
     "selectProjectHint": "Use the \"Projects\" picker in the top bar to choose which project you want to see this for.",
-    "selectProject": "Select a project",
     "selectClient": "Select a client",
     "needsClientFirst": "This is made for a client, and you don't have any yet. Create the client first, then come back.",
     "needsProjectFirst": "This belongs to a job, and you don't have any yet. Create the job first, then come back.",
     "goCreateClient": "Create a client",
     "goCreateProject": "Create a job",
-    "clearSelection": "Clear selection",
     "selectProjectHere": "Pick which one you want to see this for.",
     "noProjectsYet": "You don't have any projects yet",
     "noProjectsYetHint": "This screen fills up as soon as you have one. They're created when an estimate is accepted, or by hand.",
     "goToProjects": "Go to Projects",
     "actions": "Actions",
     "deleteError": "Could not delete",
-    "lessThanAMinute": "less than 1 min"
+    "lessThanAMinute": "less than 1 min",
+    "generalScope": "General"
   },
   "nav": {
     "home": "HOME",
@@ -1066,7 +1065,9 @@
     "uploadError": "Could not upload the photo",
     "uploadedBy": "Uploaded by {{name}}",
     "deleteConfirm": "Delete this photo? The file is removed too.",
-    "toggleVisibility": "Toggle whether the client sees it"
+    "toggleVisibility": "Toggle whether the client sees it",
+    "descriptionForProject": "Photos of {{project}}, by date and area",
+    "descriptionAll": "By date and area, with client visibility"
   },
   "changeOrders": {
     "tab": "Change orders",
@@ -1447,5 +1448,11 @@
       "salida": "Out",
       "aprobado": "Approved"
     }
+  },
+  "scope": {
+    "filteredBy": "Filtered by site:",
+    "seeAll": "See everything",
+    "pickToUpload": "Pick a site in the selector above to upload.",
+    "pickToRecord": "Pick a site in the selector above to record an expense."
   }
 }

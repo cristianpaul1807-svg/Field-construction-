@@ -5243,7 +5243,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("time_entries")
       .select(
-        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, check_out_location, check_out_lat, check_out_lng, approved, service_type, schedule_events(title, commessa), work_orders(title, commessa), projects(name, code), employees(name), subcontractors(name)"
+        "id, check_in_time, check_in_location, check_in_lat, check_in_lng, check_out_time, check_out_location, check_out_lat, check_out_lng, approved, service_type, project_id, schedule_events(title, commessa), work_orders(title, commessa), projects(name, code), employees(name), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .order("check_in_time", { ascending: false });
@@ -5253,6 +5253,7 @@ apiRouter.get(
     res.json(
       data.map((t: any) => ({
         id: t.id,
+        projectId: t.project_id ?? null,
         projectName: t.projects?.name ?? null,
         workerName: t.employees?.name ?? t.subcontractors?.name ?? null,
         checkInTime: t.check_in_time,
@@ -5342,7 +5343,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const { data, error } = await supabase
       .from("work_orders")
-      .select("id, title, description, priority, status, service_type, scheduled_start, duration_minutes, commessa, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
+      .select("id, title, description, priority, status, service_type, scheduled_start, duration_minutes, commessa, project_id, projects(name, code), employees:assigned_employee_id(name), subcontractors:assigned_subcontractor_id(name)")
       .eq("business_id", req.businessId!);
 
     if (error) throw error;
@@ -5359,6 +5360,7 @@ apiRouter.get(
         durationMinutes: w.duration_minutes ?? null,
         // El número de obra, emitido al crearla y ya inamovible.
         commessa: w.commessa ?? null,
+        projectId: w.project_id ?? null,
         projectName: w.projects?.name ?? null,
         projectCode: w.projects?.code ?? null,
         assignedTo: w.employees?.name ?? w.subcontractors?.name ?? null,
@@ -6323,7 +6325,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, projects(name), clients(name)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -6350,6 +6352,7 @@ apiRouter.get(
         description: i.description,
         createdAt: i.created_at,
         paidAt: i.paid_at,
+        projectId: i.project_id ?? null,
         projectName: i.projects?.name ?? null,
         clientName: i.clients?.name ?? null,
       }))

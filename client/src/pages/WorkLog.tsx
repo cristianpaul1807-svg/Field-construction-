@@ -12,9 +12,12 @@ import { Codigo } from "@/components/Codigo";
 import { useTiposDeTrabajo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { useFiltroDeObra } from "@/lib/filtroDeObra";
 
 interface Linea {
   id: string;
+  projectId: string | null;
   kind: "orden" | "cita";
   commessa: string;
   title: string;
@@ -186,8 +189,12 @@ export default function WorkLog() {
   // Sin acentos: media plantilla de Quebec se llama Gagné y quien busca
   // escribe "gagne" con el teclado que tenga a mano.
   const sinAcentos = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  // Primero la obra elegida arriba, después el buscador de esta pantalla.
+  const { filtrar } = useFiltroDeObra();
+  const deLaObra = filtrar(lineas, (l) => l.projectId);
+
   const aguja = sinAcentos(busqueda.trim());
-  const visibles = (lineas ?? []).filter(
+  const visibles = deLaObra.filter(
     (l) =>
       !aguja ||
       sinAcentos([l.commessa, l.title, l.projectName, l.assignedTo].filter(Boolean).join(" ")).includes(aguja)
@@ -200,7 +207,9 @@ export default function WorkLog() {
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader title={t("workLog.title")} description={t("workLog.description")} />
 
-      {(lineas?.length ?? 0) > 0 && (
+      <FiltradoPorObra />
+
+      {deLaObra.length > 0 && (
         <div className="relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
@@ -291,7 +300,7 @@ export default function WorkLog() {
               {t("workLog.noMatches", { query: busqueda.trim() })}
             </p>
           )}
-          {!aguja && lineas?.length === 0 && (
+          {!aguja && deLaObra.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">{t("workLog.empty")}</p>
           )}
         </div>

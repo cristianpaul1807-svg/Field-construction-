@@ -14,9 +14,12 @@ import { Link } from "wouter";
 import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
 import { Codigo } from "@/components/Codigo";
+import { FiltradoPorObra } from "@/components/FiltradoPorObra";
+import { useFiltroDeObra } from "@/lib/filtroDeObra";
 
 interface TimeEntry {
   id: string;
+  projectId: string | null;
   projectName: string | null;
   workerName: string | null;
   checkInTime: string;
@@ -75,8 +78,13 @@ export default function CheckIn() {
   // Se busca por persona, por obra, por trabajo y por número: quien revisa
   // horas llega con una de esas cuatro en la cabeza, y el número es la que
   // trae quien viene de un albarán o de una factura.
+  // La obra elegida arriba manda sobre la lista; el buscador afina dentro de
+  // lo que quede.
+  const { filtrar } = useFiltroDeObra();
+  const deLaObra = filtrar(entries, (e) => e.projectId);
+
   const aguja = sinAcentos(busqueda.trim());
-  const visibles = (entries ?? []).filter((e) =>
+  const visibles = deLaObra.filter((e) =>
     !aguja ||
     sinAcentos([e.workerName, e.projectName, e.jobTitle, e.commessa].filter(Boolean).join(" ")).includes(aguja)
   );
@@ -123,8 +131,9 @@ export default function CheckIn() {
         </TabsContent>
 
         <TabsContent value="entries" className="mt-4 space-y-4">
+      <FiltradoPorObra />
       {/* Con una cuadrilla de seis la lista ya no se recorre a ojo. */}
-      {(entries?.length ?? 0) > 0 && (
+      {deLaObra.length > 0 && (
         <div className="relative">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
@@ -243,7 +252,7 @@ export default function CheckIn() {
                 </div>
               );
             })}
-            {entries?.length === 0 && (
+            {deLaObra.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">{t("checkIn.noEntries")}</p>
             )}
           </div>
