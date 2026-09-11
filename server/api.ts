@@ -1011,7 +1011,17 @@ apiRouter.post(
     // Queda el nombre de su correo como marcador provisional, y el panel le
     // pide de entrada que ponga el de verdad.
     const businessName = label.charAt(0).toUpperCase() + label.slice(1);
-    const slug = await generateUniqueSlug(admin, businessName);
+
+    // El enlace público NO sale del correo. Salía, y el resultado es que un
+    // contratista tiene hoy de dirección pública /c/nestordejesus98icloudcom:
+    // su correo personal, reconstruible por cualquiera que reciba el enlace,
+    // impreso en lo que reparte a sus clientes. El nombre provisional puede
+    // salir del correo porque sólo lo ve él dentro del panel; esto lo ve todo
+    // el mundo.
+    //
+    // Nace neutro y corto, para que se pueda dictar por teléfono, y se cambia
+    // por el de verdad desde Ajustes cuando el negocio tiene nombre.
+    const slug = await generateUniqueSlug(admin, `obra-${randomBytes(3).toString("hex")}`);
 
     const { data: business, error: businessError } = await admin
       .from("businesses")

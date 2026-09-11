@@ -175,6 +175,24 @@ solo tocas tu propia fila.
 
 ---
 
+## El enlace público
+
+Es la dirección que se reparte: `tudominio/c/tu-negocio`. Se cambia en
+**Configuración → Datos de la empresa**, en el campo *Link público*.
+
+Un negocio nuevo nace con un enlace neutro del tipo `/c/obra-4d015e`. **No
+sale del correo de quien se registra, y es a propósito**: salía, y un
+contratista acabó con `/c/nestordejesus98icloudcom` de dirección pública — su
+correo personal, reconstruible por cualquiera que reciba el enlace, impreso en
+lo que reparte a sus clientes. El nombre provisional del negocio sí sale del
+correo, porque ése sólo se ve dentro del panel.
+
+Ponle el de verdad **antes de repartirlo**. Cambiarlo después rompe todos los
+enlaces ya compartidos: quien tenga el viejo deja de poder usarlo, y el aviso
+naranja del campo lo dice por eso.
+
+---
+
 ## El logo
 
 Se sube en **Configuración → Datos de la empresa**, en la tarjeta de arriba.
