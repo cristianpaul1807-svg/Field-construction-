@@ -21,6 +21,7 @@ import {
   Clock,
   ClipboardList,
   ListChecks,
+  Tags,
   Calendar,
   CreditCard,
   BarChart3,
@@ -146,6 +147,9 @@ const navSections: NavSection[] = [
     Icon: Settings,
     items: [
       { id: "company-data", labelKey: "nav.companyData", Icon: Building2, path: "/settings/company" },
+      // Junto a los datos de la empresa: los tipos de trabajo son suyos, y su
+      // letra es la que acaba dentro de cada número de obra.
+      { id: "service-types", labelKey: "nav.serviceTypes", Icon: Tags, path: "/settings/service-types" },
       { id: "payments", labelKey: "nav.payments", Icon: Wallet, path: "/settings/payments" },
       { id: "margins-rules", labelKey: "nav.margins", Icon: Percent, path: "/settings/margins" },
       { id: "users-roles", labelKey: "nav.users", Icon: UserCog, path: "/settings/users" },

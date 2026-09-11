@@ -95,7 +95,8 @@
     "assistantHint": "Ask it to add a work projection, review pending estimates, or anything else you'd like to automate.",
     "payroll": "Payroll",
     "workLog": "Work log",
-    "clientPortalShort": "Portal"
+    "clientPortalShort": "Portal",
+    "serviceTypes": "Job types"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1462,5 +1463,24 @@
     "searchProject": "Search a site",
     "noMatches": "No site matches “{{query}}”.",
     "filterByProject": "Filter by site"
+  },
+  "serviceTypes": {
+    "title": "Job types",
+    "description": "How you classify work. Each type's letter goes inside the job number.",
+    "newType": "New type",
+    "create": "Create type",
+    "createError": "The type could not be created",
+    "namePlaceholder": "e.g. Roofing, Wiring, Excavation",
+    "letter": "Letter",
+    "letterAuto": "auto",
+    "letterHint": "It is the one that shows in the job number: Ba-26-0014.",
+    "lettersTaken": "Already taken: {{letters}}",
+    "builtin": "Built-in",
+    "builtinHint": "Built-in types cannot be edited or deleted: their name is translated into all four languages and the worker reads it in theirs. Yours show exactly as you write them.",
+    "rename": "Rename",
+    "renameHint": "The name only. The letter “{{letter}}” is inside job numbers already issued, and an issued number does not move.",
+    "deleteConfirm": "Delete the type “{{name}}”?",
+    "inUse": "Cannot delete: {{count}} jobs are classified this way. They would be labelled with something that no longer exists.",
+    "empty": "No types yet."
   }
 }

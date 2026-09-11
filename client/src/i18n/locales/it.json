@@ -95,7 +95,8 @@
     "assistantHint": "Chiedigli di aggiungere una proiezione di lavoro, rivedere i preventivi in sospeso, o qualsiasi cosa tu voglia automatizzare.",
     "payroll": "Buste paga",
     "workLog": "Controllo lavori",
-    "clientPortalShort": "Portale"
+    "clientPortalShort": "Portale",
+    "serviceTypes": "Tipi di lavoro"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1462,5 +1463,24 @@
     "searchProject": "Cerca un cantiere",
     "noMatches": "Nessun cantiere corrisponde a «{{query}}».",
     "filterByProject": "Filtra per cantiere"
+  },
+  "serviceTypes": {
+    "title": "Tipi di lavoro",
+    "description": "Come classifichi il lavoro. La lettera di ogni tipo entra nel numero di commessa.",
+    "newType": "Nuovo tipo",
+    "create": "Crea tipo",
+    "createError": "Non è stato possibile creare il tipo",
+    "namePlaceholder": "Es. Toiture, Cablaggio, Scavo",
+    "letter": "Lettera",
+    "letterAuto": "auto",
+    "letterHint": "È quella che compare nel numero di commessa: Ba-26-0014.",
+    "lettersTaken": "Già in uso: {{letters}}",
+    "builtin": "Di serie",
+    "builtinHint": "I tipi di serie non si modificano né si eliminano: il loro nome è tradotto nelle quattro lingue e il lavoratore lo legge nella sua. I tuoi si mostrano esattamente come li scrivi.",
+    "rename": "Rinomina",
+    "renameHint": "Solo il nome. La lettera «{{letter}}» è dentro numeri già emessi, e un numero emesso non si muove.",
+    "deleteConfirm": "Eliminare il tipo «{{name}}»?",
+    "inUse": "Non si può eliminare: {{count}} lavori sono classificati così. Resterebbero etichettati con qualcosa che non esiste più.",
+    "empty": "Non ci sono ancora tipi."
   }
 }

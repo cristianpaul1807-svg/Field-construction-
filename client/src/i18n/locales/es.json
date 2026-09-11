@@ -95,7 +95,8 @@
     "assistantHint": "Pídele que agregue una proyección de trabajo, revise presupuestos pendientes, o cualquier cosa que quieras automatizar.",
     "payroll": "Nóminas",
     "workLog": "Control de trabajo",
-    "clientPortalShort": "Portal"
+    "clientPortalShort": "Portal",
+    "serviceTypes": "Tipos de trabajo"
   },
   "dashboard": {
     "title": "Panel",
@@ -1462,5 +1463,24 @@
     "searchProject": "Busca una obra",
     "noMatches": "Ninguna obra coincide con «{{query}}».",
     "filterByProject": "Filtrar por obra"
+  },
+  "serviceTypes": {
+    "title": "Tipos de trabajo",
+    "description": "Cómo clasificas el trabajo. La letra de cada tipo va dentro del número de obra.",
+    "newType": "Nuevo tipo",
+    "create": "Crear tipo",
+    "createError": "No se pudo crear el tipo",
+    "namePlaceholder": "Ej. Toiture, Filage, Excavación",
+    "letter": "Letra",
+    "letterAuto": "auto",
+    "letterHint": "Es la que aparece en el número de obra: Ba-26-0014.",
+    "lettersTaken": "Ya en uso: {{letters}}",
+    "builtin": "De casa",
+    "builtinHint": "Los tipos de casa no se editan ni se borran: su nombre se traduce a los cuatro idiomas y el trabajador lo lee en el suyo. Los tuyos se enseñan tal y como los escribas.",
+    "rename": "Cambiar el nombre",
+    "renameHint": "Sólo el nombre. La letra «{{letter}}» está dentro de números de obra ya emitidos, y un número emitido no se mueve.",
+    "deleteConfirm": "¿Borrar el tipo «{{name}}»?",
+    "inUse": "No se puede borrar: hay {{count}} trabajos clasificados así. Quedarían etiquetados con algo que ya no existe.",
+    "empty": "Todavía no hay tipos."
   }
 }

@@ -57,7 +57,7 @@ lleva; si más adelante se le asigna una obra, coge número en ese momento.
 
 | Tabla | Para qué |
 |---|---|
-| `service_types` | Los tipos del negocio y su letra. `name` nulo = uno de casa, se traduce con `t()`; con nombre = lo creó el negocio, se muestra tal cual. |
+| `service_types` | Los tipos del negocio y su letra. `name` nulo = uno de casa, se traduce con `t()`; con nombre = lo creó el negocio, se muestra tal cual. Se gestionan en **Configuración → Tipos de trabajo**: se crean con su letra, se les cambia el nombre, y no se borran si ya clasificaron trabajo — esos trabajos quedarían etiquetados con algo que ya no existe, y la letra sigue dentro de números emitidos. Los cinco de casa no se tocan: su nombre se traduce a los cuatro idiomas. |
 | `numero_counters` | Un contador por negocio y serie (`'2026'`, `'proyecto'`). |
 | `projects.code` | La letra de la obra. |
 | `work_orders.commessa`, `schedule_events.commessa` | El número del trabajo. |

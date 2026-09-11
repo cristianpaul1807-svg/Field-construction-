@@ -95,7 +95,8 @@
     "assistantHint": "Demandez-lui d'ajouter une projection de travaux, de revoir les soumissions en attente, ou tout ce que vous souhaitez automatiser.",
     "payroll": "Paie",
     "workLog": "Suivi des travaux",
-    "clientPortalShort": "Portail"
+    "clientPortalShort": "Portail",
+    "serviceTypes": "Types de travaux"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1462,5 +1463,24 @@
     "searchProject": "Chercher un chantier",
     "noMatches": "Aucun chantier ne correspond à « {{query}} ».",
     "filterByProject": "Filtrer par chantier"
+  },
+  "serviceTypes": {
+    "title": "Types de travaux",
+    "description": "Comment vous classez le travail. La lettre de chaque type entre dans le numéro de chantier.",
+    "newType": "Nouveau type",
+    "create": "Créer le type",
+    "createError": "Le type n'a pas pu être créé",
+    "namePlaceholder": "Ex. Toiture, Filage, Excavation",
+    "letter": "Lettre",
+    "letterAuto": "auto",
+    "letterHint": "C'est celle qui apparaît dans le numéro de chantier : Ba-26-0014.",
+    "lettersTaken": "Déjà prises : {{letters}}",
+    "builtin": "De base",
+    "builtinHint": "Les types de base ne se modifient ni ne s'effacent : leur nom est traduit dans les quatre langues et le travailleur le lit dans la sienne. Les vôtres s'affichent tels que vous les écrivez.",
+    "rename": "Renommer",
+    "renameHint": "Le nom seulement. La lettre « {{letter}} » est dans des numéros déjà émis, et un numéro émis ne bouge pas.",
+    "deleteConfirm": "Supprimer le type « {{name}} » ?",
+    "inUse": "Suppression impossible : {{count}} travaux sont classés ainsi. Ils resteraient étiquetés avec quelque chose qui n'existe plus.",
+    "empty": "Aucun type pour l'instant."
   }
 }

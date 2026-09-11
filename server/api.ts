@@ -5377,6 +5377,153 @@ apiRouter.get(
   })
 );
 
+/**
+ * Dar de alta un tipo de trabajo propio.
+ *
+ * Los cinco de casa cubren lo genérico, pero un techador factura "Toiture" y
+ * un electricista "Filage": obligarles a meterlo todo en "Otro" es perder
+ * justo el dato por el que se clasifica el trabajo.
+ *
+ * La letra es lo que entra en el número de obra, así que es única dentro del
+ * negocio y no se puede cambiar una vez hay trabajos emitidos con ella — un
+ * número emitido no se mueve.
+ */
+const LETRAS_POSIBLES = "abcdefghijklmnopqrstuvwxyz".split("");
+
+apiRouter.post(
+  "/service-types",
+  route(async (req, res) => {
+    const nombre = String(req.body?.name ?? "").trim();
+    if (!nombre) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const { data: existentes, error: errLeer } = await supabase
+      .from("service_types")
+      .select("letter, sort")
+      .eq("business_id", req.businessId!);
+    if (errLeer) throw errLeer;
+
+    // La letra que pida, si está libre; si no, la primera que quede. Se
+    // acaban en 26 y entonces se dice, en vez de fallar con un choque de
+    // índice que no explica nada.
+    const ocupadas = new Set((existentes ?? []).map((t: any) => t.letter));
+    const pedida = String(req.body?.letter ?? "").trim().toLowerCase();
+    const letra =
+      pedida && /^[a-z]$/.test(pedida) && !ocupadas.has(pedida)
+        ? pedida
+        : LETRAS_POSIBLES.find((l) => !ocupadas.has(l));
+    if (!letra) {
+      res.status(409).json({ error: "no letters left", code: "service_type_letters_exhausted" });
+      return;
+    }
+    if (pedida && pedida !== letra) {
+      res.status(409).json({ error: "letter taken", code: "service_type_letter_taken", letter: pedida });
+      return;
+    }
+
+    // El slug es lo que se guarda en cada trabajo y en cada fichaje, así que
+    // nace del nombre y ya no se toca: cambiarlo dejaría huérfano todo lo que
+    // se clasificó con él.
+    const base = nombre
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "_")
+      .replace(/^_|_$/g, "")
+      .toLowerCase()
+      .slice(0, 40) || `tipo_${letra}`;
+
+    const sort = Math.max(0, ...(existentes ?? []).map((t: any) => Number(t.sort) || 0).filter((n) => n < 90)) + 1;
+
+    const { data, error } = await supabase
+      .from("service_types")
+      .insert({ business_id: req.businessId!, slug: base, letter: letra, name: nombre, builtin: false, sort })
+      .select("id, slug, letter, name, builtin")
+      .single();
+    if (error) {
+      if ((error as any).code === "23505") {
+        res.status(409).json({ error: "already exists", code: "service_type_exists" });
+        return;
+      }
+      throw error;
+    }
+    res.status(201).json(data);
+  })
+);
+
+apiRouter.patch(
+  "/service-types/:id",
+  route(async (req, res) => {
+    const nombre = String(req.body?.name ?? "").trim();
+    if (!nombre) {
+      res.status(400).json({ error: "name is required" });
+      return;
+    }
+    const supabase = req.supabase!;
+    // Sólo el nombre. La letra y el slug están dentro de números ya emitidos
+    // y en las fichas de cada trabajo; cambiarlos rompería la relación.
+    const { data, error } = await supabase
+      .from("service_types")
+      .update({ name: nombre })
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .eq("builtin", false)
+      .select("id, slug, letter, name, builtin")
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ error: "not found or built-in", code: "service_type_builtin" });
+      return;
+    }
+    res.json(data);
+  })
+);
+
+apiRouter.delete(
+  "/service-types/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: tipo } = await supabase
+      .from("service_types")
+      .select("slug, builtin")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!tipo) {
+      res.status(404).json({ error: "not found" });
+      return;
+    }
+    if (tipo.builtin) {
+      res.status(409).json({ error: "built-in", code: "service_type_builtin" });
+      return;
+    }
+
+    // Un tipo que ya clasificó trabajo no se borra: esos trabajos quedarían
+    // etiquetados con algo que no está en ninguna parte, y su letra sigue
+    // dentro de números de obra ya emitidos.
+    const [ordenes, citas, fichajes] = await Promise.all([
+      supabase.from("work_orders").select("id", { count: "exact", head: true }).eq("business_id", req.businessId!).eq("service_type", tipo.slug),
+      supabase.from("schedule_events").select("id", { count: "exact", head: true }).eq("business_id", req.businessId!).eq("service_type", tipo.slug),
+      supabase.from("time_entries").select("id", { count: "exact", head: true }).eq("business_id", req.businessId!).eq("service_type", tipo.slug),
+    ]);
+    const enUso = (ordenes.count ?? 0) + (citas.count ?? 0) + (fichajes.count ?? 0);
+    if (enUso > 0) {
+      res.status(409).json({ error: "in use", code: "service_type_in_use", count: enUso });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("service_types")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 // ---------- Work Orders ----------
 
 apiRouter.get(
