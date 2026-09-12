@@ -92,6 +92,37 @@ cómo funciona algo, el tema de ayuda que lo explica cambia con ello — si no,
 el bot pasa a ser una fuente de mentiras con la autoridad de estar dentro del
 producto.
 
+### Nunca escribas el nombre de una pantalla
+
+Para mandar a un sitio del menú, **interpola**; no lo copies:
+
+```
+"{{menuCampo}} → {{menuRegistro}}: una línea por número de trabajo…"
+```
+
+El componente los saca de `nav.*` y los pasa a `t()`, así que la ayuda nombra
+cada sección exactamente como la nombra el menú, en el idioma que esté puesto.
+
+Esto no es estilo. Pasó: el bot estaba traducido a los cuatro idiomas y aun
+así, **en francés mandaba a «TERRAIN → Registre de travail» cuando el menú
+dice CHANTIER → Suivi des travaux**, y en italiano a «CAMPO» cuando dice
+CANTIERE. Cada idioma se escribió a mano por separado y divergió del producto
+sin que nada fallara. Un texto correcto que te manda a una opción inexistente
+es peor que no tener ayuda.
+
+| Marcador | Sale de |
+|---|---|
+| `{{menuAjustes}}` `{{menuEmpresa}}` `{{menuTipos}}` `{{menuPagos}}` `{{menuMargenes}}` | Configuración |
+| `{{menuCampo}}` `{{menuTecnicos}}` `{{menuOrdenes}}` `{{menuRegistro}}` `{{menuFichaje}}` | Campo |
+| `{{menuFinanzas}}` `{{menuFacturacion}}` `{{menuInformes}}` | Finanzas |
+| `{{menuCrm}}` `{{menuPortal}}` `{{menuProyectos}}` | El resto |
+
+Lo vigila un script, que falla si alguien vuelve a copiarlo a mano:
+
+```bash
+python3 scripts/check-help-menu.py
+```
+
 ### Secciones y a qué pantallas pertenecen
 
 | Sección | Rutas que la abren por defecto |

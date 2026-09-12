@@ -1503,21 +1503,21 @@
       "empezar": {
         "datosEmpresa": {
           "title": "Completar los datos de mi empresa",
-          "p1": "Ve a CONFIGURACIÓN → Datos de la empresa. Son dos tarjetas: arriba tu identidad (nombre, licencia RBQ, provincia y tu enlace público), abajo lo que se imprime en cada documento.",
+          "p1": "Ve a {{menuAjustes}} → {{menuEmpresa}}. Son dos tarjetas: arriba tu identidad (nombre, licencia RBQ, provincia y tu enlace público), abajo lo que se imprime en cada documento.",
           "p2": "Rellena dirección, teléfono, número de TPS y número de TVQ. Eso es lo que sale en la cabecera de cada presupuesto y de cada factura.",
           "p3": "Más abajo pones tu depósito por defecto, tu retención (10 % en Quebec) y el texto legal que va al pie del presupuesto.",
           "nota": "En Quebec, una factura sin número de TPS y TVQ te la devuelve el contable de tu cliente. El aviso de arriba del panel desaparece solo en cuanto los rellenes."
         },
         "accesoTrabajador": {
           "title": "Dar acceso a un trabajador",
-          "p1": "Primero lo das de alta: CAMPO → Técnicos → Nuevo técnico, con su nombre, su teléfono y su oficio.",
+          "p1": "Primero lo das de alta: {{menuCampo}} → {{menuTecnicos}} → Nuevo técnico, con su nombre, su teléfono y su oficio.",
           "p2": "En su tarjeta, pulsa Código PWA. Sale un código.",
           "p3": "Mándaselo por donde ya habléis. Él abre /campo en el móvil, escribe el código y ya está dentro: sin correo y sin contraseña.",
           "nota": "El código se enseña una sola vez. Generar otro anula el anterior — así es como le quitas el acceso a quien ya no trabaja contigo."
         },
         "accesoCliente": {
           "title": "Dar acceso a un cliente",
-          "p1": "CRM → abre la ficha del cliente → Generar código de acceso.",
+          "p1": "{{menuCrm}} → abre la ficha del cliente → Generar código de acceso.",
           "p2": "Cópialo y mándaselo. Él entra en /portal y lo escribe.",
           "p3": "Ahí ve el avance de su obra, su presupuesto, sus facturas y un chat contigo. No ve tus costes ni tus márgenes.",
           "nota": "Generar un código nuevo anula el anterior."
@@ -1531,25 +1531,25 @@
       "clientes": {
         "nuevoContacto": {
           "title": "Añadir un cliente a mano",
-          "p1": "CRM → Nuevo contacto. Con el nombre basta; teléfono, correo y dirección los puedes rellenar después.",
+          "p1": "{{menuCrm}} → Nuevo contacto. Con el nombre basta; teléfono, correo y dirección los puedes rellenar después.",
           "p2": "Al crearlo se abre un canal de mensajería contigo, así que puedes escribirle desde el primer momento."
         },
         "enlacePublico": {
           "title": "Mi enlace para recibir solicitudes",
           "p1": "Es un chat que cualquiera puede abrir sin registrarse. Tu dirección es la de tu panel seguida de /c/ y tu enlace.",
           "p2": "El bot le hace unas preguntas —qué servicio, qué quiere hacer, la dirección y cómo contactarle— y te deja un presupuesto en borrador con todo dentro.",
-          "p3": "Lo cambias en CONFIGURACIÓN → Datos de la empresa, en el campo Link público.",
+          "p3": "Lo cambias en {{menuAjustes}} → {{menuEmpresa}}, en el campo Link público.",
           "nota": "Si lo cambias, los enlaces que ya hayas repartido dejan de funcionar: el QR de la camioneta, tu bio, el mensaje de WhatsApp. Cámbialo pronto o no lo cambies."
         },
         "queVeElCliente": {
           "title": "Qué ve mi cliente en su portal",
-          "p1": "Entra en Portal desde tu menú: es exactamente lo que él ve, para que lo compruebes antes de darle el código.",
+          "p1": "Entra en {{menuPortal}} desde tu menú: es exactamente lo que él ve, para que lo compruebes antes de darle el código.",
           "p2": "Ve el avance de la obra, su presupuesto en PDF, sus facturas, las fotos que tú marques como visibles y un chat contigo.",
           "p3": "No ve tus costes, tus márgenes, tus proveedores ni las líneas del presupuesto que hayas marcado como internas."
         },
         "exportar": {
           "title": "Bajar mis datos a Excel o PDF",
-          "p1": "En CRM, las pestañas de arriba son las tablas del negocio: obras, trabajos y facturación.",
+          "p1": "En {{menuCrm}}, las pestañas de arriba son las tablas del negocio: obras, trabajos y facturación.",
           "p2": "Cada tabla se ordena y se filtra, y puedes esconder las columnas que no te interesen.",
           "p3": "El botón de descarga te la da en Excel o en PDF. El PDF sale con tu logo y tus datos de empresa en la cabecera."
         }
@@ -1570,7 +1570,7 @@
         "margenYmerma": {
           "title": "Margen y merma",
           "p1": "Están en el panel de la derecha. La merma es el material que se pierde en cortes, roturas y sobrantes; el margen es lo tuyo.",
-          "p2": "Los mueves con las barras y el total se recalcula al momento. Tus valores por defecto los pones en CONFIGURACIÓN → Márgenes y reglas."
+          "p2": "Los mueves con las barras y el total se recalcula al momento. Tus valores por defecto los pones en {{menuAjustes}} → {{menuMargenes}}."
         },
         "enviarYaceptar": {
           "title": "Enviárselo y que lo acepte",
@@ -1583,7 +1583,7 @@
       "trabajo": {
         "crearOrden": {
           "title": "Mandar un trabajo a alguien",
-          "p1": "CAMPO → Órdenes de trabajo → Nueva orden. Eliges el proyecto y escribes el título como se lo dirías a la persona: «Instalar azulejos del baño», no «seguir con el baño».",
+          "p1": "{{menuCampo}} → {{menuOrdenes}} → Nueva orden. Eliges el proyecto y escribes el título como se lo dirías a la persona: «Instalar azulejos del baño», no «seguir con el baño».",
           "p2": "Pones la prioridad y a quién se lo asignas. Puede quedar sin asignar si todavía no lo sabes.",
           "p3": "En cuanto la asignas, le aparece en su app de campo sin que tengas que avisarle."
         },
@@ -1591,12 +1591,12 @@
           "title": "Qué significa Aa-26-0001",
           "p1": "Es el número de ese trabajo. La mayúscula es la obra, la minúscula es el tipo de trabajo, después el año y el correlativo de ese año.",
           "p2": "Se pone al crearlo y no cambia nunca, aunque después muevas la fecha o cambies el tipo.",
-          "p3": "Con ese número, CAMPO → Control de trabajo te dice quién estuvo, cuántas horas y cuántas faltan por aprobar.",
+          "p3": "Con ese número, {{menuCampo}} → {{menuRegistro}} te dice quién estuvo, cuántas horas y cuántas faltan por aprobar.",
           "nota": "Una cita sin obra asignada no lleva número, a propósito: no es trabajo de obra. Si después le asignas una obra, coge número en ese momento."
         },
         "tiposDeTrabajo": {
           "title": "Crear mis propios tipos de trabajo",
-          "p1": "CONFIGURACIÓN → Tipos de trabajo. Vienen cinco de casa; si tú facturas Toiture o Filage, créalos con su letra en vez de meterlo todo en «Otro».",
+          "p1": "{{menuAjustes}} → {{menuTipos}}. Vienen cinco de casa; si tú facturas Toiture o Filage, créalos con su letra en vez de meterlo todo en «Otro».",
           "p2": "No se puede borrar uno que ya haya clasificado trabajo, ni cambiarle la letra: esa letra está dentro de números ya emitidos."
         },
         "comoFicha": {
@@ -1608,21 +1608,21 @@
         },
         "verHoras": {
           "title": "Ver las horas de una obra",
-          "p1": "CAMPO → Control de trabajo: una línea por número de trabajo, con las horas, cuánta gente estuvo y cuántas horas están sin aprobar.",
-          "p2": "Si lo que quieres son las horas sueltas de todo el mundo, eso está en CAMPO → Fichaje."
+          "p1": "{{menuCampo}} → {{menuRegistro}}: una línea por número de trabajo, con las horas, cuánta gente estuvo y cuántas horas están sin aprobar.",
+          "p2": "Si lo que quieres son las horas sueltas de todo el mundo, eso está en {{menuCampo}} → {{menuFichaje}}."
         }
       },
       "dinero": {
         "crearFactura": {
           "title": "Emitir una factura",
-          "p1": "FINANZAS → Facturación y pagos → Nueva factura. Eliges el cliente, la obra y el tipo: depósito, pago parcial o pago final.",
+          "p1": "{{menuFinanzas}} → {{menuFacturacion}} → Nueva factura. Eliges el cliente, la obra y el tipo: depósito, pago parcial o pago final.",
           "p2": "Escribes el importe antes de impuestos. El impuesto lo pone el sistema.",
           "p3": "Antes de guardar ves el desglose: subtotal, impuesto y total.",
           "nota": "El número se pone solo. No hay que escribirlo y no se puede cambiar."
         },
         "impuestos": {
           "title": "Cómo se calculan los impuestos",
-          "p1": "Salen de la provincia que tengas en CONFIGURACIÓN → Datos de la empresa. En Quebec, TPS 5 % y TVQ 9,975 %.",
+          "p1": "Salen de la provincia que tengas en {{menuAjustes}} → {{menuEmpresa}}. En Quebec, TPS 5 % y TVQ 9,975 %.",
           "p2": "Se calculan sobre el valor entero del trabajo, y cada uno se redondea por su cuenta, porque se declaran por separado.",
           "p3": "La retención (10 % en Quebec) se descuenta de los depósitos y los pagos parciales, nunca del pago final: el final es justo donde se libera lo retenido."
         },
@@ -1633,32 +1633,32 @@
         },
         "cobrar": {
           "title": "Cobrar con tarjeta",
-          "p1": "CONFIGURACIÓN → Pagos (Stripe) → conectar. Haces tu alta con tus datos y tu banco.",
+          "p1": "{{menuAjustes}} → {{menuPagos}} → conectar. Haces tu alta con tus datos y tu banco.",
           "p2": "La cuenta queda a nombre de tu negocio y con tu correo, y el dinero va directo a tu cuenta.",
           "p3": "Después, tu cliente paga su factura desde su portal.",
           "nota": "Si la plataforma todavía está en modo de pruebas, una tarjeta de verdad no pasa por mucho que completes el alta. Pregúntale a quien administra la instalación."
         },
         "contable": {
           "title": "Pasarle los datos a mi contable",
-          "p1": "FINANZAS → Informes. Ahí están las cuentas por cobrar, la rentabilidad por obra y la exportación para el contable.",
-          "p2": "También puedes bajar cualquier tabla del CRM en Excel o en PDF con tu membrete."
+          "p1": "{{menuFinanzas}} → {{menuInformes}}. Ahí están las cuentas por cobrar, la rentabilidad por obra y la exportación para el contable.",
+          "p2": "También puedes bajar cualquier tabla de {{menuCrm}} en Excel o en PDF con tu membrete."
         }
       },
       "problemas": {
         "noVeObras": {
           "title": "Mi trabajador no ve ninguna obra al fichar",
           "p1": "Solo le salen las obras que están abiertas. Si la obra está en pausa o cerrada, no aparece.",
-          "p2": "Comprueba en PROYECTOS que la obra existe y en qué estado está.",
-          "nota": "También puede ser que el código que le diste ya no valga, porque después se generó otro. Genérale uno nuevo desde su tarjeta en Técnicos."
+          "p2": "Comprueba en {{menuProyectos}} que la obra existe y en qué estado está.",
+          "nota": "También puede ser que el código que le diste ya no valga, porque después se generó otro. Genérale uno nuevo desde su tarjeta en {{menuTecnicos}}."
         },
         "horasEnCero": {
           "title": "Un trabajo hecho me sale con cero horas",
-          "p1": "El fichaje se hizo sobre la obra a secas, sin elegir el trabajo del día. Esas horas existen y salen en Fichaje, pero no se le cargan a ningún número.",
+          "p1": "El fichaje se hizo sobre la obra a secas, sin elegir el trabajo del día. Esas horas existen y salen en {{menuFichaje}}, pero no se le cargan a ningún número.",
           "p2": "Para que cuenten, el trabajador tiene que fichar eligiendo el trabajo. No se le atribuyen a uno que nadie eligió."
         },
         "noSeCobra": {
           "title": "No me deja cobrar",
-          "p1": "Mira CONFIGURACIÓN → Pagos (Stripe). Si el alta está a medias, todavía no se puede cobrar: hay que terminarla.",
+          "p1": "Mira {{menuAjustes}} → {{menuPagos}}. Si el alta está a medias, todavía no se puede cobrar: hay que terminarla.",
           "p2": "Si la plataforma está en modo de pruebas, ninguna tarjeta real va a pasar por mucho que completes el alta. Eso lo cambia quien administra la instalación."
         },
         "noLlegaCorreo": {

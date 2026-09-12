@@ -1503,21 +1503,21 @@
       "empezar": {
         "datosEmpresa": {
           "title": "Completare i dati della mia azienda",
-          "p1": "Vai su IMPOSTAZIONI → Dati aziendali. Due schede: in alto la tua identità (nome, licenza RBQ, provincia e il tuo link pubblico), sotto ciò che viene stampato su ogni documento.",
+          "p1": "Vai su {{menuAjustes}} → {{menuEmpresa}}. Due schede: in alto la tua identità (nome, licenza RBQ, provincia e il tuo link pubblico), sotto ciò che viene stampato su ogni documento.",
           "p2": "Compila indirizzo, telefono, numero GST e numero QST. È ciò che compare nell'intestazione di ogni preventivo e di ogni fattura.",
           "p3": "Più sotto imposti l'acconto predefinito, la ritenuta (10% in Quebec) e il testo legale a piè di preventivo.",
           "nota": "In Quebec, una fattura senza numeri GST e QST te la rimanda il commercialista del cliente. L'avviso in cima al pannello sparisce da solo appena li compili."
         },
         "accesoTrabajador": {
           "title": "Dare accesso a un lavoratore",
-          "p1": "Prima lo registri: CAMPO → Tecnici → Nuovo tecnico, con nome, telefono e mestiere.",
+          "p1": "Prima lo registri: {{menuCampo}} → {{menuTecnicos}} → Nuovo tecnico, con nome, telefono e mestiere.",
           "p2": "Sulla sua scheda, premi Codice PWA. Compare un codice.",
           "p3": "Mandaglielo come già vi scrivete. Apre /campo sul telefono, scrive il codice ed è dentro: senza email e senza password.",
           "nota": "Il codice si mostra una volta sola. Generarne un altro annulla il precedente — così togli l'accesso a chi non lavora più con te."
         },
         "accesoCliente": {
           "title": "Dare accesso a un cliente",
-          "p1": "CRM → apri la scheda del cliente → Genera codice di accesso.",
+          "p1": "{{menuCrm}} → apri la scheda del cliente → Genera codice di accesso.",
           "p2": "Copialo e mandaglielo. Lui va su /portal e lo scrive.",
           "p3": "Lì vede l'avanzamento del cantiere, il preventivo, le fatture e una chat con te. Non vede i tuoi costi né i tuoi margini.",
           "nota": "Generare un nuovo codice annulla il precedente."
@@ -1531,25 +1531,25 @@
       "clientes": {
         "nuevoContacto": {
           "title": "Aggiungere un cliente a mano",
-          "p1": "CRM → Nuovo contatto. Basta il nome; telefono, email e indirizzo puoi metterli dopo.",
+          "p1": "{{menuCrm}} → Nuovo contatto. Basta il nome; telefono, email e indirizzo puoi metterli dopo.",
           "p2": "Creandolo si apre un canale di messaggi con te, così puoi scrivergli fin da subito."
         },
         "enlacePublico": {
           "title": "Il mio link per ricevere richieste",
           "p1": "È una chat che chiunque può aprire senza registrarsi. Il tuo indirizzo è quello del pannello, seguito da /c/ e dal tuo link.",
           "p2": "Il bot fa qualche domanda — quale servizio, cosa vuole fare, l'indirizzo e come contattarlo — e ti lascia un preventivo in bozza già compilato.",
-          "p3": "Lo cambi in IMPOSTAZIONI → Dati aziendali, nel campo Link pubblico.",
+          "p3": "Lo cambi in {{menuAjustes}} → {{menuEmpresa}}, nel campo Link pubblico.",
           "nota": "Se lo cambi, tutti i link già distribuiti smettono di funzionare: il QR del furgone, la tua bio, il messaggio WhatsApp. Cambialo presto o non cambiarlo."
         },
         "queVeElCliente": {
           "title": "Cosa vede il cliente nel suo portale",
-          "p1": "Apri Portale dal menu: è esattamente quello che vede lui, così lo controlli prima di dargli il codice.",
+          "p1": "Apri {{menuPortal}} dal menu: è esattamente quello che vede lui, così lo controlli prima di dargli il codice.",
           "p2": "Vede l'avanzamento del cantiere, il preventivo in PDF, le fatture, le foto che marchi come visibili e una chat con te.",
           "p3": "Non vede i tuoi costi, i tuoi margini, i tuoi fornitori né le righe di preventivo marcate come interne."
         },
         "exportar": {
           "title": "Scaricare i dati in Excel o PDF",
-          "p1": "Nel CRM, le schede in alto sono le tabelle dell'azienda: cantieri, lavori e fatturazione.",
+          "p1": "In {{menuCrm}}, le schede in alto sono le tabelle dell'azienda: cantieri, lavori e fatturazione.",
           "p2": "Ogni tabella si ordina e si filtra, e puoi nascondere le colonne che non ti servono.",
           "p3": "Il pulsante di download te la dà in Excel o in PDF. Il PDF esce con il tuo logo e i dati aziendali in intestazione."
         }
@@ -1570,7 +1570,7 @@
         "margenYmerma": {
           "title": "Margine e sfrido",
           "p1": "Sono nel pannello a destra. Lo sfrido è il materiale perso in tagli, rotture e ritagli; il margine è il tuo.",
-          "p2": "Li muovi con le barre e il totale si ricalcola subito. I valori predefiniti li imposti in IMPOSTAZIONI → Margini e regole."
+          "p2": "Li muovi con le barre e il totale si ricalcola subito. I valori predefiniti li imposti in {{menuAjustes}} → {{menuMargenes}}."
         },
         "enviarYaceptar": {
           "title": "Inviarlo e farlo accettare",
@@ -1583,7 +1583,7 @@
       "trabajo": {
         "crearOrden": {
           "title": "Assegnare un lavoro a qualcuno",
-          "p1": "CAMPO → Ordini di lavoro → Nuovo ordine. Scegli il cantiere e scrivi il titolo come lo diresti alla persona: «Posare le piastrelle del bagno», non «continuare col bagno».",
+          "p1": "{{menuCampo}} → {{menuOrdenes}} → Nuovo ordine. Scegli il cantiere e scrivi il titolo come lo diresti alla persona: «Posare le piastrelle del bagno», non «continuare col bagno».",
           "p2": "Imposti la priorità e a chi lo assegni. Può restare non assegnato se ancora non lo sai.",
           "p3": "Appena lo assegni, gli compare nella sua app di campo senza che tu debba avvisarlo."
         },
@@ -1591,12 +1591,12 @@
           "title": "Cosa significa Aa-26-0001",
           "p1": "È il numero di quel lavoro. La maiuscola è il cantiere, la minuscola il tipo di lavoro, poi l'anno e il progressivo dell'anno.",
           "p2": "Viene assegnato alla creazione e non cambia mai, anche se poi sposti la data o cambi il tipo.",
-          "p3": "Con quel numero, CAMPO → Registro di lavoro ti dice chi c'era, quante ore e quante restano da approvare.",
+          "p3": "Con quel numero, {{menuCampo}} → {{menuRegistro}} ti dice chi c'era, quante ore e quante restano da approvare.",
           "nota": "Un appuntamento senza cantiere non ha numero, di proposito: non è lavoro di cantiere. Se poi gli assegni un cantiere, prende il numero in quel momento."
         },
         "tiposDeTrabajo": {
           "title": "Creare i miei tipi di lavoro",
-          "p1": "IMPOSTAZIONI → Tipi di lavoro. Cinque sono di serie; se fatturi Toiture o Filage, creali con la loro lettera invece di mettere tutto in «Altro».",
+          "p1": "{{menuAjustes}} → {{menuTipos}}. Cinque sono di serie; se fatturi Toiture o Filage, creali con la loro lettera invece di mettere tutto in «Altro».",
           "p2": "Non si può eliminare un tipo che ha già classificato lavoro, né cambiargli la lettera: quella lettera sta dentro numeri già emessi."
         },
         "comoFicha": {
@@ -1608,21 +1608,21 @@
         },
         "verHoras": {
           "title": "Vedere le ore di un cantiere",
-          "p1": "CAMPO → Registro di lavoro: una riga per numero di lavoro, con le ore, quante persone c'erano e quante ore sono da approvare.",
-          "p2": "Se vuoi le timbrature singole di tutti, sono in CAMPO → Timbratura."
+          "p1": "{{menuCampo}} → {{menuRegistro}}: una riga per numero di lavoro, con le ore, quante persone c'erano e quante ore sono da approvare.",
+          "p2": "Se vuoi le timbrature singole di tutti, sono in {{menuCampo}} → {{menuFichaje}}."
         }
       },
       "dinero": {
         "crearFactura": {
           "title": "Emettere una fattura",
-          "p1": "FINANZE → Fatturazione e pagamenti → Nuova fattura. Scegli il cliente, il cantiere e il tipo: acconto, pagamento parziale o saldo.",
+          "p1": "{{menuFinanzas}} → {{menuFacturacion}} → Nuova fattura. Scegli il cliente, il cantiere e il tipo: acconto, pagamento parziale o saldo.",
           "p2": "Scrivi l'importo prima delle imposte. L'imposta la mette il sistema.",
           "p3": "Prima di salvare vedi il dettaglio: imponibile, imposta e totale.",
           "nota": "Il numero viene assegnato da solo. Non si scrive e non si può cambiare."
         },
         "impuestos": {
           "title": "Come si calcolano le imposte",
-          "p1": "Derivano dalla provincia impostata in IMPOSTAZIONI → Dati aziendali. In Quebec, GST 5% e QST 9,975%.",
+          "p1": "Derivano dalla provincia impostata in {{menuAjustes}} → {{menuEmpresa}}. In Quebec, GST 5% e QST 9,975%.",
           "p2": "Si calcolano sul valore intero del lavoro, e ognuna si arrotonda per conto suo, perché si dichiarano separatamente.",
           "p3": "La ritenuta (10% in Quebec) si toglie da acconti e pagamenti parziali, mai dal saldo: è nel saldo che la ritenuta viene liberata."
         },
@@ -1633,32 +1633,32 @@
         },
         "cobrar": {
           "title": "Incassare con carta",
-          "p1": "IMPOSTAZIONI → Pagamenti (Stripe) → collega. Fai la registrazione con i tuoi dati e la tua banca.",
+          "p1": "{{menuAjustes}} → {{menuPagos}} → collega. Fai la registrazione con i tuoi dati e la tua banca.",
           "p2": "Il conto è a nome della tua azienda e sulla tua email, e il denaro va dritto sul tuo conto.",
           "p3": "Dopodiché, il tuo cliente paga la fattura dal suo portale.",
           "nota": "Se la piattaforma è ancora in modalità test, una carta vera non passa per quanto tu completi la registrazione. Chiedi a chi amministra l'installazione."
         },
         "contable": {
           "title": "Passare i dati al commercialista",
-          "p1": "FINANZE → Report. Lì ci sono i crediti, la redditività per cantiere e l'esportazione per il commercialista.",
-          "p2": "Puoi anche scaricare qualsiasi tabella del CRM in Excel o in PDF con la tua carta intestata."
+          "p1": "{{menuFinanzas}} → {{menuInformes}}. Lì ci sono i crediti, la redditività per cantiere e l'esportazione per il commercialista.",
+          "p2": "Puoi anche scaricare qualsiasi tabella del {{menuCrm}} in Excel o in PDF con la tua carta intestata."
         }
       },
       "problemas": {
         "noVeObras": {
           "title": "Il mio operaio non vede nessun cantiere quando timbra",
           "p1": "Gli compaiono solo i cantieri aperti. Se il cantiere è in pausa o chiuso, non appare.",
-          "p2": "Controlla in CANTIERI che il cantiere esista e in che stato si trova.",
-          "nota": "Può anche essere che il codice che gli hai dato non valga più, perché dopo ne è stato generato un altro. Generagliene uno nuovo dalla sua scheda in Tecnici."
+          "p2": "Controlla in {{menuProyectos}} che il cantiere esista e in che stato si trova.",
+          "nota": "Può anche essere che il codice che gli hai dato non valga più, perché dopo ne è stato generato un altro. Generagliene uno nuovo dalla sua scheda in {{menuTecnicos}}."
         },
         "horasEnCero": {
           "title": "Un lavoro fatto risulta con zero ore",
-          "p1": "La timbratura è stata fatta sul cantiere e basta, senza scegliere il lavoro del giorno. Quelle ore esistono e compaiono in Timbratura, ma non si caricano su nessun numero.",
+          "p1": "La timbratura è stata fatta sul cantiere e basta, senza scegliere il lavoro del giorno. Quelle ore esistono e compaiono in {{menuFichaje}}, ma non si caricano su nessun numero.",
           "p2": "Perché contino, l'operaio deve timbrare scegliendo il lavoro. Non si attribuiscono a un lavoro che nessuno ha scelto."
         },
         "noSeCobra": {
           "title": "Non mi fa incassare",
-          "p1": "Guarda IMPOSTAZIONI → Pagamenti (Stripe). Se la registrazione è a metà, non puoi ancora incassare: va completata.",
+          "p1": "Guarda {{menuAjustes}} → {{menuPagos}}. Se la registrazione è a metà, non puoi ancora incassare: va completata.",
           "p2": "Se la piattaforma è in modalità test, nessuna carta vera passerà per quanto tu completi la registrazione. Lo cambia chi amministra l'installazione."
         },
         "noLlegaCorreo": {

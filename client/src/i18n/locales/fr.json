@@ -1503,21 +1503,21 @@
       "empezar": {
         "datosEmpresa": {
           "title": "Remplir les informations de mon entreprise",
-          "p1": "Allez dans PARAMÈTRES → Informations de l'entreprise. Deux cartes : en haut votre identité (nom, licence RBQ, province et votre lien public), en bas ce qui s'imprime sur chaque document.",
+          "p1": "Allez dans {{menuAjustes}} → {{menuEmpresa}}. Deux cartes : en haut votre identité (nom, licence RBQ, province et votre lien public), en bas ce qui s'imprime sur chaque document.",
           "p2": "Remplissez l'adresse, le téléphone, le numéro de TPS et le numéro de TVQ. C'est ce qui apparaît en en-tête de chaque soumission et de chaque facture.",
           "p3": "Plus bas, vous réglez votre acompte par défaut, votre retenue (10 % au Québec) et le texte légal en pied de soumission.",
           "nota": "Au Québec, une facture sans numéros de TPS et TVQ vous revient par le comptable de votre client. Le bandeau en haut du panneau disparaît de lui-même une fois remplis."
         },
         "accesoTrabajador": {
           "title": "Donner accès à un travailleur",
-          "p1": "D'abord, inscrivez-le : TERRAIN → Techniciens → Nouveau technicien, avec son nom, son téléphone et son métier.",
+          "p1": "D'abord, inscrivez-le : {{menuCampo}} → {{menuTecnicos}} → Nouveau technicien, avec son nom, son téléphone et son métier.",
           "p2": "Sur sa fiche, appuyez sur Code PWA. Un code s'affiche.",
           "p3": "Envoyez-le par le moyen habituel. Il ouvre /campo sur son téléphone, saisit le code, et il est dedans : sans courriel ni mot de passe.",
           "nota": "Le code n'est affiché qu'une fois. En générer un autre annule le précédent — c'est ainsi que vous retirez l'accès à quelqu'un qui ne travaille plus avec vous."
         },
         "accesoCliente": {
           "title": "Donner accès à un client",
-          "p1": "CRM → ouvrez la fiche du client → Générer un code d'accès.",
+          "p1": "{{menuCrm}} → ouvrez la fiche du client → Générer un code d'accès.",
           "p2": "Copiez-le et envoyez-le. Il va sur /portal et le saisit.",
           "p3": "Il y voit l'avancement de son chantier, sa soumission, ses factures et une messagerie avec vous. Il ne voit ni vos coûts ni vos marges.",
           "nota": "Générer un nouveau code annule le précédent."
@@ -1531,25 +1531,25 @@
       "clientes": {
         "nuevoContacto": {
           "title": "Ajouter un client à la main",
-          "p1": "CRM → Nouveau contact. Le nom suffit ; téléphone, courriel et adresse peuvent attendre.",
+          "p1": "{{menuCrm}} → Nouveau contact. Le nom suffit ; téléphone, courriel et adresse peuvent attendre.",
           "p2": "À sa création, un canal de messagerie s'ouvre avec vous : vous pouvez lui écrire dès le départ."
         },
         "enlacePublico": {
           "title": "Mon lien pour recevoir des demandes",
           "p1": "C'est une messagerie que n'importe qui peut ouvrir sans s'inscrire. Votre adresse est celle de votre panneau, suivie de /c/ et de votre lien.",
           "p2": "Le robot pose quelques questions — quel service, ce qu'il veut faire, l'adresse et comment le joindre — et vous laisse une soumission en brouillon déjà remplie.",
-          "p3": "Vous le changez dans PARAMÈTRES → Informations de l'entreprise, au champ Lien public.",
+          "p3": "Vous le changez dans {{menuAjustes}} → {{menuEmpresa}}, au champ Lien public.",
           "nota": "Si vous le changez, tous les liens déjà distribués cessent de fonctionner : le code QR du camion, votre bio, votre message WhatsApp. Changez-le tôt, ou pas du tout."
         },
         "queVeElCliente": {
           "title": "Ce que mon client voit dans son portail",
-          "p1": "Ouvrez Portail depuis votre menu : c'est exactement ce qu'il voit, pour vérifier avant de lui donner le code.",
+          "p1": "Ouvrez {{menuPortal}} depuis votre menu : c'est exactement ce qu'il voit, pour vérifier avant de lui donner le code.",
           "p2": "Il voit l'avancement du chantier, sa soumission en PDF, ses factures, les photos que vous marquez comme visibles et une messagerie avec vous.",
           "p3": "Il ne voit pas vos coûts, vos marges, vos fournisseurs, ni les lignes de soumission marquées comme internes."
         },
         "exportar": {
           "title": "Exporter mes données en Excel ou PDF",
-          "p1": "Dans le CRM, les onglets du haut sont les tableaux de l'entreprise : chantiers, travaux et facturation.",
+          "p1": "Dans {{menuCrm}}, les onglets du haut sont les tableaux de l'entreprise : chantiers, travaux et facturation.",
           "p2": "Chaque tableau se trie et se filtre, et vous pouvez masquer les colonnes qui ne vous intéressent pas.",
           "p3": "Le bouton de téléchargement vous la donne en Excel ou en PDF. Le PDF sort avec votre logo et vos coordonnées en en-tête."
         }
@@ -1570,7 +1570,7 @@
         "margenYmerma": {
           "title": "Marge et perte",
           "p1": "Ils sont dans le panneau de droite. La perte, c'est le matériau perdu aux coupes, casses et chutes ; la marge, c'est la vôtre.",
-          "p2": "Vous les réglez avec les curseurs et le total se recalcule aussitôt. Vos valeurs par défaut sont dans PARAMÈTRES → Marges et règles."
+          "p2": "Vous les réglez avec les curseurs et le total se recalcule aussitôt. Vos valeurs par défaut sont dans {{menuAjustes}} → {{menuMargenes}}."
         },
         "enviarYaceptar": {
           "title": "L'envoyer et le faire accepter",
@@ -1583,7 +1583,7 @@
       "trabajo": {
         "crearOrden": {
           "title": "Confier un travail à quelqu'un",
-          "p1": "TERRAIN → Bons de travail → Nouveau bon. Choisissez le chantier et écrivez le titre comme vous le diriez à la personne : « Poser le carrelage de la salle de bain », pas « continuer la salle de bain ».",
+          "p1": "{{menuCampo}} → {{menuOrdenes}} → Nouveau bon. Choisissez le chantier et écrivez le titre comme vous le diriez à la personne : « Poser le carrelage de la salle de bain », pas « continuer la salle de bain ».",
           "p2": "Réglez la priorité et à qui vous l'attribuez. Il peut rester non attribué si vous ne savez pas encore.",
           "p3": "Dès que vous l'attribuez, il apparaît dans son application de terrain sans que vous ayez à le prévenir."
         },
@@ -1591,12 +1591,12 @@
           "title": "Ce que signifie Aa-26-0001",
           "p1": "C'est le numéro de ce travail. La majuscule est le chantier, la minuscule le type de travail, puis l'année et le numéro d'ordre de l'année.",
           "p2": "Il est attribué à la création et ne change jamais, même si vous déplacez la date ou changez le type ensuite.",
-          "p3": "Avec ce numéro, TERRAIN → Registre de travail vous dit qui était là, combien d'heures, et combien restent à approuver.",
+          "p3": "Avec ce numéro, {{menuCampo}} → {{menuRegistro}} vous dit qui était là, combien d'heures, et combien restent à approuver.",
           "nota": "Un rendez-vous sans chantier n'a pas de numéro, volontairement : ce n'est pas du travail de chantier. Si vous y rattachez un chantier plus tard, il en prend un à ce moment-là."
         },
         "tiposDeTrabajo": {
           "title": "Créer mes propres types de travaux",
-          "p1": "PARAMÈTRES → Types de travaux. Cinq sont fournis ; si vous facturez Toiture ou Filage, créez-les avec leur lettre au lieu de tout mettre dans « Autre ».",
+          "p1": "{{menuAjustes}} → {{menuTipos}}. Cinq sont fournis ; si vous facturez Toiture ou Filage, créez-les avec leur lettre au lieu de tout mettre dans « Autre ».",
           "p2": "On ne peut pas supprimer un type qui a déjà classé du travail, ni changer sa lettre : cette lettre figure dans des numéros déjà émis."
         },
         "comoFicha": {
@@ -1608,21 +1608,21 @@
         },
         "verHoras": {
           "title": "Voir les heures d'un chantier",
-          "p1": "TERRAIN → Registre de travail : une ligne par numéro de travail, avec les heures, combien de personnes y étaient et combien d'heures restent à approuver.",
-          "p2": "Si vous voulez les pointages individuels de tout le monde, c'est dans TERRAIN → Pointage."
+          "p1": "{{menuCampo}} → {{menuRegistro}} : une ligne par numéro de travail, avec les heures, combien de personnes y étaient et combien d'heures restent à approuver.",
+          "p2": "Si vous voulez les pointages individuels de tout le monde, c'est dans {{menuCampo}} → {{menuFichaje}}."
         }
       },
       "dinero": {
         "crearFactura": {
           "title": "Émettre une facture",
-          "p1": "FINANCES → Facturation et paiements → Nouvelle facture. Choisissez le client, le chantier et le type : acompte, paiement partiel ou paiement final.",
+          "p1": "{{menuFinanzas}} → {{menuFacturacion}} → Nouvelle facture. Choisissez le client, le chantier et le type : acompte, paiement partiel ou paiement final.",
           "p2": "Vous saisissez le montant avant taxes. Le système ajoute les taxes.",
           "p3": "Avant d'enregistrer, vous voyez le détail : sous-total, taxes et total.",
           "nota": "Le numéro est attribué automatiquement. Vous ne le saisissez pas et ne pouvez pas le changer."
         },
         "impuestos": {
           "title": "Comment les taxes sont calculées",
-          "p1": "Elles viennent de la province réglée dans PARAMÈTRES → Informations de l'entreprise. Au Québec, TPS 5 % et TVQ 9,975 %.",
+          "p1": "Elles viennent de la province réglée dans {{menuAjustes}} → {{menuEmpresa}}. Au Québec, TPS 5 % et TVQ 9,975 %.",
           "p2": "Elles se calculent sur la valeur entière des travaux, et chacune est arrondie séparément, parce qu'elles se déclarent séparément.",
           "p3": "La retenue (10 % au Québec) se déduit des acomptes et des paiements partiels, jamais du paiement final : c'est au final que la retenue est libérée."
         },
@@ -1633,32 +1633,32 @@
         },
         "cobrar": {
           "title": "Encaisser par carte",
-          "p1": "PARAMÈTRES → Paiements (Stripe) → connecter. Vous faites votre inscription avec vos informations et votre banque.",
+          "p1": "{{menuAjustes}} → {{menuPagos}} → connecter. Vous faites votre inscription avec vos informations et votre banque.",
           "p2": "Le compte est au nom de votre entreprise et sur votre courriel, et l'argent va directement sur votre compte.",
           "p3": "Ensuite, votre client paie sa facture depuis son portail.",
           "nota": "Si la plateforme est encore en mode test, une vraie carte ne passera pas, même inscription terminée. Demandez à qui administre l'installation."
         },
         "contable": {
           "title": "Transmettre les données à mon comptable",
-          "p1": "FINANCES → Rapports. C'est là que se trouvent les comptes clients, la rentabilité par chantier et l'export pour le comptable.",
-          "p2": "Vous pouvez aussi télécharger n'importe quel tableau du CRM en Excel ou en PDF à votre en-tête."
+          "p1": "{{menuFinanzas}} → {{menuInformes}}. C'est là que se trouvent les comptes clients, la rentabilité par chantier et l'export pour le comptable.",
+          "p2": "Vous pouvez aussi télécharger n'importe quel tableau du {{menuCrm}} en Excel ou en PDF à votre en-tête."
         }
       },
       "problemas": {
         "noVeObras": {
           "title": "Mon travailleur ne voit aucun chantier au pointage",
           "p1": "Seuls les chantiers ouverts lui apparaissent. Si le chantier est en pause ou fermé, il n'apparaît pas.",
-          "p2": "Vérifiez dans CHANTIERS que le chantier existe et dans quel état il est.",
-          "nota": "Il se peut aussi que le code donné ne soit plus valable, parce qu'un autre a été généré depuis. Générez-en un nouveau depuis sa fiche dans Techniciens."
+          "p2": "Vérifiez dans {{menuProyectos}} que le chantier existe et dans quel état il est.",
+          "nota": "Il se peut aussi que le code donné ne soit plus valable, parce qu'un autre a été généré depuis. Générez-en un nouveau depuis sa fiche dans {{menuTecnicos}}."
         },
         "horasEnCero": {
           "title": "Un travail fait affiche zéro heure",
-          "p1": "Le pointage a été fait sur le chantier seul, sans choisir le travail du jour. Ces heures existent et apparaissent dans Pointage, mais ne sont imputées à aucun numéro.",
+          "p1": "Le pointage a été fait sur le chantier seul, sans choisir le travail du jour. Ces heures existent et apparaissent dans {{menuFichaje}}, mais ne sont imputées à aucun numéro.",
           "p2": "Pour qu'elles comptent, le travailleur doit pointer en choisissant le travail. Elles ne sont pas attribuées à un travail que personne n'a choisi."
         },
         "noSeCobra": {
           "title": "Je n'arrive pas à encaisser",
-          "p1": "Regardez PARAMÈTRES → Paiements (Stripe). Si l'inscription est à moitié faite, vous ne pouvez pas encore encaisser : il faut la terminer.",
+          "p1": "Regardez {{menuAjustes}} → {{menuPagos}}. Si l'inscription est à moitié faite, vous ne pouvez pas encore encaisser : il faut la terminer.",
           "p2": "Si la plateforme est en mode test, aucune vraie carte ne passera, même inscription terminée. Cela se change par qui administre l'installation."
         },
         "noLlegaCorreo": {

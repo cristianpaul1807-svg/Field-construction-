@@ -35,6 +35,40 @@ export function BotDeAyuda() {
 
   const paso = camino[camino.length - 1];
 
+  /**
+   * Los nombres del menú, sacados del propio menú.
+   *
+   * Las respuestas los llevaban escritos a mano y en cada idioma por separado,
+   * y divergieron: en francés la ayuda mandaba a «TERRAIN → Registre de
+   * travail» cuando el menú dice **CHANTIER → Suivi des travaux**, y en
+   * italiano a «CAMPO» cuando dice **CANTIERE**. El texto estaba traducido y
+   * aun así mandaba a sitios que no existen con ese nombre.
+   *
+   * Viniendo de `nav.*`, la ayuda no puede volver a inventarse una etiqueta:
+   * si alguien renombra una sección, la ayuda la renombra con ella.
+   */
+  const menu = useMemo(
+    () => ({
+      menuAjustes: t("nav.settings"),
+      menuEmpresa: t("nav.companyData"),
+      menuCampo: t("nav.field"),
+      menuTecnicos: t("nav.technicians"),
+      menuOrdenes: t("nav.workOrders"),
+      menuRegistro: t("nav.workLog"),
+      menuFichaje: t("nav.checkIn"),
+      menuFinanzas: t("nav.finance"),
+      menuFacturacion: t("nav.invoicing"),
+      menuInformes: t("nav.reports"),
+      menuCrm: t("nav.crm"),
+      menuPagos: t("nav.payments"),
+      menuMargenes: t("nav.margins"),
+      menuTipos: t("nav.serviceTypes"),
+      menuPortal: t("nav.clientPortalShort"),
+      menuProyectos: t("nav.projects"),
+    }),
+    [t]
+  );
+
   // La sección de la pantalla en la que está, para ofrecerla primero. Quien
   // pide ayuda desde Facturación pregunta por facturas.
   const suya = useMemo(() => seccionSegunRuta(ruta), [ruta]);
@@ -155,11 +189,11 @@ export function BotDeAyuda() {
                     <Suyo>{tituloTema(seccion, tema)}</Suyo>
                     <Bot_>
                       {Array.from({ length: tema.parrafos }, (_, n) => (
-                        <p key={n}>{t(`${base}.p${n + 1}`)}</p>
+                        <p key={n}>{t(`${base}.p${n + 1}`, menu)}</p>
                       ))}
                       {tema.nota && (
                         <p className="text-xs text-muted-foreground border-l-2 border-border pl-2">
-                          {t(`${base}.nota`)}
+                          {t(`${base}.nota`, menu)}
                         </p>
                       )}
                     </Bot_>

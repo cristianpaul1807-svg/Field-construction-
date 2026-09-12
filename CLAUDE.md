@@ -69,9 +69,14 @@ only the payment is reduced by a holdback.
 
 ```bash
 npx tsc --noEmit                      # must be silent
-npm run build                         # must succeed
+npm run build                         # client AND server — not just `vite build`
 python3 scripts/check-route-gate.py   # every route on its correct side
+python3 scripts/check-help-menu.py    # help answers name screens via {{menu…}}
 ```
+
+`npm run build` is `vite build && esbuild server/…`. Running only the first
+half checks the client and silently skips the server bundle — which is the
+half that has to boot in production.
 
 Then check locale parity (`docs/desarrollo/idiomas.md`) and, for anything
 user-visible, look at it in a browser. Screenshots caught real layout bugs
