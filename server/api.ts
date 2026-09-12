@@ -37,6 +37,8 @@ import { receivables } from "./receivables";
 import { profitabilityByProject } from "./profitability";
 import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
+import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
+import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
 import {
   annualTotals,
   approvedHours,
@@ -4353,6 +4355,73 @@ apiRouter.post(
   })
 );
 
+/**
+ * Le manda al cliente su código de acceso al portal.
+ *
+ * Devuelve qué pasó en vez de lanzarlo. Quien llama ya ha hecho lo importante
+ * —emitir el código— y no puede quedarse a medias porque el correo falle.
+ */
+async function avisarDelCodigoAlCliente(
+  businessId: string,
+  nombreCliente: string | null,
+  correoCliente: string | null,
+  token: string,
+  baseUrl: string,
+  lang: LangCorreo
+): Promise<ResultadoDeCorreo | { estado: "sin_correo" }> {
+  if (!correoCliente?.trim()) return { estado: "sin_correo" };
+
+  const admin = getSupabaseAdmin();
+  const { data: negocio } = await admin
+    .from("businesses")
+    .select("name, email, logo_url")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  const t = TEXTOS_CORREO[lang];
+  const nombre = negocio?.name ?? "";
+  // Igual que en el panel: detrás del proxy req.protocol dice http, y un
+  // enlace http en un correo es el que los filtros marcan.
+  const portal = `${baseUrl.replace(/^http:\/\//i, "https://").replace(/\/+$/, "")}/portal`;
+
+  const cuerpo = `
+    <p style="margin:0 0 16px">${esc(t.codigoIntro(nombre))}</p>
+    <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#777">${esc(t.codigoEtiqueta)}</p>
+    <p style="margin:0 0 18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:26px;font-weight:700;letter-spacing:.06em">${esc(token)}</p>
+    <p style="margin:0 0 20px">${esc(t.codigoComoEntrar)}</p>
+    <p style="margin:0 0 20px">
+      <a href="${esc(portal)}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600">${esc(t.codigoBoton)}</a>
+    </p>
+    <p style="margin:0 0 14px;color:#555">${esc(t.codigoQueVera)}</p>
+    <p style="margin:0;font-size:13px;color:#777">${esc(t.codigoCaduca)}</p>`;
+
+  return enviarCorreo({
+    para: correoCliente.trim(),
+    asunto: t.codigoAsunto(nombre),
+    deParteDe: nombre,
+    // Si el cliente responde, que le llegue a su contratista y no a un buzón
+    // que nadie lee.
+    responderA: negocio?.email ?? null,
+    html: plantilla({
+      titulo: t.codigoTitulo(nombre),
+      cuerpo,
+      negocio: nombre,
+      logoUrl: negocio?.logo_url ?? null,
+      pie: t.pie(nombre),
+    }),
+    texto: [
+      t.codigoIntro(nombre),
+      "",
+      `${t.codigoEtiqueta}: ${token}`,
+      "",
+      t.codigoComoEntrar,
+      portal,
+      "",
+      t.codigoCaduca,
+    ].join("\n"),
+  });
+}
+
 // Issues a fresh access code for the Client Portal — only the hash is
 // Se guarda el código además de su hash, así que se puede volver a enseñar y
 // reenviar tantas veces como haga falta. Generar otro sólo se hace a propósito,
@@ -4363,16 +4432,38 @@ apiRouter.post(
   route(async (req, res) => {
     const supabase = req.supabase!;
     const token = randomBytes(9).toString("base64url");
-    const { error } = await supabase
+    const { data: cliente, error } = await supabase
       .from("clients")
       // El código se guarda además del hash para poder reenviarlo cuando
       // alguien lo pierda, en vez de tener que generar otro y dejar sin
       // acceso al que ya lo tenía.
       .update({ access_token: token, access_token_hash: hashToken(token) })
       .eq("business_id", req.businessId!)
-      .eq("id", req.params.id);
+      .eq("id", req.params.id)
+      .select("name, email")
+      .single();
     if (error) throw error;
-    res.json({ token });
+
+    // Y si tenemos su correo, se lo mandamos directamente.
+    //
+    // Hasta ahora el código se le enseñaba al contratista una sola vez y él
+    // tenía que copiarlo y perseguir a su cliente por WhatsApp. El que se
+    // quedaba a medias no entraba nunca.
+    //
+    // El envío va después de guardar y su resultado no toca la respuesta: el
+    // código ya existe y se sigue enseñando en pantalla. Si el correo no sale
+    // —sin clave configurada, dominio sin verificar, cliente sin correo—, se
+    // dice, pero no se deshace nada.
+    const correo = await avisarDelCodigoAlCliente(
+      req.businessId!,
+      cliente?.name ?? null,
+      cliente?.email ?? null,
+      token,
+      `${req.protocol}://${req.get("host")}`,
+      normalizarLangCorreo(req.query.lang ?? req.get("accept-language"))
+    );
+
+    res.json({ token, correo });
   })
 );
 
