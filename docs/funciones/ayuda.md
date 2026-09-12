@@ -115,7 +115,7 @@ es peor que no tener ayuda.
 | `{{menuAjustes}}` `{{menuEmpresa}}` `{{menuTipos}}` `{{menuPagos}}` `{{menuMargenes}}` | Configuración |
 | `{{menuCampo}}` `{{menuTecnicos}}` `{{menuOrdenes}}` `{{menuRegistro}}` `{{menuFichaje}}` | Campo |
 | `{{menuFinanzas}}` `{{menuFacturacion}}` `{{menuInformes}}` | Finanzas |
-| `{{menuCrm}}` `{{menuPortal}}` `{{menuProyectos}}` | El resto |
+| `{{menuCrm}}` `{{menuPortal}}` `{{menuProyectos}}` `{{menuPresupuestos}}` | El resto |
 
 Lo vigila un script, que falla si alguien vuelve a copiarlo a mano:
 
@@ -129,7 +129,7 @@ python3 scripts/check-help-menu.py
 |---|---|
 | Empezar | *(ninguna: es la de arranque)* |
 | Clientes y mensajes | `/crm`, `/client-portal`, `/communication` |
-| Presupuestos | `/budgets`, `/materials` |
+| Presupuestos | `/budgets`, `/materials` — incluye *Mandarlo por WhatsApp en vez de por el sistema*, el camino entero para los clientes que no van a entrar al portal |
 | Obras y trabajo | `/projects`, `/work-orders`, `/scheduling`, `/check-in`, `/work-log`, `/technicians`, `/gps-routing` |
 | Dinero | `/invoicing`, `/payroll`, `/reports`, `/cost-tracking`, `/settings/payments` |
 | Qué pasa cuando… | *(ninguna: no es una pantalla)* |

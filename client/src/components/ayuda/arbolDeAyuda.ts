@@ -62,6 +62,12 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "visibilidad", parrafos: 2, nota: true },
       { id: "margenYmerma", parrafos: 2 },
       { id: "enviarYaceptar", parrafos: 3, nota: true },
+      // La mayoría de los clientes que ya tiene un contratista llegaron por
+      // WhatsApp y van a seguir ahí. Ese camino existe entero en el producto y
+      // no se explicaba en ninguna parte, que es como se pierden obras: el
+      // presupuesto sale, el cliente dice que sí por fuera, y aquí dentro no
+      // pasa nada porque nadie lo marcó.
+      { id: "porFuera", parrafos: 4, nota: true, ruta: "/budgets" },
     ],
   },
   {

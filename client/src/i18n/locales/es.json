@@ -210,7 +210,7 @@
     "insertIntoEstimate": "Insertar en presupuesto",
     "insertTemplate": "Insertar \"{{name}}\"",
     "templateZoneQuestion": "¿A qué zona del presupuesto pertenece esta plantilla?",
-    "zonePlaceholder": "Ej. Baño 2",
+    "zonePlaceholder": "Ej. Cocina",
     "newEstimate": "Nuevo presupuesto",
     "newEstimateHint": "Crea un presupuesto vacío para empezar a agregar líneas.",
     "createEstimate": "Crear presupuesto",
@@ -263,7 +263,11 @@
     "approveAndDeliver": "Aprobar y enviar",
     "sentToClient": "Enviado al chat del cliente.",
     "beforeTax": "Total antes de impuestos",
-    "taxNote": "Es el total que sale en el PDF y el que se facturará. La retención, si la aplicas, se descuenta del pago, no del total."
+    "taxNote": "Es el total que sale en el PDF y el que se facturará. La retención, si la aplicas, se descuenta del pago, no del total.",
+    "acceptEstimate": "Aceptar presupuesto (abre la obra)",
+    "acceptOnTheirBehalf": "¿Te dijo que sí por WhatsApp, por teléfono o en la propia obra? Acéptalo tú aquí. Este botón es lo que abre la obra, mete el trabajo en el calendario y emite la primera factura. Hasta que lo toques, el presupuesto se queda esperando.",
+    "sendItYourselfHint": "¿Se lo mandas tú por WhatsApp o por correo? Descarga el PDF aquí arriba y elige «{{boton}}»: queda marcado como enviado sin que le llegue nada por el chat.",
+    "projectionTitlePlaceholder": "Ej. Instalar piso de cocina"
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -1589,6 +1593,14 @@
           "p2": "Él lo descarga en PDF y puede firmarlo desde el móvil.",
           "p3": "Cuando lo acepta, se convierte en obra con su cliente, sus fechas y su plan de trabajo ya dentro.",
           "nota": "Solo puede aceptar uno que tú hayas marcado como enviado. Un borrador que estás afinando no se te puede aceptar por detrás."
+        },
+        "porFuera": {
+          "title": "Mandarlo por WhatsApp en vez de por el sistema",
+          "p1": "Se puede, y es lo normal con los clientes de toda la vida: ellos están en WhatsApp y ahí se quedan. Primero dale de alta en {{menuCrm}}. Con el nombre basta; el correo y el teléfono los puedes dejar vacíos.",
+          "p2": "Haz el presupuesto en {{menuPresupuestos}} igual que cualquier otro y dale a Generar PDF. Se descarga con tu logo, tu dirección, tu licencia RBQ y su propio número, tipo EST-2026-0001. Ese archivo es el que le mandas por WhatsApp.",
+          "p3": "Para que el sistema sepa que ya salió, pulsa «Aprobar y marcar como enviado» y elige «Aprobar sin enviar». Queda como enviado sin que al cliente le llegue nada por aquí, porque ya se lo mandaste tú.",
+          "p4": "Cuando te diga que sí, vuelve al presupuesto y acéptalo tú. Eso es lo que abre la obra, mete el trabajo en el calendario y emite la primera factura. Si no lo haces no pasa nada de nada: el presupuesto se queda quieto y la obra no llega a existir.",
+          "nota": "Las facturas se descargan igual, desde {{menuFinanzas}} → {{menuFacturacion}}. Eso sí: sólo se marcan pagadas solas las que el cliente paga con tarjeta desde su portal. Si te paga en efectivo o por transferencia, la factura se queda en pendiente."
         }
       },
       "trabajo": {

@@ -141,6 +141,38 @@ rechaza con un 409 aunque alguien la llame directamente.
 Al aceptarse: se crea o se vincula el proyecto, se vuelca la proyección al
 calendario, y si el cliente no tenía cuenta, se le crea una.
 
+*Aprobar y marcar como enviado* sale tanto en `borrador` como en
+`pendiente_aprobacion`. Mirar solo el segundo dejaba sin ninguna salida a todo
+presupuesto escrito a mano: nacía en `borrador`, el panel le decía «envíalo
+para poder aceptarlo» y no había con qué enviarlo. Un borrador que escribió el
+contratista está tan listo para salir como uno que redactó el bot.
+
+---
+
+## Mandarlo por fuera
+
+La mayoría de los clientes que ya tiene un contratista llegaron por WhatsApp y
+van a seguir ahí. Ese camino existe entero y no dependía de nada nuevo:
+
+1. El cliente se da de alta **solo con el nombre** — `POST /clients` únicamente
+   exige eso; el correo y el teléfono pueden quedar vacíos.
+2. El PDF se descarga **estando todavía en borrador**, sin portal, sin envío y
+   sin código de acceso. Lleva el número impreso en el nombre del archivo
+   (`EST-2026-0001.pdf`), no el id.
+3. *Aprobar sin enviar* lo marca como `enviado` sin tocar el chat del cliente.
+4. Cuando el cliente dice que sí por fuera, **lo acepta el contratista desde el
+   panel**, y a partir de ahí ocurre exactamente lo mismo que si lo hubiera
+   firmado en el portal.
+
+El paso 4 es el que se olvida, y es el único que dispara algo. Sin él el
+presupuesto se queda quieto: ni obra, ni calendario, ni primera factura. Por
+eso el panel lo dice en pantalla cuando el presupuesto está `enviado`
+(`budgets.acceptOnTheirBehalf`) en vez de dejarlo escrito solo aquí.
+
+Lo que **no** cubre este camino: una factura pagada en efectivo o por
+transferencia no tiene forma de marcarse pagada. Solo la marca sola el webhook
+de Stripe cuando el cliente paga con tarjeta desde su portal.
+
 ---
 
 ## El PDF

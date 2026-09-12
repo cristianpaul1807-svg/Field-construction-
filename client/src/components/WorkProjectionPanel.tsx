@@ -176,6 +176,9 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
 
   const pendingItems = (items ?? []).filter((i) => i.status === "pendiente");
 
+  /** Todavía no ha salido hacia el cliente, lo escribiera el bot o el contratista. */
+  const puedeSalir = status === "borrador" || status === "pendiente_aprobacion";
+
   return (
     <Card className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -191,7 +194,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
       {result ? (
         <div className="rounded-lg border border-status-success-bg bg-status-success-bg/40 p-4 space-y-2">
           <div className="flex items-center gap-2 text-status-success-fg text-sm font-medium">
-            <CheckCircle2 size={16} /> Presupuesto aceptado
+            <CheckCircle2 size={16} /> {t("budgets.estimateStatus.aceptado")}
           </div>
           <p className="text-xs text-muted-foreground">
             {t("budgets.projectionApplied", { count: result.scheduledCount })}
@@ -231,11 +234,11 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="proj-title">{t("common.title")}</Label>
-              <Input id="proj-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej. Instalar piso de cocina" />
+              <Input id="proj-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("budgets.projectionTitlePlaceholder")} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="proj-zone">{t("budgets.zone")} ({t("common.optional")})</Label>
-              <Input id="proj-zone" value={zone} onChange={(e) => setZone(e.target.value)} placeholder="Ej. Cocina" />
+              <Input id="proj-zone" value={zone} onChange={(e) => setZone(e.target.value)} placeholder={t("budgets.zonePlaceholder")} />
             </div>
             <div className="space-y-1.5">
               <Label>{t("budgets.worker")} ({t("common.optional")})</Label>
@@ -267,18 +270,32 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
             <Plus size={14} /> {t("budgets.addToProjection")}
           </Button>
 
-          <div className="flex gap-2 pt-2 border-t border-border">
-            {status === "pendiente_aprobacion" && (
-              <Button className="flex-1" onClick={approveDraft} disabled={busy}>
+          <div className="space-y-3 pt-2 border-t border-border">
+            {/* Un borrador escrito a mano está igual de listo para salir que uno
+                que redactó el bot. Mirar sólo 'pendiente_aprobacion' dejaba sin
+                ningún botón a todo presupuesto hecho desde el panel: se quedaba
+                en borrador para siempre, leyendo «envíalo para poder aceptarlo»
+                sin que hubiera nada que tocar para enviarlo. */}
+            {puedeSalir && (
+              <Button className="w-full" onClick={approveDraft} disabled={busy}>
                 {t("budgets.approveAndSend")}
               </Button>
             )}
             {status === "enviado" && (
-              <Button className="flex-1" onClick={acceptEstimate} disabled={busy}>
-                Aceptar presupuesto (crea proyecto + agenda)
-              </Button>
+              <>
+                {/* El presupuesto que se entregó por fuera —WhatsApp, teléfono,
+                    en la propia obra— no lo va a aceptar nadie desde el portal.
+                    Sin este aviso queda esperando una firma que no va a llegar,
+                    y con él la obra y la primera factura sin nacer. */}
+                <div className="rounded-lg border border-border bg-muted/40 p-3">
+                  <p className="text-xs text-muted-foreground">{t("budgets.acceptOnTheirBehalf")}</p>
+                </div>
+                <Button className="w-full" onClick={acceptEstimate} disabled={busy}>
+                  {t("budgets.acceptEstimate")}
+                </Button>
+              </>
             )}
-            {status !== "pendiente_aprobacion" && status !== "enviado" && (
+            {!puedeSalir && status !== "enviado" && (
               <p className="text-xs text-muted-foreground">
                 {status === "aceptado" ? t("budgets.alreadyAccepted") : t("budgets.sendBeforeAccept")}
               </p>
@@ -314,6 +331,12 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
               />
             </div>
             {sendError && <p className="text-sm text-status-error-fg">{sendError}</p>}
+            {/* «Aprobar sin enviar» parece la opción tímida y es en realidad la
+                del contratista que se lo manda él por WhatsApp. Sin decirlo
+                aquí, nadie la elige a propósito. */}
+            <p className="text-xs text-muted-foreground border-t border-border pt-3">
+              {t("budgets.sendItYourselfHint", { boton: t("budgets.approveWithoutSending") })}
+            </p>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={approveOnly} disabled={busy} className="sm:flex-1">

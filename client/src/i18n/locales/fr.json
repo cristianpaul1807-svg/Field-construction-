@@ -210,7 +210,7 @@
     "insertIntoEstimate": "Insérer dans la soumission",
     "insertTemplate": "Insérer « {{name}} »",
     "templateZoneQuestion": "À quelle zone de la soumission ce modèle appartient-il ?",
-    "zonePlaceholder": "Ex. Salle de bain 2",
+    "zonePlaceholder": "Ex. Cuisine",
     "newEstimate": "Nouvelle soumission",
     "newEstimateHint": "Créez une soumission vide et commencez à ajouter des postes.",
     "createEstimate": "Créer la soumission",
@@ -263,7 +263,11 @@
     "approveAndDeliver": "Approuver et envoyer",
     "sentToClient": "Envoyé dans le clavardage du client.",
     "beforeTax": "Total avant taxes",
-    "taxNote": "C'est le total qui figure sur le PDF et qui sera facturé. La retenue, si vous en appliquez une, se déduit du paiement, pas du total."
+    "taxNote": "C'est le total qui figure sur le PDF et qui sera facturé. La retenue, si vous en appliquez une, se déduit du paiement, pas du total.",
+    "acceptEstimate": "Accepter la soumission (ouvre le chantier)",
+    "acceptOnTheirBehalf": "Il vous a dit oui par WhatsApp, au téléphone ou sur le chantier même ? Acceptez-la vous-même ici. C'est ce bouton qui ouvre le chantier, met les travaux au calendrier et émet la première facture. Tant que vous n'y touchez pas, la soumission reste en attente.",
+    "sendItYourselfHint": "Vous l'envoyez vous-même par WhatsApp ou par courriel ? Téléchargez le PDF ci-dessus et choisissez « {{boton}} » : elle est marquée comme envoyée sans que rien n'arrive dans sa messagerie.",
+    "projectionTitlePlaceholder": "Ex. Installer le plancher de la cuisine"
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -1589,6 +1593,14 @@
           "p2": "Il la télécharge en PDF et peut la signer depuis son téléphone.",
           "p3": "Une fois acceptée, elle devient un chantier avec son client, ses dates et son plan de travail déjà dedans.",
           "nota": "Il ne peut accepter qu'une soumission que vous avez marquée comme envoyée. Un brouillon en cours ne peut pas être accepté dans votre dos."
+        },
+        "porFuera": {
+          "title": "L'envoyer par WhatsApp au lieu de passer par le système",
+          "p1": "C'est possible, et avec vos clients de longue date c'est même normal : ils sont sur WhatsApp et ils y restent. Ajoutez-le d'abord dans {{menuCrm}}. Le nom suffit ; vous pouvez laisser le courriel et le téléphone vides.",
+          "p2": "Faites la soumission dans {{menuPresupuestos}} comme n'importe quelle autre et appuyez sur Générer le PDF. Il se télécharge avec votre logo, votre adresse, votre licence RBQ et son propre numéro, du genre EST-2026-0001. C'est ce fichier que vous envoyez par WhatsApp.",
+          "p3": "Pour que le système sache qu'elle est partie, appuyez sur « Approuver et marquer comme envoyée » et choisissez « Approuver sans envoyer ». Elle passe à envoyée sans que rien n'arrive au client ici, puisque vous la lui avez déjà envoyée.",
+          "p4": "Quand il vous dit oui, revenez à la soumission et acceptez-la vous-même. C'est ça qui ouvre le chantier, met les travaux au calendrier et émet la première facture. Sans ce geste, rien ne se passe : la soumission reste figée et le chantier n'existe jamais.",
+          "nota": "Les factures se téléchargent de la même façon, depuis {{menuFinanzas}} → {{menuFacturacion}}. Une chose par contre : seules celles que le client paie par carte depuis son portail se marquent payées toutes seules. S'il vous paie comptant ou par virement, la facture reste en attente."
         }
       },
       "trabajo": {

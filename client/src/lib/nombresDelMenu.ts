@@ -45,6 +45,7 @@ export function useNombresDelMenu() {
       menuTipos: t("nav.serviceTypes"),
       menuPortal: t("nav.clientPortalShort"),
       menuProyectos: t("nav.projects"),
+      menuPresupuestos: t("nav.budgets"),
     }),
     [t]
   );

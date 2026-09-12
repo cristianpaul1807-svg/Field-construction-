@@ -736,7 +736,7 @@ export default function Budgets() {
                   </Button>
                   <Button variant="outline" className="flex-1 gap-2" onClick={saveDraft} disabled={savingDraft}>
                     {savedFlash ? <Check size={16} /> : null}
-                    {savedFlash ? "Guardado" : "Guardar borrador"}
+                    {savedFlash ? t("common.saved") : t("budgets.saveDraft")}
                   </Button>
                 </div>
               </div>

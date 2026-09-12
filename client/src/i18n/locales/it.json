@@ -210,7 +210,7 @@
     "insertIntoEstimate": "Inserisci nel preventivo",
     "insertTemplate": "Inserisci \"{{name}}\"",
     "templateZoneQuestion": "A quale zona del preventivo appartiene questo modello?",
-    "zonePlaceholder": "Es. Bagno 2",
+    "zonePlaceholder": "Es. Cucina",
     "newEstimate": "Nuovo preventivo",
     "newEstimateHint": "Crea un preventivo vuoto e inizia ad aggiungere le voci.",
     "createEstimate": "Crea preventivo",
@@ -263,7 +263,11 @@
     "approveAndDeliver": "Approva e invia",
     "sentToClient": "Inviato nella chat del cliente.",
     "beforeTax": "Totale prima delle imposte",
-    "taxNote": "È il totale che appare nel PDF e quello che verrà fatturato. La ritenuta, se la applichi, si sottrae dal pagamento, non dal totale."
+    "taxNote": "È il totale che appare nel PDF e quello che verrà fatturato. La ritenuta, se la applichi, si sottrae dal pagamento, non dal totale.",
+    "acceptEstimate": "Accetta il preventivo (apre il cantiere)",
+    "acceptOnTheirBehalf": "Ti ha detto di sì su WhatsApp, al telefono o direttamente in cantiere? Accettalo tu qui. È questo pulsante che apre il cantiere, mette il lavoro in calendario ed emette la prima fattura. Finché non lo premi, il preventivo resta lì ad aspettare.",
+    "sendItYourselfHint": "Glielo mandi tu su WhatsApp o via email? Scarica il PDF qui sopra e scegli «{{boton}}»: risulta inviato senza che gli arrivi nulla in chat.",
+    "projectionTitlePlaceholder": "Es. Posare il pavimento della cucina"
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -1589,6 +1593,14 @@
           "p2": "Lui lo scarica in PDF e può firmarlo dal telefono.",
           "p3": "Quando lo accetta, diventa un cantiere con il suo cliente, le date e il piano di lavoro già dentro.",
           "nota": "Può accettare solo quello che hai marcato come inviato. Una bozza che stai ancora sistemando non può essere accettata alle tue spalle."
+        },
+        "porFuera": {
+          "title": "Mandarlo su WhatsApp invece che dal sistema",
+          "p1": "Si può, ed è la cosa normale con i clienti di sempre: loro stanno su WhatsApp e lì restano. Prima inseriscilo in {{menuCrm}}. Basta il nome; email e telefono puoi lasciarli vuoti.",
+          "p2": "Fai il preventivo in {{menuPresupuestos}} come tutti gli altri e premi Genera PDF. Si scarica con il tuo logo, il tuo indirizzo, la tua licenza RBQ e un numero suo, tipo EST-2026-0001. Quel file è quello che gli mandi su WhatsApp.",
+          "p3": "Perché il sistema sappia che è già partito, premi «Approva e segna come inviato» e scegli «Approva senza inviare». Risulta inviato senza che al cliente arrivi nulla da qui, perché gliel'hai già mandato tu.",
+          "p4": "Quando ti dice di sì, torna al preventivo e accettalo tu. È questo che apre il cantiere, mette il lavoro in calendario ed emette la prima fattura. Se non lo fai non succede niente: il preventivo resta fermo e il cantiere non nasce.",
+          "nota": "Le fatture si scaricano allo stesso modo, da {{menuFinanzas}} → {{menuFacturacion}}. Una cosa però: si segnano pagate da sole solo quelle che il cliente paga con carta dal suo portale. Se ti paga in contanti o con bonifico, la fattura resta in sospeso."
         }
       },
       "trabajo": {

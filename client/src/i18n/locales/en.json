@@ -210,7 +210,7 @@
     "insertIntoEstimate": "Insert into estimate",
     "insertTemplate": "Insert \"{{name}}\"",
     "templateZoneQuestion": "Which zone of the estimate does this template belong to?",
-    "zonePlaceholder": "e.g. Bathroom 2",
+    "zonePlaceholder": "E.g. Kitchen",
     "newEstimate": "New estimate",
     "newEstimateHint": "Create an empty estimate and start adding line items.",
     "createEstimate": "Create estimate",
@@ -263,7 +263,11 @@
     "approveAndDeliver": "Approve and send",
     "sentToClient": "Sent to the client's chat.",
     "beforeTax": "Total before tax",
-    "taxNote": "This is the total on the PDF and what will be invoiced. The holdback, if you use one, comes off the payment, not off the total."
+    "taxNote": "This is the total on the PDF and what will be invoiced. The holdback, if you use one, comes off the payment, not off the total.",
+    "acceptEstimate": "Accept estimate (opens the project)",
+    "acceptOnTheirBehalf": "Did they say yes over WhatsApp, on the phone, or right there on site? Accept it here yourself. This button is what opens the project, puts the work on the calendar and issues the first invoice. Until you press it, the estimate just sits there waiting.",
+    "sendItYourselfHint": "Sending it yourself by WhatsApp or email? Download the PDF above and choose “{{boton}}”: it gets marked as sent without anything landing in their chat.",
+    "projectionTitlePlaceholder": "E.g. Install kitchen flooring"
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -1589,6 +1593,14 @@
           "p2": "They download it as a PDF and can sign it from their phone.",
           "p3": "Once accepted, it turns into a project with its client, its dates and its work plan already inside.",
           "nota": "They can only accept one you've marked as sent. A draft you're still tuning can't be accepted behind your back."
+        },
+        "porFuera": {
+          "title": "Sending it by WhatsApp instead of through the system",
+          "p1": "You can, and with long-standing clients it's the normal thing: they're on WhatsApp and that's where they'll stay. First add them in {{menuCrm}}. A name is enough; you can leave email and phone empty.",
+          "p2": "Build the estimate in {{menuPresupuestos}} like any other and press Generate PDF. It downloads with your logo, your address, your RBQ licence and a number of its own, like EST-2026-0001. That file is what you send over WhatsApp.",
+          "p3": "So the system knows it's out the door, press “Approve and mark as sent” and choose “Approve without sending”. It's marked as sent without anything reaching the client here, because you already sent it yourself.",
+          "p4": "When they say yes, come back to the estimate and accept it yourself. That's what opens the project, puts the work on the calendar and issues the first invoice. Skip it and nothing at all happens: the estimate sits still and the project never comes into being.",
+          "nota": "Invoices download the same way, from {{menuFinanzas}} → {{menuFacturacion}}. One thing though: only the ones the client pays by card from their portal mark themselves as paid. If they pay you in cash or by transfer, the invoice stays pending."
         }
       },
       "trabajo": {
