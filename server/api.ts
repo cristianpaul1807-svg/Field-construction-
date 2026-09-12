@@ -447,7 +447,6 @@ function isConnectNotEnabled(message: string): boolean {
   );
 }
 
-const INVOICE_TYPE_LABEL: Record<string, string> = { deposito: "Depósito", parcial: "Pago parcial", final: "Pago final" };
 
 async function computeInvoiceTax(admin: ReturnType<typeof getSupabaseAdmin>, businessId: string, subtotal: number) {
   const { data: business, error: businessError } = await admin
@@ -570,7 +569,8 @@ async function createInvoiceCheckoutSession(
   admin: ReturnType<typeof getSupabaseAdmin>,
   businessId: string,
   invoiceId: string,
-  baseUrl: string
+  baseUrl: string,
+  lang: DocLang = "es"
 ): Promise<string> {
   const { data: invoice, error: invoiceError } = await admin
     .from("invoices")
@@ -606,7 +606,10 @@ async function createInvoiceCheckoutSession(
             currency: "cad",
             unit_amount: Math.round(Number(invoice.amount) * 100),
             product_data: {
-              name: `${INVOICE_TYPE_LABEL[invoice.type] ?? "Factura"}${client?.name ? ` — ${client.name}` : ""}`,
+              // Lo que lee quien está a punto de pagar. Salía en castellano
+              // fijo: un cliente de Quebec veía "Depósito" en la pantalla
+              // donde mete su tarjeta.
+              name: `${docCopy(lang).invoiceTypes[invoice.type as "deposito" | "parcial" | "final"] ?? docCopy(lang).invoiceTitle}${client?.name ? ` — ${client.name}` : ""}`,
               description: invoice.description ?? undefined,
             },
           },
@@ -614,6 +617,10 @@ async function createInvoiceCheckoutSession(
         },
       ],
       customer_email: client?.email ?? undefined,
+      // Y la pasarela entera —botones, errores, condiciones— en el mismo
+      // idioma. Sin esto Stripe elige por el navegador, que no tiene por qué
+      // coincidir con el idioma en el que esa persona está trabajando.
+      locale: lang,
       success_url: `${baseUrl}/portal?pago=exitoso`,
       cancel_url: `${baseUrl}/portal?pago=cancelado`,
       metadata: { invoiceId: invoice.id, businessId },
@@ -2130,12 +2137,14 @@ apiRouter.post(
 
     const admin = getSupabaseAdmin();
     const baseUrl = `${req.protocol}://${req.get("host")}`;
-    try {
-      const url = await createInvoiceCheckoutSession(admin, invoice.business_id, invoice.id, baseUrl);
-      res.json({ url });
-    } catch (err) {
-      res.status(400).json({ error: err instanceof Error ? err.message : "No se pudo crear el link de pago" });
-    }
+    // Sin try/catch a propósito: `route()` ya reenvía el código de un
+    // CodedError, y el cliente lo traduce. Capturarlo aquí se quedaba sólo con
+    // el texto —en castellano— y le enseñaba a un cliente de Quebec "Esta
+    // factura ya está pagada" en la pantalla de pagar.
+    const url = await createInvoiceCheckoutSession(
+      admin, invoice.business_id, invoice.id, baseUrl, normalizeDocLang(req.query.lang ?? req.get("accept-language"))
+    );
+    res.json({ url });
   })
 );
 
@@ -7566,12 +7575,10 @@ apiRouter.post(
   route(async (req, res) => {
     const admin = getSupabaseAdmin();
     const baseUrl = `${req.protocol}://${req.get("host")}`;
-    try {
-      const url = await createInvoiceCheckoutSession(admin, req.businessId!, req.params.id, baseUrl);
-      res.json({ url });
-    } catch (err) {
-      res.status(400).json({ error: err instanceof Error ? err.message : "No se pudo crear el link de pago" });
-    }
+    const url = await createInvoiceCheckoutSession(
+      admin, req.businessId!, req.params.id, baseUrl, normalizeDocLang(req.query.lang ?? req.get("accept-language"))
+    );
+    res.json({ url });
   })
 );
 
@@ -8494,7 +8501,10 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
   // the document simply shows no tax line rather than inventing one.
   const subtotal = Number(invoice.data.subtotal ?? invoice.data.amount ?? 0);
   const taxAmount = Number(invoice.data.tax_amount ?? 0);
-  const label = INVOICE_TYPE_LABEL[invoice.data.type] ?? invoice.data.type;
+  // El concepto que se imprime cuando la factura no lleva descripción. Salía
+  // en castellano dentro de un PDF en francés.
+  const label =
+    docCopy(lang).invoiceTypes[invoice.data.type as "deposito" | "parcial" | "final"] ?? invoice.data.type;
 
   return renderInvoicePdf(
     {

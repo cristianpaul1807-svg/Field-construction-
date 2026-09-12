@@ -207,7 +207,7 @@ export default function ClientPortalMe() {
     setPayingInvoiceId(invoiceId);
     setPayError(null);
     try {
-      const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
+      const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout?lang=${i18n.language.slice(0, 2)}`, { method: "POST" });
       const body = await readJson(res);
       if (!res.ok) throw new Error(serverMessage(body, t, t("clientPortal.payError")));
       window.location.href = body.url;

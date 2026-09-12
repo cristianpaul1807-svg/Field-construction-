@@ -39,7 +39,7 @@ export function ClientChat() {
     setPayingMessageId(messageId);
     setPayError(null);
     try {
-      const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout`, { method: "POST" });
+      const res = await apiFetch(`/api/client/invoices/${invoiceId}/checkout?lang=${i18n.language.slice(0, 2)}`, { method: "POST" });
       const body = await readJson<{ url?: string; error?: string }>(res);
       if (!res.ok || !body?.url) throw new Error(serverMessage(body, t, t("clientPortal.payError")));
       window.location.href = body.url;

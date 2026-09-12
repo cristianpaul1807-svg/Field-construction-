@@ -229,7 +229,7 @@ export default function Invoicing() {
     setLinkBusyId(invoiceId);
     setLinkError(null);
     try {
-      const res = await apiFetch(`/api/invoices/${invoiceId}/checkout-link`, { method: "POST" });
+      const res = await apiFetch(`/api/invoices/${invoiceId}/checkout-link?lang=${i18n.language.slice(0, 2)}`, { method: "POST" });
       const body = await readJson(res);
       if (!res.ok) throw new Error(serverMessage(body, t, t("invoicing.linkError")));
       await navigator.clipboard.writeText(body.url);

@@ -202,6 +202,8 @@ interface Copy {
   paymentsNote: string;
   /** Los nombres de las etapas de casa, que el negocio no ha escrito él. */
   defaultStages: { deposito: string; avance: string; final: string };
+  /** Qué clase de cobro es. Sale en el PDF y en la pasarela de pago. */
+  invoiceTypes: { deposito: string; parcial: string; final: string };
   signedBy: string;
   signedOn: string;
   signedTotalNote: (amount: string) => string;
@@ -256,6 +258,7 @@ const COPY: Record<DocLang, Copy> = {
     qstNumber: "N.º TVQ",
     paymentsTitle: "Forma de pago",
     defaultStages: { deposito: "Depósito inicial", avance: "Avance de obra", final: "Entrega final" },
+    invoiceTypes: { deposito: "Depósito", parcial: "Pago parcial", final: "Pago final" },
     signedBy: "Firmado por",
     signedOn: "Firmado el",
     signedTotalNote: (a) => `Importe aceptado al firmar: ${a}`,
@@ -317,6 +320,7 @@ const COPY: Record<DocLang, Copy> = {
     qstNumber: "QST no.",
     paymentsTitle: "How this is paid",
     defaultStages: { deposito: "Initial deposit", avance: "Progress payment", final: "Final payment" },
+    invoiceTypes: { deposito: "Deposit", parcial: "Partial payment", final: "Final payment" },
     signedBy: "Signed by",
     signedOn: "Signed on",
     signedTotalNote: (a) => `Amount accepted at signing: ${a}`,
@@ -378,6 +382,7 @@ const COPY: Record<DocLang, Copy> = {
     qstNumber: "No TVQ",
     paymentsTitle: "Modalités de paiement",
     defaultStages: { deposito: "Acompte initial", avance: "Paiement d'étape", final: "Paiement final" },
+    invoiceTypes: { deposito: "Acompte", parcial: "Paiement partiel", final: "Paiement final" },
     signedBy: "Signé par",
     signedOn: "Signé le",
     signedTotalNote: (a) => `Montant accepté à la signature : ${a}`,
@@ -439,6 +444,7 @@ const COPY: Record<DocLang, Copy> = {
     qstNumber: "N. QST",
     paymentsTitle: "Modalità di pagamento",
     defaultStages: { deposito: "Acconto iniziale", avance: "Pagamento di avanzamento", final: "Saldo finale" },
+    invoiceTypes: { deposito: "Acconto", parcial: "Pagamento parziale", final: "Saldo finale" },
     signedBy: "Firmato da",
     signedOn: "Firmato il",
     signedTotalNote: (a) => `Importo accettato alla firma: ${a}`,
