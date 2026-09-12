@@ -13,6 +13,7 @@ import {
 import { CreditCard, ExternalLink } from "lucide-react";
 import { useApi, apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
 /**
  * The one setup step the business cannot skip without knowing what it costs
@@ -34,6 +35,7 @@ interface ConnectStatus {
 
 export function StripeConnectAlert() {
   const { t } = useTranslation();
+  const menuNombres = useNombresDelMenu();
   const { data, reload } = useApi<ConnectStatus>("/api/stripe/connect/status");
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -113,7 +115,7 @@ export function StripeConnectAlert() {
                 <li>{t("stripeAlert.keepManualPaid")}</li>
               </ul>
             </div>
-            <p className="text-xs text-muted-foreground">{t("stripeAlert.reversible")}</p>
+            <p className="text-xs text-muted-foreground">{t("stripeAlert.reversible", menuNombres)}</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirming(false)} disabled={saving}>

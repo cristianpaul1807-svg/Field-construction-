@@ -682,7 +682,7 @@
     "estimateTermsPlaceholder": "e.g. Prices are valid for 30 days. Any change of scope will be documented in writing.",
     "publicChannelTitle": "Your customer intake channel",
     "publicChannelBody": "This link opens your public chat: the customer answers with buttons, and when they finish their request arrives ready to price. It works with no Meta approval and no per-message fee.",
-    "noSlugYet": "You don't have a public link yet. Set it up in Company details.",
+    "noSlugYet": "You don't have a public link yet. Set it up in {{menuEmpresa}}.",
     "howToUseLink": "Where to put this link",
     "howToUseStep1": "In your WhatsApp Business automatic Greeting Message — the customer gets it the first time they write to you.",
     "howToUseStep2": "In your Instagram or Facebook bio, and on the \"Contact\" button of your Google listing.",
@@ -706,7 +706,7 @@
     "showSchedule": "Planned work schedule",
     "showScheduleHint": "Built from the work projection. Knowing when it starts and how long it takes is what reassures a client most before signing.",
     "provinceHint": "This is where every invoice's tax comes from. Pick where you file.",
-    "provinceChangeHere": "Change it in Settings → Payments"
+    "provinceChangeHere": "Change it in {{menuAjustes}} → {{menuPagos}}"
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1040,7 +1040,7 @@
     "todaysJobs": "Their day",
     "nothingScheduled": "Nothing scheduled today.",
     "staleNotice": "Nobody has clocked in for the last 24 hours. These are the last known positions, not where they are now.",
-    "noAddressHint": "Add your company address in Settings → Company details and the map will open there while nobody has clocked in.",
+    "noAddressHint": "Add your company address in {{menuAjustes}} → {{menuEmpresa}} and the map will open there while nobody has clocked in.",
     "imageryUnavailable": "Map imagery could not be loaded. The positions are still correct.",
     "entryTooOld": "That entry doesn't show up even within 30 days. The coordinates in the time-entry list still open the exact spot.",
     "rangeLabel": "Show",
@@ -1146,7 +1146,7 @@
     "keepDocuments": "The estimate and invoice PDFs, with your taxes, your holdback and your registration numbers.",
     "keepEverythingElse": "Everything else: jobs, scheduling, crew, clock-ins, chat, the client portal and payment schedules.",
     "keepManualPaid": "Tracking what is owed: you issue the invoice the same way and mark it paid by hand.",
-    "reversible": "You can change your mind any time from Settings → Payments. Nothing is lost.",
+    "reversible": "You can change your mind any time from {{menuAjustes}} → {{menuPagos}}. Nothing is lost.",
     "declineConfirm": "Got it, carry on without Stripe"
   },
   "payroll": {
@@ -1158,7 +1158,7 @@
     "from": "From",
     "to": "To",
     "recalculate": "Recalculate",
-    "noApprovedHours": "No approved hours in this period. Approve them in Field → Check-in.",
+    "noApprovedHours": "No approved hours in this period. Approve them in {{menuCampo}} → {{menuFichaje}}.",
     "hoursApproved": "{{hours}} h approved",
     "noRateSet": "No hourly rate. Set one on their record if you want to track what they cost.",
     "gross": "Gross",

@@ -682,7 +682,7 @@
     "estimateTermsPlaceholder": "Ej. Los precios son válidos 30 días. Todo cambio de alcance se documentará por escrito.",
     "publicChannelTitle": "Tu canal de entrada de clientes",
     "publicChannelBody": "Este link abre tu chat público: el cliente responde por botones y al terminar te llega su solicitud lista para presupuestar. Funciona sin aprobación de Meta y sin pagar por mensaje.",
-    "noSlugYet": "Todavía no tienes un link público. Configúralo en Datos de la empresa.",
+    "noSlugYet": "Todavía no tienes enlace público. Configúralo en {{menuEmpresa}}.",
     "howToUseLink": "Dónde poner este link",
     "howToUseStep1": "En el Mensaje de Bienvenida automático de tu WhatsApp Business — el cliente lo recibe al escribirte por primera vez.",
     "howToUseStep2": "En la bio de tu Instagram o Facebook, y en el botón \"Contactar\" de tu ficha de Google.",
@@ -706,7 +706,7 @@
     "showSchedule": "Programación prevista de los trabajos",
     "showScheduleHint": "Sale de la proyección de trabajo. Saber cuándo empieza y cuánto dura es lo que más tranquiliza al cliente antes de firmar.",
     "provinceHint": "De aquí sale el impuesto de cada factura. Elige donde tributas.",
-    "provinceChangeHere": "Cambiarla en Ajustes → Pagos"
+    "provinceChangeHere": "Cambiarla en {{menuAjustes}} → {{menuPagos}}"
   },
   "reports": {
     "title": "Informes",
@@ -1040,7 +1040,7 @@
     "todaysJobs": "Su día",
     "nothingScheduled": "No tiene nada programado hoy.",
     "staleNotice": "Nadie ha fichado en las últimas 24 h. Estas son las últimas posiciones conocidas, no dónde están ahora.",
-    "noAddressHint": "Añade la dirección de tu empresa en Configuración → Datos de la empresa y el mapa abrirá ahí mientras nadie haya fichado.",
+    "noAddressHint": "Añade la dirección de tu empresa en {{menuAjustes}} → {{menuEmpresa}} y el mapa abrirá ahí mientras nadie haya fichado.",
     "imageryUnavailable": "No se pudieron cargar las imágenes del mapa. Las posiciones son correctas igualmente.",
     "entryTooOld": "Ese fichaje no aparece ni siquiera en 30 días. Las coordenadas de la lista de fichajes siguen abriendo el punto exacto.",
     "rangeLabel": "Mostrar",
@@ -1146,7 +1146,7 @@
     "keepDocuments": "Los PDF de presupuestos y facturas, con tus impuestos, tu retención y tus datos fiscales.",
     "keepEverythingElse": "Todo lo demás del software: obras, agenda, equipo, fichajes, chat, portal del cliente y plan de pagos.",
     "keepManualPaid": "El control de cobros: emites la factura igual y la marcas pagada a mano.",
-    "reversible": "Puedes cambiar de opinión cuando quieras desde Configuración → Pagos. No se pierde nada.",
+    "reversible": "Puedes cambiar de opinión cuando quieras desde {{menuAjustes}} → {{menuPagos}}. No se pierde nada.",
     "declineConfirm": "Entendido, seguir sin Stripe"
   },
   "payroll": {
@@ -1158,7 +1158,7 @@
     "from": "Desde",
     "to": "Hasta",
     "recalculate": "Recalcular",
-    "noApprovedHours": "No hay horas aprobadas en este periodo. Apruébalas en Campo → Check-in.",
+    "noApprovedHours": "No hay horas aprobadas en este periodo. Apruébalas en {{menuCampo}} → {{menuFichaje}}.",
     "hoursApproved": "{{hours}} h aprobadas",
     "noRateSet": "Sin tarifa por hora. Ponle una en su ficha si quieres llevar el control de lo que cuesta.",
     "gross": "Bruto",

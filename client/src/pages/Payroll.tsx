@@ -12,6 +12,7 @@ import { Download, FileText, Plus, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, readJson, downloadFile, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
 /**
  * The office's view of what the crew costs.
@@ -109,6 +110,7 @@ interface Ajuste {
 
 export default function Payroll() {
   const { t, i18n } = useTranslation();
+  const menuNombres = useNombresDelMenu();
   const [period, setPeriod] = useState(defaultPeriod);
   const [reloadToken, setReloadToken] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -213,7 +215,7 @@ export default function Payroll() {
 
           {!loading && rows.length === 0 && (
             <Card className="p-6">
-              <p className="text-sm text-muted-foreground">{t("payroll.noApprovedHours")}</p>
+              <p className="text-sm text-muted-foreground">{t("payroll.noApprovedHours", menuNombres)}</p>
             </Card>
           )}
 

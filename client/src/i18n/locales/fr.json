@@ -682,7 +682,7 @@
     "estimateTermsPlaceholder": "Ex. Les prix sont valides 30 jours. Tout changement de portée fera l'objet d'un avenant écrit.",
     "publicChannelTitle": "Votre canal d'accueil des clients",
     "publicChannelBody": "Ce lien ouvre votre clavardage public : le client répond par boutons et, à la fin, sa demande vous arrive prête à chiffrer. Fonctionne sans approbation de Meta et sans frais par message.",
-    "noSlugYet": "Vous n'avez pas encore de lien public. Configurez-le dans Coordonnées de l'entreprise.",
+    "noSlugYet": "Vous n'avez pas encore de lien public. Configurez-le dans {{menuEmpresa}}.",
     "howToUseLink": "Où placer ce lien",
     "howToUseStep1": "Dans le message d'accueil automatique de votre WhatsApp Business — le client le reçoit dès son premier message.",
     "howToUseStep2": "Dans votre bio Instagram ou Facebook, et sur le bouton « Contact » de votre fiche Google.",
@@ -706,7 +706,7 @@
     "showSchedule": "Calendrier prévu des travaux",
     "showScheduleHint": "Construit à partir de la projection des travaux. Savoir quand ça commence et combien de temps ça dure est ce qui rassure le plus avant de signer.",
     "provinceHint": "C'est d'ici que vient la taxe de chaque facture. Choisissez où vous déclarez.",
-    "provinceChangeHere": "La changer dans Réglages → Paiements"
+    "provinceChangeHere": "La changer dans {{menuAjustes}} → {{menuPagos}}"
   },
   "reports": {
     "title": "Rapports",
@@ -1040,7 +1040,7 @@
     "todaysJobs": "Sa journée",
     "nothingScheduled": "Rien de planifié aujourd'hui.",
     "staleNotice": "Personne n'a pointé depuis 24 h. Voici les dernières positions connues, pas où ils se trouvent maintenant.",
-    "noAddressHint": "Ajoutez l'adresse de votre entreprise dans Configuration → Données de l'entreprise et la carte s'ouvrira là tant que personne n'a pointé.",
+    "noAddressHint": "Ajoutez l'adresse de votre entreprise dans {{menuAjustes}} → {{menuEmpresa}} et la carte s'ouvrira là tant que personne n'a pointé.",
     "imageryUnavailable": "Impossible de charger les images de la carte. Les positions restent exactes.",
     "entryTooOld": "Ce pointage n'apparaît même pas sur 30 jours. Les coordonnées dans la liste des pointages ouvrent toujours l'endroit exact.",
     "rangeLabel": "Afficher",
@@ -1146,7 +1146,7 @@
     "keepDocuments": "Les PDF de soumissions et de factures, avec vos taxes, votre retenue et vos numéros fiscaux.",
     "keepEverythingElse": "Tout le reste : chantiers, agenda, équipe, pointages, chat, portail client et échéanciers.",
     "keepManualPaid": "Le suivi des encaissements : vous émettez la facture pareil et la marquez payée à la main.",
-    "reversible": "Vous pouvez changer d'avis à tout moment depuis Configuration → Paiements. Rien n'est perdu.",
+    "reversible": "Vous pouvez changer d'avis à tout moment depuis {{menuAjustes}} → {{menuPagos}}. Rien n'est perdu.",
     "declineConfirm": "Compris, continuer sans Stripe"
   },
   "payroll": {
@@ -1158,7 +1158,7 @@
     "from": "Du",
     "to": "Au",
     "recalculate": "Recalculer",
-    "noApprovedHours": "Aucune heure approuvée sur cette période. Approuvez-les dans Terrain → Pointage.",
+    "noApprovedHours": "Aucune heure approuvée sur cette période. Approuvez-les dans {{menuCampo}} → {{menuFichaje}}.",
     "hoursApproved": "{{hours}} h approuvées",
     "noRateSet": "Pas de taux horaire. Renseignez-en un sur sa fiche pour suivre ce qu'il coûte.",
     "gross": "Brut",

@@ -682,7 +682,7 @@
     "estimateTermsPlaceholder": "Es. I prezzi sono validi 30 giorni. Ogni variazione dell'ambito sarà documentata per iscritto.",
     "publicChannelTitle": "Il tuo canale di ingresso clienti",
     "publicChannelBody": "Questo link apre la tua chat pubblica: il cliente risponde con i pulsanti e alla fine la sua richiesta ti arriva pronta da preventivare. Funziona senza approvazione di Meta e senza costi per messaggio.",
-    "noSlugYet": "Non hai ancora un link pubblico. Configuralo in Dati dell'impresa.",
+    "noSlugYet": "Non hai ancora un link pubblico. Configuralo in {{menuEmpresa}}.",
     "howToUseLink": "Dove mettere questo link",
     "howToUseStep1": "Nel messaggio di benvenuto automatico del tuo WhatsApp Business — il cliente lo riceve al primo messaggio.",
     "howToUseStep2": "Nella bio di Instagram o Facebook, e sul pulsante \"Contatta\" della tua scheda Google.",
@@ -706,7 +706,7 @@
     "showSchedule": "Programmazione prevista dei lavori",
     "showScheduleHint": "Costruita dalla proiezione dei lavori. Sapere quando si inizia e quanto dura è ciò che più rassicura il cliente prima di firmare.",
     "provinceHint": "Da qui esce l'imposta di ogni fattura. Scegli dove dichiari.",
-    "provinceChangeHere": "Cambiala in Impostazioni → Pagamenti"
+    "provinceChangeHere": "Cambiala in {{menuAjustes}} → {{menuPagos}}"
   },
   "reports": {
     "title": "Report",
@@ -1040,7 +1040,7 @@
     "todaysJobs": "La sua giornata",
     "nothingScheduled": "Niente in programma oggi.",
     "staleNotice": "Nessuno ha timbrato nelle ultime 24 h. Queste sono le ultime posizioni note, non dove si trovano adesso.",
-    "noAddressHint": "Aggiungi l'indirizzo della tua azienda in Configurazione → Dati dell'azienda e la mappa si aprirà lì finché nessuno ha timbrato.",
+    "noAddressHint": "Aggiungi l'indirizzo della tua azienda in {{menuAjustes}} → {{menuEmpresa}} e la mappa si aprirà lì finché nessuno ha timbrato.",
     "imageryUnavailable": "Non è stato possibile caricare le immagini della mappa. Le posizioni restano corrette.",
     "entryTooOld": "Quella timbratura non compare nemmeno in 30 giorni. Le coordinate nell'elenco aprono ancora il punto esatto.",
     "rangeLabel": "Mostra",
@@ -1146,7 +1146,7 @@
     "keepDocuments": "I PDF di preventivi e fatture, con le tue imposte, la ritenuta e i tuoi dati fiscali.",
     "keepEverythingElse": "Tutto il resto: cantieri, agenda, squadra, timbrature, chat, portale cliente e piani di pagamento.",
     "keepManualPaid": "Il controllo degli incassi: emetti la fattura allo stesso modo e la segni pagata a mano.",
-    "reversible": "Puoi cambiare idea quando vuoi da Configurazione → Pagamenti. Non si perde nulla.",
+    "reversible": "Puoi cambiare idea quando vuoi da {{menuAjustes}} → {{menuPagos}}. Non si perde nulla.",
     "declineConfirm": "Capito, continua senza Stripe"
   },
   "payroll": {
@@ -1158,7 +1158,7 @@
     "from": "Dal",
     "to": "Al",
     "recalculate": "Ricalcola",
-    "noApprovedHours": "Nessuna ora approvata in questo periodo. Approvale in Campo → Timbrature.",
+    "noApprovedHours": "Nessuna ora approvata in questo periodo. Approvale in {{menuCampo}} → {{menuFichaje}}.",
     "hoursApproved": "{{hours}} h approvate",
     "noRateSet": "Nessuna tariffa oraria. Impostane una nella sua scheda per seguire quanto costa.",
     "gross": "Lordo",

@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
+import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
 interface CompanyData {
   id: string;
@@ -52,6 +53,7 @@ function describeTax(r: TaxRate) {
 
 export default function SettingsCompany() {
   const { t } = useTranslation();
+  const menuNombres = useNombresDelMenu();
   const { data, loading, error, reload } = useApi<CompanyData>("/api/settings/company");
   const { data: taxRates } = useApi<TaxRate[]>("/api/canada-tax-rates");
   const [name, setName] = useState("");
@@ -243,7 +245,7 @@ export default function SettingsCompany() {
                   {tasaElegida ? `${tasaElegida.label} — ${describeTax(tasaElegida)}` : t("settings.provinceHint")}
                 </p>
                 <Link href="/settings/payments" className="text-xs text-primary hover:underline">
-                  {t("settings.provinceChangeHere")}
+                  {t("settings.provinceChangeHere", menuNombres)}
                 </Link>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { MessageCircle, Copy, Check } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
 /**
  * WhatsApp, entero: el link público, el texto que lo lleva, dónde ponerlo y
@@ -59,6 +60,7 @@ function CampoCopiable({ label, value }: { label: string; value: string }) {
 
 export default function SettingsWhatsapp() {
   const { t } = useTranslation();
+  const menuNombres = useNombresDelMenu();
   const { data, loading, error } = useApi<CompanyData>("/api/settings/company");
   const [copiado, setCopiado] = useState(false);
 
@@ -110,7 +112,7 @@ export default function SettingsWhatsapp() {
                 </Button>
               </div>
             ) : (
-              !error && <p className="text-sm text-status-warning-fg mt-4">{t("settings.noSlugYet")}</p>
+              !error && <p className="text-sm text-status-warning-fg mt-4">{t("settings.noSlugYet", menuNombres)}</p>
             )}
           </div>
         </div>

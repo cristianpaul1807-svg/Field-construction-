@@ -9,6 +9,7 @@ import { useApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { duracionDeTurno } from "@/lib/duracion";
 import { useTranslation } from "react-i18next";
+import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
 interface ActiveWorker {
   id: string;
@@ -56,6 +57,7 @@ interface GpsResponse {
 
 export default function GpsRouting() {
   const { t, i18n } = useTranslation();
+  const menuNombres = useNombresDelMenu();
   // Se llega aquí desde la lista de fichajes con ?entry=<id>, para abrir ese
   // fichaje concreto en el mapa en vez de tener que buscarlo entre los puntos.
   // El id es el mismo en las dos pantallas: es la fila del fichaje.
@@ -174,7 +176,7 @@ export default function GpsRouting() {
             <div className="h-96 lg:h-auto lg:flex-1 lg:min-h-96 bg-secondary flex flex-col items-center justify-center gap-2 text-center px-6">
               <MapPin size={28} className="text-muted-foreground" strokeWidth={1.5} />
               <p className="text-sm font-medium text-foreground">{t("gps.noLocations")}</p>
-              <p className="text-xs text-muted-foreground max-w-xs">{t("gps.noAddressHint")}</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{t("gps.noAddressHint", menuNombres)}</p>
             </div>
           )}
         </Card>

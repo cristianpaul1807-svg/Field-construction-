@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-"""Las respuestas de ayuda no pueden nombrar el menú a mano.
+"""Un texto que manda a una pantalla no puede escribir su nombre a mano.
 
-Pasó una vez y no se vio hasta mirarlo a propósito: el bot estaba traducido a
-los cuatro idiomas, y aun así en francés mandaba a «TERRAIN → Registre de
-travail» cuando el menú dice CHANTIER → Suivi des travaux, y en italiano a
-«CAMPO» cuando dice CANTIERE. Texto correcto, destino inexistente.
+Se vigilan los textos con flecha —"ve a X → Y"—, que son los que dan
+indicaciones. El nombre que va detrás de la flecha tiene que salir de `nav.*`
+interpolado, no copiado.
 
-Un nombre de menú escrito a mano en una respuesta es una copia que nadie
-actualiza. Por eso las respuestas interpolan {{menuX}} y el componente los
-saca de `nav.*`: la ayuda nombra el menú como se llama, en cada idioma, sin
-que nadie tenga que acordarse.
+Copiarlo parece inofensivo y no lo es: son cuatro copias, una por idioma, que
+nadie vuelve a comparar con el menú. Ya había divergido en varios sitios a la
+vez sin que nada fallara:
 
-Este script falla si alguien vuelve a escribirlo a mano.
+  · el bot de ayuda mandaba en francés a "TERRAIN → Registre de travail"
+    cuando el menú dice CHANTIER → Suivi des travaux
+  · el aviso del GPS decía "Company details" cuando la entrada es Company Data
+  · las nóminas mandaban en castellano a "Check-in" cuando se llama Fichaje
+
+Un texto correcto que manda a una opción inexistente es peor que no tener
+ayuda, porque hace dudar de sí misma a la persona que lo lee.
+
+El título de una pantalla sí puede coincidir con su entrada de menú —de hecho
+debe—, así que sólo se mira lo que va detrás de una flecha.
 """
 import json
 import re
@@ -20,16 +27,14 @@ import sys
 LOCALES = ["es", "en", "fr", "it"]
 BASE = "client/src/i18n/locales"
 
-# Las etiquetas cortas dan falsos positivos por pura coincidencia del idioma
-# ("CRM", "Portal", "Report"), así que sólo se vigilan las que identifican
-# una sección sin ambigüedad.
-MINIMO = 6
-
-# Palabras que son del menú pero también del castellano corriente, y que en
-# estas respuestas aparecen como lo segundo: "Subcontratistas" es además una
-# categoría de línea de presupuesto, y "WhatsApp" sale nombrando la aplicación
-# —"el mensaje de WhatsApp"—, no la pantalla de configurarla.
-FUERA = {"whatsapp", "subcontractors"}
+# Textos con flecha que no mandan a ninguna pantalla nuestra:
+# `budgets.description` describe la jerarquía de un presupuesto (Zona →
+# Categoría → Ítem) y `settings.pasteInWhatsapp` recita el menú de la propia
+# aplicación de WhatsApp, que no debe seguir al nuestro si lo renombramos.
+# También la secuencia de botones dentro de una pantalla: `crear.p2` encadena
+# "Nuevo presupuesto → eliges el cliente → Crear presupuesto", que son tres
+# pulsaciones seguidas ahí dentro y no un camino por el menú.
+PROSA = {"budgets.description", "settings.pasteInWhatsapp", "help.topic.presupuestos.crear.p2"}
 
 MARCADOR = re.compile(r"\{\{[^}]*\}\}")
 
@@ -48,38 +53,36 @@ def main():
     fallos = []
     for lang in LOCALES:
         datos = json.load(open(f"{BASE}/{lang}.json"))
-        todo = plano(datos)
-        etiquetas = {
-            v.strip(): k
-            for k, v in plano(datos.get("nav", {})).items()
-            if isinstance(v, str) and len(v.strip()) >= MINIMO and k not in FUERA
-        }
-        for clave, valor in todo.items():
-            if not clave.startswith("help.") or not isinstance(valor, str):
+
+        for clave, valor in plano(datos).items():
+            if clave in PROSA or clave.startswith("nav."):
                 continue
-            # Los títulos de las secciones del bot son su propio vocabulario:
-            # que "Presupuestos" coincida con el menú no es una referencia.
-            if clave.startswith("help.section."):
+            if not isinstance(valor, str) or "→" not in valor:
                 continue
-            # Sin los marcadores, o {{menuFichaje}} se delataría a sí mismo por
-            # llevar "Fichaje" dentro.
-            desnudo = MARCADOR.sub(" ", valor)
-            for etiqueta, origen in etiquetas.items():
-                if etiqueta in desnudo:
-                    fallos.append(f"{lang}: {clave} escribe «{etiqueta}» a mano — usa {{{{menu…}}}} (nav.{origen})")
+
+            # Lo que abre el camino tiene que ser un marcador.
+            #
+            # No se comprueba si el nombre escrito es el correcto, porque eso
+            # sólo detectaría los que ya están bien: un nombre equivocado no
+            # coincide con ninguna etiqueta y pasaría de largo — que es
+            # exactamente como se coló la avería. Se comprueba lo contrario:
+            # que no haya nombre escrito, venga o no del menú de verdad.
+            camino = valor[: valor.index("→")]
+            if "{{" not in camino:
+                fallos.append(f"{lang}: {clave} — «…{camino.strip()[-40:]} →» sin interpolar")
 
     if fallos:
-        print("las respuestas de ayuda nombran el menú a mano:", file=sys.stderr)
+        print("textos que nombran una pantalla a mano:", file=sys.stderr)
         for f in fallos:
             print(f"  {f}", file=sys.stderr)
         print(
-            "\nInterpola el nombre en vez de copiarlo: el componente pasa los\n"
-            "valores de nav.* como {{menuAjustes}}, {{menuCampo}}, etc.",
+            "\nInterpólalo en vez de copiarlo: useNombresDelMenu() da\n"
+            "{{menuAjustes}}, {{menuCampo}}, {{menuRegistro}}… desde nav.*.",
             file=sys.stderr,
         )
         return 1
 
-    print("help menu ok — ninguna respuesta nombra el menú a mano")
+    print("menu ok — ningún texto nombra una pantalla a mano")
     return 0
 
 

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { LifeBuoy, ChevronDown, ChevronLeft, RotateCcw, ArrowRight, Bot, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 import { ARBOL_DE_AYUDA, seccionSegunRuta, type SeccionDeAyuda, type TemaDeAyuda } from "./arbolDeAyuda";
 
 /** Dónde está la conversación ahora mismo. */
@@ -35,39 +36,9 @@ export function BotDeAyuda() {
 
   const paso = camino[camino.length - 1];
 
-  /**
-   * Los nombres del menú, sacados del propio menú.
-   *
-   * Las respuestas los llevaban escritos a mano y en cada idioma por separado,
-   * y divergieron: en francés la ayuda mandaba a «TERRAIN → Registre de
-   * travail» cuando el menú dice **CHANTIER → Suivi des travaux**, y en
-   * italiano a «CAMPO» cuando dice **CANTIERE**. El texto estaba traducido y
-   * aun así mandaba a sitios que no existen con ese nombre.
-   *
-   * Viniendo de `nav.*`, la ayuda no puede volver a inventarse una etiqueta:
-   * si alguien renombra una sección, la ayuda la renombra con ella.
-   */
-  const menu = useMemo(
-    () => ({
-      menuAjustes: t("nav.settings"),
-      menuEmpresa: t("nav.companyData"),
-      menuCampo: t("nav.field"),
-      menuTecnicos: t("nav.technicians"),
-      menuOrdenes: t("nav.workOrders"),
-      menuRegistro: t("nav.workLog"),
-      menuFichaje: t("nav.checkIn"),
-      menuFinanzas: t("nav.finance"),
-      menuFacturacion: t("nav.invoicing"),
-      menuInformes: t("nav.reports"),
-      menuCrm: t("nav.crm"),
-      menuPagos: t("nav.payments"),
-      menuMargenes: t("nav.margins"),
-      menuTipos: t("nav.serviceTypes"),
-      menuPortal: t("nav.clientPortalShort"),
-      menuProyectos: t("nav.projects"),
-    }),
-    [t]
-  );
+  // Las respuestas dicen «{{menuCampo}} → {{menuRegistro}}» y aquí se
+  // rellenan con el nombre que esa pantalla tiene de verdad en este idioma.
+  const menu = useNombresDelMenu();
 
   // La sección de la pantalla en la que está, para ofrecerla primero. Quien
   // pide ayuda desde Facturación pregunta por facturas.
