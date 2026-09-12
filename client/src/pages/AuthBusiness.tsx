@@ -25,7 +25,7 @@ function formatError(err: unknown, fallback: string): string {
 }
 
 export default function AuthBusiness() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [, setLocation] = useLocation();
   const { session, refreshPersona, signOut } = useAuth();
   const [mode, setMode] = useState<"register" | "login">("register");
@@ -47,9 +47,22 @@ export default function AuthBusiness() {
         }
 
         // 1. Native Supabase Auth Sign Up
+        // El idioma viaja con el alta.
+        //
+        // Este correo lo manda Supabase con su plantilla, y no se puede
+        // interceptar desde aquí: sale en el momento del signUp. Pero la
+        // plantilla sí puede leer los metadatos del usuario, así que se le
+        // guarda el idioma y allí se elige con qué texto saludarle.
+        //
+        // Se prefirió esto a rehacer el registro contra la API de
+        // administración: esta pantalla acumula la detección de "ya
+        // registrado" por dos caminos distintos y la limpieza de la sesión
+        // temporal, y romperla dejaría a cualquiera sin poder darse de alta
+        // para arreglar el idioma de un correo que se manda una vez.
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: { data: { lang: i18n.language.slice(0, 2) } },
         });
 
         if (signUpError) {
