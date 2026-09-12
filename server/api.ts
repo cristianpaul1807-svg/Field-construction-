@@ -493,6 +493,8 @@ async function createInvoiceRecord(
     dueDate?: string | null;
     /** Agreed work, or extra on top of it. Everything defaults to agreed. */
     chargeKind?: "proyecto" | "extra";
+    /** Para avisar al cliente. Sin esto no se manda nada. */
+    aviso?: { baseUrl: string; lang: LangCorreo };
   }
 ): Promise<string> {
   const { taxAmount, breakdown } = await computeInvoiceTax(admin, input.businessId, input.subtotal);
@@ -558,6 +560,19 @@ async function createInvoiceRecord(
     .select("id")
     .single();
   if (error) throw error;
+
+  // El aviso va aquí y no en cada ruta porque una factura se emite por cinco
+  // caminos distintos —a mano, por etapa, por cobro programado— y el día que
+  // alguien añada un sexto, su cliente se enteraría por teléfono.
+  //
+  // Nunca tumba la emisión: la factura ya existe y es lo que importa.
+  if (input.aviso) {
+    try {
+      await avisarDeLaFactura(admin, data.id, input.aviso.baseUrl, input.aviso.lang);
+    } catch (err) {
+      console.error("aviso de factura", err);
+    }
+  }
   return data.id;
 }
 
@@ -4451,6 +4466,130 @@ apiRouter.post(
   })
 );
 
+/** El dinero, escrito como lo escribe el país donde se cobra. */
+function importeEnTexto(valor: number, lang: LangCorreo): string {
+  const locales: Record<LangCorreo, string> = { es: "es-ES", en: "en-CA", fr: "fr-CA", it: "it-IT" };
+  return new Intl.NumberFormat(locales[lang], { style: "currency", currency: "CAD" }).format(valor);
+}
+
+/**
+ * Le manda al cliente el presupuesto, con el PDF dentro.
+ *
+ * Va adjunto y no sólo enlazado: un presupuesto se reenvía a la pareja, se
+ * imprime, se compara con otro. Obligar a entrar en un portal para verlo es
+ * poner una puerta donde no hace falta.
+ */
+async function avisarDelPresupuesto(
+  businessId: string,
+  estimateId: string,
+  baseUrl: string,
+  lang: LangCorreo
+): Promise<ResultadoDeCorreo | { estado: "sin_correo" }> {
+  const admin = getSupabaseAdmin();
+  const [{ data: estimate }, { data: negocio }] = await Promise.all([
+    admin
+      .from("estimates")
+      .select("id, number, total, clients(name, email)")
+      .eq("business_id", businessId)
+      .eq("id", estimateId)
+      .maybeSingle(),
+    admin.from("businesses").select("name, email, logo_url").eq("id", businessId).maybeSingle(),
+  ]);
+
+  const cliente = estimate?.clients as unknown as { name: string; email: string | null } | null;
+  if (!cliente?.email?.trim()) return { estado: "sin_correo" };
+
+  const t = TEXTOS_CORREO[lang];
+  const nombre = negocio?.name ?? "";
+  const portal = `${baseUrl.replace(/^http:\/\//i, "https://").replace(/\/+$/, "")}/portal`;
+  const total = importeEnTexto(Number(estimate?.total ?? 0), lang);
+
+  // Si el PDF no sale, el correo se manda igual con el enlace: enterarse tarde
+  // de que tienes un presupuesto es peor que recibirlo sin adjunto.
+  const pdf = await buildEstimatePdf(businessId, estimateId, lang).catch(() => null);
+
+  const cuerpo = `
+    <p style="margin:0 0 16px">${esc(t.presuIntro(nombre))}</p>
+    <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#777">${esc(t.presuTotal)}</p>
+    <p style="margin:0 0 18px;font-size:26px;font-weight:700">${esc(total)}</p>
+    ${pdf ? `<p style="margin:0 0 20px;color:#555">${esc(t.presuAdjunto)}</p>` : ""}
+    <p style="margin:0 0 18px">
+      <a href="${esc(portal)}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600">${esc(t.presuBoton)}</a>
+    </p>
+    <p style="margin:0;font-size:13px;color:#777">${esc(t.presuValidez(30))}</p>`;
+
+  return enviarCorreo({
+    para: cliente.email.trim(),
+    asunto: t.presuAsunto(nombre),
+    deParteDe: nombre,
+    responderA: negocio?.email ?? null,
+    html: plantilla({ titulo: t.presuTitulo, cuerpo, negocio: nombre, logoUrl: negocio?.logo_url ?? null, pie: t.pie(nombre) }),
+    texto: [t.presuIntro(nombre), "", `${t.presuTotal}: ${total}`, "", portal, "", t.presuValidez(30)].join("\n"),
+    adjuntos: pdf ? [{ nombre: `${estimate?.number ?? documentNumber("estimate", estimateId)}.pdf`, contenido: pdf }] : undefined,
+  });
+}
+
+/**
+ * Le avisa al cliente de que tiene una factura.
+ *
+ * El botón lleva al portal y no directo a Stripe a propósito: la sesión de
+ * pago caduca y el negocio puede no tener el cobro activado todavía. El portal
+ * funciona siempre y ahí dentro está el botón de pagar cuando lo haya.
+ */
+async function avisarDeLaFactura(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  invoiceId: string,
+  baseUrl: string,
+  lang: LangCorreo
+): Promise<ResultadoDeCorreo | { estado: "sin_correo" }> {
+  const { data: factura } = await admin
+    .from("invoices")
+    .select("id, number, amount, due_date, holdback_amount, business_id, clients(name, email)")
+    .eq("id", invoiceId)
+    .maybeSingle();
+
+  const cliente = factura?.clients as unknown as { name: string; email: string | null } | null;
+  if (!factura || !cliente?.email?.trim()) return { estado: "sin_correo" };
+
+  const { data: negocio } = await admin
+    .from("businesses")
+    .select("name, email, logo_url")
+    .eq("id", factura.business_id)
+    .maybeSingle();
+
+  const t = TEXTOS_CORREO[lang];
+  const nombre = negocio?.name ?? "";
+  const numero = factura.number ?? documentNumber("invoice", factura.id);
+  const portal = `${baseUrl.replace(/^http:\/\//i, "https://").replace(/\/+$/, "")}/portal`;
+  const importe = importeEnTexto(Number(factura.amount ?? 0), lang);
+  const vence = factura.due_date
+    ? new Intl.DateTimeFormat({ es: "es-ES", en: "en-CA", fr: "fr-CA", it: "it-IT" }[lang], {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date(`${factura.due_date}T00:00:00`))
+    : null;
+
+  const cuerpo = `
+    <p style="margin:0 0 16px">${esc(t.facturaIntro(nombre))}</p>
+    <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#777">${esc(t.facturaImporte)}</p>
+    <p style="margin:0 0 6px;font-size:26px;font-weight:700">${esc(importe)}</p>
+    ${vence ? `<p style="margin:0 0 18px;color:#555">${esc(t.facturaVence(vence))}</p>` : '<p style="margin:0 0 18px"></p>'}
+    <p style="margin:0 0 18px">
+      <a href="${esc(portal)}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600">${esc(t.facturaBoton)}</a>
+    </p>
+    ${Number(factura.holdback_amount ?? 0) > 0 ? `<p style="margin:0;font-size:13px;color:#777">${esc(t.facturaRetencion)}</p>` : ""}`;
+
+  return enviarCorreo({
+    para: cliente.email.trim(),
+    asunto: t.facturaAsunto(numero, nombre),
+    deParteDe: nombre,
+    responderA: negocio?.email ?? null,
+    html: plantilla({ titulo: t.facturaTitulo(numero), cuerpo, negocio: nombre, logoUrl: negocio?.logo_url ?? null, pie: t.pie(nombre) }),
+    texto: [t.facturaIntro(nombre), "", `${t.facturaImporte}: ${importe}`, vence ?? "", "", portal].join("\n"),
+  });
+}
+
 /**
  * Le manda al cliente su código de acceso al portal.
  *
@@ -6803,6 +6942,10 @@ apiRouter.post(
       subtotal: Number(subtotal),
       description: description ?? null,
       dueDate: dueDate ?? null,
+      aviso: {
+        baseUrl: `${req.protocol}://${req.get("host")}`,
+        lang: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")),
+      },
     });
     res.status(201).json({ id });
   })
@@ -9356,7 +9499,16 @@ apiRouter.post(
       .single();
     if (error) throw error;
 
-    res.status(201).json({ id: message.id, channelId, status: "enviado" });
+    // Mandarlo por el chat deja el presupuesto donde el cliente tiene que
+    // entrar a buscarlo. El correo se lo lleva a donde ya mira.
+    const correo = await avisarDelPresupuesto(
+      req.businessId!,
+      estimate.id,
+      `${req.protocol}://${req.get("host")}`,
+      normalizarLangCorreo(req.body?.lang ?? req.get("accept-language"))
+    ).catch(() => ({ estado: "fallo" as const, motivo: "" }));
+
+    res.status(201).json({ id: message.id, channelId, status: "enviado", correo });
   })
 );
 

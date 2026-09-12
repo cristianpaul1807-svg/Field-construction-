@@ -50,6 +50,8 @@ export async function enviarCorreo(mensaje: {
   /** El negocio, para que el correo salga a su nombre y no al nuestro. */
   deParteDe?: string | null;
   responderA?: string | null;
+  /** El documento, para que no tenga que entrar a ninguna parte a buscarlo. */
+  adjuntos?: { nombre: string; contenido: Buffer }[];
 }): Promise<ResultadoDeCorreo> {
   const clave = process.env.RESEND_API_KEY?.trim();
   if (!clave) return { estado: "sin_configurar" };
@@ -71,6 +73,14 @@ export async function enviarCorreo(mensaje: {
         // tiene que llegar.
         text: mensaje.texto,
         ...(mensaje.responderA ? { reply_to: mensaje.responderA } : {}),
+        ...(mensaje.adjuntos?.length
+          ? {
+              attachments: mensaje.adjuntos.map((a) => ({
+                filename: a.nombre,
+                content: a.contenido.toString("base64"),
+              })),
+            }
+          : {}),
       }),
     });
 

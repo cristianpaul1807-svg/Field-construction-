@@ -31,6 +31,25 @@ interface TextosCorreo {
   codigoBoton: string;
   codigoQueVera: string;
   codigoCaduca: string;
+
+  /** El presupuesto que el contratista acaba de mandar. */
+  presuAsunto: (negocio: string) => string;
+  presuTitulo: string;
+  presuIntro: (negocio: string) => string;
+  presuTotal: string;
+  presuAdjunto: string;
+  presuBoton: string;
+  presuValidez: (dias: number) => string;
+
+  /** La factura recién emitida. */
+  facturaAsunto: (numero: string, negocio: string) => string;
+  facturaTitulo: (numero: string) => string;
+  facturaIntro: (negocio: string) => string;
+  facturaImporte: string;
+  facturaVence: (fecha: string) => string;
+  facturaBoton: string;
+  facturaRetencion: string;
+
   pie: (negocio: string) => string;
   /** El pie de los correos que manda la plataforma, no un negocio. */
   piePlataforma: string;
@@ -55,6 +74,20 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
       "Dentro puedes ver el avance de los trabajos, descargar tus documentos en PDF, aprobar presupuestos y escribirle directamente.",
     codigoCaduca:
       "Guarda este correo. Si pides un código nuevo, este deja de funcionar.",
+    presuAsunto: (n) => `Tu presupuesto de ${n}`,
+    presuTitulo: "Tu presupuesto ya está listo",
+    presuIntro: (n) => `${n} te ha preparado este presupuesto. Léelo con calma y dinos si te encaja.`,
+    presuTotal: "Total",
+    presuAdjunto: "Lo tienes entero en el PDF adjunto, con el desglose y las condiciones.",
+    presuBoton: "Verlo y aceptarlo",
+    presuValidez: (d) => `El precio se mantiene ${d} días.`,
+    facturaAsunto: (num, n) => `Factura ${num} de ${n}`,
+    facturaTitulo: (num) => `Factura ${num}`,
+    facturaIntro: (n) => `${n} te ha emitido esta factura.`,
+    facturaImporte: "A pagar",
+    facturaVence: (f) => `Vence el ${f}.`,
+    facturaBoton: "Pagar ahora",
+    facturaRetencion: "El importe ya lleva descontada la retención que se libera al terminar la obra.",
     pie: (n) => `Este correo te lo envía ${n} a través de su software de gestión.`,
     piePlataforma: "Este correo es automático. No hace falta que respondas.",
   },
@@ -75,6 +108,20 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     codigoQueVera:
       "Inside you can follow the work, download your documents as PDFs, approve estimates and message them directly.",
     codigoCaduca: "Keep this email. If you ask for a new code, this one stops working.",
+    presuAsunto: (n) => `Your estimate from ${n}`,
+    presuTitulo: "Your estimate is ready",
+    presuIntro: (n) => `${n} has put this estimate together for you. Take your time with it and let them know.`,
+    presuTotal: "Total",
+    presuAdjunto: "The full version is attached as a PDF, with the breakdown and the terms.",
+    presuBoton: "View and accept it",
+    presuValidez: (d) => `The price holds for ${d} days.`,
+    facturaAsunto: (num, n) => `Invoice ${num} from ${n}`,
+    facturaTitulo: (num) => `Invoice ${num}`,
+    facturaIntro: (n) => `${n} has issued you this invoice.`,
+    facturaImporte: "Amount due",
+    facturaVence: (f) => `Due ${f}.`,
+    facturaBoton: "Pay now",
+    facturaRetencion: "The amount already has the holdback deducted; it is released when the work is finished.",
     pie: (n) => `This email was sent to you by ${n} through their management software.`,
     piePlataforma: "This is an automatic email. No need to reply.",
   },
@@ -95,6 +142,20 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     codigoQueVera:
       "À l'intérieur, vous suivez les travaux, téléchargez vos documents en PDF, acceptez les soumissions et écrivez directement.",
     codigoCaduca: "Gardez ce courriel. Si vous demandez un nouveau code, celui-ci cesse de fonctionner.",
+    presuAsunto: (n) => `Votre soumission de ${n}`,
+    presuTitulo: "Votre soumission est prête",
+    presuIntro: (n) => `${n} vous a préparé cette soumission. Prenez le temps de la lire et dites-lui ce que vous en pensez.`,
+    presuTotal: "Total",
+    presuAdjunto: "Vous l'avez en entier dans le PDF joint, avec le détail et les conditions.",
+    presuBoton: "La voir et l'accepter",
+    presuValidez: (d) => `Le prix tient ${d} jours.`,
+    facturaAsunto: (num, n) => `Facture ${num} de ${n}`,
+    facturaTitulo: (num) => `Facture ${num}`,
+    facturaIntro: (n) => `${n} vous a émis cette facture.`,
+    facturaImporte: "Montant à payer",
+    facturaVence: (f) => `Échéance le ${f}.`,
+    facturaBoton: "Payer maintenant",
+    facturaRetencion: "Le montant tient déjà compte de la retenue, libérée à la fin des travaux.",
     pie: (n) => `Ce courriel vous est envoyé par ${n} via son logiciel de gestion.`,
     piePlataforma: "Ce courriel est automatique. Inutile d'y répondre.",
   },
@@ -115,6 +176,20 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     codigoQueVera:
       "Dentro puoi seguire i lavori, scaricare i documenti in PDF, accettare preventivi e scrivergli direttamente.",
     codigoCaduca: "Conserva questa email. Se chiedi un nuovo codice, questo smette di funzionare.",
+    presuAsunto: (n) => `Il tuo preventivo di ${n}`,
+    presuTitulo: "Il tuo preventivo è pronto",
+    presuIntro: (n) => `${n} ti ha preparato questo preventivo. Leggilo con calma e facci sapere.`,
+    presuTotal: "Totale",
+    presuAdjunto: "Lo trovi per intero nel PDF allegato, con il dettaglio e le condizioni.",
+    presuBoton: "Vedilo e accettalo",
+    presuValidez: (d) => `Il prezzo resta valido ${d} giorni.`,
+    facturaAsunto: (num, n) => `Fattura ${num} di ${n}`,
+    facturaTitulo: (num) => `Fattura ${num}`,
+    facturaIntro: (n) => `${n} ti ha emesso questa fattura.`,
+    facturaImporte: "Da pagare",
+    facturaVence: (f) => `Scade il ${f}.`,
+    facturaBoton: "Paga ora",
+    facturaRetencion: "L'importo tiene già conto della ritenuta, liberata a fine lavori.",
     pie: (n) => `Questa email ti è inviata da ${n} tramite il suo software di gestione.`,
     piePlataforma: "Questa email è automatica. Non serve rispondere.",
   },
