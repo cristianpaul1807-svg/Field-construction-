@@ -200,6 +200,8 @@ interface Copy {
   scheduleDuration: (hours: string) => string;
   paymentsTitle: string;
   paymentsNote: string;
+  /** Los nombres de las etapas de casa, que el negocio no ha escrito él. */
+  defaultStages: { deposito: string; avance: string; final: string };
   signedBy: string;
   signedOn: string;
   signedTotalNote: (amount: string) => string;
@@ -253,6 +255,7 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N.º TPS",
     qstNumber: "N.º TVQ",
     paymentsTitle: "Forma de pago",
+    defaultStages: { deposito: "Depósito inicial", avance: "Avance de obra", final: "Entrega final" },
     signedBy: "Firmado por",
     signedOn: "Firmado el",
     signedTotalNote: (a) => `Importe aceptado al firmar: ${a}`,
@@ -313,6 +316,7 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "GST no.",
     qstNumber: "QST no.",
     paymentsTitle: "How this is paid",
+    defaultStages: { deposito: "Initial deposit", avance: "Progress payment", final: "Final payment" },
     signedBy: "Signed by",
     signedOn: "Signed on",
     signedTotalNote: (a) => `Amount accepted at signing: ${a}`,
@@ -373,6 +377,7 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "No TPS",
     qstNumber: "No TVQ",
     paymentsTitle: "Modalités de paiement",
+    defaultStages: { deposito: "Acompte initial", avance: "Paiement d'étape", final: "Paiement final" },
     signedBy: "Signé par",
     signedOn: "Signé le",
     signedTotalNote: (a) => `Montant accepté à la signature : ${a}`,
@@ -433,6 +438,7 @@ const COPY: Record<DocLang, Copy> = {
     gstNumber: "N. GST",
     qstNumber: "N. QST",
     paymentsTitle: "Modalità di pagamento",
+    defaultStages: { deposito: "Acconto iniziale", avance: "Pagamento di avanzamento", final: "Saldo finale" },
     signedBy: "Firmato da",
     signedOn: "Firmato il",
     signedTotalNote: (a) => `Importo accettato alla firma: ${a}`,

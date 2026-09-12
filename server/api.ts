@@ -55,6 +55,7 @@ import {
   DEFAULT_PLAN,
   MILESTONE_TRIGGERS,
   TRIGGER_FOR_STATUS,
+  type PlanMilestone,
 } from "./paymentPlans";
 import {
   advanceProject,
@@ -8189,7 +8190,7 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
           : [],
       // Against the tax-inclusive total, because that is the figure the
       // customer will actually be asked to pay at each stage.
-      payments: splitIntoStages(Math.round((subtotal + taxAmount) * 100) / 100, plan),
+      payments: splitIntoStages(Math.round((subtotal + taxAmount) * 100) / 100, plan, docCopy(lang)),
       signature: signature
         ? {
             name: signature.signed_name,
@@ -8211,9 +8212,22 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
  * document they are about to sign will find it. The last stage takes whatever
  * is left instead of its own rounded percentage.
  */
+/**
+ * Reparte el total entre las etapas del plan, y las nombra en el idioma del
+ * documento cuando son las de casa.
+ *
+ * El presupuesto de un contratista de Quebec salía en francés con tres líneas
+ * en castellano —«Depósito inicial», «Avance de obra», «Entrega final»—
+ * porque ese es el relleno con el que nace el plan y casi nadie lo cambia. El
+ * documento lo lee su cliente.
+ *
+ * Una etapa que el negocio haya renombrado no lleva clave y se imprime tal
+ * cual: eso ya es su dato, y los datos no se traducen.
+ */
 function splitIntoStages(
   total: number,
-  plan: { label: string; percent: number }[]
+  plan: PlanMilestone[],
+  copy: ReturnType<typeof docCopy>
 ): { label: string; percent: number; amount: number }[] {
   const totalCents = Math.round(total * 100);
   let assigned = 0;
@@ -8221,7 +8235,11 @@ function splitIntoStages(
     const isLast = index === plan.length - 1;
     const cents = isLast ? totalCents - assigned : Math.round(totalCents * (stage.percent / 100));
     assigned += cents;
-    return { label: stage.label, percent: stage.percent, amount: cents / 100 };
+    return {
+      label: stage.clave ? copy.defaultStages[stage.clave] : stage.label,
+      percent: stage.percent,
+      amount: cents / 100,
+    };
   });
 }
 

@@ -46,6 +46,13 @@ export interface PlanMilestone {
   label: string;
   percent: number;
   trigger: MilestoneTrigger;
+  /**
+   * Sólo las etapas de casa. Su `label` es un castellano de relleno que el
+   * negocio nunca escribió, así que en un documento se traduce al idioma en
+   * que se emite. Una etapa que el negocio haya renombrado no lleva clave y
+   * se imprime tal cual: eso ya es su dato y no se traduce.
+   */
+  clave?: "deposito" | "avance" | "final";
 }
 
 /**
@@ -55,9 +62,9 @@ export interface PlanMilestone {
  * three invoices appear by themselves as the job moves.
  */
 export const DEFAULT_PLAN: PlanMilestone[] = [
-  { position: 1, label: "Depósito inicial", percent: 50, trigger: "al_aceptar" },
-  { position: 2, label: "Avance de obra", percent: 25, trigger: "al_iniciar" },
-  { position: 3, label: "Entrega final", percent: 25, trigger: "al_confirmar" },
+  { position: 1, label: "Depósito inicial", percent: 50, trigger: "al_aceptar", clave: "deposito" },
+  { position: 2, label: "Avance de obra", percent: 25, trigger: "al_iniciar", clave: "avance" },
+  { position: 3, label: "Entrega final", percent: 25, trigger: "al_confirmar", clave: "final" },
 ];
 
 /** Which invoice type a stage bills as. The last one settles the holdback. */
