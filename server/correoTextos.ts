@@ -14,6 +14,14 @@ export function normalizarLangCorreo(bruto: unknown): LangCorreo {
 }
 
 interface TextosCorreo {
+  /** Recuperar la contraseña del panel. */
+  claveAsunto: string;
+  claveTitulo: string;
+  claveIntro: string;
+  claveEtiqueta: string;
+  claveCaduca: string;
+  claveNoFuiYo: string;
+
   /** Código de acceso al portal del cliente. */
   codigoAsunto: (negocio: string) => string;
   codigoTitulo: (negocio: string) => string;
@@ -24,10 +32,18 @@ interface TextosCorreo {
   codigoQueVera: string;
   codigoCaduca: string;
   pie: (negocio: string) => string;
+  /** El pie de los correos que manda la plataforma, no un negocio. */
+  piePlataforma: string;
 }
 
 export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
   es: {
+    claveAsunto: "Cambia tu contraseña",
+    claveTitulo: "Cambia tu contraseña",
+    claveIntro: "Has pedido entrar de nuevo. Escribe este código en la pantalla que tienes abierta y elige una contraseña nueva.",
+    claveEtiqueta: "Tu código",
+    claveCaduca: "El código vale durante una hora.",
+    claveNoFuiYo: "Si no has sido tú, no hace falta que hagas nada: sin este código nadie puede cambiar tu contraseña.",
     codigoAsunto: (n) => `Tu acceso al portal de ${n}`,
     codigoTitulo: (n) => `Ya puedes seguir tu obra con ${n}`,
     codigoIntro: (n) =>
@@ -40,8 +56,15 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     codigoCaduca:
       "Guarda este correo. Si pides un código nuevo, este deja de funcionar.",
     pie: (n) => `Este correo te lo envía ${n} a través de su software de gestión.`,
+    piePlataforma: "Este correo es automático. No hace falta que respondas.",
   },
   en: {
+    claveAsunto: "Change your password",
+    claveTitulo: "Change your password",
+    claveIntro: "You asked to get back in. Type this code on the screen you have open and choose a new password.",
+    claveEtiqueta: "Your code",
+    claveCaduca: "The code is good for one hour.",
+    claveNoFuiYo: "If this wasn't you, there's nothing to do: without this code nobody can change your password.",
     codigoAsunto: (n) => `Your access to ${n}'s portal`,
     codigoTitulo: (n) => `You can now follow your project with ${n}`,
     codigoIntro: (n) =>
@@ -53,8 +76,15 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
       "Inside you can follow the work, download your documents as PDFs, approve estimates and message them directly.",
     codigoCaduca: "Keep this email. If you ask for a new code, this one stops working.",
     pie: (n) => `This email was sent to you by ${n} through their management software.`,
+    piePlataforma: "This is an automatic email. No need to reply.",
   },
   fr: {
+    claveAsunto: "Changez votre mot de passe",
+    claveTitulo: "Changez votre mot de passe",
+    claveIntro: "Vous avez demandé à revenir. Saisissez ce code dans l'écran que vous avez ouvert et choisissez un nouveau mot de passe.",
+    claveEtiqueta: "Votre code",
+    claveCaduca: "Le code est valable une heure.",
+    claveNoFuiYo: "Si ce n'était pas vous, il n'y a rien à faire : sans ce code, personne ne peut changer votre mot de passe.",
     codigoAsunto: (n) => `Votre accès au portail de ${n}`,
     codigoTitulo: (n) => `Vous pouvez maintenant suivre votre chantier avec ${n}`,
     codigoIntro: (n) =>
@@ -66,8 +96,15 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
       "À l'intérieur, vous suivez les travaux, téléchargez vos documents en PDF, acceptez les soumissions et écrivez directement.",
     codigoCaduca: "Gardez ce courriel. Si vous demandez un nouveau code, celui-ci cesse de fonctionner.",
     pie: (n) => `Ce courriel vous est envoyé par ${n} via son logiciel de gestion.`,
+    piePlataforma: "Ce courriel est automatique. Inutile d'y répondre.",
   },
   it: {
+    claveAsunto: "Cambia la tua password",
+    claveTitulo: "Cambia la tua password",
+    claveIntro: "Hai chiesto di rientrare. Scrivi questo codice nella schermata che hai aperta e scegli una nuova password.",
+    claveEtiqueta: "Il tuo codice",
+    claveCaduca: "Il codice vale per un'ora.",
+    claveNoFuiYo: "Se non sei stato tu, non devi fare nulla: senza questo codice nessuno può cambiare la tua password.",
     codigoAsunto: (n) => `Il tuo accesso al portale di ${n}`,
     codigoTitulo: (n) => `Ora puoi seguire il tuo cantiere con ${n}`,
     codigoIntro: (n) =>
@@ -79,5 +116,6 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
       "Dentro puoi seguire i lavori, scaricare i documenti in PDF, accettare preventivi e scrivergli direttamente.",
     codigoCaduca: "Conserva questa email. Se chiedi un nuovo codice, questo smette di funzionare.",
     pie: (n) => `Questa email ti è inviata da ${n} tramite il suo software di gestione.`,
+    piePlataforma: "Questa email è automatica. Non serve rispondere.",
   },
 };

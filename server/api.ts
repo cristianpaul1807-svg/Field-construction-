@@ -3052,6 +3052,93 @@ apiRouter.get(
   })
 );
 
+/**
+ * Cuándo se le mandó a cada correo el último código, para no dejar que nadie
+ * use esta ruta como ametralladora contra un buzón ajeno.
+ *
+ * En memoria a propósito: es una molestia, no una cerradura. Con varias
+ * instancias cada una llevaría su cuenta, y Supabase pone además su propio
+ * intervalo mínimo por usuario, que es el que de verdad frena el abuso.
+ */
+const ultimoEnvioDeClave = new Map<string, number>();
+const ESPERA_ENTRE_CODIGOS = 60_000;
+
+/**
+ * Recuperar la contraseña, en el idioma en que esté puesto el panel.
+ *
+ * Supabase manda su propio correo y lo hace en un inglés fijo: no sabe en qué
+ * idioma está trabajando quien lo pide, porque el idioma vive en el navegador.
+ * Un contratista de Quebec con el panel en francés recibía un correo en
+ * inglés con una errata dentro.
+ *
+ * Aquí se le pide a Supabase que **genere** el código sin enviarlo, y el
+ * correo lo componemos nosotros con el idioma que viene en la petición —que es
+ * justo el que la persona está viendo— y lo manda Resend.
+ *
+ * Si algo de eso falla, se cae hacia atrás al correo de Supabase. Un correo
+ * feo es mucho mejor que alguien que no puede entrar en su propia cuenta.
+ *
+ * Contesta `ok` siempre, exista o no la cuenta: decir «ese correo no está
+ * registrado» es regalar una lista de quién tiene cuenta aquí.
+ */
+apiRouter.post(
+  "/public/auth/password-reset",
+  route(async (req, res) => {
+    const email = String(req.body?.email ?? "").trim().toLowerCase();
+    const lang = normalizarLangCorreo(req.body?.lang);
+    if (!email.includes("@")) {
+      res.status(400).json({ error: "email is required" });
+      return;
+    }
+
+    const ahora = Date.now();
+    const previo = ultimoEnvioDeClave.get(email);
+    if (previo && ahora - previo < ESPERA_ENTRE_CODIGOS) {
+      res.json({ ok: true });
+      return;
+    }
+    ultimoEnvioDeClave.set(email, ahora);
+
+    const admin = getSupabaseAdmin();
+    let enviado = false;
+
+    try {
+      const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email });
+      const codigo = (data as { properties?: { email_otp?: string } } | null)?.properties?.email_otp;
+      if (!error && codigo) {
+        const t = TEXTOS_CORREO[lang];
+        const cuerpo = `
+          <p style="margin:0 0 18px">${esc(t.claveIntro)}</p>
+          <p style="margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#777">${esc(t.claveEtiqueta)}</p>
+          <p style="margin:0 0 18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:30px;font-weight:700;letter-spacing:.14em">${esc(codigo)}</p>
+          <p style="margin:0 0 14px;color:#555">${esc(t.claveCaduca)}</p>
+          <p style="margin:0;font-size:13px;color:#777">${esc(t.claveNoFuiYo)}</p>`;
+        const resultado = await enviarCorreo({
+          para: email,
+          asunto: t.claveAsunto,
+          deParteDe: "Logiciel - Construction",
+          html: plantilla({
+            titulo: t.claveTitulo,
+            cuerpo,
+            negocio: "Logiciel - Construction",
+            pie: t.piePlataforma,
+          }),
+          texto: [t.claveIntro, "", `${t.claveEtiqueta}: ${codigo}`, "", t.claveCaduca, t.claveNoFuiYo].join("\n"),
+        });
+        enviado = resultado.estado === "enviado";
+      }
+    } catch {
+      // Da igual por qué falló: abajo está la red de seguridad.
+    }
+
+    if (!enviado) {
+      await admin.auth.resetPasswordForEmail(email).catch(() => {});
+    }
+
+    res.json({ ok: true });
+  })
+);
+
 // Everything below this line is the business panel — every route resolves
 // its business_id from the caller's own Supabase Auth session (never a
 // hardcoded constant), and every query below runs through req.supabase,

@@ -61,8 +61,23 @@ function esFalloDeCorreo(err: unknown): boolean {
   return texto.includes("sending") && texto.includes("email");
 }
 
+/**
+ * Pide el código de recuperación por nuestra ruta, diciéndole el idioma.
+ *
+ * No devuelve si la cuenta existe —el servidor contesta lo mismo en los dos
+ * casos a propósito—, así que aquí sólo se mira que la petición llegara.
+ */
+async function pedirCodigoDeClave(email: string, lang: string): Promise<void> {
+  const res = await fetch("/api/public/auth/password-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, lang }),
+  });
+  if (!res.ok) throw new Error(`Request failed (${res.status})`);
+}
+
 export default function AuthForgotPassword() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -77,8 +92,10 @@ export default function AuthForgotPassword() {
     setError(null);
     setBusy(true);
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
-      if (resetError) throw resetError;
+      // Por nuestra ruta y no por supabase.auth: así el correo sale en el
+      // idioma que esta pantalla tiene puesto. Supabase manda el suyo en un
+      // inglés fijo porque el idioma vive en el navegador y él no lo ve.
+      await pedirCodigoDeClave(email, i18n.language);
       setSent(true);
     } catch (err) {
       setError(esFalloDeCorreo(err) ? t("auth.emailNotSending") : formatError(err, t("auth.somethingWentWrong")));
@@ -91,8 +108,7 @@ export default function AuthForgotPassword() {
     setError(null);
     setResent(false);
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
-      if (resetError) throw resetError;
+      await pedirCodigoDeClave(email, i18n.language);
       setResent(true);
     } catch (err) {
       setError(esFalloDeCorreo(err) ? t("auth.emailNotSending") : formatError(err, t("auth.couldNotResendCode")));
