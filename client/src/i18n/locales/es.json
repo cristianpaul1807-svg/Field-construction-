@@ -607,7 +607,7 @@
     "emailNotSending": "No pudimos enviarte el código: el correo de la aplicación no está configurado. Avisa a quien la administra — reintentar no va a servir."
   },
   "landing": {
-    "hubName": "Field Construction",
+    "hubName": "Logiciel - Construction",
     "intro": "El centro de operaciones para tu negocio de construcción: presupuestos, proyectos, equipo y clientes en un solo lugar.",
     "tagline": "El sistema todo-en-uno para tu empresa de construcción",
     "subtitle": "Presupuestos, proyectos, equipo, clientes y pagos — en un solo lugar.",
@@ -621,7 +621,8 @@
     "workerDoorTitle": "Trabajador de campo",
     "workerDoorDesc": "Accede con tu código PIN a /campo",
     "clientDoorTitle": "Portal de clientes",
-    "clientDoorDesc": "Revisa el avance de tu proyecto y presupuestos"
+    "clientDoorDesc": "Revisa el avance de tu proyecto y presupuestos",
+    "emailPlaceholder": "empresa@ejemplo.com"
   },
   "settings": {
     "companyTitle": "Datos de la empresa",

@@ -607,7 +607,7 @@
     "emailNotSending": "We couldn't send the code: the app's email isn't set up. Tell whoever administers it — retrying won't help."
   },
   "landing": {
-    "hubName": "Field Construction",
+    "hubName": "Logiciel - Construction",
     "intro": "The operational command center for your construction business — estimates, projects, crew and clients all in one place.",
     "tagline": "The all-in-one system for your construction company",
     "subtitle": "Estimates, projects, crew, clients and payments — all in one place.",
@@ -621,7 +621,8 @@
     "workerDoorTitle": "Field worker",
     "workerDoorDesc": "Access /campo with your PIN code",
     "clientDoorTitle": "Client portal",
-    "clientDoorDesc": "Review your project progress and estimates"
+    "clientDoorDesc": "Review your project progress and estimates",
+    "emailPlaceholder": "company@example.com"
   },
   "settings": {
     "companyTitle": "Company Data",

@@ -31,7 +31,7 @@ async function lookup(address: string): Promise<Coordinates | null> {
     const response = await fetch(url, {
       headers: {
         // Nominatim rejects anonymous traffic, and rightly so.
-        "User-Agent": "field-construction/1.0 (construction management platform)",
+        "User-Agent": "logiciel-construction/1.0 (construction management platform)",
         "Accept-Language": "en",
       },
       signal: AbortSignal.timeout(6000),

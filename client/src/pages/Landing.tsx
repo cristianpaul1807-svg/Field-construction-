@@ -77,7 +77,7 @@ export default function Landing() {
                 <Input
                   id="quick-email"
                   type="email"
-                  placeholder="empresa@ejemplo.com"
+                  placeholder={t("landing.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"

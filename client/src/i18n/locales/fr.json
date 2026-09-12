@@ -607,7 +607,7 @@
     "emailNotSending": "Impossible d'envoyer le code : le courriel de l'application n'est pas configuré. Prévenez la personne qui l'administre — réessayer ne changera rien."
   },
   "landing": {
-    "hubName": "Field Construction",
+    "hubName": "Logiciel - Construction",
     "intro": "Le centre d'opérations pour votre entreprise de construction — soumissions, projets, équipe et clients au même endroit.",
     "tagline": "Le système tout-en-un pour votre entreprise de construction",
     "subtitle": "Soumissions, projets, équipe, clients et paiements — au même endroit.",
@@ -621,7 +621,8 @@
     "workerDoorTitle": "Travailleur de chantier",
     "workerDoorDesc": "Accédez avec votre code PIN à /campo",
     "clientDoorTitle": "Portail client",
-    "clientDoorDesc": "Consultez l'avancement de vos projets et soumissions"
+    "clientDoorDesc": "Consultez l'avancement de vos projets et soumissions",
+    "emailPlaceholder": "entreprise@exemple.com"
   },
   "settings": {
     "companyTitle": "Données de l'entreprise",

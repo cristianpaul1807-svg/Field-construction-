@@ -113,7 +113,7 @@ export async function provisionWebhook(db: Db, baseUrl: string): Promise<Provisi
 
   const created = (await stripe.v2.core.eventDestinations.create(
     {
-      name: "Field Construction",
+      name: "Logiciel - Construction",
       description: "Pagos de facturas y estado de las cuentas conectadas",
       type: "webhook_endpoint",
       event_payload: "snapshot",

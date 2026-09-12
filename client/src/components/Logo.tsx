@@ -17,7 +17,7 @@ export function Logo({ size = 48, className }: { size?: number; className?: stri
   return (
     <img
       src="/icons/apple-touch-icon.png"
-      alt="Field Construction"
+      alt="Logiciel - Construction"
       width={size}
       height={size}
       // El dibujo viene sobre blanco, así que en modo oscuro necesita el borde
