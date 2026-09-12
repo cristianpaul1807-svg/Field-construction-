@@ -132,11 +132,30 @@ python3 scripts/check-help-menu.py
 | Presupuestos | `/budgets`, `/materials` |
 | Obras y trabajo | `/projects`, `/work-orders`, `/scheduling`, `/check-in`, `/work-log`, `/technicians`, `/gps-routing` |
 | Dinero | `/invoicing`, `/payroll`, `/reports`, `/cost-tracking`, `/settings/payments` |
+| Qué pasa cuando… | *(ninguna: no es una pantalla)* |
 | Algo no funciona | *(ninguna)* |
 
 La coincidencia es por prefijo y **gana la más larga**: `/settings/payments`
 pertenece a Dinero, mientras que el resto de `/settings/…` no pertenece a
 ninguna sección y abre el menú completo.
+
+---
+
+## La sección «Qué pasa cuando…»
+
+Las demás secciones explican **dónde se hace algo**. Esta explica **qué
+desencadena**: que mandar un presupuesto envía un correo con el PDF, que
+aceptarlo crea la obra y emite el depósito, que el primer fichaje mueve la
+obra a *en progreso*, que cerrar la última orden la pasa a *confirmada*.
+
+No cuelga de ninguna ruta a propósito: no es una pantalla, es el
+funcionamiento. Y va antes de «algo no funciona» porque **la mitad de lo que
+parece una avería es el sistema haciendo algo solo que nadie esperaba** — una
+factura que aparece sin que nadie la creara es el plan de pagos, no un fallo.
+
+Cuando añadas una automatización, añade aquí su tema. Una consecuencia que el
+producto provoca y no explica en ninguna parte es una llamada de teléfono
+esperando a ocurrir.
 
 ---
 

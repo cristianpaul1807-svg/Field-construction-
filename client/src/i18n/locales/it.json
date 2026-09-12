@@ -1498,7 +1498,8 @@
       "presupuestos": "Preventivi",
       "trabajo": "Cantieri e lavoro",
       "dinero": "Denaro",
-      "problemas": "Qualcosa non funziona"
+      "problemas": "Qualcosa non funziona",
+      "queOcurre": "Cosa succede quando…"
     },
     "topic": {
       "empezar": {
@@ -1553,6 +1554,13 @@
           "p1": "In {{menuCrm}}, le schede in alto sono le tabelle dell'azienda: cantieri, lavori e fatturazione.",
           "p2": "Ogni tabella si ordina e si filtra, e puoi nascondere le colonne che non ti servono.",
           "p3": "Il pulsante di download te la dà in Excel o in PDF. Il PDF esce con il tuo logo e i dati aziendali in intestazione."
+        },
+        "quePuedeHacerElCliente": {
+          "title": "Cosa può fare il cliente da solo",
+          "p1": "Accettare e firmare un preventivo dal telefono, approvare o rifiutare un ordine di variazione, e pagare la fattura con carta. Tutto senza chiamarti.",
+          "p2": "Può anche scaricare i documenti in PDF, vedere le foto che hai marcato come visibili, e scriverti in chat.",
+          "p3": "E può dire che il lavoro è finito. Questo non chiude il cantiere né ti toglie l'ultima parola: ti segnala solo che per lui va bene.",
+          "nota": "Può accettare solo un preventivo che hai davvero inviato. Una bozza che stai ancora sistemando non può essere accettata alle tue spalle."
         }
       },
       "presupuestos": {
@@ -1611,6 +1619,13 @@
           "title": "Vedere le ore di un cantiere",
           "p1": "{{menuCampo}} → {{menuRegistro}}: una riga per numero di lavoro, con le ore, quante persone c'erano e quante ore sono da approvare.",
           "p2": "Se vuoi le timbrature singole di tutti, sono in {{menuCampo}} → {{menuFichaje}}."
+        },
+        "queVeElTrabajador": {
+          "title": "Cosa vede il mio operaio sul telefono",
+          "p1": "Tre cose e basta: cosa gli tocca oggi e questa settimana, il pulsante per timbrare, e i messaggi con te. In cantiere non si naviga tra i menu.",
+          "p2": "Vede gli ordini di lavoro assegnati a lui, con cosa fare e dove.",
+          "p3": "Non vede preventivi, prezzi, margini, altri clienti, né il lavoro dei colleghi.",
+          "nota": "Non deve installare nulla. Apre l'indirizzo sul telefono, scrive il suo codice, e può aggiungerla alla schermata home come un'app."
         }
       },
       "dinero": {
@@ -1666,6 +1681,51 @@
           "title": "Al mio cliente non arriva nessuna email",
           "p1": "L'invio di email non è ancora configurato su questa installazione.",
           "p2": "Nel frattempo, quello che devi fargli arrivare passa dal suo portale e dalla chat. Entrambi funzionano."
+        }
+      },
+      "queOcurre": {
+        "mandoPresupuesto": {
+          "title": "…mando un preventivo",
+          "p1": "Succedono tre cose insieme, da sole: il preventivo viene segnato come inviato, compare nel portale del cliente, e gli arriva un'email con il PDF allegato.",
+          "p2": "L'email esce a tuo nome, con il tuo logo, e se il cliente risponde scrive a te, non a noi.",
+          "p3": "Da quel momento il cliente può accettarlo e firmarlo dal telefono.",
+          "nota": "Se il cliente non ha un'email salvata, il preventivo va comunque nel suo portale. Manca solo l'email. Aggiungi la sua email nel CRM e la riceverà la prossima volta."
+        },
+        "aceptaPresupuesto": {
+          "title": "…il cliente accetta il preventivo",
+          "p1": "Diventa un cantiere. Non devi crearlo: nasce con il suo cliente, le date e il piano di pagamento già dentro.",
+          "p2": "Se il tuo piano di pagamento ha una fase che si fattura all'accettazione — di solito l'acconto — quella fattura viene emessa da sola in quel momento.",
+          "p3": "E dato che viene emessa una fattura, al cliente arriva l'email della fattura. Una sola azione sua, tutto il resto da solo."
+        },
+        "emitoFactura": {
+          "title": "…emetto una fattura",
+          "p1": "Riceve il suo numero progressivo, compare nel portale del cliente, e gli arriva un'email con l'importo, la scadenza e un pulsante per pagare.",
+          "p2": "Non importa come è stata emessa: a mano, perché il cantiere è arrivato a una fase di pagamento, o perché avevi un incasso programmato. L'avviso parte sempre.",
+          "p3": "Il pulsante porta al suo portale, non direttamente alla pagina di pagamento. Così funziona anche se il link è scaduto o non hai ancora attivato l'incasso con carta.",
+          "nota": "Se l'email fallisce, la fattura esiste lo stesso. Non si perde mai una fattura perché un'email non è partita."
+        },
+        "pagaCliente": {
+          "title": "…il cliente paga",
+          "p1": "Il denaro va dritto sul tuo conto, non passa da noi. La fattura si segna come pagata da sola, senza che tu la tocchi.",
+          "p2": "Se era la fattura finale del cantiere, il cantiere passa a completato. Si chiude da solo perché non resta nulla in sospeso."
+        },
+        "doyCodigoCliente": {
+          "title": "…do un codice a un cliente",
+          "p1": "Il codice compare a schermo per copiarlo, e gli arriva anche per email con il link al suo portale e una spiegazione di cosa troverà dentro.",
+          "p2": "Con quel codice entra senza creare un account e senza ricordare password.",
+          "p3": "Il codice precedente smette di valere in quel momento. C'è un solo codice valido alla volta per cliente.",
+          "nota": "È anche così che togli l'accesso a qualcuno: generi un altro codice e non glielo dai."
+        },
+        "fichaTrabajador": {
+          "title": "…un operaio timbra",
+          "p1": "Vengono salvati l'ora e il punto esatto in cui si trovava. È questo che rende la timbratura una prova e non un appunto.",
+          "p2": "Se era la prima timbratura di quel cantiere, il cantiere passa da solo da pianificazione a in corso. C'è gente che lavora, quindi lo dice.",
+          "p3": "Le sue ore si sommano al numero di quel lavoro, e le vedi nel registro. Se ha timbrato senza scegliere il lavoro, le ore esistono ma non si caricano su nessun numero."
+        },
+        "cierroOrden": {
+          "title": "…chiudo un ordine di lavoro",
+          "p1": "Se era l'ultimo rimasto aperto in quel cantiere, il cantiere passa da solo a confermato: il lavoro è fatto.",
+          "p2": "E se il tuo piano di pagamento fattura qualcosa alla conferma, quella fattura viene emessa da sola e il cliente riceve la sua email."
         }
       }
     }

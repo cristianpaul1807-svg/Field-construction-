@@ -1498,7 +1498,8 @@
       "presupuestos": "Soumissions",
       "trabajo": "Chantiers et travaux",
       "dinero": "Argent",
-      "problemas": "Quelque chose ne marche pas"
+      "problemas": "Quelque chose ne marche pas",
+      "queOcurre": "Que se passe-t-il quand…"
     },
     "topic": {
       "empezar": {
@@ -1553,6 +1554,13 @@
           "p1": "Dans {{menuCrm}}, les onglets du haut sont les tableaux de l'entreprise : chantiers, travaux et facturation.",
           "p2": "Chaque tableau se trie et se filtre, et vous pouvez masquer les colonnes qui ne vous intéressent pas.",
           "p3": "Le bouton de téléchargement vous la donne en Excel ou en PDF. Le PDF sort avec votre logo et vos coordonnées en en-tête."
+        },
+        "quePuedeHacerElCliente": {
+          "title": "Ce que mon client peut faire tout seul",
+          "p1": "Accepter et signer une soumission depuis son téléphone, approuver ou refuser un ordre de changement, et payer sa facture par carte. Tout ça sans vous appeler.",
+          "p2": "Il peut aussi télécharger ses documents en PDF, voir les photos que vous avez marquées comme visibles, et vous écrire par la messagerie.",
+          "p3": "Et il peut dire que les travaux sont terminés. Cela ne ferme pas le chantier et ne vous retire pas le dernier mot : ça vous signale simplement qu'il est satisfait.",
+          "nota": "Il ne peut accepter qu'une soumission que vous avez réellement envoyée. Un brouillon en cours ne peut pas être accepté dans votre dos."
         }
       },
       "presupuestos": {
@@ -1611,6 +1619,13 @@
           "title": "Voir les heures d'un chantier",
           "p1": "{{menuCampo}} → {{menuRegistro}} : une ligne par numéro de travail, avec les heures, combien de personnes y étaient et combien d'heures restent à approuver.",
           "p2": "Si vous voulez les pointages individuels de tout le monde, c'est dans {{menuCampo}} → {{menuFichaje}}."
+        },
+        "queVeElTrabajador": {
+          "title": "Ce que mon travailleur voit sur son téléphone",
+          "p1": "Trois choses et rien d'autre : ce qu'il a aujourd'hui et cette semaine, le bouton de pointage, et les messages avec vous. Sur un chantier, on ne navigue pas dans des menus.",
+          "p2": "Il voit les bons de travail qui lui sont attribués, avec ce qu'il faut faire et où.",
+          "p3": "Il ne voit ni soumissions, ni prix, ni marges, ni autres clients, ni le travail de ses collègues.",
+          "nota": "Il n'a rien à installer. Il ouvre l'adresse sur son téléphone, saisit son code, et peut l'ajouter à l'écran d'accueil comme une application."
         }
       },
       "dinero": {
@@ -1666,6 +1681,51 @@
           "title": "Mon client ne reçoit aucun courriel",
           "p1": "L'envoi de courriels n'est pas encore configuré sur cette installation.",
           "p2": "En attendant, ce que vous devez lui transmettre passe par son portail et par la messagerie. Les deux fonctionnent."
+        }
+      },
+      "queOcurre": {
+        "mandoPresupuesto": {
+          "title": "…j'envoie une soumission",
+          "p1": "Trois choses se passent en même temps, toutes seules : la soumission est marquée comme envoyée, elle apparaît dans le portail de votre client, et il reçoit un courriel avec le PDF joint.",
+          "p2": "Le courriel part à votre nom, avec votre logo, et si votre client répond, c'est à vous qu'il écrit, pas à nous.",
+          "p3": "À partir de là, votre client peut l'accepter et la signer depuis son téléphone.",
+          "nota": "Si votre client n'a pas de courriel enregistré, la soumission va quand même à son portail. Seul le courriel manque. Ajoutez son courriel dans le CRM et il l'aura la prochaine fois."
+        },
+        "aceptaPresupuesto": {
+          "title": "…le client accepte la soumission",
+          "p1": "Elle devient un chantier. Vous n'avez rien à créer : il naît avec son client, ses dates et son plan de paiement déjà dedans.",
+          "p2": "Si votre plan de paiement a une étape facturée à l'acceptation — l'acompte, en général — cette facture est émise toute seule à ce moment-là.",
+          "p3": "Et comme une facture est émise, votre client reçoit le courriel de facture. Une seule action de sa part, tout le reste tout seul."
+        },
+        "emitoFactura": {
+          "title": "…j'émets une facture",
+          "p1": "Elle reçoit son numéro séquentiel, apparaît dans le portail de votre client, et il reçoit un courriel avec le montant, l'échéance et un bouton pour payer.",
+          "p2": "Peu importe comment elle a été émise : à la main, parce que le chantier a atteint une étape de paiement, ou parce que vous aviez un prélèvement programmé. L'avis part toujours.",
+          "p3": "Le bouton mène à son portail, pas directement à la page de paiement. Ainsi ça marche même si le lien a expiré ou si vous n'avez pas encore activé le paiement par carte.",
+          "nota": "Si le courriel échoue, la facture existe quand même. On ne perd jamais une facture parce qu'un courriel n'est pas parti."
+        },
+        "pagaCliente": {
+          "title": "…le client paie",
+          "p1": "L'argent va directement sur votre compte bancaire, il ne passe pas par nous. La facture se marque payée toute seule, sans que vous y touchiez.",
+          "p2": "Si c'était la facture finale du chantier, le chantier passe à terminé. Il se ferme tout seul parce qu'il ne reste rien en suspens."
+        },
+        "doyCodigoCliente": {
+          "title": "…je donne un code à un client",
+          "p1": "Le code apparaît à l'écran pour que vous le copiiez, et il lui parvient aussi par courriel avec le lien vers son portail et une explication de ce qu'il y trouvera.",
+          "p2": "Avec ce code, il entre sans créer de compte et sans retenir de mot de passe.",
+          "p3": "Le code précédent cesse de fonctionner à cet instant. Il n'y a qu'un seul code valable à la fois par client.",
+          "nota": "C'est aussi ainsi qu'on retire l'accès à quelqu'un : générez un autre code et ne le lui donnez pas."
+        },
+        "fichaTrabajador": {
+          "title": "…un travailleur pointe",
+          "p1": "L'heure et l'endroit exact où il se trouvait sont enregistrés. C'est ce qui fait du pointage une preuve et non une note.",
+          "p2": "Si c'était le premier pointage sur ce chantier, le chantier passe tout seul de planification à en cours. Il y a des gens qui travaillent, alors il le dit.",
+          "p3": "Ses heures s'ajoutent au numéro de ce travail, et vous les voyez dans le registre. S'il a pointé sans choisir de travail, les heures existent mais ne sont imputées à aucun numéro."
+        },
+        "cierroOrden": {
+          "title": "…je ferme un bon de travail",
+          "p1": "Si c'était le dernier encore ouvert sur ce chantier, le chantier passe tout seul à confirmé : le travail est fait.",
+          "p2": "Et si votre plan de paiement facture quelque chose à la confirmation, cette facture est émise toute seule et votre client reçoit son courriel."
         }
       }
     }

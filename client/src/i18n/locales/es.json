@@ -1498,7 +1498,8 @@
       "presupuestos": "Presupuestos",
       "trabajo": "Obras y trabajo",
       "dinero": "Dinero",
-      "problemas": "Algo no funciona"
+      "problemas": "Algo no funciona",
+      "queOcurre": "Qué pasa cuando…"
     },
     "topic": {
       "empezar": {
@@ -1553,6 +1554,13 @@
           "p1": "En {{menuCrm}}, las pestañas de arriba son las tablas del negocio: obras, trabajos y facturación.",
           "p2": "Cada tabla se ordena y se filtra, y puedes esconder las columnas que no te interesen.",
           "p3": "El botón de descarga te la da en Excel o en PDF. El PDF sale con tu logo y tus datos de empresa en la cabecera."
+        },
+        "quePuedeHacerElCliente": {
+          "title": "Qué puede hacer mi cliente él solo",
+          "p1": "Aceptar y firmar un presupuesto desde el móvil, aprobar o rechazar una orden de cambio, y pagar su factura con tarjeta. Todo eso sin llamarte.",
+          "p2": "También puede descargar sus documentos en PDF, ver las fotos que tú hayas marcado como visibles, y escribirte por el chat.",
+          "p3": "Y puede decir que el trabajo está terminado. Eso no cierra la obra ni te quita la última palabra: sólo te avisa de que él lo da por bueno.",
+          "nota": "Sólo puede aceptar un presupuesto que tú hayas mandado. Un borrador que estás afinando no se te puede aceptar por detrás."
         }
       },
       "presupuestos": {
@@ -1611,6 +1619,13 @@
           "title": "Ver las horas de una obra",
           "p1": "{{menuCampo}} → {{menuRegistro}}: una línea por número de trabajo, con las horas, cuánta gente estuvo y cuántas horas están sin aprobar.",
           "p2": "Si lo que quieres son las horas sueltas de todo el mundo, eso está en {{menuCampo}} → {{menuFichaje}}."
+        },
+        "queVeElTrabajador": {
+          "title": "Qué ve mi trabajador en su móvil",
+          "p1": "Tres cosas y nada más: qué le toca hoy y esta semana, el botón de fichar, y los mensajes contigo. En una obra no se navega por menús.",
+          "p2": "Ve sus órdenes de trabajo asignadas, con lo que hay que hacer y dónde.",
+          "p3": "No ve presupuestos, ni precios, ni márgenes, ni otros clientes, ni el trabajo de sus compañeros.",
+          "nota": "No necesita instalar nada. Abre la dirección en el móvil, escribe su código, y puede añadirla a la pantalla de inicio como si fuera una aplicación."
         }
       },
       "dinero": {
@@ -1666,6 +1681,51 @@
           "title": "No le llega ningún correo a mi cliente",
           "p1": "El envío de correos todavía no está configurado en esta instalación.",
           "p2": "Mientras tanto, lo que le tengas que hacer llegar va por su portal y por el chat. Las dos cosas funcionan."
+        }
+      },
+      "queOcurre": {
+        "mandoPresupuesto": {
+          "title": "…mando un presupuesto",
+          "p1": "Pasan tres cosas a la vez, solas: el presupuesto queda marcado como enviado, aparece en el portal de tu cliente, y le llega un correo con el PDF adjunto.",
+          "p2": "El correo sale a tu nombre, con tu logo, y si tu cliente responde te contesta a ti, no a nosotros.",
+          "p3": "A partir de ese momento tu cliente ya puede aceptarlo y firmarlo desde el móvil.",
+          "nota": "Si tu cliente no tiene correo guardado, el presupuesto se manda igual a su portal. Lo único que no sale es el correo. Ponle el correo en su ficha del CRM y lo tendrá la próxima vez."
+        },
+        "aceptaPresupuesto": {
+          "title": "…el cliente acepta el presupuesto",
+          "p1": "Se convierte en obra. No tienes que crearla: nace con su cliente, sus fechas y su plan de pagos ya dentro.",
+          "p2": "Si tu plan de pagos tiene una etapa que se cobra al aceptar —normalmente el depósito—, esa factura se emite sola en ese momento.",
+          "p3": "Y como se emite una factura, a tu cliente le llega el correo de la factura. Una sola acción suya, todo lo demás solo."
+        },
+        "emitoFactura": {
+          "title": "…emito una factura",
+          "p1": "Se le pone su número correlativo, aparece en el portal de tu cliente, y le llega un correo con el importe, la fecha de vencimiento y un botón para pagar.",
+          "p2": "Da igual cómo se haya emitido: a mano, porque la obra llegó a una etapa de pago, o porque tenías un cobro programado. El aviso sale siempre.",
+          "p3": "El botón lleva a su portal, no directamente a la pasarela. Así funciona aunque el enlace de pago haya caducado o todavía no tengas el cobro activado.",
+          "nota": "Si el correo falla, la factura existe igual. Nunca se pierde una factura porque un correo no saliera."
+        },
+        "pagaCliente": {
+          "title": "…el cliente paga",
+          "p1": "El dinero va directo a tu cuenta bancaria, no pasa por nosotros. La factura se marca como pagada sola, sin que tengas que tocarla.",
+          "p2": "Si era la factura final de la obra, la obra pasa a completada. Se cierra sola porque ya no queda nada pendiente."
+        },
+        "doyCodigoCliente": {
+          "title": "…le doy un código a un cliente",
+          "p1": "El código aparece en pantalla para que lo copies, y además le llega por correo con el enlace a su portal y una explicación de qué va a encontrar dentro.",
+          "p2": "Con ese código entra sin crear ninguna cuenta y sin recordar ninguna contraseña.",
+          "p3": "El código anterior deja de valer en ese mismo momento. Sólo hay uno válido a la vez por cliente.",
+          "nota": "Eso es también cómo le quitas el acceso a alguien: generas otro código y no se lo das."
+        },
+        "fichaTrabajador": {
+          "title": "…un trabajador ficha",
+          "p1": "Se guardan la hora y el sitio exacto donde estaba. Eso es lo que convierte el fichaje en una prueba y no en una anotación.",
+          "p2": "Si era el primer fichaje de esa obra, la obra pasa sola de planificación a en progreso. Ya hay gente trabajando, así que lo dice.",
+          "p3": "Sus horas se suman al número de ese trabajo, y las ves en Control de trabajo. Si fichó sin elegir trabajo, las horas existen pero no se le cargan a ningún número."
+        },
+        "cierroOrden": {
+          "title": "…cierro una orden de trabajo",
+          "p1": "Si era la última que quedaba abierta en esa obra, la obra pasa sola a confirmada: el trabajo está hecho.",
+          "p2": "Y si tu plan de pagos cobra algo al confirmar, esa factura se emite sola y tu cliente recibe su correo."
         }
       }
     }

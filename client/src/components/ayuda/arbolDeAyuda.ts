@@ -50,6 +50,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "nuevoContacto", parrafos: 2, ruta: "/crm" },
       { id: "enlacePublico", parrafos: 3, nota: true, ruta: "/settings/company" },
       { id: "queVeElCliente", parrafos: 3, ruta: "/client-portal" },
+      { id: "quePuedeHacerElCliente", parrafos: 3, nota: true, ruta: "/client-portal" },
       { id: "exportar", parrafos: 3, ruta: "/crm" },
     ],
   },
@@ -71,6 +72,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "numeroDeObra", parrafos: 3, nota: true, ruta: "/work-log" },
       { id: "tiposDeTrabajo", parrafos: 2, ruta: "/settings/service-types" },
       { id: "comoFicha", parrafos: 3, nota: true },
+      { id: "queVeElTrabajador", parrafos: 3, nota: true },
       { id: "verHoras", parrafos: 2, ruta: "/work-log" },
     ],
   },
@@ -83,6 +85,21 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "numeroFactura", parrafos: 2 },
       { id: "cobrar", parrafos: 3, nota: true, ruta: "/settings/payments" },
       { id: "contable", parrafos: 2, ruta: "/reports" },
+    ],
+  },
+  {
+    // Sin rutas: no es una pantalla, es entender qué desencadena cada cosa.
+    // Va antes de "algo no funciona" porque la mitad de lo que parece una
+    // avería es en realidad algo que el sistema hizo solo y nadie esperaba.
+    id: "queOcurre",
+    temas: [
+      { id: "mandoPresupuesto", parrafos: 3, nota: true },
+      { id: "aceptaPresupuesto", parrafos: 3 },
+      { id: "emitoFactura", parrafos: 3, nota: true },
+      { id: "pagaCliente", parrafos: 2 },
+      { id: "doyCodigoCliente", parrafos: 3, nota: true },
+      { id: "fichaTrabajador", parrafos: 3 },
+      { id: "cierroOrden", parrafos: 2 },
     ],
   },
   {

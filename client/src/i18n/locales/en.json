@@ -1498,7 +1498,8 @@
       "presupuestos": "Estimates",
       "trabajo": "Projects and work",
       "dinero": "Money",
-      "problemas": "Something isn't working"
+      "problemas": "Something isn't working",
+      "queOcurre": "What happens when…"
     },
     "topic": {
       "empezar": {
@@ -1553,6 +1554,13 @@
           "p1": "In {{menuCrm}}, the tabs across the top are your business tables: projects, jobs and billing.",
           "p2": "Each table sorts and filters, and you can hide the columns you don't care about.",
           "p3": "The download button gives it to you as Excel or PDF. The PDF comes out with your logo and company details in the header."
+        },
+        "quePuedeHacerElCliente": {
+          "title": "What my client can do on their own",
+          "p1": "Accept and sign an estimate from their phone, approve or reject a change order, and pay their invoice by card. All of it without calling you.",
+          "p2": "They can also download their documents as PDFs, see the photos you marked as visible, and message you in the chat.",
+          "p3": "And they can say the work is finished. That doesn't close the project or take the last word away from you: it just tells you they're satisfied.",
+          "nota": "They can only accept an estimate you've actually sent. A draft you're still tuning can't be accepted behind your back."
         }
       },
       "presupuestos": {
@@ -1611,6 +1619,13 @@
           "title": "See the hours on a project",
           "p1": "{{menuCampo}} → {{menuRegistro}}: one line per job number, with the hours, how many people were on it, and how many hours are still unapproved.",
           "p2": "If what you want is everyone's individual entries, that's in {{menuCampo}} → {{menuFichaje}}."
+        },
+        "queVeElTrabajador": {
+          "title": "What my worker sees on their phone",
+          "p1": "Three things and nothing else: what's on for today and this week, the clock-in button, and messages with you. On a job site nobody browses menus.",
+          "p2": "They see the work orders assigned to them, with what needs doing and where.",
+          "p3": "They don't see estimates, prices, margins, other clients, or their colleagues' work.",
+          "nota": "They don't need to install anything. They open the address on their phone, type their code, and can add it to the home screen like an app."
         }
       },
       "dinero": {
@@ -1666,6 +1681,51 @@
           "title": "My client isn't getting any email",
           "p1": "Email sending isn't configured yet on this installation.",
           "p2": "In the meantime, anything you need to get to them goes through their portal and the chat. Both work."
+        }
+      },
+      "queOcurre": {
+        "mandoPresupuesto": {
+          "title": "…I send an estimate",
+          "p1": "Three things happen at once, by themselves: the estimate is marked as sent, it shows up in your client's portal, and they get an email with the PDF attached.",
+          "p2": "The email goes out in your name, with your logo, and if your client replies it comes to you, not to us.",
+          "p3": "From that moment your client can accept it and sign it from their phone.",
+          "nota": "If your client has no email on file, the estimate still goes to their portal. The only thing missing is the email. Add their email in the CRM and they'll get it next time."
+        },
+        "aceptaPresupuesto": {
+          "title": "…the client accepts the estimate",
+          "p1": "It turns into a project. You don't have to create it: it's born with its client, its dates and its payment plan already in place.",
+          "p2": "If your payment plan has a stage billed on acceptance — usually the deposit — that invoice is issued by itself right then.",
+          "p3": "And because an invoice is issued, your client gets the invoice email. One action on their side, everything else by itself."
+        },
+        "emitoFactura": {
+          "title": "…I issue an invoice",
+          "p1": "It gets its running number, shows up in your client's portal, and they get an email with the amount, the due date and a button to pay.",
+          "p2": "It doesn't matter how it was issued: by hand, because the project reached a payment stage, or because you had a scheduled charge. The notice always goes out.",
+          "p3": "The button takes them to their portal, not straight to the payment page. That way it works even if the payment link has expired or you haven't turned on card payments yet.",
+          "nota": "If the email fails, the invoice still exists. An invoice is never lost because an email didn't go out."
+        },
+        "pagaCliente": {
+          "title": "…the client pays",
+          "p1": "The money goes straight to your bank account, it doesn't pass through us. The invoice marks itself as paid, without you touching it.",
+          "p2": "If it was the project's final invoice, the project moves to completed. It closes by itself because nothing is left outstanding."
+        },
+        "doyCodigoCliente": {
+          "title": "…I give a client a code",
+          "p1": "The code appears on screen for you to copy, and it also reaches them by email with the link to their portal and an explanation of what they'll find inside.",
+          "p2": "With that code they get in without creating an account and without remembering a password.",
+          "p3": "The previous code stops working right then. There's only one valid code per client at a time.",
+          "nota": "That's also how you cut off someone's access: generate another code and don't give it to them."
+        },
+        "fichaTrabajador": {
+          "title": "…a worker clocks in",
+          "p1": "The time and the exact place they were standing are saved. That's what turns the entry into proof rather than a note.",
+          "p2": "If it was the first entry on that project, the project moves by itself from planning to in progress. People are working now, so it says so.",
+          "p3": "Their hours are added to that job's number, and you see them in the work log. If they clocked in without picking a job, the hours exist but aren't charged to any number."
+        },
+        "cierroOrden": {
+          "title": "…I close a work order",
+          "p1": "If it was the last one open on that project, the project moves by itself to confirmed: the work is done.",
+          "p2": "And if your payment plan bills something on confirmation, that invoice is issued by itself and your client gets their email."
         }
       }
     }
