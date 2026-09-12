@@ -104,6 +104,13 @@ export default function ProjectDetailPage() {
   const [editing, setEditing] = useState(false);
   const [status, setStatus] = useState<ProjectStatus>("planificacion");
   const [progress, setProgress] = useState(0);
+  // Se podían cambiar el estado y el avance, y nada más. Un nombre mal escrito
+  // o una fecha que se mueve —que en obra se mueve siempre— obligaban a crear
+  // la obra otra vez y perder lo que ya colgaba de ella.
+  const [nombre, setNombre] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [inicio, setInicio] = useState("");
+  const [fin, setFin] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
@@ -153,6 +160,10 @@ export default function ProjectDetailPage() {
     if (!project) return;
     setStatus(project.status);
     setProgress(project.progressPercent);
+    setNombre(project.name ?? "");
+    setTipo(project.type ?? "");
+    setInicio(project.startDate ?? "");
+    setFin(project.endDate ?? "");
   }, [project]);
 
   const downloadEstimate = async () => {
@@ -175,7 +186,14 @@ export default function ProjectDetailPage() {
       const res = await apiFetch(`/api/projects/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, progressPercent: progress }),
+        body: JSON.stringify({
+          status,
+          progressPercent: progress,
+          name: nombre.trim(),
+          type: tipo.trim() || null,
+          startDate: inicio || null,
+          endDate: fin || null,
+        }),
       });
       if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("projects.saveError")));
       setEditing(false);
@@ -563,6 +581,29 @@ export default function ProjectDetailPage() {
             <DialogDescription>{t("projects.editProgressHint")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="obra-nombre">{t("common.name")}</Label>
+              <Input id="obra-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="obra-tipo">{t("projects.type")}</Label>
+              <Input
+                id="obra-tipo"
+                value={tipo}
+                onChange={(e) => setTipo(e.target.value)}
+                placeholder={t("projects.typePlaceholder")}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="obra-inicio">{t("projects.startDate")}</Label>
+                <Input id="obra-inicio" type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="obra-fin">{t("projects.endDate")}</Label>
+                <Input id="obra-fin" type="date" value={fin} onChange={(e) => setFin(e.target.value)} />
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label>{t("common.status")}</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>

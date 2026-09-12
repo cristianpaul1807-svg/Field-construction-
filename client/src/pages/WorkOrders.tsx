@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, workOrderStatusTone, priorityTone } from "@/components/StatusBadge";
-import { Plus, Trash2, CalendarClock } from "lucide-react";
+import { Plus, Trash2, CalendarClock, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -200,6 +200,100 @@ interface WorkOrder {
  * era borrarlas y volver a escribirlas. Y la fecha es justo lo que hace que
  * una orden aparezca donde el trabajador la va a ver.
  */
+/**
+ * Corregir una orden ya creada.
+ *
+ * Se podía cambiar el estado y ponerle fecha, y nada más. Un título mal
+ * escrito —y se escriben desde el móvil, en obra— obligaba a borrar la orden y
+ * hacerla otra vez, con lo que se perdía su número y los fichajes colgados de
+ * él. El servidor ya aceptaba estos campos; lo que faltaba era el formulario.
+ */
+function EditarOrden({ order, onSaved }: { order: WorkOrder; onSaved: () => void }) {
+  const { t } = useTranslation();
+  const [abierto, setAbierto] = useState(false);
+  const [titulo, setTitulo] = useState(order.title);
+  const [descripcion, setDescripcion] = useState(order.description ?? "");
+  const [prioridad, setPrioridad] = useState(order.priority);
+  const [guardando, setGuardando] = useState(false);
+  const [fallo, setFallo] = useState<string | null>(null);
+
+  const guardar = async () => {
+    if (!titulo.trim()) return;
+    setGuardando(true);
+    setFallo(null);
+    try {
+      const res = await apiFetch(`/api/work-orders/${order.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: titulo.trim(), description: descripcion.trim() || null, priority: prioridad }),
+      });
+      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
+      setAbierto(false);
+      onSaved();
+    } catch (err) {
+      setFallo(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={abierto}
+      onOpenChange={(v) => {
+        setAbierto(v);
+        // Al reabrir tiene que enseñar lo que hay guardado, no lo que se
+        // estaba escribiendo cuando se cerró sin guardar.
+        if (v) {
+          setTitulo(order.title);
+          setDescripcion(order.description ?? "");
+          setPrioridad(order.priority);
+          setFallo(null);
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <button
+          aria-label={t("common.edit")}
+          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+        >
+          <Pencil size={14} strokeWidth={1.75} />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>{t("workOrders.editOrder")}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor={`t-${order.id}`}>{t("workOrders.title")}</Label>
+            <Input id={`t-${order.id}`} value={titulo} onChange={(e) => setTitulo(e.target.value)} autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`d-${order.id}`}>{t("common.description")}</Label>
+            <Input id={`d-${order.id}`} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("workOrders.priority")}</Label>
+            <Select value={prioridad} onValueChange={(v) => setPrioridad(v as WorkOrder["priority"])}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(["baja", "media", "alta"] as const).map((x) => (
+                  <SelectItem key={x} value={x}>{t(`workOrders.priorities.${x}`)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {fallo && (
+            <div className="rounded-lg border border-border bg-status-error-bg/40 p-3 text-sm text-status-error-fg">{fallo}</div>
+          )}
+          <Button className="w-full" onClick={guardar} disabled={guardando || !titulo.trim()}>
+            {guardando ? <Spinner className="size-4" /> : t("common.save")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ScheduleDialog({ order, onSaved }: { order: WorkOrder; onSaved: () => void }) {
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -405,6 +499,7 @@ export default function WorkOrders() {
                   <StatusBadge tone={workOrderStatusTone[order.status]}>{t(`workOrders.statuses.${order.status}`)}</StatusBadge>
                   {/* Lo ya terminado no se programa: ponerle fecha a mañana a
                       algo que está hecho no significa nada. */}
+                  <EditarOrden order={order} onSaved={reload} />
                   {order.status !== "completada" && <ScheduleDialog order={order} onSaved={reload} />}
                   <Select
                     value={order.status}

@@ -805,8 +805,8 @@
     "zone": "Zona",
     "item": "Ítem",
     "viewPdf": "Ver PDF",
-    "editProgress": "Editar estado y avance",
-    "editProgressHint": "El avance y el estado se muestran al cliente en su portal.",
+    "editProgress": "Editar la obra",
+    "editProgressHint": "Cambia los datos de la obra, su estado y cuánto lleva avanzado. El cliente ve el avance en su portal.",
     "saveError": "No se pudo guardar el proyecto",
     "sendUpdate": "Enviar actualización",
     "viewLocation": "Ver ubicación",
@@ -864,7 +864,8 @@
     },
     "spentOfContract": "Gastado: {{spent}}",
     "contractValue": "Valor del contrato",
-    "clientPays": "Lo que paga el cliente"
+    "clientPays": "Lo que paga el cliente",
+    "type": "Tipo de obra"
   },
   "clientDetail": {
     "title": "Ficha del cliente",
@@ -964,7 +965,8 @@
     "clearSchedule": "Quitar la fecha",
     "scheduleError": "No se pudo guardar la fecha",
     "scheduleHint": "Con fecha, la orden sale en la agenda y {{name}} la ve al fichar ese día.",
-    "scheduleHintUnassigned": "Con fecha, la orden sale en la agenda. Asígnala a alguien para que además la vea al fichar."
+    "scheduleHintUnassigned": "Con fecha, la orden sale en la agenda. Asígnala a alguien para que además la vea al fichar.",
+    "editOrder": "Editar la orden"
   },
   "scheduling": {
     "title": "Agenda",

@@ -805,8 +805,8 @@
     "zone": "Zona",
     "item": "Voce",
     "viewPdf": "Vedi PDF",
-    "editProgress": "Modifica stato e avanzamento",
-    "editProgressHint": "Avanzamento e stato sono mostrati al cliente nel suo portale.",
+    "editProgress": "Modifica il cantiere",
+    "editProgressHint": "Cambia i dati del cantiere, il suo stato e quanto è avanzato. Il cliente vede l'avanzamento nel suo portale.",
     "saveError": "Impossibile salvare il progetto",
     "sendUpdate": "Invia aggiornamento",
     "viewLocation": "Vedi posizione",
@@ -864,7 +864,8 @@
     },
     "spentOfContract": "Speso: {{spent}}",
     "contractValue": "Valore del contratto",
-    "clientPays": "Quanto paga il cliente"
+    "clientPays": "Quanto paga il cliente",
+    "type": "Tipo di cantiere"
   },
   "clientDetail": {
     "title": "Scheda cliente",
@@ -964,7 +965,8 @@
     "clearSchedule": "Togli la data",
     "scheduleError": "Non è stato possibile salvare la data",
     "scheduleHint": "Con una data, l'ordine compare in agenda e {{name}} lo vede timbrando quel giorno.",
-    "scheduleHintUnassigned": "Con una data, l'ordine compare in agenda. Assegnalo a qualcuno perché lo veda anche timbrando."
+    "scheduleHintUnassigned": "Con una data, l'ordine compare in agenda. Assegnalo a qualcuno perché lo veda anche timbrando.",
+    "editOrder": "Modifica l'ordine di lavoro"
   },
   "scheduling": {
     "title": "Calendario",

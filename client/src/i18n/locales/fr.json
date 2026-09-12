@@ -805,8 +805,8 @@
     "zone": "Zone",
     "item": "Poste",
     "viewPdf": "Voir le PDF",
-    "editProgress": "Modifier le statut et l'avancement",
-    "editProgressHint": "L'avancement et le statut sont affichés au client dans son portail.",
+    "editProgress": "Modifier le chantier",
+    "editProgressHint": "Modifiez les informations du chantier, son statut et son avancement. Le client voit l'avancement dans son portail.",
     "saveError": "Impossible d'enregistrer le projet",
     "sendUpdate": "Envoyer une mise à jour",
     "viewLocation": "Voir l'emplacement",
@@ -864,7 +864,8 @@
     },
     "spentOfContract": "Dépensé : {{spent}}",
     "contractValue": "Valeur du contrat",
-    "clientPays": "Ce que le client paie"
+    "clientPays": "Ce que le client paie",
+    "type": "Type de chantier"
   },
   "clientDetail": {
     "title": "Fiche client",
@@ -964,7 +965,8 @@
     "clearSchedule": "Retirer la date",
     "scheduleError": "La date n'a pas pu être enregistrée",
     "scheduleHint": "Avec une date, l'ordre apparaît à l'agenda et {{name}} le voit en pointant ce jour-là.",
-    "scheduleHintUnassigned": "Avec une date, l'ordre apparaît à l'agenda. Assignez-le à quelqu'un pour qu'il le voie aussi en pointant."
+    "scheduleHintUnassigned": "Avec une date, l'ordre apparaît à l'agenda. Assignez-le à quelqu'un pour qu'il le voie aussi en pointant.",
+    "editOrder": "Modifier le bon de travail"
   },
   "scheduling": {
     "title": "Calendrier",

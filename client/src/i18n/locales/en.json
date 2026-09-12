@@ -805,8 +805,8 @@
     "zone": "Zone",
     "item": "Item",
     "viewPdf": "View PDF",
-    "editProgress": "Edit status and progress",
-    "editProgressHint": "Progress and status are shown to the client in their portal.",
+    "editProgress": "Edit the project",
+    "editProgressHint": "Change the project's details, its status and how far along it is. The client sees the progress in their portal.",
     "saveError": "Could not save the project",
     "sendUpdate": "Send update",
     "viewLocation": "View location",
@@ -864,7 +864,8 @@
     },
     "spentOfContract": "Spent: {{spent}}",
     "contractValue": "Contract value",
-    "clientPays": "What the client pays"
+    "clientPays": "What the client pays",
+    "type": "Project type"
   },
   "clientDetail": {
     "title": "Client record",
@@ -964,7 +965,8 @@
     "clearSchedule": "Remove the date",
     "scheduleError": "The date could not be saved",
     "scheduleHint": "With a date, the order shows on the calendar and {{name}} sees it when clocking in that day.",
-    "scheduleHintUnassigned": "With a date, the order shows on the calendar. Assign it to someone so they also see it when clocking in."
+    "scheduleHintUnassigned": "With a date, the order shows on the calendar. Assign it to someone so they also see it when clocking in.",
+    "editOrder": "Edit the work order"
   },
   "scheduling": {
     "title": "Scheduling",
