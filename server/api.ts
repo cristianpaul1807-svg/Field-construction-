@@ -5,6 +5,14 @@ import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
 import { ensureBucket } from "./storageBuckets";
 import { getStripe, getStripeWebhookSecrets, StripeNotConfiguredError } from "./stripe";
 import {
+  completarAutorizacion as completarAutorizacionQuickBooks,
+  desconectar as desconectarQuickBooks,
+  estado as estadoDeQuickBooks,
+  estaConfigurado as quickbooksConfigurado,
+  refrescarNombreDeEmpresa,
+  urlDeAutorizacion as urlDeAutorizacionQuickBooks,
+} from "./quickbooks";
+import {
   flowCopy,
   flowMessageContent,
   normalizeFlowLang,
@@ -949,6 +957,8 @@ apiRouter.get(
       stripeSecretKeyConfigured: Boolean(process.env.STRIPE_SECRET_KEY),
       stripeWebhookSecretConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       resendApiKeyConfigured: Boolean(process.env.RESEND_API_KEY),
+      quickbooksConfigured: quickbooksConfigurado(),
+      quickbooksEnvironment: process.env.QUICKBOOKS_ENVIRONMENT?.trim() === "production" ? "production" : "sandbox",
     };
 
     // The project ref is the subdomain, which is already public (the browser
@@ -3366,6 +3376,44 @@ apiRouter.post(
 // hardcoded constant), and every query below runs through req.supabase,
 // a client carrying that same session, so Postgres RLS is what actually
 // enforces one business never sees another's rows.
+// La vuelta de la autorización de QuickBooks.
+//
+// Va arriba de la puerta por obligación, no por descuido: Intuit redirige el
+// **navegador** del contratista a esta dirección, y ese salto no lleva ninguna
+// cabecera de sesión. Lo que dice de qué negocio venía es el `state`, que se
+// guardó en la base al empezar, se usa una sola vez y caduca a los diez
+// minutos.
+//
+// Contesta con una redirección y no con JSON: al otro lado hay una persona
+// mirando una pestaña, no un programa.
+apiRouter.get(
+  "/quickbooks/callback",
+  route(async (req, res) => {
+    const code = String(req.query.code ?? "");
+    const state = String(req.query.state ?? "");
+    const realmId = String(req.query.realmId ?? "");
+
+    // Si el contratista le da a "cancelar" en la pantalla de Intuit, vuelve
+    // aquí sin código. No es un error: es que cambió de idea.
+    if (!code || !state || !realmId) {
+      res.redirect("/settings/quickbooks?quickbooks=cancelado");
+      return;
+    }
+
+    try {
+      const admin = getSupabaseAdmin();
+      const { businessId } = await completarAutorizacionQuickBooks(admin, { code, state, realmId });
+      // El nombre de la empresa es un adorno de la pantalla; que falle no
+      // puede tirar abajo una conexión que ya está hecha.
+      await refrescarNombreDeEmpresa(admin, businessId).catch(() => null);
+      res.redirect("/settings/quickbooks?quickbooks=conectado");
+    } catch (err) {
+      console.error("quickbooks callback", err);
+      res.redirect("/settings/quickbooks?quickbooks=fallo");
+    }
+  })
+);
+
 apiRouter.use(requireBusinessAuth);
 
 // ---------- Materials & Costs ----------
@@ -9701,6 +9749,36 @@ apiRouter.post(
       return;
     }
     res.json({ ok: true, status: "pagado" });
+  })
+);
+
+// ---------- QuickBooks ----------
+// Conectar, ver cómo está y desconectar. Lo que se manda a QuickBooks vive
+// aparte: esto es sólo la llave.
+
+apiRouter.get(
+  "/quickbooks/status",
+  route(async (req, res) => {
+    res.json(await estadoDeQuickBooks(getSupabaseAdmin(), req.businessId!));
+  })
+);
+
+apiRouter.post(
+  "/quickbooks/connect",
+  route(async (req, res) => {
+    // La dirección se devuelve en vez de redirigir aquí mismo: esta llamada
+    // sale de una pantalla del panel con su cabecera de sesión, y una
+    // redirección desde ahí la seguiría el fetch, no el navegador.
+    const url = await urlDeAutorizacionQuickBooks(getSupabaseAdmin(), req.businessId!);
+    res.json({ url });
+  })
+);
+
+apiRouter.post(
+  "/quickbooks/disconnect",
+  route(async (req, res) => {
+    await desconectarQuickBooks(getSupabaseAdmin(), req.businessId!);
+    res.json({ ok: true });
   })
 );
 

@@ -94,7 +94,8 @@
     "workLog": "Suivi des travaux",
     "clientPortalShort": "Portail",
     "serviceTypes": "Types de travaux",
-    "timeOff": "Congés et absences"
+    "timeOff": "Congés et absences",
+    "quickbooks": "QuickBooks"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1420,7 +1421,9 @@
     "agreement_already_signed": "Cette entente est déjà signée.",
     "agreement_not_sendable": "Cette entente n'est pas en attente de signature.",
     "time_off_backwards": "La date de fin précède la date de début.",
-    "holdback_out_of_range": "La retenue doit être entre 0 et 20 %. Si vous vouliez celle du Québec, inscrivez 10."
+    "holdback_out_of_range": "La retenue doit être entre 0 et 20 %. Si vous vouliez celle du Québec, inscrivez 10.",
+    "quickbooks_not_configured": "La connexion à QuickBooks n'est pas activée sur ce serveur.",
+    "quickbooks_not_connected": "Cette entreprise n'a pas encore connecté son QuickBooks."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1896,5 +1899,24 @@
     "dayOff": "Vous ne travaillez pas aujourd'hui",
     "rangeOff": "Du {{from}} au {{to}}",
     "yourUpcoming": "Vos prochains jours de congé"
+  },
+  "quickbooks": {
+    "title": "QuickBooks",
+    "description": "Connectez votre comptabilité pour que vos factures et vos clients arrivent tout seuls, sans passer par un fichier.",
+    "connectTitle": "Connecter votre QuickBooks",
+    "connectBody": "Vous êtes redirigé vers Intuit pour vous connecter avec votre compte et choisir l'entreprise que vous autorisez. Nous ne voyons jamais votre mot de passe.",
+    "connect": "Se connecter à QuickBooks",
+    "connectNote": "Vous pouvez vous déconnecter quand vous voulez, et la déconnexion n'efface rien de ce qui a déjà été envoyé.",
+    "connected": "Connecté",
+    "connectedOn": "Connecté le {{date}}",
+    "unnamedCompany": "Votre entreprise QuickBooks",
+    "disconnect": "Déconnecter",
+    "disconnectConfirm": "Déconnecter QuickBooks ? Ce qui a déjà été envoyé y reste ; seuls les nouveaux éléments cessent d'être envoyés.",
+    "justConnected": "C'est fait, vous êtes connecté.",
+    "cancelled": "Rien n'a été connecté. Vous pouvez réessayer quand vous voulez.",
+    "failed": "Nous n'avons pas pu terminer la connexion. Réessayez ; si ça continue, écrivez-nous.",
+    "notConfiguredTitle": "Pas encore disponible",
+    "notConfiguredBody": "La connexion à QuickBooks n'est pas encore activée sur ce serveur. Dès qu'elle le sera, le bouton apparaîtra ici.",
+    "sandboxWarning": "Vous êtes connecté à une entreprise de test. Ce qui est envoyé n'apparaîtra pas dans votre vraie comptabilité."
   }
 }

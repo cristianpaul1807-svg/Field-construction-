@@ -94,7 +94,8 @@
     "workLog": "Work log",
     "clientPortalShort": "Portal",
     "serviceTypes": "Job types",
-    "timeOff": "Time off"
+    "timeOff": "Time off",
+    "quickbooks": "QuickBooks"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1420,7 +1421,9 @@
     "agreement_already_signed": "This agreement is already signed.",
     "agreement_not_sendable": "This agreement isn't waiting to be signed.",
     "time_off_backwards": "The end date is before the start date.",
-    "holdback_out_of_range": "The holdback must be between 0 and 20 %. If you meant Quebec's, enter 10."
+    "holdback_out_of_range": "The holdback must be between 0 and 20 %. If you meant Quebec's, enter 10.",
+    "quickbooks_not_configured": "The QuickBooks connection isn't switched on for this server.",
+    "quickbooks_not_connected": "This business hasn't connected its QuickBooks yet."
   },
   "workLog": {
     "title": "Work log",
@@ -1896,5 +1899,24 @@
     "dayOff": "You're not working today",
     "rangeOff": "From {{from}} to {{to}}",
     "yourUpcoming": "Your upcoming days off"
+  },
+  "quickbooks": {
+    "title": "QuickBooks",
+    "description": "Connect your books so your invoices and customers arrive on their own, without going through a file.",
+    "connectTitle": "Connect your QuickBooks",
+    "connectBody": "It takes you to Intuit to sign in with your account and choose which company you're authorising. We never see your password.",
+    "connect": "Connect to QuickBooks",
+    "connectNote": "You can disconnect whenever you like, and disconnecting deletes nothing that's already been sent.",
+    "connected": "Connected",
+    "connectedOn": "Connected on {{date}}",
+    "unnamedCompany": "Your QuickBooks company",
+    "disconnect": "Disconnect",
+    "disconnectConfirm": "Disconnect QuickBooks? What's already been sent stays there; only new things stop being sent.",
+    "justConnected": "Done — you're connected.",
+    "cancelled": "Nothing was connected. You can try again whenever you like.",
+    "failed": "We couldn't finish the connection. Try again; if it keeps failing, get in touch.",
+    "notConfiguredTitle": "Not available yet",
+    "notConfiguredBody": "The QuickBooks connection isn't switched on for this server yet. As soon as it is, the button will appear here.",
+    "sandboxWarning": "You're connected to a test company. Anything sent won't show up in your real books."
   }
 }

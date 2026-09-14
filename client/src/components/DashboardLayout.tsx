@@ -31,6 +31,7 @@ import {
   Smartphone,
   Home,
   FolderKanban,
+  BookOpen,
   HardHat,
   Palmtree,
   Settings,
@@ -155,6 +156,9 @@ const navSections: NavSection[] = [
       // letra es la que acaba dentro de cada número de obra.
       { id: "service-types", labelKey: "nav.serviceTypes", Icon: Tags, path: "/settings/service-types" },
       { id: "payments", labelKey: "nav.payments", Icon: Wallet, path: "/settings/payments" },
+      // Detrás de Pagos porque son las dos cuentas de fuera que se conectan,
+      // aunque una sea por dónde entra el dinero y la otra a dónde van los libros.
+      { id: "quickbooks", labelKey: "nav.quickbooks", Icon: BookOpen, path: "/settings/quickbooks" },
       { id: "margins-rules", labelKey: "nav.margins", Icon: Percent, path: "/settings/margins" },
       { id: "users-roles", labelKey: "nav.users", Icon: UserCog, path: "/settings/users" },
       { id: "whatsapp-connection", labelKey: "nav.whatsapp", Icon: Smartphone, path: "/settings/whatsapp" },

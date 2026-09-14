@@ -18,7 +18,12 @@ API = pathlib.Path(__file__).resolve().parent.parent / "server" / "api.ts"
 # Routes above the gate that legitimately have no middleware: the health probe
 # and the two credential exchanges, which are how a worker or a code-entry
 # client gets a token in the first place.
-PUBLIC_BY_DESIGN = {"/health", "/worker-auth/login", "/client-auth/login"}
+# ...and the QuickBooks callback: Intuit redirects the contractor's BROWSER
+# here after they authorise, and that jump carries no session header at all.
+# What proves which business it belongs to is the single-use `state` row, not
+# a credential. Registering it below the gate would make every connection fail
+# with a 401 at the last step.
+PUBLIC_BY_DESIGN = {"/health", "/worker-auth/login", "/client-auth/login", "/quickbooks/callback"}
 
 # Prefixes that mean "not the business panel".
 NON_PANEL = ("/public/", "/client-portal/", "/client/", "/worker/", "/c/")

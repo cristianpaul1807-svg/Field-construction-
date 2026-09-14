@@ -94,7 +94,8 @@
     "workLog": "Control de trabajo",
     "clientPortalShort": "Portal",
     "serviceTypes": "Tipos de trabajo",
-    "timeOff": "Vacaciones y ausencias"
+    "timeOff": "Vacaciones y ausencias",
+    "quickbooks": "QuickBooks"
   },
   "dashboard": {
     "title": "Panel",
@@ -1420,7 +1421,9 @@
     "agreement_already_signed": "Este acuerdo ya está firmado.",
     "agreement_not_sendable": "Este acuerdo no está pendiente de firma.",
     "time_off_backwards": "La fecha de fin es anterior a la de inicio.",
-    "holdback_out_of_range": "La retención va entre 0 y 20 %. Si querías aplicar la de Quebec, pon 10."
+    "holdback_out_of_range": "La retención va entre 0 y 20 %. Si querías aplicar la de Quebec, pon 10.",
+    "quickbooks_not_configured": "La conexión con QuickBooks no está activada en el servidor.",
+    "quickbooks_not_connected": "Este negocio todavía no ha conectado su QuickBooks."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1896,5 +1899,24 @@
     "dayOff": "Hoy no trabajas",
     "rangeOff": "Del {{from}} al {{to}}",
     "yourUpcoming": "Tus próximos días libres"
+  },
+  "quickbooks": {
+    "title": "QuickBooks",
+    "description": "Conecta tu contabilidad para que tus facturas y tus clientes lleguen solos, sin pasar por un archivo.",
+    "connectTitle": "Conectar tu QuickBooks",
+    "connectBody": "Te lleva a Intuit para que entres con tu cuenta y elijas qué empresa autorizas. Nosotros nunca vemos tu contraseña.",
+    "connect": "Conectar con QuickBooks",
+    "connectNote": "Puedes desconectarlo cuando quieras, y desconectarlo no borra nada de lo que ya se haya mandado.",
+    "connected": "Conectado",
+    "connectedOn": "Conectado el {{date}}",
+    "unnamedCompany": "Tu empresa de QuickBooks",
+    "disconnect": "Desconectar",
+    "disconnectConfirm": "¿Desconectar QuickBooks? Lo que ya se mandó se queda allí; sólo dejará de mandarse lo nuevo.",
+    "justConnected": "Listo, ya está conectado.",
+    "cancelled": "No se conectó nada. Puedes volver a intentarlo cuando quieras.",
+    "failed": "No pudimos completar la conexión. Vuelve a intentarlo; si sigue fallando, escríbenos.",
+    "notConfiguredTitle": "Todavía no está disponible",
+    "notConfiguredBody": "La conexión con QuickBooks aún no está activada en este servidor. En cuanto lo esté, este botón aparecerá aquí.",
+    "sandboxWarning": "Estás conectado a una empresa de pruebas. Lo que se mande no aparecerá en tu contabilidad de verdad."
   }
 }

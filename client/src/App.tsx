@@ -42,6 +42,7 @@ import Reports from "@/pages/Reports";
 import SettingsCompany from "@/pages/SettingsCompany";
 import SettingsServiceTypes from "@/pages/SettingsServiceTypes";
 import SettingsPayments from "@/pages/SettingsPayments";
+import SettingsQuickBooks from "@/pages/SettingsQuickBooks";
 import SettingsMargins from "@/pages/SettingsMargins";
 import SettingsUsers from "@/pages/SettingsUsers";
 import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
@@ -83,6 +84,7 @@ function BusinessPanel() {
         <Route path={"/settings/company"} component={SettingsCompany} />
         <Route path={"/settings/service-types"} component={SettingsServiceTypes} />
         <Route path={"/settings/payments"} component={SettingsPayments} />
+        <Route path={"/settings/quickbooks"} component={SettingsQuickBooks} />
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
         <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
