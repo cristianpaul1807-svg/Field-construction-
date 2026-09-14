@@ -203,6 +203,89 @@ function NotaDeCreditoDialog({ invoice, onDone }: { invoice: Invoice; onDone: ()
   );
 }
 
+/**
+ * Lo que se puede hacer con una factura.
+ *
+ * Uno solo para las dos formas de verla —la ficha del móvil y la fila del
+ * escritorio—. Estaban duplicados y era cuestión de tiempo que alguien añadiera
+ * un botón en un sitio y no en el otro.
+ */
+function AccionesDeFactura({
+  invoice,
+  onDone,
+  pdfBusyId,
+  linkBusyId,
+  copiedId,
+  onDownload,
+  onCancel,
+  onCopyLink,
+}: {
+  invoice: Invoice;
+  onDone: () => void;
+  pdfBusyId: string | null;
+  linkBusyId: string | null;
+  copiedId: string | null;
+  onDownload: (id: string) => void;
+  onCancel: (id: string) => void;
+  onCopyLink: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  const viva = invoice.status !== "pagado" && invoice.status !== "cancelado";
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
+      <Button
+        size="sm"
+        variant="outline"
+        className="gap-1.5 min-h-11 lg:min-h-0"
+        onClick={() => onDownload(invoice.id)}
+        disabled={pdfBusyId === invoice.id}
+      >
+        {pdfBusyId === invoice.id ? <Spinner className="size-3.5" /> : <Download size={13} strokeWidth={1.75} />}
+        {t("invoicing.downloadPdf")}
+      </Button>
+
+      {viva && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1.5 min-h-11 lg:min-h-0"
+          onClick={() => onCopyLink(invoice.id)}
+          disabled={linkBusyId === invoice.id}
+        >
+          {linkBusyId === invoice.id ? (
+            <Spinner className="size-3.5" />
+          ) : copiedId === invoice.id ? (
+            <Check size={13} />
+          ) : (
+            <Copy size={13} />
+          )}
+          {copiedId === invoice.id ? t("invoicing.copied") : t("invoicing.copyPaymentLink")}
+        </Button>
+      )}
+
+      {viva && <CobroManualDialog invoice={invoice} onDone={onDone} />}
+
+      {/* La nota de crédito sí sale sobre una factura pagada: es justo el caso
+          en que anularla ya no es una opción. */}
+      {invoice.status !== "cancelado" && invoice.creditedAmount < invoice.amount && (
+        <NotaDeCreditoDialog invoice={invoice} onDone={onDone} />
+      )}
+
+      {viva && (
+        <button
+          aria-label={t("invoicing.cancel")}
+          title={t("invoicing.cancel")}
+          className="p-1.5 min-h-11 lg:min-h-0 rounded-md text-muted-foreground hover:text-status-error-fg hover:bg-secondary transition-colors"
+          onClick={() => onCancel(invoice.id)}
+        >
+          <Ban size={14} strokeWidth={1.75} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 /** Los medios que se pueden apuntar a mano. La tarjeta la escribe Stripe, no el panel. */
 const MEDIOS_A_MANO = ["transferencia", "efectivo", "cheque", "otro"] as const;
 
@@ -529,7 +612,7 @@ export default function Invoicing() {
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">{linkError}</div>
       )}
 
-      <Card className="p-6 overflow-x-auto">
+      <Card className="p-4 sm:p-6">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
             <Spinner className="size-4" /> {t("common.loading")}
@@ -541,7 +624,77 @@ export default function Invoicing() {
           </div>
         )}
 
+        {/* Por debajo de lg, una ficha por factura.
+            La tabla mide 1255 px por los botones de cada fila, y en un iPhone
+            de 390 se salían 900: "Marquer payée" quedaba fuera de la pantalla y
+            había que arrastrar de lado para encontrarlo. Con guantes, de pie y
+            con prisa, eso es un botón que no existe. */}
         {!loading && !error && (
+          <div className="lg:hidden divide-y divide-border">
+            {visibles.map((invoice) => (
+              <div key={invoice.id} className="py-4 first:pt-0 last:pb-0 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Codigo code={invoice.number} />
+                    <p className="text-foreground font-medium truncate mt-1">
+                      {invoice.clientName ?? invoice.projectName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {invoice.description ?? "-"} · {t(`invoicing.type.${invoice.type}`)}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-foreground font-semibold">{formatCurrency(invoice.amount)}</p>
+                    <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>
+                      {t(`invoicing.status.${invoice.status}`)}
+                    </StatusBadge>
+                  </div>
+                </div>
+
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                  {invoice.holdbackAmount > 0 && (
+                    <p>{t("invoicing.holdbackWithheld", { amount: formatCurrency(invoice.holdbackAmount) })}</p>
+                  )}
+                  {invoice.holdbackReleased > 0 && (
+                    <p className="text-status-success-fg">
+                      {t("invoicing.holdbackReleased", { amount: formatCurrency(invoice.holdbackReleased) })}
+                    </p>
+                  )}
+                  {invoice.creditedAmount > 0 && (
+                    <p className="text-status-warning-fg">
+                      {t("creditNotes.credited", { amount: formatCurrency(invoice.creditedAmount) })}
+                    </p>
+                  )}
+                  {invoice.status === "pagado" && invoice.paymentMethod && (
+                    <p>
+                      {t(`invoicing.method.${invoice.paymentMethod}`)}
+                      {invoice.paymentReference && ` · ${invoice.paymentReference}`}
+                    </p>
+                  )}
+                </div>
+
+                <EstadoQuickBooks invoice={invoice} onRetried={reload} />
+
+                <AccionesDeFactura
+                  invoice={invoice}
+                  onDone={reload}
+                  pdfBusyId={pdfBusyId}
+                  linkBusyId={linkBusyId}
+                  copiedId={copiedId}
+                  onDownload={downloadInvoice}
+                  onCancel={cancelInvoice}
+                  onCopyLink={copyLink}
+                />
+              </div>
+            ))}
+            {visibles.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">{t("invoicing.noInvoices")}</p>
+            )}
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
@@ -598,54 +751,16 @@ export default function Invoicing() {
                     )}
                   </td>
                   <td className="py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5"
-                      onClick={() => downloadInvoice(invoice.id)}
-                      disabled={pdfBusyId === invoice.id}
-                    >
-                      {pdfBusyId === invoice.id ? <Spinner className="size-3.5" /> : <Download size={13} strokeWidth={1.75} />}
-                      {t("invoicing.downloadPdf")}
-                    </Button>
-                    {invoice.status !== "pagado" && invoice.status !== "cancelado" && (
-                      <button
-                        aria-label={t("invoicing.cancel")}
-                        title={t("invoicing.cancel")}
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-status-error-fg hover:bg-secondary transition-colors"
-                        onClick={() => cancelInvoice(invoice.id)}
-                      >
-                        <Ban size={14} strokeWidth={1.75} />
-                      </button>
-                    )}
-                    {invoice.status !== "pagado" && invoice.status !== "cancelado" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1.5"
-                        onClick={() => copyLink(invoice.id)}
-                        disabled={linkBusyId === invoice.id}
-                      >
-                        {linkBusyId === invoice.id ? (
-                          <Spinner className="size-3.5" />
-                        ) : copiedId === invoice.id ? (
-                          <Check size={13} />
-                        ) : (
-                          <Copy size={13} />
-                        )}
-                        {copiedId === invoice.id ? t("invoicing.copied") : t("invoicing.copyPaymentLink")}
-                      </Button>
-                    )}
-                    {invoice.status !== "pagado" && invoice.status !== "cancelado" && (
-                      <CobroManualDialog invoice={invoice} onDone={reload} />
-                    )}
-                    {/* La nota de crédito sí sale sobre una factura pagada: es
-                        justo el caso en que anularla ya no es una opción. */}
-                    {invoice.status !== "cancelado" && invoice.creditedAmount < invoice.amount && (
-                      <NotaDeCreditoDialog invoice={invoice} onDone={reload} />
-                    )}
-                    </div>
+                    <AccionesDeFactura
+                      invoice={invoice}
+                      onDone={reload}
+                      pdfBusyId={pdfBusyId}
+                      linkBusyId={linkBusyId}
+                      copiedId={copiedId}
+                      onDownload={downloadInvoice}
+                      onCancel={cancelInvoice}
+                      onCopyLink={copyLink}
+                    />
                   </td>
                 </tr>
               ))}
@@ -656,6 +771,7 @@ export default function Invoicing() {
               )}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 
