@@ -18,6 +18,7 @@ import {
   enviarNotaDeCredito as enviarNotaAQuickBooks,
   enviarEnSegundoPlano,
   diagnostico as diagnosticoDeQuickBooks,
+  traerCambios as traerCambiosDeQuickBooks,
 } from "./quickbooksSync";
 import {
   flowCopy,
@@ -7162,7 +7163,7 @@ apiRouter.get(
     // esquema.
     const { data: enlaces } = await supabase
       .from("quickbooks_links")
-      .select("local_id, status, error")
+      .select("local_id, status, error, diverged, remote")
       .eq("business_id", req.businessId!)
       .eq("kind", "invoice");
     const porFactura = new Map((enlaces ?? []).map((e: any) => [e.local_id, e]));
@@ -7205,7 +7206,16 @@ apiRouter.get(
         // permanente sobre algo que no le importa.
         quickbooks: (() => {
           const enlace = porFactura.get(i.id);
-          return enlace ? { status: enlace.status, error: enlace.error } : null;
+          if (!enlace) return null;
+          return {
+            status: enlace.status,
+            error: enlace.error,
+            // Alguien la cambió allí y ya no coincide. No se pisa lo nuestro:
+            // se enseñan los dos números y decide quien emitió la factura.
+            diverged: enlace.diverged === true,
+            remoteTotal: enlace.remote?.total ?? null,
+            remoteDeleted: enlace.remote?.deleted === true,
+          };
         })(),
       }))
     );
@@ -10047,6 +10057,37 @@ apiRouter.post(
         code: "quickbooks_send_failed",
       });
     }
+  })
+);
+
+// Traer lo que haya cambiado allí.
+//
+// Se llama sola al abrir la facturación, con freno de cinco minutos en el
+// servidor: "todo siempre igual" no puede costar una llamada a Intuit por
+// cada recarga de pantalla.
+apiRouter.post(
+  "/quickbooks/pull",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const resultado = await traerCambiosDeQuickBooks(admin, req.businessId!, {
+      forzar: req.body?.force === true,
+    });
+
+    // El cobro que venía de allí se registra por el mismo sitio que el de
+    // Stripe y el de la mano: la factura se cierra, la obra avanza si era la
+    // final, y la petición del chat deja de decir "pendiente". Tenerlo escrito
+    // aparte habría sido la cuarta copia de lo mismo.
+    for (const invoiceId of resultado.cobradas) {
+      await registrarCobro(admin, {
+        businessId: req.businessId!,
+        invoiceId,
+        medio: "otro",
+        referencia: "QuickBooks",
+        actor: "admin",
+      });
+    }
+
+    res.json(resultado);
   })
 );
 

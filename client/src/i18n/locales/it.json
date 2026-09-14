@@ -1928,7 +1928,9 @@
     "rowRetry": "Riprova",
     "diagnose": "Vedi diagnostica",
     "diagnoseHint": "Cosa ha configurato il tuo QuickBooks: codici d'imposta, servizi e conti. Serve a sapere perché un invio fallisce.",
-    "diagnoseCopy": "Copia per mandarlo"
+    "diagnoseCopy": "Copia per mandarlo",
+    "rowDiffers": "Su QuickBooks c'è {{there}} e qui {{here}}. Controlla.",
+    "rowDeletedThere": "L'hanno eliminata su QuickBooks. Qui risulta ancora emessa."
   },
   "creditNotes": {
     "issue": "Nota di credito",

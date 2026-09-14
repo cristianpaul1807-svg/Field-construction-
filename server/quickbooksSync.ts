@@ -475,3 +475,121 @@ export async function diagnostico(admin: Admin, businessId: string) {
     errores: [codigos, servicios, cuentas].filter((r: any) => r?.error).map((r: any) => r.error),
   };
 }
+
+/**
+ * Traer lo que ha cambiado en QuickBooks.
+ *
+ * QuickBooks tiene una llamada que devuelve lo que se ha tocado desde una
+ * fecha, así que no hay que recorrer todo cada vez.
+ *
+ * **Lo nuestro no se sobrescribe con lo suyo, y es a propósito.** La factura
+ * la emitimos aquí y es la que el cliente tiene en la mano; si alguien cambia
+ * el importe allí, el equivocado puede ser cualquiera de los dos, y decidirlo
+ * en silencio es la peor opción posible. Se guarda lo que dice QuickBooks, se
+ * marca que difieren, y lo resuelve el contratista mirando los dos números.
+ *
+ * Lo único que sí se toma de allí es el **cobro**. Si QuickBooks dice que la
+ * factura está saldada, eso es información que aquí no existía: alguien cobró
+ * y lo apuntó en la contabilidad. Eso no contradice nada nuestro, lo completa.
+ */
+export async function traerCambios(
+  admin: Admin,
+  businessId: string,
+  opciones?: { forzar?: boolean }
+): Promise<{ revisadas: number; divergentes: number; cobradas: string[]; omitido?: true }> {
+  const { data: conexion } = await admin
+    .from("quickbooks_connections")
+    .select("last_sync_at")
+    .eq("business_id", businessId)
+    .maybeSingle();
+  if (!conexion) throw new QuickBooksSinConectar();
+
+  const desde = conexion.last_sync_at ? new Date(conexion.last_sync_at) : null;
+
+  // Cinco minutos de descanso. Esto se dispara al abrir la pantalla de
+  // facturas, y sin freno cada recarga sería una llamada a Intuit.
+  if (!opciones?.forzar && desde && Date.now() - desde.getTime() < 5 * 60_000) {
+    return { revisadas: 0, divergentes: 0, cobradas: [], omitido: true };
+  }
+
+  // La primera vez, treinta días. QuickBooks no acepta un rango cualquiera y
+  // tampoco tiene sentido revisar el año entero para arrancar.
+  const cuando = desde ?? new Date(Date.now() - 30 * 86_400_000);
+
+  const res = await llamar<{
+    CDCResponse?: { QueryResponse?: { Invoice?: any[] }[] }[];
+  }>(admin, businessId, `cdc?entities=Invoice&changedSince=${cuando.toISOString()}&minorversion=70`);
+
+  const remotas: any[] = [];
+  for (const bloque of res.CDCResponse ?? []) {
+    for (const q of bloque.QueryResponse ?? []) {
+      for (const f of q.Invoice ?? []) remotas.push(f);
+    }
+  }
+
+  // Sólo interesan las que salieron de aquí. Una factura que el contratista
+  // creó directamente en QuickBooks es suya y no tenemos nada que decir.
+  const { data: enlaces } = await admin
+    .from("quickbooks_links")
+    .select("local_id, qbo_id")
+    .eq("business_id", businessId)
+    .eq("kind", "invoice")
+    .eq("status", "enviado");
+  const porQbo = new Map((enlaces ?? []).map((e: any) => [String(e.qbo_id), e.local_id]));
+
+  const cobradas: string[] = [];
+  let divergentes = 0;
+  let revisadas = 0;
+
+  for (const remota of remotas) {
+    const localId = porQbo.get(String(remota.Id));
+    if (!localId) continue;
+    revisadas += 1;
+
+    const { data: nuestra } = await admin
+      .from("invoices")
+      .select("id, number, amount, status")
+      .eq("business_id", businessId)
+      .eq("id", localId)
+      .maybeSingle();
+    if (!nuestra) continue;
+
+    const importeRemoto = Number(remota.TotalAmt ?? 0);
+    const saldo = Number(remota.Balance ?? importeRemoto);
+    // `status: "Deleted"` es cómo CDC dice que allí ya no existe.
+    const borrada = String(remota.status ?? "").toLowerCase() === "deleted";
+
+    // Un céntimo de diferencia es redondeo, no una corrección.
+    const difiere = borrada || Math.abs(importeRemoto - Number(nuestra.amount)) > 0.01;
+    if (difiere) divergentes += 1;
+
+    await admin
+      .from("quickbooks_links")
+      .update({
+        remote: {
+          total: importeRemoto,
+          balance: saldo,
+          docNumber: remota.DocNumber ?? null,
+          txnDate: remota.TxnDate ?? null,
+          deleted: borrada,
+        },
+        diverged: difiere,
+        checked_at: new Date().toISOString(),
+      })
+      .eq("business_id", businessId)
+      .eq("kind", "invoice")
+      .eq("local_id", localId);
+
+    // El cobro sí se toma. Que esté saldada allí es algo que aquí no sabíamos.
+    if (!borrada && saldo === 0 && importeRemoto > 0 && nuestra.status !== "pagado" && nuestra.status !== "cancelado") {
+      cobradas.push(nuestra.id);
+    }
+  }
+
+  await admin
+    .from("quickbooks_connections")
+    .update({ last_sync_at: new Date().toISOString() })
+    .eq("business_id", businessId);
+
+  return { revisadas, divergentes, cobradas };
+}

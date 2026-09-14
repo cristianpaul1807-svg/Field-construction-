@@ -1928,7 +1928,9 @@
     "rowRetry": "Try again",
     "diagnose": "Run diagnostics",
     "diagnoseHint": "What your QuickBooks has set up: tax codes, services and accounts. It's what tells you why a send is failing.",
-    "diagnoseCopy": "Copy to send it"
+    "diagnoseCopy": "Copy to send it",
+    "rowDiffers": "QuickBooks says {{there}} and here it's {{here}}. Take a look.",
+    "rowDeletedThere": "It was deleted in QuickBooks. Here it's still issued."
   },
   "creditNotes": {
     "issue": "Credit note",

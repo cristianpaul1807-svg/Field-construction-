@@ -1928,7 +1928,9 @@
     "rowRetry": "Réessayer",
     "diagnose": "Voir le diagnostic",
     "diagnoseHint": "Ce que votre QuickBooks a de configuré : codes de taxe, services et comptes. C'est ce qui dit pourquoi un envoi échoue.",
-    "diagnoseCopy": "Copier pour l'envoyer"
+    "diagnoseCopy": "Copier pour l'envoyer",
+    "rowDiffers": "QuickBooks indique {{there}} et ici c'est {{here}}. Vérifiez.",
+    "rowDeletedThere": "Elle a été supprimée dans QuickBooks. Ici elle est toujours émise."
   },
   "creditNotes": {
     "issue": "Note de crédit",

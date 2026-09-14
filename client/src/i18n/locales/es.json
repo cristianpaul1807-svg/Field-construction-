@@ -1928,7 +1928,9 @@
     "rowRetry": "Reintentar",
     "diagnose": "Ver diagnóstico",
     "diagnoseHint": "Lo que tu QuickBooks tiene configurado: códigos de impuesto, servicios y cuentas. Sirve para saber por qué falla un envío.",
-    "diagnoseCopy": "Copiar para mandarlo"
+    "diagnoseCopy": "Copiar para mandarlo",
+    "rowDiffers": "En QuickBooks pone {{there}} y aquí {{here}}. Míralo.",
+    "rowDeletedThere": "La borraron en QuickBooks. Aquí sigue emitida."
   },
   "creditNotes": {
     "issue": "Nota de crédito",

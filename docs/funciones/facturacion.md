@@ -225,6 +225,27 @@ Lo que se manda con cuidado:
 `quickbooks_links` es lo que impide duplicar: un reintento sobre algo ya
 enviado no vuelve a crearlo.
 
+### Y lo que cambian allí
+
+Al abrir la facturación se pide a QuickBooks lo que haya cambiado, con freno
+de cinco minutos en el servidor — «todo siempre igual» no puede costar una
+llamada a Intuit por cada recarga.
+
+**Lo nuestro no se sobrescribe con lo suyo, y es una decisión.** La factura la
+emitimos aquí y es la que el cliente tiene en la mano; si alguien cambia el
+importe allí, el equivocado puede ser cualquiera de los dos, y elegir en
+silencio es la peor de las opciones.
+
+| Lo que pasa allí | Lo que hacemos |
+|---|---|
+| Cambian el importe | La fila dice *«En QuickBooks pone X y aquí Y»*. Decide el contratista |
+| La borran | La fila lo dice. Aquí sigue emitida |
+| La marcan pagada | **Se toma.** Es información que aquí no existía |
+
+El cobro que viene de allí pasa por `registrarCobro()`, el mismo sitio que el
+de Stripe y el de la mano: la factura se cierra, la obra avanza si era la
+final, y la petición del chat deja de decir «pendiente».
+
 ---
 
 ## Estados

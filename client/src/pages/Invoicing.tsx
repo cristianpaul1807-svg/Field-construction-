@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { PaymentRequestPanel } from "@/components/PaymentRequestPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,7 +51,14 @@ interface Invoice {
   /** Lo ya acreditado con notas de crédito. */
   creditedAmount: number;
   /** Si llegó a QuickBooks. `null` cuando el negocio no lo usa. */
-  quickbooks: { status: "pendiente" | "enviado" | "fallo"; error: string | null } | null;
+  quickbooks: {
+    status: "pendiente" | "enviado" | "fallo";
+    error: string | null;
+    /** Alguien la cambió en QuickBooks y ya no coincide con la nuestra. */
+    diverged: boolean;
+    remoteTotal: number | null;
+    remoteDeleted: boolean;
+  } | null;
 }
 
 /**
@@ -70,6 +77,22 @@ function EstadoQuickBooks({ invoice, onRetried }: { invoice: Invoice; onRetried:
   if (!invoice.quickbooks) return null;
 
   if (invoice.quickbooks.status === "enviado") {
+    const qb = invoice.quickbooks;
+    // Difiere: se enseñan los dos números y ya está. No se pisa lo nuestro
+    // con lo suyo — la factura la emitimos aquí y es la que el cliente tiene
+    // en la mano; quién se equivocó lo sabe el contratista, no el programa.
+    if (qb.diverged) {
+      return (
+        <p className="text-xs text-status-warning-fg mt-1">
+          {qb.remoteDeleted
+            ? t("quickbooks.rowDeletedThere")
+            : t("quickbooks.rowDiffers", {
+                here: formatCurrency(invoice.amount),
+                there: formatCurrency(qb.remoteTotal ?? 0),
+              })}
+        </p>
+      );
+    }
     return <p className="text-xs text-status-success-fg mt-1">{t("quickbooks.rowSent")}</p>;
   }
 
@@ -522,6 +545,25 @@ export default function Invoicing() {
 
   // Las sumas de arriba cuentan lo mismo que enseña la tabla de abajo. Si la
   // tabla filtrara y los totales no, la pantalla se contradiría a sí misma.
+  // Al abrir la pantalla se pide lo que haya cambiado allí. El freno de los
+  // cinco minutos vive en el servidor: aquí no se sabe cuándo fue la última.
+  // Si falla no se dice nada — quien viene a mirar sus facturas no tiene por
+  // qué enterarse de que Intuit está caído.
+  useEffect(() => {
+    let vivo = true;
+    apiFetch("/api/quickbooks/pull", { method: "POST" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        if (vivo && body && (body.revisadas > 0 || body.cobradas?.length > 0)) reload();
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+    // Una vez al entrar, no en cada cambio de filtro.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { filtrar } = useFiltroDeObra();
   const visibles = filtrar(invoices, (i) => i.projectId);
 
