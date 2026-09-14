@@ -7147,12 +7147,24 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference), credit_notes(amount), quickbooks_links!left(kind, status, error)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference), credit_notes(amount)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
+
+    // Aparte y no con un join: `quickbooks_links.local_id` apunta a tres
+    // tablas distintas —cliente, factura, nota— así que no puede tener clave
+    // ajena a ninguna, y sin clave ajena Supabase no sabe unirlas. Pedirlo
+    // como relación incrustada tumbaba la pantalla entera con un error de
+    // esquema.
+    const { data: enlaces } = await supabase
+      .from("quickbooks_links")
+      .select("local_id, status, error")
+      .eq("business_id", req.businessId!)
+      .eq("kind", "invoice");
+    const porFactura = new Map((enlaces ?? []).map((e: any) => [e.local_id, e]));
 
     res.json(
       data.map((i: any) => ({
@@ -7191,7 +7203,7 @@ apiRouter.get(
         // insignia gris en cada fila de quien no tiene QuickBooks sería ruido
         // permanente sobre algo que no le importa.
         quickbooks: (() => {
-          const enlace = (i.quickbooks_links ?? []).find((l: any) => l.kind === "invoice");
+          const enlace = porFactura.get(i.id);
           return enlace ? { status: enlace.status, error: enlace.error } : null;
         })(),
       }))

@@ -543,6 +543,11 @@ export const findProject = (id: string) => projects.find((p) => p.id === id);
  * de estilo — es un número que su cliente compara con el papel que tiene
  * delante, y escrito al revés le hace dudar del papel.
  *
+ * `narrowSymbol` porque sin él, en castellano y en italiano, Intl escribe
+ * «CAD 0.00» en vez de «$0.00»: el código de la moneda en mitad de una
+ * pantalla donde todo está en dólares y no hay ninguna otra con la que
+ * confundirlo.
+ *
  * Se lee del idioma puesto en cada llamada y no de un parámetro, para no
  * tocar las ciento y pico llamadas que ya hay. Los componentes que enseñan
  * dinero usan `t()`, así que se vuelven a pintar solos al cambiar de idioma.
@@ -556,12 +561,12 @@ const localeDelDinero = (): string => {
 };
 
 export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD" }).format(value);
+  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD", currencyDisplay: "narrowSymbol" }).format(value);
 
 // For headline totals, where the cents are noise and the shape of the number
 // is the point. Only for aggregates — never for anything owed.
 export const formatCurrencyRounded = (value: number) =>
-  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(value);
+  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 0 }).format(value);
 
 // For compact UI spaces (small screens, summary tiles) where large numbers
 // (e.g. $45,000 or $1,500,000) could overflow or overlap table bounds.
