@@ -1922,7 +1922,10 @@
     "failed": "Non siamo riusciti a completare il collegamento. Riprova; se continua a fallire, scrivici.",
     "notConfiguredTitle": "Non ancora disponibile",
     "notConfiguredBody": "Il collegamento con QuickBooks non è ancora attivo su questo server. Appena lo sarà, il pulsante comparirà qui.",
-    "sandboxWarning": "Sei collegato a un'azienda di prova. Quello che viene mandato non comparirà nella tua contabilità vera."
+    "sandboxWarning": "Sei collegato a un'azienda di prova. Quello che viene mandato non comparirà nella tua contabilità vera.",
+    "rowSent": "In QuickBooks",
+    "rowNotSent": "Non è arrivata su QuickBooks",
+    "rowRetry": "Riprova"
   },
   "creditNotes": {
     "issue": "Nota di credito",

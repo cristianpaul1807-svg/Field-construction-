@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Plus, Copy, Check, Download, Ban, Banknote, FileMinus } from "lucide-react";
+import { Send, Plus, Copy, Check, Download, Ban, Banknote, FileMinus, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { previewTax, type TaxRate } from "@/lib/taxes";
@@ -50,6 +50,50 @@ interface Invoice {
   paymentReference: string | null;
   /** Lo ya acreditado con notas de crédito. */
   creditedAmount: number;
+  /** Si llegó a QuickBooks. `null` cuando el negocio no lo usa. */
+  quickbooks: { status: "pendiente" | "enviado" | "fallo"; error: string | null } | null;
+}
+
+/**
+ * Si la factura llegó a QuickBooks, y qué hacer si no.
+ *
+ * Se manda sola al emitirse, así que lo único que hace falta en pantalla es
+ * saber si llegó. Cuando falla, el motivo se enseña entero: casi siempre dice
+ * qué falta —un código de impuesto, una cuenta de ingresos— y esconderlo
+ * detrás de «no se pudo» no ayuda a nadie a arreglarlo.
+ */
+function EstadoQuickBooks({ invoice, onRetried }: { invoice: Invoice; onRetried: () => void }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!invoice.quickbooks) return null;
+
+  if (invoice.quickbooks.status === "enviado") {
+    return <p className="text-xs text-status-success-fg mt-1">{t("quickbooks.rowSent")}</p>;
+  }
+
+  const reintentar = async () => {
+    setBusy(true);
+    setError(null);
+    const res = await apiFetch(`/api/quickbooks/retry/invoice/${invoice.id}`, { method: "POST" });
+    const body = await readJson<{ error?: string }>(res);
+    setBusy(false);
+    if (res.ok) onRetried();
+    else setError(body?.error ?? t("common.genericError"));
+  };
+
+  return (
+    <div className="mt-1 space-y-1">
+      <p className="text-xs text-status-warning-fg">{t("quickbooks.rowNotSent")}</p>
+      {(error ?? invoice.quickbooks.error) && (
+        <p className="text-[11px] text-muted-foreground break-words max-w-xs">{error ?? invoice.quickbooks.error}</p>
+      )}
+      <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs gap-1" onClick={reintentar} disabled={busy}>
+        {busy ? <Spinner className="size-3" /> : <RefreshCw size={11} />} {t("quickbooks.rowRetry")}
+      </Button>
+    </div>
+  );
 }
 
 /**
@@ -539,6 +583,7 @@ export default function Invoicing() {
                         {t("creditNotes.credited", { amount: formatCurrency(invoice.creditedAmount) })}
                       </p>
                     )}
+                    <EstadoQuickBooks invoice={invoice} onRetried={reload} />
                   </td>
                   <td className="py-3 pl-2">
                     <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{t(`invoicing.status.${invoice.status}`)}</StatusBadge>

@@ -13,6 +13,12 @@ import {
   urlDeAutorizacion as urlDeAutorizacionQuickBooks,
 } from "./quickbooks";
 import {
+  enviarCliente as enviarClienteAQuickBooks,
+  enviarFactura as enviarFacturaAQuickBooks,
+  enviarNotaDeCredito as enviarNotaAQuickBooks,
+  enviarEnSegundoPlano,
+} from "./quickbooksSync";
+import {
   flowCopy,
   flowMessageContent,
   normalizeFlowLang,
@@ -583,6 +589,16 @@ async function createInvoiceRecord(
       console.error("aviso de factura", err);
     }
   }
+
+  // Y a QuickBooks, por el mismo motivo y en el mismo sitio: cinco caminos
+  // emiten facturas, y una integración que sólo cubre uno de ellos deja la
+  // contabilidad con agujeros que nadie ve hasta el cierre del año.
+  //
+  // Sin esperar. La factura ya está emitida y es válida; quien la acaba de
+  // crear no tiene por qué quedarse mirando una barra mientras hablamos con
+  // Intuit, y menos ver un error suyo.
+  enviarEnSegundoPlano(enviarFacturaAQuickBooks(admin, input.businessId, data.id), `factura ${data.id}`);
+
   return data.id;
 }
 
@@ -7131,7 +7147,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference), credit_notes(amount)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference), credit_notes(amount), quickbooks_links!left(kind, status, error)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -7171,6 +7187,13 @@ apiRouter.get(
         // pantalla decía que le deben un dinero que ya nadie le debe.
         creditedAmount:
           Math.round((i.credit_notes ?? []).reduce((suma: number, n: any) => suma + Number(n.amount), 0) * 100) / 100,
+        // Si llegó a QuickBooks o no. `null` cuando el negocio no lo usa: una
+        // insignia gris en cada fila de quien no tiene QuickBooks sería ruido
+        // permanente sobre algo que no le importa.
+        quickbooks: (() => {
+          const enlace = (i.quickbooks_links ?? []).find((l: any) => l.kind === "invoice");
+          return enlace ? { status: enlace.status, error: enlace.error } : null;
+        })(),
       }))
     );
   })
@@ -9963,6 +9986,8 @@ apiRouter.post(
       await admin.from("invoices").update({ status: "cancelado" }).eq("id", invoiceId);
     }
 
+    enviarEnSegundoPlano(enviarNotaAQuickBooks(admin, req.businessId!, data.id), `nota ${data.id}`);
+
     res.status(201).json({ id: data.id, number: `NC-${data.number}`, amount: Number(data.amount), invoiceCancelled: entera });
   })
 );
@@ -9982,6 +10007,35 @@ apiRouter.get(
 // ---------- QuickBooks ----------
 // Conectar, ver cómo está y desconectar. Lo que se manda a QuickBooks vive
 // aparte: esto es sólo la llave.
+
+// Reintentar un envío que falló. Es lo que hace falta detrás de un aviso que
+// dice "no llegó": enseñarlo sin poder hacer nada al respecto sería peor que
+// no enseñarlo.
+apiRouter.post(
+  "/quickbooks/retry/:kind/:id",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { kind, id } = req.params;
+    try {
+      if (kind === "invoice") await enviarFacturaAQuickBooks(admin, req.businessId!, id);
+      else if (kind === "credit_note") await enviarNotaAQuickBooks(admin, req.businessId!, id);
+      else if (kind === "customer") await enviarClienteAQuickBooks(admin, req.businessId!, id);
+      else {
+        res.status(400).json({ error: "kind must be invoice, credit_note or customer" });
+        return;
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      // El motivo, tal cual, porque es lo único que permite arreglarlo: casi
+      // siempre dice qué falta —un código de impuesto, una cuenta de ingresos—
+      // y esconderlo detrás de "no se pudo" no ayuda a nadie.
+      res.status(502).json({
+        error: err instanceof Error ? err.message : "no se pudo mandar a QuickBooks",
+        code: "quickbooks_send_failed",
+      });
+    }
+  })
+);
 
 apiRouter.get(
   "/quickbooks/status",

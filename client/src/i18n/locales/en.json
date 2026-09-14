@@ -1922,7 +1922,10 @@
     "failed": "We couldn't finish the connection. Try again; if it keeps failing, get in touch.",
     "notConfiguredTitle": "Not available yet",
     "notConfiguredBody": "The QuickBooks connection isn't switched on for this server yet. As soon as it is, the button will appear here.",
-    "sandboxWarning": "You're connected to a test company. Anything sent won't show up in your real books."
+    "sandboxWarning": "You're connected to a test company. Anything sent won't show up in your real books.",
+    "rowSent": "In QuickBooks",
+    "rowNotSent": "Didn't reach QuickBooks",
+    "rowRetry": "Try again"
   },
   "creditNotes": {
     "issue": "Credit note",

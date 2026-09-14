@@ -184,6 +184,49 @@ corrigió. Restarlas por dentro cuadraría el total y borraría la corrección.
 
 ---
 
+## QuickBooks
+
+Si el negocio tiene QuickBooks conectado (Configuración → QuickBooks), **cada
+factura se manda sola al emitirse**. También las notas de crédito. No hay nada
+que pulsar.
+
+Automático **no quiere decir mudo**. Cada envío deja su rastro en
+`quickbooks_links`, y la fila de la factura dice una de tres cosas:
+
+| En la fila | Qué pasó |
+|---|---|
+| *En QuickBooks* | Llegó |
+| *No llegó a QuickBooks* + el motivo + **Reintentar** | Falló |
+| Nada | Ese negocio no usa QuickBooks |
+
+El motivo se enseña **entero**. Casi siempre dice qué falta —un código de
+impuesto, una cuenta de ingresos— y esconderlo detrás de «no se pudo» deja a
+alguien sin forma de arreglarlo.
+
+**Nada de esto puede tumbar una emisión.** El envío va en segundo plano: la
+factura se emite aquí pase lo que pase con Intuit, porque ya es válida y quien
+la acaba de crear no tiene por qué esperar a QuickBooks ni ver un error suyo.
+
+Lo que se manda con cuidado:
+
+- **El cliente primero.** QuickBooks rechaza una factura de un cliente que no
+  conoce, y el error no dice que falte el cliente. Se busca por nombre antes de
+  crearlo, para no dejarle dos fichas del mismo cliente a quien ya lo tenía.
+- **El impuesto no se manda calculado.** Se manda el código de la provincia y
+  lo calcula QuickBooks. Mandar nuestro total daría impuesto sobre impuesto, y
+  los libros tienen que cuadrar con **sus** reglas, que son las que mira el
+  contable.
+- **Nuestro número va como `DocNumber`**, para que las dos contabilidades
+  hablen del mismo papel. Sin eso, casar una factura de aquí con una de allí es
+  comparar importes a ojo.
+- **Una factura anulada no se manda.** Allí no existe; crearla para anularla
+  acto seguido deja dos apuntes donde no debería haber ninguno.
+
+`quickbooks_links` es lo que impide duplicar: un reintento sobre algo ya
+enviado no vuelve a crearlo.
+
+---
+
 ## Estados
 
 | Estado | Qué significa |
