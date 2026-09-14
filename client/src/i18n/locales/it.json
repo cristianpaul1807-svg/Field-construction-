@@ -727,7 +727,8 @@
     "showSchedule": "Programmazione prevista dei lavori",
     "showScheduleHint": "Costruita dalla proiezione dei lavori. Sapere quando si inizia e quanto dura è ciò che più rassicura il cliente prima di firmare.",
     "provinceHint": "Da qui esce l'imposta di ogni fattura. Scegli dove dichiari.",
-    "provinceChangeHere": "Cambiala in {{menuAjustes}} → {{menuPagos}}"
+    "provinceChangeHere": "Cambiala in {{menuAjustes}} → {{menuPagos}}",
+    "holdbackTooHigh": "Attenzione: con il {{percent}} % trattieni quella parte su ogni pagamento parziale, quindi le tue fatture chiederanno molto meno di quanto vale il lavoro. In Québec la ritenuta è del 10 %."
   },
   "reports": {
     "title": "Report",
@@ -1352,8 +1353,13 @@
     "kind": {
       "invoices": "Fatture",
       "payments": "Pagamenti",
-      "expenses": "Spese"
-    }
+      "expenses": "Spese",
+      "quickbooks-customers": "Clienti",
+      "quickbooks-invoices": "Fatture"
+    },
+    "quickbooksTitle": "Per QuickBooks",
+    "quickbooksNote": "Questi due si caricano su QuickBooks così come sono, senza toccare nessuna colonna. Caricali in quest'ordine: QuickBooks rifiuta una fattura di un cliente che ancora non conosce.",
+    "quickbooksTaxNote": "L'imposta la ricalcola QuickBooks con il codice della tua provincia, quindi i totali escono dalle sue regole e non dalle nostre. Se hai rinominato i tuoi codici d'imposta in QuickBooks, dovrai abbinarli al momento dell'importazione."
   },
   "stripeBalance": {
     "title": "Denaro su Stripe",
@@ -1413,7 +1419,8 @@
     "worker_has_no_channel": "Questa persona non ha ancora una conversazione aperta. Aprigliene una da Messaggistica e rimandaglielo.",
     "agreement_already_signed": "Questo accordo è già firmato.",
     "agreement_not_sendable": "Questo accordo non è in attesa di firma.",
-    "time_off_backwards": "La data di fine è precedente a quella di inizio."
+    "time_off_backwards": "La data di fine è precedente a quella di inizio.",
+    "holdback_out_of_range": "La ritenuta va tra 0 e 20 %. Se volevi quella del Québec, metti 10."
   },
   "workLog": {
     "title": "Controllo lavori",

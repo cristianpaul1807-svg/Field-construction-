@@ -21,7 +21,40 @@ import type { getSupabaseAdmin } from "./supabaseAdmin";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
 
-export type ExportKind = "invoices" | "payments" | "expenses";
+export type ExportKind =
+  | "invoices"
+  | "payments"
+  | "expenses"
+  | "quickbooks-invoices"
+  | "quickbooks-customers";
+
+/**
+ * El código de impuesto que QuickBooks espera en cada línea.
+ *
+ * QuickBooks no acepta un importe de impuesto suelto: quiere el **nombre del
+ * código** que la empresa tiene dado de alta, y lo recalcula él. Si no
+ * coincide con uno que exista en su cuenta, la importación rechaza la línea.
+ *
+ * Los nombres son los que trae QuickBooks Canadá de fábrica por provincia.
+ * Quien haya renombrado los suyos tendrá que ajustarlos al importar, y por eso
+ * la pantalla lo avisa en vez de dejarlo descubrir a base de líneas
+ * rechazadas.
+ */
+const CODIGO_DE_IMPUESTO: Record<string, string> = {
+  QC: "GST/QST QC",
+  ON: "HST ON",
+  BC: "GST/PST BC",
+  AB: "GST",
+  MB: "GST/PST MB",
+  SK: "GST/PST SK",
+  NS: "HST NS",
+  NB: "HST NB",
+  NL: "HST NL",
+  PE: "HST PE",
+  NT: "GST",
+  NU: "GST",
+  YT: "GST",
+};
 
 /**
  * One CSV cell.
@@ -114,6 +147,93 @@ export async function exportAccounting(
           "id", "fecha", "vencimiento", "cliente", "obra", "tipo", "concepto", "estado", "descripcion",
           "subtotal", "tps_gst", "tvq_pst", "impuesto_total", "retencion", "retencion_liberada",
           "total_a_cobrar", "fecha_de_pago", "medio_de_cobro", "referencia_de_cobro",
+        ],
+        rows
+      ),
+    };
+  }
+
+  // ---- Los dos formatos que QuickBooks importa tal cual ----
+  //
+  // El CSV genérico de arriba lo mapea el contable a mano una vez. Estos dos
+  // llevan las columnas con los nombres que QuickBooks espera, así que se
+  // suben sin mapear nada. Son dos archivos y en este orden a propósito:
+  // QuickBooks rechaza una factura de un cliente que no conoce, así que los
+  // clientes van primero.
+
+  if (kind === "quickbooks-customers") {
+    const { data } = await db
+      .from("clients")
+      .select("name, email, phone, address")
+      .eq("business_id", businessId)
+      .order("name");
+
+    const rows = ((data ?? []) as any[]).map((c) => [c.name, c.name, c.email ?? "", c.phone ?? "", c.address ?? ""]);
+
+    return {
+      filename: `quickbooks-clientes-${from}-${to}.csv`,
+      rowCount: rows.length,
+      // Los nombres son de QuickBooks y van en inglés a propósito: es lo que
+      // lee su importador, no una persona.
+      csv: toCsv(["Name", "Company", "Email", "Phone", "Billing Address"], rows),
+    };
+  }
+
+  if (kind === "quickbooks-invoices") {
+    const [{ data: negocio }, { data }] = await Promise.all([
+      db.from("businesses").select("province").eq("id", businessId).maybeSingle(),
+      db
+        .from("invoices")
+        .select(
+          "number, created_at, due_date, description, subtotal, tax_amount, amount, status, type, clients(name), projects(name)"
+        )
+        .eq("business_id", businessId)
+        .neq("status", "cancelado")
+        .gte("created_at", fromIso)
+        .lte("created_at", toIso)
+        .order("created_at"),
+    ]);
+
+    const codigo = CODIGO_DE_IMPUESTO[String((negocio as any)?.province ?? "QC").toUpperCase()] ?? "GST";
+
+    const rows = ((data ?? []) as any[]).map((i) => {
+      // El concepto que QuickBooks va a crear como producto o servicio. Su
+      // importador exige uno, y meter aquí la descripción entera dejaría la
+      // lista de servicios llena de frases distintas que no agrupan nada.
+      const concepto = i.projects?.name ? "Travaux de construction" : "Services";
+      const descripcion = [i.description, i.projects?.name].filter(Boolean).join(" — ") || concepto;
+      return [
+        i.number ?? "",
+        i.clients?.name ?? "",
+        day(i.created_at),
+        day(i.due_date),
+        concepto,
+        descripcion,
+        1,
+        // El importe antes de impuestos: el impuesto lo vuelve a calcular
+        // QuickBooks desde el código. Mandar el total daría impuesto sobre
+        // impuesto.
+        money(i.subtotal),
+        money(i.subtotal),
+        codigo,
+      ];
+    });
+
+    return {
+      filename: `quickbooks-facturas-${from}-${to}.csv`,
+      rowCount: rows.length,
+      csv: toCsv(
+        [
+          "*InvoiceNo",
+          "*Customer",
+          "*InvoiceDate",
+          "*DueDate",
+          "Item(Product/Service)",
+          "ItemDescription",
+          "ItemQuantity",
+          "ItemRate",
+          "*ItemAmount",
+          "ItemTaxCode",
         ],
         rows
       ),

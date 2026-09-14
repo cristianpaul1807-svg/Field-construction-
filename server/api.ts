@@ -7032,8 +7032,9 @@ apiRouter.get(
   "/reports/accounting-export",
   route(async (req, res) => {
     const kind = String(req.query.kind ?? "invoices") as ExportKind;
-    if (!["invoices", "payments", "expenses"].includes(kind)) {
-      res.status(400).json({ error: "kind must be invoices, payments or expenses" });
+    const permitidos = ["invoices", "payments", "expenses", "quickbooks-invoices", "quickbooks-customers"];
+    if (!permitidos.includes(kind)) {
+      res.status(400).json({ error: `kind must be one of: ${permitidos.join(", ")}` });
       return;
     }
     // A year to date by default: the range somebody exporting the books wants
@@ -11144,8 +11145,19 @@ apiRouter.patch(
     if (body.estimateShowSchedule !== undefined) update.estimate_show_schedule = Boolean(body.estimateShowSchedule);
     if (body.holdbackPercent !== undefined) {
       const pct = Number(body.holdbackPercent);
-      if (Number.isNaN(pct) || pct < 0 || pct > 100) {
-        res.status(400).json({ error: "holdbackPercent must be between 0 and 100" });
+      // El tope es 20 y no 100 a propósito. La retención del Código Civil de
+      // Quebec es del 10 %, y por contrato se ve hasta un 15; por encima de 20
+      // no es una retención, es un número mal tecleado.
+      //
+      // Aceptar 100 costó dinero de verdad: un negocio lo puso creyendo que
+      // decía «aplicar la retención al 100 %», y su primera factura le cobró
+      // al cliente 748,75 $ —sólo los impuestos— en vez de 5.748,75 $. El
+      // sistema hizo exactamente lo que se le pidió y nadie avisó.
+      if (Number.isNaN(pct) || pct < 0 || pct > 20) {
+        res.status(400).json({
+          error: "la retención va entre 0 y 20 %",
+          code: "holdback_out_of_range",
+        });
         return;
       }
       update.holdback_percent = pct;

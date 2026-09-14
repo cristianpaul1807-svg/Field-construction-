@@ -303,11 +303,20 @@ export default function SettingsCompany() {
                   id="holdback"
                   type="number"
                   min={0}
-                  max={100}
+                  max={20}
+                  step="0.5"
                   value={holdbackPercent}
                   onChange={(e) => setHoldbackPercent(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">{t("settings.holdbackPercentHint")}</p>
+                {/* Un número alto aquí no da error: da facturas por menos
+                    dinero del que toca, y eso no se nota hasta que el cliente
+                    paga. Por encima del 10 % se avisa en pantalla. */}
+                {Number(holdbackPercent) > 10 && (
+                  <p className="text-xs text-status-warning-fg">
+                    {t("settings.holdbackTooHigh", { percent: Number(holdbackPercent) })}
+                  </p>
+                )}
               </div>
               {/* Both sections are built from data the estimate already
                   holds, so turning them on costs nothing to maintain — and

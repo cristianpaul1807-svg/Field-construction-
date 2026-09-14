@@ -20,9 +20,20 @@ import { useTranslation } from "react-i18next";
  * hand back a login page named like a spreadsheet.
  */
 
-type Kind = "invoices" | "payments" | "expenses";
+type Kind = "invoices" | "payments" | "expenses" | "quickbooks-customers" | "quickbooks-invoices";
 
+/** El CSV genérico, que el contable mapea una vez y reutiliza cada trimestre. */
 const KINDS: Kind[] = ["invoices", "payments", "expenses"];
+
+/**
+ * Los dos que QuickBooks importa sin mapear nada.
+ *
+ * Van en este orden y separados del resto porque el orden importa: QuickBooks
+ * rechaza una factura de un cliente que no conoce, así que los clientes se
+ * suben primero. Ponerlos en la misma fila que los otros tres invitaba a
+ * bajarse el que tocara y a que fallara la mitad de la importación.
+ */
+const QUICKBOOKS: Kind[] = ["quickbooks-customers", "quickbooks-invoices"];
 
 function defaultRange() {
   const now = new Date();
@@ -88,6 +99,23 @@ export function AccountingExportCard() {
             {t(`accountingExport.kind.${kind}`)}
           </Button>
         ))}
+      </div>
+
+      <div className="pt-3 border-t border-border space-y-2">
+        <p className="text-xs font-medium text-foreground">{t("accountingExport.quickbooksTitle")}</p>
+        <p className="text-xs text-muted-foreground">{t("accountingExport.quickbooksNote")}</p>
+        <div className="flex flex-wrap gap-2">
+          {QUICKBOOKS.map((kind, i) => (
+            <Button key={kind} variant="outline" size="sm" className="gap-1.5" disabled={busy !== null} onClick={() => download(kind)}>
+              {busy === kind ? <Spinner className="size-3.5" /> : <Download size={14} />}
+              {i + 1}. {t(`accountingExport.kind.${kind}`)}
+            </Button>
+          ))}
+        </div>
+        {/* El código de impuesto tiene que existir con ese nombre en su
+            QuickBooks o la importación rechaza las líneas. Decirlo aquí cuesta
+            una frase; descubrirlo, una tarde. */}
+        <p className="text-xs text-muted-foreground">{t("accountingExport.quickbooksTaxNote")}</p>
       </div>
 
       {error && <p className="text-sm text-status-error-fg">{error}</p>}

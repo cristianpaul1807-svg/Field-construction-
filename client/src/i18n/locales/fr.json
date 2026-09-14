@@ -727,7 +727,8 @@
     "showSchedule": "Calendrier prévu des travaux",
     "showScheduleHint": "Construit à partir de la projection des travaux. Savoir quand ça commence et combien de temps ça dure est ce qui rassure le plus avant de signer.",
     "provinceHint": "C'est d'ici que vient la taxe de chaque facture. Choisissez où vous déclarez.",
-    "provinceChangeHere": "La changer dans {{menuAjustes}} → {{menuPagos}}"
+    "provinceChangeHere": "La changer dans {{menuAjustes}} → {{menuPagos}}",
+    "holdbackTooHigh": "Attention : à {{percent}} %, vous retenez cette part sur chaque paiement partiel, donc vos factures réclameront bien moins que la valeur des travaux. Au Québec, la retenue est de 10 %."
   },
   "reports": {
     "title": "Rapports",
@@ -1352,8 +1353,13 @@
     "kind": {
       "invoices": "Factures",
       "payments": "Paiements",
-      "expenses": "Dépenses"
-    }
+      "expenses": "Dépenses",
+      "quickbooks-customers": "Clients",
+      "quickbooks-invoices": "Factures"
+    },
+    "quickbooksTitle": "Pour QuickBooks",
+    "quickbooksNote": "Ces deux-là s'importent tels quels dans QuickBooks, sans toucher à aucune colonne. Importez-les dans cet ordre : QuickBooks refuse une facture d'un client qu'il ne connaît pas encore.",
+    "quickbooksTaxNote": "QuickBooks recalcule la taxe avec le code de votre province : les totaux viennent donc de ses règles, pas des nôtres. Si vous avez renommé vos codes de taxe dans QuickBooks, il faudra les associer au moment de l'importation."
   },
   "stripeBalance": {
     "title": "Argent chez Stripe",
@@ -1413,7 +1419,8 @@
     "worker_has_no_channel": "Cette personne n'a pas encore de conversation ouverte. Ouvrez-en une depuis la Messagerie et renvoyez-la.",
     "agreement_already_signed": "Cette entente est déjà signée.",
     "agreement_not_sendable": "Cette entente n'est pas en attente de signature.",
-    "time_off_backwards": "La date de fin précède la date de début."
+    "time_off_backwards": "La date de fin précède la date de début.",
+    "holdback_out_of_range": "La retenue doit être entre 0 et 20 %. Si vous vouliez celle du Québec, inscrivez 10."
   },
   "workLog": {
     "title": "Suivi des travaux",

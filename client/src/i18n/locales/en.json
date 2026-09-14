@@ -727,7 +727,8 @@
     "showSchedule": "Planned work schedule",
     "showScheduleHint": "Built from the work projection. Knowing when it starts and how long it takes is what reassures a client most before signing.",
     "provinceHint": "This is where every invoice's tax comes from. Pick where you file.",
-    "provinceChangeHere": "Change it in {{menuAjustes}} → {{menuPagos}}"
+    "provinceChangeHere": "Change it in {{menuAjustes}} → {{menuPagos}}",
+    "holdbackTooHigh": "Careful: at {{percent}} % you withhold that share of every progress payment, so your invoices will charge far less than the work is worth. In Quebec the holdback is 10 %."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1352,8 +1353,13 @@
     "kind": {
       "invoices": "Invoices",
       "payments": "Payments",
-      "expenses": "Expenses"
-    }
+      "expenses": "Expenses",
+      "quickbooks-customers": "Customers",
+      "quickbooks-invoices": "Invoices"
+    },
+    "quickbooksTitle": "For QuickBooks",
+    "quickbooksNote": "These two upload to QuickBooks as they are, without touching a single column. Upload them in this order: QuickBooks rejects an invoice for a customer it doesn't know yet.",
+    "quickbooksTaxNote": "QuickBooks recalculates the tax using your province's code, so the totals come from its rules and not ours. If you renamed your tax codes in QuickBooks, you'll have to match them up during the import."
   },
   "stripeBalance": {
     "title": "Money at Stripe",
@@ -1413,7 +1419,8 @@
     "worker_has_no_channel": "This person has no conversation open yet. Start one from Messaging and send it again.",
     "agreement_already_signed": "This agreement is already signed.",
     "agreement_not_sendable": "This agreement isn't waiting to be signed.",
-    "time_off_backwards": "The end date is before the start date."
+    "time_off_backwards": "The end date is before the start date.",
+    "holdback_out_of_range": "The holdback must be between 0 and 20 %. If you meant Quebec's, enter 10."
   },
   "workLog": {
     "title": "Work log",

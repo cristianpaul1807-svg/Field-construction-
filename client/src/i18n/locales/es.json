@@ -727,7 +727,8 @@
     "showSchedule": "Programación prevista de los trabajos",
     "showScheduleHint": "Sale de la proyección de trabajo. Saber cuándo empieza y cuánto dura es lo que más tranquiliza al cliente antes de firmar.",
     "provinceHint": "De aquí sale el impuesto de cada factura. Elige donde tributas.",
-    "provinceChangeHere": "Cambiarla en {{menuAjustes}} → {{menuPagos}}"
+    "provinceChangeHere": "Cambiarla en {{menuAjustes}} → {{menuPagos}}",
+    "holdbackTooHigh": "Ojo: con un {{percent}} % le retienes esa parte a cada pago parcial, así que tus facturas cobrarán mucho menos de lo que vale el trabajo. En Quebec la retención es del 10 %."
   },
   "reports": {
     "title": "Informes",
@@ -1352,8 +1353,13 @@
     "kind": {
       "invoices": "Facturas",
       "payments": "Pagos",
-      "expenses": "Gastos"
-    }
+      "expenses": "Gastos",
+      "quickbooks-customers": "Clientes",
+      "quickbooks-invoices": "Facturas"
+    },
+    "quickbooksTitle": "Para QuickBooks",
+    "quickbooksNote": "Estos dos se suben a QuickBooks tal cual, sin tocar ninguna columna. Súbelos en este orden: QuickBooks rechaza una factura de un cliente que todavía no conoce.",
+    "quickbooksTaxNote": "El impuesto lo recalcula QuickBooks con el código de tu provincia, así que los totales salen de sus reglas y no de las nuestras. Si renombraste tus códigos de impuesto en QuickBooks, tendrás que emparejarlos al importar."
   },
   "stripeBalance": {
     "title": "Dinero en Stripe",
@@ -1413,7 +1419,8 @@
     "worker_has_no_channel": "Esta persona todavía no tiene conversación abierta. Ábrele una desde Mensajería y vuelve a mandárselo.",
     "agreement_already_signed": "Este acuerdo ya está firmado.",
     "agreement_not_sendable": "Este acuerdo no está pendiente de firma.",
-    "time_off_backwards": "La fecha de fin es anterior a la de inicio."
+    "time_off_backwards": "La fecha de fin es anterior a la de inicio.",
+    "holdback_out_of_range": "La retención va entre 0 y 20 %. Si querías aplicar la de Quebec, pon 10."
   },
   "workLog": {
     "title": "Control de trabajo",
