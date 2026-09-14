@@ -311,7 +311,22 @@
     "tabInvoices": "Invoices",
     "tabRequests": "Chat charges",
     "holdbackReleased": "Includes {{amount}} of holdback released from the earlier invoices",
-    "number": "No."
+    "number": "No.",
+    "registerPayment": "Mark as paid",
+    "registerPaymentTitle": "Record the {{amount}} payment",
+    "registerPaymentHint": "For what you collect outside the software: a transfer, a cheque, cash on site. Anything paid by card from the portal marks itself.",
+    "paymentMethod": "How you were paid",
+    "paidOn": "Date received",
+    "paymentReference": "Reference",
+    "paymentReferencePlaceholder": "E.g. cheque or transfer number",
+    "confirmPayment": "Mark it paid",
+    "method": {
+      "stripe": "Card",
+      "transferencia": "Transfer",
+      "efectivo": "Cash",
+      "cheque": "Cheque",
+      "otro": "Other"
+    }
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -1390,7 +1405,8 @@
     "signature_required": "We need the name of whoever is signing.",
     "slug_taken": "That link is already used by another business. Pick a different one.",
     "stripe_no_checkout_url": "We couldn't open the payment page. Please try again in a moment.",
-    "worker_not_in_period": "That worker has no hours in that period."
+    "worker_not_in_period": "That worker has no hours in that period.",
+    "cancelled_invoice_not_payable": "A cancelled invoice cannot be collected."
   },
   "workLog": {
     "title": "Work log",
@@ -1600,7 +1616,7 @@
           "p2": "Build the estimate in {{menuPresupuestos}} like any other and press Generate PDF. It downloads with your logo, your address, your RBQ licence and a number of its own, like EST-2026-0001. That file is what you send over WhatsApp.",
           "p3": "So the system knows it's out the door, press “Approve and mark as sent” and choose “Approve without sending”. It's marked as sent without anything reaching the client here, because you already sent it yourself.",
           "p4": "When they say yes, come back to the estimate and accept it yourself. That's what opens the project, puts the work on the calendar and issues the first invoice. Skip it and nothing at all happens: the estimate sits still and the project never comes into being.",
-          "nota": "Invoices download the same way, from {{menuFinanzas}} → {{menuFacturacion}}. One thing though: only the ones the client pays by card from their portal mark themselves as paid. If they pay you in cash or by transfer, the invoice stays pending."
+          "nota": "Invoices download the same way, from {{menuFinanzas}} → {{menuFacturacion}}. And if they pay you in cash, by cheque or by transfer, “Mark as paid” is right there to record it."
         }
       },
       "trabajo": {
@@ -1672,6 +1688,13 @@
           "title": "Get the data to my accountant",
           "p1": "{{menuFinanzas}} → {{menuInformes}}. That's where receivables, profitability by project and the accountant export live.",
           "p2": "You can also download any {{menuCrm}} table as Excel or as a PDF on your letterhead."
+        },
+        "cobrarPorFuera": {
+          "title": "They paid me in cash or by transfer",
+          "p1": "On the invoice you'll find “Mark as paid”. You pick how they paid you, the day, and optionally the cheque or transfer number so you can recognise it later.",
+          "p2": "Exactly the same thing happens as if they'd paid by card: the invoice is settled, it counts towards the collected figure up top, and it shows in the accountant's report with the payment method recorded.",
+          "p3": "And if it was the project's final invoice, marking it paid is what closes the project. That's why recording it matters even though the money is already in your account.",
+          "nota": "“Card” can't be chosen by hand: Stripe writes that one when there's a real charge behind it. That way the report can't claim you took a card payment for something you were paid in cash."
         }
       },
       "problemas": {

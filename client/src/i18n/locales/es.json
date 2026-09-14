@@ -311,7 +311,22 @@
     "tabInvoices": "Facturas",
     "tabRequests": "Cobros por chat",
     "holdbackReleased": "Incluye {{amount}} de retención liberada de las facturas anteriores",
-    "number": "Nº"
+    "number": "Nº",
+    "registerPayment": "Marcar cobrada",
+    "registerPaymentTitle": "Apuntar el cobro de {{amount}}",
+    "registerPaymentHint": "Para lo que cobras fuera del software: una transferencia, un cheque, efectivo en la obra. Lo que se paga con tarjeta desde el portal se marca solo.",
+    "paymentMethod": "Cómo te pagaron",
+    "paidOn": "Fecha del cobro",
+    "paymentReference": "Referencia",
+    "paymentReferencePlaceholder": "Ej. nº de cheque o de transferencia",
+    "confirmPayment": "Dar por cobrada",
+    "method": {
+      "stripe": "Tarjeta",
+      "transferencia": "Transferencia",
+      "efectivo": "Efectivo",
+      "cheque": "Cheque",
+      "otro": "Otro"
+    }
   },
   "payments": {
     "title": "Pagos (Stripe)",
@@ -1390,7 +1405,8 @@
     "signature_required": "Hace falta el nombre de quien firma.",
     "slug_taken": "Ese enlace ya lo usa otro negocio. Elige otro.",
     "stripe_no_checkout_url": "No pudimos abrir la pasarela de pago. Vuelve a intentarlo en un momento.",
-    "worker_not_in_period": "Ese trabajador no tiene horas en ese periodo."
+    "worker_not_in_period": "Ese trabajador no tiene horas en ese periodo.",
+    "cancelled_invoice_not_payable": "Una factura anulada no se puede cobrar."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1600,7 +1616,7 @@
           "p2": "Haz el presupuesto en {{menuPresupuestos}} igual que cualquier otro y dale a Generar PDF. Se descarga con tu logo, tu dirección, tu licencia RBQ y su propio número, tipo EST-2026-0001. Ese archivo es el que le mandas por WhatsApp.",
           "p3": "Para que el sistema sepa que ya salió, pulsa «Aprobar y marcar como enviado» y elige «Aprobar sin enviar». Queda como enviado sin que al cliente le llegue nada por aquí, porque ya se lo mandaste tú.",
           "p4": "Cuando te diga que sí, vuelve al presupuesto y acéptalo tú. Eso es lo que abre la obra, mete el trabajo en el calendario y emite la primera factura. Si no lo haces no pasa nada de nada: el presupuesto se queda quieto y la obra no llega a existir.",
-          "nota": "Las facturas se descargan igual, desde {{menuFinanzas}} → {{menuFacturacion}}. Eso sí: sólo se marcan pagadas solas las que el cliente paga con tarjeta desde su portal. Si te paga en efectivo o por transferencia, la factura se queda en pendiente."
+          "nota": "Las facturas se descargan igual, desde {{menuFinanzas}} → {{menuFacturacion}}. Y si te pagan en efectivo, por cheque o por transferencia, ahí mismo tienes «Marcar cobrada» para apuntarlo."
         }
       },
       "trabajo": {
@@ -1672,6 +1688,13 @@
           "title": "Pasarle los datos a mi contable",
           "p1": "{{menuFinanzas}} → {{menuInformes}}. Ahí están las cuentas por cobrar, la rentabilidad por obra y la exportación para el contable.",
           "p2": "También puedes bajar cualquier tabla de {{menuCrm}} en Excel o en PDF con tu membrete."
+        },
+        "cobrarPorFuera": {
+          "title": "Me pagaron en efectivo o por transferencia",
+          "p1": "En la factura tienes «Marcar cobrada». Eliges cómo te pagaron, el día, y si quieres el número del cheque o de la transferencia para reconocerlo después.",
+          "p2": "Pasa exactamente lo mismo que si hubiera pagado con tarjeta: la factura queda pagada, entra en el cobrado de arriba, y sale en el informe del contable con el medio de cobro apuntado.",
+          "p3": "Y si era la factura final de la obra, marcarla cobrada es lo que da la obra por completada. Por eso importa apuntarlo aunque el dinero ya esté en tu cuenta.",
+          "nota": "«Tarjeta» no se puede elegir a mano: ese medio lo escribe Stripe cuando hay un cargo de verdad detrás. Así el informe no puede decir que cobraste con tarjeta algo que cobraste en efectivo."
         }
       },
       "problemas": {

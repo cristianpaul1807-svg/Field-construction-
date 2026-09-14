@@ -311,7 +311,22 @@
     "tabInvoices": "Factures",
     "tabRequests": "Demandes par chat",
     "holdbackReleased": "Comprend {{amount}} de retenue libérée des factures précédentes",
-    "number": "Nº"
+    "number": "Nº",
+    "registerPayment": "Marquer payée",
+    "registerPaymentTitle": "Enregistrer l'encaissement de {{amount}}",
+    "registerPaymentHint": "Pour ce que vous encaissez hors du logiciel : un virement, un chèque, de l'argent comptant sur le chantier. Ce qui est payé par carte depuis le portail se marque tout seul.",
+    "paymentMethod": "Comment on vous a payé",
+    "paidOn": "Date de l'encaissement",
+    "paymentReference": "Référence",
+    "paymentReferencePlaceholder": "Ex. nº de chèque ou de virement",
+    "confirmPayment": "Marquer comme payée",
+    "method": {
+      "stripe": "Carte",
+      "transferencia": "Virement Interac",
+      "efectivo": "Comptant",
+      "cheque": "Chèque",
+      "otro": "Autre"
+    }
   },
   "payments": {
     "title": "Paiements (Stripe)",
@@ -1390,7 +1405,8 @@
     "signature_required": "Il nous faut le nom de la personne qui signe.",
     "slug_taken": "Ce lien est déjà utilisé par une autre entreprise. Choisissez-en un autre.",
     "stripe_no_checkout_url": "Nous n'avons pas pu ouvrir la page de paiement. Réessayez dans un instant.",
-    "worker_not_in_period": "Ce travailleur n'a aucune heure sur cette période."
+    "worker_not_in_period": "Ce travailleur n'a aucune heure sur cette période.",
+    "cancelled_invoice_not_payable": "Une facture annulée ne peut pas être encaissée."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1600,7 +1616,7 @@
           "p2": "Faites la soumission dans {{menuPresupuestos}} comme n'importe quelle autre et appuyez sur Générer le PDF. Il se télécharge avec votre logo, votre adresse, votre licence RBQ et son propre numéro, du genre EST-2026-0001. C'est ce fichier que vous envoyez par WhatsApp.",
           "p3": "Pour que le système sache qu'elle est partie, appuyez sur « Approuver et marquer comme envoyée » et choisissez « Approuver sans envoyer ». Elle passe à envoyée sans que rien n'arrive au client ici, puisque vous la lui avez déjà envoyée.",
           "p4": "Quand il vous dit oui, revenez à la soumission et acceptez-la vous-même. C'est ça qui ouvre le chantier, met les travaux au calendrier et émet la première facture. Sans ce geste, rien ne se passe : la soumission reste figée et le chantier n'existe jamais.",
-          "nota": "Les factures se téléchargent de la même façon, depuis {{menuFinanzas}} → {{menuFacturacion}}. Une chose par contre : seules celles que le client paie par carte depuis son portail se marquent payées toutes seules. S'il vous paie comptant ou par virement, la facture reste en attente."
+          "nota": "Les factures se téléchargent de la même façon, depuis {{menuFinanzas}} → {{menuFacturacion}}. Et s'il vous paie comptant, par chèque ou par virement, « Marquer payée » est juste là pour l'enregistrer."
         }
       },
       "trabajo": {
@@ -1672,6 +1688,13 @@
           "title": "Transmettre les données à mon comptable",
           "p1": "{{menuFinanzas}} → {{menuInformes}}. C'est là que se trouvent les comptes clients, la rentabilité par chantier et l'export pour le comptable.",
           "p2": "Vous pouvez aussi télécharger n'importe quel tableau du {{menuCrm}} en Excel ou en PDF à votre en-tête."
+        },
+        "cobrarPorFuera": {
+          "title": "On m'a payé comptant ou par virement",
+          "p1": "Sur la facture, vous avez « Marquer payée ». Vous choisissez le mode de paiement, la date, et si vous voulez le nº du chèque ou du virement pour le reconnaître plus tard.",
+          "p2": "Il se passe exactement la même chose que s'il avait payé par carte : la facture est réglée, elle compte dans l'encaissé en haut, et elle sort dans le rapport du comptable avec le mode de paiement inscrit.",
+          "p3": "Et si c'était la facture finale du chantier, la marquer payée est ce qui clôt le chantier. C'est pour ça que l'enregistrer compte, même si l'argent est déjà dans votre compte.",
+          "nota": "« Carte » ne se choisit pas à la main : c'est Stripe qui l'inscrit quand il y a une vraie transaction derrière. Ainsi le rapport ne peut pas dire que vous avez encaissé par carte ce qu'on vous a payé comptant."
         }
       },
       "problemas": {

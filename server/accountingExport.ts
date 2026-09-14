@@ -74,7 +74,7 @@ export async function exportAccounting(
     const { data } = await db
       .from("invoices")
       .select(
-        "id, created_at, due_date, paid_at, type, charge_kind, status, description, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, amount, clients(name), projects(name)"
+        "id, created_at, due_date, paid_at, type, charge_kind, status, description, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, amount, clients(name), projects(name), payments(method, reference)"
       )
       .eq("business_id", businessId)
       .gte("created_at", fromIso)
@@ -99,6 +99,11 @@ export async function exportAccounting(
       money(i.holdback_released),
       money(i.amount),
       day(i.paid_at),
+      // Con qué se cobró. Para el contable no es lo mismo una transferencia
+      // que un cargo con tarjeta, y la referencia es lo que le deja casar la
+      // línea con el extracto del banco.
+      i.payments?.[0]?.method ?? "",
+      i.payments?.[0]?.reference ?? "",
     ]);
 
     return {
@@ -108,7 +113,7 @@ export async function exportAccounting(
         [
           "id", "fecha", "vencimiento", "cliente", "obra", "tipo", "concepto", "estado", "descripcion",
           "subtotal", "tps_gst", "tvq_pst", "impuesto_total", "retencion", "retencion_liberada",
-          "total_a_cobrar", "fecha_de_pago",
+          "total_a_cobrar", "fecha_de_pago", "medio_de_cobro", "referencia_de_cobro",
         ],
         rows
       ),

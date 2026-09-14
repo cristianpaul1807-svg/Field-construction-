@@ -311,7 +311,22 @@
     "tabInvoices": "Fatture",
     "tabRequests": "Richieste in chat",
     "holdbackReleased": "Include {{amount}} di ritenuta svincolata dalle fatture precedenti",
-    "number": "N."
+    "number": "N.",
+    "registerPayment": "Segna incassata",
+    "registerPaymentTitle": "Registra l'incasso di {{amount}}",
+    "registerPaymentHint": "Per quello che incassi fuori dal software: un bonifico, un assegno, contanti in cantiere. Quello che si paga con carta dal portale si segna da solo.",
+    "paymentMethod": "Come ti hanno pagato",
+    "paidOn": "Data dell'incasso",
+    "paymentReference": "Riferimento",
+    "paymentReferencePlaceholder": "Es. n. assegno o bonifico",
+    "confirmPayment": "Dai per incassata",
+    "method": {
+      "stripe": "Carta",
+      "transferencia": "Bonifico",
+      "efectivo": "Contanti",
+      "cheque": "Assegno",
+      "otro": "Altro"
+    }
   },
   "payments": {
     "title": "Pagamenti (Stripe)",
@@ -1390,7 +1405,8 @@
     "signature_required": "Serve il nome di chi firma.",
     "slug_taken": "Questo link è già usato da un'altra impresa. Scegline un altro.",
     "stripe_no_checkout_url": "Non siamo riusciti ad aprire la pagina di pagamento. Riprova tra un momento.",
-    "worker_not_in_period": "Questo lavoratore non ha ore in quel periodo."
+    "worker_not_in_period": "Questo lavoratore non ha ore in quel periodo.",
+    "cancelled_invoice_not_payable": "Una fattura annullata non si può incassare."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -1600,7 +1616,7 @@
           "p2": "Fai il preventivo in {{menuPresupuestos}} come tutti gli altri e premi Genera PDF. Si scarica con il tuo logo, il tuo indirizzo, la tua licenza RBQ e un numero suo, tipo EST-2026-0001. Quel file è quello che gli mandi su WhatsApp.",
           "p3": "Perché il sistema sappia che è già partito, premi «Approva e segna come inviato» e scegli «Approva senza inviare». Risulta inviato senza che al cliente arrivi nulla da qui, perché gliel'hai già mandato tu.",
           "p4": "Quando ti dice di sì, torna al preventivo e accettalo tu. È questo che apre il cantiere, mette il lavoro in calendario ed emette la prima fattura. Se non lo fai non succede niente: il preventivo resta fermo e il cantiere non nasce.",
-          "nota": "Le fatture si scaricano allo stesso modo, da {{menuFinanzas}} → {{menuFacturacion}}. Una cosa però: si segnano pagate da sole solo quelle che il cliente paga con carta dal suo portale. Se ti paga in contanti o con bonifico, la fattura resta in sospeso."
+          "nota": "Le fatture si scaricano allo stesso modo, da {{menuFinanzas}} → {{menuFacturacion}}. E se ti pagano in contanti, con assegno o con bonifico, lì c'è «Segna incassata» per registrarlo."
         }
       },
       "trabajo": {
@@ -1672,6 +1688,13 @@
           "title": "Passare i dati al commercialista",
           "p1": "{{menuFinanzas}} → {{menuInformes}}. Lì ci sono i crediti, la redditività per cantiere e l'esportazione per il commercialista.",
           "p2": "Puoi anche scaricare qualsiasi tabella del {{menuCrm}} in Excel o in PDF con la tua carta intestata."
+        },
+        "cobrarPorFuera": {
+          "title": "Mi hanno pagato in contanti o con bonifico",
+          "p1": "Sulla fattura trovi «Segna incassata». Scegli come ti hanno pagato, il giorno, e se vuoi il numero dell'assegno o del bonifico per riconoscerlo dopo.",
+          "p2": "Succede esattamente la stessa cosa che se avesse pagato con carta: la fattura risulta pagata, entra nell'incassato in alto, ed esce nel report del commercialista con il mezzo di pagamento annotato.",
+          "p3": "E se era la fattura finale del cantiere, segnarla incassata è ciò che chiude il cantiere. Per questo conta registrarlo anche se i soldi sono già sul tuo conto.",
+          "nota": "«Carta» non si può scegliere a mano: quello lo scrive Stripe quando dietro c'è un addebito vero. Così il report non può dire che hai incassato con carta qualcosa che ti hanno pagato in contanti."
         }
       },
       "problemas": {

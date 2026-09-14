@@ -169,9 +169,9 @@ presupuesto se queda quieto: ni obra, ni calendario, ni primera factura. Por
 eso el panel lo dice en pantalla cuando el presupuesto está `enviado`
 (`budgets.acceptOnTheirBehalf`) en vez de dejarlo escrito solo aquí.
 
-Lo que **no** cubre este camino: una factura pagada en efectivo o por
-transferencia no tiene forma de marcarse pagada. Solo la marca sola el webhook
-de Stripe cuando el cliente paga con tarjeta desde su portal.
+El cobro también sale del portal: si te pagan en efectivo, por cheque o por
+transferencia, se apunta desde la propia factura. Ver
+[facturacion.md](facturacion.md#cobrado-fuera-del-software).
 
 ---
 

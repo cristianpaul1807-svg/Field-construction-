@@ -90,6 +90,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "impuestos", parrafos: 3 },
       { id: "numeroFactura", parrafos: 2 },
       { id: "cobrar", parrafos: 3, nota: true, ruta: "/settings/payments" },
+      { id: "cobrarPorFuera", parrafos: 3, nota: true, ruta: "/invoicing" },
       { id: "contable", parrafos: 2, ruta: "/reports" },
     ],
   },

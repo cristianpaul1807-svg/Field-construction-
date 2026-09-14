@@ -107,6 +107,40 @@ Requiere tener Stripe conectado: [pagos-stripe.md](pagos-stripe.md).
 
 ---
 
+## Cobrado fuera del software
+
+**Marcar cobrada** en la fila de la factura. Se elige el medio, el día y, si
+hace falta, una referencia (número de cheque o de transferencia).
+
+La tarjeta **no se puede elegir a mano**. Ese medio lo escribe el webhook y
+significa que hay un cargo de verdad detrás; dejarlo elegible desde el panel
+sería poder inventarse un cobro con tarjeta, y el informe del contable dejaría
+de valer para lo único que sirve.
+
+Pasa exactamente lo mismo que con la tarjeta, porque es el mismo código:
+`registrarCobro()` en `server/api.ts` lo usan el webhook y esta ruta. La
+factura se cierra, el cobro se escribe en `payments` con su `method`, la
+petición del chat deja de decir «pendiente», y si era la factura final, la obra
+pasa a completada.
+
+**Por qué existe.** Hasta que se añadió, la única forma de que una factura
+llegara a `pagado` era que el cliente metiera la tarjeta en su portal. En
+construcción en Quebec la mayor parte se cobra por transferencia Interac o con
+un cheque en la obra: esas facturas se quedaban pendientes para siempre, los
+totales de la pantalla mentían, y ninguna obra llegaba a completarse, porque
+ese paso cuelga del cobro de la factura final.
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/invoices/:id/register-payment` | `{ method, paidAt?, reference? }` |
+
+Rechaza una factura ya pagada (`invoice_already_paid`) y una anulada
+(`cancelled_invoice_not_payable`). Cobrar dos veces no cierra la obra dos
+veces: `registrarCobro()` devuelve `false` si ya estaba cobrada, que es lo
+que también protege de los reintentos del webhook.
+
+---
+
 ## Descargar el PDF
 
 **Descargar factura** en cualquier fila. Sale en el idioma del panel, con tu
@@ -120,13 +154,14 @@ cabecera, tus números de TPS/TVQ y el desglose completo. Ver
 | Estado | Qué significa |
 |---|---|
 | `pendiente` | Emitida, sin cobrar |
-| `pagado` | Cobrada — lo marca Stripe, no tú |
+| `pagado` | Cobrada — la marca Stripe, o tú con *Marcar cobrada* |
 | `vencido` | Pasó la fecha de vencimiento |
 | `cancelado` | Anulada |
 
-El paso a `pagado` lo hace el **webhook de Stripe**. Si un pago se completó y
-la factura sigue pendiente, el problema es el webhook, no el cobro: ver
-[pagos-stripe.md](pagos-stripe.md#el-webhook).
+Con tarjeta, el paso a `pagado` lo hace el **webhook de Stripe**. Si un pago se
+completó y la factura sigue pendiente, el problema es el webhook, no el cobro:
+ver [pagos-stripe.md](pagos-stripe.md#el-webhook). Todo lo demás se apunta a
+mano, arriba.
 
 ---
 

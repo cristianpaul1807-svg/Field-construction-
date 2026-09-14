@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Plus, Copy, Check, Download, Ban } from "lucide-react";
+import { Send, Plus, Copy, Check, Download, Ban, Banknote } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { previewTax, type TaxRate } from "@/lib/taxes";
@@ -45,6 +45,98 @@ interface Invoice {
   description: string | null;
   projectName: string | null;
   clientName: string | null;
+  /** Cómo entró el dinero. `stripe` es la tarjeta; el resto lo apuntó el contratista. */
+  paymentMethod: "stripe" | "efectivo" | "transferencia" | "cheque" | "otro" | null;
+  paymentReference: string | null;
+}
+
+/** Los medios que se pueden apuntar a mano. La tarjeta la escribe Stripe, no el panel. */
+const MEDIOS_A_MANO = ["transferencia", "efectivo", "cheque", "otro"] as const;
+
+/**
+ * Apuntar una factura que se cobró fuera del software.
+ *
+ * En construcción en Quebec la mayor parte se cobra por transferencia Interac
+ * o con un cheque en la obra. Hasta ahora nada de eso podía llegar a "pagada":
+ * la única forma era que el cliente metiera la tarjeta en su portal, así que
+ * las facturas cobradas de verdad se quedaban pendientes, los totales de
+ * arriba mentían, y la obra no se cerraba nunca.
+ */
+function CobroManualDialog({ invoice, onDone }: { invoice: Invoice; onDone: () => void }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [medio, setMedio] = useState<(typeof MEDIOS_A_MANO)[number]>("transferencia");
+  const [referencia, setReferencia] = useState("");
+  // La fecha del recibo, no la de hoy: el efectivo se apunta días después.
+  const [dia, setDia] = useState(() => new Date().toISOString().slice(0, 10));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const guardar = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiFetch(`/api/invoices/${invoice.id}/register-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method: medio, reference: referencia.trim() || undefined, paidAt: dia }),
+      });
+      const body = await readJson(res);
+      if (!res.ok) throw new Error(serverMessage(body, t, t("common.genericError")));
+      setOpen(false);
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="gap-1.5">
+          <Banknote size={13} strokeWidth={1.75} /> {t("invoicing.registerPayment")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("invoicing.registerPaymentTitle", { amount: formatCurrency(invoice.amount) })}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">{t("invoicing.registerPaymentHint")}</p>
+          <div className="space-y-1.5">
+            <Label>{t("invoicing.paymentMethod")}</Label>
+            <Select value={medio} onValueChange={(v) => setMedio(v as (typeof MEDIOS_A_MANO)[number])}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {MEDIOS_A_MANO.map((m) => (
+                  <SelectItem key={m} value={m}>{t(`invoicing.method.${m}`)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cobro-dia">{t("invoicing.paidOn")}</Label>
+            <Input id="cobro-dia" type="date" value={dia} onChange={(e) => setDia(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cobro-ref">{t("invoicing.paymentReference")} ({t("common.optional")})</Label>
+            <Input
+              id="cobro-ref"
+              value={referencia}
+              onChange={(e) => setReferencia(e.target.value)}
+              placeholder={t("invoicing.paymentReferencePlaceholder")}
+            />
+          </div>
+          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+          <Button className="w-full" onClick={guardar} disabled={busy}>
+            {busy ? <Spinner className="size-4" /> : t("invoicing.confirmPayment")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 interface ClientOption {
@@ -333,6 +425,15 @@ export default function Invoicing() {
                   </td>
                   <td className="py-3 pl-2">
                     <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{t(`invoicing.status.${invoice.status}`)}</StatusBadge>
+                    {/* Cómo entró el dinero. Sin esto, una transferencia y una
+                        tarjeta se leen exactamente igual, y es lo primero que
+                        pregunta el contable. */}
+                    {invoice.status === "pagado" && invoice.paymentMethod && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t(`invoicing.method.${invoice.paymentMethod}`)}
+                        {invoice.paymentReference && ` · ${invoice.paymentReference}`}
+                      </p>
+                    )}
                   </td>
                   <td className="py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -373,6 +474,9 @@ export default function Invoicing() {
                         )}
                         {copiedId === invoice.id ? t("invoicing.copied") : t("invoicing.copyPaymentLink")}
                       </Button>
+                    )}
+                    {invoice.status !== "pagado" && invoice.status !== "cancelado" && (
+                      <CobroManualDialog invoice={invoice} onDone={reload} />
                     )}
                     </div>
                   </td>

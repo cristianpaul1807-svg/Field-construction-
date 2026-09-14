@@ -648,6 +648,79 @@ async function createInvoiceCheckoutSession(
   return session.url;
 }
 
+/** De dónde vino el dinero. `stripe` es la tarjeta; el resto lo apunta el contratista. */
+export type MedioDeCobro = "stripe" | "efectivo" | "transferencia" | "cheque" | "otro";
+
+/**
+ * Dar una factura por cobrada.
+ *
+ * Los dos caminos —la tarjeta que confirma Stripe y el efectivo que apunta el
+ * contratista— pasan por aquí a propósito. Lo que tiene que ocurrir cuando
+ * entra el dinero es lo mismo venga de donde venga: la factura se cierra, el
+ * cobro queda registrado, la petición del chat deja de decir «pendiente», y si
+ * era la factura final, la obra se da por completada. Escrito dos veces
+ * acabaría escrito mal en una de ellas, y ya pasó: durante meses sólo se
+ * cobraron las facturas con tarjeta porque este bloque vivía únicamente dentro
+ * del webhook.
+ *
+ * Devuelve `false` si la factura ya estaba cobrada. Cobrar dos veces no puede
+ * cerrar la obra dos veces: Stripe reintenta sus webhooks, y el contratista
+ * puede darle al botón mientras el cliente paga con la tarjeta.
+ */
+async function registrarCobro(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  args: {
+    businessId: string;
+    invoiceId: string;
+    medio: MedioDeCobro;
+    referencia?: string | null;
+    stripePaymentId?: string | null;
+    stripeEventId?: string | null;
+    /** Cuándo entró de verdad. El efectivo suele apuntarse días después. */
+    cobradoEl?: string;
+    actor: "cliente" | "admin";
+  }
+): Promise<boolean> {
+  const { data: invoice } = await admin
+    .from("invoices")
+    .select("id, amount, status, type, project_id")
+    .eq("id", args.invoiceId)
+    .eq("business_id", args.businessId)
+    .maybeSingle();
+  if (!invoice || invoice.status === "pagado") return false;
+
+  const cobradoEl = args.cobradoEl ?? new Date().toISOString();
+
+  await admin.from("invoices").update({ status: "pagado", paid_at: cobradoEl }).eq("id", invoice.id);
+  await admin.from("payments").insert({
+    business_id: args.businessId,
+    invoice_id: invoice.id,
+    method: args.medio,
+    reference: args.referencia ?? null,
+    stripe_payment_id: args.stripePaymentId ?? null,
+    stripe_event_id: args.stripeEventId ?? null,
+    amount: Number(invoice.amount),
+    status: "succeeded",
+    paid_at: cobradoEl,
+  });
+
+  // If this invoice came from a request in the chat, that thread should
+  // stop saying "pending" the moment the money lands.
+  await markRequestPaidByInvoice(admin, invoice.id);
+
+  // The final payment landing is what closes a job. A deposit or a
+  // progress payment does not: there is still work owed.
+  if (invoice.type === "final" && invoice.project_id) {
+    await advanceAndBill(admin, {
+      businessId: args.businessId,
+      projectId: invoice.project_id,
+      trigger: "factura_final_pagada",
+      actor: args.actor,
+    });
+  }
+  return true;
+}
+
 // Stripe fires this on the CONNECTED account's events (since these are
 // direct charges) — the webhook endpoint itself still lives on the
 // platform, Stripe just tags each event with the originating account id.
@@ -702,32 +775,15 @@ async function stripeWebhookHandler(req: Request, res: Response) {
         .eq("id", invoiceId)
         .eq("business_id", businessId)
         .maybeSingle();
-      if (invoice && invoice.status !== "pagado") {
-        await admin.from("invoices").update({ status: "pagado", paid_at: new Date().toISOString() }).eq("id", invoiceId);
-        await admin.from("payments").insert({
-          business_id: businessId,
-          invoice_id: invoiceId,
-          stripe_payment_id: typeof session.payment_intent === "string" ? session.payment_intent : session.id,
-          stripe_event_id: event.id,
-          amount: Number(invoice.amount),
-          status: "succeeded",
-          paid_at: new Date().toISOString(),
+      if (invoice) {
+        await registrarCobro(admin, {
+          businessId,
+          invoiceId,
+          medio: "stripe",
+          stripePaymentId: typeof session.payment_intent === "string" ? session.payment_intent : session.id,
+          stripeEventId: event.id,
+          actor: "cliente",
         });
-
-        // If this invoice came from a request in the chat, that thread should
-        // stop saying "pending" the moment the money lands.
-        await markRequestPaidByInvoice(admin, invoiceId);
-
-        // The final payment landing is what closes a job. A deposit or a
-        // progress payment does not: there is still work owed.
-        if (invoice.type === "final" && invoice.project_id) {
-          await advanceAndBill(admin, {
-            businessId,
-            projectId: invoice.project_id,
-            trigger: "factura_final_pagada",
-            actor: "cliente",
-          });
-        }
       }
     }
   }
@@ -6883,7 +6939,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -6913,6 +6969,11 @@ apiRouter.get(
         projectId: i.project_id ?? null,
         projectName: i.projects?.name ?? null,
         clientName: i.clients?.name ?? null,
+        // Cómo entró el dinero. Una factura cobrada en efectivo y una cobrada
+        // con tarjeta se leen igual en la tabla si no se dice, y al contable
+        // le hace falta la diferencia.
+        paymentMethod: i.payments?.[0]?.method ?? null,
+        paymentReference: i.payments?.[0]?.reference ?? null,
       }))
     );
   })
@@ -9335,6 +9396,67 @@ apiRouter.patch(
     const { error } = await supabase.from("invoices").update({ status: "cancelado" }).eq("id", invoice.id);
     if (error) throw error;
     res.json({ ok: true, status: "cancelado" });
+  })
+);
+
+// Cobrado fuera del software: efectivo, cheque, transferencia Interac.
+//
+// Sin esto la única forma de que una factura llegara a "pagada" era que el
+// cliente metiera la tarjeta en su portal. En construcción en Quebec la mayor
+// parte se cobra por transferencia, así que las facturas se quedaban
+// pendientes para siempre, los totales de la pantalla mentían, y la obra no
+// llegaba nunca a completada porque ese paso cuelga de la factura final.
+apiRouter.post(
+  "/invoices/:id/register-payment",
+  route(async (req, res) => {
+    const medios: MedioDeCobro[] = ["efectivo", "transferencia", "cheque", "otro"];
+    const medio = req.body?.method;
+    // 'stripe' no se acepta a mano a propósito: ese medio lo escribe el
+    // webhook y significa "hay un cargo de verdad detrás". Dejar que se
+    // escriba desde el panel sería poder inventarse un cobro con tarjeta.
+    if (!medios.includes(medio)) {
+      res.status(400).json({ error: `method must be one of: ${medios.join(", ")}` });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const { data: invoice } = await supabase
+      .from("invoices")
+      .select("id, status")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!invoice) {
+      res.status(404).json({ error: "invoice not found", code: "invoice_not_found" });
+      return;
+    }
+    if (invoice.status === "pagado") {
+      res.status(409).json({ error: "Esta factura ya está pagada", code: "invoice_already_paid" });
+      return;
+    }
+    if (invoice.status === "cancelado") {
+      res.status(409).json({ error: "Una factura anulada no se puede cobrar", code: "cancelled_invoice_not_payable" });
+      return;
+    }
+
+    // La fecha llega como día suelto ("2026-09-14") porque es lo que el
+    // contratista tiene delante: la del recibo, no la de hoy.
+    const dia = typeof req.body?.paidAt === "string" ? req.body.paidAt.slice(0, 10) : null;
+    const cobradoEl = dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? new Date(`${dia}T12:00:00Z`).toISOString() : undefined;
+
+    const registrado = await registrarCobro(getSupabaseAdmin(), {
+      businessId: req.businessId!,
+      invoiceId: invoice.id,
+      medio,
+      referencia: typeof req.body?.reference === "string" ? req.body.reference.trim().slice(0, 120) || null : null,
+      cobradoEl,
+      actor: "admin",
+    });
+    if (!registrado) {
+      res.status(409).json({ error: "Esta factura ya está pagada", code: "invoice_already_paid" });
+      return;
+    }
+    res.json({ ok: true, status: "pagado" });
   })
 );
 
