@@ -173,6 +173,38 @@ export interface AgreementDoc {
   signature: { name: string; signedAt: Date } | null;
 }
 
+/**
+ * La nota de crédito: lo que corrige una factura ya emitida.
+ *
+ * Lleva impreso a qué factura corrige y por qué. Sin esas dos cosas es un
+ * papel con un importe negativo que nadie puede casar con nada.
+ */
+export interface CreditNoteDoc {
+  kind: "credit";
+  number: string;
+  date: Date;
+  business: BusinessIdentity;
+  client: PartyIdentity;
+  /** La factura que corrige, por su número impreso. */
+  correctsNumber: string | null;
+  correctsDate: Date | null;
+  reason: string;
+  subtotal: number;
+  taxAmount: number;
+  taxBreakdown: TaxBreakdown;
+  /**
+   * La retención que llevaba la factura, en la parte que se acredita.
+   *
+   * Sin esta línea el papel no cuadra: el total de una factura con retención
+   * no es el subtotal más los impuestos, y quien lo lea va a pensar que la
+   * nota está mal cuando lo que pasa es que falta la resta.
+   */
+  holdback: number;
+  total: number;
+  /** Verdadero si deja la factura anulada del todo. */
+  full: boolean;
+}
+
 export interface InvoiceDoc {
   kind: "invoice";
   number: string;
@@ -284,6 +316,12 @@ interface Copy {
   agreementBusinessSignature: string;
   agreementSignedBy: (name: string, date: string) => string;
   agreementDisclaimer: string;
+  creditTitle: string;
+  creditCorrects: string;
+  creditReason: string;
+  creditFull: string;
+  creditPartial: string;
+  creditNote: string;
 }
 
 const COPY: Record<DocLang, Copy> = {
@@ -380,6 +418,13 @@ const COPY: Record<DocLang, Copy> = {
     agreementSignedBy: (name, date) => `Firmado por ${name} el ${date}`,
     agreementDisclaimer:
       "Documento de gestión interna. No sustituye al asesoramiento legal ni a un contrato revisado por un abogado.",
+    creditTitle: "NOTA DE CRÉDITO",
+    creditCorrects: "Corrige a la factura",
+    creditReason: "Motivo",
+    creditFull: "Anula la factura por completo.",
+    creditPartial: "Anula una parte de la factura. El resto sigue pendiente.",
+    creditNote:
+      "Este documento reduce el importe de la factura indicada. Los impuestos se acreditan en la misma proporción y a las tasas de la factura original.",
   },
   en: {
     estimateTitle: "ESTIMATE",
@@ -473,6 +518,13 @@ const COPY: Record<DocLang, Copy> = {
     agreementSignedBy: (name, date) => `Signed by ${name} on ${date}`,
     agreementDisclaimer:
       "Internal management document. It does not replace legal advice or a contract reviewed by a lawyer.",
+    creditTitle: "CREDIT NOTE",
+    creditCorrects: "Corrects invoice",
+    creditReason: "Reason",
+    creditFull: "Cancels the invoice in full.",
+    creditPartial: "Cancels part of the invoice. The rest is still outstanding.",
+    creditNote:
+      "This document reduces the amount of the invoice named above. Taxes are credited in the same proportion and at the original invoice's rates.",
   },
   fr: {
     estimateTitle: "SOUMISSION",
@@ -566,6 +618,13 @@ const COPY: Record<DocLang, Copy> = {
     agreementSignedBy: (name, date) => `Signé par ${name} le ${date}`,
     agreementDisclaimer:
       "Document de gestion interne. Il ne remplace pas un avis juridique ni un contrat révisé par un avocat.",
+    creditTitle: "NOTE DE CRÉDIT",
+    creditCorrects: "Corrige la facture",
+    creditReason: "Motif",
+    creditFull: "Annule la facture en totalité.",
+    creditPartial: "Annule une partie de la facture. Le reste demeure dû.",
+    creditNote:
+      "Ce document réduit le montant de la facture indiquée. Les taxes sont créditées dans la même proportion et aux taux de la facture d'origine.",
   },
   it: {
     estimateTitle: "PREVENTIVO",
@@ -659,6 +718,13 @@ const COPY: Record<DocLang, Copy> = {
     agreementSignedBy: (name, date) => `Firmato da ${name} il ${date}`,
     agreementDisclaimer:
       "Documento di gestione interna. Non sostituisce una consulenza legale né un contratto rivisto da un avvocato.",
+    creditTitle: "NOTA DI CREDITO",
+    creditCorrects: "Corregge la fattura",
+    creditReason: "Motivo",
+    creditFull: "Annulla la fattura per intero.",
+    creditPartial: "Annulla una parte della fattura. Il resto resta da pagare.",
+    creditNote:
+      "Questo documento riduce l'importo della fattura indicata. Le imposte vengono accreditate nella stessa proporzione e alle aliquote della fattura originale.",
   },
 };
 
@@ -759,7 +825,7 @@ function letterhead(doc: Doc, b: BusinessIdentity, copy: Copy): number {
   return doc.y;
 }
 
-function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc | AgreementDoc, copy: Copy, lang: DocLang) {
+function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc | AgreementDoc | CreditNoteDoc, copy: Copy, lang: DocLang) {
   const b = data.business;
 
   // Dónde acaba de verdad el membrete, medido antes de escribir nada más: el
@@ -779,7 +845,9 @@ function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc | Agreemen
           ? data.agreementKind === "subcontrato"
             ? copy.agreementTitleSubcontrato
             : copy.agreementTitleEmpleo
-          : copy.invoiceTitle;
+          : data.kind === "credit"
+            ? copy.creditTitle
+            : copy.invoiceTitle;
   // El membrete ocupa 300 puntos a la izquierda, así que el título sólo tiene
   // lo que sobra a la derecha. A 20 puntos «FACTURE» cabe de sobra y
   // «CONTRAT DE SOUS-TRAITANCE» no: se imprimía encima del nombre de la
@@ -1476,6 +1544,107 @@ export function renderPayrollPdf(data: PayrollDoc, lang: DocLang): Promise<Buffe
 
   doc.y += 8;
   doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.payrollDisclaimer, MARGIN, doc.y, {
+    width: CONTENT_WIDTH,
+  });
+
+  pageNumbers(doc, copy);
+  doc.end();
+  return done;
+}
+
+/**
+ * La nota de crédito, en papel.
+ *
+ * Sin tabla de líneas: no describe un trabajo, describe una corrección. Lo que
+ * tiene que quedar impreso es a qué factura corrige, por qué, cuánto, y si la
+ * anula entera o sólo una parte — que es lo único que distingue «esta factura
+ * ya no existe» de «esta factura sigue viva por la diferencia».
+ */
+export function renderCreditNotePdf(data: CreditNoteDoc, lang: DocLang): Promise<Buffer> {
+  const copy = COPY[lang];
+  const doc = nuevoDocumento();
+
+  const chunks: Buffer[] = [];
+  const done = new Promise<Buffer>((resolve, reject) => {
+    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+  });
+
+  header(doc, data, copy, lang);
+
+  const field = (label: string, value: string) => {
+    ensureRoom(doc, 18, copy);
+    const y = doc.y;
+    doc.font("Helvetica").fontSize(9).fillColor("#888888").text(label, MARGIN, y, { width: 190 });
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#111111").text(value, MARGIN + 190, y, {
+      width: CONTENT_WIDTH - 190,
+    });
+    doc.y = Math.max(doc.y, y + 15);
+  };
+
+  field(copy.billTo, data.client.name ?? "—");
+  if (data.client.address) {
+    doc.font("Helvetica").fontSize(9).fillColor("#555555").text(data.client.address, MARGIN + 190, doc.y, {
+      width: CONTENT_WIDTH - 190,
+    });
+    doc.y += 6;
+  }
+
+  field(
+    copy.creditCorrects,
+    [data.correctsNumber, data.correctsDate ? shortDate(data.correctsDate, lang) : null].filter(Boolean).join(" · ") || "—"
+  );
+
+  doc.y += 8;
+  doc.font("Helvetica").fontSize(9).fillColor("#888888").text(copy.creditReason, MARGIN, doc.y, { width: CONTENT_WIDTH });
+  doc.y += 3;
+  doc.font("Helvetica").fontSize(10).fillColor("#333333").text(data.reason, MARGIN, doc.y, { width: CONTENT_WIDTH });
+  doc.y += 14;
+
+  ensureRoom(doc, 90, copy);
+  const lineaY = doc.y;
+  doc.moveTo(MARGIN, lineaY).lineTo(PAGE_WIDTH - MARGIN, lineaY).strokeColor("#dddddd").lineWidth(1).stroke();
+  doc.y = lineaY + 10;
+
+  // Los importes van en negativo porque eso es lo que son: dinero que deja de
+  // deberse. Imprimirlos en positivo obliga a quien lee a acordarse de que el
+  // título decía «crédito», y a mitad de una pila de papeles no se acuerda.
+  const fila = (label: string, valor: number, fuerte = false) => {
+    const y = doc.y;
+    doc
+      .font(fuerte ? "Helvetica-Bold" : "Helvetica")
+      .fontSize(fuerte ? 11 : 9.5)
+      .fillColor("#111111")
+      .text(label, MARGIN + CONTENT_WIDTH - 300, y, { width: 160, align: "right" });
+    doc.text(`-${money(valor, lang)}`, MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+    doc.y = Math.max(doc.y, y + (fuerte ? 18 : 14));
+  };
+
+  fila(copy.subtotal, data.subtotal);
+  const b = data.taxBreakdown;
+  if (b.hst !== undefined) fila(copy.hst, b.hst);
+  if (b.gst !== undefined) fila(copy.gst, b.gst);
+  if (b.pst !== undefined) fila(b.province === "QC" ? copy.qst : copy.pst, b.pst);
+  if (data.holdback > 0) {
+    // En positivo, porque resta de un importe que ya va en negativo: restar
+    // una resta suma, y aquí el signo se lee, no se calcula.
+    const y = doc.y;
+    doc.font("Helvetica").fontSize(9.5).fillColor("#111111");
+    doc.text(copy.holdback, MARGIN + CONTENT_WIDTH - 300, y, { width: 160, align: "right" });
+    doc.text(`+${money(data.holdback, lang)}`, MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+    doc.y = Math.max(doc.y, y + 14);
+  }
+  fila(copy.total, data.total, true);
+
+  doc.y += 10;
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(9)
+    .fillColor("#111111")
+    .text(data.full ? copy.creditFull : copy.creditPartial, MARGIN, doc.y, { width: CONTENT_WIDTH });
+  doc.y += 12;
+  doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.creditNote, MARGIN, doc.y, {
     width: CONTENT_WIDTH,
   });
 

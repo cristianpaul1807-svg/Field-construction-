@@ -1356,7 +1356,8 @@
       "payments": "Pagamenti",
       "expenses": "Spese",
       "quickbooks-customers": "Clienti",
-      "quickbooks-invoices": "Fatture"
+      "quickbooks-invoices": "Fatture",
+      "credit-notes": "Note di credito"
     },
     "quickbooksTitle": "Per QuickBooks",
     "quickbooksNote": "Questi due si caricano su QuickBooks così come sono, senza toccare nessuna colonna. Caricali in quest'ordine: QuickBooks rifiuta una fattura di un cliente che ancora non conosce.",
@@ -1423,7 +1424,11 @@
     "time_off_backwards": "La data di fine è precedente a quella di inizio.",
     "holdback_out_of_range": "La ritenuta va tra 0 e 20 %. Se volevi quella del Québec, metti 10.",
     "quickbooks_not_configured": "Il collegamento con QuickBooks non è attivo su questo server.",
-    "quickbooks_not_connected": "Questa impresa non ha ancora collegato il suo QuickBooks."
+    "quickbooks_not_connected": "Questa impresa non ha ancora collegato il suo QuickBooks.",
+    "credit_note_needs_reason": "Bisogna dire perché si corregge.",
+    "invoice_fully_credited": "Questa fattura è già corretta per intero.",
+    "credit_note_exceeds_invoice": "Non puoi correggere più di quanto resta da correggere su quella fattura.",
+    "credit_note_not_found": "Non abbiamo trovato quella nota di credito."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -1918,5 +1923,18 @@
     "notConfiguredTitle": "Non ancora disponibile",
     "notConfiguredBody": "Il collegamento con QuickBooks non è ancora attivo su questo server. Appena lo sarà, il pulsante comparirà qui.",
     "sandboxWarning": "Sei collegato a un'azienda di prova. Quello che viene mandato non comparirà nella tua contabilità vera."
+  },
+  "creditNotes": {
+    "issue": "Nota di credito",
+    "issueTitle": "Correggere la fattura {{number}}",
+    "issueHint": "Una fattura emessa non si cancella né si modifica: si corregge con una nota di credito, e restano entrambe nei tuoi libri. È così che va fatto perché i conti reggano un controllo.",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Es. Importo sbagliato per via della ritenuta",
+    "reasonNote": "Viene stampato sul documento. È quello che leggerà chi controllerà i tuoi libri fra due anni.",
+    "partial": "Correggere solo una parte",
+    "fullBy": "Se non lo spunti, si annulla per intero: {{amount}}",
+    "amount": "Importo da correggere",
+    "confirm": "Emetti nota di credito",
+    "credited": "Corretto: {{amount}}"
   }
 }

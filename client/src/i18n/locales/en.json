@@ -1356,7 +1356,8 @@
       "payments": "Payments",
       "expenses": "Expenses",
       "quickbooks-customers": "Customers",
-      "quickbooks-invoices": "Invoices"
+      "quickbooks-invoices": "Invoices",
+      "credit-notes": "Credit notes"
     },
     "quickbooksTitle": "For QuickBooks",
     "quickbooksNote": "These two upload to QuickBooks as they are, without touching a single column. Upload them in this order: QuickBooks rejects an invoice for a customer it doesn't know yet.",
@@ -1423,7 +1424,11 @@
     "time_off_backwards": "The end date is before the start date.",
     "holdback_out_of_range": "The holdback must be between 0 and 20 %. If you meant Quebec's, enter 10.",
     "quickbooks_not_configured": "The QuickBooks connection isn't switched on for this server.",
-    "quickbooks_not_connected": "This business hasn't connected its QuickBooks yet."
+    "quickbooks_not_connected": "This business hasn't connected its QuickBooks yet.",
+    "credit_note_needs_reason": "You have to say why it's being corrected.",
+    "invoice_fully_credited": "This invoice has already been corrected in full.",
+    "credit_note_exceeds_invoice": "You can't correct more than what's left to correct on that invoice.",
+    "credit_note_not_found": "We couldn't find that credit note."
   },
   "workLog": {
     "title": "Work log",
@@ -1918,5 +1923,18 @@
     "notConfiguredTitle": "Not available yet",
     "notConfiguredBody": "The QuickBooks connection isn't switched on for this server yet. As soon as it is, the button will appear here.",
     "sandboxWarning": "You're connected to a test company. Anything sent won't show up in your real books."
+  },
+  "creditNotes": {
+    "issue": "Credit note",
+    "issueTitle": "Correct invoice {{number}}",
+    "issueHint": "An issued invoice is never deleted or edited: you correct it with a credit note, and both stay in your books. That's how it has to be done for the accounts to survive an audit.",
+    "reason": "Reason",
+    "reasonPlaceholder": "E.g. Amount miscalculated because of the holdback",
+    "reasonNote": "It's printed on the document. It's what whoever reviews your books in two years will read.",
+    "partial": "Correct only part of it",
+    "fullBy": "Unticked, it cancels the whole thing: {{amount}}",
+    "amount": "Amount to correct",
+    "confirm": "Issue credit note",
+    "credited": "Corrected: {{amount}}"
   }
 }

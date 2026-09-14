@@ -85,6 +85,7 @@ directamente al paso a paso.
 |---|---|
 | Facturación | [funciones/facturacion.md](funciones/facturacion.md) |
 | *(dentro de Facturación)* El número de factura | [funciones/facturacion.md](funciones/facturacion.md#el-número-de-factura) |
+| *(dentro de Facturación)* Notas de crédito | [funciones/facturacion.md](funciones/facturacion.md#corregir-una-factura-emitida) |
 | *(dentro de Facturación)* Impuestos y retención | [funciones/impuestos-canada.md](funciones/impuestos-canada.md) |
 | *(en varias pantallas)* PDF de presupuesto y factura | [funciones/documentos-pdf.md](funciones/documentos-pdf.md) |
 | Nóminas | [funciones/nominas.md](funciones/nominas.md) |

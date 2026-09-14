@@ -25,6 +25,7 @@ import {
   renderReportPdf,
   renderPayrollPdf,
   renderAgreementPdf,
+  renderCreditNotePdf,
   documentNumber,
   normalizeDocLang,
   docCopy,
@@ -7080,7 +7081,7 @@ apiRouter.get(
   "/reports/accounting-export",
   route(async (req, res) => {
     const kind = String(req.query.kind ?? "invoices") as ExportKind;
-    const permitidos = ["invoices", "payments", "expenses", "quickbooks-invoices", "quickbooks-customers"];
+    const permitidos = ["invoices", "credit-notes", "payments", "expenses", "quickbooks-invoices", "quickbooks-customers"];
     if (!permitidos.includes(kind)) {
       res.status(400).json({ error: `kind must be one of: ${permitidos.join(", ")}` });
       return;
@@ -7130,7 +7131,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference), credit_notes(amount)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -7165,6 +7166,11 @@ apiRouter.get(
         // le hace falta la diferencia.
         paymentMethod: i.payments?.[0]?.method ?? null,
         paymentReference: i.payments?.[0]?.reference ?? null,
+        // Lo acreditado con notas de crédito. Sin esto, una factura acreditada
+        // a medias seguía sumando entera en el pendiente de arriba, y la
+        // pantalla decía que le deben un dinero que ya nadie le debe.
+        creditedAmount:
+          Math.round((i.credit_notes ?? []).reduce((suma: number, n: any) => suma + Number(n.amount), 0) * 100) / 100,
       }))
     );
   })
@@ -8637,6 +8643,63 @@ async function loadBusinessIdentity(
   };
 }
 
+/** El PDF de una nota de crédito. `null` si no es de ese negocio. */
+async function construirPdfDeNota(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  creditNoteId: string,
+  lang: DocLang
+): Promise<{ buffer: Buffer; nombre: string } | null> {
+  const { data: n } = await admin
+    .from("credit_notes")
+    .select(
+      "id, number, reason, subtotal, tax_amount, tax_breakdown, amount, created_at, invoices(number, created_at, amount, clients(name, address, phone, email))"
+    )
+    .eq("business_id", businessId)
+    .eq("id", creditNoteId)
+    .maybeSingle();
+  if (!n) return null;
+
+  const factura = n.invoices as unknown as {
+    number: string | null;
+    created_at: string;
+    amount: number;
+    clients: { name: string; address: string | null; phone: string | null; email: string | null } | null;
+  } | null;
+
+  const { identity } = await loadBusinessIdentity(admin, businessId);
+
+  const buffer = await renderCreditNotePdf(
+    {
+      kind: "credit",
+      number: `NC-${n.number}`,
+      date: new Date(n.created_at),
+      business: identity,
+      client: {
+        name: factura?.clients?.name ?? null,
+        address: factura?.clients?.address ?? null,
+        phone: factura?.clients?.phone ?? null,
+        email: factura?.clients?.email ?? null,
+      },
+      correctsNumber: factura?.number ? `FAC-${factura.number}` : null,
+      correctsDate: factura?.created_at ? new Date(factura.created_at) : null,
+      reason: n.reason,
+      subtotal: Number(n.subtotal),
+      taxAmount: Number(n.tax_amount),
+      taxBreakdown: n.tax_breakdown as TaxBreakdown,
+      holdback: Math.round((Number(n.subtotal) + Number(n.tax_amount) - Number(n.amount)) * 100) / 100,
+      total: Number(n.amount),
+      // Entera o parcial se decide comparando con la factura, no guardando un
+      // booleano: si mañana se emite una segunda nota, el papel de la primera
+      // seguiría diciendo lo que era verdad el día que se imprimió.
+      full: Number(n.amount) >= Number(factura?.amount ?? 0) - 0.005,
+    },
+    lang
+  );
+
+  return { buffer, nombre: `NC-${n.number}.pdf` };
+}
+
 /**
  * El PDF de un acuerdo de trabajo, con su nombre de archivo.
  *
@@ -9749,6 +9812,170 @@ apiRouter.post(
       return;
     }
     res.json({ ok: true, status: "pagado" });
+  })
+);
+
+// ---------- Notas de crédito ----------
+// Lo que corrige una factura ya emitida, porque una factura emitida no se
+// toca. Ver docs/funciones/facturacion.md.
+
+/** Lo que queda por acreditar de una factura. Nunca se puede acreditar de más. */
+async function pendienteDeAcreditar(
+  supabase: NonNullable<Request["supabase"]>,
+  businessId: string,
+  invoiceId: string
+): Promise<{ invoice: { id: string; number: string | null; amount: number; subtotal: number; status: string }; libre: number } | null> {
+  const { data: invoice } = await supabase
+    .from("invoices")
+    .select("id, number, amount, subtotal, status")
+    .eq("business_id", businessId)
+    .eq("id", invoiceId)
+    .maybeSingle();
+  if (!invoice) return null;
+
+  const { data: notas } = await supabase
+    .from("credit_notes")
+    .select("amount")
+    .eq("business_id", businessId)
+    .eq("invoice_id", invoiceId);
+
+  const acreditado = (notas ?? []).reduce((suma, n) => suma + Number(n.amount), 0);
+  return {
+    invoice: {
+      id: invoice.id,
+      number: invoice.number,
+      amount: Number(invoice.amount),
+      subtotal: Number(invoice.subtotal),
+      status: invoice.status,
+    },
+    libre: Math.round((Number(invoice.amount) - acreditado) * 100) / 100,
+  };
+}
+
+apiRouter.get(
+  "/credit-notes",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    let q = supabase
+      .from("credit_notes")
+      .select("id, number, invoice_id, reason, subtotal, tax_amount, tax_breakdown, amount, created_at, invoices(number, clients(name))")
+      .eq("business_id", req.businessId!)
+      .order("created_at", { ascending: false });
+    if (req.query.invoiceId) q = q.eq("invoice_id", String(req.query.invoiceId));
+
+    const { data, error } = await q;
+    if (error) throw error;
+
+    res.json(
+      data.map((n: any) => ({
+        id: n.id,
+        number: `NC-${n.number}`,
+        invoiceId: n.invoice_id,
+        invoiceNumber: n.invoices?.number ?? null,
+        clientName: n.invoices?.clients?.name ?? null,
+        reason: n.reason,
+        subtotal: Number(n.subtotal),
+        taxAmount: Number(n.tax_amount),
+        taxBreakdown: n.tax_breakdown,
+        amount: Number(n.amount),
+        createdAt: n.created_at,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/credit-notes",
+  route(async (req, res) => {
+    const { invoiceId, reason } = req.body ?? {};
+    if (!invoiceId || typeof reason !== "string" || !reason.trim()) {
+      res.status(400).json({ error: "invoiceId y reason son obligatorios", code: "credit_note_needs_reason" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const estado = await pendienteDeAcreditar(supabase, req.businessId!, invoiceId);
+    if (!estado) {
+      res.status(404).json({ error: "invoice not found", code: "invoice_not_found" });
+      return;
+    }
+    if (estado.libre <= 0) {
+      res.status(409).json({ error: "esta factura ya está acreditada entera", code: "invoice_fully_credited" });
+      return;
+    }
+
+    // Sin importe, se acredita lo que quede: anular la factura entera es el
+    // caso normal, y obligar a teclear el total es invitar a equivocarse en
+    // el documento que existe precisamente para arreglar una equivocación.
+    const pedido = req.body?.amount === undefined || req.body?.amount === null ? estado.libre : Number(req.body.amount);
+    if (!Number.isFinite(pedido) || pedido <= 0) {
+      res.status(400).json({ error: "amount must be a positive number" });
+      return;
+    }
+    if (pedido > estado.libre + 0.005) {
+      res.status(409).json({
+        error: `no se puede acreditar más de lo que queda (${estado.libre})`,
+        code: "credit_note_exceeds_invoice",
+      });
+      return;
+    }
+
+    const total = Math.round(pedido * 100) / 100;
+
+    // El desglose se saca del de la factura, en proporción a lo que se
+    // acredita. Recalcularlo con las tasas de hoy sería corregir una factura
+    // de enero con los impuestos de diciembre.
+    const admin = getSupabaseAdmin();
+    const { data: original, error: originalError } = await admin
+      .from("invoices")
+      .select("subtotal, tax_amount, tax_breakdown, amount")
+      .eq("id", invoiceId)
+      .single();
+    if (originalError || !original) throw originalError ?? new Error("invoice disappeared");
+
+    const proporcion = Number(original.amount) > 0 ? total / Number(original.amount) : 0;
+    const escalar = (valor: unknown) => Math.round(Number(valor ?? 0) * proporcion * 100) / 100;
+    const desglose = original.tax_breakdown as Record<string, unknown>;
+    const desgloseNota: Record<string, unknown> = { province: desglose?.province };
+    for (const clave of ["gst", "pst", "hst"]) {
+      if (desglose?.[clave] !== undefined) desgloseNota[clave] = escalar(desglose[clave]);
+    }
+
+    const { data, error } = await supabase
+      .from("credit_notes")
+      .insert({
+        business_id: req.businessId!,
+        invoice_id: invoiceId,
+        reason: reason.trim().slice(0, 500),
+        subtotal: escalar(original.subtotal),
+        tax_amount: escalar(original.tax_amount),
+        tax_breakdown: desgloseNota,
+        amount: total,
+      })
+      .select("id, number, amount")
+      .single();
+    if (error) throw error;
+
+    // Acreditada entera, la factura queda anulada. Parcial no: sigue viva por
+    // la diferencia, y marcarla anulada escondería lo que queda por cobrar.
+    const entera = total >= estado.libre - 0.005;
+    if (entera && estado.invoice.status !== "cancelado") {
+      await admin.from("invoices").update({ status: "cancelado" }).eq("id", invoiceId);
+    }
+
+    res.status(201).json({ id: data.id, number: `NC-${data.number}`, amount: Number(data.amount), invoiceCancelled: entera });
+  })
+);
+
+apiRouter.get(
+  "/credit-notes/:id/pdf",
+  route(async (req, res) => {
+    const pdf = await construirPdfDeNota(getSupabaseAdmin(), req.businessId!, req.params.id, normalizeDocLang(req.query.lang));
+    if (!pdf) {
+      res.status(404).json({ error: "credit note not found", code: "credit_note_not_found" });
+      return;
+    }
+    sendPdf(res, pdf.buffer, pdf.nombre, req.query.download ? "attachment" : "inline");
   })
 );
 

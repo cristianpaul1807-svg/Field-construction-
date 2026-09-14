@@ -149,6 +149,41 @@ cabecera, tus números de TPS/TVQ y el desglose completo. Ver
 
 ---
 
+## Corregir una factura emitida
+
+**Nota de crédito** en la fila de la factura. Se escribe el motivo y, si sólo
+se corrige una parte, el importe; en blanco se anula entera.
+
+Una factura emitida **no se borra ni se edita**. Se corrige con una nota de
+crédito y las dos se quedan en los libros — eso no es una preferencia nuestra,
+es cómo tiene que poder reconstruirse un ejercicio meses después. El botón sale
+también sobre una factura **pagada**, que es justo el caso en el que anularla
+ya no es una opción.
+
+| Qué | Cómo |
+|---|---|
+| Número | `NC-2026-0001`, contador propio por año |
+| Impuestos | En la misma proporción y **a las tasas de la factura original**, no a las de hoy |
+| Entera | Deja la factura en `cancelado` |
+| Parcial | La factura sigue viva por la diferencia |
+| Tope | No se puede acreditar más de lo que queda por acreditar |
+
+El PDF lleva impreso a qué factura corrige, por qué, y **la línea de retención**.
+Sin ella el papel no cuadra: el total de una factura con retención no es el
+subtotal más los impuestos, y quien lo lea pensará que la nota está mal.
+
+Salen en su propio archivo del contable (*Notas de crédito*), no restadas de
+las facturas. Un libro enseña las dos cosas: lo que se facturó y lo que se
+corrigió. Restarlas por dentro cuadraría el total y borraría la corrección.
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/credit-notes?invoiceId=` | Lista |
+| `POST /api/credit-notes` | `{ invoiceId, reason, amount? }` |
+| `GET /api/credit-notes/:id/pdf` | El documento |
+
+---
+
 ## Estados
 
 | Estado | Qué significa |

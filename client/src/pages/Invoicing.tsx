@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Plus, Copy, Check, Download, Ban, Banknote } from "lucide-react";
+import { Send, Plus, Copy, Check, Download, Ban, Banknote, FileMinus } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { previewTax, type TaxRate } from "@/lib/taxes";
@@ -48,6 +48,115 @@ interface Invoice {
   /** Cómo entró el dinero. `stripe` es la tarjeta; el resto lo apuntó el contratista. */
   paymentMethod: "stripe" | "efectivo" | "transferencia" | "cheque" | "otro" | null;
   paymentReference: string | null;
+  /** Lo ya acreditado con notas de crédito. */
+  creditedAmount: number;
+}
+
+/**
+ * Emitir una nota de crédito sobre una factura.
+ *
+ * Una factura emitida no se toca: se corrige con esto, y las dos se quedan en
+ * los libros. Sin importe se acredita lo que quede, que es el caso normal
+ * —anularla entera— y evita teclear un total en el documento que existe
+ * justamente para arreglar un error de tecleo.
+ */
+function NotaDeCreditoDialog({ invoice, onDone }: { invoice: Invoice; onDone: () => void }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [parcial, setParcial] = useState(false);
+  const [importe, setImporte] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const libre = Math.round((invoice.amount - invoice.creditedAmount) * 100) / 100;
+
+  const emitir = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/credit-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invoiceId: invoice.id,
+          reason: motivo.trim(),
+          amount: parcial && importe ? Number(importe) : undefined,
+        }),
+      });
+      const body = await readJson(res);
+      if (!res.ok) throw new Error(serverMessage(body, t, t("common.genericError")));
+      setOpen(false);
+      setMotivo("");
+      setParcial(false);
+      setImporte("");
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="gap-1.5">
+          <FileMinus size={13} strokeWidth={1.75} /> {t("creditNotes.issue")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("creditNotes.issueTitle", { number: invoice.number ?? "" })}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">{t("creditNotes.issueHint")}</p>
+          <div className="space-y-1.5">
+            <Label htmlFor="nc-motivo">{t("creditNotes.reason")}</Label>
+            <Input
+              id="nc-motivo"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              placeholder={t("creditNotes.reasonPlaceholder")}
+            />
+            {/* Va impreso en el documento: es lo que va a leer quien revise
+                los libros dentro de dos años. */}
+            <p className="text-xs text-muted-foreground">{t("creditNotes.reasonNote")}</p>
+          </div>
+
+          <label className="flex items-start gap-2 text-sm text-foreground cursor-pointer">
+            <input type="checkbox" className="mt-0.5" checked={parcial} onChange={(e) => setParcial(e.target.checked)} />
+            <span>
+              {t("creditNotes.partial")}
+              <span className="block text-xs text-muted-foreground">
+                {t("creditNotes.fullBy", { amount: formatCurrency(libre) })}
+              </span>
+            </span>
+          </label>
+
+          {parcial && (
+            <div className="space-y-1.5">
+              <Label htmlFor="nc-importe">{t("creditNotes.amount")}</Label>
+              <Input
+                id="nc-importe"
+                type="number"
+                min={0}
+                max={libre}
+                step="0.01"
+                value={importe}
+                onChange={(e) => setImporte(e.target.value)}
+              />
+            </div>
+          )}
+
+          {error && <p className="text-sm text-status-error-fg">{error}</p>}
+          <Button className="w-full" onClick={emitir} disabled={busy || !motivo.trim() || (parcial && !importe)}>
+            {busy ? <Spinner className="size-4" /> : t("creditNotes.confirm")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 /** Los medios que se pueden apuntar a mano. La tarjeta la escribe Stripe, no el panel. */
@@ -289,8 +398,11 @@ export default function Invoicing() {
   const { filtrar } = useFiltroDeObra();
   const visibles = filtrar(invoices, (i) => i.projectId);
 
-  const totalPending = visibles.filter((i) => i.status === "pendiente" || i.status === "vencido").reduce((s, i) => s + i.amount, 0);
-  const totalPaid = visibles.filter((i) => i.status === "pagado").reduce((s, i) => s + i.amount, 0);
+  // Lo acreditado ya no se debe ni se ha cobrado, así que sale de los dos
+  // totales. Antes una factura acreditada a medias seguía sumando entera.
+  const neto = (i: Invoice) => i.amount - i.creditedAmount;
+  const totalPending = visibles.filter((i) => i.status === "pendiente" || i.status === "vencido").reduce((s, i) => s + neto(i), 0);
+  const totalPaid = visibles.filter((i) => i.status === "pagado").reduce((s, i) => s + neto(i), 0);
 
   const downloadInvoice = async (invoiceId: string) => {
     setPdfBusyId(invoiceId);
@@ -422,6 +534,11 @@ export default function Invoicing() {
                         {t("invoicing.holdbackWithheld", { amount: formatCurrency(invoice.holdbackAmount) })}
                       </span>
                     )}
+                    {invoice.creditedAmount > 0 && (
+                      <p className="text-xs text-status-warning-fg mt-0.5">
+                        {t("creditNotes.credited", { amount: formatCurrency(invoice.creditedAmount) })}
+                      </p>
+                    )}
                   </td>
                   <td className="py-3 pl-2">
                     <StatusBadge tone={invoiceStatusTone[invoice.status] ?? "info"}>{t(`invoicing.status.${invoice.status}`)}</StatusBadge>
@@ -477,6 +594,11 @@ export default function Invoicing() {
                     )}
                     {invoice.status !== "pagado" && invoice.status !== "cancelado" && (
                       <CobroManualDialog invoice={invoice} onDone={reload} />
+                    )}
+                    {/* La nota de crédito sí sale sobre una factura pagada: es
+                        justo el caso en que anularla ya no es una opción. */}
+                    {invoice.status !== "cancelado" && invoice.creditedAmount < invoice.amount && (
+                      <NotaDeCreditoDialog invoice={invoice} onDone={reload} />
                     )}
                     </div>
                   </td>

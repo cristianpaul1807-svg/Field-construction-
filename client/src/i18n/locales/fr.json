@@ -1356,7 +1356,8 @@
       "payments": "Paiements",
       "expenses": "Dépenses",
       "quickbooks-customers": "Clients",
-      "quickbooks-invoices": "Factures"
+      "quickbooks-invoices": "Factures",
+      "credit-notes": "Notes de crédit"
     },
     "quickbooksTitle": "Pour QuickBooks",
     "quickbooksNote": "Ces deux-là s'importent tels quels dans QuickBooks, sans toucher à aucune colonne. Importez-les dans cet ordre : QuickBooks refuse une facture d'un client qu'il ne connaît pas encore.",
@@ -1423,7 +1424,11 @@
     "time_off_backwards": "La date de fin précède la date de début.",
     "holdback_out_of_range": "La retenue doit être entre 0 et 20 %. Si vous vouliez celle du Québec, inscrivez 10.",
     "quickbooks_not_configured": "La connexion à QuickBooks n'est pas activée sur ce serveur.",
-    "quickbooks_not_connected": "Cette entreprise n'a pas encore connecté son QuickBooks."
+    "quickbooks_not_connected": "Cette entreprise n'a pas encore connecté son QuickBooks.",
+    "credit_note_needs_reason": "Il faut indiquer pourquoi elle est corrigée.",
+    "invoice_fully_credited": "Cette facture est déjà corrigée en totalité.",
+    "credit_note_exceeds_invoice": "Vous ne pouvez pas corriger plus que ce qu'il reste à corriger sur cette facture.",
+    "credit_note_not_found": "Nous n'avons pas trouvé cette note de crédit."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1918,5 +1923,18 @@
     "notConfiguredTitle": "Pas encore disponible",
     "notConfiguredBody": "La connexion à QuickBooks n'est pas encore activée sur ce serveur. Dès qu'elle le sera, le bouton apparaîtra ici.",
     "sandboxWarning": "Vous êtes connecté à une entreprise de test. Ce qui est envoyé n'apparaîtra pas dans votre vraie comptabilité."
+  },
+  "creditNotes": {
+    "issue": "Note de crédit",
+    "issueTitle": "Corriger la facture {{number}}",
+    "issueHint": "Une facture émise ne s'efface ni ne se modifie : on la corrige par une note de crédit, et les deux restent dans vos livres. C'est ainsi qu'il faut procéder pour que la comptabilité tienne lors d'une vérification.",
+    "reason": "Motif",
+    "reasonPlaceholder": "Ex. Montant mal calculé à cause de la retenue",
+    "reasonNote": "C'est imprimé sur le document. C'est ce que lira la personne qui vérifiera vos livres dans deux ans.",
+    "partial": "Ne corriger qu'une partie",
+    "fullBy": "Non coché, elle est annulée en entier : {{amount}}",
+    "amount": "Montant à corriger",
+    "confirm": "Émettre la note de crédit",
+    "credited": "Corrigé : {{amount}}"
   }
 }

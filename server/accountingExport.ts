@@ -23,6 +23,7 @@ type Db = ReturnType<typeof getSupabaseAdmin>;
 
 export type ExportKind =
   | "invoices"
+  | "credit-notes"
   | "payments"
   | "expenses"
   | "quickbooks-invoices"
@@ -234,6 +235,49 @@ export async function exportAccounting(
           "ItemRate",
           "*ItemAmount",
           "ItemTaxCode",
+        ],
+        rows
+      ),
+    };
+  }
+
+  // Las notas de crédito van en su propio archivo, no restadas de las
+  // facturas. Un libro tiene que enseñar las dos cosas: lo que se facturó y lo
+  // que se corrigió después. Restarlas por dentro haría cuadrar el total y
+  // borraría la corrección, que es justo lo que no se puede borrar.
+  if (kind === "credit-notes") {
+    const { data } = await db
+      .from("credit_notes")
+      .select("id, number, created_at, reason, subtotal, tax_amount, tax_breakdown, amount, invoices(number, clients(name), projects(name))")
+      .eq("business_id", businessId)
+      .gte("created_at", fromIso)
+      .lte("created_at", toIso)
+      .order("created_at");
+
+    const rows = ((data ?? []) as any[]).map((n) => [
+      n.id,
+      n.number ? `NC-${n.number}` : "",
+      day(n.created_at),
+      n.invoices?.number ? `FAC-${n.invoices.number}` : "",
+      n.invoices?.clients?.name ?? "",
+      n.invoices?.projects?.name ?? "",
+      n.reason ?? "",
+      // En negativo, que es lo que son: importe que deja de deberse. Un
+      // contable que vea 500 en una columna llamada "importe" los suma.
+      `-${money(n.subtotal)}`,
+      `-${money(n.tax_breakdown?.gst)}`,
+      `-${money(n.tax_breakdown?.pst)}`,
+      `-${money(n.tax_amount)}`,
+      `-${money(n.amount)}`,
+    ]);
+
+    return {
+      filename: `notas-de-credito-${from}-${to}.csv`,
+      rowCount: rows.length,
+      csv: toCsv(
+        [
+          "id", "numero", "fecha", "corrige_factura", "cliente", "obra", "motivo",
+          "subtotal", "tps_gst", "tvq_pst", "impuesto_total", "total",
         ],
         rows
       ),

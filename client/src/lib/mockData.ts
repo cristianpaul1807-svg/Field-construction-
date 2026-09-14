@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 // Sample data for the business panel prototype (Fase A — visual only, no backend yet).
 // Shapes mirror the data model in Especificacion-Pantallas-v1: every record belongs to
 // a single business_id (multi-tenant), included here even though there's only one business.
@@ -533,13 +534,34 @@ export const findProject = (id: string) => projects.find((p) => p.id === id);
 // screen is a price somebody pays, a line a customer checks against a quote,
 // or a catalogue rate. Rounding $5,748.75 to "$5,749" on a payment schedule
 // is a small lie that costs trust the first time the card is charged.
+/**
+ * En qué idioma se escribe el dinero.
+ *
+ * Estaba fijo en `en-CA`, así que un contratista con el panel en francés leía
+ * `$5,248.75` en todas las pantallas. En Quebec eso se escribe `5 248,75 $`:
+ * el símbolo detrás, el espacio de millar y la coma decimal. No es un detalle
+ * de estilo — es un número que su cliente compara con el papel que tiene
+ * delante, y escrito al revés le hace dudar del papel.
+ *
+ * Se lee del idioma puesto en cada llamada y no de un parámetro, para no
+ * tocar las ciento y pico llamadas que ya hay. Los componentes que enseñan
+ * dinero usan `t()`, así que se vuelven a pintar solos al cambiar de idioma.
+ */
+const localeDelDinero = (): string => {
+  const idioma = i18n.language?.slice(0, 2);
+  if (idioma === "fr") return "fr-CA";
+  if (idioma === "es") return "es-419";
+  if (idioma === "it") return "it-IT";
+  return "en-CA";
+};
+
 export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(value);
+  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD" }).format(value);
 
 // For headline totals, where the cents are noise and the shape of the number
 // is the point. Only for aggregates — never for anything owed.
 export const formatCurrencyRounded = (value: number) =>
-  new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(value);
+  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(value);
 
 // For compact UI spaces (small screens, summary tiles) where large numbers
 // (e.g. $45,000 or $1,500,000) could overflow or overlap table bounds.

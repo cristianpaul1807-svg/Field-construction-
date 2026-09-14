@@ -1356,7 +1356,8 @@
       "payments": "Pagos",
       "expenses": "Gastos",
       "quickbooks-customers": "Clientes",
-      "quickbooks-invoices": "Facturas"
+      "quickbooks-invoices": "Facturas",
+      "credit-notes": "Notas de crédito"
     },
     "quickbooksTitle": "Para QuickBooks",
     "quickbooksNote": "Estos dos se suben a QuickBooks tal cual, sin tocar ninguna columna. Súbelos en este orden: QuickBooks rechaza una factura de un cliente que todavía no conoce.",
@@ -1423,7 +1424,11 @@
     "time_off_backwards": "La fecha de fin es anterior a la de inicio.",
     "holdback_out_of_range": "La retención va entre 0 y 20 %. Si querías aplicar la de Quebec, pon 10.",
     "quickbooks_not_configured": "La conexión con QuickBooks no está activada en el servidor.",
-    "quickbooks_not_connected": "Este negocio todavía no ha conectado su QuickBooks."
+    "quickbooks_not_connected": "Este negocio todavía no ha conectado su QuickBooks.",
+    "credit_note_needs_reason": "Hace falta decir por qué se corrige.",
+    "invoice_fully_credited": "Esta factura ya está corregida por completo.",
+    "credit_note_exceeds_invoice": "No puedes corregir más de lo que queda por corregir de esa factura.",
+    "credit_note_not_found": "No encontramos esa nota de crédito."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1918,5 +1923,18 @@
     "notConfiguredTitle": "Todavía no está disponible",
     "notConfiguredBody": "La conexión con QuickBooks aún no está activada en este servidor. En cuanto lo esté, este botón aparecerá aquí.",
     "sandboxWarning": "Estás conectado a una empresa de pruebas. Lo que se mande no aparecerá en tu contabilidad de verdad."
+  },
+  "creditNotes": {
+    "issue": "Nota de crédito",
+    "issueTitle": "Corregir la factura {{number}}",
+    "issueHint": "Una factura emitida no se borra ni se cambia: se corrige con una nota de crédito, y las dos se quedan en tus libros. Es como tiene que hacerse para que las cuentas aguanten una revisión.",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Ej. Importe mal calculado por la retención",
+    "reasonNote": "Va impreso en el documento. Es lo que leerá quien revise tus libros dentro de dos años.",
+    "partial": "Corregir sólo una parte",
+    "fullBy": "Sin marcar, se anula entera: {{amount}}",
+    "amount": "Importe a corregir",
+    "confirm": "Emitir nota de crédito",
+    "credited": "Corregido: {{amount}}"
   }
 }

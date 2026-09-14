@@ -20,10 +20,10 @@ import { useTranslation } from "react-i18next";
  * hand back a login page named like a spreadsheet.
  */
 
-type Kind = "invoices" | "payments" | "expenses" | "quickbooks-customers" | "quickbooks-invoices";
+type Kind = "invoices" | "credit-notes" | "payments" | "expenses" | "quickbooks-customers" | "quickbooks-invoices";
 
 /** El CSV genérico, que el contable mapea una vez y reutiliza cada trimestre. */
-const KINDS: Kind[] = ["invoices", "payments", "expenses"];
+const KINDS: Kind[] = ["invoices", "credit-notes", "payments", "expenses"];
 
 /**
  * Los dos que QuickBooks importa sin mapear nada.
