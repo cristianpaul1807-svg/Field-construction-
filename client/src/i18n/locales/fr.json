@@ -93,7 +93,8 @@
     "payroll": "Paie",
     "workLog": "Suivi des travaux",
     "clientPortalShort": "Portail",
-    "serviceTypes": "Types de travaux"
+    "serviceTypes": "Types de travaux",
+    "timeOff": "Congés et absences"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1411,7 +1412,8 @@
     "signed_agreement_locked": "Une entente signée ne se modifie ni ne se supprime. Si les conditions changent, faites-en une nouvelle.",
     "worker_has_no_channel": "Cette personne n'a pas encore de conversation ouverte. Ouvrez-en une depuis la Messagerie et renvoyez-la.",
     "agreement_already_signed": "Cette entente est déjà signée.",
-    "agreement_not_sendable": "Cette entente n'est pas en attente de signature."
+    "agreement_not_sendable": "Cette entente n'est pas en attente de signature.",
+    "time_off_backwards": "La date de fin précède la date de début."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1669,6 +1671,13 @@
           "p3": "Sans date de fin, c'est à durée indéterminée. Les conditions que vous écrivez s'impriment telles quelles dans le document : mettez-y ce que vous avez vraiment convenu — qui fournit les outils, à partir de quand comptent les heures supplémentaires, quel préavis s'applique.",
           "p4": "L'entente produit un PDF avec votre logo, votre adresse et votre licence RBQ. Vous pouvez le télécharger et l'envoyer comme bon vous semble, ou le remettre par la messagerie pour qu'il le signe depuis son téléphone.",
           "nota": "Une entente signée ne peut être ni modifiée ni supprimée, volontairement : si vous pouviez la retoucher après coup, la signature ne vaudrait rien. Si les conditions changent, vous en faites une nouvelle."
+        },
+        "vacaciones": {
+          "title": "Planifier les congés de quelqu'un",
+          "p1": "Dans {{menuCampo}} → {{menuVacaciones}}, vous choisissez la personne, le motif et les dates. Pour une seule journée, laissez le champ « au » vide.",
+          "p2": "Dès que vous enregistrez, ça apparaît dans le calendrier de cette personne sur son téléphone, avec un avis les jours concernés. Pas besoin de le lui dire à part.",
+          "p3": "Et au moment de la paie, les jours d'absence s'affichent à côté des heures travaillées. Des heures basses s'expliquent ainsi d'elles-mêmes au lieu de vous renvoyer aux feuilles de temps.",
+          "nota": "Ce que vous planifiez est approuvé d'emblée. Ce qu'un travailleur demande reste en attente jusqu'à votre accord, et d'ici là il le voit marqué en attente sur son téléphone."
         }
       },
       "dinero": {
@@ -1844,5 +1853,41 @@
     "signHint": "Lisez-la avant de signer. En inscrivant votre nom, il est enregistré que c'était bien vous et à quel moment.",
     "yourName": "Vos nom et prénom",
     "confirmSign": "Signer"
+  },
+  "timeOff": {
+    "title": "Congés et absences",
+    "description": "Qui est absent et quand. Ça s'affiche sur le téléphone de chacun et se compte à part au moment de la paie.",
+    "new": "Ajouter une absence",
+    "newTitle": "Ajouter des congés ou une absence",
+    "newHint": "Ce que vous inscrivez ici apparaît dans le calendrier de cette personne sur son téléphone.",
+    "who": "Qui",
+    "pickSomeone": "Choisissez quelqu'un",
+    "kindLabel": "Motif",
+    "kind": {
+      "vacaciones": "Vacances",
+      "enfermedad": "Congé de maladie",
+      "permiso": "Congé",
+      "festivo": "Jour férié"
+    },
+    "from": "Du",
+    "to": "Au",
+    "toHint": "Vide s'il s'agit d'une seule journée.",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "status": {
+      "planificada": "En attente",
+      "aprobada": "Approuvé",
+      "rechazada": "Refusé"
+    },
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "deleteConfirm": "Supprimer cette absence de {{name}} ?",
+    "upcoming": "À venir",
+    "upcomingHint": "Ce qui n'a pas encore eu lieu, par ordre de date.",
+    "noneUpcoming": "Aucune absence prévue.",
+    "past": "Passées",
+    "dayOff": "Vous ne travaillez pas aujourd'hui",
+    "rangeOff": "Du {{from}} au {{to}}",
+    "yourUpcoming": "Vos prochains jours de congé"
   }
 }

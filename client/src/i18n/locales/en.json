@@ -93,7 +93,8 @@
     "payroll": "Payroll",
     "workLog": "Work log",
     "clientPortalShort": "Portal",
-    "serviceTypes": "Job types"
+    "serviceTypes": "Job types",
+    "timeOff": "Time off"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1411,7 +1412,8 @@
     "signed_agreement_locked": "A signed agreement can't be changed or deleted. If the terms change, make a new one.",
     "worker_has_no_channel": "This person has no conversation open yet. Start one from Messaging and send it again.",
     "agreement_already_signed": "This agreement is already signed.",
-    "agreement_not_sendable": "This agreement isn't waiting to be signed."
+    "agreement_not_sendable": "This agreement isn't waiting to be signed.",
+    "time_off_backwards": "The end date is before the start date."
   },
   "workLog": {
     "title": "Work log",
@@ -1669,6 +1671,13 @@
           "p3": "Leave the end date empty and it's open-ended. Whatever terms you type get printed word for word in the document, so put what you actually agreed there: who provides the tools, when overtime starts counting, how much notice there is.",
           "p4": "The agreement produces a PDF with your logo, your address and your RBQ licence. You can download it and send it however you like, or hand it over through the messaging so they sign it from their phone.",
           "nota": "A signed agreement can't be changed or deleted, on purpose: if you could touch it up afterwards, the signature would be worth nothing. If the terms change, you make a new one."
+        },
+        "vacaciones": {
+          "title": "Planning someone's time off",
+          "p1": "In {{menuCampo}} → {{menuVacaciones}} you pick the person, the reason and the dates. For a single day, leave the “until” field empty.",
+          "p2": "The moment you save it, it appears in that person's calendar on their phone, with a notice on the days it covers. You don't have to tell them separately.",
+          "p3": "And when you prepare payroll, the days away show up next to the hours worked. That way low hours explain themselves instead of sending you back through the timesheets.",
+          "nota": "What you plan is approved straight away. What a worker asks for stays pending until you sign off, and until then they see it marked as pending on their phone."
         }
       },
       "dinero": {
@@ -1844,5 +1853,41 @@
     "signHint": "Read it before you sign. Typing your name records that it was you and when you did it.",
     "yourName": "Your full name",
     "confirmSign": "Sign"
+  },
+  "timeOff": {
+    "title": "Time off",
+    "description": "Who's away and when. It shows on each person's phone and is counted separately when you prepare payroll.",
+    "new": "Add time off",
+    "newTitle": "Add time off or absence",
+    "newHint": "What you enter here shows up in that person's calendar on their phone.",
+    "who": "Who",
+    "pickSomeone": "Pick someone",
+    "kindLabel": "Reason",
+    "kind": {
+      "vacaciones": "Vacation",
+      "enfermedad": "Sick leave",
+      "permiso": "Leave",
+      "festivo": "Holiday"
+    },
+    "from": "From",
+    "to": "Until",
+    "toHint": "Empty if it's a single day.",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "status": {
+      "planificada": "Pending",
+      "aprobada": "Approved",
+      "rechazada": "Rejected"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "deleteConfirm": "Delete this time off for {{name}}?",
+    "upcoming": "Coming up",
+    "upcomingHint": "What hasn't happened yet, in date order.",
+    "noneUpcoming": "No time off is planned.",
+    "past": "Past",
+    "dayOff": "You're not working today",
+    "rangeOff": "From {{from}} to {{to}}",
+    "yourUpcoming": "Your upcoming days off"
   }
 }

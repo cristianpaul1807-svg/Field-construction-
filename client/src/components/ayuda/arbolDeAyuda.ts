@@ -72,7 +72,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
   },
   {
     id: "trabajo",
-    rutas: ["/projects", "/work-orders", "/scheduling", "/check-in", "/work-log", "/technicians", "/gps-routing"],
+    rutas: ["/projects", "/work-orders", "/scheduling", "/check-in", "/work-log", "/technicians", "/gps-routing", "/time-off"],
     temas: [
       { id: "crearOrden", parrafos: 3, ruta: "/work-orders" },
       { id: "numeroDeObra", parrafos: 3, nota: true, ruta: "/work-log" },
@@ -83,6 +83,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // Lo que se acordó con cada uno dejaba de existir en cuanto se
       // cerraba la conversación en la que se dijo.
       { id: "acuerdo", parrafos: 4, nota: true, ruta: "/technicians" },
+      { id: "vacaciones", parrafos: 3, nota: true, ruta: "/time-off" },
     ],
   },
   {

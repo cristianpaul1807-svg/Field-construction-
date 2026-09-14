@@ -93,7 +93,8 @@
     "payroll": "Nóminas",
     "workLog": "Control de trabajo",
     "clientPortalShort": "Portal",
-    "serviceTypes": "Tipos de trabajo"
+    "serviceTypes": "Tipos de trabajo",
+    "timeOff": "Vacaciones y ausencias"
   },
   "dashboard": {
     "title": "Panel",
@@ -1411,7 +1412,8 @@
     "signed_agreement_locked": "Un acuerdo firmado no se cambia ni se borra. Si cambian las condiciones, haz uno nuevo.",
     "worker_has_no_channel": "Esta persona todavía no tiene conversación abierta. Ábrele una desde Mensajería y vuelve a mandárselo.",
     "agreement_already_signed": "Este acuerdo ya está firmado.",
-    "agreement_not_sendable": "Este acuerdo no está pendiente de firma."
+    "agreement_not_sendable": "Este acuerdo no está pendiente de firma.",
+    "time_off_backwards": "La fecha de fin es anterior a la de inicio."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1669,6 +1671,13 @@
           "p3": "Si lo dejas sin fecha de fin, es indefinido. Las condiciones que escribas salen impresas tal cual en el documento, así que ahí va lo que de verdad acordasteis: quién pone la herramienta, desde cuándo cuentan las horas extra, cuánto preaviso hay.",
           "p4": "Del acuerdo sale un PDF con tu logo, tu dirección y tu licencia RBQ. Lo puedes descargar y mandárselo por donde quieras, o dárselo por la mensajería para que lo firme desde el móvil.",
           "nota": "Un acuerdo ya firmado no se puede cambiar ni borrar, a propósito: si pudieras retocarlo después, la firma no valdría nada. Si cambian las condiciones, haces uno nuevo."
+        },
+        "vacaciones": {
+          "title": "Planificar las vacaciones de alguien",
+          "p1": "En {{menuCampo}} → {{menuVacaciones}} eliges a la persona, el motivo y las fechas. Si es un solo día, dejas vacío el «hasta».",
+          "p2": "En cuanto lo guardas le aparece a esa persona en el calendario de su móvil, con un aviso los días que caen dentro. No tienes que decírselo aparte.",
+          "p3": "Y cuando prepares la nómina, los días fuera salen al lado de las horas trabajadas. Así unas horas bajas se explican solas en vez de mandarte a revisar los partes.",
+          "nota": "Lo que planificas tú queda aprobado directamente. Lo que pide el trabajador queda pendiente hasta que le des al visto bueno, y hasta entonces él lo ve marcado como pendiente en su móvil."
         }
       },
       "dinero": {
@@ -1844,5 +1853,41 @@
     "signHint": "Léelo antes de firmar. Al escribir tu nombre queda guardado que fuiste tú y cuándo lo hiciste.",
     "yourName": "Tu nombre y apellido",
     "confirmSign": "Firmar"
+  },
+  "timeOff": {
+    "title": "Vacaciones y ausencias",
+    "description": "Quién no está y cuándo. Sale en el móvil de cada uno y se cuenta aparte al preparar la nómina.",
+    "new": "Añadir ausencia",
+    "newTitle": "Añadir vacaciones o ausencia",
+    "newHint": "Lo que pongas aquí le aparece a esa persona en su calendario del móvil.",
+    "who": "Quién",
+    "pickSomeone": "Elige a alguien",
+    "kindLabel": "Motivo",
+    "kind": {
+      "vacaciones": "Vacaciones",
+      "enfermedad": "Baja por enfermedad",
+      "permiso": "Permiso",
+      "festivo": "Festivo"
+    },
+    "from": "Desde",
+    "to": "Hasta",
+    "toHint": "Vacío si es un solo día.",
+    "days_one": "{{count}} día",
+    "days_other": "{{count}} días",
+    "status": {
+      "planificada": "Pendiente",
+      "aprobada": "Aprobada",
+      "rechazada": "Rechazada"
+    },
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "deleteConfirm": "¿Borrar esta ausencia de {{name}}?",
+    "upcoming": "Lo que viene",
+    "upcomingHint": "Lo que todavía no ha pasado, por orden de fecha.",
+    "noneUpcoming": "No hay ninguna ausencia prevista.",
+    "past": "Ya pasadas",
+    "dayOff": "Hoy no trabajas",
+    "rangeOff": "Del {{from}} al {{to}}",
+    "yourUpcoming": "Tus próximos días libres"
   }
 }

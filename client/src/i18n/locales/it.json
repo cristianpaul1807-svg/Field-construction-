@@ -93,7 +93,8 @@
     "payroll": "Buste paga",
     "workLog": "Controllo lavori",
     "clientPortalShort": "Portale",
-    "serviceTypes": "Tipi di lavoro"
+    "serviceTypes": "Tipi di lavoro",
+    "timeOff": "Ferie e assenze"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1411,7 +1412,8 @@
     "signed_agreement_locked": "Un accordo firmato non si modifica né si elimina. Se cambiano le condizioni, fanne uno nuovo.",
     "worker_has_no_channel": "Questa persona non ha ancora una conversazione aperta. Aprigliene una da Messaggistica e rimandaglielo.",
     "agreement_already_signed": "Questo accordo è già firmato.",
-    "agreement_not_sendable": "Questo accordo non è in attesa di firma."
+    "agreement_not_sendable": "Questo accordo non è in attesa di firma.",
+    "time_off_backwards": "La data di fine è precedente a quella di inizio."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -1669,6 +1671,13 @@
           "p3": "Se lo lasci senza data di fine, è a tempo indeterminato. Le condizioni che scrivi vengono stampate così come sono nel documento, quindi lì va quello che avete davvero concordato: chi mette gli attrezzi, da quando contano gli straordinari, quanto preavviso c'è.",
           "p4": "Dall'accordo esce un PDF con il tuo logo, il tuo indirizzo e la tua licenza RBQ. Puoi scaricarlo e mandarglielo come vuoi, o passarglielo dalla messaggistica perché lo firmi dal telefono.",
           "nota": "Un accordo già firmato non si può modificare né cancellare, di proposito: se potessi ritoccarlo dopo, la firma non varrebbe niente. Se cambiano le condizioni, ne fai uno nuovo."
+        },
+        "vacaciones": {
+          "title": "Pianificare le ferie di qualcuno",
+          "p1": "In {{menuCampo}} → {{menuVacaciones}} scegli la persona, il motivo e le date. Se è un solo giorno, lasci vuoto il campo «al».",
+          "p2": "Appena salvi, compare a quella persona nel calendario del telefono, con un avviso nei giorni interessati. Non devi dirglielo a parte.",
+          "p3": "E quando prepari la busta paga, i giorni di assenza compaiono accanto alle ore lavorate. Così delle ore basse si spiegano da sole invece di mandarti a rivedere i rapportini.",
+          "nota": "Quello che pianifichi tu è approvato subito. Quello che chiede il lavoratore resta in attesa finché non dai l'ok, e fino ad allora lui lo vede segnato come in attesa sul telefono."
         }
       },
       "dinero": {
@@ -1844,5 +1853,41 @@
     "signHint": "Leggilo prima di firmare. Scrivendo il tuo nome resta registrato che sei stato tu e quando l'hai fatto.",
     "yourName": "Nome e cognome",
     "confirmSign": "Firma"
+  },
+  "timeOff": {
+    "title": "Ferie e assenze",
+    "description": "Chi non c'è e quando. Compare sul telefono di ciascuno e si conta a parte quando prepari le buste paga.",
+    "new": "Aggiungi assenza",
+    "newTitle": "Aggiungi ferie o assenza",
+    "newHint": "Quello che metti qui compare a quella persona nel calendario del telefono.",
+    "who": "Chi",
+    "pickSomeone": "Scegli qualcuno",
+    "kindLabel": "Motivo",
+    "kind": {
+      "vacaciones": "Ferie",
+      "enfermedad": "Malattia",
+      "permiso": "Permesso",
+      "festivo": "Festivo"
+    },
+    "from": "Dal",
+    "to": "Al",
+    "toHint": "Vuoto se è un solo giorno.",
+    "days_one": "{{count}} giorno",
+    "days_other": "{{count}} giorni",
+    "status": {
+      "planificada": "In attesa",
+      "aprobada": "Approvata",
+      "rechazada": "Rifiutata"
+    },
+    "approve": "Approva",
+    "reject": "Rifiuta",
+    "deleteConfirm": "Eliminare questa assenza di {{name}}?",
+    "upcoming": "In arrivo",
+    "upcomingHint": "Quello che non è ancora successo, in ordine di data.",
+    "noneUpcoming": "Nessuna assenza prevista.",
+    "past": "Passate",
+    "dayOff": "Oggi non lavori",
+    "rangeOff": "Dal {{from}} al {{to}}",
+    "yourUpcoming": "I tuoi prossimi giorni liberi"
   }
 }

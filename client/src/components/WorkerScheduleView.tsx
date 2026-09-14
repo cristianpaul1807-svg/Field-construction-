@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { ChevronLeft, ChevronRight, ClipboardList } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardList, Palmtree } from "lucide-react";
 import { hashColor, cn } from "@/lib/utils";
 import { workerApiFetch } from "@/lib/workerSession";
 import { MonthGrid, claveDia, type DiaMarcado } from "@/components/MonthGrid";
@@ -16,6 +16,14 @@ interface ScheduleEvent {
   notes: string | null;
   projectId: string | null;
   projectName: string | null;
+}
+
+interface TimeOff {
+  id: string;
+  startDate: string;
+  endDate: string;
+  kind: "vacaciones" | "enfermedad" | "permiso" | "festivo";
+  status: "planificada" | "aprobada" | "rechazada";
 }
 
 interface WorkOrder {
@@ -72,6 +80,7 @@ export function WorkerScheduleView() {
   const { t, i18n } = useTranslation();
   const [events, setEvents] = useState<ScheduleEvent[] | null>(null);
   const [workOrders, setWorkOrders] = useState<WorkOrder[] | null>(null);
+  const [timeOff, setTimeOff] = useState<TimeOff[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"dia" | "semana" | "mes">("dia");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -85,6 +94,7 @@ export function WorkerScheduleView() {
         if (cancelled) return;
         setEvents(body.events ?? []);
         setWorkOrders(body.workOrders ?? []);
+        setTimeOff(body.timeOff ?? []);
       })
       .finally(() => !cancelled && setLoading(false));
     return () => {
@@ -93,6 +103,24 @@ export function WorkerScheduleView() {
   }, []);
 
   const dayEvents = useMemo(() => (events ?? []).filter((e) => isSameDay(e.startTime, currentDate)), [events, currentDate]);
+
+  /** El día que se está mirando, como "2026-08-12", para compararlo con las ausencias. */
+  const claveDelDia = claveDia(currentDate);
+  const libreHoy = useMemo(
+    () => timeOff.find((a) => a.startDate <= claveDelDia && a.endDate >= claveDelDia) ?? null,
+    [timeOff, claveDelDia]
+  );
+
+  // Un "2026-09-14" en pantalla es una fecha de base de datos, no una fecha.
+  // Al mediodía UTC para que no se corra un día según el huso.
+  const fechaCorta = (iso: string) =>
+    new Date(`${iso}T12:00:00Z`).toLocaleDateString(i18n.language, { day: "numeric", month: "long" });
+
+  const hoyClave = claveDia(new Date());
+  const librePorVenir = useMemo(
+    () => timeOff.filter((a) => a.endDate >= hoyClave).sort((a, b) => a.startDate.localeCompare(b.startDate)),
+    [timeOff, hoyClave]
+  );
   const positioned = useMemo(() => layoutEvents(dayEvents), [dayEvents]);
 
   const now = new Date();
@@ -122,8 +150,17 @@ export function WorkerScheduleView() {
       const clave = claveDia(new Date(e.startTime));
       mapa.set(clave, { cuantas: (mapa.get(clave)?.cuantas ?? 0) + 1 });
     }
+    // Los días que no se trabaja, pintados aparte del contador de trabajos:
+    // un día de vacaciones con un punto igual que un día con una visita se
+    // lee como trabajo, que es lo contrario de lo que es.
+    for (const a of timeOff) {
+      for (let d = new Date(`${a.startDate}T12:00:00Z`); claveDia(d) <= a.endDate; d.setDate(d.getDate() + 1)) {
+        const clave = claveDia(d);
+        mapa.set(clave, { cuantas: mapa.get(clave)?.cuantas ?? 0, libre: true });
+      }
+    }
     return mapa;
-  }, [events]);
+  }, [events, timeOff]);
 
   const weekStart = useMemo(() => startOfWeek(currentDate), [currentDate]);
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => new Date(weekStart.getTime() + i * 86400000)), [weekStart]);
@@ -148,6 +185,24 @@ export function WorkerScheduleView() {
 
   return (
     <div className="space-y-4">
+      {/* Antes que la rejilla: si hoy no se trabaja, eso es lo primero que hay
+          que saber. Mirar una agenda vacía y no saber si es que no hay trabajo
+          o es que son tus vacaciones es exactamente la llamada que se quiere
+          evitar. */}
+      {libreHoy && (
+        <div className="rounded-xl border border-status-success-bg bg-status-success-bg/40 p-4 flex items-center gap-2.5">
+          <Palmtree size={18} className="text-status-success-fg flex-shrink-0" strokeWidth={1.75} />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">{t(`timeOff.kind.${libreHoy.kind}`)}</p>
+            <p className="text-xs text-muted-foreground">
+              {libreHoy.startDate === libreHoy.endDate
+                ? t("timeOff.dayOff")
+                : t("timeOff.rangeOff", { from: fechaCorta(libreHoy.startDate), to: fechaCorta(libreHoy.endDate) })}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setCurrentDate((d) => mover(d, -1))} aria-label={t(view === "dia" ? "scheduling.previousDay" : view === "semana" ? "scheduling.previousWeek" : "scheduling.previousMonth")}>
@@ -315,6 +370,28 @@ export function WorkerScheduleView() {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {librePorVenir.length > 0 && (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Palmtree size={15} className="text-muted-foreground" strokeWidth={1.75} />
+            <h3 className="text-sm font-semibold text-foreground">{t("timeOff.yourUpcoming")}</h3>
+          </div>
+          <div className="space-y-2">
+            {librePorVenir.map((a) => (
+              <div key={a.id} className="flex items-center justify-between gap-3 text-sm border-b border-border last:border-0 pb-2 last:pb-0">
+                <span className="text-foreground">{t(`timeOff.kind.${a.kind}`)}</span>
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  {a.startDate === a.endDate ? fechaCorta(a.startDate) : `${fechaCorta(a.startDate)} → ${fechaCorta(a.endDate)}`}
+                  {/* Lo pedido y lo aprobado no son lo mismo, y el trabajador
+                      tiene que poder distinguirlo sin preguntar. */}
+                  {a.status === "planificada" && ` · ${t("timeOff.status.planificada")}`}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

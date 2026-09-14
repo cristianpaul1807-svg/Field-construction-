@@ -46,6 +46,7 @@ export function useNombresDelMenu() {
       menuPortal: t("nav.clientPortalShort"),
       menuProyectos: t("nav.projects"),
       menuPresupuestos: t("nav.budgets"),
+      menuVacaciones: t("nav.timeOff"),
     }),
     [t]
   );

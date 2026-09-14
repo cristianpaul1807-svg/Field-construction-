@@ -1306,7 +1306,7 @@ apiRouter.get(
     const admin = getSupabaseAdmin();
     const column = workerColumn(req);
 
-    const [events, workOrders] = await Promise.all([
+    const [events, workOrders, ausencias] = await Promise.all([
       admin
         .from("schedule_events")
         .select("id, title, type, start_time, end_time, notes, project_id, projects(name)")
@@ -1319,10 +1319,21 @@ apiRouter.get(
         .eq("business_id", req.workerBusinessId!)
         .eq(column, req.workerId!)
         .neq("status", "completada"),
+      // Sus días libres, en el mismo sitio donde mira qué le toca. Tenerlos
+      // sólo en el panel de la oficina significaba que el trabajador se
+      // enteraba de sus propias vacaciones preguntando.
+      admin
+        .from("time_off")
+        .select("id, start_date, end_date, kind, status")
+        .eq("business_id", req.workerBusinessId!)
+        .eq(column, req.workerId!)
+        .neq("status", "rechazada")
+        .order("start_date"),
     ]);
 
     if (events.error) throw events.error;
     if (workOrders.error) throw workOrders.error;
+    if (ausencias.error) throw ausencias.error;
 
     res.json({
       events: events.data.map((e: any) => ({
@@ -1343,6 +1354,13 @@ apiRouter.get(
         status: w.status,
         projectId: w.project_id,
         projectName: w.projects?.name ?? null,
+      })),
+      timeOff: ausencias.data.map((a) => ({
+        id: a.id,
+        startDate: a.start_date,
+        endDate: a.end_date,
+        kind: a.kind,
+        status: a.status,
       })),
     });
   })
@@ -7428,16 +7446,53 @@ apiRouter.get(
       return;
     }
     const admin = getSupabaseAdmin();
-    const [workers, rules] = await Promise.all([
+    const [workers, rules, ausencias] = await Promise.all([
       approvedHours(admin, req.businessId!, from, `${to}T23:59:59.999Z`),
       readDeductions(admin, req.businessId!),
+      // Los días que no estuvo, junto a las horas que hizo. Sin esto, quien
+      // prepara la nómina ve unas horas bajas y no sabe si el trabajador faltó,
+      // estuvo de vacaciones o es que nadie le aprobó los partes.
+      admin
+        .from("time_off")
+        .select("employee_id, subcontractor_id, start_date, end_date, kind")
+        .eq("business_id", req.businessId!)
+        .eq("status", "aprobada")
+        .lte("start_date", to)
+        .gte("end_date", from),
     ]);
+    if (ausencias.error) throw ausencias.error;
     const periodDays = Math.max(1, Math.round((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000) + 1);
+
+    /** Días de ausencia de una persona dentro del periodo, recortados a él. */
+    const diasFuera = (workerId: string) => {
+      const suyas = (ausencias.data ?? []).filter(
+        (a) => a.employee_id === workerId || a.subcontractor_id === workerId
+      );
+      const porTipo: Record<string, number> = {};
+      let total = 0;
+      for (const a of suyas) {
+        // Unas vacaciones de julio a agosto cuentan en la quincena sólo por
+        // los días que caen dentro de ella.
+        const desde = a.start_date > from ? a.start_date : from;
+        const hasta = a.end_date < to ? a.end_date : to;
+        const dias = diasDeAusencia(desde, hasta);
+        if (dias <= 0) continue;
+        porTipo[a.kind] = (porTipo[a.kind] ?? 0) + dias;
+        total += dias;
+      }
+      return { total, porTipo };
+    };
+
+    // Quien estuvo todo el periodo de vacaciones tiene cero horas, y filtrando
+    // sólo por horas desaparecía de la lista justo cuando hacía falta verlo.
+    const conAusencia = new Set(
+      (ausencias.data ?? []).map((a) => a.employee_id ?? a.subcontractor_id).filter(Boolean) as string[]
+    );
 
     const year = new Date(to).getUTCFullYear();
     const rows = await Promise.all(
       workers
-        .filter((w) => w.hours > 0)
+        .filter((w) => w.hours > 0 || conAusencia.has(w.workerId))
         .map(async (w) => ({
           workerId: w.workerId,
           kind: w.kind,
@@ -7445,6 +7500,7 @@ apiRouter.get(
           hourlyRate: w.hourlyRate,
           hours: w.hours,
           overtimeHours: w.overtimeHours,
+          timeOff: diasFuera(w.workerId),
           // Without a rate there is nothing to compute, and inventing one
           // would put a number in front of somebody that nobody chose.
           breakdown: w.hourlyRate
@@ -9644,6 +9700,149 @@ apiRouter.post(
       return;
     }
     res.json({ ok: true, status: "pagado" });
+  })
+);
+
+// ---------- Vacaciones y ausencias ----------
+// Los días que alguien no está. Salen en su calendario de campo y se cuentan
+// aparte de las horas trabajadas cuando se prepara la nómina.
+
+const SELECT_AUSENCIA =
+  "id, start_date, end_date, kind, status, notes, requested_by, approved_at, employee_id, subcontractor_id, created_at, employees(name), subcontractors(name)";
+
+function ausenciaParaElPanel(a: any) {
+  return {
+    id: a.id,
+    startDate: a.start_date,
+    endDate: a.end_date,
+    kind: a.kind,
+    status: a.status,
+    notes: a.notes,
+    requestedBy: a.requested_by,
+    approvedAt: a.approved_at,
+    employeeId: a.employee_id,
+    subcontractorId: a.subcontractor_id,
+    workerName: a.employees?.name ?? a.subcontractors?.name ?? null,
+    workerKind: a.employee_id ? "employee" : "subcontractor",
+    /** Días enteros, extremos incluidos: del 3 al 5 son tres días, no dos. */
+    days: diasDeAusencia(a.start_date, a.end_date),
+  };
+}
+
+/** Días naturales que abarca una ausencia, contando el primero y el último. */
+function diasDeAusencia(desde: string, hasta: string): number {
+  const d1 = Date.parse(`${desde}T00:00:00Z`);
+  const d2 = Date.parse(`${hasta}T00:00:00Z`);
+  if (Number.isNaN(d1) || Number.isNaN(d2)) return 0;
+  return Math.round((d2 - d1) / 86_400_000) + 1;
+}
+
+apiRouter.get(
+  "/time-off",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    let q = supabase
+      .from("time_off")
+      .select(SELECT_AUSENCIA)
+      .eq("business_id", req.businessId!)
+      .order("start_date", { ascending: false });
+
+    // El calendario pide un tramo; la ficha de una persona, la suya. Se
+    // solapan los rangos en vez de compararlos enteros: unas vacaciones que
+    // empiezan en julio y acaban en agosto salen en los dos meses.
+    if (req.query.from) q = q.gte("end_date", String(req.query.from));
+    if (req.query.to) q = q.lte("start_date", String(req.query.to));
+    if (req.query.employeeId) q = q.eq("employee_id", String(req.query.employeeId));
+    if (req.query.subcontractorId) q = q.eq("subcontractor_id", String(req.query.subcontractorId));
+
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json(data.map(ausenciaParaElPanel));
+  })
+);
+
+apiRouter.post(
+  "/time-off",
+  route(async (req, res) => {
+    const employeeId = req.body?.employeeId ?? null;
+    const subcontractorId = req.body?.subcontractorId ?? null;
+    if (Boolean(employeeId) === Boolean(subcontractorId)) {
+      res.status(400).json({ error: "pass exactly one of employeeId or subcontractorId" });
+      return;
+    }
+    const { startDate, endDate } = req.body ?? {};
+    if (!startDate || !endDate) {
+      res.status(400).json({ error: "startDate and endDate are required" });
+      return;
+    }
+    if (endDate < startDate) {
+      res.status(400).json({ error: "la fecha de fin es anterior a la de inicio", code: "time_off_backwards" });
+      return;
+    }
+
+    const kind = ["vacaciones", "enfermedad", "permiso", "festivo"].includes(req.body?.kind)
+      ? req.body.kind
+      : "vacaciones";
+
+    const supabase = req.supabase!;
+    // Lo que planifica la oficina nace aprobado: el contratista no se pide
+    // permiso a sí mismo para cerrar en agosto.
+    const { data, error } = await supabase
+      .from("time_off")
+      .insert({
+        business_id: req.businessId!,
+        employee_id: employeeId,
+        subcontractor_id: subcontractorId,
+        start_date: startDate,
+        end_date: endDate,
+        kind,
+        status: "aprobada",
+        requested_by: "admin",
+        approved_at: new Date().toISOString(),
+        notes: typeof req.body?.notes === "string" && req.body.notes.trim() ? req.body.notes.trim() : null,
+      })
+      .select(SELECT_AUSENCIA)
+      .single();
+    if (error) throw error;
+    res.status(201).json(ausenciaParaElPanel(data));
+  })
+);
+
+apiRouter.patch(
+  "/time-off/:id/status",
+  route(async (req, res) => {
+    const permitidos = ["planificada", "aprobada", "rechazada"];
+    if (!permitidos.includes(req.body?.status)) {
+      res.status(400).json({ error: `status must be one of: ${permitidos.join(", ")}` });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("time_off")
+      .update({
+        status: req.body.status,
+        approved_at: req.body.status === "aprobada" ? new Date().toISOString() : null,
+      })
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .select(SELECT_AUSENCIA)
+      .single();
+    if (error) throw error;
+    res.json(ausenciaParaElPanel(data));
+  })
+);
+
+apiRouter.delete(
+  "/time-off/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("time_off")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
   })
 );
 

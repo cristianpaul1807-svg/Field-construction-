@@ -53,6 +53,8 @@ interface WorkerRow {
   hourlyRate: number | null;
   hours: number;
   overtimeHours: number;
+  /** Días que no estuvo dentro del periodo, y por qué. */
+  timeOff: { total: number; porTipo: Record<string, number> };
   breakdown: Breakdown | null;
 }
 
@@ -231,6 +233,16 @@ export default function Payroll() {
                       : ""}
                     {worker.hourlyRate ? ` · ${formatCurrency(worker.hourlyRate)}/h` : ""}
                   </p>
+                  {/* Unas horas bajas sin explicación mandan a revisar los
+                      partes. Con los días fuera al lado, la mitad de esas
+                      revisiones no hacen falta: estuvo de vacaciones. */}
+                  {worker.timeOff?.total > 0 && (
+                    <p className="text-xs text-status-success-fg mt-0.5">
+                      {Object.entries(worker.timeOff.porTipo)
+                        .map(([tipo, dias]) => `${t(`timeOff.kind.${tipo}`)}: ${t("timeOff.days", { count: dias })}`)
+                        .join(" · ")}
+                    </p>
+                  )}
                 </div>
                 {worker.breakdown && (
                   <Button size="sm" variant="outline" onClick={() => record(worker)} disabled={busyId === worker.workerId}>

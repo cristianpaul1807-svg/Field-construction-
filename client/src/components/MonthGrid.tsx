@@ -17,6 +17,14 @@ import { cn } from "@/lib/utils";
 export interface DiaMarcado {
   /** Cuántas cosas hay ese día. Cero no se marca. */
   cuantas: number;
+  /**
+   * Ese día no se trabaja: vacaciones, baja, permiso o festivo.
+   *
+   * Va aparte del contador a propósito. Sumarlo a `cuantas` pintaría un día
+   * libre igual que un día con un trabajo, que es justo lo contrario de lo
+   * que hay que ver de un vistazo.
+   */
+  libre?: boolean;
 }
 
 /** La clave de un día, en su huso horario local y no en UTC: un evento a las
@@ -97,12 +105,15 @@ export function MonthGrid({
               key={fecha.toISOString()}
               onClick={() => onElegir(fecha)}
               aria-label={`${fecha.toLocaleDateString(i18n.language, { day: "numeric", month: "long", year: "numeric" })}${
-                marca ? ` — ${t("scheduling.countThatDay", { count: marca.cuantas })}` : ""
-              }`}
+                marca?.libre ? ` — ${t("timeOff.dayOff")}` : ""
+              }${marca?.cuantas ? ` — ${t("scheduling.countThatDay", { count: marca.cuantas })}` : ""}`}
               aria-current={esElElegido ? "date" : undefined}
               className={cn(
                 "relative min-h-11 rounded-lg flex flex-col items-center justify-center gap-1 transition-colors",
                 esElElegido ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
+                // Un día libre se ve antes de leer el número: el fondo cambia,
+                // no un punto más pequeño que la uña.
+                marca?.libre && !esElElegido && "bg-status-success-bg/60",
                 !deEsteMes && !esElElegido && "text-muted-foreground/50"
               )}
             >

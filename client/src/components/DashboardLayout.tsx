@@ -32,6 +32,7 @@ import {
   Home,
   FolderKanban,
   HardHat,
+  Palmtree,
   Settings,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -129,6 +130,9 @@ const navSections: NavSection[] = [
       // crearlas: qué ha pasado de verdad en cada número de obra.
       { id: "work-log", labelKey: "nav.workLog", Icon: ListChecks, path: "/work-log" },
       { id: "scheduling", labelKey: "nav.scheduling", Icon: Calendar, path: "/scheduling" },
+      // Detrás de la agenda porque contesta la otra mitad de la pregunta:
+      // la agenda dice quién trabaja el martes, esto dice quién no está.
+      { id: "time-off", labelKey: "nav.timeOff", Icon: Palmtree, path: "/time-off" },
     ],
   },
   {

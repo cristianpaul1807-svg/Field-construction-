@@ -34,6 +34,7 @@ import GpsRouting from "@/pages/GpsRouting";
 import CheckIn from "@/pages/CheckIn";
 import WorkOrders from "@/pages/WorkOrders";
 import WorkLog from "@/pages/WorkLog";
+import TimeOff from "@/pages/TimeOff";
 import Scheduling from "@/pages/Scheduling";
 import Invoicing from "@/pages/Invoicing";
 import Payroll from "@/pages/Payroll";
@@ -74,6 +75,7 @@ function BusinessPanel() {
         <Route path={"/check-in"} component={CheckIn} />
         <Route path={"/work-orders"} component={WorkOrders} />
         <Route path={"/work-log"} component={WorkLog} />
+        <Route path={"/time-off"} component={TimeOff} />
         <Route path={"/scheduling"} component={Scheduling} />
         <Route path={"/invoicing"} component={Invoicing} />
         <Route path={"/payroll"} component={Payroll} />
