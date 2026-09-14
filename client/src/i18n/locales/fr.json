@@ -1925,7 +1925,10 @@
     "sandboxWarning": "Vous êtes connecté à une entreprise de test. Ce qui est envoyé n'apparaîtra pas dans votre vraie comptabilité.",
     "rowSent": "Dans QuickBooks",
     "rowNotSent": "N'est pas arrivée dans QuickBooks",
-    "rowRetry": "Réessayer"
+    "rowRetry": "Réessayer",
+    "diagnose": "Voir le diagnostic",
+    "diagnoseHint": "Ce que votre QuickBooks a de configuré : codes de taxe, services et comptes. C'est ce qui dit pourquoi un envoi échoue.",
+    "diagnoseCopy": "Copier pour l'envoyer"
   },
   "creditNotes": {
     "issue": "Note de crédit",

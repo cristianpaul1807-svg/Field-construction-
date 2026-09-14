@@ -1925,7 +1925,10 @@
     "sandboxWarning": "Estás conectado a una empresa de pruebas. Lo que se mande no aparecerá en tu contabilidad de verdad.",
     "rowSent": "En QuickBooks",
     "rowNotSent": "No llegó a QuickBooks",
-    "rowRetry": "Reintentar"
+    "rowRetry": "Reintentar",
+    "diagnose": "Ver diagnóstico",
+    "diagnoseHint": "Lo que tu QuickBooks tiene configurado: códigos de impuesto, servicios y cuentas. Sirve para saber por qué falla un envío.",
+    "diagnoseCopy": "Copiar para mandarlo"
   },
   "creditNotes": {
     "issue": "Nota de crédito",

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ExternalLink, Unplug, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ExternalLink, Unplug, CheckCircle2, AlertTriangle, Stethoscope, Copy, Check } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 
 /**
@@ -80,6 +80,35 @@ export default function SettingsQuickBooks() {
   };
 
   const fecha = (iso: string) => new Date(iso).toLocaleDateString(i18n.language, { dateStyle: "long" });
+
+  // El diagnóstico va en un botón y no en una dirección que se abra a mano:
+  // esta ruta es del panel y necesita la sesión, que una pestaña nueva no
+  // manda. Abierta a pelo devolvía una página en blanco, que es la peor forma
+  // de decir "no tienes permiso".
+  const [informe, setInforme] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  const diagnosticar = async () => {
+    setOcupado(true);
+    setError(null);
+    try {
+      const res = await apiFetch("/api/quickbooks/diagnostics");
+      const body = await readJson(res);
+      if (!res.ok) throw new Error(serverMessage(body, t, t("common.genericError")));
+      setInforme(JSON.stringify(body, null, 2));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.genericError"));
+    } finally {
+      setOcupado(false);
+    }
+  };
+
+  const copiar = async () => {
+    if (!informe) return;
+    await navigator.clipboard.writeText(informe);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
@@ -169,10 +198,31 @@ export default function SettingsQuickBooks() {
                 </div>
               )}
 
-              <Button variant="outline" className="gap-2 text-status-error-fg" onClick={desconectar} disabled={ocupado}>
-                {ocupado ? <Spinner className="size-4" /> : <Unplug size={15} />}
-                {t("quickbooks.disconnect")}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" className="gap-2" onClick={diagnosticar} disabled={ocupado}>
+                  {ocupado ? <Spinner className="size-4" /> : <Stethoscope size={15} />}
+                  {t("quickbooks.diagnose")}
+                </Button>
+                <Button variant="outline" className="gap-2 text-status-error-fg" onClick={desconectar} disabled={ocupado}>
+                  <Unplug size={15} /> {t("quickbooks.disconnect")}
+                </Button>
+              </div>
+
+              {informe && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">{t("quickbooks.diagnoseHint")}</p>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={copiar}>
+                    {copiado ? <Check size={13} /> : <Copy size={13} />}
+                    {copiado ? t("invoicing.copied") : t("quickbooks.diagnoseCopy")}
+                  </Button>
+                  {/* En un móvil un bloque de texto largo empuja la página de
+                      lado si no se le pone freno. Se desplaza él, dentro de su
+                      caja. */}
+                  <pre className="text-[11px] leading-snug bg-secondary rounded-lg p-3 max-h-80 overflow-auto whitespace-pre-wrap break-all">
+                    {informe}
+                  </pre>
+                </div>
+              )}
             </Card>
           )}
         </>

@@ -1925,7 +1925,10 @@
     "sandboxWarning": "You're connected to a test company. Anything sent won't show up in your real books.",
     "rowSent": "In QuickBooks",
     "rowNotSent": "Didn't reach QuickBooks",
-    "rowRetry": "Try again"
+    "rowRetry": "Try again",
+    "diagnose": "Run diagnostics",
+    "diagnoseHint": "What your QuickBooks has set up: tax codes, services and accounts. It's what tells you why a send is failing.",
+    "diagnoseCopy": "Copy to send it"
   },
   "creditNotes": {
     "issue": "Credit note",
