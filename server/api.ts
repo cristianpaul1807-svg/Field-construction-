@@ -17,6 +17,7 @@ import {
   enviarFactura as enviarFacturaAQuickBooks,
   enviarNotaDeCredito as enviarNotaAQuickBooks,
   enviarEnSegundoPlano,
+  diagnostico as diagnosticoDeQuickBooks,
 } from "./quickbooksSync";
 import {
   flowCopy,
@@ -10046,6 +10047,14 @@ apiRouter.post(
         code: "quickbooks_send_failed",
       });
     }
+  })
+);
+
+// Qué tiene esta empresa en QuickBooks. Se abre en el navegador y se lee.
+apiRouter.get(
+  "/quickbooks/diagnostics",
+  route(async (req, res) => {
+    res.json(await diagnosticoDeQuickBooks(getSupabaseAdmin(), req.businessId!));
   })
 );
 

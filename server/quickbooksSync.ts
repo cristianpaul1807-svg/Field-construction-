@@ -69,7 +69,7 @@ async function anotar(
  */
 function motivo(err: unknown): string {
   const texto = err instanceof Error ? err.message : String(err);
-  return texto.replace(/\s+/g, " ").slice(0, 300);
+  return texto.replace(/\s+/g, " ").slice(0, 900);
 }
 
 /**
@@ -116,14 +116,32 @@ const NO_ES_IMPUESTO = /exempt|zero|out of scope|hors|esent|no tax/i;
  */
 async function idDelImpuesto(admin: Admin, businessId: string, provincia: string): Promise<string | null> {
   try {
-    const res = await llamar<{ QueryResponse?: { TaxCode?: { Id: string; Name: string; Active?: boolean; Taxable?: boolean }[] } }>(
+    const res = await llamar<{
+      QueryResponse?: {
+        TaxCode?: {
+          Id: string;
+          Name: string;
+          Active?: boolean;
+          Taxable?: boolean;
+          SalesTaxRateList?: { TaxRateDetail?: unknown[] };
+        }[];
+      };
+    }>(
       admin,
       businessId,
       `query?query=${encodeURIComponent("select * from TaxCode maxresults 200")}&minorversion=70`
     );
 
+    // Con tasa de venta, no sólo activo. Un código de compra está activo y es
+    // gravable igual, y mandarlo en una factura le pide a QuickBooks que
+    // calcule con algo que no tiene tasa de venta: entonces no dice que el
+    // código esté mal, dice que no consiguió calcular el impuesto.
     const candidatos = (res.QueryResponse?.TaxCode ?? []).filter(
-      (c) => c.Active !== false && c.Taxable !== false && !NO_ES_IMPUESTO.test(c.Name ?? "")
+      (c) =>
+        c.Active !== false &&
+        c.Taxable !== false &&
+        (c.SalesTaxRateList?.TaxRateDetail?.length ?? 0) > 0 &&
+        !NO_ES_IMPUESTO.test(c.Name ?? "")
     );
     if (candidatos.length === 0) return null;
 
@@ -299,7 +317,12 @@ export async function enviarFactura(admin: Admin, businessId: string, invoiceId:
               },
             },
           ],
-          ...(impuesto ? { TxnTaxDetail: { TxnTaxCodeRef: { value: impuesto } } } : {}),
+          // Sin `TxnTaxDetail`. Una empresa canadiense lleva el cálculo
+          // automático de impuestos, y mandarle a la vez el código de la línea
+          // y el del documento le pide dos cosas que tiene que cuadrar solo;
+          // cuando no puede, contesta que no consiguió calcular el impuesto.
+          // El código de la línea es el que manda.
+          GlobalTaxCalculation: "TaxExcluded",
         },
       }
     );
@@ -372,7 +395,7 @@ export async function enviarNotaDeCredito(admin: Admin, businessId: string, cred
               },
             },
           ],
-          ...(impuesto ? { TxnTaxDetail: { TxnTaxCodeRef: { value: impuesto } } } : {}),
+          GlobalTaxCalculation: "TaxExcluded",
         },
       }
     );
@@ -406,4 +429,49 @@ export function enviarEnSegundoPlano(promesa: Promise<unknown>, que: string): vo
     if (err instanceof QuickBooksSinConectar) return;
     console.error(`quickbooks: no se pudo mandar ${que}`, err);
   });
+}
+
+/**
+ * Qué tiene esa empresa en QuickBooks, para poder mirarlo en vez de adivinarlo.
+ *
+ * Un envío que falla dice qué salió mal pero no qué había. Dos rondas de
+ * prueba y error se fueron en no saber cómo se llamaban los códigos de
+ * impuesto de una empresa concreta; esto contesta esa pregunta de una vez.
+ *
+ * No devuelve nada que no sea suyo ni nada sensible: nombres y tasas de sus
+ * propios códigos, que es lo mismo que ve en su pantalla de impuestos.
+ */
+export async function diagnostico(admin: Admin, businessId: string) {
+  const pedir = async <T>(consulta: string): Promise<T | { error: string }> => {
+    try {
+      return await llamar<T>(admin, businessId, `query?query=${encodeURIComponent(consulta)}&minorversion=70`);
+    } catch (err) {
+      return { error: motivo(err) };
+    }
+  };
+
+  const [codigos, servicios, cuentas] = await Promise.all([
+    pedir<{ QueryResponse?: { TaxCode?: any[] } }>("select * from TaxCode maxresults 200"),
+    pedir<{ QueryResponse?: { Item?: any[] } }>("select Id, Name, Type from Item maxresults 50"),
+    pedir<{ QueryResponse?: { Account?: any[] } }>(
+      "select Id, Name, AccountType from Account where AccountType = 'Income' maxresults 20"
+    ),
+  ]);
+
+  const lista = (codigos as any)?.QueryResponse?.TaxCode ?? [];
+  return {
+    taxCodes: lista.map((c: any) => ({
+      id: c.Id,
+      name: c.Name,
+      active: c.Active,
+      taxable: c.Taxable,
+      // Lo que decide si sirve para una factura: un código de compra está
+      // activo y es gravable igual, pero no tiene tasa de venta.
+      salesRates: (c.SalesTaxRateList?.TaxRateDetail ?? []).length,
+      purchaseRates: (c.PurchaseTaxRateList?.TaxRateDetail ?? []).length,
+    })),
+    items: (servicios as any)?.QueryResponse?.Item ?? [],
+    incomeAccounts: (cuentas as any)?.QueryResponse?.Account ?? [],
+    errores: [codigos, servicios, cuentas].filter((r: any) => r?.error).map((r: any) => r.error),
+  };
 }
