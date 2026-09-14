@@ -223,7 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Link
           href={only.path}
           className={cn(
-            "h-8 px-2.5 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
+            "h-8 px-1.5 xl:px-2.5 inline-flex items-center gap-1.5 xl:gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
             active ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
           )}
         >
@@ -238,13 +238,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <DropdownMenuTrigger asChild>
           <button
             className={cn(
-              "h-8 px-2.5 inline-flex items-center gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
+              "h-8 px-1.5 xl:px-2.5 inline-flex items-center gap-1.5 xl:gap-2 rounded-md text-sm transition-colors whitespace-nowrap",
               active ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
             )}
           >
             <section.Icon size={15} strokeWidth={1.75} />
             {t(section.titleKey)}
-            <ChevronDown size={13} strokeWidth={1.75} className="opacity-60" />
+            <ChevronDown size={13} strokeWidth={1.75} className="opacity-60 hidden xl:block" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-60">
@@ -296,13 +296,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               already truncates; it just needed permission to. */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
             <MarcaDelNegocio logoUrl={company?.logoUrl} name={company?.name} size={28} recurso="plataforma" className="flex-shrink-0" />
-            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] sm:max-w-[8rem] 2xl:max-w-[12rem]">
+            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] xl:max-w-[8rem] 2xl:max-w-[12rem] inline md:hidden xl:inline">
               {company?.name ?? t("common.loading")}
             </span>
           </Link>
 
+          {/* Se aprieta antes que cortarse. A 1152 px el menú se salía por la
+              derecha: "FINANCE" quedaba a medias y de "PARAMÈTRES" sólo se veía
+              una S, sin ninguna señal de que hubiera más. Un rótulo cortado a
+              mitad de palabra no se lee como "hay más": se lee como roto.
+
+              Por debajo de xl se quitan la flecha y la mitad del relleno, que
+              es adorno, y entre 1024 y 1280 el nombre del negocio desaparece y
+              queda el logotipo: un nombre recortado a seis letras no dice de
+              quién es la empresa, y ese hueco sí hace que el menú entre entero.
+              En el móvil vuelve, porque allí no compite con nada. */}
           {!isMobile && (
-            <nav className="flex items-center gap-0.5 min-w-0 overflow-x-auto ml-2">
+            <nav className="flex items-center gap-0.5 min-w-0 overflow-x-auto ml-1 xl:ml-2">
               {navSections.map((section) => (
                 <SectionMenu key={section.id} section={section} />
               ))}

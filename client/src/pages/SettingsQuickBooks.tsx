@@ -85,17 +85,23 @@ export default function SettingsQuickBooks() {
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
       <PageHeader title={t("quickbooks.title")} description={t("quickbooks.description")} />
 
-      {resultado === "conectado" && (
+      {resultado === "conectado" && estado?.connected && (
         <div className="rounded-lg border border-status-success-bg bg-status-success-bg/40 p-4 text-sm text-status-success-fg flex items-center gap-2">
           <CheckCircle2 size={16} /> {t("quickbooks.justConnected")}
         </div>
       )}
-      {resultado === "cancelado" && (
+      {/* El aviso de fallo sólo si de verdad no hay conexión.
+          Intuit puede volver aquí dos veces —una recarga, un botón atrás— y la
+          segunda se encuentra el `state` ya gastado y contesta que falló,
+          cuando la primera había conectado perfectamente. Sin esta condición
+          la pantalla decía las dos cosas a la vez: "no pudimos conectar"
+          arriba y "Conectado" justo debajo. Manda el estado, no la URL. */}
+      {resultado === "cancelado" && !estado?.connected && (
         <div className="rounded-lg border border-border bg-secondary p-4 text-sm text-muted-foreground">
           {t("quickbooks.cancelled")}
         </div>
       )}
-      {resultado === "fallo" && (
+      {resultado === "fallo" && !estado?.connected && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
           {t("quickbooks.failed")}
         </div>
