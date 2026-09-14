@@ -85,8 +85,18 @@ function nombreDeLaCabecera(cabecera: string | null): string | null {
  * carries no headers, so the server would answer 401. Fetching the bytes and
  * handing the browser a blob URL is what makes "Download PDF" work at all.
  */
-export async function downloadFile(path: string, filename: string): Promise<void> {
-  const res = await apiFetch(path);
+/**
+ * `fetcher` existe para el trabajador: él lleva un código en localStorage y no
+ * una sesión de Supabase, así que `apiFetch` no mandaría cabecera de
+ * autorización ninguna y la descarga volvería 401. Quien llama desde /campo
+ * pasa el suyo; el resto no toca nada.
+ */
+export async function downloadFile(
+  path: string,
+  filename: string,
+  fetcher: (path: string, init?: RequestInit) => Promise<Response> = apiFetch
+): Promise<void> {
+  const res = await fetcher(path);
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error || `Request failed (${res.status})`);

@@ -16,6 +16,7 @@ import {
   renderInvoicePdf,
   renderReportPdf,
   renderPayrollPdf,
+  renderAgreementPdf,
   documentNumber,
   normalizeDocLang,
   docCopy,
@@ -1344,6 +1345,129 @@ apiRouter.get(
         projectName: w.projects?.name ?? null,
       })),
     });
+  })
+);
+
+// Sus acuerdos. Sólo los que la oficina ya le mandó: un borrador que el
+// contratista está afinando no tiene por qué verlo, y menos firmarlo.
+apiRouter.get(
+  "/worker/agreements",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("worker_agreements")
+      .select(
+        "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, status, sent_at, signed_at, signature_name"
+      )
+      .eq("business_id", req.workerBusinessId!)
+      .eq(workerColumn(req), req.workerId!)
+      .in("status", ["enviado", "firmado", "terminado"])
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    res.json(
+      data.map((a) => ({
+        id: a.id,
+        number: `ACU-${a.number}`,
+        kind: a.kind,
+        title: a.title,
+        startDate: a.start_date,
+        endDate: a.end_date,
+        payKind: a.pay_kind,
+        payAmount: Number(a.pay_amount),
+        payFrequency: a.pay_frequency,
+        hoursPerWeek: a.hours_per_week == null ? null : Number(a.hours_per_week),
+        vacationPercent: Number(a.vacation_percent),
+        terms: a.terms,
+        notes: a.notes,
+        status: a.status,
+        signedAt: a.signed_at,
+        signatureName: a.signature_name,
+      }))
+    );
+  })
+);
+
+apiRouter.get(
+  "/worker/agreements/:id/pdf",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    // Que sea suyo se comprueba aquí y no dentro del constructor: el
+    // constructor sólo sabe de negocios, y un trabajador no puede leer el
+    // acuerdo de su compañero aunque sean del mismo negocio.
+    const { data: suyo } = await admin
+      .from("worker_agreements")
+      .select("id")
+      .eq("business_id", req.workerBusinessId!)
+      .eq("id", req.params.id)
+      .eq(workerColumn(req), req.workerId!)
+      .in("status", ["enviado", "firmado", "terminado"])
+      .maybeSingle();
+    if (!suyo) {
+      res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
+      return;
+    }
+
+    const pdf = await construirPdfDeAcuerdo(admin, req.workerBusinessId!, req.params.id, normalizeDocLang(req.query.lang));
+    if (!pdf) {
+      res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
+      return;
+    }
+    sendPdf(res, pdf.buffer, pdf.nombre, req.query.download ? "attachment" : "inline");
+  })
+);
+
+// Firmarlo desde el móvil, escribiendo su nombre.
+//
+// Se guarda el nombre, la hora y la IP. Sin las tres, el PDF firmado es un
+// papel que dice lo que queramos: la firma es precisamente la prueba de que
+// alguien concreto, un día concreto, dijo que sí.
+apiRouter.post(
+  "/worker/agreements/:id/sign",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const nombre = String(req.body?.name ?? "").trim();
+    if (!nombre) {
+      res.status(400).json({ error: "el nombre de quien firma es obligatorio", code: "signature_required" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const { data: acuerdo } = await admin
+      .from("worker_agreements")
+      .select("id, status")
+      .eq("business_id", req.workerBusinessId!)
+      .eq("id", req.params.id)
+      .eq(workerColumn(req), req.workerId!)
+      .maybeSingle();
+    if (!acuerdo) {
+      res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
+      return;
+    }
+    // Sólo se firma lo que la oficina soltó, y sólo una vez: volver a firmar
+    // pisaría la fecha de la firma que vale.
+    if (acuerdo.status !== "enviado") {
+      res.status(409).json({
+        error: "este acuerdo no está pendiente de firma",
+        code: acuerdo.status === "firmado" ? "agreement_already_signed" : "agreement_not_sendable",
+      });
+      return;
+    }
+
+    const { error } = await admin
+      .from("worker_agreements")
+      .update({
+        status: "firmado",
+        signed_at: new Date().toISOString(),
+        signature_name: nombre.slice(0, 120),
+        signature_ip: req.ip ?? null,
+      })
+      .eq("id", acuerdo.id);
+    if (error) throw error;
+
+    res.json({ ok: true, status: "firmado" });
   })
 );
 
@@ -8408,6 +8532,69 @@ async function loadBusinessIdentity(
   };
 }
 
+/**
+ * El PDF de un acuerdo de trabajo, con su nombre de archivo.
+ *
+ * Lo usan la oficina y el propio trabajador. Se genera de la fila viva y no se
+ * guarda en ningún sitio, así que el papel que abre el trabajador dentro de
+ * seis meses es exactamente lo que el sistema tiene escrito.
+ *
+ * Devuelve `null` si el acuerdo no es de ese negocio, para que quien llama
+ * conteste 404 sin tener que distinguir «no existe» de «no es tuyo».
+ */
+async function construirPdfDeAcuerdo(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  agreementId: string,
+  lang: DocLang
+): Promise<{ buffer: Buffer; nombre: string } | null> {
+  const { data: a } = await admin
+    .from("worker_agreements")
+    .select(
+      "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, signed_at, signature_name, created_at, employees(name, role, phone), subcontractors(name, trade, phone)"
+    )
+    .eq("business_id", businessId)
+    .eq("id", agreementId)
+    .maybeSingle();
+  if (!a) return null;
+
+  const { identity } = await loadBusinessIdentity(admin, businessId);
+  const empleado = a.employees as unknown as { name: string; role: string | null; phone: string | null } | null;
+  const subcontratista = a.subcontractors as unknown as { name: string; trade: string | null; phone: string | null } | null;
+
+  const buffer = await renderAgreementPdf(
+    {
+      kind: "agreement",
+      number: `ACU-${a.number}`,
+      date: new Date(a.created_at),
+      business: identity,
+      worker: {
+        name: empleado?.name ?? subcontratista?.name ?? null,
+        // El oficio de un subcontratista hace de cargo: es lo que se contrató.
+        role: empleado?.role ?? subcontratista?.trade ?? null,
+        address: null,
+        phone: empleado?.phone ?? subcontratista?.phone ?? null,
+        email: null,
+      },
+      agreementKind: a.kind as "empleo" | "subcontrato",
+      title: a.title,
+      startDate: new Date(`${a.start_date}T12:00:00Z`),
+      endDate: a.end_date ? new Date(`${a.end_date}T12:00:00Z`) : null,
+      payKind: a.pay_kind as "por_hora" | "fijo" | "por_obra",
+      payAmount: Number(a.pay_amount),
+      payFrequency: a.pay_frequency as "semanal" | "quincenal" | "mensual" | "al_terminar",
+      hoursPerWeek: a.hours_per_week == null ? null : Number(a.hours_per_week),
+      vacationPercent: Number(a.vacation_percent),
+      terms: a.terms,
+      notes: a.notes,
+      signature: a.signed_at && a.signature_name ? { name: a.signature_name, signedAt: new Date(a.signed_at) } : null,
+    },
+    lang
+  );
+
+  return { buffer, nombre: `ACU-${a.number}.pdf` };
+}
+
 function sendPdf(res: express.Response, pdf: Buffer, filename: string, disposition: "inline" | "attachment") {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `${disposition}; filename="${filename}"`);
@@ -9460,6 +9647,268 @@ apiRouter.post(
   })
 );
 
+// ---------- Acuerdos de trabajo ----------
+// Lo que se acordó con cada empleado y con cada subcontratista: desde cuándo,
+// cuánto, y cada cuánto se le paga. Hasta ahora eso vivía en la cabeza del
+// contratista, que es donde se pierde en cuanto hay una discusión.
+
+/** Los campos que el panel puede escribir, saneados. Nada más entra a la tabla. */
+function camposDelAcuerdo(body: any) {
+  const kind = ["empleo", "subcontrato"].includes(body?.kind) ? body.kind : "empleo";
+  const payKind = ["por_hora", "fijo", "por_obra"].includes(body?.payKind) ? body.payKind : "por_hora";
+  const payFrequency = ["semanal", "quincenal", "mensual", "al_terminar"].includes(body?.payFrequency)
+    ? body.payFrequency
+    : "quincenal";
+  return {
+    kind,
+    title: typeof body?.title === "string" && body.title.trim() ? body.title.trim() : null,
+    start_date: body?.startDate,
+    end_date: body?.endDate || null,
+    pay_kind: payKind,
+    pay_amount: Number(body?.payAmount ?? 0),
+    pay_frequency: payFrequency,
+    hours_per_week: body?.hoursPerWeek === "" || body?.hoursPerWeek == null ? null : Number(body.hoursPerWeek),
+    // Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí. Un
+    // subcontratista factura y no cobra vacaciones, así que ahí va a cero.
+    vacation_percent: kind === "subcontrato" ? 0 : Number(body?.vacationPercent ?? 4),
+    terms: typeof body?.terms === "string" && body.terms.trim() ? body.terms.trim() : null,
+    notes: typeof body?.notes === "string" && body.notes.trim() ? body.notes.trim() : null,
+  };
+}
+
+function acuerdoParaElPanel(a: any) {
+  return {
+    id: a.id,
+    number: a.number,
+    kind: a.kind,
+    title: a.title,
+    startDate: a.start_date,
+    endDate: a.end_date,
+    payKind: a.pay_kind,
+    payAmount: Number(a.pay_amount),
+    payFrequency: a.pay_frequency,
+    hoursPerWeek: a.hours_per_week == null ? null : Number(a.hours_per_week),
+    vacationPercent: Number(a.vacation_percent),
+    terms: a.terms,
+    notes: a.notes,
+    status: a.status,
+    sentAt: a.sent_at,
+    signedAt: a.signed_at,
+    signatureName: a.signature_name,
+    employeeId: a.employee_id,
+    subcontractorId: a.subcontractor_id,
+    workerName: a.employees?.name ?? a.subcontractors?.name ?? null,
+    createdAt: a.created_at,
+  };
+}
+
+const SELECT_ACUERDO =
+  "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, status, sent_at, signed_at, signature_name, employee_id, subcontractor_id, created_at, employees(name), subcontractors(name)";
+
+apiRouter.get(
+  "/agreements",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    let q = supabase
+      .from("worker_agreements")
+      .select(SELECT_ACUERDO)
+      .eq("business_id", req.businessId!)
+      .order("created_at", { ascending: false });
+    if (req.query.employeeId) q = q.eq("employee_id", String(req.query.employeeId));
+    if (req.query.subcontractorId) q = q.eq("subcontractor_id", String(req.query.subcontractorId));
+
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json(data.map(acuerdoParaElPanel));
+  })
+);
+
+apiRouter.post(
+  "/agreements",
+  route(async (req, res) => {
+    const employeeId = req.body?.employeeId ?? null;
+    const subcontractorId = req.body?.subcontractorId ?? null;
+    // Un acuerdo es de alguien, y de uno solo. La base lo exige igual; aquí se
+    // dice con un mensaje que se entiende en vez de con un error de Postgres.
+    if (Boolean(employeeId) === Boolean(subcontractorId)) {
+      res.status(400).json({ error: "pass exactly one of employeeId or subcontractorId" });
+      return;
+    }
+    const campos = camposDelAcuerdo(req.body);
+    if (!campos.start_date) {
+      res.status(400).json({ error: "startDate is required" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("worker_agreements")
+      .insert({ business_id: req.businessId!, employee_id: employeeId, subcontractor_id: subcontractorId, ...campos })
+      .select(SELECT_ACUERDO)
+      .single();
+    if (error) throw error;
+    res.status(201).json(acuerdoParaElPanel(data));
+  })
+);
+
+apiRouter.patch(
+  "/agreements/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: actual } = await supabase
+      .from("worker_agreements")
+      .select("id, status")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!actual) {
+      res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
+      return;
+    }
+    // Un acuerdo firmado no se retoca: si cambian las condiciones se hace otro.
+    // Dejar editarlo por detrás convierte la firma en un adorno.
+    if (actual.status === "firmado") {
+      res.status(409).json({ error: "a signed agreement cannot be edited", code: "signed_agreement_locked" });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("worker_agreements")
+      .update(camposDelAcuerdo(req.body))
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .select(SELECT_ACUERDO)
+      .single();
+    if (error) throw error;
+    res.json(acuerdoParaElPanel(data));
+  })
+);
+
+apiRouter.patch(
+  "/agreements/:id/status",
+  route(async (req, res) => {
+    const permitidos = ["borrador", "enviado", "firmado", "rechazado", "terminado"];
+    if (!permitidos.includes(req.body?.status)) {
+      res.status(400).json({ error: `status must be one of: ${permitidos.join(", ")}` });
+      return;
+    }
+    const supabase = req.supabase!;
+    const { error } = await supabase
+      .from("worker_agreements")
+      .update({ status: req.body.status })
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true, status: req.body.status });
+  })
+);
+
+apiRouter.delete(
+  "/agreements/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: actual } = await supabase
+      .from("worker_agreements")
+      .select("id, status")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!actual) {
+      res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
+      return;
+    }
+    // Firmado no se borra: es la prueba de lo que se acordó. Se da por
+    // terminado, que deja el papel donde estaba.
+    if (actual.status === "firmado") {
+      res.status(409).json({ error: "a signed agreement cannot be deleted", code: "signed_agreement_locked" });
+      return;
+    }
+    const { error } = await supabase
+      .from("worker_agreements")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.get(
+  "/agreements/:id/pdf",
+  route(async (req, res) => {
+    const pdf = await construirPdfDeAcuerdo(getSupabaseAdmin(), req.businessId!, req.params.id, normalizeDocLang(req.query.lang));
+    if (!pdf) {
+      res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
+      return;
+    }
+    sendPdf(res, pdf.buffer, pdf.nombre, req.query.download ? "attachment" : "inline");
+  })
+);
+
+// Mandárselo por la mensajería, que es donde el trabajador ya mira. El PDF no
+// se adjunta como fichero: se referencia la fila, así que el documento que
+// abra dentro de tres meses es el que el sistema tiene de verdad.
+apiRouter.post(
+  "/agreements/:id/send",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: acuerdo } = await admin
+      .from("worker_agreements")
+      .select("id, number, status, employee_id, subcontractor_id")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!acuerdo) {
+      res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
+      return;
+    }
+
+    const tipo = acuerdo.employee_id ? "employee" : "subcontractor";
+    const participante = acuerdo.employee_id ?? acuerdo.subcontractor_id;
+
+    const { data: canal } = await admin
+      .from("chat_channels")
+      .select("id, disappearing_duration, status")
+      .eq("business_id", req.businessId!)
+      .eq("participant_type", tipo)
+      .eq("participant_id", participante)
+      .maybeSingle();
+    if (!canal) {
+      // El canal del trabajador nace cuando la oficina le abre conversación.
+      // Sin él no hay dónde dejarlo, y decirlo es más útil que crear un canal
+      // que el trabajador no sabe que existe.
+      res.status(409).json({ error: "this worker has no chat channel yet", code: "worker_has_no_channel" });
+      return;
+    }
+
+    const { error: mensajeError } = await admin.from("chat_messages").insert({
+      channel_id: canal.id,
+      business_id: req.businessId!,
+      sender_type: "admin",
+      sender_id: req.authUserId ?? null,
+      content: String(req.body?.message ?? "").trim() || `ACU-${acuerdo.number}`,
+      attachment_kind: "agreement",
+      attachment_id: acuerdo.id,
+      attachment_name: `ACU-${acuerdo.number}.pdf`,
+      attachment_mime: "application/pdf",
+      expires_at: computeExpiresAt(canal.disappearing_duration ?? null),
+    });
+    if (mensajeError) throw mensajeError;
+
+    // Mandarlo ES mandarlo: un acuerdo que el trabajador puede leer pero que
+    // por dentro sigue diciendo "borrador" le dejaría firmar algo que la
+    // oficina no había soltado.
+    if (acuerdo.status === "borrador") {
+      await admin
+        .from("worker_agreements")
+        .update({ status: "enviado", sent_at: new Date().toISOString() })
+        .eq("id", acuerdo.id);
+    }
+
+    res.status(201).json({ ok: true, channelId: canal.id, status: "enviado" });
+  })
+);
+
 // ---------- Chat attachments ----------
 // Anything the conversation needs to carry: a generated estimate or invoice
 // (stored as a reference so the PDF always matches the live row), or an
@@ -9706,7 +10155,11 @@ async function resolveAttachment(
     return { status: 404, body: { error: "attachment not found" } };
   }
 
-  if (message.attachment_kind === "estimate" || message.attachment_kind === "invoice") {
+  if (
+    message.attachment_kind === "estimate" ||
+    message.attachment_kind === "invoice" ||
+    message.attachment_kind === "agreement"
+  ) {
     // Generated on demand from the live row, so the document a customer opens
     // months later is the document the system actually holds.
     return {

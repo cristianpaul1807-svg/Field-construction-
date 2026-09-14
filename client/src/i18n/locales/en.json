@@ -1406,7 +1406,12 @@
     "slug_taken": "That link is already used by another business. Pick a different one.",
     "stripe_no_checkout_url": "We couldn't open the payment page. Please try again in a moment.",
     "worker_not_in_period": "That worker has no hours in that period.",
-    "cancelled_invoice_not_payable": "A cancelled invoice cannot be collected."
+    "cancelled_invoice_not_payable": "A cancelled invoice cannot be collected.",
+    "agreement_not_found": "We couldn't find that agreement.",
+    "signed_agreement_locked": "A signed agreement can't be changed or deleted. If the terms change, make a new one.",
+    "worker_has_no_channel": "This person has no conversation open yet. Start one from Messaging and send it again.",
+    "agreement_already_signed": "This agreement is already signed.",
+    "agreement_not_sendable": "This agreement isn't waiting to be signed."
   },
   "workLog": {
     "title": "Work log",
@@ -1656,6 +1661,14 @@
           "p2": "They see the work orders assigned to them, with what needs doing and where.",
           "p3": "They don't see estimates, prices, margins, other clients, or their colleagues' work.",
           "nota": "They don't need to install anything. They open the address on their phone, type their code, and can add it to the home screen like an app."
+        },
+        "acuerdo": {
+          "title": "Putting what you agreed with someone in writing",
+          "p1": "In {{menuCampo}} → {{menuTecnicos}}, next to each person there's a button with a signature on it. Their agreement lives there: from when they work, until when, how much they earn and how often they're paid.",
+          "p2": "Same for subcontractors, on their own screen. The difference is a subcontractor invoices you, so there's no vacation pay for them and the field simply isn't there.",
+          "p3": "Leave the end date empty and it's open-ended. Whatever terms you type get printed word for word in the document, so put what you actually agreed there: who provides the tools, when overtime starts counting, how much notice there is.",
+          "p4": "The agreement produces a PDF with your logo, your address and your RBQ licence. You can download it and send it however you like, or hand it over through the messaging so they sign it from their phone.",
+          "nota": "A signed agreement can't be changed or deleted, on purpose: if you could touch it up afterwards, the signature would be worth nothing. If the terms change, you make a new one."
         }
       },
       "dinero": {
@@ -1763,8 +1776,73 @@
           "title": "…I close a work order",
           "p1": "If it was the last one open on that project, the project moves by itself to confirmed: the work is done.",
           "p2": "And if your payment plan bills something on confirmation, that invoice is issued by itself and your client gets their email."
+        },
+        "mandoAcuerdo": {
+          "title": "…I send a worker an agreement",
+          "p1": "The agreement lands in their conversation as a document they can open, and the moment they go into the field app a notice appears right at the top saying something is waiting for their signature.",
+          "p2": "That notice is only there while something is unsigned. The moment they sign, it disappears on its own and stops bothering them.",
+          "p3": "When they sign, their name, the exact time and where they did it from are all stored, and the PDF starts carrying it printed on it. That's what makes the paper worth something if there's ever a dispute.",
+          "nota": "If it tells you they have no conversation open, start one from {{menuCrm}} or from the messaging and send it again. A worker's conversation begins when the office writes to them, not when you add them."
         }
       }
     }
+  },
+  "agreements": {
+    "open": "Work agreements",
+    "title": "{{name}}'s agreements",
+    "description": "What you agreed with this person: from when, how much, and how often they're paid. It's generated as a PDF and sent through the messaging.",
+    "none": "There's no agreement with this person yet.",
+    "new": "New agreement",
+    "agreementTitle": "Title",
+    "agreementTitlePlaceholder": "E.g. Carpenter — 2026 season",
+    "startDate": "From",
+    "endDate": "Until",
+    "endDateHint": "Leave it empty if there's no end date.",
+    "openEnded": "No end date",
+    "payKindLabel": "How they're paid",
+    "payKind": {
+      "por_hora": "Hourly",
+      "fijo": "Fixed amount",
+      "por_obra": "Per project"
+    },
+    "payAmount": "Amount",
+    "payFrequencyLabel": "How often",
+    "payFrequency": {
+      "semanal": "Weekly",
+      "quincenal": "Every two weeks",
+      "mensual": "Monthly",
+      "al_terminar": "On completion"
+    },
+    "hoursPerWeek": "Hours per week",
+    "vacationPercent": "Vacation pay (%)",
+    "vacationHint": "In Quebec: 4 % up to three years of service, 6 % after that.",
+    "terms": "Agreed terms",
+    "termsPlaceholder": "E.g. Own tools. Overtime beyond 40 h/week. Two weeks' notice.",
+    "notes": "Notes",
+    "downloadPdf": "PDF",
+    "send": "Send it",
+    "sent": "Sent",
+    "deleteConfirm": "Delete agreement {{number}}?",
+    "signedBy": "Signed by {{name}} on {{date}}",
+    "kind": {
+      "empleo": "Employment agreement",
+      "subcontrato": "Subcontractor agreement"
+    },
+    "status": {
+      "borrador": "Draft",
+      "enviado": "Sent",
+      "firmado": "Signed",
+      "rechazado": "Rejected",
+      "terminado": "Ended"
+    }
+  },
+  "workerAgreements": {
+    "pendingTitle": "You have an agreement waiting for your signature",
+    "read": "Read it",
+    "sign": "Sign",
+    "signTitle": "Sign the agreement",
+    "signHint": "Read it before you sign. Typing your name records that it was you and when you did it.",
+    "yourName": "Your full name",
+    "confirmSign": "Sign"
   }
 }

@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Star, KeyRound } from "lucide-react";
+import { AcuerdosDeTrabajo, BotonDeAcuerdos } from "@/components/AcuerdosDeTrabajo";
 import { AccessCode } from "@/components/AccessCode";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
@@ -163,6 +164,7 @@ export default function Subcontractors() {
   const [reloadToken, setReloadToken] = useState(0);
   const { data: subcontractors, loading, error } = useApi<Subcontractor[]>(`/api/subcontractors?_r=${reloadToken}`);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
+  const [acuerdosDe, setAcuerdosDe] = useState<Subcontractor | null>(null);
 
   const generateToken = async (sub: Subcontractor) => {
     const res = await apiFetch(`/api/subcontractors/${sub.id}/access-token`, { method: "POST" });
@@ -230,10 +232,20 @@ export default function Subcontractors() {
                 <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => generateToken(sub)}>
                   <KeyRound size={14} /> {sub.hasAccessCode ? t("subcontractors.newPwaCode") : t("subcontractors.pwaCode")}
                 </Button>
+                <BotonDeAcuerdos label={t("agreements.open")} onClick={() => setAcuerdosDe(sub)} />
               </div>
             </Card>
           ))}
         </div>
+      )}
+
+      {acuerdosDe && (
+        <AcuerdosDeTrabajo
+          kind="subcontractor"
+          workerId={acuerdosDe.id}
+          workerName={acuerdosDe.name}
+          onClose={() => setAcuerdosDe(null)}
+        />
       )}
 
       <Dialog open={!!newToken} onOpenChange={(open) => !open && setNewToken(null)}>

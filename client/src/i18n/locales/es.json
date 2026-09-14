@@ -1406,7 +1406,12 @@
     "slug_taken": "Ese enlace ya lo usa otro negocio. Elige otro.",
     "stripe_no_checkout_url": "No pudimos abrir la pasarela de pago. Vuelve a intentarlo en un momento.",
     "worker_not_in_period": "Ese trabajador no tiene horas en ese periodo.",
-    "cancelled_invoice_not_payable": "Una factura anulada no se puede cobrar."
+    "cancelled_invoice_not_payable": "Una factura anulada no se puede cobrar.",
+    "agreement_not_found": "No encontramos ese acuerdo.",
+    "signed_agreement_locked": "Un acuerdo firmado no se cambia ni se borra. Si cambian las condiciones, haz uno nuevo.",
+    "worker_has_no_channel": "Esta persona todavía no tiene conversación abierta. Ábrele una desde Mensajería y vuelve a mandárselo.",
+    "agreement_already_signed": "Este acuerdo ya está firmado.",
+    "agreement_not_sendable": "Este acuerdo no está pendiente de firma."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1656,6 +1661,14 @@
           "p2": "Ve sus órdenes de trabajo asignadas, con lo que hay que hacer y dónde.",
           "p3": "No ve presupuestos, ni precios, ni márgenes, ni otros clientes, ni el trabajo de sus compañeros.",
           "nota": "No necesita instalar nada. Abre la dirección en el móvil, escribe su código, y puede añadirla a la pantalla de inicio como si fuera una aplicación."
+        },
+        "acuerdo": {
+          "title": "Dejar por escrito lo que acordé con alguien",
+          "p1": "En {{menuCampo}} → {{menuTecnicos}}, junto a cada persona hay un botón con una firma. Ahí vive su acuerdo: desde cuándo trabaja, hasta cuándo, cuánto cobra y cada cuánto se le paga.",
+          "p2": "Lo mismo para los subcontratistas, en su pantalla. La diferencia es que un subcontratista te factura, así que a él no se le ponen vacaciones y el campo directamente no aparece.",
+          "p3": "Si lo dejas sin fecha de fin, es indefinido. Las condiciones que escribas salen impresas tal cual en el documento, así que ahí va lo que de verdad acordasteis: quién pone la herramienta, desde cuándo cuentan las horas extra, cuánto preaviso hay.",
+          "p4": "Del acuerdo sale un PDF con tu logo, tu dirección y tu licencia RBQ. Lo puedes descargar y mandárselo por donde quieras, o dárselo por la mensajería para que lo firme desde el móvil.",
+          "nota": "Un acuerdo ya firmado no se puede cambiar ni borrar, a propósito: si pudieras retocarlo después, la firma no valdría nada. Si cambian las condiciones, haces uno nuevo."
         }
       },
       "dinero": {
@@ -1763,8 +1776,73 @@
           "title": "…cierro una orden de trabajo",
           "p1": "Si era la última que quedaba abierta en esa obra, la obra pasa sola a confirmada: el trabajo está hecho.",
           "p2": "Y si tu plan de pagos cobra algo al confirmar, esa factura se emite sola y tu cliente recibe su correo."
+        },
+        "mandoAcuerdo": {
+          "title": "…le mando un acuerdo a un trabajador",
+          "p1": "El acuerdo le llega a su conversación como un documento que puede abrir, y en cuanto entra en la aplicación de campo le sale un aviso arriba del todo diciendo que tiene algo esperando su firma.",
+          "p2": "Ese aviso sólo está mientras haya algo sin firmar. En cuanto firma, desaparece solo y no vuelve a molestarle.",
+          "p3": "Cuando firma se guardan su nombre, la hora exacta y desde dónde lo hizo, y el PDF pasa a llevarlo impreso. Eso es lo que hace que el papel sirva de algo si algún día hay una discusión.",
+          "nota": "Si te dice que no tiene conversación abierta, ábresela desde {{menuCrm}} o desde la mensajería y vuelve a mandárselo. La conversación de un trabajador nace cuando la oficina le escribe, no cuando lo das de alta."
         }
       }
     }
+  },
+  "agreements": {
+    "open": "Acuerdos de trabajo",
+    "title": "Acuerdos de {{name}}",
+    "description": "Lo que acordaste con esta persona: desde cuándo, cuánto y cada cuánto se le paga. Se genera en PDF y se le manda por la mensajería.",
+    "none": "Todavía no hay ningún acuerdo con esta persona.",
+    "new": "Nuevo acuerdo",
+    "agreementTitle": "Título",
+    "agreementTitlePlaceholder": "Ej. Carpintero — temporada 2026",
+    "startDate": "Desde",
+    "endDate": "Hasta",
+    "endDateHint": "Déjalo vacío si no tiene fecha de fin.",
+    "openEnded": "Sin fecha de fin",
+    "payKindLabel": "Forma de pago",
+    "payKind": {
+      "por_hora": "Por hora",
+      "fijo": "Importe fijo",
+      "por_obra": "Por obra"
+    },
+    "payAmount": "Importe",
+    "payFrequencyLabel": "Cada cuánto se paga",
+    "payFrequency": {
+      "semanal": "Semanal",
+      "quincenal": "Quincenal",
+      "mensual": "Mensual",
+      "al_terminar": "Al terminar el trabajo"
+    },
+    "hoursPerWeek": "Horas por semana",
+    "vacationPercent": "Vacaciones (%)",
+    "vacationHint": "En Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí.",
+    "terms": "Condiciones acordadas",
+    "termsPlaceholder": "Ej. Herramienta propia. Horas extra a partir de 40 h/semana. Preaviso de dos semanas.",
+    "notes": "Notas",
+    "downloadPdf": "PDF",
+    "send": "Mandárselo",
+    "sent": "Enviado",
+    "deleteConfirm": "¿Borrar el acuerdo {{number}}?",
+    "signedBy": "Firmado por {{name}} el {{date}}",
+    "kind": {
+      "empleo": "Acuerdo de trabajo",
+      "subcontrato": "Contrato de subcontratación"
+    },
+    "status": {
+      "borrador": "Borrador",
+      "enviado": "Enviado",
+      "firmado": "Firmado",
+      "rechazado": "Rechazado",
+      "terminado": "Terminado"
+    }
+  },
+  "workerAgreements": {
+    "pendingTitle": "Tienes un acuerdo esperando tu firma",
+    "read": "Leerlo",
+    "sign": "Firmar",
+    "signTitle": "Firmar el acuerdo",
+    "signHint": "Léelo antes de firmar. Al escribir tu nombre queda guardado que fuiste tú y cuándo lo hiciste.",
+    "yourName": "Tu nombre y apellido",
+    "confirmSign": "Firmar"
   }
 }

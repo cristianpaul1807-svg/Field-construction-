@@ -11,6 +11,7 @@ import { getWorkerSession, setWorkerSession, clearWorkerSession, type WorkerSess
 import { WorkerScheduleView } from "@/components/WorkerScheduleView";
 import { WorkerClock } from "@/components/WorkerClock";
 import { WorkerChat } from "@/components/WorkerChat";
+import { WorkerAgreementBanner } from "@/components/WorkerAgreementBanner";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
@@ -131,7 +132,12 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 max-w-2xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-4">
+        {/* Encima de las pestañas y no dentro: un acuerdo sin firmar no es una
+            sección donde entrar, es algo que hay que resolver antes de seguir.
+            Cuando no hay nada pendiente no pinta nada. */}
+        <WorkerAgreementBanner workerName={session.name} />
+
         <Tabs defaultValue="agenda">
           {/* Estas tres pestañas son toda la navegación del trabajador y se
               tocan con guantes, de pie y con prisa. Medían 29 px de alto:

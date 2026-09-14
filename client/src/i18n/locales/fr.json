@@ -1406,7 +1406,12 @@
     "slug_taken": "Ce lien est déjà utilisé par une autre entreprise. Choisissez-en un autre.",
     "stripe_no_checkout_url": "Nous n'avons pas pu ouvrir la page de paiement. Réessayez dans un instant.",
     "worker_not_in_period": "Ce travailleur n'a aucune heure sur cette période.",
-    "cancelled_invoice_not_payable": "Une facture annulée ne peut pas être encaissée."
+    "cancelled_invoice_not_payable": "Une facture annulée ne peut pas être encaissée.",
+    "agreement_not_found": "Nous n'avons pas trouvé cette entente.",
+    "signed_agreement_locked": "Une entente signée ne se modifie ni ne se supprime. Si les conditions changent, faites-en une nouvelle.",
+    "worker_has_no_channel": "Cette personne n'a pas encore de conversation ouverte. Ouvrez-en une depuis la Messagerie et renvoyez-la.",
+    "agreement_already_signed": "Cette entente est déjà signée.",
+    "agreement_not_sendable": "Cette entente n'est pas en attente de signature."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1656,6 +1661,14 @@
           "p2": "Il voit les bons de travail qui lui sont attribués, avec ce qu'il faut faire et où.",
           "p3": "Il ne voit ni soumissions, ni prix, ni marges, ni autres clients, ni le travail de ses collègues.",
           "nota": "Il n'a rien à installer. Il ouvre l'adresse sur son téléphone, saisit son code, et peut l'ajouter à l'écran d'accueil comme une application."
+        },
+        "acuerdo": {
+          "title": "Mettre par écrit ce que vous avez convenu avec quelqu'un",
+          "p1": "Dans {{menuCampo}} → {{menuTecnicos}}, à côté de chaque personne il y a un bouton avec une signature. C'est là que vit son entente : depuis quand elle travaille, jusqu'à quand, combien elle gagne et à quelle fréquence elle est payée.",
+          "p2": "Pareil pour les sous-traitants, sur leur écran. La différence, c'est qu'un sous-traitant vous facture : il n'a pas d'indemnité de vacances et le champ n'apparaît tout simplement pas.",
+          "p3": "Sans date de fin, c'est à durée indéterminée. Les conditions que vous écrivez s'impriment telles quelles dans le document : mettez-y ce que vous avez vraiment convenu — qui fournit les outils, à partir de quand comptent les heures supplémentaires, quel préavis s'applique.",
+          "p4": "L'entente produit un PDF avec votre logo, votre adresse et votre licence RBQ. Vous pouvez le télécharger et l'envoyer comme bon vous semble, ou le remettre par la messagerie pour qu'il le signe depuis son téléphone.",
+          "nota": "Une entente signée ne peut être ni modifiée ni supprimée, volontairement : si vous pouviez la retoucher après coup, la signature ne vaudrait rien. Si les conditions changent, vous en faites une nouvelle."
         }
       },
       "dinero": {
@@ -1763,8 +1776,73 @@
           "title": "…je ferme un bon de travail",
           "p1": "Si c'était le dernier encore ouvert sur ce chantier, le chantier passe tout seul à confirmé : le travail est fait.",
           "p2": "Et si votre plan de paiement facture quelque chose à la confirmation, cette facture est émise toute seule et votre client reçoit son courriel."
+        },
+        "mandoAcuerdo": {
+          "title": "…j'envoie une entente à un travailleur",
+          "p1": "L'entente arrive dans sa conversation sous forme de document qu'il peut ouvrir, et dès qu'il entre dans l'application de chantier, un avis s'affiche tout en haut : quelque chose attend sa signature.",
+          "p2": "Cet avis n'est là que tant qu'il reste quelque chose à signer. Dès qu'il signe, il disparaît tout seul et cesse de le déranger.",
+          "p3": "Quand il signe, son nom, l'heure exacte et l'endroit d'où il l'a fait sont enregistrés, et le PDF le porte désormais imprimé. C'est ce qui donne de la valeur au papier s'il y a un jour un litige.",
+          "nota": "S'il vous dit qu'il n'a pas de conversation ouverte, ouvrez-en une depuis {{menuCrm}} ou depuis la messagerie et renvoyez-la. La conversation d'un travailleur naît quand le bureau lui écrit, pas quand vous l'ajoutez."
         }
       }
     }
+  },
+  "agreements": {
+    "open": "Ententes de travail",
+    "title": "Ententes de {{name}}",
+    "description": "Ce que vous avez convenu avec cette personne : à partir de quand, combien, et à quelle fréquence elle est payée. Généré en PDF et envoyé par la messagerie.",
+    "none": "Il n'y a encore aucune entente avec cette personne.",
+    "new": "Nouvelle entente",
+    "agreementTitle": "Titre",
+    "agreementTitlePlaceholder": "Ex. Charpentier — saison 2026",
+    "startDate": "À partir du",
+    "endDate": "Jusqu'au",
+    "endDateHint": "Laissez vide s'il n'y a pas de date de fin.",
+    "openEnded": "Sans date de fin",
+    "payKindLabel": "Mode de rémunération",
+    "payKind": {
+      "por_hora": "À l'heure",
+      "fijo": "Montant fixe",
+      "por_obra": "Au chantier"
+    },
+    "payAmount": "Montant",
+    "payFrequencyLabel": "Fréquence de paie",
+    "payFrequency": {
+      "semanal": "Hebdomadaire",
+      "quincenal": "Aux deux semaines",
+      "mensual": "Mensuelle",
+      "al_terminar": "À la fin des travaux"
+    },
+    "hoursPerWeek": "Heures par semaine",
+    "vacationPercent": "Indemnité de vacances (%)",
+    "vacationHint": "Au Québec : 4 % jusqu'à trois ans de service, 6 % par la suite.",
+    "terms": "Conditions convenues",
+    "termsPlaceholder": "Ex. Outils personnels. Heures supplémentaires au-delà de 40 h/semaine. Préavis de deux semaines.",
+    "notes": "Notes",
+    "downloadPdf": "PDF",
+    "send": "L'envoyer",
+    "sent": "Envoyée",
+    "deleteConfirm": "Supprimer l'entente {{number}} ?",
+    "signedBy": "Signé par {{name}} le {{date}}",
+    "kind": {
+      "empleo": "Entente de travail",
+      "subcontrato": "Contrat de sous-traitance"
+    },
+    "status": {
+      "borrador": "Brouillon",
+      "enviado": "Envoyée",
+      "firmado": "Signée",
+      "rechazado": "Refusée",
+      "terminado": "Terminée"
+    }
+  },
+  "workerAgreements": {
+    "pendingTitle": "Une entente attend votre signature",
+    "read": "La lire",
+    "sign": "Signer",
+    "signTitle": "Signer l'entente",
+    "signHint": "Lisez-la avant de signer. En inscrivant votre nom, il est enregistré que c'était bien vous et à quel moment.",
+    "yourName": "Vos nom et prénom",
+    "confirmSign": "Signer"
   }
 }

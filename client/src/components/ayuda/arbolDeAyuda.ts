@@ -80,6 +80,9 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "comoFicha", parrafos: 3, nota: true },
       { id: "queVeElTrabajador", parrafos: 3, nota: true },
       { id: "verHoras", parrafos: 2, ruta: "/work-log" },
+      // Lo que se acordó con cada uno dejaba de existir en cuanto se
+      // cerraba la conversación en la que se dijo.
+      { id: "acuerdo", parrafos: 4, nota: true, ruta: "/technicians" },
     ],
   },
   {
@@ -107,6 +110,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "doyCodigoCliente", parrafos: 3, nota: true },
       { id: "fichaTrabajador", parrafos: 3 },
       { id: "cierroOrden", parrafos: 2 },
+      { id: "mandoAcuerdo", parrafos: 3, nota: true },
     ],
   },
   {

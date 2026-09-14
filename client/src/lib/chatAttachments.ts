@@ -36,6 +36,18 @@ export async function openChatAttachment(
 
   const filename = body.name ?? message.attachment.name ?? "documento";
 
+  // El acuerdo de trabajo sólo viaja hacia el trabajador, y el trabajador
+  // tiene su propia ruta: la del panel le devolvería 401 porque él no lleva
+  // sesión de Supabase.
+  if (body.kind === "agreement") {
+    const ruta =
+      prefix === "/worker"
+        ? `/api/worker/agreements/${body.documentId}/pdf?download=1`
+        : `/api/agreements/${body.documentId}/pdf?download=1`;
+    await downloadFile(`${ruta}&lang=${lang.slice(0, 2)}`, filename, fetcherFor(prefix));
+    return;
+  }
+
   if (body.kind === "estimate" || body.kind === "invoice") {
     // The portal has its own document routes; the panel has the business ones.
     const documentPath =

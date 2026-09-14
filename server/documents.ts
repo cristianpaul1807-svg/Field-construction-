@@ -142,6 +142,37 @@ export interface PayrollDocLine {
   amount: number;
 }
 
+/**
+ * El acuerdo de trabajo que se le entrega a un empleado o a un subcontratista.
+ *
+ * No lleva líneas ni impuestos: no es un cobro, es lo que se acordó. Lo que
+ * tiene que quedar negro sobre blanco es quién, desde cuándo, cuánto y cada
+ * cuánto — y, si se firmó, quién lo firmó y cuándo.
+ */
+export interface AgreementDoc {
+  kind: "agreement";
+  number: string;
+  date: Date;
+  business: BusinessIdentity;
+  /** A quién se le entrega. Un subcontratista lleva su oficio en el cargo. */
+  worker: PartyIdentity & { role: string | null };
+  /** `empleo` o `subcontrato`: cambia el título del documento. */
+  agreementKind: "empleo" | "subcontrato";
+  title: string | null;
+  startDate: Date;
+  /** Sin fecha de fin es indefinido, que es lo normal en un empleo. */
+  endDate: Date | null;
+  payKind: "por_hora" | "fijo" | "por_obra";
+  payAmount: number;
+  payFrequency: "semanal" | "quincenal" | "mensual" | "al_terminar";
+  hoursPerWeek: number | null;
+  /** Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí. */
+  vacationPercent: number;
+  terms: string | null;
+  notes: string | null;
+  signature: { name: string; signedAt: Date } | null;
+}
+
 export interface InvoiceDoc {
   kind: "invoice";
   number: string;
@@ -227,6 +258,32 @@ interface Copy {
   thanks: string;
   page: (n: number) => string;
   noLines: string;
+  /** El acuerdo de trabajo. Dos títulos: no es lo mismo emplear que subcontratar. */
+  agreementTitleEmpleo: string;
+  agreementTitleSubcontrato: string;
+  agreementWorker: string;
+  agreementRole: string;
+  agreementPeriod: string;
+  agreementStart: string;
+  agreementEnd: string;
+  agreementOpenEnded: string;
+  agreementPayTitle: string;
+  agreementPayKind: string;
+  /** El importe acordado. No es un «total»: no hay nada que sumar en un contrato. */
+  agreementPayAmount: string;
+  agreementPayKinds: Record<"por_hora" | "fijo" | "por_obra", string>;
+  agreementPayFrequency: string;
+  agreementPayFrequencies: Record<"semanal" | "quincenal" | "mensual" | "al_terminar", string>;
+  agreementHoursPerWeek: string;
+  agreementVacation: string;
+  agreementVacationNote: (p: number) => string;
+  agreementTerms: string;
+  agreementNotes: string;
+  agreementAcceptance: string;
+  agreementWorkerSignature: string;
+  agreementBusinessSignature: string;
+  agreementSignedBy: (name: string, date: string) => string;
+  agreementDisclaimer: string;
 }
 
 const COPY: Record<DocLang, Copy> = {
@@ -291,6 +348,38 @@ const COPY: Record<DocLang, Copy> = {
     thanks: "Gracias por su confianza.",
     page: (n) => `Página ${n}`,
     noLines: "Sin partidas.",
+    agreementTitleEmpleo: "ACUERDO DE TRABAJO",
+    agreementTitleSubcontrato: "CONTRATO DE SUBCONTRATACIÓN",
+    agreementWorker: "Trabajador",
+    agreementRole: "Puesto",
+    agreementPeriod: "Duración",
+    agreementStart: "Desde",
+    agreementEnd: "Hasta",
+    agreementOpenEnded: "Indefinido",
+    agreementPayTitle: "Condiciones de pago",
+    agreementPayKind: "Forma de pago",
+    agreementPayAmount: "Importe acordado",
+    agreementPayKinds: { por_hora: "Por hora", fijo: "Importe fijo", por_obra: "Por obra" },
+    agreementPayFrequency: "Cada cuánto se paga",
+    agreementPayFrequencies: {
+      semanal: "Semanal",
+      quincenal: "Quincenal",
+      mensual: "Mensual",
+      al_terminar: "Al terminar el trabajo",
+    },
+    agreementHoursPerWeek: "Horas por semana",
+    agreementVacation: "Indemnidad de vacaciones",
+    agreementVacationNote: (p) =>
+      `Se añade un ${p} % del salario bruto en concepto de vacaciones, conforme a la Ley de normas del trabajo de Quebec.`,
+    agreementTerms: "Condiciones acordadas",
+    agreementNotes: "Notas",
+    agreementAcceptance:
+      "Al firmar, ambas partes aceptan las condiciones recogidas en este documento.",
+    agreementWorkerSignature: "Firma del trabajador",
+    agreementBusinessSignature: "Firma de la empresa",
+    agreementSignedBy: (name, date) => `Firmado por ${name} el ${date}`,
+    agreementDisclaimer:
+      "Documento de gestión interna. No sustituye al asesoramiento legal ni a un contrato revisado por un abogado.",
   },
   en: {
     estimateTitle: "ESTIMATE",
@@ -353,6 +442,37 @@ const COPY: Record<DocLang, Copy> = {
     thanks: "Thank you for your business.",
     page: (n) => `Page ${n}`,
     noLines: "No line items.",
+    agreementTitleEmpleo: "EMPLOYMENT AGREEMENT",
+    agreementTitleSubcontrato: "SUBCONTRACTOR AGREEMENT",
+    agreementWorker: "Worker",
+    agreementRole: "Position",
+    agreementPeriod: "Term",
+    agreementStart: "From",
+    agreementEnd: "Until",
+    agreementOpenEnded: "Open-ended",
+    agreementPayTitle: "Payment terms",
+    agreementPayKind: "How they are paid",
+    agreementPayAmount: "Agreed amount",
+    agreementPayKinds: { por_hora: "Hourly", fijo: "Fixed amount", por_obra: "Per project" },
+    agreementPayFrequency: "How often",
+    agreementPayFrequencies: {
+      semanal: "Weekly",
+      quincenal: "Every two weeks",
+      mensual: "Monthly",
+      al_terminar: "On completion",
+    },
+    agreementHoursPerWeek: "Hours per week",
+    agreementVacation: "Vacation pay",
+    agreementVacationNote: (p) =>
+      `${p} % of gross wages is added as vacation pay, in accordance with Quebec's Act respecting labour standards.`,
+    agreementTerms: "Agreed terms",
+    agreementNotes: "Notes",
+    agreementAcceptance: "By signing, both parties accept the terms set out in this document.",
+    agreementWorkerSignature: "Worker's signature",
+    agreementBusinessSignature: "Company's signature",
+    agreementSignedBy: (name, date) => `Signed by ${name} on ${date}`,
+    agreementDisclaimer:
+      "Internal management document. It does not replace legal advice or a contract reviewed by a lawyer.",
   },
   fr: {
     estimateTitle: "SOUMISSION",
@@ -415,6 +535,37 @@ const COPY: Record<DocLang, Copy> = {
     thanks: "Merci de votre confiance.",
     page: (n) => `Page ${n}`,
     noLines: "Aucun poste.",
+    agreementTitleEmpleo: "ENTENTE DE TRAVAIL",
+    agreementTitleSubcontrato: "CONTRAT DE SOUS-TRAITANCE",
+    agreementWorker: "Travailleur",
+    agreementRole: "Poste",
+    agreementPeriod: "Durée",
+    agreementStart: "À partir du",
+    agreementEnd: "Jusqu'au",
+    agreementOpenEnded: "Durée indéterminée",
+    agreementPayTitle: "Conditions de paiement",
+    agreementPayKind: "Mode de rémunération",
+    agreementPayAmount: "Montant convenu",
+    agreementPayKinds: { por_hora: "À l'heure", fijo: "Montant fixe", por_obra: "Au chantier" },
+    agreementPayFrequency: "Fréquence de paie",
+    agreementPayFrequencies: {
+      semanal: "Hebdomadaire",
+      quincenal: "Aux deux semaines",
+      mensual: "Mensuelle",
+      al_terminar: "À la fin des travaux",
+    },
+    agreementHoursPerWeek: "Heures par semaine",
+    agreementVacation: "Indemnité de vacances",
+    agreementVacationNote: (p) =>
+      `Une indemnité de vacances de ${p} % du salaire brut s'ajoute, conformément à la Loi sur les normes du travail du Québec.`,
+    agreementTerms: "Conditions convenues",
+    agreementNotes: "Notes",
+    agreementAcceptance: "En signant, les deux parties acceptent les conditions énoncées dans ce document.",
+    agreementWorkerSignature: "Signature du travailleur",
+    agreementBusinessSignature: "Signature de l'entreprise",
+    agreementSignedBy: (name, date) => `Signé par ${name} le ${date}`,
+    agreementDisclaimer:
+      "Document de gestion interne. Il ne remplace pas un avis juridique ni un contrat révisé par un avocat.",
   },
   it: {
     estimateTitle: "PREVENTIVO",
@@ -477,6 +628,37 @@ const COPY: Record<DocLang, Copy> = {
     thanks: "Grazie per la fiducia.",
     page: (n) => `Pagina ${n}`,
     noLines: "Nessuna voce.",
+    agreementTitleEmpleo: "ACCORDO DI LAVORO",
+    agreementTitleSubcontrato: "CONTRATTO DI SUBAPPALTO",
+    agreementWorker: "Lavoratore",
+    agreementRole: "Mansione",
+    agreementPeriod: "Durata",
+    agreementStart: "Dal",
+    agreementEnd: "Fino al",
+    agreementOpenEnded: "A tempo indeterminato",
+    agreementPayTitle: "Condizioni di pagamento",
+    agreementPayKind: "Come viene pagato",
+    agreementPayAmount: "Importo concordato",
+    agreementPayKinds: { por_hora: "A ore", fijo: "Importo fisso", por_obra: "A cantiere" },
+    agreementPayFrequency: "Ogni quanto si paga",
+    agreementPayFrequencies: {
+      semanal: "Settimanale",
+      quincenal: "Ogni due settimane",
+      mensual: "Mensile",
+      al_terminar: "A lavoro finito",
+    },
+    agreementHoursPerWeek: "Ore a settimana",
+    agreementVacation: "Indennità di ferie",
+    agreementVacationNote: (p) =>
+      `Si aggiunge un ${p} % della retribuzione lorda a titolo di ferie, secondo la Legge sulle norme del lavoro del Québec.`,
+    agreementTerms: "Condizioni concordate",
+    agreementNotes: "Note",
+    agreementAcceptance: "Firmando, entrambe le parti accettano le condizioni indicate in questo documento.",
+    agreementWorkerSignature: "Firma del lavoratore",
+    agreementBusinessSignature: "Firma dell'impresa",
+    agreementSignedBy: (name, date) => `Firmato da ${name} il ${date}`,
+    agreementDisclaimer:
+      "Documento di gestione interna. Non sostituisce una consulenza legale né un contratto rivisto da un avvocato.",
   },
 };
 
@@ -577,7 +759,7 @@ function letterhead(doc: Doc, b: BusinessIdentity, copy: Copy): number {
   return doc.y;
 }
 
-function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Copy, lang: DocLang) {
+function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc | AgreementDoc, copy: Copy, lang: DocLang) {
   const b = data.business;
 
   // Dónde acaba de verdad el membrete, medido antes de escribir nada más: el
@@ -589,9 +771,29 @@ function header(doc: Doc, data: EstimateDoc | InvoiceDoc | PayrollDoc, copy: Cop
   const letterheadBottom = letterhead(doc, b, copy);
 
   const title =
-    data.kind === "estimate" ? copy.estimateTitle : data.kind === "payroll" ? copy.payrollTitle : copy.invoiceTitle;
-  doc.font("Helvetica-Bold").fontSize(20).fillColor("#111111").text(title, MARGIN, MARGIN, {
-    width: CONTENT_WIDTH,
+    data.kind === "estimate"
+      ? copy.estimateTitle
+      : data.kind === "payroll"
+        ? copy.payrollTitle
+        : data.kind === "agreement"
+          ? data.agreementKind === "subcontrato"
+            ? copy.agreementTitleSubcontrato
+            : copy.agreementTitleEmpleo
+          : copy.invoiceTitle;
+  // El membrete ocupa 300 puntos a la izquierda, así que el título sólo tiene
+  // lo que sobra a la derecha. A 20 puntos «FACTURE» cabe de sobra y
+  // «CONTRAT DE SOUS-TRAITANCE» no: se imprimía encima del nombre de la
+  // empresa, y las dos cosas quedaban ilegibles. Se encoge hasta que entra, y
+  // si ni al mínimo entra, se parte en dos líneas en su mitad de la hoja.
+  const ANCHO_DEL_MEMBRETE = 300;
+  const anchoDelTitulo = CONTENT_WIDTH - ANCHO_DEL_MEMBRETE - 16;
+  let cuerpoDelTitulo = 20;
+  doc.font("Helvetica-Bold");
+  while (cuerpoDelTitulo > 12 && doc.fontSize(cuerpoDelTitulo).widthOfString(title) > anchoDelTitulo) {
+    cuerpoDelTitulo -= 1;
+  }
+  doc.fontSize(cuerpoDelTitulo).fillColor("#111111").text(title, MARGIN + ANCHO_DEL_MEMBRETE + 16, MARGIN, {
+    width: anchoDelTitulo,
     align: "right",
   });
 
@@ -1274,6 +1476,139 @@ export function renderPayrollPdf(data: PayrollDoc, lang: DocLang): Promise<Buffe
 
   doc.y += 8;
   doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.payrollDisclaimer, MARGIN, doc.y, {
+    width: CONTENT_WIDTH,
+  });
+
+  pageNumbers(doc, copy);
+  doc.end();
+  return done;
+}
+
+/**
+ * El acuerdo de trabajo, en papel.
+ *
+ * Deliberadamente sin tabla de líneas ni totales: lo que tiene que poder leer
+ * alguien que no conoce el software es quién, desde cuándo, cuánto y cada
+ * cuánto. Todo lo demás estorba.
+ */
+export function renderAgreementPdf(data: AgreementDoc, lang: DocLang): Promise<Buffer> {
+  const copy = COPY[lang];
+  const doc = nuevoDocumento();
+
+  const chunks: Buffer[] = [];
+  const done = new Promise<Buffer>((resolve, reject) => {
+    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+  });
+
+  header(doc, data, copy, lang);
+
+  const field = (label: string, value: string) => {
+    ensureRoom(doc, 18, copy);
+    const y = doc.y;
+    doc.font("Helvetica").fontSize(9).fillColor("#888888").text(label, MARGIN, y, { width: 190 });
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#111111").text(value, MARGIN + 190, y, {
+      width: CONTENT_WIDTH - 190,
+    });
+    doc.y = Math.max(doc.y, y + 15);
+  };
+
+  const section = (titulo: string) => {
+    ensureRoom(doc, 34, copy);
+    doc.y += 8;
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("#111111").text(titulo, MARGIN, doc.y);
+    doc.y += 4;
+    doc.moveTo(MARGIN, doc.y).lineTo(PAGE_WIDTH - MARGIN, doc.y).strokeColor("#dddddd").lineWidth(1).stroke();
+    doc.y += 8;
+  };
+
+  if (data.title) {
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#111111").text(data.title, MARGIN, doc.y, {
+      width: CONTENT_WIDTH,
+    });
+    doc.y += 10;
+  }
+
+  field(copy.agreementWorker, data.worker.name ?? "—");
+  if (data.worker.role) field(copy.agreementRole, data.worker.role);
+  // El contacto va sin rótulo, como en el bloque del cliente: un teléfono y un
+  // correo se reconocen solos y dos etiquetas más sólo ensucian la ficha.
+  const contacto = [data.worker.phone, data.worker.email].filter(Boolean).join(" · ");
+  if (contacto) {
+    ensureRoom(doc, 16, copy);
+    doc.font("Helvetica").fontSize(9).fillColor("#555555").text(contacto, MARGIN + 190, doc.y, {
+      width: CONTENT_WIDTH - 190,
+    });
+    doc.y += 6;
+  }
+
+  section(copy.agreementPeriod);
+  field(copy.agreementStart, shortDate(data.startDate, lang));
+  field(copy.agreementEnd, data.endDate ? shortDate(data.endDate, lang) : copy.agreementOpenEnded);
+  if (data.hoursPerWeek) field(copy.agreementHoursPerWeek, String(data.hoursPerWeek));
+
+  section(copy.agreementPayTitle);
+  field(copy.agreementPayKind, copy.agreementPayKinds[data.payKind]);
+  field(copy.agreementPayAmount, money(data.payAmount, lang));
+  field(copy.agreementPayFrequency, copy.agreementPayFrequencies[data.payFrequency]);
+  // Sólo en el empleo: un subcontratista factura, no cobra vacaciones.
+  if (data.agreementKind === "empleo" && data.vacationPercent > 0) {
+    field(copy.agreementVacation, `${data.vacationPercent} %`);
+    ensureRoom(doc, 24, copy);
+    doc.font("Helvetica").fontSize(8).fillColor("#666666").text(
+      copy.agreementVacationNote(data.vacationPercent),
+      MARGIN,
+      doc.y,
+      { width: CONTENT_WIDTH }
+    );
+    doc.y += 6;
+  }
+
+  const bloqueDeTexto = (titulo: string, texto: string) => {
+    section(titulo);
+    ensureRoom(doc, 30, copy);
+    doc.font("Helvetica").fontSize(9).fillColor("#333333").text(texto, MARGIN, doc.y, {
+      width: CONTENT_WIDTH,
+      align: "left",
+    });
+    doc.y += 6;
+  };
+  if (data.terms?.trim()) bloqueDeTexto(copy.agreementTerms, data.terms.trim());
+  if (data.notes?.trim()) bloqueDeTexto(copy.agreementNotes, data.notes.trim());
+
+  // La firma. Si ya está firmado en el sistema se imprime quién y cuándo; si
+  // no, se dejan las dos rayas para firmarlo a mano, que es como se va a
+  // firmar la mitad de las veces.
+  ensureRoom(doc, 110, copy);
+  doc.y += 14;
+  doc.font("Helvetica").fontSize(8.5).fillColor("#555555").text(copy.agreementAcceptance, MARGIN, doc.y, {
+    width: CONTENT_WIDTH,
+  });
+  doc.y += 18;
+
+  if (data.signature) {
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .fillColor("#1a7f37")
+      .text(copy.agreementSignedBy(data.signature.name, shortDate(data.signature.signedAt, lang)), MARGIN, doc.y, {
+        width: CONTENT_WIDTH,
+      });
+    doc.y += 20;
+  } else {
+    const y = doc.y + 26;
+    const mitad = CONTENT_WIDTH / 2 - 16;
+    doc.moveTo(MARGIN, y).lineTo(MARGIN + mitad, y).strokeColor("#999999").lineWidth(1).stroke();
+    doc.moveTo(MARGIN + CONTENT_WIDTH - mitad, y).lineTo(PAGE_WIDTH - MARGIN, y).stroke();
+    doc.font("Helvetica").fontSize(8).fillColor("#666666");
+    doc.text(copy.agreementWorkerSignature, MARGIN, y + 4, { width: mitad });
+    doc.text(copy.agreementBusinessSignature, MARGIN + CONTENT_WIDTH - mitad, y + 4, { width: mitad });
+    doc.y = y + 22;
+  }
+
+  doc.y += 10;
+  doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.agreementDisclaimer, MARGIN, doc.y, {
     width: CONTENT_WIDTH,
   });
 

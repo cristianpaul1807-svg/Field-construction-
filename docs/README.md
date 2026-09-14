@@ -68,6 +68,7 @@ directamente al paso a paso.
 | Técnicos | [funciones/equipo.md](funciones/equipo.md#técnicos-empleados) |
 | Subcontratistas | [funciones/equipo.md](funciones/equipo.md#subcontratistas) |
 | *(sin menú)* App del trabajador `/campo` | [funciones/equipo.md](funciones/equipo.md#la-app-del-trabajador) |
+| *(en la ficha de cada persona)* Acuerdos de trabajo | [funciones/acuerdos-de-trabajo.md](funciones/acuerdos-de-trabajo.md) |
 | GPS y rutas | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#gps-y-rutas) |
 | Check-in / Check-out | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#check-in-check-out) |
 | *(dentro de Check-in)* Las 8 horas y las extra | [funciones/campo-gps-y-fichaje.md](funciones/campo-gps-y-fichaje.md#las-8-horas-y-las-extra) |
