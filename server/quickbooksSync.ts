@@ -21,7 +21,7 @@ import type { getSupabaseAdmin } from "./supabaseAdmin";
  */
 
 type Admin = ReturnType<typeof getSupabaseAdmin>;
-type Tipo = "customer" | "invoice" | "credit_note";
+type Tipo = "customer" | "invoice" | "credit_note" | "payment" | "estimate" | "expense";
 
 interface Enlace {
   qbo_id: string | null;
@@ -592,4 +592,329 @@ export async function traerCambios(
     .eq("business_id", businessId);
 
   return { revisadas, divergentes, cobradas };
+}
+
+/**
+ * Un cobro en QuickBooks, colgado de su factura.
+ *
+ * Sin esto la integración estaba a medias de la peor forma: las facturas
+ * llegaban y los cobros no, así que en su contabilidad **todo aparecía
+ * impagado** aunque Stripe hubiera cobrado días antes. Un contable mirando eso
+ * ve una empresa que factura y no cobra.
+ *
+ * Se cuelga de la factura con `LinkedTxn`, que es lo que hace que QuickBooks
+ * salde esa factura concreta. Un pago suelto por el mismo importe deja las dos
+ * cosas abiertas: un cobro sin asignar y una factura sin pagar.
+ */
+export async function enviarPago(admin: Admin, businessId: string, paymentId: string): Promise<void> {
+  const enlace = await leerEnlace(admin, businessId, "payment", paymentId);
+  if (enlace?.qbo_id) return;
+
+  const { data: pago } = await admin
+    .from("payments")
+    .select("id, invoice_id, amount, paid_at, method, reference, invoices(client_id)")
+    .eq("business_id", businessId)
+    .eq("id", paymentId)
+    .maybeSingle();
+  if (!pago) return;
+
+  try {
+    // La factura tiene que estar allí antes que su cobro. Si aún no llegó se
+    // manda ahora: el cobro llega detrás y no se pierde ninguno de los dos.
+    if (pago.invoice_id) await enviarFactura(admin, businessId, pago.invoice_id);
+
+    const facturaEnlace = pago.invoice_id ? await leerEnlace(admin, businessId, "invoice", pago.invoice_id) : null;
+    if (!facturaEnlace?.qbo_id) throw new Error("la factura de este cobro todavía no está en QuickBooks");
+
+    const clienteId = (pago.invoices as unknown as { client_id: string } | null)?.client_id ?? null;
+    const clienteQbo = clienteId ? await enviarCliente(admin, businessId, clienteId) : null;
+    if (!clienteQbo) throw new Error("el cobro no tiene cliente en QuickBooks");
+
+    const creado = await llamar<{ Payment?: { Id: string; SyncToken: string } }>(
+      admin,
+      businessId,
+      "payment?minorversion=70",
+      {
+        method: "POST",
+        body: {
+          CustomerRef: { value: clienteQbo },
+          TotalAmt: Number(pago.amount),
+          TxnDate: String(pago.paid_at ?? new Date().toISOString()).slice(0, 10),
+          // Con qué se cobró, para que el contable pueda casarlo con el banco.
+          PrivateNote: [pago.method, pago.reference].filter(Boolean).join(" · ") || undefined,
+          Line: [
+            {
+              Amount: Number(pago.amount),
+              LinkedTxn: [{ TxnId: facturaEnlace.qbo_id, TxnType: "Invoice" }],
+            },
+          ],
+        },
+      }
+    );
+
+    const id = creado.Payment?.Id;
+    if (!id) throw new Error("QuickBooks no devolvió un id de cobro");
+    await anotar(admin, businessId, "payment", paymentId, {
+      qbo_id: id,
+      sync_token: creado.Payment?.SyncToken ?? null,
+      status: "enviado",
+      error: null,
+    });
+  } catch (err) {
+    await anotar(admin, businessId, "payment", paymentId, { status: "fallo", error: motivo(err) });
+    throw err;
+  }
+}
+
+/**
+ * Un presupuesto en QuickBooks.
+ *
+ * Se manda cuando sale hacia el cliente, no antes: un borrador que el
+ * contratista está afinando no es un documento, y llenarle la contabilidad de
+ * borradores es ensuciarla.
+ */
+export async function enviarPresupuesto(admin: Admin, businessId: string, estimateId: string): Promise<void> {
+  const enlace = await leerEnlace(admin, businessId, "estimate", estimateId);
+  if (enlace?.qbo_id) return;
+
+  const { data: presupuesto } = await admin
+    .from("estimates")
+    .select("id, number, client_id, created_at, description, status")
+    .eq("business_id", businessId)
+    .eq("id", estimateId)
+    .maybeSingle();
+  if (!presupuesto || !presupuesto.client_id) return;
+
+  try {
+    const [clienteQbo, negocio, lineas] = await Promise.all([
+      enviarCliente(admin, businessId, presupuesto.client_id),
+      admin.from("businesses").select("province").eq("id", businessId).maybeSingle(),
+      admin.from("estimate_lines").select("quantity, unit_cost").eq("estimate_id", estimateId),
+    ]);
+    if (!clienteQbo) throw new Error("el presupuesto no tiene cliente en QuickBooks");
+
+    // El total sin impuestos, que es lo que se manda: el impuesto lo calcula
+    // QuickBooks igual que en una factura.
+    const subtotal =
+      Math.round(
+        (lineas.data ?? []).reduce((suma, l: any) => suma + Number(l.quantity) * Number(l.unit_cost), 0) * 100
+      ) / 100;
+    if (subtotal <= 0) return;
+
+    const [servicio, impuesto] = await Promise.all([
+      idDelServicio(admin, businessId),
+      idDelImpuesto(admin, businessId, String((negocio.data as any)?.province ?? "QC")),
+    ]);
+    if (!impuesto) {
+      throw new Error(
+        "tu QuickBooks no tiene ningún código de impuesto que se pueda usar. Créalo en Taxes → Sales tax y vuelve a intentarlo."
+      );
+    }
+
+    const creado = await llamar<{ Estimate?: { Id: string; SyncToken: string } }>(
+      admin,
+      businessId,
+      "estimate?minorversion=70",
+      {
+        method: "POST",
+        body: {
+          CustomerRef: { value: clienteQbo },
+          DocNumber: presupuesto.number ? `EST-${presupuesto.number}` : undefined,
+          TxnDate: String(presupuesto.created_at).slice(0, 10),
+          Line: [
+            {
+              DetailType: "SalesItemLineDetail",
+              Amount: subtotal,
+              Description: presupuesto.description ?? "Travaux de construction",
+              SalesItemLineDetail: {
+                ...(servicio ? { ItemRef: { value: servicio } } : {}),
+                Qty: 1,
+                UnitPrice: subtotal,
+                TaxCodeRef: { value: impuesto },
+              },
+            },
+          ],
+          GlobalTaxCalculation: "TaxExcluded",
+        },
+      }
+    );
+
+    const id = creado.Estimate?.Id;
+    if (!id) throw new Error("QuickBooks no devolvió un id de presupuesto");
+    await anotar(admin, businessId, "estimate", estimateId, {
+      qbo_id: id,
+      sync_token: creado.Estimate?.SyncToken ?? null,
+      status: "enviado",
+      error: null,
+    });
+  } catch (err) {
+    await anotar(admin, businessId, "estimate", estimateId, { status: "fallo", error: motivo(err) });
+    throw err;
+  }
+}
+
+/** Una cuenta del plan contable de esa empresa, de un tipo concreto. */
+async function idDeCuenta(admin: Admin, businessId: string, tipo: string): Promise<string | null> {
+  try {
+    const res = await llamar<{ QueryResponse?: { Account?: { Id: string }[] } }>(
+      admin,
+      businessId,
+      `query?query=${encodeURIComponent(`select Id from Account where AccountType = '${tipo}' maxresults 1`)}&minorversion=70`
+    );
+    return res.QueryResponse?.Account?.[0]?.Id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Un gasto de obra en QuickBooks.
+ *
+ * Sin los gastos, su contabilidad enseña lo que ingresa y nada de lo que le
+ * cuesta: una empresa que factura cien mil y no gasta nada. El beneficio que
+ * declararía sería el ingreso entero.
+ *
+ * QuickBooks pide dos cuentas de su plan contable —de dónde salió el dinero y
+ * a qué concepto va— y las dos son suyas, no nuestras. Se cogen las que tenga
+ * en vez de inventárselas: un plan contable es una decisión de su contable.
+ */
+export async function enviarGasto(admin: Admin, businessId: string, expenseId: string): Promise<void> {
+  const enlace = await leerEnlace(admin, businessId, "expense", expenseId);
+  if (enlace?.qbo_id) return;
+
+  const { data: gasto } = await admin
+    .from("expenses")
+    .select("id, date, category, description, amount, projects(name)")
+    .eq("business_id", businessId)
+    .eq("id", expenseId)
+    .maybeSingle();
+  if (!gasto || Number(gasto.amount) <= 0) return;
+
+  try {
+    const [cuentaOrigen, cuentaGasto] = await Promise.all([
+      idDeCuenta(admin, businessId, "Bank"),
+      idDeCuenta(admin, businessId, "Expense"),
+    ]);
+    if (!cuentaOrigen || !cuentaGasto) {
+      throw new Error(
+        "tu QuickBooks necesita una cuenta bancaria y una de gastos para registrar compras. Créalas en su plan contable y vuelve a intentarlo."
+      );
+    }
+
+    const obra = (gasto.projects as unknown as { name: string } | null)?.name ?? null;
+    const creado = await llamar<{ Purchase?: { Id: string; SyncToken: string } }>(
+      admin,
+      businessId,
+      "purchase?minorversion=70",
+      {
+        method: "POST",
+        body: {
+          AccountRef: { value: cuentaOrigen },
+          PaymentType: "Cash",
+          TxnDate: String(gasto.date).slice(0, 10),
+          Line: [
+            {
+              DetailType: "AccountBasedExpenseLineDetail",
+              Amount: Number(gasto.amount),
+              // La categoría nuestra y la obra, para que el gasto se pueda leer
+              // sin abrir nuestro sistema.
+              Description: [gasto.description, gasto.category, obra].filter(Boolean).join(" · "),
+              AccountBasedExpenseLineDetail: { AccountRef: { value: cuentaGasto } },
+            },
+          ],
+        },
+      }
+    );
+
+    const id = creado.Purchase?.Id;
+    if (!id) throw new Error("QuickBooks no devolvió un id de gasto");
+    await anotar(admin, businessId, "expense", expenseId, {
+      qbo_id: id,
+      sync_token: creado.Purchase?.SyncToken ?? null,
+      status: "enviado",
+      error: null,
+    });
+  } catch (err) {
+    await anotar(admin, businessId, "expense", expenseId, { status: "fallo", error: motivo(err) });
+    throw err;
+  }
+}
+
+/**
+ * Qué hacer con un fallo, en una palabra que la pantalla sabe traducir.
+ *
+ * El mensaje que devuelve Intuit está escrito para quien programa: habla de
+ * validaciones, de tokens y de objetos obsoletos. Un contratista leyendo
+ * «Business Validation Error: Make sure all your transactions have a GST/HST
+ * rate» no sabe si el problema es suyo, nuestro, o de nadie.
+ *
+ * Esto lo traduce a la acción que resuelve cada caso. El texto original no se
+ * tira —sigue guardado y se puede desplegar— porque el día que aparezca uno
+ * que no conocemos, es lo único que permite averiguar qué pasó.
+ */
+export function comoArreglarlo(error: string | null): string {
+  const texto = error ?? "";
+  if (/tax code|GST\/HST rate|calculating tax|código de impuesto/i.test(texto)) return "tax";
+  if (/cuenta bancaria|AccountType|Account.*required|cuenta de gastos/i.test(texto)) return "accounts";
+  if (/Duplicate Document Number|DocNumber/i.test(texto)) return "duplicate";
+  if (/AuthenticationFailed|Token|401|invalid_grant|unauthorized/i.test(texto)) return "reconnect";
+  if (/Stale Object|SyncToken/i.test(texto)) return "stale";
+  if (/todavía no está en QuickBooks|no tiene cliente/i.test(texto)) return "order";
+  return "generic";
+}
+
+/** Lo que no ha llegado a QuickBooks, con qué es cada cosa y qué hacer. */
+export async function loQueFalta(admin: Admin, businessId: string) {
+  const { data } = await admin
+    .from("quickbooks_links")
+    .select("kind, local_id, status, error, last_attempt_at")
+    .eq("business_id", businessId)
+    .neq("status", "enviado")
+    .order("last_attempt_at", { ascending: false })
+    .limit(100);
+
+  const filas = data ?? [];
+  if (filas.length === 0) return [];
+
+  // Los rótulos salen de cada tabla, para que la lista diga "Factura
+  // 2026-0003 · Nestor" y no un identificador que no le dice nada a nadie.
+  const porTipo = (kind: string) => filas.filter((f: any) => f.kind === kind).map((f: any) => f.local_id);
+  const [facturas, notas, clientes, presupuestos, gastos] = await Promise.all([
+    admin.from("invoices").select("id, number, amount, clients(name)").in("id", porTipo("invoice").length ? porTipo("invoice") : ["-"]),
+    admin.from("credit_notes").select("id, number, amount").in("id", porTipo("credit_note").length ? porTipo("credit_note") : ["-"]),
+    admin.from("clients").select("id, name").in("id", porTipo("customer").length ? porTipo("customer") : ["-"]),
+    admin.from("estimates").select("id, number").in("id", porTipo("estimate").length ? porTipo("estimate") : ["-"]),
+    admin.from("expenses").select("id, description, amount").in("id", porTipo("expense").length ? porTipo("expense") : ["-"]),
+  ]);
+
+  const buscar = (kind: string, id: string): string => {
+    if (kind === "invoice") {
+      const f = (facturas.data ?? []).find((x: any) => x.id === id) as any;
+      return f ? `${f.number ?? ""} · ${f.clients?.name ?? ""}`.trim() : "";
+    }
+    if (kind === "credit_note") {
+      const n = (notas.data ?? []).find((x: any) => x.id === id) as any;
+      return n ? `NC-${n.number ?? ""}` : "";
+    }
+    if (kind === "customer") return ((clientes.data ?? []).find((x: any) => x.id === id) as any)?.name ?? "";
+    if (kind === "estimate") {
+      const e = (presupuestos.data ?? []).find((x: any) => x.id === id) as any;
+      return e ? `EST-${e.number ?? ""}` : "";
+    }
+    if (kind === "expense") return ((gastos.data ?? []).find((x: any) => x.id === id) as any)?.description ?? "";
+    // Un cobro no tiene nombre propio: se reconoce por su factura, y esa ya
+    // sale en la lista si también falló.
+    return "";
+  };
+
+  return filas.map((f: any) => ({
+    kind: f.kind,
+    id: f.local_id,
+    label: buscar(f.kind, f.local_id),
+    status: f.status,
+    error: f.error,
+    // La acción que lo resuelve, no el mensaje de Intuit.
+    fix: comoArreglarlo(f.error),
+    lastAttemptAt: f.last_attempt_at,
+  }));
 }

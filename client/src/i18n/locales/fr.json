@@ -1732,6 +1732,21 @@
           "p2": "Il se passe exactement la même chose que s'il avait payé par carte : la facture est réglée, elle compte dans l'encaissé en haut, et elle sort dans le rapport du comptable avec le mode de paiement inscrit.",
           "p3": "Et si c'était la facture finale du chantier, la marquer payée est ce qui clôt le chantier. C'est pour ça que l'enregistrer compte, même si l'argent est déjà dans votre compte.",
           "nota": "« Carte » ne se choisit pas à la main : c'est Stripe qui l'inscrit quand il y a une vraie transaction derrière. Ainsi le rapport ne peut pas dire que vous avez encaissé par carte ce qu'on vous a payé comptant."
+        },
+        "quickbooks": {
+          "title": "Ce qui part tout seul vers QuickBooks",
+          "p1": "La connexion se fait une fois, dans {{menuAjustes}} → {{menuQuickBooks}}. Ensuite il n'y a rien à cliquer : ce que vous émettez ici apparaît là-bas tout seul, en arrière-plan, sans attendre.",
+          "p2": "Y vont le client, la soumission, la facture, la note de crédit, le paiement —par carte comme celui que vous avez inscrit comptant— et la dépense. Chacun dès que vous l'émettez ou l'inscrivez, et le paiement reste rattaché à sa facture, pour qu'elle n'y figure plus comme impayée.",
+          "p3": "N'y vont ni le contrat de travail ni la paie. Un contrat n'est pas un document comptable, et la paie de QuickBooks est un autre produit payant. Les heures et ce que vous versez à vos gens restent ici et sortent dans l'export pour le comptable.",
+          "p4": "La lecture marche aussi dans l'autre sens. Si votre comptable change là-bas un montant, une date ou l'état d'une facture, ça revient ici et se voit dans {{menuFacturacion}}, pour ne pas finir avec deux vérités différentes.",
+          "nota": "Chaque facture affiche où en est son envoi. Si elle dit que ça a échoué, le bouton pour réessayer est juste là."
+        },
+        "quickbooksFalla": {
+          "title": "Quelque chose n'est pas arrivé à QuickBooks",
+          "p1": "Dans {{menuAjustes}} → {{menuQuickBooks}} il y a la liste de ce qui n'est pas passé, avec la raison dite simplement : le plus souvent il manque un code de taxe utilisable à la vente, ou un compte dans leur plan comptable.",
+          "p2": "Chaque ligne a son bouton pour réessayer, et en haut il y en a un qui les renvoie tous. Celui-là y va un par un exprès : une facture ne peut pas monter avant son client, et vingt appels d'un coup, c'est comme ça qu'Intuit vous limite.",
+          "p3": "Que ça ne parte pas ne casse rien ici. Le document existe, le client le voit, vous pouvez encaisser. QuickBooks est la destination, pas la permission.",
+          "nota": "Si vous réessayez et que ça échoue encore, ouvrez le détail technique de cette ligne et envoyez-le-nous. C'est la réponse mot pour mot de QuickBooks, et c'est ce qu'il faut pour corriger."
         }
       },
       "problemas": {
@@ -1807,6 +1822,13 @@
           "p2": "Cet avis n'est là que tant qu'il reste quelque chose à signer. Dès qu'il signe, il disparaît tout seul et cesse de le déranger.",
           "p3": "Quand il signe, son nom, l'heure exacte et l'endroit d'où il l'a fait sont enregistrés, et le PDF le porte désormais imprimé. C'est ce qui donne de la valeur au papier s'il y a un jour un litige.",
           "nota": "S'il vous dit qu'il n'a pas de conversation ouverte, ouvrez-en une depuis {{menuCrm}} ou depuis la messagerie et renvoyez-la. La conversation d'un travailleur naît quand le bureau lui écrit, pas quand vous l'ajoutez."
+        },
+        "emitoConQuickBooks": {
+          "title": "…j'émets quelque chose avec QuickBooks branché",
+          "p1": "Tout se passe comme d'habitude —son numéro, le portail du client, le courriel— et en plus ça part vers QuickBooks par derrière. Vous n'attendez rien et l'écran ne change pas.",
+          "p2": "Ça part dans l'ordre : le client d'abord s'il n'y était pas encore, puis le document. Un paiement se rattache à sa facture, et une note de crédit à la facture qu'elle corrige.",
+          "p3": "Si QuickBooks refuse, vous n'avez pas d'erreur en plein travail. C'est noté et ça apparaît dans la liste de ce qui n'est pas arrivé, à regarder quand vous pouvez.",
+          "nota": "Envoyer deux fois ne duplique rien. Chaque document reste apparié au sien là-bas, donc un nouvel essai le met à jour au lieu d'en créer un autre."
         }
       }
     }
@@ -1930,7 +1952,31 @@
     "diagnoseHint": "Ce que votre QuickBooks a de configuré : codes de taxe, services et comptes. C'est ce qui dit pourquoi un envoi échoue.",
     "diagnoseCopy": "Copier pour l'envoyer",
     "rowDiffers": "QuickBooks indique {{there}} et ici c'est {{here}}. Vérifiez.",
-    "rowDeletedThere": "Elle a été supprimée dans QuickBooks. Ici elle est toujours émise."
+    "rowDeletedThere": "Elle a été supprimée dans QuickBooks. Ici elle est toujours émise.",
+    "allSynced": "Votre comptabilité est à jour",
+    "allSyncedHint": "Tout ce que vous avez émis est arrivé dans QuickBooks : factures, encaissements, soumissions, notes de crédit et dépenses.",
+    "pendingTitle": "Ceci n'est pas arrivé dans QuickBooks",
+    "pendingCount_one": "{{count}} document en attente",
+    "pendingCount_other": "{{count}} documents en attente",
+    "retryAll": "Tout réessayer",
+    "showDetail": "Voir le détail technique",
+    "kind": {
+      "invoice": "Facture",
+      "credit_note": "Note de crédit",
+      "customer": "Client",
+      "payment": "Encaissement",
+      "estimate": "Soumission",
+      "expense": "Dépense"
+    },
+    "fix": {
+      "tax": "Il manque à votre QuickBooks un code de taxe utilisable sur une vente. Créez-le sous Taxes → Sales tax et réessayez.",
+      "accounts": "Votre QuickBooks a besoin d'un compte bancaire et d'un compte de dépenses pour enregistrer des achats. Créez-les dans son plan comptable et réessayez.",
+      "duplicate": "Un document avec ce numéro existe déjà là-bas. Cherchez-le dans QuickBooks : il a peut-être été saisi à la main avant.",
+      "reconnect": "La connexion à QuickBooks a expiré. Déconnectez-la et reconnectez-la ci-dessus.",
+      "stale": "Quelqu'un a modifié ce document dans QuickBooks pendant l'envoi. Réessayez et il se mettra à jour.",
+      "order": "Il manque quelque chose dont il dépend : son client ou sa facture n'y est pas encore. Faites Tout réessayer et ils partiront dans l'ordre.",
+      "generic": "QuickBooks l'a refusé et nous ne savons pas pourquoi. Réessayez ; si ça échoue encore, ouvrez le détail technique et envoyez-le-nous."
+    }
   },
   "creditNotes": {
     "issue": "Note de crédit",

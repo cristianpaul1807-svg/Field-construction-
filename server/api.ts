@@ -19,6 +19,10 @@ import {
   enviarEnSegundoPlano,
   diagnostico as diagnosticoDeQuickBooks,
   traerCambios as traerCambiosDeQuickBooks,
+  enviarPago as enviarPagoAQuickBooks,
+  enviarPresupuesto as enviarPresupuestoAQuickBooks,
+  enviarGasto as enviarGastoAQuickBooks,
+  loQueFalta as loQueFaltaEnQuickBooks,
 } from "./quickbooksSync";
 import {
   flowCopy,
@@ -720,7 +724,7 @@ async function registrarCobro(
   const cobradoEl = args.cobradoEl ?? new Date().toISOString();
 
   await admin.from("invoices").update({ status: "pagado", paid_at: cobradoEl }).eq("id", invoice.id);
-  await admin.from("payments").insert({
+  const { data: cobro } = await admin.from("payments").insert({
     business_id: args.businessId,
     invoice_id: invoice.id,
     method: args.medio,
@@ -730,11 +734,22 @@ async function registrarCobro(
     amount: Number(invoice.amount),
     status: "succeeded",
     paid_at: cobradoEl,
-  });
+  }).select("id").single();
 
   // If this invoice came from a request in the chat, that thread should
   // stop saying "pending" the moment the money lands.
   await markRequestPaidByInvoice(admin, invoice.id);
+
+  // Y a QuickBooks, colgado de su factura. Sin esto la integración estaba a
+  // medias de la peor forma: las facturas llegaban y los cobros no, así que en
+  // su contabilidad todo aparecía impagado aunque Stripe hubiera cobrado días
+  // antes. Un contable mirando eso ve una empresa que factura y no cobra.
+  //
+  // Menos si el cobro vino de allí: lo apuntó QuickBooks y devolvérselo sería
+  // cobrar dos veces la misma factura en sus libros.
+  if (cobro?.id && args.referencia !== "QuickBooks") {
+    enviarEnSegundoPlano(enviarPagoAQuickBooks(admin, args.businessId, cobro.id), `cobro ${cobro.id}`);
+  }
 
   // The final payment landing is what closes a job. A deposit or a
   // progress payment does not: there is still work owed.
@@ -3868,6 +3883,13 @@ apiRouter.patch(
       } catch (err) {
         console.error("ensureClientAccount failed", err);
       }
+      // A QuickBooks sólo cuando sale hacia el cliente. Un borrador que el
+      // contratista está afinando no es un documento, y llenarle la
+      // contabilidad de borradores es ensuciarla.
+      enviarEnSegundoPlano(
+        enviarPresupuestoAQuickBooks(getSupabaseAdmin(), req.businessId!, req.params.id),
+        `presupuesto ${req.params.id}`
+      );
     }
 
     res.json({ ok: true });
@@ -8240,6 +8262,12 @@ apiRouter.post(
       .select("id")
       .single();
     if (error) throw error;
+
+    // Sin los gastos, su contabilidad enseña lo que ingresa y nada de lo que le
+    // cuesta: una empresa que factura cien mil y no gasta nada, con el ingreso
+    // entero como beneficio.
+    enviarEnSegundoPlano(enviarGastoAQuickBooks(getSupabaseAdmin(), req.businessId!, data.id), `gasto ${data.id}`);
+
     res.status(201).json({ id: data.id });
   })
 );
@@ -10043,8 +10071,11 @@ apiRouter.post(
       if (kind === "invoice") await enviarFacturaAQuickBooks(admin, req.businessId!, id);
       else if (kind === "credit_note") await enviarNotaAQuickBooks(admin, req.businessId!, id);
       else if (kind === "customer") await enviarClienteAQuickBooks(admin, req.businessId!, id);
+      else if (kind === "payment") await enviarPagoAQuickBooks(admin, req.businessId!, id);
+      else if (kind === "estimate") await enviarPresupuestoAQuickBooks(admin, req.businessId!, id);
+      else if (kind === "expense") await enviarGastoAQuickBooks(admin, req.businessId!, id);
       else {
-        res.status(400).json({ error: "kind must be invoice, credit_note or customer" });
+        res.status(400).json({ error: "kind must be one of: invoice, credit_note, customer, payment, estimate, expense" });
         return;
       }
       res.json({ ok: true });
@@ -10088,6 +10119,18 @@ apiRouter.post(
     }
 
     res.json(resultado);
+  })
+);
+
+// Lo que no ha llegado, en un sitio.
+//
+// Un sitio y no una insignia en cada pantalla: la pregunta que se hace un
+// contratista no es "¿llegó esta factura?", es "¿está mi contabilidad al día?",
+// y esa no se contesta repartida por cinco pantallas.
+apiRouter.get(
+  "/quickbooks/pending",
+  route(async (req, res) => {
+    res.json(await loQueFaltaEnQuickBooks(getSupabaseAdmin(), req.businessId!));
   })
 );
 
@@ -10690,6 +10733,11 @@ apiRouter.post(
       .select("id")
       .single();
     if (error) throw error;
+
+    enviarEnSegundoPlano(
+      enviarPresupuestoAQuickBooks(admin, req.businessId!, estimate.id),
+      `presupuesto ${estimate.id}`
+    );
 
     // Mandarlo por el chat deja el presupuesto donde el cliente tiene que
     // entrar a buscarlo. El correo se lo lleva a donde ya mira.

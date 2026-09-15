@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
-import { ExternalLink, Unplug, CheckCircle2, AlertTriangle, Stethoscope, Copy, Check } from "lucide-react";
+import { ExternalLink, Unplug, CheckCircle2, AlertTriangle, Stethoscope, Copy, Check, RefreshCw, ChevronDown } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 
 /**
@@ -16,6 +16,123 @@ import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
  * dinero y esto es a dónde van los libros. Se parecen en que los dos son «una
  * cuenta de fuera conectada», y en nada más.
  */
+
+/**
+ * Lo que no ha llegado a QuickBooks.
+ *
+ * Un sitio y no una insignia repartida por cinco pantallas: la pregunta que se
+ * hace un contratista no es «¿llegó esta factura?», es «¿está mi contabilidad
+ * al día?», y esa no se contesta mirando pantalla por pantalla.
+ *
+ * El mensaje de Intuit no se enseña de entrada. Está escrito para quien
+ * programa —habla de validaciones, de tokens, de objetos obsoletos— y delante
+ * de un contratista no dice si el problema es suyo, nuestro o de nadie. Se
+ * enseña qué hacer, y el original queda debajo para quien lo necesite.
+ */
+function LoQueFalta({ onChanged }: { onChanged: () => void }) {
+  const { t } = useTranslation();
+  const [recarga, setRecarga] = useState(0);
+  const { data: pendientes, loading } = useApi<
+    { kind: string; id: string; label: string; status: string; error: string | null; fix: string }[]
+  >(`/api/quickbooks/pending?_r=${recarga}`);
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  const [abierto, setAbierto] = useState<string | null>(null);
+
+  const reintentar = async (kind: string, id: string) => {
+    setOcupado(id);
+    await apiFetch(`/api/quickbooks/retry/${kind}/${id}`, { method: "POST" }).catch(() => null);
+    setOcupado(null);
+    setRecarga((n) => n + 1);
+    onChanged();
+  };
+
+  const reintentarTodo = async () => {
+    setOcupado("todo");
+    // De uno en uno: veinte llamadas a la vez a Intuit es como se consigue que
+    // te limite, y entonces fallan las veinte.
+    for (const p of pendientes ?? []) {
+      await apiFetch(`/api/quickbooks/retry/${p.kind}/${p.id}`, { method: "POST" }).catch(() => null);
+    }
+    setOcupado(null);
+    setRecarga((n) => n + 1);
+    onChanged();
+  };
+
+  if (loading) return null;
+
+  if ((pendientes ?? []).length === 0) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-status-success-fg">
+          <CheckCircle2 size={16} strokeWidth={1.75} />
+          <p className="text-sm font-medium">{t("quickbooks.allSynced")}</p>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">{t("quickbooks.allSyncedHint")}</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-6 space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-foreground">{t("quickbooks.pendingTitle")}</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t("quickbooks.pendingCount", { count: pendientes!.length })}
+          </p>
+        </div>
+        <Button size="sm" variant="outline" className="gap-1.5" onClick={reintentarTodo} disabled={ocupado !== null}>
+          {ocupado === "todo" ? <Spinner className="size-3.5" /> : <RefreshCw size={13} />}
+          {t("quickbooks.retryAll")}
+        </Button>
+      </div>
+
+      <div className="divide-y divide-border">
+        {pendientes!.map((p) => (
+          <div key={`${p.kind}-${p.id}`} className="py-3 first:pt-0 last:pb-0 space-y-2">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-sm text-foreground">
+                  {t(`quickbooks.kind.${p.kind}`)}
+                  {p.label && <span className="text-muted-foreground"> · {p.label}</span>}
+                </p>
+                {/* Qué hacer, no qué dijo Intuit. */}
+                <p className="text-xs text-status-warning-fg mt-0.5">{t(`quickbooks.fix.${p.fix}`)}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 min-h-11 sm:min-h-0"
+                onClick={() => reintentar(p.kind, p.id)}
+                disabled={ocupado !== null}
+              >
+                {ocupado === p.id ? <Spinner className="size-3.5" /> : <RefreshCw size={12} />}
+                {t("quickbooks.rowRetry")}
+              </Button>
+            </div>
+
+            {p.error && (
+              <div>
+                <button
+                  className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                  onClick={() => setAbierto(abierto === p.id ? null : p.id)}
+                >
+                  <ChevronDown size={11} className={abierto === p.id ? "rotate-180 transition-transform" : "transition-transform"} />
+                  {t("quickbooks.showDetail")}
+                </button>
+                {abierto === p.id && (
+                  <pre className="mt-1 text-[11px] leading-snug bg-secondary rounded-md p-2 max-h-40 overflow-auto whitespace-pre-wrap break-all">
+                    {p.error}
+                  </pre>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
 
 interface Estado {
   configured: boolean;
@@ -225,6 +342,8 @@ export default function SettingsQuickBooks() {
               )}
             </Card>
           )}
+
+          {estado.connected && <LoQueFalta onChanged={() => setRecarga((n) => n + 1)} />}
         </>
       )}
     </div>

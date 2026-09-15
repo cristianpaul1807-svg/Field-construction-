@@ -34,7 +34,19 @@ BASE = "client/src/i18n/locales"
 # También la secuencia de botones dentro de una pantalla: `crear.p2` encadena
 # "Nuevo presupuesto → eliges el cliente → Crear presupuesto", que son tres
 # pulsaciones seguidas ahí dentro y no un camino por el menú.
-PROSA = {"budgets.description", "settings.pasteInWhatsapp", "help.topic.presupuestos.crear.p2"}
+# Textos donde la flecha no lleva a una pantalla nuestra.
+#
+# Los tres primeros son prosa: una flecha dentro de una frase, no un camino.
+# `quickbooks.fix.tax` es distinto: nombra un camino de verdad, pero del menú
+# de **QuickBooks**, que no sale de nuestro `nav.*` y que no podemos
+# interpolar. La guarda existe para que nuestros nombres no se copien a mano y
+# deriven del menú; el menú de otro no puede derivar de nada nuestro.
+PROSA = {
+    "budgets.description",
+    "settings.pasteInWhatsapp",
+    "help.topic.presupuestos.crear.p2",
+    "quickbooks.fix.tax",
+}
 
 MARCADOR = re.compile(r"\{\{[^}]*\}\}")
 

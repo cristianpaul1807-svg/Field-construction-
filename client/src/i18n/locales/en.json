@@ -1732,6 +1732,21 @@
           "p2": "Exactly the same thing happens as if they'd paid by card: the invoice is settled, it counts towards the collected figure up top, and it shows in the accountant's report with the payment method recorded.",
           "p3": "And if it was the project's final invoice, marking it paid is what closes the project. That's why recording it matters even though the money is already in your account.",
           "nota": "“Card” can't be chosen by hand: Stripe writes that one when there's a real charge behind it. That way the report can't claim you took a card payment for something you were paid in cash."
+        },
+        "quickbooks": {
+          "title": "What goes to QuickBooks on its own",
+          "p1": "You connect it once, in {{menuAjustes}} → {{menuQuickBooks}}. After that there is nothing to press: what you issue here shows up there by itself, in the background, with no waiting.",
+          "p2": "That covers the client, the estimate, the invoice, the credit note, the payment —card or the cash one you recorded by hand— and the expense. Each one as soon as you issue or record it, and the payment is attached to its invoice, so it stops sitting there as unpaid.",
+          "p3": "Work agreements and payroll do not go. An agreement is not an accounting document, and QuickBooks payroll is a separate paid product. Hours and what you pay your people stay here and come out in the accountant export.",
+          "p4": "It also reads back. If your accountant changes an amount, a date or an invoice's status over there, the change comes back here and you see it in {{menuFacturacion}}, so you never end up with two different truths.",
+          "nota": "Every invoice shows the state of its sync. If it says it failed, the retry button is right there."
+        },
+        "quickbooksFalla": {
+          "title": "Something didn't reach QuickBooks",
+          "p1": "{{menuAjustes}} → {{menuQuickBooks}} lists whatever didn't make it, with the reason in plain words: usually a missing tax code that can be used on a sale, or a missing account in their chart of accounts.",
+          "p2": "Each row has its own retry, and there is one at the top that sends them all. That one goes one at a time on purpose: an invoice can't be uploaded before its client, and twenty calls at once is how Intuit starts throttling you.",
+          "p3": "Something not arriving breaks nothing here. The document exists, the client sees it, you can get paid. QuickBooks is the destination, not the permission.",
+          "nota": "If a retry fails again, open that row's technical detail and send it to us. It holds QuickBooks's own words, which is what's needed to fix it."
         }
       },
       "problemas": {
@@ -1807,6 +1822,13 @@
           "p2": "That notice is only there while something is unsigned. The moment they sign, it disappears on its own and stops bothering them.",
           "p3": "When they sign, their name, the exact time and where they did it from are all stored, and the PDF starts carrying it printed on it. That's what makes the paper worth something if there's ever a dispute.",
           "nota": "If it tells you they have no conversation open, start one from {{menuCrm}} or from the messaging and send it again. A worker's conversation begins when the office writes to them, not when you add them."
+        },
+        "emitoConQuickBooks": {
+          "title": "…I issue something with QuickBooks connected",
+          "p1": "Everything normal happens —its number, the client portal, the email— and it also heads to QuickBooks behind the scenes. You don't wait and the screen doesn't change.",
+          "p2": "It goes in order: the client first if it wasn't there yet, then the document. A payment attaches to its invoice, and a credit note to the invoice it corrects.",
+          "p3": "If QuickBooks rejects it you don't get an error in the middle of your work. It's recorded and shows up in the list of what didn't arrive, to look at when you can.",
+          "nota": "Sending twice doesn't duplicate anything. Each document stays paired with its counterpart there, so a retry updates it instead of creating another."
         }
       }
     }
@@ -1930,7 +1952,31 @@
     "diagnoseHint": "What your QuickBooks has set up: tax codes, services and accounts. It's what tells you why a send is failing.",
     "diagnoseCopy": "Copy to send it",
     "rowDiffers": "QuickBooks says {{there}} and here it's {{here}}. Take a look.",
-    "rowDeletedThere": "It was deleted in QuickBooks. Here it's still issued."
+    "rowDeletedThere": "It was deleted in QuickBooks. Here it's still issued.",
+    "allSynced": "Your books are up to date",
+    "allSyncedHint": "Everything you've issued has reached QuickBooks: invoices, payments, estimates, credit notes and expenses.",
+    "pendingTitle": "This hasn't reached QuickBooks",
+    "pendingCount_one": "{{count}} document pending",
+    "pendingCount_other": "{{count}} documents pending",
+    "retryAll": "Retry all",
+    "showDetail": "Show the technical detail",
+    "kind": {
+      "invoice": "Invoice",
+      "credit_note": "Credit note",
+      "customer": "Customer",
+      "payment": "Payment",
+      "estimate": "Estimate",
+      "expense": "Expense"
+    },
+    "fix": {
+      "tax": "Your QuickBooks is missing a tax code that can be used on a sale. Create one under Taxes → Sales tax and try again.",
+      "accounts": "Your QuickBooks needs a bank account and an expense account to record purchases. Create them in its chart of accounts and try again.",
+      "duplicate": "A document with that number already exists there. Look for it in QuickBooks — it may have been entered by hand first.",
+      "reconnect": "The QuickBooks connection expired. Disconnect it and connect again up above.",
+      "stale": "Someone changed that document in QuickBooks while it was being sent. Retry and it'll catch up.",
+      "order": "Something it depends on is missing: its customer or its invoice isn't there yet. Hit Retry all and they'll go in order.",
+      "generic": "QuickBooks rejected it and we don't know why. Retry; if it fails again, open the technical detail and send it to us."
+    }
   },
   "creditNotes": {
     "issue": "Credit note",

@@ -47,6 +47,7 @@ export function useNombresDelMenu() {
       menuProyectos: t("nav.projects"),
       menuPresupuestos: t("nav.budgets"),
       menuVacaciones: t("nav.timeOff"),
+      menuQuickBooks: t("nav.quickbooks"),
     }),
     [t]
   );

@@ -186,9 +186,29 @@ corrigió. Restarlas por dentro cuadraría el total y borraría la corrección.
 
 ## QuickBooks
 
-Si el negocio tiene QuickBooks conectado (Configuración → QuickBooks), **cada
-factura se manda sola al emitirse**. También las notas de crédito. No hay nada
-que pulsar.
+Si el negocio tiene QuickBooks conectado (Configuración → QuickBooks), **todo
+documento contable se manda solo en cuanto existe**. No hay nada que pulsar.
+
+| Qué | Cuándo sale | Función |
+|---|---|---|
+| Cliente | Antes que cualquier documento suyo | `enviarCliente` |
+| Presupuesto | Al mandarlo al cliente | `enviarPresupuesto` |
+| Factura | Al emitirla | `enviarFactura` |
+| Nota de crédito | Al crearla | `enviarNotaDeCredito` |
+| Cobro | Al registrarse — Stripe, a mano o por etapas | `enviarPago` |
+| Gasto | Al apuntarlo | `enviarGasto` |
+
+**El cobro es el que faltaba.** Con las facturas sincronizadas pero los cobros
+no, la contabilidad de allí enseñaba todo pendiente de pagar mientras el dinero
+ya estaba en la cuenta. Va como `Payment` enganchado a su factura por
+`LinkedTxn`, que es lo que la cierra allí.
+
+Lo que **no** se manda, y por qué:
+
+- **Las nóminas.** La nómina de QuickBooks es otro producto, de pago y con su
+  propia alta. Nuestras horas salen en la exportación para el contable.
+- **Los acuerdos de trabajo.** Un contrato no es un asiento contable. Se
+  descarga y se manda por mensajería; en los libros no pinta nada.
 
 Automático **no quiere decir mudo**. Cada envío deja su rastro en
 `quickbooks_links`, y la fila de la factura dice una de tres cosas:
@@ -199,9 +219,26 @@ Automático **no quiere decir mudo**. Cada envío deja su rastro en
 | *No llegó a QuickBooks* + el motivo + **Reintentar** | Falló |
 | Nada | Ese negocio no usa QuickBooks |
 
-El motivo se enseña **entero**. Casi siempre dice qué falta —un código de
-impuesto, una cuenta de ingresos— y esconderlo detrás de «no se pudo» deja a
-alguien sin forma de arreglarlo.
+### Lo que no llegó
+
+`GET /api/quickbooks/pending` junta todo lo que falló, de los seis tipos, y lo
+enseña en Configuración → QuickBooks. Es la única pantalla que contesta «¿está
+mi contabilidad al día?».
+
+Cada fila dice **qué hacer**, no qué contestó Intuit. `comoArreglarlo()` mira la
+respuesta y la reduce a una de siete causas —falta un código de impuesto usable
+en ventas, falta una cuenta, número duplicado, conexión caducada, lo cambiaron
+allí mientras subía, falta algo de lo que depende, o no lo sabemos— y cada una
+tiene su frase en los cuatro idiomas (`quickbooks.fix.*`).
+
+La respuesta literal de QuickBooks **sigue estando**, plegada detrás de *Ver el
+detalle técnico*. Enseñarla de primeras era pedirle a un contratista que
+interprete un `Business Validation Error`; esconderla del todo nos dejaba sin
+lo único que sirve para arreglarlo cuando nos escriben.
+
+*Reintentar todo* va **de uno en uno, a propósito**: un cobro no puede subir
+antes que su factura ni una factura antes que su cliente, y veinte llamadas a la
+vez a Intuit es como se consigue que te limite y fallen las veinte.
 
 **Nada de esto puede tumbar una emisión.** El envío va en segundo plano: la
 factura se emite aquí pase lo que pase con Intuit, porque ya es válida y quien

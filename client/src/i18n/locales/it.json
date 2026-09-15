@@ -1732,6 +1732,21 @@
           "p2": "Succede esattamente la stessa cosa che se avesse pagato con carta: la fattura risulta pagata, entra nell'incassato in alto, ed esce nel report del commercialista con il mezzo di pagamento annotato.",
           "p3": "E se era la fattura finale del cantiere, segnarla incassata è ciò che chiude il cantiere. Per questo conta registrarlo anche se i soldi sono già sul tuo conto.",
           "nota": "«Carta» non si può scegliere a mano: quello lo scrive Stripe quando dietro c'è un addebito vero. Così il report non può dire che hai incassato con carta qualcosa che ti hanno pagato in contanti."
+        },
+        "quickbooks": {
+          "title": "Cosa va da solo su QuickBooks",
+          "p1": "Il collegamento si fa una volta sola, in {{menuAjustes}} → {{menuQuickBooks}}. Da lì in poi non c'è niente da premere: quello che emetti qui compare là da solo, in secondo piano, senza aspettare.",
+          "p2": "Ci vanno il cliente, il preventivo, la fattura, la nota di credito, l'incasso —sia con carta sia quello che hai segnato in contanti— e la spesa. Ognuno appena lo emetti o lo registri, e l'incasso resta agganciato alla sua fattura, così lì non risulta più da pagare.",
+          "p3": "Non ci vanno il contratto di lavoro né le buste paga. Un contratto non è un documento contabile, e le paghe di QuickBooks sono un altro prodotto a pagamento. Le ore e quello che paghi alla tua gente restano qui ed escono nell'esportazione per il commercialista.",
+          "p4": "La lettura funziona anche al contrario. Se il tuo commercialista cambia là un importo, una data o lo stato di una fattura, quel cambio torna qui e si vede in {{menuFacturacion}}, così non finisci con due verità diverse.",
+          "nota": "Ogni fattura mostra a che punto è il suo invio. Se dice che è fallito, il pulsante per riprovare è lì accanto."
+        },
+        "quickbooksFalla": {
+          "title": "Qualcosa non è arrivato su QuickBooks",
+          "p1": "In {{menuAjustes}} → {{menuQuickBooks}} c'è l'elenco di quello che non è passato, col motivo detto in parole semplici: di solito manca un codice d'imposta utilizzabile in vendita, o un conto nel loro piano dei conti.",
+          "p2": "Ogni riga ha il suo pulsante per riprovare, e in alto ce n'è uno che li rimanda tutti. Quello va uno alla volta apposta: una fattura non può salire prima del suo cliente, e venti chiamate in una volta è il modo per farsi limitare da Intuit.",
+          "p3": "Se qualcosa non arriva, qui non si rompe niente. Il documento esiste, il cliente lo vede, puoi incassare. QuickBooks è la destinazione, non il permesso.",
+          "nota": "Se riprovi e fallisce ancora, apri il dettaglio tecnico di quella riga e mandacelo. Lì c'è la risposta testuale di QuickBooks, che è quello che serve per sistemarlo."
         }
       },
       "problemas": {
@@ -1807,6 +1822,13 @@
           "p2": "Quell'avviso resta solo finché c'è qualcosa da firmare. Appena firma, sparisce da solo e non lo disturba più.",
           "p3": "Quando firma si salvano il suo nome, l'ora esatta e da dove l'ha fatto, e il PDF se lo porta stampato. È questo che rende utile il foglio se un giorno c'è una discussione.",
           "nota": "Se ti dice che non ha una conversazione aperta, aprigliela da {{menuCrm}} o dalla messaggistica e rimandaglielo. La conversazione di un lavoratore nasce quando l'ufficio gli scrive, non quando lo inserisci."
+        },
+        "emitoConQuickBooks": {
+          "title": "…emetto qualcosa con QuickBooks collegato",
+          "p1": "Succede tutto il solito —il suo numero, il portale del cliente, la mail— e in più parte verso QuickBooks dietro le quinte. Non aspetti niente e la schermata non cambia.",
+          "p2": "Parte in ordine: prima il cliente se non c'era ancora, poi il documento. Un incasso si aggancia alla sua fattura, e una nota di credito alla fattura che corregge.",
+          "p3": "Se QuickBooks lo rifiuta non ti esce un errore in mezzo al lavoro. Viene annotato e compare nell'elenco di quello che non è arrivato, da guardare quando puoi.",
+          "nota": "Mandarlo due volte non duplica niente. Ogni documento resta appaiato con il suo di là, quindi un nuovo tentativo lo aggiorna invece di crearne un altro."
         }
       }
     }
@@ -1930,7 +1952,31 @@
     "diagnoseHint": "Cosa ha configurato il tuo QuickBooks: codici d'imposta, servizi e conti. Serve a sapere perché un invio fallisce.",
     "diagnoseCopy": "Copia per mandarlo",
     "rowDiffers": "Su QuickBooks c'è {{there}} e qui {{here}}. Controlla.",
-    "rowDeletedThere": "L'hanno eliminata su QuickBooks. Qui risulta ancora emessa."
+    "rowDeletedThere": "L'hanno eliminata su QuickBooks. Qui risulta ancora emessa.",
+    "allSynced": "La tua contabilità è aggiornata",
+    "allSyncedHint": "Tutto quello che hai emesso è arrivato su QuickBooks: fatture, incassi, preventivi, note di credito e spese.",
+    "pendingTitle": "Questo non è arrivato su QuickBooks",
+    "pendingCount_one": "{{count}} documento in sospeso",
+    "pendingCount_other": "{{count}} documenti in sospeso",
+    "retryAll": "Riprova tutto",
+    "showDetail": "Vedi il dettaglio tecnico",
+    "kind": {
+      "invoice": "Fattura",
+      "credit_note": "Nota di credito",
+      "customer": "Cliente",
+      "payment": "Incasso",
+      "estimate": "Preventivo",
+      "expense": "Spesa"
+    },
+    "fix": {
+      "tax": "Al tuo QuickBooks manca un codice d'imposta utilizzabile in una vendita. Crealo in Taxes → Sales tax e riprova.",
+      "accounts": "Il tuo QuickBooks ha bisogno di un conto bancario e di uno di spese per registrare gli acquisti. Creali nel suo piano dei conti e riprova.",
+      "duplicate": "Lì esiste già un documento con quel numero. Cercalo su QuickBooks: forse è stato inserito a mano prima.",
+      "reconnect": "Il collegamento con QuickBooks è scaduto. Scollegalo e ricollegalo qui sopra.",
+      "stale": "Qualcuno ha modificato quel documento su QuickBooks mentre veniva inviato. Riprova e si aggiorna.",
+      "order": "Manca qualcosa da cui dipende: il suo cliente o la sua fattura non sono ancora lì. Premi Riprova tutto e partono in ordine.",
+      "generic": "QuickBooks l'ha rifiutato e non sappiamo perché. Riprova; se fallisce di nuovo, apri il dettaglio tecnico e mandacelo."
+    }
   },
   "creditNotes": {
     "issue": "Nota di credito",

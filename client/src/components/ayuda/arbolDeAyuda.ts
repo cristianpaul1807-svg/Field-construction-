@@ -88,7 +88,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
   },
   {
     id: "dinero",
-    rutas: ["/invoicing", "/payroll", "/reports", "/cost-tracking", "/settings/payments"],
+    rutas: ["/invoicing", "/payroll", "/reports", "/cost-tracking", "/settings/payments", "/settings/quickbooks"],
     temas: [
       { id: "crearFactura", parrafos: 3, nota: true, ruta: "/invoicing" },
       { id: "impuestos", parrafos: 3 },
@@ -96,6 +96,11 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "cobrar", parrafos: 3, nota: true, ruta: "/settings/payments" },
       { id: "cobrarPorFuera", parrafos: 3, nota: true, ruta: "/invoicing" },
       { id: "contable", parrafos: 2, ruta: "/reports" },
+      // Lo que se manda solo a QuickBooks y qué hacer cuando algo no llega.
+      // Sin esto, la primera vez que una factura falla el contratista no sabe
+      // ni que existe una pantalla donde mirarlo.
+      { id: "quickbooks", parrafos: 4, nota: true, ruta: "/settings/quickbooks" },
+      { id: "quickbooksFalla", parrafos: 3, nota: true, ruta: "/settings/quickbooks" },
     ],
   },
   {
@@ -112,6 +117,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "fichaTrabajador", parrafos: 3 },
       { id: "cierroOrden", parrafos: 2 },
       { id: "mandoAcuerdo", parrafos: 3, nota: true },
+      { id: "emitoConQuickBooks", parrafos: 3, nota: true },
     ],
   },
   {
