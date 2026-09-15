@@ -13,6 +13,7 @@ import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 const DOCUMENT_TAGS = ["contrato", "permiso", "plano", "garantia"] as const;
 
@@ -114,7 +115,7 @@ export default function Contracts() {
       setDownloadingId(null);
     }
   };
-  const { data: documents, loading, error, reload } = useApi<Document[]>("/api/documents");
+  const { data: documents, loading, error, reload, detalle } = useApi<Document[]>("/api/documents");
   const [query, setQuery] = useState("");
 
   // En General se ven los documentos de todas las obras. Exigir elegir una
@@ -172,9 +173,11 @@ export default function Contracts() {
           )}
 
           {error && (
-            <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-              {t("common.loadError", { message: error })}
-            </div>
+            <AvisoDeFallo
+              mensaje={t("common.loadError", { message: error })}
+              detalle={detalle}
+              onReintentar={reload}
+            />
           )}
 
           {!loading && !error && (

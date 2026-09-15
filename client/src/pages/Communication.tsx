@@ -15,6 +15,7 @@ import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
 import type { ChatChannel, ChatMessage, DirectoryContact } from "@/lib/chatApi";
 import { AppointmentRequestsPanel } from "@/components/AppointmentRequestsPanel";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 type LabelFilter = "general" | "trabajador" | "subcontrato" | "cliente";
 
@@ -95,7 +96,7 @@ export default function Communication() {
   const query = new URLSearchParams({ system });
   if (system === "interno" && labelFilter !== "general") query.set("label", labelFilter);
 
-  const { data: channels, loading, error } = useApi<ChatChannel[]>(`/api/chat/channels?${query.toString()}&_r=${reloadToken}`);
+  const { data: channels, loading, error, detalle, reload } = useApi<ChatChannel[]>(`/api/chat/channels?${query.toString()}&_r=${reloadToken}`);
   const { data: messages, reload: reloadMessages } = useApi<ChatMessage[]>(
     // El idioma va en la petición: los mensajes del bot se guardan por su
     // clave y se pintan en el idioma de quien los lee.
@@ -193,9 +194,11 @@ export default function Communication() {
 
       {loading && <p className="text-sm text-muted-foreground py-8 text-center">{t("common.loading")}</p>}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

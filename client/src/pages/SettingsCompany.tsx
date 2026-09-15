@@ -12,6 +12,7 @@ import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface CompanyData {
   id: string;
@@ -54,7 +55,7 @@ function describeTax(r: TaxRate) {
 export default function SettingsCompany() {
   const { t } = useTranslation();
   const menuNombres = useNombresDelMenu();
-  const { data, loading, error, reload } = useApi<CompanyData>("/api/settings/company");
+  const { data, loading, error, reload, detalle } = useApi<CompanyData>("/api/settings/company");
   const { data: taxRates } = useApi<TaxRate[]>("/api/canada-tax-rates");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -167,9 +168,11 @@ export default function SettingsCompany() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && data && (

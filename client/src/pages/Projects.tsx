@@ -18,6 +18,7 @@ import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface Project {
   id: string;
@@ -129,7 +130,7 @@ export default function Projects() {
   const tasaDelNegocio = tasas?.find((r) => r.province === empresa?.province) ?? null;
   const { reloadProjects } = useSelectedProject();
   const [reloadToken, setReloadToken] = useState(0);
-  const { data: projects, loading, error } = useApi<Project[]>(`/api/projects?_r=${reloadToken}`);
+  const { data: projects, loading, error, detalle, reload } = useApi<Project[]>(`/api/projects?_r=${reloadToken}`);
   // Aquí el filtro deja una sola tarjeta, y aun así se aplica: una pantalla
   // que ignorara el selector haría dudar de si filtra en las demás.
   const { filtrar } = useFiltroDeObra();
@@ -160,9 +161,11 @@ export default function Projects() {
       )}
 
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

@@ -33,7 +33,7 @@
     "project": "Proyecto",
     "category": "Categoría",
     "noData": "Sin datos todavía.",
-    "loadError": "No se pudo cargar desde Supabase: {{message}}",
+    "loadError": "No se pudo cargar esta pantalla. {{message}}",
     "genericError": "Ocurrió un error inesperado",
     "logout": "Cerrar sesión",
     "language": "Idioma",
@@ -1770,6 +1770,13 @@
           "title": "No le llega ningún correo a mi cliente",
           "p1": "El envío de correos todavía no está configurado en esta instalación.",
           "p2": "Mientras tanto, lo que le tengas que hacer llegar va por su portal y por el chat. Las dos cosas funcionan."
+        },
+        "avisoDeFallo": {
+          "title": "Me sale un aviso de que algo falló",
+          "p1": "Lo primero: no has perdido nada. El aviso sale cuando una petición no llegó o volvió mal, y lo que tenías escrito sigue en la pantalla. Dale a «Volver a intentarlo» antes que a nada más.",
+          "p2": "Si dice que se te caducó la sesión, entra otra vez y sigues donde estabas. Si dice que el fallo es nuestro, es nuestro de verdad: espera un momento y reinténtalo, porque casi siempre es un momento malo del servidor y se arregla solo.",
+          "p3": "Si vuelve a salir, abre «Ver el detalle técnico» del propio aviso y mándanos esa línea. Ahí está lo que contestó el servidor, y es lo único que nos deja saber qué pasó sin adivinar.",
+          "nota": "El aviso nunca te va a enseñar un código suelto ni una frase en inglés. Si ves uno, es un fallo nuestro y también queremos saberlo."
         }
       },
       "queOcurre": {
@@ -1990,5 +1997,24 @@
     "amount": "Importe a corregir",
     "confirm": "Emitir nota de crédito",
     "credited": "Corregido: {{amount}}"
+  },
+  "errores": {
+    "titulo": "Algo no ha salido bien",
+    "generico": "No hemos podido completarlo. Vuelve a intentarlo.",
+    "sinConexion": "No llegamos al servidor. Comprueba la conexión y vuelve a intentarlo: lo que escribiste sigue aquí.",
+    "sesion": "Se te ha caducado la sesión. Entra otra vez y sigue donde lo dejaste.",
+    "permiso": "Tu cuenta no tiene permiso para esto. Pídeselo a quien lleve el negocio.",
+    "noExiste": "Esto ya no existe. Puede que se haya borrado o que el enlace sea viejo.",
+    "conflicto": "Alguien lo cambió antes que tú. Vuelve a cargar la pantalla y mira cómo está ahora.",
+    "demasiadoGrande": "El archivo pesa demasiado. Prueba con uno más pequeño.",
+    "demasiadasVeces": "Lo has pedido muchas veces seguidas. Espera un momento y vuelve a intentarlo.",
+    "nuestro": "El fallo es nuestro, no tuyo. Vuelve a intentarlo en un momento; si sigue igual, dínoslo.",
+    "reintentar": "Volver a intentarlo",
+    "preguntar": "Preguntar a la ayuda",
+    "escribirnos": "Escríbenos",
+    "asuntoCorreo": "Algo falló en Logiciel Construction",
+    "verDetalle": "Ver el detalle técnico",
+    "adjuntoAbrir": "No hemos podido abrir el archivo.",
+    "adjuntoEnviar": "No hemos podido enviar el archivo."
   }
 }

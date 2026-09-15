@@ -13,6 +13,7 @@ import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface Photo {
   id: string;
@@ -131,7 +132,7 @@ function colorForId(id: string) {
 export default function PhotoGallery() {
   const { t } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
-  const { data: photos, loading, error, reload } = useApi<Photo[]>("/api/photos");
+  const { data: photos, loading, error, reload, detalle } = useApi<Photo[]>("/api/photos");
 
   // En General se ven las fotos de todas las obras. Obligar a elegir una para
   // poder mirar era pedirle al jefe que ya supiera dónde está la foto.
@@ -183,9 +184,11 @@ export default function PhotoGallery() {
       )}
 
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

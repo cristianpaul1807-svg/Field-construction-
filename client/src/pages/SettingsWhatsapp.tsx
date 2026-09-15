@@ -8,6 +8,7 @@ import { MessageCircle, Copy, Check } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 /**
  * WhatsApp, entero: el link público, el texto que lo lleva, dónde ponerlo y
@@ -61,7 +62,7 @@ function CampoCopiable({ label, value }: { label: string; value: string }) {
 export default function SettingsWhatsapp() {
   const { t } = useTranslation();
   const menuNombres = useNombresDelMenu();
-  const { data, loading, error } = useApi<CompanyData>("/api/settings/company");
+  const { data, loading, error, detalle, reload } = useApi<CompanyData>("/api/settings/company");
   const [copiado, setCopiado] = useState(false);
 
   const link = data?.slug ? `${window.location.origin}/c/${data.slug}` : "";
@@ -79,9 +80,11 @@ export default function SettingsWhatsapp() {
       <PageHeader title={t("settings.whatsappTitle")} description={t("settings.whatsappDescription")} />
 
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       <Card className="p-6">

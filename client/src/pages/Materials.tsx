@@ -18,6 +18,7 @@ import { Plus, Search, Pencil, Trash2, HardHat } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface MaterialRow {
   id: string;
@@ -49,7 +50,7 @@ const EMPTY_LABOR: LaborDraft = { id: null, name: "", hourlyRate: "" };
 
 export default function Materials() {
   const { t } = useTranslation();
-  const { data, loading, error, reload } = useApi<MaterialsResponse>("/api/materials");
+  const { data, loading, error, reload, detalle } = useApi<MaterialsResponse>("/api/materials");
   const [query, setQuery] = useState("");
   const [material, setMaterial] = useState<MaterialDraft | null>(null);
   const [labor, setLabor] = useState<LaborDraft | null>(null);
@@ -208,9 +209,11 @@ export default function Materials() {
         )}
 
         {error && (
-          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-            {t("common.loadError", { message: error })}
-          </div>
+          <AvisoDeFallo
+            mensaje={t("common.loadError", { message: error })}
+            detalle={detalle}
+            onReintentar={reload}
+          />
         )}
 
         {!loading && !error && (

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface Tipo {
   id: string;
@@ -28,7 +29,7 @@ interface Tipo {
  */
 export default function SettingsServiceTypes() {
   const { t } = useTranslation();
-  const { data: tipos, loading, error, reload } = useApi<Tipo[]>("/api/service-types");
+  const { data: tipos, loading, error, reload, detalle } = useApi<Tipo[]>("/api/service-types");
 
   const [nuevo, setNuevo] = useState("");
   const [letra, setLetra] = useState("");
@@ -163,9 +164,11 @@ export default function SettingsServiceTypes() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
       {!abierto && fallo && (
         <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">{fallo}</div>

@@ -18,6 +18,7 @@ import { ProfitabilityPanel } from "@/components/ProfitabilityPanel";
 import { AccountingExportCard } from "@/components/AccountingExportCard";
 import { StripeBalanceCard } from "@/components/StripeBalanceCard";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface ReportsData {
   revenueByMonth: { month: string; ingresos: number; gastos: number }[];
@@ -33,7 +34,7 @@ interface ReportsData {
 
 export default function Reports() {
   const { t } = useTranslation();
-  const { data, loading, error } = useApi<ReportsData>("/api/reports");
+  const { data, loading, error, detalle, reload } = useApi<ReportsData>("/api/reports");
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
@@ -45,9 +46,11 @@ export default function Reports() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && data && (

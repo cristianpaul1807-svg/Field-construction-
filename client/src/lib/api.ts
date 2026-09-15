@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getClientSession } from "@/lib/clientSession";
+import { anuncioDeFallo, detalleDe, fallo, FalloDelServidor } from "@/lib/fallos";
 
 export interface ApiState<T> {
   data: T | null;
   loading: boolean;
+  /** El anuncio, ya en el idioma de quien mira. Es lo que se enseña. */
   error: string | null;
+  /** Lo que contestó el servidor. Va plegado en el aviso, no en la frase. */
+  detalle: string | null;
   /** Re-runs the request. Screens that write call this after a mutation. */
   reload: () => void;
 }
@@ -53,16 +57,21 @@ export async function readJson<T = any>(res: Response): Promise<T> {
  * Los mensajes del servidor estaban escritos en castellano y se enseñaban tal
  * cual: un cliente francófono pagando una factura, o un trabajador tecleando
  * mal su código, leían el fallo en español. Ahora el servidor manda un código
- * estable y aquí se traduce; su texto queda de reserva para los fallos que
- * todavía no tengan nombre, que siempre es mejor que un mensaje genérico.
+ * estable y aquí se traduce.
+ *
+ * Lo que ya no hace es enseñar el texto del servidor cuando no hay código. De
+ * los 194 fallos que contesta la API, un tercio no tiene nombre todavía y su
+ * texto está escrito para nosotros: «content is required», «token is required».
+ * Eso no es una instrucción para nadie. El crudo no se pierde —va en el
+ * `detalle` del fallo, plegado en el aviso— pero deja de ser lo que se lee.
  */
 export function serverMessage(
   body: { error?: string; code?: string } | null | undefined,
   t: (key: string, opts?: Record<string, unknown>) => string,
   fallback: string
 ): string {
-  if (body?.code) return t(`serverErrors.${body.code}`, { defaultValue: body.error || fallback });
-  return body?.error || fallback;
+  if (body?.code) return t(`serverErrors.${body.code}`, { defaultValue: fallback });
+  return fallback;
 }
 
 /**
@@ -97,10 +106,7 @@ export async function downloadFile(
   fetcher: (path: string, init?: RequestInit) => Promise<Response> = apiFetch
 ): Promise<void> {
   const res = await fetcher(path);
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(body?.error || `Request failed (${res.status})`);
-  }
+  if (!res.ok) throw await fallo(res);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -127,32 +133,41 @@ export function useApi<T>(path: string | null): ApiState<T> {
     data: null,
     loading: path !== null,
     error: null,
+    detalle: null,
   });
   const [nonce, setNonce] = useState(0);
   const reload = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
     if (path === null) {
-      setState({ data: null, loading: false, error: null });
+      setState({ data: null, loading: false, error: null, detalle: null });
       return;
     }
 
     let cancelled = false;
-    setState({ data: null, loading: true, error: null });
+    setState({ data: null, loading: true, error: null, detalle: null });
 
     apiFetch(path)
       .then(async (res) => {
-        const body = await res.json().catch(() => null);
-        if (!res.ok) {
-          throw new Error(body?.error || `Request failed (${res.status})`);
-        }
-        return body as T;
+        if (!res.ok) throw await fallo(res);
+        return (await res.json().catch(() => null)) as T;
       })
       .then((data) => {
-        if (!cancelled) setState({ data, loading: false, error: null });
+        if (!cancelled) setState({ data, loading: false, error: null, detalle: null });
       })
       .catch((err) => {
-        if (!cancelled) setState({ data: null, loading: false, error: err.message });
+        // Una lectura que no llega es casi siempre la red o nosotros, nunca
+        // algo que la persona hiciera mal: no hay respaldo que ponerle, y el
+        // estado ya dice lo bastante. Lo que no llegó a haber respuesta —el
+        // móvil sin cobertura en la obra— entra como estado 0, porque «Failed
+        // to fetch» es exactamente el texto que no queremos enseñar.
+        if (!cancelled) {
+          const anuncio =
+            err instanceof FalloDelServidor
+              ? { mensaje: err.message, detalle: err.detalle }
+              : anuncioDeFallo(0, null);
+          setState({ data: null, loading: false, error: anuncio.mensaje, detalle: anuncio.detalle });
+        }
       });
 
     return () => {

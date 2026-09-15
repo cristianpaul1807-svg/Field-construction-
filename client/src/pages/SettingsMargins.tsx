@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface MarginSettings {
   defaultMarginType: "global" | "section";
@@ -13,7 +14,7 @@ interface MarginSettings {
 
 export default function SettingsMargins() {
   const { t } = useTranslation();
-  const { data, loading, error } = useApi<MarginSettings>("/api/settings/margins");
+  const { data, loading, error, detalle, reload } = useApi<MarginSettings>("/api/settings/margins");
   const [marginType, setMarginType] = useState<"global" | "section">("global");
   const [waste, setWaste] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -55,9 +56,11 @@ export default function SettingsMargins() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

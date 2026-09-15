@@ -127,6 +127,10 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "horasEnCero", parrafos: 2 },
       { id: "noSeCobra", parrafos: 2 },
       { id: "noLlegaCorreo", parrafos: 2 },
+      // Es el tema al que lleva el botón de los avisos de fallo, así que va
+      // aquí aunque nadie lo busque por su nombre: quien llega ya está
+      // mirando el aviso y lo que necesita es el siguiente paso.
+      { id: "avisoDeFallo", parrafos: 3, nota: true },
     ],
   },
 ];

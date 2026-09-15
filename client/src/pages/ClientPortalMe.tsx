@@ -16,6 +16,7 @@ import { clearClientSession } from "@/lib/clientSession";
 import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
 import { SignEstimateDialog } from "@/components/SignEstimateDialog";
 import { PaymentScheduleCard, type PaymentMilestone } from "@/components/PaymentScheduleCard";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface ClientPortalData {
   client: { id: string; name: string };
@@ -138,7 +139,7 @@ export default function ClientPortalMe() {
     await signOut();
     window.location.href = "/cliente/acceso";
   };
-  const { data, loading, error, reload } = useApi<ClientPortalData>("/api/client-portal/me");
+  const { data, loading, error, reload, detalle, } = useApi<ClientPortalData>("/api/client-portal/me");
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -262,9 +263,11 @@ export default function ClientPortalMe() {
               </div>
             )}
             {error && (
-              <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-                {t("common.loadError", { message: error })}
-              </div>
+              <AvisoDeFallo
+                mensaje={t("common.loadError", { message: error })}
+                detalle={detalle}
+                onReintentar={reload}
+              />
             )}
 
             {!loading && !error && data && (

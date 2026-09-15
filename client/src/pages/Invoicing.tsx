@@ -25,6 +25,7 @@ import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/a
 import { previewTax, type TaxRate } from "@/lib/taxes";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 const INVOICE_TYPES = ["deposito", "parcial", "final"] as const;
 const INVOICE_STATUSES = ["pendiente", "pagado", "vencido", "cancelado"] as const;
@@ -534,7 +535,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 
 export default function Invoicing() {
   const { t, i18n } = useTranslation();
-  const { data: invoices, loading, error, reload } = useApi<Invoice[]>("/api/invoices");
+  const { data: invoices, loading, error, reload, detalle } = useApi<Invoice[]>("/api/invoices");
   // Chat charges are a pay button, so they only make sense once the business
   // can actually take a card.
   const { data: connect } = useApi<{ chargesEnabled: boolean }>("/api/stripe/connect/status");
@@ -661,9 +662,11 @@ export default function Invoicing() {
           </div>
         )}
         {error && (
-          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-            {t("common.loadError", { message: error })}
-          </div>
+          <AvisoDeFallo
+            mensaje={t("common.loadError", { message: error })}
+            detalle={detalle}
+            onReintentar={reload}
+          />
         )}
 
         {/* Por debajo de lg, una ficha por factura.

@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, KeyRound, Pencil, Trash2, FileSignature } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
   const { t } = useTranslation();
@@ -242,7 +243,7 @@ interface Employee {
 export default function Technicians() {
   const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
-  const { data: employees, loading, error } = useApi<Employee[]>(`/api/employees?_r=${reloadToken}`);
+  const { data: employees, loading, error, detalle, reload } = useApi<Employee[]>(`/api/employees?_r=${reloadToken}`);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
   const [editando, setEditando] = useState<Employee | null>(null);
   const [borrando, setBorrando] = useState<Employee | null>(null);
@@ -270,9 +271,11 @@ export default function Technicians() {
           </div>
         )}
         {error && (
-          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-            {t("common.loadError", { message: error })}
-          </div>
+          <AvisoDeFallo
+            mensaje={t("common.loadError", { message: error })}
+            detalle={detalle}
+            onReintentar={reload}
+          />
         )}
         {/* En el móvil la tabla se salía de la pantalla y las columnas de la
             derecha —donde viven las acciones— quedaban fuera del alcance del

@@ -33,7 +33,7 @@
     "project": "Project",
     "category": "Category",
     "noData": "No data yet.",
-    "loadError": "Could not load from Supabase: {{message}}",
+    "loadError": "This screen couldn't be loaded. {{message}}",
     "genericError": "An unexpected error occurred",
     "logout": "Sign out",
     "language": "Language",
@@ -1770,6 +1770,13 @@
           "title": "My client isn't getting any email",
           "p1": "Email sending isn't configured yet on this installation.",
           "p2": "In the meantime, anything you need to get to them goes through their portal and the chat. Both work."
+        },
+        "avisoDeFallo": {
+          "title": "I got a notice saying something failed",
+          "p1": "First: you haven't lost anything. The notice appears when a request didn't get through or came back wrong, and what you had typed is still on screen. Hit \"Try again\" before anything else.",
+          "p2": "If it says your session expired, sign in again and you're back where you were. If it says the fault is ours, it really is: wait a moment and retry, because it's almost always a bad moment on the server and it clears by itself.",
+          "p3": "If it comes back, open \"Show technical detail\" on the notice itself and send us that line. It holds what the server answered, and it's the only thing that lets us know what happened without guessing.",
+          "nota": "The notice will never show you a bare code or a sentence in a language you didn't pick. If you see one, that's a bug on our side and we want to hear about it too."
         }
       },
       "queOcurre": {
@@ -1990,5 +1997,24 @@
     "amount": "Amount to correct",
     "confirm": "Issue credit note",
     "credited": "Corrected: {{amount}}"
+  },
+  "errores": {
+    "titulo": "Something went wrong",
+    "generico": "We couldn't finish that. Try again.",
+    "sinConexion": "We couldn't reach the server. Check your connection and try again — what you typed is still here.",
+    "sesion": "Your session expired. Sign in again and carry on where you left off.",
+    "permiso": "Your account isn't allowed to do this. Ask whoever runs the business.",
+    "noExiste": "This no longer exists. It may have been deleted, or the link is old.",
+    "conflicto": "Someone changed it before you did. Reload the screen to see how it stands now.",
+    "demasiadoGrande": "The file is too big. Try a smaller one.",
+    "demasiadasVeces": "You've asked for this many times in a row. Wait a moment and try again.",
+    "nuestro": "This one is on us, not you. Try again in a moment; if it keeps happening, tell us.",
+    "reintentar": "Try again",
+    "preguntar": "Ask the help bot",
+    "escribirnos": "Write to us",
+    "asuntoCorreo": "Something failed in Logiciel Construction",
+    "verDetalle": "Show technical detail",
+    "adjuntoAbrir": "We couldn't open the file.",
+    "adjuntoEnviar": "We couldn't send the file."
   }
 }

@@ -20,6 +20,7 @@ import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface CostRow {
   category: string;
@@ -51,7 +52,7 @@ const CATEGORIES = ["materiales", "mano_obra", "subcontratistas", "equipos", "pe
 export default function CostTracking() {
   const { t, i18n } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
-  const { data, loading, error, reload } = useApi<ProjectCostTracking[]>("/api/cost-tracking");
+  const { data, loading, error, reload, detalle } = useApi<ProjectCostTracking[]>("/api/cost-tracking");
   const {
     data: expenses,
     loading: expensesLoading,
@@ -140,9 +141,11 @@ export default function CostTracking() {
       )}
 
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

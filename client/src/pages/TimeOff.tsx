@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Trash2, Check, X, Palmtree } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 /**
  * Vacaciones y ausencias.
@@ -167,7 +168,7 @@ function NuevaAusencia({ onCreated }: { onCreated: () => void }) {
 export default function TimeOff() {
   const { t, i18n } = useTranslation();
   const [recarga, setRecarga] = useState(0);
-  const { data: ausencias, loading, error } = useApi<Ausencia[]>(`/api/time-off?_r=${recarga}`);
+  const { data: ausencias, loading, error, detalle, reload } = useApi<Ausencia[]>(`/api/time-off?_r=${recarga}`);
   const [fallo, setFallo] = useState<string | null>(null);
   const recargar = () => setRecarga((n) => n + 1);
 
@@ -253,9 +254,11 @@ export default function TimeOff() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

@@ -1,6 +1,8 @@
 import { apiFetch, readJson, downloadFile } from "@/lib/api";
 import { workerApiFetch } from "@/lib/workerSession";
 import type { ChatMessage } from "@/lib/chatApi";
+import { anuncioDeFallo, FalloDelServidor, type CuerpoDeFallo } from "@/lib/fallos";
+import i18n from "@/i18n";
 
 export type ChatPrefix = "" | "/client" | "/worker";
 
@@ -31,7 +33,7 @@ export async function openChatAttachment(
   const res = await fetcherFor(prefix)(`/api${prefix}/chat/messages/${message.id}/attachment`);
   const body = await readJson<{ kind?: string; url?: string; documentId?: string; name?: string }>(res);
   if (!res.ok) {
-    throw new Error((body as { error?: string })?.error || "No se pudo abrir el adjunto");
+    throw new FalloDelServidor(anuncioDeFallo(res.status, body as CuerpoDeFallo, i18n.t("errores.adjuntoAbrir")), res.status);
   }
 
   const filename = body.name ?? message.attachment.name ?? "documento";
@@ -78,7 +80,7 @@ export async function sendChatAttachment(
     body,
   });
   if (!res.ok) {
-    const err = await readJson<{ error?: string }>(res);
-    throw new Error(err?.error || "No se pudo enviar el archivo");
+    const err = await readJson<CuerpoDeFallo>(res);
+    throw new FalloDelServidor(anuncioDeFallo(res.status, err, i18n.t("errores.adjuntoEnviar")), res.status);
   }
 }

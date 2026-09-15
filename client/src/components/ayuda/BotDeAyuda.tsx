@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 import { ARBOL_DE_AYUDA, seccionSegunRuta, type SeccionDeAyuda, type TemaDeAyuda } from "./arbolDeAyuda";
+import { EVENTO_AYUDA, registrarAyuda, type PeticionDeAyuda } from "@/lib/abrirAyuda";
 
 /** Dónde está la conversación ahora mismo. */
 type Paso =
@@ -52,6 +53,24 @@ export function BotDeAyuda() {
   useEffect(() => {
     if (abierto) finRef.current?.scrollIntoView({ block: "end" });
   }, [camino, abierto]);
+
+  // Quien avisa de un fallo ofrece preguntar aquí, y llega ya colocado en la
+  // respuesta que toca. Que el aviso tenga salida es la mitad del aviso: leer
+  // que algo falló sin nada que hacer después es donde la gente se cae.
+  useEffect(() => registrarAyuda(), []);
+
+  useEffect(() => {
+    const atender = (e: Event) => {
+      const { seccion, tema } = (e as CustomEvent<PeticionDeAyuda>).detail ?? {};
+      setAbierto(true);
+      const s = ARBOL_DE_AYUDA.find((x) => x.id === seccion);
+      if (!s) return setCamino([{ tipo: "secciones" }]);
+      const x = s.temas.find((y) => y.id === tema);
+      setCamino(x ? [{ tipo: "secciones" }, { tipo: "temas", seccion: s }, { tipo: "respuesta", seccion: s, tema: x }] : [{ tipo: "secciones" }, { tipo: "temas", seccion: s }]);
+    };
+    window.addEventListener(EVENTO_AYUDA, atender);
+    return () => window.removeEventListener(EVENTO_AYUDA, atender);
+  }, []);
 
   const atras = () => setCamino((c) => (c.length > 1 ? c.slice(0, -1) : c));
   const reiniciar = () => setCamino([{ tipo: "secciones" }]);

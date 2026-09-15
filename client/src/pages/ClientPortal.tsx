@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface ClientOption {
   id: string;
@@ -43,7 +44,7 @@ export default function ClientPortal() {
   const clientId = selectedClientId ?? clients?.[0]?.id ?? null;
   const clientElegido = clients?.find((c) => c.id === clientId) ?? null;
 
-  const { data, loading, error } = useApi<ClientPortalData>(clientId ? `/api/client-portal/${clientId}` : null);
+  const { data, loading, error, detalle, reload } = useApi<ClientPortalData>(clientId ? `/api/client-portal/${clientId}` : null);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
   const [issuing, setIssuing] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
@@ -202,9 +203,11 @@ export default function ClientPortal() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && data && (

@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 /**
  * Is this job making money.
@@ -37,7 +38,7 @@ interface ProjectProfit {
 
 export function ProfitabilityPanel() {
   const { t } = useTranslation();
-  const { data, loading, error } = useApi<ProjectProfit[]>("/api/reports/profitability");
+  const { data, loading, error, detalle, reload } = useApi<ProjectProfit[]>("/api/reports/profitability");
 
   if (loading) {
     return (
@@ -47,12 +48,9 @@ export function ProfitabilityPanel() {
     );
   }
   if (error) {
-    return (
-      <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-        {t("common.loadError", { message: error })}
-      </div>
-    );
+    return <AvisoDeFallo mensaje={t("common.loadError", { message: error })} detalle={detalle} onReintentar={reload} />;
   }
+
 
   // A project with no contract and no cost has nothing to say yet.
   const projects = (data ?? []).filter((p) => p.contractValue > 0 || p.cost > 0);

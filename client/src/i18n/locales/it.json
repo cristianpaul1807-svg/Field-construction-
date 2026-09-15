@@ -33,7 +33,7 @@
     "project": "Progetto",
     "category": "Categoria",
     "noData": "Ancora nessun dato.",
-    "loadError": "Impossibile caricare da Supabase: {{message}}",
+    "loadError": "Non è stato possibile caricare questa schermata. {{message}}",
     "genericError": "Si è verificato un errore imprevisto",
     "logout": "Esci",
     "language": "Lingua",
@@ -1770,6 +1770,13 @@
           "title": "Al mio cliente non arriva nessuna email",
           "p1": "L'invio di email non è ancora configurato su questa installazione.",
           "p2": "Nel frattempo, quello che devi fargli arrivare passa dal suo portale e dalla chat. Entrambi funzionano."
+        },
+        "avisoDeFallo": {
+          "title": "Mi esce un avviso che qualcosa è fallito",
+          "p1": "Prima cosa: non hai perso niente. L'avviso compare quando una richiesta non è arrivata o è tornata male, e quello che avevi scritto è ancora sullo schermo. Premi «Riprova» prima di qualsiasi altra cosa.",
+          "p2": "Se dice che la sessione è scaduta, entra di nuovo e riprendi da dove eri. Se dice che l'errore è nostro, lo è davvero: aspetta un attimo e riprova, perché quasi sempre è un brutto momento del server e si sistema da solo.",
+          "p3": "Se ricompare, apri «Vedi il dettaglio tecnico» sull'avviso stesso e mandaci quella riga. Lì c'è la risposta del server, ed è l'unica cosa che ci fa sapere cosa è successo senza indovinare.",
+          "nota": "L'avviso non ti mostrerà mai un codice da solo né una frase in una lingua che non hai scelto. Se ne vedi uno, è un errore nostro e vogliamo saperlo anche quello."
         }
       },
       "queOcurre": {
@@ -1990,5 +1997,24 @@
     "amount": "Importo da correggere",
     "confirm": "Emetti nota di credito",
     "credited": "Corretto: {{amount}}"
+  },
+  "errores": {
+    "titulo": "Qualcosa non ha funzionato",
+    "generico": "Non siamo riusciti a completarlo. Riprova.",
+    "sinConexion": "Non raggiungiamo il server. Controlla la connessione e riprova: quello che hai scritto è ancora qui.",
+    "sesion": "La sessione è scaduta. Entra di nuovo e riprendi da dove eri.",
+    "permiso": "Il tuo account non ha il permesso per farlo. Chiedilo a chi gestisce l'impresa.",
+    "noExiste": "Questo non esiste più. Potrebbe essere stato cancellato, o il link è vecchio.",
+    "conflicto": "Qualcuno l'ha cambiato prima di te. Ricarica la schermata e guarda com'è adesso.",
+    "demasiadoGrande": "Il file pesa troppo. Provane uno più piccolo.",
+    "demasiadasVeces": "L'hai chiesto molte volte di fila. Aspetta un momento e riprova.",
+    "nuestro": "L'errore è nostro, non tuo. Riprova tra un attimo; se continua, dillo a noi.",
+    "reintentar": "Riprova",
+    "preguntar": "Chiedi all'aiuto",
+    "escribirnos": "Scrivici",
+    "asuntoCorreo": "Qualcosa non va in Logiciel Construction",
+    "verDetalle": "Vedi il dettaglio tecnico",
+    "adjuntoAbrir": "Non siamo riusciti ad aprire il file.",
+    "adjuntoEnviar": "Non siamo riusciti a inviare il file."
   }
 }

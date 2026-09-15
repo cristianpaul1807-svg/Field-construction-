@@ -16,6 +16,7 @@ import { Codigo } from "@/components/Codigo";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
 import { useTiposDeTrabajo, nombreDeTipo, nombreDeSlug } from "@/lib/tiposDeTrabajo";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 const STATUSES = ["pendiente", "en_progreso", "completada"] as const;
 const SIN_ESPECIFICAR = "sin_especificar";
@@ -396,7 +397,7 @@ function ScheduleDialog({ order, onSaved }: { order: WorkOrder; onSaved: () => v
 
 export default function WorkOrders() {
   const { t, i18n } = useTranslation();
-  const { data: orders, loading, error, reload } = useApi<WorkOrder[]>("/api/work-orders");
+  const { data: orders, loading, error, reload, detalle } = useApi<WorkOrder[]>("/api/work-orders");
   const { data: tipos } = useTiposDeTrabajo();
   const { filtrar } = useFiltroDeObra();
   const visibles = filtrar(orders, (o) => o.projectId);
@@ -441,9 +442,11 @@ export default function WorkOrders() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       <SelectorDeObra />

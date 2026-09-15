@@ -33,7 +33,7 @@
     "project": "Projet",
     "category": "Catégorie",
     "noData": "Aucune donnée pour l'instant.",
-    "loadError": "Impossible de charger depuis Supabase : {{message}}",
+    "loadError": "Cet écran n'a pas pu être chargé. {{message}}",
     "genericError": "Une erreur inattendue s'est produite",
     "logout": "Se déconnecter",
     "language": "Langue",
@@ -1770,6 +1770,13 @@
           "title": "Mon client ne reçoit aucun courriel",
           "p1": "L'envoi de courriels n'est pas encore configuré sur cette installation.",
           "p2": "En attendant, ce que vous devez lui transmettre passe par son portail et par la messagerie. Les deux fonctionnent."
+        },
+        "avisoDeFallo": {
+          "title": "J'ai un avis disant que quelque chose a échoué",
+          "p1": "D'abord : vous n'avez rien perdu. L'avis apparaît quand une demande n'est pas passée ou est revenue mauvaise, et ce que vous aviez saisi est toujours à l'écran. Appuyez sur « Réessayer » avant toute autre chose.",
+          "p2": "S'il dit que votre session a expiré, reconnectez-vous et vous reprenez où vous étiez. S'il dit que l'erreur vient de nous, elle vient vraiment de nous : attendez un instant et réessayez, car c'est presque toujours un mauvais moment du serveur et ça se règle tout seul.",
+          "p3": "Si ça revient, ouvrez « Voir le détail technique » sur l'avis lui-même et envoyez-nous cette ligne. C'est la réponse du serveur, et c'est la seule chose qui nous permet de savoir ce qui s'est passé sans deviner.",
+          "nota": "L'avis ne vous montrera jamais un code tout seul ni une phrase dans une langue que vous n'avez pas choisie. Si vous en voyez un, c'est une erreur de notre côté et nous voulons aussi le savoir."
         }
       },
       "queOcurre": {
@@ -1990,5 +1997,24 @@
     "amount": "Montant à corriger",
     "confirm": "Émettre la note de crédit",
     "credited": "Corrigé : {{amount}}"
+  },
+  "errores": {
+    "titulo": "Quelque chose n'a pas fonctionné",
+    "generico": "Nous n'avons pas pu le faire. Réessayez.",
+    "sinConexion": "Nous n'arrivons pas au serveur. Vérifiez la connexion et réessayez : ce que vous avez saisi est toujours là.",
+    "sesion": "Votre session a expiré. Reconnectez-vous et reprenez où vous en étiez.",
+    "permiso": "Votre compte n'a pas le droit de faire ça. Demandez-le à la personne qui dirige l'entreprise.",
+    "noExiste": "Ceci n'existe plus. Ça a peut-être été supprimé, ou le lien est ancien.",
+    "conflicto": "Quelqu'un l'a modifié avant vous. Rechargez l'écran pour voir où ça en est.",
+    "demasiadoGrande": "Le fichier est trop lourd. Essayez-en un plus petit.",
+    "demasiadasVeces": "Vous l'avez demandé plusieurs fois de suite. Attendez un moment et réessayez.",
+    "nuestro": "L'erreur vient de nous, pas de vous. Réessayez dans un instant ; si ça continue, dites-le-nous.",
+    "reintentar": "Réessayer",
+    "preguntar": "Demander à l'aide",
+    "escribirnos": "Écrivez-nous",
+    "asuntoCorreo": "Un problème dans Logiciel Construction",
+    "verDetalle": "Voir le détail technique",
+    "adjuntoAbrir": "Nous n'avons pas pu ouvrir le fichier.",
+    "adjuntoEnviar": "Nous n'avons pas pu envoyer le fichier."
   }
 }

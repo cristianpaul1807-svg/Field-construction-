@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TablaObras, TablaCommessas, TablaFacturas, TablaFichajes } from "@/components/crm/TablasDelNegocio";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface Client {
   id: string;
@@ -108,7 +109,7 @@ function NewLeadDialog({ onCreated }: { onCreated: () => void }) {
 
 export default function Crm() {
   const { t } = useTranslation();
-  const { data: clients, loading, error, reload } = useApi<Client[]>("/api/clients");
+  const { data: clients, loading, error, reload, detalle } = useApi<Client[]>("/api/clients");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
   const [draft, setDraft] = useState<ClientDraft | null>(null);
@@ -221,9 +222,11 @@ export default function Crm() {
         )}
 
         {error && (
-          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-            {t("common.loadError", { message: error })}
-          </div>
+          <AvisoDeFallo
+            mensaje={t("common.loadError", { message: error })}
+            detalle={detalle}
+            onReintentar={reload}
+          />
         )}
 
         {!loading && !error && (

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { fallo } from "@/lib/fallos";
 import { useTranslation } from "react-i18next";
 
 /** Un mensaje que no le dice nada a nadie. En la pantalla salía literalmente
@@ -73,7 +74,7 @@ async function pedirCodigoDeClave(email: string, lang: string): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, lang }),
   });
-  if (!res.ok) throw new Error(`Request failed (${res.status})`);
+  if (!res.ok) throw await fallo(res);
 }
 
 export default function AuthForgotPassword() {

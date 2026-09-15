@@ -27,6 +27,7 @@ import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface EstimateSummary {
   id: string;
@@ -83,13 +84,9 @@ interface AssemblyTemplate {
   laborHours: number;
 }
 
-function ErrorNote({ message }: { message: string }) {
+function ErrorNote({ message, detalle, onReintentar }: { message: string; detalle?: string | null; onReintentar?: () => void }) {
   const { t } = useTranslation();
-  return (
-    <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-      {t("common.loadError", { message })}
-    </div>
-  );
+  return <AvisoDeFallo mensaje={t("common.loadError", { message })} detalle={detalle} onReintentar={onReintentar} />;
 }
 
 const emptyLineForm: { zone: string; category: EstimateLine["category"]; item: string; quantity: number; unitCost: number } = {
@@ -105,12 +102,12 @@ export default function Budgets() {
   const [reloadToken, setReloadToken] = useState(0);
   const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
   const [newBudgetOpen, setNewBudgetOpen] = useState(false);
-  const { data: summaries, loading: summariesLoading, error: summariesError } =
+  const { data: summaries, loading: summariesLoading, error: summariesError, detalle: summariesDetalle } =
     useApi<EstimateSummary[]>(`/api/estimates?_r=${reloadToken}`);
   const draftId = activeEstimateId ?? (summaries && summaries.length > 0 ? summaries[0].id : null);
-  const { data: draft, loading: draftLoading, error: draftError } =
+  const { data: draft, loading: draftLoading, error: draftError, detalle: draftDetalle } =
     useApi<EstimateDetail>(draftId ? `/api/estimates/${draftId}?_r=${reloadToken}` : null);
-  const { data: assemblyTemplates, loading: templatesLoading, error: templatesError } =
+  const { data: assemblyTemplates, loading: templatesLoading, error: templatesError, detalle: templatesDetalle } =
     useApi<AssemblyTemplate[]>("/api/assembly-templates");
   const { data: categories } = useApi<BudgetCategory[]>(`/api/budget-categories?_r=${reloadToken}`);
   // La provincia del negocio y la tabla de tasas de Canadá: las mismas dos
@@ -206,6 +203,7 @@ export default function Budgets() {
 
   const loading = summariesLoading || draftLoading;
   const error = summariesError || draftError;
+  const detalleDelError = summariesError ? summariesDetalle : draftDetalle;
 
   const lines = draft?.lines ?? [];
   const subtotal = lines.reduce((sum, l) => sum + l.quantity * l.unitCost, 0);
@@ -396,7 +394,7 @@ export default function Budgets() {
               <Spinner className="size-4" /> {t("common.loading")}
             </div>
           )}
-          {error && <ErrorNote message={error} />}
+          {error && <ErrorNote message={error} detalle={detalleDelError} onReintentar={refresh} />}
           {!loading && !error && !draft && (
             <p className="text-sm text-muted-foreground py-8 text-center">
               {t("budgets.noBudgets")}
@@ -769,7 +767,7 @@ export default function Budgets() {
                 <Spinner className="size-4" /> {t("common.loading")}
               </div>
             )}
-            {templatesError && <ErrorNote message={templatesError} />}
+            {templatesError && <ErrorNote message={templatesError} detalle={templatesDetalle} />}
 
             {!templatesLoading && !templatesError && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

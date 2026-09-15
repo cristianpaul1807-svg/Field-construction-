@@ -13,6 +13,7 @@ import { AcuerdosDeTrabajo, BotonDeAcuerdos } from "@/components/AcuerdosDeTraba
 import { AccessCode } from "@/components/AccessCode";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface Subcontractor {
   id: string;
@@ -162,7 +163,7 @@ function Valoracion({ subId, valor, onSaved }: { subId: string; valor: number | 
 export default function Subcontractors() {
   const { t } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
-  const { data: subcontractors, loading, error } = useApi<Subcontractor[]>(`/api/subcontractors?_r=${reloadToken}`);
+  const { data: subcontractors, loading, error, detalle, reload } = useApi<Subcontractor[]>(`/api/subcontractors?_r=${reloadToken}`);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
   const [acuerdosDe, setAcuerdosDe] = useState<Subcontractor | null>(null);
 
@@ -186,9 +187,11 @@ export default function Subcontractors() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

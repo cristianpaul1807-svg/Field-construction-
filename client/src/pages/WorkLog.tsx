@@ -14,6 +14,7 @@ import { enlaceDeMapa } from "@/lib/mapaExterno";
 import { duracionDeTurno } from "@/lib/duracion";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface Linea {
   id: string;
@@ -181,7 +182,7 @@ function DetalleDialog({ commessa, onClose }: { commessa: string | null; onClose
  */
 export default function WorkLog() {
   const { t, i18n } = useTranslation();
-  const { data: lineas, loading, error } = useApi<Linea[]>("/api/work-log");
+  const { data: lineas, loading, error, detalle, reload } = useApi<Linea[]>("/api/work-log");
   const { data: tipos } = useTiposDeTrabajo();
   const [busqueda, setBusqueda] = useState("");
   const [abierta, setAbierta] = useState<string | null>(null);
@@ -228,9 +229,11 @@ export default function WorkLog() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && (

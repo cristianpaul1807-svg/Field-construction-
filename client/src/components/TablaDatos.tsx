@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { apiFetch, serverMessage } from "@/lib/api";
 import { useSelectedProject } from "@/contexts/SelectedProjectContext";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 /**
  * Qué clase de dato hay en la columna. Decide tres cosas a la vez: cómo se
@@ -341,22 +342,14 @@ export function TablaDatos<T>({
         </DropdownMenu>
       </div>
 
-      {errorExport && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-3 text-sm text-status-error-fg">
-          {errorExport}
-        </div>
-      )}
+      {errorExport && <AvisoDeFallo mensaje={errorExport} />}
 
       {cargando && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
           <Spinner className="size-4" /> {t("common.loading")}
         </div>
       )}
-      {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
-      )}
+      {error && <AvisoDeFallo mensaje={t("common.loadError", { message: error })} />}
 
       {!cargando && !error && (
         // Una tabla es de las pocas cosas que pueden ser más anchas que la

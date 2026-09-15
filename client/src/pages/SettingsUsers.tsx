@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Pencil } from "lucide-react";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface AppUser {
   id: string;
@@ -40,7 +41,7 @@ const EMPTY: Draft = { id: null, name: "", email: "", phone: "", roleId: "" };
 
 export default function SettingsUsers() {
   const { t } = useTranslation();
-  const { data, loading, error, reload } = useApi<SettingsUsersData>("/api/settings/users");
+  const { data, loading, error, reload, detalle } = useApi<SettingsUsersData>("/api/settings/users");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -97,9 +98,11 @@ export default function SettingsUsers() {
         </div>
       )}
       {error && (
-        <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-          {t("common.loadError", { message: error })}
-        </div>
+        <AvisoDeFallo
+          mensaje={t("common.loadError", { message: error })}
+          detalle={detalle}
+          onReintentar={reload}
+        />
       )}
 
       {!loading && !error && data && (

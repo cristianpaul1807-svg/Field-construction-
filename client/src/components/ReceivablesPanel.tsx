@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 /**
  * Who owes money, oldest first.
@@ -47,7 +48,7 @@ function toneFor(bucket: BucketKey): "neutral" | "info" | "warning" | "error" {
 
 export function ReceivablesPanel() {
   const { t } = useTranslation();
-  const { data, loading, error } = useApi<Report>("/api/reports/receivables");
+  const { data, loading, error, detalle, reload } = useApi<Report>("/api/reports/receivables");
 
   if (loading) {
     return (
@@ -57,12 +58,9 @@ export function ReceivablesPanel() {
     );
   }
   if (error) {
-    return (
-      <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-        {t("common.loadError", { message: error })}
-      </div>
-    );
+    return <AvisoDeFallo mensaje={t("common.loadError", { message: error })} detalle={detalle} onReintentar={reload} />;
   }
+
   if (!data) return null;
 
   const nothingOwed = data.total === 0;

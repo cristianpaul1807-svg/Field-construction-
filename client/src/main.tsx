@@ -22,7 +22,7 @@ function fatalCopy() {
 
 // The message can carry a server error string, so it is inserted as text
 // rather than markup — an error is not a place to start trusting input.
-function showFatal(message: string) {
+function showFatal(message: string, detalle?: string) {
   const { heading } = fatalCopy();
   const box = document.createElement("div");
   box.setAttribute(
@@ -36,6 +36,15 @@ function showFatal(message: string) {
   body.setAttribute("style", "margin:8px 0 0;color:#111");
   body.textContent = message;
   box.append(title, body);
+  // El motivo técnico va debajo y en pequeño. Es un arranque fallido: quien lo
+  // ve no puede hacer nada con «Failed to fetch», pero es lo primero que
+  // preguntamos cuando alguien nos escribe que no le abre.
+  if (detalle) {
+    const pie = document.createElement("p");
+    pie.setAttribute("style", "margin:12px 0 0;color:#666;font-size:12px;font-family:ui-monospace,monospace");
+    pie.textContent = detalle;
+    box.append(pie);
+  }
   document.body.replaceChildren(box);
 }
 
@@ -59,9 +68,5 @@ loadSupabaseConfig()
     createRoot(document.getElementById("root")!).render(<App />);
   })
   .catch((err: unknown) => {
-    showFatal(
-      err instanceof Error
-        ? err.message
-        : fatalCopy().fallback
-    );
+    showFatal(fatalCopy().fallback, err instanceof Error ? err.message : undefined);
   });

@@ -16,6 +16,7 @@ import { duracionDeTurno } from "@/lib/duracion";
 import { Codigo } from "@/components/Codigo";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useFiltroDeObra } from "@/lib/filtroDeObra";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface TimeEntry {
   id: string;
@@ -63,7 +64,7 @@ function Punto({ etiqueta, texto, lat, lng, obra }: { etiqueta: string; texto: s
 
 export default function CheckIn() {
   const { t, i18n } = useTranslation();
-  const { data: entries, loading, error } = useApi<TimeEntry[]>("/api/time-entries");
+  const { data: entries, loading, error, detalle, reload, } = useApi<TimeEntry[]>("/api/time-entries");
   const [locallyApproved, setLocallyApproved] = useState<Set<string>>(new Set());
   const [busqueda, setBusqueda] = useState("");
 
@@ -153,9 +154,11 @@ export default function CheckIn() {
           </div>
         )}
         {error && (
-          <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-            {t("common.loadError", { message: error })}
-          </div>
+          <AvisoDeFallo
+            mensaje={t("common.loadError", { message: error })}
+            detalle={detalle}
+            onReintentar={reload}
+          />
         )}
 
         {!loading && !error && aguja && visibles.length === 0 && (

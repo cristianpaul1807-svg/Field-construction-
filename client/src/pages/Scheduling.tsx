@@ -10,6 +10,7 @@ import { useSelectedProject } from "@/contexts/SelectedProjectContext";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { hashColor, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 interface ScheduleEvent {
   id: string;
@@ -69,7 +70,7 @@ export default function Scheduling() {
   const { t, i18n } = useTranslation();
   const { selectedProjectId, selectedProject } = useSelectedProject();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { data: events, loading, error, reload } = useApi<ScheduleEvent[]>("/api/schedule-events");
+  const { data: events, loading, error, reload, detalle } = useApi<ScheduleEvent[]>("/api/schedule-events");
 
   const [vista, setVista] = useState<"dia" | "mes">("dia");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -226,9 +227,11 @@ export default function Scheduling() {
             </div>
           )}
           {error && (
-            <div className="rounded-lg border border-border bg-status-error-bg/40 p-4 text-sm text-status-error-fg">
-              {t("common.loadError", { message: error })}
-            </div>
+            <AvisoDeFallo
+              mensaje={t("common.loadError", { message: error })}
+              detalle={detalle}
+              onReintentar={reload}
+            />
           )}
 
           {!loading && !error && vista === "mes" && (
