@@ -23,6 +23,7 @@ import {
   enviarPresupuesto as enviarPresupuestoAQuickBooks,
   enviarGasto as enviarGastoAQuickBooks,
   enviarComisionDeStripe as enviarComisionAQuickBooks,
+  enviarNomina as enviarNominaAQuickBooks,
   loQueFalta as loQueFaltaEnQuickBooks,
 } from "./quickbooksSync";
 import {
@@ -7783,6 +7784,12 @@ apiRouter.post(
       .select("id")
       .single();
     if (error) throw error;
+
+    // Y a QuickBooks. Intuit no tiene API de nóminas, así que va como asiento
+    // contable —que es lo que hace falta para declarar— o, si es un
+    // subcontratista, como el gasto que de verdad es.
+    enviarEnSegundoPlano(enviarNominaAQuickBooks(admin, req.businessId!, data.id), `nómina ${data.id}`);
+
     res.status(201).json({ id: data.id, ...breakdown });
   })
 );
@@ -10128,8 +10135,9 @@ apiRouter.post(
       else if (kind === "estimate") await enviarPresupuestoAQuickBooks(admin, req.businessId!, id);
       else if (kind === "expense") await enviarGastoAQuickBooks(admin, req.businessId!, id);
       else if (kind === "stripe_fee") await apuntarYmandarComision(admin, req.businessId!, id);
+      else if (kind === "payroll") await enviarNominaAQuickBooks(admin, req.businessId!, id);
       else {
-        res.status(400).json({ error: "kind must be one of: invoice, credit_note, customer, payment, estimate, expense, stripe_fee" });
+        res.status(400).json({ error: "kind must be one of: invoice, credit_note, customer, payment, estimate, expense, stripe_fee, payroll" });
         return;
       }
       res.json({ ok: true });

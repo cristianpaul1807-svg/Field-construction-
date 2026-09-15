@@ -21,7 +21,7 @@ import type { getSupabaseAdmin } from "./supabaseAdmin";
  */
 
 type Admin = ReturnType<typeof getSupabaseAdmin>;
-type Tipo = "customer" | "invoice" | "credit_note" | "payment" | "estimate" | "expense" | "stripe_fee";
+type Tipo = "customer" | "invoice" | "credit_note" | "payment" | "estimate" | "expense" | "stripe_fee" | "payroll";
 
 interface Enlace {
   qbo_id: string | null;
@@ -890,7 +890,7 @@ export async function loQueFalta(admin: Admin, businessId: string) {
   // Los rótulos salen de cada tabla, para que la lista diga "Factura
   // 2026-0003 · Nestor" y no un identificador que no le dice nada a nadie.
   const porTipo = (kind: string) => filas.filter((f: any) => f.kind === kind).map((f: any) => f.local_id);
-  const [facturas, notas, clientes, presupuestos, gastos, comisiones] = await Promise.all([
+  const [facturas, notas, clientes, presupuestos, gastos, comisiones, nominas] = await Promise.all([
     admin.from("invoices").select("id, number, amount, clients(name)").in("id", porTipo("invoice").length ? porTipo("invoice") : ["-"]),
     admin.from("credit_notes").select("id, number, amount").in("id", porTipo("credit_note").length ? porTipo("credit_note") : ["-"]),
     admin.from("clients").select("id, name").in("id", porTipo("customer").length ? porTipo("customer") : ["-"]),
@@ -900,6 +900,10 @@ export async function loQueFalta(admin: Admin, businessId: string) {
       .from("payments")
       .select("id, stripe_fee, invoices(number)")
       .in("id", porTipo("stripe_fee").length ? porTipo("stripe_fee") : ["-"]),
+    admin
+      .from("payroll_runs")
+      .select("id, worker_name, period_end")
+      .in("id", porTipo("payroll").length ? porTipo("payroll") : ["-"]),
   ]);
 
   const buscar = (kind: string, id: string): string => {
@@ -917,6 +921,10 @@ export async function loQueFalta(admin: Admin, businessId: string) {
       return e ? `EST-${e.number ?? ""}` : "";
     }
     if (kind === "expense") return ((gastos.data ?? []).find((x: any) => x.id === id) as any)?.description ?? "";
+    if (kind === "payroll") {
+      const n = (nominas.data ?? []).find((x: any) => x.id === id) as any;
+      return n ? `${n.worker_name} · ${String(n.period_end).slice(0, 10)}` : "";
+    }
     if (kind === "stripe_fee") {
       const c = (comisiones.data ?? []).find((x: any) => x.id === id) as any;
       return c ? [c.invoices?.number, c.stripe_fee ? `${c.stripe_fee}` : null].filter(Boolean).join(" · ") : "";
@@ -1116,4 +1124,191 @@ export async function enviarComisionDeStripe(admin: Admin, businessId: string, p
     await anotar(admin, businessId, "stripe_fee", paymentId, { status: "fallo", error: motivo(err) });
     throw err;
   }
+}
+
+/**
+ * Una hoja de nómina en QuickBooks.
+ *
+ * Intuit **no tiene API de nóminas**: QuickBooks Payroll es otro producto y no
+ * se puede escribir en él desde fuera. Lo que hacen todas las herramientas de
+ * nóminas que se integran con QuickBooks —y lo que hacemos aquí— es mandar el
+ * **asiento contable**, que es lo que de verdad hace falta para declarar.
+ *
+ * El asiento cuadra así:
+ *
+ * | Debe | Haber |
+ * |---|---|
+ * | Salarios (bruto) | Retenciones por pagar, por destino |
+ * | Aportaciones de la empresa | Neto pagado (banco) |
+ * | Gastos devueltos, si los hay | |
+ *
+ * Las retenciones se agrupan **por a quién se le pagan**, no en un montón: lo
+ * que va a Revenu Québec y lo que va a la CRA se remiten por separado, en
+ * calendarios distintos, y juntarlos aquí obliga a volver a separarlos allí.
+ */
+export async function enviarNomina(admin: Admin, businessId: string, runId: string): Promise<void> {
+  const enlace = await leerEnlace(admin, businessId, "payroll", runId);
+  if (enlace?.qbo_id) return;
+
+  const { data: hoja } = await admin
+    .from("payroll_runs")
+    .select(
+      "id, worker_name, subcontractor_id, period_start, period_end, gross, employee_deductions, employer_contributions, net, lines, adjustments"
+    )
+    .eq("business_id", businessId)
+    .eq("id", runId)
+    .maybeSingle();
+  if (!hoja) return;
+
+  try {
+    // Un subcontratista factura, no cobra un sueldo. Mandarlo como salario le
+    // cambiaría sus obligaciones de retención en los libros de quien le paga,
+    // que es exactamente el error que esta integración existe para evitar.
+    if (hoja.subcontractor_id) {
+      await comoCompra(admin, businessId, runId, hoja);
+      return;
+    }
+    await comoAsiento(admin, businessId, runId, hoja);
+  } catch (err) {
+    await anotar(admin, businessId, "payroll", runId, { status: "fallo", error: motivo(err) });
+    throw err;
+  }
+}
+
+interface HojaDeNomina {
+  worker_name: string;
+  period_start: string;
+  period_end: string;
+  gross: number | string;
+  employee_deductions: number | string;
+  employer_contributions: number | string;
+  net: number | string;
+  lines: { label: string; paidBy: string; amount: number; remitTo: string }[] | null;
+  adjustments: { label: string; amount: number; taxable: boolean }[] | null;
+}
+
+/** Lo que se devolvió de gastos: es dinero pagado, pero no es salario. */
+function gastosDevueltos(hoja: HojaDeNomina): number {
+  return redondear((hoja.adjustments ?? []).filter((a) => !a.taxable).reduce((s, a) => s + Number(a.amount), 0));
+}
+
+const redondear = (x: number) => Math.round(x * 100) / 100;
+
+async function comoAsiento(admin: Admin, businessId: string, runId: string, hoja: HojaDeNomina): Promise<void> {
+  const [cuentaSalarios, cuentaRetenciones, cuentaBanco] = await Promise.all([
+    idDeCuentaPorSubtipo(admin, businessId, "Expense", ["PayrollExpenses", "OtherMiscellaneousServiceCost"]),
+    idDeCuentaPorSubtipo(admin, businessId, "Other Current Liability", [
+      "PayrollTaxPayable",
+      "PayrollClearing",
+      "OtherCurrentLiabilities",
+    ]),
+    idDeCuenta(admin, businessId, "Bank"),
+  ]);
+  if (!cuentaSalarios || !cuentaRetenciones || !cuentaBanco) {
+    throw new Error(
+      "tu QuickBooks necesita una cuenta de gastos de personal, una de retenciones por pagar y una bancaria. Créalas en su plan contable y vuelve a intentarlo."
+    );
+  }
+
+  const periodo = `${String(hoja.period_start).slice(0, 10)} → ${String(hoja.period_end).slice(0, 10)}`;
+  const concepto = `${hoja.worker_name} · ${periodo}`;
+  const lineas: unknown[] = [];
+
+  const apunte = (tipo: "Debit" | "Credit", cuenta: string, importe: number, texto: string) => {
+    if (importe <= 0) return;
+    lineas.push({
+      DetailType: "JournalEntryLineDetail",
+      Amount: redondear(importe),
+      Description: texto.slice(0, 4000),
+      JournalEntryLineDetail: { PostingType: tipo, AccountRef: { value: cuenta } },
+    });
+  };
+
+  apunte("Debit", cuentaSalarios, Number(hoja.gross), `${concepto} · brut`);
+  apunte("Debit", cuentaSalarios, Number(hoja.employer_contributions), `${concepto} · part de l'employeur`);
+  apunte("Debit", cuentaSalarios, gastosDevueltos(hoja), `${concepto} · dépenses remboursées`);
+
+  // Agrupadas por destino: lo de Revenu Québec y lo de la CRA se remiten por
+  // separado y en calendarios distintos.
+  const porDestino = new Map<string, number>();
+  for (const linea of hoja.lines ?? []) {
+    porDestino.set(linea.remitTo, redondear((porDestino.get(linea.remitTo) ?? 0) + Number(linea.amount)));
+  }
+  for (const [destino, importe] of Array.from(porDestino)) {
+    apunte("Credit", cuentaRetenciones, importe, `${concepto} · ${destino}`);
+  }
+
+  apunte("Credit", cuentaBanco, Number(hoja.net), `${concepto} · net versé`);
+
+  const creado = await llamar<{ JournalEntry?: { Id: string; SyncToken: string } }>(
+    admin,
+    businessId,
+    "journalentry?minorversion=70",
+    {
+      method: "POST",
+      body: {
+        TxnDate: String(hoja.period_end).slice(0, 10),
+        // Una nómina no lleva impuesto sobre las ventas. Decirlo evita que
+        // QuickBooks intente calcular uno y rechace el asiento entero.
+        GlobalTaxCalculation: "NotApplicable",
+        PrivateNote: concepto,
+        Line: lineas,
+      },
+    }
+  );
+
+  const id = creado.JournalEntry?.Id;
+  if (!id) throw new Error("QuickBooks no devolvió un id de asiento");
+  await anotar(admin, businessId, "payroll", runId, {
+    qbo_id: id,
+    sync_token: creado.JournalEntry?.SyncToken ?? null,
+    status: "enviado",
+    error: null,
+  });
+}
+
+/** Lo pagado a un subcontratista: un gasto, con su nombre en el concepto. */
+async function comoCompra(admin: Admin, businessId: string, runId: string, hoja: HojaDeNomina): Promise<void> {
+  const [cuentaBanco, cuentaGasto] = await Promise.all([
+    idDeCuenta(admin, businessId, "Bank"),
+    idDeCuentaPorSubtipo(admin, businessId, "Expense", ["Subcontractors", "CostOfLabour", "OtherMiscellaneousServiceCost"]),
+  ]);
+  if (!cuentaBanco || !cuentaGasto) {
+    throw new Error(
+      "tu QuickBooks necesita una cuenta bancaria y una de gastos para registrar compras. Créalas en su plan contable y vuelve a intentarlo."
+    );
+  }
+
+  const periodo = `${String(hoja.period_start).slice(0, 10)} → ${String(hoja.period_end).slice(0, 10)}`;
+  const creado = await llamar<{ Purchase?: { Id: string; SyncToken: string } }>(
+    admin,
+    businessId,
+    "purchase?minorversion=70",
+    {
+      method: "POST",
+      body: {
+        AccountRef: { value: cuentaBanco },
+        PaymentType: "Cash",
+        TxnDate: String(hoja.period_end).slice(0, 10),
+        GlobalTaxCalculation: "NotApplicable",
+        Line: [
+          {
+            DetailType: "AccountBasedExpenseLineDetail",
+            Amount: redondear(Number(hoja.net)),
+            Description: `${hoja.worker_name} · ${periodo}`,
+            AccountBasedExpenseLineDetail: { AccountRef: { value: cuentaGasto } },
+          },
+        ],
+      },
+    }
+  );
+
+  const id = creado.Purchase?.Id;
+  if (!id) throw new Error("QuickBooks no devolvió un id de gasto");
+  await anotar(admin, businessId, "payroll", runId, {
+    qbo_id: id,
+    sync_token: creado.Purchase?.SyncToken ?? null,
+    status: "enviado",
+    error: null,
+  });
 }

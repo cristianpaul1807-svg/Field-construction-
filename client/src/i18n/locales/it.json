@@ -1740,7 +1740,7 @@
           "title": "Cosa va da solo su QuickBooks",
           "p1": "Il collegamento si fa una volta sola, in {{menuAjustes}} → {{menuQuickBooks}}. Da lì in poi non c'è niente da premere: quello che emetti qui compare là da solo, in secondo piano, senza aspettare.",
           "p2": "Ci vanno il cliente, il preventivo, la fattura, la nota di credito, l'incasso —sia con carta sia quello che hai segnato in contanti— e la spesa. Ognuno appena lo emetti o lo registri, e l'incasso resta agganciato alla sua fattura, così lì non risulta più da pagare.",
-          "p3": "Non ci vanno il contratto di lavoro né le buste paga. Un contratto non è un documento contabile, e le paghe di QuickBooks sono un altro prodotto a pagamento. Le ore e quello che paghi alla tua gente restano qui ed escono nell'esportazione per il commercialista.",
+          "p3": "Il contratto di lavoro non ci va: non è un documento contabile. La busta paga sì, ma come **scrittura contabile**, non come paghe di QuickBooks — quello è un altro loro prodotto a pagamento, su cui non si può scrivere dall'esterno. La scrittura porta gli stipendi, le ritenute raggruppate per destinatario, e la parte del datore di lavoro. Che è esattamente quello che serve per dichiarare.",
           "p4": "La lettura funziona anche al contrario. Se il tuo commercialista cambia là un importo, una data o lo stato di una fattura, quel cambio torna qui e si vede in {{menuFacturacion}}, così non finisci con due verità diverse.",
           "nota": "Ogni fattura mostra a che punto è il suo invio. Se dice che è fallito, il pulsante per riprovare è lì accanto."
         },
@@ -1984,7 +1984,8 @@
       "payment": "Incasso",
       "estimate": "Preventivo",
       "expense": "Spesa",
-      "stripe_fee": "Commissione Stripe"
+      "stripe_fee": "Commissione Stripe",
+      "payroll": "Busta paga"
     },
     "fix": {
       "tax": "Al tuo QuickBooks manca un codice d'imposta utilizzabile in una vendita. Crealo in Taxes → Sales tax e riprova.",

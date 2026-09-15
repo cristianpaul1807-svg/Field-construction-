@@ -1740,7 +1740,7 @@
           "title": "What goes to QuickBooks on its own",
           "p1": "You connect it once, in {{menuAjustes}} → {{menuQuickBooks}}. After that there is nothing to press: what you issue here shows up there by itself, in the background, with no waiting.",
           "p2": "That covers the client, the estimate, the invoice, the credit note, the payment —card or the cash one you recorded by hand— and the expense. Each one as soon as you issue or record it, and the payment is attached to its invoice, so it stops sitting there as unpaid.",
-          "p3": "Work agreements and payroll do not go. An agreement is not an accounting document, and QuickBooks payroll is a separate paid product. Hours and what you pay your people stay here and come out in the accountant export.",
+          "p3": "Work agreements don't go: an agreement isn't an accounting document. Payroll does, but as a **journal entry**, not as QuickBooks payroll — that's a separate paid product of theirs that can't be written to from outside. The entry carries the wages, the deductions grouped by who they're remitted to, and the employer's own contributions. Which is exactly what filing needs.",
           "p4": "It also reads back. If your accountant changes an amount, a date or an invoice's status over there, the change comes back here and you see it in {{menuFacturacion}}, so you never end up with two different truths.",
           "nota": "Every invoice shows the state of its sync. If it says it failed, the retry button is right there."
         },
@@ -1984,7 +1984,8 @@
       "payment": "Payment",
       "estimate": "Estimate",
       "expense": "Expense",
-      "stripe_fee": "Stripe fee"
+      "stripe_fee": "Stripe fee",
+      "payroll": "Payroll"
     },
     "fix": {
       "tax": "Your QuickBooks is missing a tax code that can be used on a sale. Create one under Taxes → Sales tax and try again.",

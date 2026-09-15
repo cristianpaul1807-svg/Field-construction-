@@ -1740,7 +1740,7 @@
           "title": "Ce qui part tout seul vers QuickBooks",
           "p1": "La connexion se fait une fois, dans {{menuAjustes}} → {{menuQuickBooks}}. Ensuite il n'y a rien à cliquer : ce que vous émettez ici apparaît là-bas tout seul, en arrière-plan, sans attendre.",
           "p2": "Y vont le client, la soumission, la facture, la note de crédit, le paiement —par carte comme celui que vous avez inscrit comptant— et la dépense. Chacun dès que vous l'émettez ou l'inscrivez, et le paiement reste rattaché à sa facture, pour qu'elle n'y figure plus comme impayée.",
-          "p3": "N'y vont ni le contrat de travail ni la paie. Un contrat n'est pas un document comptable, et la paie de QuickBooks est un autre produit payant. Les heures et ce que vous versez à vos gens restent ici et sortent dans l'export pour le comptable.",
+          "p3": "Le contrat de travail n'y va pas : ce n'est pas un document comptable. La paie si, mais en **écriture de journal**, pas en paie QuickBooks — c'est un autre produit payant chez eux, dans lequel on ne peut pas écrire de l'extérieur. L'écriture porte les salaires, les retenues regroupées par destinataire, et la part de l'employeur. C'est exactement ce qu'il faut pour déclarer.",
           "p4": "La lecture marche aussi dans l'autre sens. Si votre comptable change là-bas un montant, une date ou l'état d'une facture, ça revient ici et se voit dans {{menuFacturacion}}, pour ne pas finir avec deux vérités différentes.",
           "nota": "Chaque facture affiche où en est son envoi. Si elle dit que ça a échoué, le bouton pour réessayer est juste là."
         },
@@ -1984,7 +1984,8 @@
       "payment": "Encaissement",
       "estimate": "Soumission",
       "expense": "Dépense",
-      "stripe_fee": "Frais Stripe"
+      "stripe_fee": "Frais Stripe",
+      "payroll": "Paie"
     },
     "fix": {
       "tax": "Il manque à votre QuickBooks un code de taxe utilisable sur une vente. Créez-le sous Taxes → Sales tax et réessayez.",

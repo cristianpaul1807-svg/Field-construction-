@@ -199,6 +199,7 @@ documento contable se manda solo en cuanto existe**. No hay nada que pulsar.
 | Gasto | Al apuntarlo | `enviarGasto` |
 
 | Comisión de Stripe | Al confirmarla Stripe | `enviarComisionDeStripe` |
+| Nómina | Al emitir la hoja | `enviarNomina` |
 
 **El cobro es el que faltaba.** Con las facturas sincronizadas pero los cobros
 no, la contabilidad de allí enseñaba todo pendiente de pagar mientras el dinero
@@ -250,10 +251,36 @@ En la factura del cliente **no aparece**, y no es un olvido. El cliente paga el
 total; lo que nos cueste cobrarlo es asunto nuestro, y ponerlo en su documento
 se lee como un recargo.
 
+### La nómina
+
+Intuit **no tiene API de nóminas**. QuickBooks Payroll es otro producto suyo,
+de pago, y no se puede escribir en él desde fuera — ninguna herramienta de
+nóminas lo hace. Todas mandan el **asiento contable**, que es lo que de verdad
+hace falta para declarar, y es lo que hacemos aquí.
+
+| Debe | Haber |
+|---|---|
+| Salarios (bruto) | Retenciones por pagar, **una línea por destino** |
+| Aportaciones de la empresa | Neto pagado (banco) |
+| Gastos devueltos, si los hay | |
+
+Las retenciones se agrupan por **a quién se le pagan** y no en un montón: lo de
+Revenu Québec y lo de la CRA se remiten por separado y en calendarios
+distintos, y juntarlos aquí obliga a volver a separarlos allí.
+
+El asiento cuadra siempre porque el cálculo garantiza la identidad
+`bruto + aportaciones + gastos devueltos = retenciones + neto`. Está probado
+contra las reglas reales de Quebec incluyendo los casos que la romperían: topes
+anuales ya alcanzados, primas gravables, gastos devueltos y ajustes negativos
+mayores que el bruto.
+
+**Un subcontratista no va como salario.** Va como compra contra una cuenta de
+gastos. Un subcontratista factura, y meterlo en los libros como sueldo le
+cambia a quien le paga sus obligaciones de retención en la fuente — que es
+exactamente la clase de error que esta integración existe para evitar.
+
 Lo que **no** se manda, y por qué:
 
-- **Las nóminas.** La nómina de QuickBooks es otro producto, de pago y con su
-  propia alta. Nuestras horas salen en la exportación para el contable.
 - **Los acuerdos de trabajo.** Un contrato no es un asiento contable. Se
   descarga y se manda por mensajería; en los libros no pinta nada.
 
