@@ -736,7 +736,9 @@
     "ccqSubject": "My work falls under the CCQ (loi R-20)",
     "ccqSubjectHint": "Almost all construction in Quebec does. If you tick this, you have to send the CCQ monthly report by the 15th of each month — even for a month with no work.",
     "ccqEmployerNumber": "CCQ employer number",
-    "ccqEmployerNumberHint": "The one they gave you when you registered. It appears on every monthly report you send."
+    "ccqEmployerNumberHint": "The one they gave you when you registered. It appears on every monthly report you send.",
+    "country": "Country",
+    "countryHint": "This decides which tax details you're asked for and which rules apply to you. Canada only for now — it's the one place whose rules we can do in full. If you're somewhere else, tell us and we'll add it."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -2060,5 +2062,13 @@
     "verDetalle": "Show technical detail",
     "adjuntoAbrir": "We couldn't open the file.",
     "adjuntoEnviar": "We couldn't send the file."
+  },
+  "countries": {
+    "name": {
+      "CA": "Canada"
+    },
+    "region": {
+      "province": "Province"
+    }
   }
 }

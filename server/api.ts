@@ -63,6 +63,11 @@ import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq } from "./ccq";
+// Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
+// `vite.config.ts` importa este archivo para montar la API en el servidor de
+// desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
+// importa así.
+import { aplicaLaCcq, esPaisConocido, esRegionDe, PAIS_POR_DEFECTO } from "../shared/paises";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
 import {
@@ -11567,7 +11572,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, ccq_employer_number, ccq_subject"
+        "id, name, slug, license_number, tax_config, country, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, ccq_employer_number, ccq_subject"
       )
       .eq("id", req.businessId!)
       .single();
@@ -11580,6 +11585,10 @@ apiRouter.get(
       slug: data.slug,
       licenseNumber: data.license_number,
       taxConfig: data.tax_config,
+      // El país decide qué se le pide: los números de TPS/TVQ, la licencia RBQ
+      // y la CCQ son de Canadá, y preguntárselos a quien no está allí es
+      // pedirle datos que no tiene.
+      country: data.country ?? PAIS_POR_DEFECTO,
       province: data.province,
       // Everything below prints in the header (or the footer) of every
       // estimate and invoice this business sends out.
@@ -11693,7 +11702,30 @@ apiRouter.patch(
     if (body.name !== undefined) update.name = body.name;
     if (body.licenseNumber !== undefined) update.license_number = body.licenseNumber;
     if (body.taxConfig !== undefined) update.tax_config = body.taxConfig;
-    if (body.province !== undefined) update.province = body.province;
+    // El país y la región se validan juntos: «QC» es una provincia de Canadá y
+    // no significa nada en ningún otro sitio, y una región que su país no
+    // reconoce deja al negocio sin tasa de impuesto y sin forma de saberlo.
+    const paisFinal = body.country !== undefined ? body.country : null;
+    if (paisFinal !== null) {
+      if (!esPaisConocido(paisFinal)) {
+        res.status(400).json({ error: "unknown country", code: "unknown_country" });
+        return;
+      }
+      update.country = paisFinal;
+    }
+    if (body.province !== undefined) {
+      const { data: actual } = await supabase
+        .from("businesses")
+        .select("country")
+        .eq("id", req.businessId!)
+        .maybeSingle();
+      const pais = paisFinal ?? actual?.country ?? PAIS_POR_DEFECTO;
+      if (body.province && !esRegionDe(pais, body.province)) {
+        res.status(400).json({ error: "that region does not exist in that country", code: "unknown_region" });
+        return;
+      }
+      update.province = body.province;
+    }
     if (body.address !== undefined) update.address = body.address || null;
     if (body.phone !== undefined) update.phone = body.phone || null;
     if (body.email !== undefined) update.email = body.email || null;
@@ -11702,10 +11734,28 @@ apiRouter.patch(
     if (body.estimateTerms !== undefined) update.estimate_terms = body.estimateTerms || null;
     if (body.estimateShowMaterials !== undefined) update.estimate_show_materials = Boolean(body.estimateShowMaterials);
     if (body.estimateShowSchedule !== undefined) update.estimate_show_schedule = Boolean(body.estimateShowSchedule);
-    if (body.ccqEmployerNumber !== undefined) {
-      update.ccq_employer_number = String(body.ccqEmployerNumber ?? "").trim().slice(0, 40) || null;
+    if (body.ccqEmployerNumber !== undefined || body.ccqSubject !== undefined) {
+      const { data: actual } = await supabase
+        .from("businesses")
+        .select("country, province")
+        .eq("id", req.businessId!)
+        .maybeSingle();
+      const pais = (update.country as string | undefined) ?? actual?.country ?? PAIS_POR_DEFECTO;
+      const region = (update.province as string | undefined) ?? actual?.province ?? null;
+
+      // Fuera de Quebec la CCQ no existe, y ahí no se guarda ni se discute:
+      // aceptar el dato sería dejar algo que después sale impreso o acaba
+      // mandándose a un organismo que no es el suyo.
+      if (aplicaLaCcq(pais, region)) {
+        if (body.ccqSubject !== undefined) update.ccq_subject = Boolean(body.ccqSubject);
+        if (body.ccqEmployerNumber !== undefined) {
+          update.ccq_employer_number = String(body.ccqEmployerNumber ?? "").trim().slice(0, 40) || null;
+        }
+      } else {
+        update.ccq_subject = false;
+        update.ccq_employer_number = null;
+      }
     }
-    if (body.ccqSubject !== undefined) update.ccq_subject = Boolean(body.ccqSubject);
     if (body.holdbackPercent !== undefined) {
       const pct = Number(body.holdbackPercent);
       // El tope es 20 y no 100 a propósito. La retención del Código Civil de

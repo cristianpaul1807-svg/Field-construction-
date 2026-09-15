@@ -736,7 +736,9 @@
     "ccqSubject": "Mes travaux sont assujettis à la CCQ (loi R-20)",
     "ccqSubjectHint": "C'est le cas de presque toute la construction au Québec. Si vous cochez, vous devez transmettre le rapport mensuel à la CCQ avant le 15 de chaque mois, même pour un mois sans travaux.",
     "ccqEmployerNumber": "Numéro d'employeur CCQ",
-    "ccqEmployerNumberHint": "Celui qu'on vous a donné à l'inscription. Il figure sur chaque rapport mensuel que vous transmettez."
+    "ccqEmployerNumberHint": "Celui qu'on vous a donné à l'inscription. Il figure sur chaque rapport mensuel que vous transmettez.",
+    "country": "Pays",
+    "countryHint": "C'est de là que sortent les renseignements fiscaux qu'on vous demande et les règles qui s'appliquent. Pour l'instant le Canada seulement : c'est le seul endroit dont on sait faire les règles au complet. Si vous êtes ailleurs, dites-le-nous et on l'ajoute."
   },
   "reports": {
     "title": "Rapports",
@@ -2060,5 +2062,13 @@
     "verDetalle": "Voir le détail technique",
     "adjuntoAbrir": "Nous n'avons pas pu ouvrir le fichier.",
     "adjuntoEnviar": "Nous n'avons pas pu envoyer le fichier."
+  },
+  "countries": {
+    "name": {
+      "CA": "Canada"
+    },
+    "region": {
+      "province": "Province"
+    }
   }
 }

@@ -736,7 +736,9 @@
     "ccqSubject": "Mi trabajo está sujeto a la CCQ (loi R-20)",
     "ccqSubjectHint": "Casi toda la construcción en Quebec lo está. Si lo marcas, tendrás que mandar el informe mensual a la CCQ antes del día 15 de cada mes, aunque ese mes no se haya trabajado.",
     "ccqEmployerNumber": "Número de empleador de la CCQ",
-    "ccqEmployerNumberHint": "El que te dieron al darte de alta. Sale en cada informe mensual que mandas."
+    "ccqEmployerNumberHint": "El que te dieron al darte de alta. Sale en cada informe mensual que mandas.",
+    "country": "País",
+    "countryHint": "De aquí sale qué datos fiscales se te piden y qué reglas se te aplican. Por ahora sólo Canadá: es el único sitio cuyas reglas sabemos hacer enteras. Si estás en otro país, dínoslo y lo añadimos."
   },
   "reports": {
     "title": "Informes",
@@ -2060,5 +2062,13 @@
     "verDetalle": "Ver el detalle técnico",
     "adjuntoAbrir": "No hemos podido abrir el archivo.",
     "adjuntoEnviar": "No hemos podido enviar el archivo."
+  },
+  "countries": {
+    "name": {
+      "CA": "Canadá"
+    },
+    "region": {
+      "province": "Provincia"
+    }
   }
 }

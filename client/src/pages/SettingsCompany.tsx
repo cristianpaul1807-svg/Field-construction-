@@ -8,11 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Check, Upload, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { PAISES, paisDe, aplicaLaCcq } from "@shared/paises";
 
 interface CompanyData {
   id: string;
@@ -20,6 +22,7 @@ interface CompanyData {
   slug: string;
   licenseNumber: string;
   taxConfig: { region?: string; rate?: number };
+  country: string;
   province: string;
   address: string | null;
   phone: string | null;
@@ -62,7 +65,11 @@ export default function SettingsCompany() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [license, setLicense] = useState("");
+  const [country, setCountry] = useState("CA");
   const [province, setProvince] = useState("");
+  // Lo que se le pide sale de aquí y no de una lista escrita en la pantalla:
+  // los números de TPS/TVQ, la licencia RBQ y la CCQ son de Canadá.
+  const pais = paisDe(country);
   const tasaElegida = (taxRates ?? []).find((r) => r.province === province) ?? null;
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
@@ -114,6 +121,7 @@ export default function SettingsCompany() {
     setName(data.name);
     setSlug(data.slug ?? "");
     setLicense(data.licenseNumber ?? "");
+    setCountry(data.country ?? "CA");
     setProvince(data.province ?? "");
     setAddress(data.address ?? "");
     setPhone(data.phone ?? "");
@@ -139,6 +147,7 @@ export default function SettingsCompany() {
           name,
           slug,
           licenseNumber: license,
+          country,
           address,
           phone,
           email,
@@ -231,9 +240,31 @@ export default function SettingsCompany() {
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="license">{t("settings.licenseNumber")}</Label>
-                <Input id="license" value={license} onChange={(e) => setLicense(e.target.value)} />
+                <Label htmlFor="country">{t("settings.country")}</Label>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger id="country"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PAISES.map((p) => (
+                      <SelectItem key={p.codigo} value={p.codigo}>{t(`countries.name.${p.codigo}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {/* Sólo se ofrece lo que sabemos hacer entero. Dejar elegir un
+                    país para el que no calculamos el impuesto sería darle a
+                    alguien facturas mal hechas con aspecto de correctas. */}
+                <p className="text-xs text-muted-foreground">{t("settings.countryHint")}</p>
               </div>
+              {pais.licencia && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="license">{t(pais.licencia.etiqueta)}</Label>
+                  <Input
+                    id="license"
+                    value={license}
+                    onChange={(e) => setLicense(e.target.value)}
+                    placeholder={pais.licencia.ejemplo}
+                  />
+                </div>
+              )}
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="slug">{t("settings.publicLinkAutomations")}</Label>
                 <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
@@ -290,27 +321,20 @@ export default function SettingsCompany() {
                 <Label htmlFor="company-email">{t("common.email")}</Label>
                 <Input id="company-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="gst">{t("settings.gstNumber")}</Label>
-                <Input
-                  id="gst"
-                  value={gstNumber}
-                  onChange={(e) => setGstNumber(e.target.value)}
-                  placeholder="123456789 RT0001"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="qst">{t("settings.qstNumber")}</Label>
-                <Input
-                  id="qst"
-                  value={qstNumber}
-                  onChange={(e) => setQstNumber(e.target.value)}
-                  placeholder="1234567890 TQ0001"
-                />
-              </div>
+              {pais.identificadoresFiscales.map((id) => (
+                <div key={id.campo} className="space-y-1.5">
+                  <Label htmlFor={id.campo}>{t(id.etiqueta)}</Label>
+                  <Input
+                    id={id.campo}
+                    value={id.campo === "gst" ? gstNumber : qstNumber}
+                    onChange={(e) => (id.campo === "gst" ? setGstNumber : setQstNumber)(e.target.value)}
+                    placeholder={id.ejemplo}
+                  />
+                </div>
+              ))}
               {/* La CCQ. Sólo en Quebec: en el resto de Canadá no existe, y
                   un campo que no le toca a nadie es ruido permanente. */}
-              {province === "QC" && (
+              {aplicaLaCcq(country, province) && (
                 <div className="sm:col-span-2 space-y-2 rounded-lg border border-border p-3">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <Checkbox checked={ccqSubject} onCheckedChange={(v) => setCcqSubject(v === true)} />
@@ -334,6 +358,7 @@ export default function SettingsCompany() {
                 </div>
               )}
 
+              {pais.retencion && (
               <div className="space-y-1.5">
                 <Label htmlFor="holdback">{t("settings.holdbackPercent")}</Label>
                 <Input
@@ -355,6 +380,7 @@ export default function SettingsCompany() {
                   </p>
                 )}
               </div>
+              )}
               {/* Both sections are built from data the estimate already
                   holds, so turning them on costs nothing to maintain — and
                   they are what a customer reads before signing. */}

@@ -736,7 +736,9 @@
     "ccqSubject": "Il mio lavoro è soggetto alla CCQ (loi R-20)",
     "ccqSubjectHint": "Lo è quasi tutta l'edilizia in Québec. Se lo spunti, dovrai mandare il rapporto mensile alla CCQ entro il 15 di ogni mese, anche per un mese senza lavori.",
     "ccqEmployerNumber": "Numero di datore di lavoro CCQ",
-    "ccqEmployerNumberHint": "Quello che ti hanno dato all'iscrizione. Compare su ogni rapporto mensile che trasmetti."
+    "ccqEmployerNumberHint": "Quello che ti hanno dato all'iscrizione. Compare su ogni rapporto mensile che trasmetti.",
+    "country": "Paese",
+    "countryHint": "Da qui esce quali dati fiscali ti vengono chiesti e quali regole ti si applicano. Per ora solo il Canada: è l'unico posto di cui sappiamo fare le regole per intero. Se sei altrove, diccelo e lo aggiungiamo."
   },
   "reports": {
     "title": "Report",
@@ -2060,5 +2062,13 @@
     "verDetalle": "Vedi il dettaglio tecnico",
     "adjuntoAbrir": "Non siamo riusciti ad aprire il file.",
     "adjuntoEnviar": "Non siamo riusciti a inviare il file."
+  },
+  "countries": {
+    "name": {
+      "CA": "Canada"
+    },
+    "region": {
+      "province": "Provincia"
+    }
   }
 }

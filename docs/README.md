@@ -23,6 +23,7 @@ la plataforma para gestionar su empresa, y quien va a extender el código.
 | Desplegar, o arreglar un despliegue caído | [desarrollo/despliegue.md](desarrollo/despliegue.md) |
 | Diagnosticar un error que ya está pasando | [desarrollo/solucion-de-problemas.md](desarrollo/solucion-de-problemas.md) |
 | Avisar de un fallo sin enseñar el crudo | [desarrollo/errores.md](desarrollo/errores.md) |
+| Añadir un país | [desarrollo/paises.md](desarrollo/paises.md) |
 
 ---
 
