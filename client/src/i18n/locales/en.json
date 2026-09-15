@@ -1721,6 +1721,13 @@
           "p2": "Tick the box in {{menuAjustes}} → {{menuEmpresa}} and put your employer number there. It's asked once.",
           "p3": "Each person's trade, status, sector and region go on their work agreement, in {{menuTecnicos}}. There and not on their profile because it's what you agreed with them for that period: someone who changes trade signs a new agreement, and March's report has to keep saying what it was in March.",
           "nota": "The trade and status also print on the agreement they sign. They're what sets their collective-agreement rate, and whoever signs has a right to see what they're being paid on."
+        },
+        "papeles": {
+          "title": "Each person's documents (T4, contracts)",
+          "p1": "Every worker's and subcontractor's card has a **Documents** button. That's where you upload the contract you signed elsewhere, their T4, their RL-1 or a pay stub, and they sit beside their hours and their agreement instead of in an email nobody can find in March.",
+          "p2": "Most of those come out of your payroll — QuickBooks Payroll, say — and can't be fetched automatically: there's no way to ask QuickBooks for them from outside. You upload the file, and that's it.",
+          "p3": "By default the person sees them on their phone, folded under their day's work. That's half the point: the T4 goes out every February, gets lost, and in April they ask you again. If you'd rather keep one to yourself, untick the box when you upload it.",
+          "nota": "A T4 has the social insurance number printed on it. These are stored privately and only the office and that person can see them, never a colleague. What we don't do is read the numbers inside the PDF: being right \"almost always\" about a figure that goes on a tax return is worse than not having it."
         }
       },
       "dinero": {
@@ -2094,5 +2101,30 @@
     "region": {
       "province": "Province"
     }
+  },
+  "workerDocs": {
+    "title": "{{name}}'s documents",
+    "hint": "The contract signed elsewhere, the T4, the RL-1, the pay stub. Upload them here and they live beside their hours instead of in an email.",
+    "open": "Documents",
+    "kind": "What it is",
+    "kinds": {
+      "contrato": "Contract",
+      "t4": "T4",
+      "rl1": "RL-1",
+      "talon": "Pay stub",
+      "otro": "Other"
+    },
+    "year": "Tax year",
+    "file": "File (PDF or photo)",
+    "upload": "Upload",
+    "uploadError": "The file couldn't be uploaded.",
+    "download": "Open",
+    "empty": "No documents for this person yet.",
+    "shareWithWorker": "Let them see it on their phone",
+    "shareWithWorkerHint": "The document is theirs. This way they have it without asking you every year.",
+    "hiddenFromWorker": "Office only",
+    "hide": "Stop sharing it",
+    "share": "Share it with them",
+    "mine": "My documents ({{count}})"
   }
 }

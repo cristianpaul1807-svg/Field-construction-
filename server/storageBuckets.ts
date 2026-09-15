@@ -26,6 +26,9 @@ const BUCKETS = {
   "project-documents": { public: false },
   "estimate-references": { public: false },
   "chat-attachments": { public: false },
+  // Los papeles de personal: contratos, T4, RL-1, talones. Privado sin
+  // discusión — un T4 lleva impreso el número de seguro social de esa persona.
+  "worker-documents": { public: false },
 } as const;
 
 export type BucketName = keyof typeof BUCKETS;

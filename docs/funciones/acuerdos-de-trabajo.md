@@ -188,3 +188,50 @@ adivinando la estructura sería entregar algo que la CCQ rechaza.
 Lo que sí está es **el dato**, que es la parte que no cambia: con el oficio, el
 estatuto, el sector, la región y las horas aprobadas, el informe se puede armar
 en cuanto tengamos la especificación.
+
+---
+
+## Los papeles de cada persona
+
+Botón **Papeles** en la ficha de cada trabajador y de cada subcontratista.
+Contrato firmado fuera, T4, RL-1, talón de pago.
+
+**Existe porque QuickBooks Payroll no tiene API pública.** Casi todos esos
+papeles los genera la nómina, y no hay forma de pedírselos desde fuera. Lo que
+sí se puede es que vivan junto a sus horas y su acuerdo en vez de en un correo
+que en marzo no encuentra nadie.
+
+**Lo que no hacemos es leer los números de dentro del PDF.** Sacar el sueldo de
+un T4 con un lector automático acierta casi siempre, y «casi siempre» en una
+cifra que va a una declaración es peor que no tenerla.
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/worker-documents?employeeId=` | Los de esa persona, vistos por la oficina |
+| `POST /api/worker-documents` | Subir. `multipart`, con `kind`, `year` y `visibleToWorker` |
+| `PATCH /api/worker-documents/:id` | Cambiar nombre, nota o si lo ve la persona |
+| `GET /api/worker-documents/:id/download-url` | Dirección firmada, 5 minutos |
+| `DELETE /api/worker-documents/:id` | Borra la fila **y el archivo** |
+| `GET /api/worker/documents` | Los suyos, vistos por él, sólo los compartidos |
+
+### Lo sensible
+
+Un **T4 lleva impreso el número de seguro social**. De ahí tres decisiones:
+
+- Depósito **privado** (`worker-documents`), nunca público. Se lee sólo por
+  dirección firmada de cinco minutos.
+- La ruta del trabajador comprueba que el documento es **suyo dentro de la
+  propia consulta**, no después: un compañero no puede leerlo ni con el
+  identificador en la mano.
+- Borrar quita **también el archivo del depósito**. Un T4 huérfano en el cubo
+  sigue siendo el número de seguro social de alguien guardado sin motivo.
+
+### Compartido por defecto
+
+`visible_to_worker` nace en `true`: el documento va sobre esa persona y es
+suyo. La oficina puede apagarlo para algo que todavía no quiere compartir, y
+entonces la fila lo dice.
+
+El T4 se manda cada febrero por correo, se pierde, y en abril lo vuelven a
+pedir. En su móvil aparece plegado encima de su trabajo del día — y **no
+aparece si no le han subido nada**, porque un cajón vacío no informa de nada.

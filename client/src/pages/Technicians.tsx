@@ -10,8 +10,9 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { AccessCode } from "@/components/AccessCode";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { AcuerdosDeTrabajo, BotonDeAcuerdos } from "@/components/AcuerdosDeTrabajo";
+import { PapelesDeLaPersona } from "@/components/PapelesDeLaPersona";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, KeyRound, Pencil, Trash2, FileSignature } from "lucide-react";
+import { Plus, KeyRound, Pencil, Trash2, FileSignature , FolderOpen } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -248,6 +249,7 @@ export default function Technicians() {
   const [editando, setEditando] = useState<Employee | null>(null);
   const [borrando, setBorrando] = useState<Employee | null>(null);
   const [acuerdosDe, setAcuerdosDe] = useState<Employee | null>(null);
+  const [papelesDe, setPapelesDe] = useState<Employee | null>(null);
   const recargar = () => setReloadToken((n) => n + 1);
 
   const generateToken = async (emp: Employee) => {
@@ -311,6 +313,16 @@ export default function Technicians() {
                       <KeyRound size={14} /> {emp.accessCode ? t("technicians.regenerateCode") : t("technicians.generateCode")}
                     </Button>
                     <BotonDeAcuerdos label={t("agreements.open")} onClick={() => setAcuerdosDe(emp)} />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-h-11 sm:min-h-0"
+                  aria-label={t("workerDocs.open")}
+                  title={t("workerDocs.open")}
+                  onClick={() => setPapelesDe(emp)}
+                >
+                  <FolderOpen size={14} />
+                </Button>
                     <Button size="sm" variant="outline" className="min-h-11" aria-label={t("technicians.editEmployee")} onClick={() => setEditando(emp)}>
                       <Pencil size={14} />
                     </Button>
@@ -380,6 +392,9 @@ export default function Technicians() {
                       <Button size="sm" variant="ghost" aria-label={t("agreements.open")} title={t("agreements.open")} onClick={() => setAcuerdosDe(emp)}>
                         <FileSignature size={14} />
                       </Button>
+                      <Button size="sm" variant="ghost" aria-label={t("workerDocs.open")} title={t("workerDocs.open")} onClick={() => setPapelesDe(emp)}>
+                        <FolderOpen size={14} />
+                      </Button>
                       <Button size="sm" variant="ghost" aria-label={t("technicians.editEmployee")} onClick={() => setEditando(emp)}>
                         <Pencil size={14} />
                       </Button>
@@ -401,6 +416,15 @@ export default function Technicians() {
       {borrando && (
         <DeleteEmployeeDialog emp={borrando} onDeleted={recargar} onClose={() => setBorrando(null)} />
       )}
+      {papelesDe && (
+        <PapelesDeLaPersona
+          kind="employee"
+          workerId={papelesDe.id}
+          workerName={papelesDe.name}
+          onClose={() => setPapelesDe(null)}
+        />
+      )}
+
       {acuerdosDe && (
         <AcuerdosDeTrabajo
           kind="employee"

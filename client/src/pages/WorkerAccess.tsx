@@ -12,6 +12,7 @@ import { WorkerScheduleView } from "@/components/WorkerScheduleView";
 import { WorkerClock } from "@/components/WorkerClock";
 import { WorkerChat } from "@/components/WorkerChat";
 import { WorkerAgreementBanner } from "@/components/WorkerAgreementBanner";
+import { WorkerPapeles } from "@/components/WorkerPapeles";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
@@ -137,6 +138,7 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
             sección donde entrar, es algo que hay que resolver antes de seguir.
             Cuando no hay nada pendiente no pinta nada. */}
         <WorkerAgreementBanner workerName={session.name} />
+        <WorkerPapeles />
 
         <Tabs defaultValue="agenda">
           {/* Estas tres pestañas son toda la navegación del trabajador y se

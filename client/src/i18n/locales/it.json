@@ -1721,6 +1721,13 @@
           "p2": "Spunta la casella in {{menuAjustes}} → {{menuEmpresa}} e scrivici il tuo numero di datore di lavoro. Si chiede una volta sola.",
           "p3": "Il mestiere, lo status, il settore e la regione di ognuno vanno nel suo contratto di lavoro, in {{menuTecnicos}}. Lì e non nella sua scheda perché è quanto hai pattuito con lui per quel periodo: chi cambia mestiere firma un altro contratto, e il rapporto di marzo deve continuare a dire com'era a marzo.",
           "nota": "Il mestiere e lo status vengono stampati anche sul contratto che firma. Sono quello che fissa la sua tariffa del contratto collettivo, e chi firma ha diritto di vedere su cosa gli viene calcolata."
+        },
+        "papeles": {
+          "title": "I documenti di ogni persona (T4, contratti)",
+          "p1": "Nella scheda di ogni lavoratore e di ogni subappaltatore c'è un pulsante **Documenti**. Lì carichi il contratto firmato fuori, il suo T4, il suo RL-1 o una busta paga, e restano accanto alle sue ore e al suo contratto invece che in una mail che a marzo non trova nessuno.",
+          "p2": "Quasi tutti quei fogli li genera la tua contabilità paghe — QuickBooks Payroll, per esempio — e non si possono prendere da soli: non c'è modo di chiederli a QuickBooks dall'esterno. Si carica il file, e basta.",
+          "p3": "Di default la persona li vede sul suo telefono, ripiegati sotto il lavoro del giorno. Questa è metà dell'idea: il T4 parte ogni febbraio, si perde, e ad aprile te lo richiedono. Se preferisci tenerne uno per te, togli la spunta quando lo carichi.",
+          "nota": "Un T4 ha stampato il numero di previdenza sociale. Si conservano in un posto privato e li vedono solo l'ufficio e quella persona, mai un collega. Quello che non facciamo è leggere i numeri dentro il PDF: azzeccare «quasi sempre» una cifra che va in una dichiarazione è peggio che non averla."
         }
       },
       "dinero": {
@@ -2094,5 +2101,30 @@
     "region": {
       "province": "Provincia"
     }
+  },
+  "workerDocs": {
+    "title": "Documenti di {{name}}",
+    "hint": "Il contratto firmato fuori, il T4, il RL-1, la busta paga. Caricali qui e stanno accanto alle sue ore, invece che in una mail.",
+    "open": "Documenti",
+    "kind": "Che cos'è",
+    "kinds": {
+      "contrato": "Contratto",
+      "t4": "T4",
+      "rl1": "RL-1",
+      "talon": "Busta paga",
+      "otro": "Altro"
+    },
+    "year": "Anno fiscale",
+    "file": "File (PDF o foto)",
+    "upload": "Carica",
+    "uploadError": "Non è stato possibile caricare il file.",
+    "download": "Apri",
+    "empty": "Ancora nessun documento per questa persona.",
+    "shareWithWorker": "Che lo veda sul suo telefono",
+    "shareWithWorkerHint": "Il documento è suo. Così ce l'ha senza chiedertelo ogni anno.",
+    "hiddenFromWorker": "Solo l'ufficio",
+    "hide": "Smetti di condividerlo",
+    "share": "Condividilo con lui",
+    "mine": "I miei documenti ({{count}})"
   }
 }

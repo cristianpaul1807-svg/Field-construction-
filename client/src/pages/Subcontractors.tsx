@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Star, KeyRound, Trash2 } from "lucide-react";
+import { Plus, Star, KeyRound, Trash2 , FolderOpen } from "lucide-react";
 import { AcuerdosDeTrabajo, BotonDeAcuerdos } from "@/components/AcuerdosDeTrabajo";
+import { PapelesDeLaPersona } from "@/components/PapelesDeLaPersona";
 import { AccessCode } from "@/components/AccessCode";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
@@ -167,6 +168,7 @@ export default function Subcontractors() {
   const { data: subcontractors, loading, error, detalle, reload } = useApi<Subcontractor[]>(`/api/subcontractors?_r=${reloadToken}`);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
   const [acuerdosDe, setAcuerdosDe] = useState<Subcontractor | null>(null);
+  const [papelesDe, setPapelesDe] = useState<Subcontractor | null>(null);
   const [borrando, setBorrando] = useState<Subcontractor | null>(null);
 
   const generateToken = async (sub: Subcontractor) => {
@@ -241,6 +243,16 @@ export default function Subcontractors() {
                 <Button
                   size="sm"
                   variant="outline"
+                  className="min-h-11 sm:min-h-0"
+                  aria-label={t("workerDocs.open")}
+                  title={t("workerDocs.open")}
+                  onClick={() => setPapelesDe(sub)}
+                >
+                  <FolderOpen size={14} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
                   className="text-status-error-fg"
                   aria-label={t("common.delete")}
                   onClick={() => setBorrando(sub)}
@@ -260,6 +272,15 @@ export default function Subcontractors() {
           ruta={`/api/subcontractors/${borrando.id}`}
           onBorrado={() => setReloadToken((n) => n + 1)}
           onCerrar={() => setBorrando(null)}
+        />
+      )}
+
+      {papelesDe && (
+        <PapelesDeLaPersona
+          kind="subcontractor"
+          workerId={papelesDe.id}
+          workerName={papelesDe.name}
+          onClose={() => setPapelesDe(null)}
         />
       )}
 

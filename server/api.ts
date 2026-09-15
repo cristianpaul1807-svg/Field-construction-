@@ -1385,6 +1385,20 @@ function workerColumn(req: Request): "assigned_employee_id" | "assigned_subcontr
   return req.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
 }
 
+/**
+ * La columna que dice de quién es una fila **suya**: su acuerdo, sus papeles.
+ *
+ * No es la misma que `workerColumn`. Esa dice a quién está *asignada* una orden
+ * o un evento de agenda (`assigned_employee_id`); ésta dice de quién *es* el
+ * documento (`employee_id`). Son dos preguntas distintas y estaban usando la
+ * misma función: las tres rutas de acuerdos del trabajador filtraban por una
+ * columna que `worker_agreements` no tiene, así que fallaban siempre. Nadie lo
+ * vio porque quien las usa es el trabajador desde el móvil, no la oficina.
+ */
+function columnaDelDueno(req: Request): "employee_id" | "subcontractor_id" {
+  return req.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+}
+
 apiRouter.get(
   "/worker/schedule",
   requireWorkerAuth,
@@ -1465,7 +1479,7 @@ apiRouter.get(
         "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, status, sent_at, signed_at, signature_name"
       )
       .eq("business_id", req.workerBusinessId!)
-      .eq(workerColumn(req), req.workerId!)
+      .eq(columnaDelDueno(req), req.workerId!)
       .in("status", ["enviado", "firmado", "terminado"])
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -1493,6 +1507,79 @@ apiRouter.get(
   })
 );
 
+/** El cubo de los papeles de personal. Privado: un T4 lleva su NAS impreso. */
+const CUBO_DE_PAPELES = "worker-documents";
+
+/**
+ * Una dirección temporal para leer un papel.
+ *
+ * Cinco minutos, como el resto de los documentos. El cubo no es público y no
+ * puede serlo: cualquiera con la dirección de un T4 tendría el número de seguro
+ * social de esa persona.
+ */
+async function urlFirmadaDePapel(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  ruta: string
+): Promise<string> {
+  const { data, error } = await admin.storage.from(CUBO_DE_PAPELES).createSignedUrl(ruta, 300);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+/**
+ * Los papeles de esa persona, vistos por ella.
+ *
+ * Sólo los que la oficina marcó como suyos. Un T4 lleva su número de seguro
+ * social impreso, así que aquí no hay margen: la comprobación de que el
+ * documento es suyo se hace en la consulta, no después.
+ */
+apiRouter.get(
+  "/worker/documents",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("worker_documents")
+      .select("id, kind, name, year, note, uploaded_at")
+      .eq("business_id", req.workerBusinessId!)
+      .eq(columnaDelDueno(req), req.workerId!)
+      .eq("visible_to_worker", true)
+      .order("uploaded_at", { ascending: false });
+    if (error) throw error;
+    res.json(
+      data.map((d) => ({
+        id: d.id,
+        kind: d.kind,
+        name: d.name,
+        year: d.year,
+        note: d.note,
+        uploadedAt: d.uploaded_at,
+      }))
+    );
+  })
+);
+
+apiRouter.get(
+  "/worker/documents/:id/download-url",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: doc } = await admin
+      .from("worker_documents")
+      .select("file_url")
+      .eq("business_id", req.workerBusinessId!)
+      .eq("id", req.params.id)
+      .eq(columnaDelDueno(req), req.workerId!)
+      .eq("visible_to_worker", true)
+      .maybeSingle();
+    if (!doc?.file_url) {
+      res.status(404).json({ error: "document not found", code: "document_not_found" });
+      return;
+    }
+    res.json({ url: await urlFirmadaDePapel(admin, doc.file_url) });
+  })
+);
+
 apiRouter.get(
   "/worker/agreements/:id/pdf",
   requireWorkerAuth,
@@ -1506,7 +1593,7 @@ apiRouter.get(
       .select("id")
       .eq("business_id", req.workerBusinessId!)
       .eq("id", req.params.id)
-      .eq(workerColumn(req), req.workerId!)
+      .eq(columnaDelDueno(req), req.workerId!)
       .in("status", ["enviado", "firmado", "terminado"])
       .maybeSingle();
     if (!suyo) {
@@ -1544,7 +1631,7 @@ apiRouter.post(
       .select("id, status")
       .eq("business_id", req.workerBusinessId!)
       .eq("id", req.params.id)
-      .eq(workerColumn(req), req.workerId!)
+      .eq(columnaDelDueno(req), req.workerId!)
       .maybeSingle();
     if (!acuerdo) {
       res.status(404).json({ error: "agreement not found", code: "agreement_not_found" });
@@ -10616,6 +10703,170 @@ function acuerdoParaElPanel(a: any) {
     createdAt: a.created_at,
   };
 }
+
+/**
+ * Los papeles de una persona: su contrato firmado fuera, su T4, su RL-1, su
+ * talón de pago.
+ *
+ * Casi todos los genera QuickBooks Payroll, que **no tiene API pública**: no se
+ * pueden traer solos y no vamos a fingir que sí. Lo que sí se puede es que
+ * vivan aquí, junto a sus horas y su acuerdo, en vez de en un correo que en
+ * marzo no encuentra nadie. Y que la persona los tenga en su móvil sin
+ * pedírselos a la oficina, que es donde se pierden los T4 cada año.
+ *
+ * Lo que **no** hacemos es leer los números de dentro del PDF. Sacar el sueldo
+ * de un T4 con un lector automático acierta casi siempre, y «casi siempre» en
+ * una cifra que va a una declaración es peor que no tenerla.
+ */
+const TIPOS_DE_PAPEL = ["contrato", "t4", "rl1", "talon", "otro"] as const;
+
+apiRouter.get(
+  "/worker-documents",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    let q = supabase
+      .from("worker_documents")
+      .select("id, kind, name, year, note, visible_to_worker, uploaded_at, employee_id, subcontractor_id")
+      .eq("business_id", req.businessId!)
+      .order("uploaded_at", { ascending: false });
+    if (req.query.employeeId) q = q.eq("employee_id", String(req.query.employeeId));
+    if (req.query.subcontractorId) q = q.eq("subcontractor_id", String(req.query.subcontractorId));
+
+    const { data, error } = await q;
+    if (error) throw error;
+    res.json(
+      data.map((d: any) => ({
+        id: d.id,
+        kind: d.kind,
+        name: d.name,
+        year: d.year,
+        note: d.note,
+        visibleToWorker: d.visible_to_worker === true,
+        uploadedAt: d.uploaded_at,
+        employeeId: d.employee_id,
+        subcontractorId: d.subcontractor_id,
+      }))
+    );
+  })
+);
+
+apiRouter.post(
+  "/worker-documents",
+  upload.single("file"),
+  route(async (req, res) => {
+    const { employeeId, subcontractorId, kind, name, year, note, visibleToWorker } = req.body ?? {};
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: "file is required", code: "file_required" });
+      return;
+    }
+    // De una persona, y de una sola. La base lo exige igual; aquí se dice con
+    // un mensaje que se entiende.
+    if (Boolean(employeeId) === Boolean(subcontractorId)) {
+      res.status(400).json({ error: "pass exactly one of employeeId or subcontractorId" });
+      return;
+    }
+    const tipo = (TIPOS_DE_PAPEL as readonly string[]).includes(kind) ? kind : "otro";
+    const anio = year ? Number(year) : null;
+    if (anio !== null && (!Number.isInteger(anio) || anio < 2000 || anio > 2100)) {
+      res.status(400).json({ error: "year out of range", code: "year_out_of_range" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const duenoId = employeeId || subcontractorId;
+    const ruta = `${req.businessId}/${duenoId}/${randomUUID()}-${file.originalname}`;
+    await ensureBucket(CUBO_DE_PAPELES);
+    const { error: fallo } = await supabase.storage
+      .from(CUBO_DE_PAPELES)
+      .upload(ruta, file.buffer, { contentType: file.mimetype });
+    if (fallo) throw fallo;
+
+    const { data, error } = await supabase
+      .from("worker_documents")
+      .insert({
+        business_id: req.businessId!,
+        employee_id: employeeId || null,
+        subcontractor_id: subcontractorId || null,
+        kind: tipo,
+        name: (typeof name === "string" && name.trim()) || file.originalname,
+        file_url: ruta,
+        year: anio,
+        // Suyo salvo que digan lo contrario: el documento va sobre esa persona.
+        visible_to_worker: visibleToWorker === undefined ? true : visibleToWorker === "true" || visibleToWorker === true,
+        note: (typeof note === "string" && note.trim()) || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    res.status(201).json({ id: data.id });
+  })
+);
+
+apiRouter.patch(
+  "/worker-documents/:id",
+  route(async (req, res) => {
+    const cambios: Record<string, unknown> = {};
+    if (req.body?.visibleToWorker !== undefined) cambios.visible_to_worker = Boolean(req.body.visibleToWorker);
+    if (req.body?.name !== undefined) cambios.name = String(req.body.name).trim() || null;
+    if (req.body?.note !== undefined) cambios.note = String(req.body.note).trim() || null;
+    if (Object.keys(cambios).length === 0) {
+      res.status(400).json({ error: "nothing to change" });
+      return;
+    }
+    const { error } = await req.supabase!
+      .from("worker_documents")
+      .update(cambios)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.get(
+  "/worker-documents/:id/download-url",
+  route(async (req, res) => {
+    const { data: doc } = await req.supabase!
+      .from("worker_documents")
+      .select("file_url")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!doc?.file_url) {
+      res.status(404).json({ error: "document not found", code: "document_not_found" });
+      return;
+    }
+    res.json({ url: await urlFirmadaDePapel(getSupabaseAdmin(), doc.file_url) });
+  })
+);
+
+apiRouter.delete(
+  "/worker-documents/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const { data: doc } = await supabase
+      .from("worker_documents")
+      .select("file_url")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (!doc) {
+      res.status(404).json({ error: "document not found", code: "document_not_found" });
+      return;
+    }
+    // El archivo también, no sólo la fila. Un T4 huérfano en el cubo sigue
+    // siendo el número de seguro social de alguien guardado sin motivo.
+    await supabase.storage.from(CUBO_DE_PAPELES).remove([doc.file_url]).catch(() => null);
+    const { error } = await supabase
+      .from("worker_documents")
+      .delete()
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
 
 const SELECT_ACUERDO =
   "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, status, sent_at, signed_at, signature_name, employee_id, subcontractor_id, ccq_trade, ccq_status, ccq_sector, ccq_region, created_at, employees(name), subcontractors(name)";

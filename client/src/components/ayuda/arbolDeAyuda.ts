@@ -88,6 +88,9 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // datos de la empresa, el oficio en cada acuerdo— y sin esto nadie
       // encuentra la segunda.
       { id: "ccq", parrafos: 3, nota: true, ruta: "/technicians" },
+      // Los papeles que genera la nómina de fuera. Sin esto, el botón de
+      // Papeles en la ficha no lo abre nadie porque nadie sabe para qué es.
+      { id: "papeles", parrafos: 3, nota: true, ruta: "/technicians" },
     ],
   },
   {

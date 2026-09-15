@@ -1721,6 +1721,13 @@
           "p2": "Cochez la case dans {{menuAjustes}} → {{menuEmpresa}} et inscrivez-y votre numéro d'employeur. On ne le demande qu'une fois.",
           "p3": "Le métier, le statut, le secteur et la région de chaque personne vont dans son contrat de travail, dans {{menuTecnicos}}. Là et non dans sa fiche parce que c'est ce que vous avez convenu avec elle pour cette période : qui change de métier signe un autre contrat, et le rapport de mars doit continuer à dire ce qu'il en était en mars.",
           "nota": "Le métier et le statut s'impriment aussi sur le contrat qu'elle signe. C'est ce qui fixe son taux de la convention, et qui signe a le droit de voir sur quoi on le calcule."
+        },
+        "papeles": {
+          "title": "Les documents de chaque personne (T4, contrats)",
+          "p1": "Dans la fiche de chaque travailleur et de chaque sous-traitant il y a un bouton **Documents**. C'est là que vous téléversez le contrat signé ailleurs, son T4, son RL-1 ou un talon de paie, et ils restent à côté de ses heures et de son contrat au lieu d'un courriel introuvable en mars.",
+          "p2": "La plupart de ces papiers sortent de votre paie — QuickBooks Payroll, par exemple — et ne peuvent pas être récupérés tout seuls : il n'y a aucun moyen de les demander à QuickBooks de l'extérieur. On téléverse le fichier, c'est tout.",
+          "p3": "Par défaut la personne les voit sur son téléphone, repliés sous son travail du jour. C'est la moitié de l'idée : le T4 part chaque février, se perd, et en avril on vous le redemande. Si vous préférez en garder un pour vous, décochez la case au téléversement.",
+          "nota": "Un T4 porte le numéro d'assurance sociale imprimé. Ils sont rangés dans un endroit privé et seuls le bureau et cette personne les voient, jamais un collègue. Ce qu'on ne fait pas, c'est lire les chiffres à l'intérieur du PDF : avoir raison « presque toujours » sur un montant qui va dans une déclaration, c'est pire que de ne pas l'avoir."
         }
       },
       "dinero": {
@@ -2094,5 +2101,30 @@
     "region": {
       "province": "Province"
     }
+  },
+  "workerDocs": {
+    "title": "Documents de {{name}}",
+    "hint": "Le contrat signé ailleurs, le T4, le RL-1, le talon de paie. Téléversez-les ici et ils vivent à côté de ses heures, au lieu d'un courriel.",
+    "open": "Documents",
+    "kind": "De quoi il s'agit",
+    "kinds": {
+      "contrato": "Contrat",
+      "t4": "T4",
+      "rl1": "RL-1",
+      "talon": "Talon de paie",
+      "otro": "Autre"
+    },
+    "year": "Année d'imposition",
+    "file": "Fichier (PDF ou photo)",
+    "upload": "Téléverser",
+    "uploadError": "Le fichier n'a pas pu être téléversé.",
+    "download": "Ouvrir",
+    "empty": "Aucun document pour cette personne pour l'instant.",
+    "shareWithWorker": "Qu'elle le voie sur son téléphone",
+    "shareWithWorkerHint": "Le document est le sien. Ainsi elle l'a sans vous le redemander chaque année.",
+    "hiddenFromWorker": "Bureau seulement",
+    "hide": "Cesser de le partager",
+    "share": "Le partager avec elle",
+    "mine": "Mes documents ({{count}})"
   }
 }

@@ -1721,6 +1721,13 @@
           "p2": "Marca la casilla en {{menuAjustes}} → {{menuEmpresa}} y escribe ahí tu número de empleador. Sólo se pide una vez.",
           "p3": "El oficio, el estatuto, el sector y la región de cada persona van en su acuerdo de trabajo, en {{menuTecnicos}}. Van ahí y no en su ficha porque es lo que pactaste con ella para ese periodo: quien cambia de oficio firma otro acuerdo, y el informe de marzo tiene que seguir diciendo lo que era en marzo.",
           "nota": "El oficio y el estatuto también salen impresos en el acuerdo que firma. Son lo que fija su tarifa del convenio, y quien firma tiene derecho a ver con qué se le calcula."
+        },
+        "papeles": {
+          "title": "Los papeles de cada persona (T4, contratos)",
+          "p1": "En la ficha de cada trabajador y de cada subcontratista hay un botón de **Papeles**. Ahí subes el contrato que firmasteis fuera, su T4, su RL-1 o un talón de pago, y se quedan junto a sus horas y su acuerdo en vez de en un correo que en marzo no encuentra nadie.",
+          "p2": "Casi todos esos papeles los genera tu nómina —si la llevas en QuickBooks Payroll, por ejemplo— y no se pueden traer solos: no hay forma de pedírselos a QuickBooks desde fuera. Se suben como archivo, y ya está.",
+          "p3": "Por defecto la persona los ve en su móvil, plegados debajo de su trabajo del día. Eso es la mitad de la idea: el T4 se manda cada febrero, se pierde, y en abril te lo vuelven a pedir. Si alguno prefieres guardártelo, quítale la marca al subirlo.",
+          "nota": "Un T4 lleva impreso el número de seguro social. Se guardan en un sitio privado y sólo los ven la oficina y esa persona, nunca un compañero. Lo que no hacemos es leer los números de dentro del PDF: acertar «casi siempre» en una cifra que va a una declaración es peor que no tenerla."
         }
       },
       "dinero": {
@@ -2094,5 +2101,30 @@
     "region": {
       "province": "Provincia"
     }
+  },
+  "workerDocs": {
+    "title": "Papeles de {{name}}",
+    "hint": "El contrato firmado fuera, el T4, el RL-1, el talón de pago. Súbelos aquí y viven junto a sus horas, en vez de en un correo.",
+    "open": "Papeles",
+    "kind": "Qué es",
+    "kinds": {
+      "contrato": "Contrato",
+      "t4": "T4",
+      "rl1": "RL-1",
+      "talon": "Talón de pago",
+      "otro": "Otro"
+    },
+    "year": "Año fiscal",
+    "file": "Archivo (PDF o foto)",
+    "upload": "Subir",
+    "uploadError": "No se pudo subir el archivo.",
+    "download": "Abrir",
+    "empty": "Todavía no hay ningún papel de esta persona.",
+    "shareWithWorker": "Que lo vea en su móvil",
+    "shareWithWorkerHint": "El documento es suyo. Así lo tiene sin pedírtelo cada año.",
+    "hiddenFromWorker": "Sólo lo ve la oficina",
+    "hide": "Dejar de compartirlo",
+    "share": "Compartirlo con la persona",
+    "mine": "Mis papeles ({{count}})"
   }
 }
