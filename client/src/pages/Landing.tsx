@@ -11,6 +11,7 @@ import { Logo } from "@/components/Logo";
 import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { tomarDestino } from "@/lib/destino";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -33,7 +34,7 @@ export default function Landing() {
       const res = await apiFetch("/api/auth/me");
       const body = await readJson(res);
       if (body.persona === "client") setLocation("/portal");
-      else setLocation("/");
+      else setLocation(tomarDestino() ?? "/");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("auth.wrongCredentials"));
     } finally {

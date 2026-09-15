@@ -9,6 +9,7 @@ import { ArrowLeft, Briefcase } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { tomarDestino } from "@/lib/destino";
 import { useTranslation } from "react-i18next";
 
 function formatError(err: unknown, fallback: string): string {
@@ -99,7 +100,10 @@ export default function AuthBusiness() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
         await refreshPersona();
-        setLocation("/");
+        // Quien venía de un enlace a una pantalla concreta vuelve a ella. El
+        // alta de más abajo no lo hace: un negocio recién creado no venía de
+        // ninguna parte.
+        setLocation(tomarDestino() ?? "/");
       }
     } catch (err) {
       const msg = formatError(err, "").toLowerCase();

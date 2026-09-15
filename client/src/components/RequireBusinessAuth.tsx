@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { ServerUnreachable } from "@/components/ServerUnreachable";
 import { Spinner } from "@/components/ui/spinner";
+import { recordarDestino } from "@/lib/destino";
 
 export function RequireBusinessAuth({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
@@ -17,7 +18,12 @@ export function RequireBusinessAuth({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!session) return <Redirect to="/" />;
+  if (!session) {
+    // Guardarlo antes de saltar: después del inicio de sesión ya no queda
+    // rastro de a qué pantalla venía esta persona.
+    recordarDestino(window.location.pathname);
+    return <Redirect to="/" />;
+  }
   // A server that didn't answer says nothing about this account — never let
   // that fall through to the provisioning redirect below.
   if (personaError) return <ServerUnreachable message={personaError} />;

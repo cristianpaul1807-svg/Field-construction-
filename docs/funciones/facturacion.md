@@ -197,7 +197,6 @@ documento contable se manda solo en cuanto existe**. No hay nada que pulsar.
 | Nota de crédito | Al crearla | `enviarNotaDeCredito` |
 | Cobro | Al registrarse — Stripe, a mano o por etapas | `enviarPago` |
 | Gasto | Al apuntarlo | `enviarGasto` |
-
 | Comisión de Stripe | Al confirmarla Stripe | `enviarComisionDeStripe` |
 | Nómina | Al emitir la hoja | `enviarNomina` |
 
@@ -205,6 +204,51 @@ documento contable se manda solo en cuanto existe**. No hay nada que pulsar.
 no, la contabilidad de allí enseñaba todo pendiente de pagar mientras el dinero
 ya estaba en la cuenta. Va como `Payment` enganchado a su factura por
 `LinkedTxn`, que es lo que la cierra allí.
+
+### Lo que el servidor necesita
+
+Cuatro variables de entorno. Si falta cualquiera de las tres primeras, la
+pantalla de QuickBooks dice que no está configurado en vez de dejar pulsar un
+botón que iba a fallar.
+
+| Variable | Qué es |
+|---|---|
+| `QUICKBOOKS_CLIENT_ID` | Del panel de Intuit, de la app |
+| `QUICKBOOKS_CLIENT_SECRET` | Ídem. No sale del servidor |
+| `QUICKBOOKS_REDIRECT_URI` | `https://…/api/quickbooks/callback` |
+| `QUICKBOOKS_ENVIRONMENT` | `production`, o cualquier otra cosa para pruebas |
+
+El entorno es deliberadamente desconfiado: **sólo la palabra exacta
+`production` es producción**. Al revés —dar por bueno lo que no se entiende—
+un servidor mal configurado mandaría facturas de verdad.
+
+Las claves de sandbox y las de producción son **distintas**, y el `realmId`
+de una empresa de pruebas no existe en producción. Al cambiar de entorno hay
+que volver a conectar desde la pantalla; las conexiones viejas dan
+`invalid_grant` y el sistema las borra solo.
+
+### Las direcciones que pide Intuit
+
+Para desbloquear las claves de producción, Intuit pide en **Keys &
+Credentials → Production** un puñado de direcciones. Todas son de este
+producto y todas tienen que existir de verdad — las abren a mano para
+comprobarlo:
+
+| Lo que piden | Qué es aquí |
+|---|---|
+| Host domain | `logiciel-construction.com` |
+| Launch URL | `https://logiciel-construction.com/settings/quickbooks` |
+| Connect / reconnect URL | la misma |
+| Disconnect URL | la misma |
+| Redirect URI (OAuth) | `https://logiciel-construction.com/api/quickbooks/callback` |
+| EULA | `https://logiciel-construction.com/terms` |
+| Privacy policy | `https://logiciel-construction.com/privacy` |
+
+Las tres del medio llevan a una pantalla del panel, así que quien las pulse
+sin sesión pasa por el inicio de sesión. **Vuelve a la pantalla de QuickBooks
+después de entrar**, no al panel: lo guarda `client/src/lib/destino.ts`. Sin
+eso, el enlace de «volver a conectar» de Intuit te dejaba dentro del producto
+pero lejos de lo que ibas a arreglar.
 
 ### La comisión de Stripe
 
