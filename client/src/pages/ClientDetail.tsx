@@ -74,7 +74,7 @@ export default function ClientDetail() {
           </div>
         </div>
         <StatusBadge tone={leadStatusTone[client.leadStatus]}>
-          {t(`crm.status.${client.leadStatus}`)}
+          {t(`crm.status.${client.leadStatus}`, { defaultValue: client.leadStatus })}
         </StatusBadge>
       </div>
 

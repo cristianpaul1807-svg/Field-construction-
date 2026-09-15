@@ -150,7 +150,9 @@
       "commessas": "N. commessa",
       "facturas": "Fatture",
       "fichajes": "Timbrature"
-    }
+    },
+    "deleteClient": "Elimina cliente",
+    "deleteClientConfirm": "Eliminare {{name}}? Non si può annullare."
   },
   "budgets": {
     "title": "Preventivi",
@@ -269,7 +271,9 @@
     "acceptEstimate": "Accetta il preventivo (apre il cantiere)",
     "acceptOnTheirBehalf": "Ti ha detto di sì su WhatsApp, al telefono o direttamente in cantiere? Accettalo tu qui. È questo pulsante che apre il cantiere, mette il lavoro in calendario ed emette la prima fattura. Finché non lo premi, il preventivo resta lì ad aspettare.",
     "sendItYourselfHint": "Glielo mandi tu su WhatsApp o via email? Scarica il PDF qui sopra e scegli «{{boton}}»: risulta inviato senza che gli arrivi nulla in chat.",
-    "projectionTitlePlaceholder": "Es. Posare il pavimento della cucina"
+    "projectionTitlePlaceholder": "Es. Posare il pavimento della cucina",
+    "deleteEstimate": "Elimina preventivo",
+    "deleteEstimateConfirm": "Eliminare il preventivo {{number}}? Non si può annullare."
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -462,7 +466,9 @@
     "codeIssued": "Codice emesso",
     "noCodeYet": "Nessun codice",
     "newPwaCode": "Genera un nuovo codice",
-    "rateStars": "Valuta {{count}} stelle"
+    "rateStars": "Valuta {{count}} stelle",
+    "deleteSub": "Elimina subappaltatore",
+    "deleteSubConfirm": "Eliminare {{name}}? Non si può annullare."
   },
   "clientPortal": {
     "title": "Portale cliente",
@@ -1437,7 +1443,13 @@
     "credit_note_needs_reason": "Bisogna dire perché si corregge.",
     "invoice_fully_credited": "Questa fattura è già corretta per intero.",
     "credit_note_exceeds_invoice": "Non puoi correggere più di quanto resta da correggere su quella fattura.",
-    "credit_note_not_found": "Non abbiamo trovato quella nota di credito."
+    "credit_note_not_found": "Non abbiamo trovato quella nota di credito.",
+    "client_has_history": "Non si può eliminare: questo cliente ha già preventivi, cantieri o fatture. Eliminarlo si porterebbe via quei documenti, e una fattura emessa non si cancella.",
+    "estimate_has_invoices": "Non si può eliminare: da questo preventivo è uscita una fattura, e quella fattura dice da dove viene.",
+    "subcontractor_has_history": "Non si può eliminare: questa persona ha già ore timbrate o paghe emesse. Quelle ore sono il costo di un cantiere.",
+    "client_not_found": "Quel cliente non esiste più.",
+    "estimate_not_found": "Quel preventivo non esiste più.",
+    "subcontractor_not_found": "Quella persona non esiste più."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -1753,7 +1765,7 @@
           "title": "Cosa va da solo su QuickBooks",
           "p1": "Il collegamento si fa una volta sola, in {{menuAjustes}} → {{menuQuickBooks}}. Da lì in poi non c'è niente da premere: quello che emetti qui compare là da solo, in secondo piano, senza aspettare.",
           "p2": "Ci vanno il cliente, il preventivo, la fattura, la nota di credito, l'incasso —sia con carta sia quello che hai segnato in contanti— e la spesa. Ognuno appena lo emetti o lo registri, e l'incasso resta agganciato alla sua fattura, così lì non risulta più da pagare.",
-          "p3": "Il contratto di lavoro non ci va: non è un documento contabile. La busta paga sì, ma come **scrittura contabile**, non come paghe di QuickBooks — quello è un altro loro prodotto a pagamento, su cui non si può scrivere dall'esterno. La scrittura porta gli stipendi, le ritenute raggruppate per destinatario, e la parte del datore di lavoro. Che è esattamente quello che serve per dichiarare.",
+          "p3": "Il contratto di lavoro non ci va: non è un documento contabile. La busta paga sì, ma come **scrittura contabile**, non come paghe di QuickBooks — quello è un altro loro prodotto a pagamento, su cui non si può scrivere dall'esterno. **E se usi già QuickBooks Payroll, diccelo nella sua schermata**: allora non mandiamo la scrittura, perché lui scrive la sua e gli stipendi risulterebbero contati due volte.",
           "p4": "La lettura funziona anche al contrario. Se il tuo commercialista cambia là un importo, una data o lo stato di una fattura, quel cambio torna qui e si vede in {{menuFacturacion}}, così non finisci con due verità diverse.",
           "nota": "Ogni fattura mostra a che punto è il suo invio. Se dice che è fallito, il pulsante per riprovare è lì accanto."
         },
@@ -1800,6 +1812,13 @@
           "p2": "Se dice che la sessione è scaduta, entra di nuovo e riprendi da dove eri. Se dice che l'errore è nostro, lo è davvero: aspetta un attimo e riprova, perché quasi sempre è un brutto momento del server e si sistema da solo.",
           "p3": "Se ricompare, apri «Vedi il dettaglio tecnico» sull'avviso stesso e mandaci quella riga. Lì c'è la risposta del server, ed è l'unica cosa che ci fa sapere cosa è successo senza indovinare.",
           "nota": "L'avviso non ti mostrerà mai un codice da solo né una frase in una lingua che non hai scelto. Se ne vedi uno, è un errore nostro e vogliamo saperlo anche quello."
+        },
+        "borrar": {
+          "title": "Eliminare, e cosa non si lascia eliminare",
+          "p1": "Quasi tutto si elimina dalla sua schermata: il cliente e il preventivo hanno il loro cestino, e anche la persona e il foglio paga. Se non vedi il pulsante, quella schermata non ce l'ha ancora e va detto a noi.",
+          "p2": "Alcune cose il sistema si rifiuta di eliminarle, e ti dice perché. Un cliente con fatture non si elimina, perché eliminarlo se le porterebbe via — e una fattura emessa non si cancella mai: lascerebbe un buco nella serie progressiva, che è la prima cosa che guarda un ispettore. Lo stesso per chi ha ore timbrate: quelle ore sono il costo di un cantiere già fatturato.",
+          "p3": "Per correggere una fattura c'è la nota di credito, non la cancellazione. Restano entrambe nei libri, ed è così che un esercizio deve potersi ricostruire mesi dopo.",
+          "nota": "Se un cliente ti chiede di cancellare i suoi dati e non si può perché ha fatture, scrivici: dietro c'è un obbligo di legge e c'è modo di risolverlo senza rompere la contabilità."
         }
       },
       "queOcurre": {
@@ -2029,7 +2048,12 @@
       "stale": "Qualcuno ha modificato quel documento su QuickBooks mentre veniva inviato. Riprova e si aggiorna.",
       "order": "Manca qualcosa da cui dipende: il suo cliente o la sua fattura non sono ancora lì. Premi Riprova tutto e partono in ordine.",
       "generic": "QuickBooks l'ha rifiutato e non sappiamo perché. Riprova; se fallisce di nuovo, apri il dettaglio tecnico e mandacelo."
-    }
+    },
+    "payrollTitle": "Chi fa le buste paga",
+    "payrollHint": "QuickBooks ha il suo prodotto per le paghe, separato e a pagamento. Se lo usi, scrive già la scrittura di ogni paga nei tuoi libri.",
+    "payrollTheirs": "Le mie paghe le fa QuickBooks Payroll",
+    "payrollTheirsHint": "Spuntalo se paghi la tua gente da QuickBooks. Se lo lasci vuoto, la scrittura di ogni foglio che emetti qui parte là da sola.",
+    "payrollTheirsNote": "Con questo spuntato non mandiamo la scrittura delle paghe, così gli stipendi non risultano contati due volte. Quello che paghi ai subappaltatori continua ad andare: non è busta paga e QuickBooks Payroll non lo registra."
   },
   "creditNotes": {
     "issue": "Nota di credito",

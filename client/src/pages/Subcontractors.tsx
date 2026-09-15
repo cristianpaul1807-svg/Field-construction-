@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Star, KeyRound } from "lucide-react";
+import { Plus, Star, KeyRound, Trash2 } from "lucide-react";
 import { AcuerdosDeTrabajo, BotonDeAcuerdos } from "@/components/AcuerdosDeTrabajo";
 import { AccessCode } from "@/components/AccessCode";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { BorrarConHistorial } from "@/components/BorrarConHistorial";
 
 interface Subcontractor {
   id: string;
@@ -166,6 +167,7 @@ export default function Subcontractors() {
   const { data: subcontractors, loading, error, detalle, reload } = useApi<Subcontractor[]>(`/api/subcontractors?_r=${reloadToken}`);
   const [newToken, setNewToken] = useState<{ name: string; token: string } | null>(null);
   const [acuerdosDe, setAcuerdosDe] = useState<Subcontractor | null>(null);
+  const [borrando, setBorrando] = useState<Subcontractor | null>(null);
 
   const generateToken = async (sub: Subcontractor) => {
     const res = await apiFetch(`/api/subcontractors/${sub.id}/access-token`, { method: "POST" });
@@ -236,10 +238,29 @@ export default function Subcontractors() {
                   <KeyRound size={14} /> {sub.hasAccessCode ? t("subcontractors.newPwaCode") : t("subcontractors.pwaCode")}
                 </Button>
                 <BotonDeAcuerdos label={t("agreements.open")} onClick={() => setAcuerdosDe(sub)} />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-status-error-fg"
+                  aria-label={t("common.delete")}
+                  onClick={() => setBorrando(sub)}
+                >
+                  <Trash2 size={14} />
+                </Button>
               </div>
             </Card>
           ))}
         </div>
+      )}
+
+      {borrando && (
+        <BorrarConHistorial
+          titulo={t("subcontractors.deleteSub")}
+          confirmacion={t("subcontractors.deleteSubConfirm", { name: borrando.name })}
+          ruta={`/api/subcontractors/${borrando.id}`}
+          onBorrado={() => setReloadToken((n) => n + 1)}
+          onCerrar={() => setBorrando(null)}
+        />
       )}
 
       {acuerdosDe && (

@@ -150,7 +150,9 @@
       "commessas": "Nº de obra",
       "facturas": "Facturas",
       "fichajes": "Fichajes"
-    }
+    },
+    "deleteClient": "Borrar cliente",
+    "deleteClientConfirm": "¿Borrar a {{name}}? No se puede deshacer."
   },
   "budgets": {
     "title": "Presupuestos",
@@ -269,7 +271,9 @@
     "acceptEstimate": "Aceptar presupuesto (abre la obra)",
     "acceptOnTheirBehalf": "¿Te dijo que sí por WhatsApp, por teléfono o en la propia obra? Acéptalo tú aquí. Este botón es lo que abre la obra, mete el trabajo en el calendario y emite la primera factura. Hasta que lo toques, el presupuesto se queda esperando.",
     "sendItYourselfHint": "¿Se lo mandas tú por WhatsApp o por correo? Descarga el PDF aquí arriba y elige «{{boton}}»: queda marcado como enviado sin que le llegue nada por el chat.",
-    "projectionTitlePlaceholder": "Ej. Instalar piso de cocina"
+    "projectionTitlePlaceholder": "Ej. Instalar piso de cocina",
+    "deleteEstimate": "Borrar presupuesto",
+    "deleteEstimateConfirm": "¿Borrar el presupuesto {{number}}? No se puede deshacer."
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -462,7 +466,9 @@
     "codeIssued": "Código emitido",
     "noCodeYet": "Sin código",
     "newPwaCode": "Generar código nuevo",
-    "rateStars": "Valorar con {{count}} estrellas"
+    "rateStars": "Valorar con {{count}} estrellas",
+    "deleteSub": "Borrar subcontratista",
+    "deleteSubConfirm": "¿Borrar a {{name}}? No se puede deshacer."
   },
   "clientPortal": {
     "title": "Portal del cliente",
@@ -1437,7 +1443,13 @@
     "credit_note_needs_reason": "Hace falta decir por qué se corrige.",
     "invoice_fully_credited": "Esta factura ya está corregida por completo.",
     "credit_note_exceeds_invoice": "No puedes corregir más de lo que queda por corregir de esa factura.",
-    "credit_note_not_found": "No encontramos esa nota de crédito."
+    "credit_note_not_found": "No encontramos esa nota de crédito.",
+    "client_has_history": "No se puede borrar: este cliente ya tiene presupuestos, obras o facturas. Borrarlo se llevaría por delante esos documentos, y una factura emitida no se borra.",
+    "estimate_has_invoices": "No se puede borrar: de este presupuesto salió una factura, y esa factura dice de dónde viene.",
+    "subcontractor_has_history": "No se puede borrar: esta persona ya tiene horas fichadas o pagas emitidas. Esas horas son el coste de una obra.",
+    "client_not_found": "Ese cliente ya no existe.",
+    "estimate_not_found": "Ese presupuesto ya no existe.",
+    "subcontractor_not_found": "Esa persona ya no existe."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1753,7 +1765,7 @@
           "title": "Qué se manda solo a QuickBooks",
           "p1": "La conexión se hace una vez en {{menuAjustes}} → {{menuQuickBooks}}. A partir de ahí no hay que darle a nada: lo que emites aquí aparece allí solo, en segundo plano, sin que tengas que esperar.",
           "p2": "Va el cliente, el presupuesto, la factura, la nota de crédito, el cobro —lo mismo si pagó con tarjeta que si lo apuntaste en efectivo— y el gasto. Cada uno en cuanto lo emites o lo registras, y el cobro queda enganchado a su factura, para que allí no siga figurando como pendiente de pagar.",
-          "p3": "El contrato de trabajo no va: no es un documento contable. La nómina sí, pero como **asiento**, no como nómina de QuickBooks — ese es otro producto suyo que se paga aparte y en el que no se puede escribir desde fuera. El asiento lleva los salarios, lo retenido agrupado por a quién se le paga, y lo que aporta la empresa. Que es justo lo que hace falta para declarar.",
+          "p3": "El contrato de trabajo no va: no es un documento contable. La nómina sí, pero como **asiento**, no como nómina de QuickBooks — ese es otro producto suyo que se paga aparte y en el que no se puede escribir desde fuera. **Y si ya usas QuickBooks Payroll, díselo en su pantalla**: entonces no mandamos el asiento, porque él ya escribe el suyo y los salarios quedarían contados dos veces.",
           "p4": "La lectura también funciona al revés. Si tu contable cambia allí un importe, una fecha o el estado de una factura, esos cambios vuelven aquí y se ven en {{menuFacturacion}}, para que no acabes con dos verdades distintas.",
           "nota": "Cada factura enseña en qué estado está su envío. Si dice que falló, ahí mismo tienes el botón para reintentarlo."
         },
@@ -1800,6 +1812,13 @@
           "p2": "Si dice que se te caducó la sesión, entra otra vez y sigues donde estabas. Si dice que el fallo es nuestro, es nuestro de verdad: espera un momento y reinténtalo, porque casi siempre es un momento malo del servidor y se arregla solo.",
           "p3": "Si vuelve a salir, abre «Ver el detalle técnico» del propio aviso y mándanos esa línea. Ahí está lo que contestó el servidor, y es lo único que nos deja saber qué pasó sin adivinar.",
           "nota": "El aviso nunca te va a enseñar un código suelto ni una frase en inglés. Si ves uno, es un fallo nuestro y también queremos saberlo."
+        },
+        "borrar": {
+          "title": "Borrar algo, y qué no se deja borrar",
+          "p1": "Casi todo se borra desde su propia pantalla: el cliente y el presupuesto tienen su papelera, y la persona y la hoja de pago también. Si no ves el botón, es que esa pantalla todavía no lo tiene y hay que decírnoslo.",
+          "p2": "Algunas cosas el sistema se niega a borrarlas, y te dice por qué. Un cliente con facturas no se borra porque borrarlo se las llevaría por delante, y una factura emitida no se borra nunca: dejaría un hueco en la serie correlativa, que es de lo primero que mira un inspector. Lo mismo con una persona que tiene horas fichadas: esas horas son el coste de una obra que ya facturaste.",
+          "p3": "Para corregir una factura está la nota de crédito, no el borrado. Las dos se quedan en los libros, que es como tiene que poder reconstruirse un ejercicio meses después.",
+          "nota": "Si un cliente te pide que borres sus datos y no te deja porque tiene facturas, escríbenos: hay una obligación legal detrás y hay forma de resolverlo sin romper la contabilidad."
         }
       },
       "queOcurre": {
@@ -2029,7 +2048,12 @@
       "stale": "Alguien cambió ese documento en QuickBooks mientras se enviaba. Reintenta y se pone al día.",
       "order": "Falta algo de lo que depende: su cliente o su factura todavía no están allí. Dale a Reintentar todo y se mandan en orden.",
       "generic": "QuickBooks lo rechazó y no sabemos por qué. Reintenta; si vuelve a fallar, abre el detalle técnico y mándanoslo."
-    }
+    },
+    "payrollTitle": "Quién lleva la nómina",
+    "payrollHint": "QuickBooks tiene su propio producto de nóminas, aparte y de pago. Si lo usas, él ya escribe el asiento de cada paga en tus libros.",
+    "payrollTheirs": "Mi nómina la lleva QuickBooks Payroll",
+    "payrollTheirsHint": "Márcalo si pagas a tu gente desde QuickBooks. Si lo dejas sin marcar, el asiento de cada hoja que emitas aquí se manda allí solo.",
+    "payrollTheirsNote": "Con esto marcado no mandamos el asiento de nómina, para que los salarios no queden contados dos veces. Lo que pagas a subcontratistas sí sigue yendo: eso no es nómina y QuickBooks Payroll no lo apunta."
   },
   "creditNotes": {
     "issue": "Nota de crédito",

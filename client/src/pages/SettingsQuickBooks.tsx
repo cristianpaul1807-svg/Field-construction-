@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Unplug, CheckCircle2, AlertTriangle, Stethoscope, Copy, Check, RefreshCw, ChevronDown } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 
@@ -29,6 +30,59 @@ import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
  * de un contratista no dice si el problema es suyo, nuestro o de nadie. Se
  * enseña qué hacer, y el original queda debajo para quien lo necesite.
  */
+/**
+ * Quién lleva la nómina.
+ *
+ * QuickBooks Payroll es un producto aparte de Intuit y escribe sus propios
+ * asientos de nómina en los libros. Si lo usa y además mandamos el nuestro, los
+ * salarios quedan contados dos veces: los libros cuadran igual —cada asiento
+ * cuadra por su cuenta— y el gasto de personal sale el doble del real, que es
+ * de los errores que no se ven hasta que alguien mira el beneficio y no le sale.
+ *
+ * Por eso se pregunta en vez de adivinarse. No hay forma de saberlo desde la
+ * API: QuickBooks no dice si esa empresa tiene contratada su nómina.
+ */
+function QuienLlevaLaNomina() {
+  const { t } = useTranslation();
+  const { data } = useApi<{ payrollInQuickbooks: boolean }>("/api/settings/company");
+  const [suya, setSuya] = useState<boolean | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    if (data) setSuya(data.payrollInQuickbooks === true);
+  }, [data]);
+
+  const cambiar = async (valor: boolean) => {
+    setSuya(valor);
+    setGuardando(true);
+    await apiFetch("/api/settings/company", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payrollInQuickbooks: valor }),
+    }).catch(() => null);
+    setGuardando(false);
+  };
+
+  if (suya === null) return null;
+
+  return (
+    <Card className="p-6 space-y-3">
+      <div>
+        <h2 className="text-base font-semibold text-foreground">{t("quickbooks.payrollTitle")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("quickbooks.payrollHint")}</p>
+      </div>
+      <label className="flex items-start gap-2.5 cursor-pointer">
+        <Checkbox checked={suya} disabled={guardando} onCheckedChange={(v) => cambiar(v === true)} />
+        <span className="min-w-0">
+          <span className="block text-sm text-foreground">{t("quickbooks.payrollTheirs")}</span>
+          <span className="block text-xs text-muted-foreground">{t("quickbooks.payrollTheirsHint")}</span>
+        </span>
+      </label>
+      {suya && <p className="text-xs text-status-info-fg">{t("quickbooks.payrollTheirsNote")}</p>}
+    </Card>
+  );
+}
+
 function LoQueFalta({ onChanged }: { onChanged: () => void }) {
   const { t } = useTranslation();
   const [recarga, setRecarga] = useState(0);
@@ -343,6 +397,7 @@ export default function SettingsQuickBooks() {
             </Card>
           )}
 
+          {estado.connected && <QuienLlevaLaNomina />}
           {estado.connected && <LoQueFalta onChanged={() => setRecarga((n) => n + 1)} />}
         </>
       )}

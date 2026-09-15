@@ -89,3 +89,28 @@ pueda abrirlo ataría las dos cosas para siempre.
    necesita una tarjeta: necesita que la frase esté debajo del campo.
 
 Lo que nunca se hace es enseñar `err.message` de algo que no pasó por aquí.
+
+---
+
+## Borrar
+
+Casi todo lo que se borra tiene la misma forma: confirmar, llamar, y que el
+servidor pueda negarse porque eso ya tiene documentos colgando.
+`BorrarConHistorial` es esa forma, escrita una vez.
+
+**Cuando el servidor se niega, el botón de borrar desaparece.** Dejarlo invita a
+pulsarlo otra vez esperando un resultado distinto; lo que queda es el motivo y
+la salida. El motivo lo traduce `serverMessage` por el código, así que añadir un
+caso es añadir su texto en los cuatro idiomas y no tocar el componente.
+
+Lo que se niega, y por qué:
+
+| Código | Por qué |
+|---|---|
+| `client_has_history` | Borrar un cliente **arrastra sus facturas en cascada** en la base. Una factura emitida no se borra: dejaría un hueco en la serie |
+| `estimate_has_invoices` | De ese presupuesto salió una factura, y esa factura dice de dónde viene |
+| `employee_has_history`, `subcontractor_has_history` | Sus horas son el coste de una obra ya facturada |
+
+La cascada del cliente es el motivo de que esto se comprueba **antes** y no se
+deje decidir a la base: un borrado que se lleva la contabilidad por delante sin
+avisar es la peor forma posible de cumplir un «quiero borrar esto».

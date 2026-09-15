@@ -28,6 +28,7 @@ import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { BorrarConHistorial } from "@/components/BorrarConHistorial";
 
 interface EstimateSummary {
   id: string;
@@ -100,6 +101,7 @@ const emptyLineForm: { zone: string; category: EstimateLine["category"]; item: s
 export default function Budgets() {
   const { t, i18n } = useTranslation();
   const [reloadToken, setReloadToken] = useState(0);
+  const [borrandoPresupuesto, setBorrandoPresupuesto] = useState(false);
   const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
   const [newBudgetOpen, setNewBudgetOpen] = useState(false);
   const { data: summaries, loading: summariesLoading, error: summariesError, detalle: summariesDetalle } =
@@ -441,6 +443,17 @@ export default function Budgets() {
                         </SelectContent>
                       </Select>
                       <StatusBadge tone="info">{t(`budgets.estimateStatus.${draft.status}`, { defaultValue: draft.status })}</StatusBadge>
+                      {/* Borrar el presupuesto entero. El servidor se niega si
+                          de él salió una factura, y lo dice. */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-status-error-fg"
+                        aria-label={t("budgets.deleteEstimate")}
+                        onClick={() => setBorrandoPresupuesto(true)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
                     </div>
                   </div>
 
@@ -811,6 +824,21 @@ export default function Budgets() {
           <BudgetCategoriesPanel />
         </TabsContent>
       </Tabs>
+
+      {draft && borrandoPresupuesto && (
+        <BorrarConHistorial
+          titulo={t("budgets.deleteEstimate")}
+          confirmacion={t("budgets.deleteEstimateConfirm", {
+            number: draft.number ?? draft.id.slice(0, 8).toUpperCase(),
+          })}
+          ruta={`/api/estimates/${draft.id}`}
+          onBorrado={() => {
+            setActiveEstimateId(null);
+            setReloadToken((n) => n + 1);
+          }}
+          onCerrar={() => setBorrandoPresupuesto(false)}
+        />
+      )}
 
       {draft && (
         <Dialog open={pdfOpen} onOpenChange={setPdfOpen}>

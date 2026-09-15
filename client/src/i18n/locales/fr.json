@@ -150,7 +150,9 @@
       "commessas": "Nº de chantier",
       "facturas": "Factures",
       "fichajes": "Pointages"
-    }
+    },
+    "deleteClient": "Supprimer le client",
+    "deleteClientConfirm": "Supprimer {{name}} ? C'est irréversible."
   },
   "budgets": {
     "title": "Soumissions",
@@ -269,7 +271,9 @@
     "acceptEstimate": "Accepter la soumission (ouvre le chantier)",
     "acceptOnTheirBehalf": "Il vous a dit oui par WhatsApp, au téléphone ou sur le chantier même ? Acceptez-la vous-même ici. C'est ce bouton qui ouvre le chantier, met les travaux au calendrier et émet la première facture. Tant que vous n'y touchez pas, la soumission reste en attente.",
     "sendItYourselfHint": "Vous l'envoyez vous-même par WhatsApp ou par courriel ? Téléchargez le PDF ci-dessus et choisissez « {{boton}} » : elle est marquée comme envoyée sans que rien n'arrive dans sa messagerie.",
-    "projectionTitlePlaceholder": "Ex. Installer le plancher de la cuisine"
+    "projectionTitlePlaceholder": "Ex. Installer le plancher de la cuisine",
+    "deleteEstimate": "Supprimer la soumission",
+    "deleteEstimateConfirm": "Supprimer la soumission {{number}} ? C'est irréversible."
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -462,7 +466,9 @@
     "codeIssued": "Code émis",
     "noCodeYet": "Aucun code",
     "newPwaCode": "Générer un nouveau code",
-    "rateStars": "Noter {{count}} étoiles"
+    "rateStars": "Noter {{count}} étoiles",
+    "deleteSub": "Supprimer le sous-traitant",
+    "deleteSubConfirm": "Supprimer {{name}} ? C'est irréversible."
   },
   "clientPortal": {
     "title": "Portail client",
@@ -1437,7 +1443,13 @@
     "credit_note_needs_reason": "Il faut indiquer pourquoi elle est corrigée.",
     "invoice_fully_credited": "Cette facture est déjà corrigée en totalité.",
     "credit_note_exceeds_invoice": "Vous ne pouvez pas corriger plus que ce qu'il reste à corriger sur cette facture.",
-    "credit_note_not_found": "Nous n'avons pas trouvé cette note de crédit."
+    "credit_note_not_found": "Nous n'avons pas trouvé cette note de crédit.",
+    "client_has_history": "Suppression impossible : ce client a déjà des soumissions, des chantiers ou des factures. Le supprimer emporterait ces documents, et une facture émise ne se supprime pas.",
+    "estimate_has_invoices": "Suppression impossible : une facture est issue de cette soumission, et cette facture dit d'où elle vient.",
+    "subcontractor_has_history": "Suppression impossible : cette personne a déjà des heures pointées ou des payes émises. Ces heures sont le coût d'un chantier.",
+    "client_not_found": "Ce client n'existe plus.",
+    "estimate_not_found": "Cette soumission n'existe plus.",
+    "subcontractor_not_found": "Cette personne n'existe plus."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1753,7 +1765,7 @@
           "title": "Ce qui part tout seul vers QuickBooks",
           "p1": "La connexion se fait une fois, dans {{menuAjustes}} → {{menuQuickBooks}}. Ensuite il n'y a rien à cliquer : ce que vous émettez ici apparaît là-bas tout seul, en arrière-plan, sans attendre.",
           "p2": "Y vont le client, la soumission, la facture, la note de crédit, le paiement —par carte comme celui que vous avez inscrit comptant— et la dépense. Chacun dès que vous l'émettez ou l'inscrivez, et le paiement reste rattaché à sa facture, pour qu'elle n'y figure plus comme impayée.",
-          "p3": "Le contrat de travail n'y va pas : ce n'est pas un document comptable. La paie si, mais en **écriture de journal**, pas en paie QuickBooks — c'est un autre produit payant chez eux, dans lequel on ne peut pas écrire de l'extérieur. L'écriture porte les salaires, les retenues regroupées par destinataire, et la part de l'employeur. C'est exactement ce qu'il faut pour déclarer.",
+          "p3": "Le contrat de travail n'y va pas : ce n'est pas un document comptable. La paie si, mais en **écriture de journal**, pas en paie QuickBooks — c'est un autre produit payant chez eux, dans lequel on ne peut pas écrire de l'extérieur. **Et si vous utilisez déjà QuickBooks Payroll, dites-le sur son écran** : on n'envoie alors pas l'écriture, parce qu'il écrit la sienne et les salaires seraient comptés deux fois.",
           "p4": "La lecture marche aussi dans l'autre sens. Si votre comptable change là-bas un montant, une date ou l'état d'une facture, ça revient ici et se voit dans {{menuFacturacion}}, pour ne pas finir avec deux vérités différentes.",
           "nota": "Chaque facture affiche où en est son envoi. Si elle dit que ça a échoué, le bouton pour réessayer est juste là."
         },
@@ -1800,6 +1812,13 @@
           "p2": "S'il dit que votre session a expiré, reconnectez-vous et vous reprenez où vous étiez. S'il dit que l'erreur vient de nous, elle vient vraiment de nous : attendez un instant et réessayez, car c'est presque toujours un mauvais moment du serveur et ça se règle tout seul.",
           "p3": "Si ça revient, ouvrez « Voir le détail technique » sur l'avis lui-même et envoyez-nous cette ligne. C'est la réponse du serveur, et c'est la seule chose qui nous permet de savoir ce qui s'est passé sans deviner.",
           "nota": "L'avis ne vous montrera jamais un code tout seul ni une phrase dans une langue que vous n'avez pas choisie. Si vous en voyez un, c'est une erreur de notre côté et nous voulons aussi le savoir."
+        },
+        "borrar": {
+          "title": "Supprimer, et ce qui refuse de se supprimer",
+          "p1": "Presque tout se supprime depuis son propre écran : le client et la soumission ont leur corbeille, la personne et la feuille de paie aussi. Si vous ne voyez pas le bouton, c'est que cet écran ne l'a pas encore et il faut nous le dire.",
+          "p2": "Certaines choses, le système refuse de les supprimer, et il vous dit pourquoi. Un client avec des factures ne se supprime pas, parce que le supprimer les emporterait — et une facture émise ne se supprime jamais : ça laisserait un trou dans la série séquentielle, ce qu'un inspecteur regarde en premier. Pareil pour quelqu'un qui a des heures pointées : ces heures sont le coût d'un chantier déjà facturé.",
+          "p3": "Pour corriger une facture il y a la note de crédit, pas la suppression. Les deux restent dans les livres, c'est ainsi qu'un exercice doit pouvoir se reconstituer des mois plus tard.",
+          "nota": "Si un client vous demande d'effacer ses données et que ça refuse parce qu'il a des factures, écrivez-nous : il y a une obligation légale derrière et il y a moyen de la régler sans casser la comptabilité."
         }
       },
       "queOcurre": {
@@ -2029,7 +2048,12 @@
       "stale": "Quelqu'un a modifié ce document dans QuickBooks pendant l'envoi. Réessayez et il se mettra à jour.",
       "order": "Il manque quelque chose dont il dépend : son client ou sa facture n'y est pas encore. Faites Tout réessayer et ils partiront dans l'ordre.",
       "generic": "QuickBooks l'a refusé et nous ne savons pas pourquoi. Réessayez ; si ça échoue encore, ouvrez le détail technique et envoyez-le-nous."
-    }
+    },
+    "payrollTitle": "Qui fait votre paie",
+    "payrollHint": "QuickBooks a son propre produit de paie, à part et payant. Si vous l'utilisez, il écrit déjà l'écriture de chaque paie dans vos livres.",
+    "payrollTheirs": "Ma paie se fait sur QuickBooks Payroll",
+    "payrollTheirsHint": "Cochez si vous payez vos gens depuis QuickBooks. Si vous laissez décoché, l'écriture de chaque feuille émise ici part là-bas toute seule.",
+    "payrollTheirsNote": "Coché, on n'envoie pas l'écriture de paie, pour que les salaires ne soient pas comptés deux fois. Ce que vous payez aux sous-traitants continue de partir : ce n'est pas de la paie et QuickBooks Payroll ne l'inscrit pas."
   },
   "creditNotes": {
     "issue": "Note de crédit",

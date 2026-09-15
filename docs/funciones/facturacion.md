@@ -274,6 +274,18 @@ contra las reglas reales de Quebec incluyendo los casos que la romperían: topes
 anuales ya alcanzados, primas gravables, gastos devueltos y ajustes negativos
 mayores que el bruto.
 
+**Si su nómina la lleva QuickBooks Payroll, el asiento no se manda.** Es otro
+producto de Intuit y escribe sus propios asientos: los dos juntos dejan los
+salarios **contados dos veces**, y es de los errores que no se ven, porque cada
+asiento cuadra por separado y lo único raro es que el gasto de personal sale el
+doble. Se pregunta en la pantalla de QuickBooks porque no hay forma de saberlo
+desde su API. Lo pagado a subcontratistas sí sigue yendo: no es nómina y
+QuickBooks Payroll no lo apunta.
+
+Cuando está marcado **no se apunta nada** en `quickbooks_links`. Marcarlo como
+enviado sería decir que está allí cuando no está, y la pantalla lo enseñaría
+como sincronizado.
+
 **Un subcontratista no va como salario.** Va como compra contra una cuenta de
 gastos. Un subcontratista factura, y meterlo en los libros como sueldo le
 cambia a quien le paga sus obligaciones de retención en la fuente — que es

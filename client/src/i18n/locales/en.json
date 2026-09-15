@@ -150,7 +150,9 @@
       "commessas": "Job numbers",
       "facturas": "Invoices",
       "fichajes": "Clock-ins"
-    }
+    },
+    "deleteClient": "Delete client",
+    "deleteClientConfirm": "Delete {{name}}? This can't be undone."
   },
   "budgets": {
     "title": "Budgets & Estimates",
@@ -269,7 +271,9 @@
     "acceptEstimate": "Accept estimate (opens the project)",
     "acceptOnTheirBehalf": "Did they say yes over WhatsApp, on the phone, or right there on site? Accept it here yourself. This button is what opens the project, puts the work on the calendar and issues the first invoice. Until you press it, the estimate just sits there waiting.",
     "sendItYourselfHint": "Sending it yourself by WhatsApp or email? Download the PDF above and choose “{{boton}}”: it gets marked as sent without anything landing in their chat.",
-    "projectionTitlePlaceholder": "E.g. Install kitchen flooring"
+    "projectionTitlePlaceholder": "E.g. Install kitchen flooring",
+    "deleteEstimate": "Delete estimate",
+    "deleteEstimateConfirm": "Delete estimate {{number}}? This can't be undone."
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -462,7 +466,9 @@
     "codeIssued": "Code issued",
     "noCodeYet": "No code yet",
     "newPwaCode": "Generate a new code",
-    "rateStars": "Rate {{count}} stars"
+    "rateStars": "Rate {{count}} stars",
+    "deleteSub": "Delete subcontractor",
+    "deleteSubConfirm": "Delete {{name}}? This can't be undone."
   },
   "clientPortal": {
     "title": "Client Portal",
@@ -1437,7 +1443,13 @@
     "credit_note_needs_reason": "You have to say why it's being corrected.",
     "invoice_fully_credited": "This invoice has already been corrected in full.",
     "credit_note_exceeds_invoice": "You can't correct more than what's left to correct on that invoice.",
-    "credit_note_not_found": "We couldn't find that credit note."
+    "credit_note_not_found": "We couldn't find that credit note.",
+    "client_has_history": "Can't delete: this client already has estimates, jobs or invoices. Deleting would take those documents with it, and an issued invoice is never deleted.",
+    "estimate_has_invoices": "Can't delete: an invoice came from this estimate, and that invoice says where it came from.",
+    "subcontractor_has_history": "Can't delete: this person already has logged hours or issued pay sheets. Those hours are a job's cost.",
+    "client_not_found": "That client no longer exists.",
+    "estimate_not_found": "That estimate no longer exists.",
+    "subcontractor_not_found": "That person no longer exists."
   },
   "workLog": {
     "title": "Work log",
@@ -1753,7 +1765,7 @@
           "title": "What goes to QuickBooks on its own",
           "p1": "You connect it once, in {{menuAjustes}} → {{menuQuickBooks}}. After that there is nothing to press: what you issue here shows up there by itself, in the background, with no waiting.",
           "p2": "That covers the client, the estimate, the invoice, the credit note, the payment —card or the cash one you recorded by hand— and the expense. Each one as soon as you issue or record it, and the payment is attached to its invoice, so it stops sitting there as unpaid.",
-          "p3": "Work agreements don't go: an agreement isn't an accounting document. Payroll does, but as a **journal entry**, not as QuickBooks payroll — that's a separate paid product of theirs that can't be written to from outside. The entry carries the wages, the deductions grouped by who they're remitted to, and the employer's own contributions. Which is exactly what filing needs.",
+          "p3": "Work agreements don't go: an agreement isn't an accounting document. Payroll does, but as a **journal entry**, not as QuickBooks payroll — that's a separate paid product of theirs you can't write to from outside. **And if you already use QuickBooks Payroll, say so on its screen**: then we don't send the entry, because it writes its own and wages would be counted twice.",
           "p4": "It also reads back. If your accountant changes an amount, a date or an invoice's status over there, the change comes back here and you see it in {{menuFacturacion}}, so you never end up with two different truths.",
           "nota": "Every invoice shows the state of its sync. If it says it failed, the retry button is right there."
         },
@@ -1800,6 +1812,13 @@
           "p2": "If it says your session expired, sign in again and you're back where you were. If it says the fault is ours, it really is: wait a moment and retry, because it's almost always a bad moment on the server and it clears by itself.",
           "p3": "If it comes back, open \"Show technical detail\" on the notice itself and send us that line. It holds what the server answered, and it's the only thing that lets us know what happened without guessing.",
           "nota": "The notice will never show you a bare code or a sentence in a language you didn't pick. If you see one, that's a bug on our side and we want to hear about it too."
+        },
+        "borrar": {
+          "title": "Deleting things, and what won't delete",
+          "p1": "Almost everything deletes from its own screen: clients and estimates have a bin, so do people and pay sheets. If you can't see the button, that screen doesn't have it yet and we want to hear about it.",
+          "p2": "Some things the system refuses to delete, and tells you why. A client with invoices won't delete, because deleting would take those invoices with it — and an issued invoice is never deleted: it would leave a hole in the sequential numbering, which is the first thing an inspector looks at. Same with someone who has logged hours: those hours are the cost of a job you've already billed.",
+          "p3": "To correct an invoice there's the credit note, not deletion. Both stay in the books, which is how a year has to be reconstructable months later.",
+          "nota": "If a client asks you to delete their data and it won't because they have invoices, write to us: there's a legal obligation behind that and there's a way to handle it without breaking the accounting."
         }
       },
       "queOcurre": {
@@ -2029,7 +2048,12 @@
       "stale": "Someone changed that document in QuickBooks while it was being sent. Retry and it'll catch up.",
       "order": "Something it depends on is missing: its customer or its invoice isn't there yet. Hit Retry all and they'll go in order.",
       "generic": "QuickBooks rejected it and we don't know why. Retry; if it fails again, open the technical detail and send it to us."
-    }
+    },
+    "payrollTitle": "Who runs your payroll",
+    "payrollHint": "QuickBooks has its own payroll product, separate and paid. If you use it, it already writes each pay run's journal entry into your books.",
+    "payrollTheirs": "My payroll runs on QuickBooks Payroll",
+    "payrollTheirsHint": "Tick this if you pay your people from QuickBooks. Left unticked, the journal entry for every sheet you issue here is sent there on its own.",
+    "payrollTheirsNote": "With this ticked we don't send the payroll entry, so wages aren't counted twice. What you pay subcontractors still goes: that isn't payroll and QuickBooks Payroll doesn't record it."
   },
   "creditNotes": {
     "issue": "Credit note",

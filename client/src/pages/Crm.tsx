@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge, leadStatusTone } from "@/components/StatusBadge";
-import { Plus, Search, Pencil } from "lucide-react";
+import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +17,7 @@ import { TablaObras, TablaCommessas, TablaFacturas, TablaFichajes } from "@/comp
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { BorrarConHistorial } from "@/components/BorrarConHistorial";
 
 interface Client {
   id: string;
@@ -113,6 +114,7 @@ export default function Crm() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<LeadStatus | "all">("all");
   const [draft, setDraft] = useState<ClientDraft | null>(null);
+  const [borrando, setBorrando] = useState<Client | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -253,7 +255,7 @@ export default function Crm() {
                     <td className="py-3 text-muted-foreground">{client.phone}</td>
                     <td className="py-3">
                       <StatusBadge tone={leadStatusTone[client.leadStatus]}>
-                        {t(`crm.status.${client.leadStatus}`)}
+                        {t(`crm.status.${client.leadStatus}`, { defaultValue: client.leadStatus })}
                       </StatusBadge>
                     </td>
                     <td className="py-3 text-muted-foreground">{client.source}</td>
@@ -276,6 +278,13 @@ export default function Crm() {
                       >
                         <Pencil size={14} strokeWidth={1.75} />
                       </button>
+                      <button
+                        aria-label={t("common.delete")}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-status-error-fg hover:bg-card transition-colors"
+                        onClick={() => setBorrando(client)}
+                      >
+                        <Trash2 size={14} strokeWidth={1.75} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -293,6 +302,16 @@ export default function Crm() {
       </Card>
         </TabsContent>
       </Tabs>
+
+      {borrando && (
+        <BorrarConHistorial
+          titulo={t("crm.deleteClient")}
+          confirmacion={t("crm.deleteClientConfirm", { name: borrando.name })}
+          ruta={`/api/clients/${borrando.id}`}
+          onBorrado={reload}
+          onCerrar={() => setBorrando(null)}
+        />
+      )}
 
       <Dialog open={draft !== null} onOpenChange={(open) => !open && setDraft(null)}>
         <DialogContent className="sm:max-w-md">

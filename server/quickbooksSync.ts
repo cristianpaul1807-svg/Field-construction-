@@ -1150,6 +1150,12 @@ export async function enviarNomina(admin: Admin, businessId: string, runId: stri
   const enlace = await leerEnlace(admin, businessId, "payroll", runId);
   if (enlace?.qbo_id) return;
 
+  const { data: negocio } = await admin
+    .from("businesses")
+    .select("payroll_in_quickbooks")
+    .eq("id", businessId)
+    .maybeSingle();
+
   const { data: hoja } = await admin
     .from("payroll_runs")
     .select(
@@ -1168,6 +1174,20 @@ export async function enviarNomina(admin: Admin, businessId: string, runId: stri
       await comoCompra(admin, businessId, runId, hoja);
       return;
     }
+
+    // Si su nómina la lleva QuickBooks Payroll, el asiento ya lo escribe él.
+    // Mandar el nuestro dejaría los salarios contados dos veces: los libros
+    // cuadrarían igual —los dos asientos cuadran por separado— y el gasto de
+    // personal sería el doble del real, que es de los errores que no se ven
+    // hasta que alguien mira el beneficio y no le sale.
+    //
+    // Lo de arriba no lleva esta condición a propósito: lo pagado a un
+    // subcontratista no es nómina y QuickBooks Payroll no lo apunta.
+    // No se apunta nada: marcarlo como enviado sería decir que está allí
+    // cuando no está, y la pantalla lo enseñaría como sincronizado. Sin fila,
+    // la hoja no sale en «lo que no llegó» ni promete nada que no pasó.
+    if (negocio?.payroll_in_quickbooks === true) return;
+
     await comoAsiento(admin, businessId, runId, hoja);
   } catch (err) {
     await anotar(admin, businessId, "payroll", runId, { status: "fallo", error: motivo(err) });

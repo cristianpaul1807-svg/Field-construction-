@@ -9837,6 +9837,166 @@ apiRouter.delete(
   })
 );
 
+/**
+ * Borrar un cliente.
+ *
+ * **Lo primero: en la base, borrar un cliente arrastra sus facturas en
+ * cascada.** Eso no puede pasar nunca. Una factura emitida no se borra —deja un
+ * hueco en la serie correlativa, que es de lo primero que mira un inspector— y
+ * un borrado que se lleva por delante la contabilidad sin avisar es la peor
+ * forma posible de cumplir un «quiero borrar esto».
+ *
+ * Así que se comprueba antes y se dice qué lo impide, en vez de dejar que la
+ * cascada decida. Un cliente sin nada emitido se borra entero, que es el caso
+ * de verdad: el contacto que se metió mal, o el que pide que le borremos sus
+ * datos.
+ */
+apiRouter.delete(
+  "/clients/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const id = req.params.id;
+
+    const { data: cliente } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("business_id", req.businessId!)
+      .eq("id", id)
+      .maybeSingle();
+    if (!cliente) {
+      res.status(404).json({ error: "client not found", code: "client_not_found" });
+      return;
+    }
+
+    const contar = (tabla: string) =>
+      supabase
+        .from(tabla)
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", req.businessId!)
+        .eq("client_id", id);
+    const [facturas, presupuestos, obras] = await Promise.all([
+      contar("invoices"),
+      contar("estimates"),
+      contar("projects"),
+    ]);
+    const emitidas = facturas.count ?? 0;
+    const suyos = presupuestos.count ?? 0;
+    const suyas = obras.count ?? 0;
+    if (emitidas > 0 || suyos > 0 || suyas > 0) {
+      res.status(409).json({
+        error: "client has history",
+        code: "client_has_history",
+        invoices: emitidas,
+        estimates: suyos,
+        projects: suyas,
+      });
+      return;
+    }
+
+    const { error } = await supabase.from("clients").delete().eq("business_id", req.businessId!).eq("id", id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+/**
+ * Borrar un presupuesto.
+ *
+ * Si de él salió una factura no se borra: esa factura dice de dónde viene, y
+ * dejarla apuntando a algo que ya no existe convierte una cadena que se puede
+ * auditar en un número suelto. La obra y la agenda sí sobreviven —su referencia
+ * se pone a nulo sola— porque la obra existe por su cuenta una vez empezada.
+ */
+apiRouter.delete(
+  "/estimates/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const id = req.params.id;
+
+    const { data: presupuesto } = await supabase
+      .from("estimates")
+      .select("id")
+      .eq("business_id", req.businessId!)
+      .eq("id", id)
+      .maybeSingle();
+    if (!presupuesto) {
+      res.status(404).json({ error: "estimate not found", code: "estimate_not_found" });
+      return;
+    }
+
+    const { count } = await supabase
+      .from("invoices")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", req.businessId!)
+      .eq("estimate_id", id);
+    if ((count ?? 0) > 0) {
+      res.status(409).json({ error: "estimate has invoices", code: "estimate_has_invoices", invoices: count ?? 0 });
+      return;
+    }
+
+    const { error } = await supabase.from("estimates").delete().eq("business_id", req.businessId!).eq("id", id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+/**
+ * Borrar un subcontratista.
+ *
+ * Mismo criterio que con un empleado: si tiene horas fichadas o pagas emitidas,
+ * no se borra. Esas horas son el coste de una obra y esas pagas son un apunte
+ * contable; borrar a la persona los dejaría sin dueño y cambiaría hacia atrás
+ * lo que costó un trabajo que ya se facturó.
+ */
+apiRouter.delete(
+  "/subcontractors/:id",
+  route(async (req, res) => {
+    const supabase = req.supabase!;
+    const id = req.params.id;
+
+    const { data: quien } = await supabase
+      .from("subcontractors")
+      .select("id")
+      .eq("business_id", req.businessId!)
+      .eq("id", id)
+      .maybeSingle();
+    if (!quien) {
+      res.status(404).json({ error: "subcontractor not found", code: "subcontractor_not_found" });
+      return;
+    }
+
+    const [fichajes, nominas] = await Promise.all([
+      supabase.from("time_entries").select("id", { count: "exact", head: true })
+        .eq("business_id", req.businessId!).eq("subcontractor_id", id),
+      supabase.from("payroll_runs").select("id", { count: "exact", head: true })
+        .eq("business_id", req.businessId!).eq("subcontractor_id", id),
+    ]);
+    const horas = fichajes.count ?? 0;
+    const pagas = nominas.count ?? 0;
+    if (horas > 0 || pagas > 0) {
+      res.status(409).json({
+        error: "subcontractor has history",
+        code: "subcontractor_has_history",
+        entries: horas,
+        payrolls: pagas,
+      });
+      return;
+    }
+
+    await supabase.from("schedule_events").update({ assigned_subcontractor_id: null })
+      .eq("business_id", req.businessId!).eq("assigned_subcontractor_id", id);
+    await supabase.from("work_orders").update({ assigned_subcontractor_id: null })
+      .eq("business_id", req.businessId!).eq("assigned_subcontractor_id", id);
+    await supabase.from("assignments").delete()
+      .eq("business_id", req.businessId!).eq("subcontractor_id", id);
+
+    const { error } = await supabase.from("subcontractors").delete()
+      .eq("business_id", req.businessId!).eq("id", id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 apiRouter.patch(
   "/subcontractors/:id",
   route(async (req, res) => {
@@ -11572,7 +11732,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, country, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, ccq_employer_number, ccq_subject"
+        "id, name, slug, license_number, tax_config, country, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, ccq_employer_number, ccq_subject, payroll_in_quickbooks"
       )
       .eq("id", req.businessId!)
       .single();
@@ -11606,6 +11766,7 @@ apiRouter.get(
       // su trabajo está sujeto a la loi R-20 lo sabe él, no nosotros.
       ccqEmployerNumber: data.ccq_employer_number ?? null,
       ccqSubject: data.ccq_subject === true,
+      payrollInQuickbooks: data.payroll_in_quickbooks === true,
     });
   })
 );
@@ -11734,6 +11895,9 @@ apiRouter.patch(
     if (body.estimateTerms !== undefined) update.estimate_terms = body.estimateTerms || null;
     if (body.estimateShowMaterials !== undefined) update.estimate_show_materials = Boolean(body.estimateShowMaterials);
     if (body.estimateShowSchedule !== undefined) update.estimate_show_schedule = Boolean(body.estimateShowSchedule);
+    if (body.payrollInQuickbooks !== undefined) {
+      update.payroll_in_quickbooks = Boolean(body.payrollInQuickbooks);
+    }
     if (body.ccqEmployerNumber !== undefined || body.ccqSubject !== undefined) {
       const { data: actual } = await supabase
         .from("businesses")

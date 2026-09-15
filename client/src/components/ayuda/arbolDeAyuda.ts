@@ -138,6 +138,9 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // aquí aunque nadie lo busque por su nombre: quien llega ya está
       // mirando el aviso y lo que necesita es el siguiente paso.
       { id: "avisoDeFallo", parrafos: 3, nota: true },
+      // Lo que el sistema se niega a borrar tiene siempre un motivo contable,
+      // y sin explicarlo parece que el botón está roto.
+      { id: "borrar", parrafos: 3, nota: true },
     ],
   },
 ];
