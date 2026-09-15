@@ -328,7 +328,10 @@
       "efectivo": "Comptant",
       "cheque": "Chèque",
       "otro": "Autre"
-    }
+    },
+    "stripeFee": "Frais Stripe {{fee}} · vous avez reçu {{net}}",
+    "stripeFeeTax": "Sur ces frais, {{tax}} sont des taxes que vous récupérez dans votre déclaration.",
+    "stripeFeePending": "Stripe n'a pas encore confirmé ses frais pour ce paiement."
   },
   "payments": {
     "title": "Paiements (Stripe)",
@@ -1747,6 +1750,13 @@
           "p2": "Chaque ligne a son bouton pour réessayer, et en haut il y en a un qui les renvoie tous. Celui-là y va un par un exprès : une facture ne peut pas monter avant son client, et vingt appels d'un coup, c'est comme ça qu'Intuit vous limite.",
           "p3": "Que ça ne parte pas ne casse rien ici. Le document existe, le client le voit, vous pouvez encaisser. QuickBooks est la destination, pas la permission.",
           "nota": "Si vous réessayez et que ça échoue encore, ouvrez le détail technique de cette ligne et envoyez-le-nous. C'est la réponse mot pour mot de QuickBooks, et c'est ce qu'il faut pour corriger."
+        },
+        "comisionStripe": {
+          "title": "Les frais Stripe et où les voir",
+          "p1": "Quand un client paie par carte, Stripe garde ses frais avant de vous déposer le reste. Une facture de 5 000 $ ne laisse pas 5 000 $ dans votre compte, et ce n'est pas une erreur : c'est ce que coûte l'encaissement par carte.",
+          "p2": "Sur la facture, sous « carte », on vous dit combien Stripe a pris et combien vous est réellement parvenu. Le chiffre sort du registre de votre propre compte Stripe, pas d'un tarif saisi à la main, donc il est exact même quand paie une carte étrangère, qui porte un supplément.",
+          "p3": "Une partie de ces frais est de la TPS et de la TVQ, parce que Stripe vous facture un service. Cette taxe n'est pas une dépense : vous la récupérez dans votre déclaration. C'est pour ça qu'elle est dite à part, et qu'elle part vers QuickBooks séparée, en frais bancaires avec sa taxe ventilée.",
+          "nota": "Ça met quelques minutes à apparaître : Stripe enregistre la transaction après l'encaissement. En attendant, la facture dit que les frais restent à confirmer, et ça se remplit tout seul la prochaine fois que vous ouvrez la facturation."
         }
       },
       "problemas": {
@@ -1973,7 +1983,8 @@
       "customer": "Client",
       "payment": "Encaissement",
       "estimate": "Soumission",
-      "expense": "Dépense"
+      "expense": "Dépense",
+      "stripe_fee": "Frais Stripe"
     },
     "fix": {
       "tax": "Il manque à votre QuickBooks un code de taxe utilisable sur une vente. Créez-le sous Taxes → Sales tax et réessayez.",

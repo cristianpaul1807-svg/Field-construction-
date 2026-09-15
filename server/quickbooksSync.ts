@@ -21,7 +21,7 @@ import type { getSupabaseAdmin } from "./supabaseAdmin";
  */
 
 type Admin = ReturnType<typeof getSupabaseAdmin>;
-type Tipo = "customer" | "invoice" | "credit_note" | "payment" | "estimate" | "expense";
+type Tipo = "customer" | "invoice" | "credit_note" | "payment" | "estimate" | "expense" | "stripe_fee";
 
 interface Enlace {
   qbo_id: string | null;
@@ -630,6 +630,16 @@ export async function enviarPago(admin: Admin, businessId: string, paymentId: st
     const clienteQbo = clienteId ? await enviarCliente(admin, businessId, clienteId) : null;
     if (!clienteQbo) throw new Error("el cobro no tiene cliente en QuickBooks");
 
+    // A la cuenta bancaria, no a la de fondos sin depositar que QuickBooks usa
+    // por defecto. Con tarjeta, la comisión de Stripe se apunta como una
+    // compra pagada desde el banco, y si el cobro no ha entrado ahí el banco se
+    // queda en negativo por el importe de la comisión: dos apuntes correctos
+    // que juntos enseñan una cuenta que no existe.
+    //
+    // Si ese plan contable no tiene cuenta bancaria, se deja que QuickBooks
+    // elija. Es su plan, no el nuestro.
+    const cuentaDelDeposito = pago.method === "stripe" ? await idDeCuenta(admin, businessId, "Bank") : null;
+
     const creado = await llamar<{ Payment?: { Id: string; SyncToken: string } }>(
       admin,
       businessId,
@@ -639,6 +649,7 @@ export async function enviarPago(admin: Admin, businessId: string, paymentId: st
         body: {
           CustomerRef: { value: clienteQbo },
           TotalAmt: Number(pago.amount),
+          ...(cuentaDelDeposito ? { DepositToAccountRef: { value: cuentaDelDeposito } } : {}),
           TxnDate: String(pago.paid_at ?? new Date().toISOString()).slice(0, 10),
           // Con qué se cobró, para que el contable pueda casarlo con el banco.
           PrivateNote: [pago.method, pago.reference].filter(Boolean).join(" · ") || undefined,
@@ -879,12 +890,16 @@ export async function loQueFalta(admin: Admin, businessId: string) {
   // Los rótulos salen de cada tabla, para que la lista diga "Factura
   // 2026-0003 · Nestor" y no un identificador que no le dice nada a nadie.
   const porTipo = (kind: string) => filas.filter((f: any) => f.kind === kind).map((f: any) => f.local_id);
-  const [facturas, notas, clientes, presupuestos, gastos] = await Promise.all([
+  const [facturas, notas, clientes, presupuestos, gastos, comisiones] = await Promise.all([
     admin.from("invoices").select("id, number, amount, clients(name)").in("id", porTipo("invoice").length ? porTipo("invoice") : ["-"]),
     admin.from("credit_notes").select("id, number, amount").in("id", porTipo("credit_note").length ? porTipo("credit_note") : ["-"]),
     admin.from("clients").select("id, name").in("id", porTipo("customer").length ? porTipo("customer") : ["-"]),
     admin.from("estimates").select("id, number").in("id", porTipo("estimate").length ? porTipo("estimate") : ["-"]),
     admin.from("expenses").select("id, description, amount").in("id", porTipo("expense").length ? porTipo("expense") : ["-"]),
+    admin
+      .from("payments")
+      .select("id, stripe_fee, invoices(number)")
+      .in("id", porTipo("stripe_fee").length ? porTipo("stripe_fee") : ["-"]),
   ]);
 
   const buscar = (kind: string, id: string): string => {
@@ -902,6 +917,10 @@ export async function loQueFalta(admin: Admin, businessId: string) {
       return e ? `EST-${e.number ?? ""}` : "";
     }
     if (kind === "expense") return ((gastos.data ?? []).find((x: any) => x.id === id) as any)?.description ?? "";
+    if (kind === "stripe_fee") {
+      const c = (comisiones.data ?? []).find((x: any) => x.id === id) as any;
+      return c ? [c.invoices?.number, c.stripe_fee ? `${c.stripe_fee}` : null].filter(Boolean).join(" · ") : "";
+    }
     // Un cobro no tiene nombre propio: se reconoce por su factura, y esa ya
     // sale en la lista si también falló.
     return "";
@@ -917,4 +936,184 @@ export async function loQueFalta(admin: Admin, businessId: string) {
     fix: comoArreglarlo(f.error),
     lastAttemptAt: f.last_attempt_at,
   }));
+}
+
+/**
+ * Una cuenta suya por tipo y, si se puede, por subtipo.
+ *
+ * La comisión de la pasarela tiene su sitio en cualquier plan contable —«Bank
+ * Charges», «Frais bancaires»— y meterla en la primera cuenta de gastos que
+ * aparezca la mezcla con los materiales. Se busca el subtipo primero y se cae
+ * al tipo sólo si ese plan no lo tiene.
+ */
+async function idDeCuentaPorSubtipo(
+  admin: Admin,
+  businessId: string,
+  tipo: string,
+  subtipos: string[]
+): Promise<string | null> {
+  for (const subtipo of subtipos) {
+    try {
+      const res = await llamar<{ QueryResponse?: { Account?: { Id: string }[] } }>(
+        admin,
+        businessId,
+        `query?query=${encodeURIComponent(
+          `select Id from Account where AccountType = '${tipo}' and AccountSubType = '${subtipo}' maxresults 1`
+        )}&minorversion=70`
+      );
+      const id = res.QueryResponse?.Account?.[0]?.Id;
+      if (id) return id;
+    } catch {
+      // Un subtipo que ese plan no conoce no es un error: se prueba el
+      // siguiente.
+    }
+  }
+  return idDeCuenta(admin, businessId, tipo);
+}
+
+/**
+ * El código de impuesto que sirve en una **compra**.
+ *
+ * No es el mismo que el de las ventas. Un código de venta no lleva tasa de
+ * compra, y usarlo aquí hace que QuickBooks no sepa calcular nada. Importa
+ * acertar: la TPS y la TVQ que Stripe cobra sobre su comisión son un crédito
+ * que el contratista recupera, y si entran como parte del gasto se pierden.
+ */
+async function idDelImpuestoDeCompra(admin: Admin, businessId: string, provincia: string): Promise<string | null> {
+  try {
+    const res = await llamar<{
+      QueryResponse?: {
+        TaxCode?: {
+          Id: string;
+          Name: string;
+          Active?: boolean;
+          Taxable?: boolean;
+          PurchaseTaxRateList?: { TaxRateDetail?: unknown[] };
+        }[];
+      };
+    }>(
+      admin,
+      businessId,
+      `query?query=${encodeURIComponent("select * from TaxCode maxresults 200")}&minorversion=70`
+    );
+
+    const candidatos = (res.QueryResponse?.TaxCode ?? []).filter(
+      (c) =>
+        c.Active !== false &&
+        c.Taxable !== false &&
+        (c.PurchaseTaxRateList?.TaxRateDetail?.length ?? 0) > 0 &&
+        !NO_ES_IMPUESTO.test(c.Name ?? "")
+    );
+    if (candidatos.length === 0) return null;
+
+    const pista = PISTA_DE_IMPUESTO[provincia.toUpperCase()];
+    const suyo = pista ? candidatos.find((c) => pista.test(c.Name ?? "")) : undefined;
+    return (suyo ?? candidatos[0]).Id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * La comisión de Stripe, como el gasto que es.
+ *
+ * Un cobro de 5 748,75 $ no deja 5 748,75 $ en el banco. Sin este apunte, en
+ * QuickBooks la factura queda cobrada entera y el depósito que llega es menor,
+ * y el contable tiene una diferencia que no puede explicar — que es justo el
+ * trabajo que esta integración existe para ahorrarle.
+ *
+ * Va como compra pagada desde la cuenta bancaria, porque eso es literalmente lo
+ * que pasó: Stripe se cobró de ese dinero antes de depositarlo.
+ *
+ * Y con el impuesto sacado aparte. En Canadá la comisión lleva TPS y TVQ
+ * encima; se manda **con impuesto incluido** para que el total cuadre con
+ * Stripe al centavo y sea QuickBooks quien lo desglose con sus propias tasas,
+ * que son las que mira el contable.
+ */
+export async function enviarComisionDeStripe(admin: Admin, businessId: string, paymentId: string): Promise<void> {
+  const enlace = await leerEnlace(admin, businessId, "stripe_fee", paymentId);
+  if (enlace?.qbo_id) return;
+
+  const { data: pago } = await admin
+    .from("payments")
+    .select("id, paid_at, stripe_fee, stripe_fee_tax, stripe_balance_txn_id, invoices(number)")
+    .eq("business_id", businessId)
+    .eq("id", paymentId)
+    .maybeSingle();
+  // Sin comisión apuntada todavía no hay nada que mandar, y no es un fallo: el
+  // dato aparece cuando Stripe asienta la transacción.
+  if (!pago || !pago.stripe_fee || Number(pago.stripe_fee) <= 0) return;
+
+  try {
+    const { data: empresa } = await admin
+      .from("businesses")
+      .select("province")
+      .eq("id", businessId)
+      .maybeSingle();
+
+    const [cuentaBanco, cuentaComision, impuesto] = await Promise.all([
+      idDeCuenta(admin, businessId, "Bank"),
+      idDeCuentaPorSubtipo(admin, businessId, "Expense", ["BankCharges", "OtherMiscellaneousServiceCost"]),
+      Number(pago.stripe_fee_tax) > 0
+        ? idDelImpuestoDeCompra(admin, businessId, empresa?.province ?? "QC")
+        : Promise.resolve(null),
+    ]);
+    if (!cuentaBanco || !cuentaComision) {
+      throw new Error(
+        "tu QuickBooks necesita una cuenta bancaria y una de gastos para registrar compras. Créalas en su plan contable y vuelve a intentarlo."
+      );
+    }
+
+    const factura = (pago.invoices as unknown as { number: string } | null)?.number ?? null;
+    const conImpuesto = Boolean(impuesto);
+    // Si su plan no tiene código de compra no se deja de mandar el gasto: se
+    // manda entero y se dice en el concepto cuánto era impuesto, para que su
+    // contable lo pueda reclasificar. Perder la comisión entera por no poder
+    // separar el impuesto sería cambiar un problema pequeño por uno grande.
+    const aviso =
+      !conImpuesto && Number(pago.stripe_fee_tax) > 0
+        ? `incl. taxes ${Number(pago.stripe_fee_tax).toFixed(2)}`
+        : null;
+
+    const creado = await llamar<{ Purchase?: { Id: string; SyncToken: string } }>(
+      admin,
+      businessId,
+      "purchase?minorversion=70",
+      {
+        method: "POST",
+        body: {
+          AccountRef: { value: cuentaBanco },
+          PaymentType: "Cash",
+          TxnDate: String(pago.paid_at ?? new Date().toISOString()).slice(0, 10),
+          GlobalTaxCalculation: conImpuesto ? "TaxInclusive" : "NotApplicable",
+          // La transacción del libro mayor de Stripe, que es como se casa este
+          // apunte con el depósito que llegó al banco.
+          PrivateNote: pago.stripe_balance_txn_id ?? undefined,
+          Line: [
+            {
+              DetailType: "AccountBasedExpenseLineDetail",
+              Amount: Number(pago.stripe_fee),
+              Description: ["Stripe", factura, aviso].filter(Boolean).join(" · "),
+              AccountBasedExpenseLineDetail: {
+                AccountRef: { value: cuentaComision },
+                ...(conImpuesto ? { TaxCodeRef: { value: impuesto } } : {}),
+              },
+            },
+          ],
+        },
+      }
+    );
+
+    const id = creado.Purchase?.Id;
+    if (!id) throw new Error("QuickBooks no devolvió un id de gasto");
+    await anotar(admin, businessId, "stripe_fee", paymentId, {
+      qbo_id: id,
+      sync_token: creado.Purchase?.SyncToken ?? null,
+      status: "enviado",
+      error: null,
+    });
+  } catch (err) {
+    await anotar(admin, businessId, "stripe_fee", paymentId, { status: "fallo", error: motivo(err) });
+    throw err;
+  }
 }

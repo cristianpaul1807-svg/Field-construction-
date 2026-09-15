@@ -49,6 +49,13 @@ interface Invoice {
   /** Cómo entró el dinero. `stripe` es la tarjeta; el resto lo apuntó el contratista. */
   paymentMethod: "stripe" | "efectivo" | "transferencia" | "cheque" | "otro" | null;
   paymentReference: string | null;
+  /** Lo que Stripe se quedó de este cobro, impuestos de su comisión incluidos.
+   *  `null` mientras Stripe no haya asentado la transacción. */
+  stripeFee: number | null;
+  /** La parte de esa comisión que es TPS/TVQ, que él recupera. */
+  stripeFeeTax: number | null;
+  /** Lo que de verdad llegó al banco. */
+  stripeNet: number | null;
   /** Lo ya acreditado con notas de crédito. */
   creditedAmount: number;
   /** Si llegó a QuickBooks. `null` cuando el negocio no lo usa. */
@@ -70,6 +77,38 @@ interface Invoice {
  * qué falta —un código de impuesto, una cuenta de ingresos— y esconderlo
  * detrás de «no se pudo» no ayuda a nadie a arreglarlo.
  */
+/**
+ * Lo que Stripe se llevó de un cobro.
+ *
+ * Una factura de 5 748,75 $ cobrada con tarjeta no deja 5 748,75 $ en el banco,
+ * y hasta ahora no había ningún sitio donde se pudiera ver la diferencia:
+ * arriba decía cobrado el total y en su cuenta había menos.
+ *
+ * El impuesto de la comisión se dice aparte porque no es un coste suyo: lo
+ * recupera en la declaración, y quien no lo sepa lo está regalando.
+ */
+function ComisionDeStripe({ invoice }: { invoice: Invoice }) {
+  const { t } = useTranslation();
+  if (invoice.paymentMethod !== "stripe") return null;
+
+  // Sin dato todavía no se enseña un cero: sería decir que no le costó nada.
+  if (invoice.stripeFee === null) {
+    return <p className="text-xs text-muted-foreground mt-0.5">{t("invoicing.stripeFeePending")}</p>;
+  }
+
+  return (
+    <p className="text-xs text-muted-foreground mt-0.5">
+      {t("invoicing.stripeFee", {
+        fee: formatCurrency(invoice.stripeFee),
+        net: formatCurrency(invoice.stripeNet ?? invoice.amount - invoice.stripeFee),
+      })}
+      {invoice.stripeFeeTax !== null && invoice.stripeFeeTax > 0 && (
+        <span className="block">{t("invoicing.stripeFeeTax", { tax: formatCurrency(invoice.stripeFeeTax) })}</span>
+      )}
+    </p>
+  );
+}
+
 function EstadoQuickBooks({ invoice, onRetried }: { invoice: Invoice; onRetried: () => void }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
@@ -716,6 +755,7 @@ export default function Invoicing() {
                       {invoice.paymentReference && ` · ${invoice.paymentReference}`}
                     </p>
                   )}
+                  {invoice.status === "pagado" && <ComisionDeStripe invoice={invoice} />}
                 </div>
 
                 <EstadoQuickBooks invoice={invoice} onRetried={reload} />
@@ -794,6 +834,7 @@ export default function Invoicing() {
                         {invoice.paymentReference && ` · ${invoice.paymentReference}`}
                       </p>
                     )}
+                    {invoice.status === "pagado" && <ComisionDeStripe invoice={invoice} />}
                   </td>
                   <td className="py-3 text-right">
                     <AccionesDeFactura

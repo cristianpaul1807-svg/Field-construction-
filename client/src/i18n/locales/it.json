@@ -328,7 +328,10 @@
       "efectivo": "Contanti",
       "cheque": "Assegno",
       "otro": "Altro"
-    }
+    },
+    "stripeFee": "Commissione Stripe {{fee}} · ti sono arrivati {{net}}",
+    "stripeFeeTax": "Di quella commissione, {{tax}} sono imposte che recuperi nella dichiarazione.",
+    "stripeFeePending": "Stripe non ha ancora confermato la sua commissione per questo incasso."
   },
   "payments": {
     "title": "Pagamenti (Stripe)",
@@ -1747,6 +1750,13 @@
           "p2": "Ogni riga ha il suo pulsante per riprovare, e in alto ce n'è uno che li rimanda tutti. Quello va uno alla volta apposta: una fattura non può salire prima del suo cliente, e venti chiamate in una volta è il modo per farsi limitare da Intuit.",
           "p3": "Se qualcosa non arriva, qui non si rompe niente. Il documento esiste, il cliente lo vede, puoi incassare. QuickBooks è la destinazione, non il permesso.",
           "nota": "Se riprovi e fallisce ancora, apri il dettaglio tecnico di quella riga e mandacelo. Lì c'è la risposta testuale di QuickBooks, che è quello che serve per sistemarlo."
+        },
+        "comisionStripe": {
+          "title": "La commissione di Stripe e dove si vede",
+          "p1": "Quando un cliente paga con carta, Stripe si tiene la sua commissione prima di depositarti il resto. Una fattura da 5.000 $ non lascia 5.000 $ sul tuo conto, e non è un errore: è quanto costa incassare con carta.",
+          "p2": "Sulla fattura, sotto «carta», ti dice quanto si è preso e quanto ti è arrivato davvero. Il dato esce dal registro del tuo conto Stripe, non da una tariffa scritta a mano, quindi è esatto anche quando paga una carta straniera, che ha un sovrapprezzo.",
+          "p3": "Parte di quella commissione è TPS e TVQ, perché Stripe ti sta fatturando un servizio. Quell'imposta non è una tua spesa: la recuperi nella dichiarazione. Per questo si dice a parte, e va su QuickBooks separata, come spesa bancaria con la sua imposta scorporata.",
+          "nota": "Ci mette qualche minuto a comparire: Stripe registra la transazione dopo l'incasso. Nel frattempo la fattura dice che la commissione è da confermare, e si riempie da sola la prossima volta che apri la fatturazione."
         }
       },
       "problemas": {
@@ -1973,7 +1983,8 @@
       "customer": "Cliente",
       "payment": "Incasso",
       "estimate": "Preventivo",
-      "expense": "Spesa"
+      "expense": "Spesa",
+      "stripe_fee": "Commissione Stripe"
     },
     "fix": {
       "tax": "Al tuo QuickBooks manca un codice d'imposta utilizzabile in una vendita. Crealo in Taxes → Sales tax e riprova.",

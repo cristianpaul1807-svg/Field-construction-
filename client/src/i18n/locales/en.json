@@ -328,7 +328,10 @@
       "efectivo": "Cash",
       "cheque": "Cheque",
       "otro": "Other"
-    }
+    },
+    "stripeFee": "Stripe fee {{fee}} · {{net}} reached you",
+    "stripeFeeTax": "Of that fee, {{tax}} is tax you claim back on your return.",
+    "stripeFeePending": "Stripe hasn't confirmed its fee for this payment yet."
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -1747,6 +1750,13 @@
           "p2": "Each row has its own retry, and there is one at the top that sends them all. That one goes one at a time on purpose: an invoice can't be uploaded before its client, and twenty calls at once is how Intuit starts throttling you.",
           "p3": "Something not arriving breaks nothing here. The document exists, the client sees it, you can get paid. QuickBooks is the destination, not the permission.",
           "nota": "If a retry fails again, open that row's technical detail and send it to us. It holds QuickBooks's own words, which is what's needed to fix it."
+        },
+        "comisionStripe": {
+          "title": "The Stripe fee and where to see it",
+          "p1": "When a client pays by card, Stripe keeps its fee before depositing the rest. A $5,000 invoice doesn't leave $5,000 in your account, and that isn't a fault: it's what card payments cost.",
+          "p2": "On the invoice, under \"card\", it tells you how much Stripe took and how much actually reached you. The figure comes from your own Stripe account's ledger, not from a rate typed in by hand, so it's exact even when a foreign card pays and carries a surcharge.",
+          "p3": "Part of that fee is GST and QST, because Stripe is billing you for a service. That tax isn't a cost of yours: you claim it back on your return. That's why it's stated separately, and why it goes to QuickBooks split out, as a bank charge with its tax broken down.",
+          "nota": "It takes a few minutes to appear: Stripe settles the transaction after charging. Until then the invoice says the fee is still to be confirmed, and it fills itself in the next time you open invoicing."
         }
       },
       "problemas": {
@@ -1973,7 +1983,8 @@
       "customer": "Customer",
       "payment": "Payment",
       "estimate": "Estimate",
-      "expense": "Expense"
+      "expense": "Expense",
+      "stripe_fee": "Stripe fee"
     },
     "fix": {
       "tax": "Your QuickBooks is missing a tax code that can be used on a sale. Create one under Taxes → Sales tax and try again.",

@@ -22,6 +22,7 @@ import {
   enviarPago as enviarPagoAQuickBooks,
   enviarPresupuesto as enviarPresupuestoAQuickBooks,
   enviarGasto as enviarGastoAQuickBooks,
+  enviarComisionDeStripe as enviarComisionAQuickBooks,
   loQueFalta as loQueFaltaEnQuickBooks,
 } from "./quickbooksSync";
 import {
@@ -59,6 +60,7 @@ import { receivables } from "./receivables";
 import { profitabilityByProject } from "./profitability";
 import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
+import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
 import {
@@ -751,6 +753,17 @@ async function registrarCobro(
     enviarEnSegundoPlano(enviarPagoAQuickBooks(admin, args.businessId, cobro.id), `cobro ${cobro.id}`);
   }
 
+  // Y lo que Stripe se quedó por el camino. Sin esto la factura queda cobrada
+  // entera en los dos sitios y el depósito que llega al banco es menor: una
+  // diferencia que el contable ve y no puede explicar.
+  //
+  // Puede que la comisión todavía no exista —Stripe tarda en asentar la
+  // transacción— y entonces no pasa nada aquí: la recoge el repaso que se hace
+  // al abrir la facturación.
+  if (cobro?.id && args.medio === "stripe") {
+    enviarEnSegundoPlano(apuntarYmandarComision(admin, args.businessId, cobro.id), `comisión ${cobro.id}`);
+  }
+
   // The final payment landing is what closes a job. A deposit or a
   // progress payment does not: there is still work owed.
   if (invoice.type === "final" && invoice.project_id) {
@@ -762,6 +775,21 @@ async function registrarCobro(
     });
   }
   return true;
+}
+
+/**
+ * Apuntar la comisión de un cobro y mandarla a QuickBooks, en ese orden.
+ *
+ * Los dos pasos juntos porque el segundo no tiene sentido sin el primero: sin
+ * saber cuánto se llevó Stripe no hay gasto que mandar.
+ */
+async function apuntarYmandarComision(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  paymentId: string
+): Promise<void> {
+  const apuntada = await capturarComision(admin, businessId, paymentId);
+  if (apuntada) await enviarComisionAQuickBooks(admin, businessId, paymentId);
 }
 
 // Stripe fires this on the CONNECTED account's events (since these are
@@ -7171,7 +7199,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference), credit_notes(amount)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference, stripe_fee, stripe_fee_tax, stripe_net), credit_notes(amount)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
@@ -7218,6 +7246,24 @@ apiRouter.get(
         // le hace falta la diferencia.
         paymentMethod: i.payments?.[0]?.method ?? null,
         paymentReference: i.payments?.[0]?.reference ?? null,
+        // Lo que Stripe se quedó y lo que de verdad llegó al banco. Sin esto
+        // la pantalla dice que cobró 5 748,75 $ y en su cuenta hay menos, y no
+        // hay ningún sitio donde ver por qué.
+        //
+        // `null` mientras Stripe no haya asentado la transacción, que tarda
+        // unos minutos: enseñar un cero sería decir que no le costó nada.
+        stripeFee:
+          i.payments?.[0]?.stripe_fee === null || i.payments?.[0]?.stripe_fee === undefined
+            ? null
+            : Number(i.payments[0].stripe_fee),
+        stripeFeeTax:
+          i.payments?.[0]?.stripe_fee_tax === null || i.payments?.[0]?.stripe_fee_tax === undefined
+            ? null
+            : Number(i.payments[0].stripe_fee_tax),
+        stripeNet:
+          i.payments?.[0]?.stripe_net === null || i.payments?.[0]?.stripe_net === undefined
+            ? null
+            : Number(i.payments[0].stripe_net),
         // Lo acreditado con notas de crédito. Sin esto, una factura acreditada
         // a medias seguía sumando entera en el pendiente de arriba, y la
         // pantalla decía que le deben un dinero que ya nadie le debe.
@@ -10074,8 +10120,9 @@ apiRouter.post(
       else if (kind === "payment") await enviarPagoAQuickBooks(admin, req.businessId!, id);
       else if (kind === "estimate") await enviarPresupuestoAQuickBooks(admin, req.businessId!, id);
       else if (kind === "expense") await enviarGastoAQuickBooks(admin, req.businessId!, id);
+      else if (kind === "stripe_fee") await apuntarYmandarComision(admin, req.businessId!, id);
       else {
-        res.status(400).json({ error: "kind must be one of: invoice, credit_note, customer, payment, estimate, expense" });
+        res.status(400).json({ error: "kind must be one of: invoice, credit_note, customer, payment, estimate, expense, stripe_fee" });
         return;
       }
       res.json({ ok: true });
@@ -10116,6 +10163,14 @@ apiRouter.post(
         referencia: "QuickBooks",
         actor: "admin",
       });
+    }
+
+    // De paso, los cobros con tarjeta a los que todavía les faltaba la
+    // comisión. El dato aparece minutos después del cobro, así que preguntarlo
+    // sólo en el webhook lo dejaría faltando para siempre por haber preguntado
+    // medio minuto antes de tiempo.
+    for (const paymentId of await cobrosSinComision(admin, req.businessId!)) {
+      enviarEnSegundoPlano(apuntarYmandarComision(admin, req.businessId!, paymentId), `comisión ${paymentId}`);
     }
 
     res.json(resultado);

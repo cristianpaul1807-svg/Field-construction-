@@ -106,6 +106,7 @@ directamente al paso a paso.
 | *(dentro de Pagos)* Plan de pagos por etapas | [funciones/facturacion.md](funciones/facturacion.md#el-plan-de-pagos) |
 | QuickBooks | [funciones/facturacion.md](funciones/facturacion.md#quickbooks) |
 | *(dentro de QuickBooks)* Lo que no llegó | [funciones/facturacion.md](funciones/facturacion.md#lo-que-no-llegó) |
+| *(dentro de Pagos)* La comisión de Stripe | [funciones/facturacion.md](funciones/facturacion.md#la-comisión-de-stripe) |
 | Márgenes y reglas | [funciones/configuracion.md](funciones/configuracion.md#márgenes-y-reglas) |
 | Usuarios y roles | [funciones/configuracion.md](funciones/configuracion.md#usuarios-y-roles) |
 | Conexión WhatsApp | [funciones/configuracion.md](funciones/configuracion.md#conexión-whatsapp) |

@@ -328,7 +328,10 @@
       "efectivo": "Efectivo",
       "cheque": "Cheque",
       "otro": "Otro"
-    }
+    },
+    "stripeFee": "Comisión de Stripe {{fee}} · te llegaron {{net}}",
+    "stripeFeeTax": "De esa comisión, {{tax}} son impuestos que recuperas en la declaración.",
+    "stripeFeePending": "Stripe todavía no ha confirmado su comisión de este cobro."
   },
   "payments": {
     "title": "Pagos (Stripe)",
@@ -1747,6 +1750,13 @@
           "p2": "Cada línea tiene su botón de reintentar, y arriba hay uno que los manda todos. Ese va de uno en uno a propósito: una factura no puede subir antes que su cliente, y veinte llamadas a la vez es como se consigue que Intuit te corte.",
           "p3": "Que algo no llegue no rompe nada aquí. El documento existe, el cliente lo ve, se puede cobrar. QuickBooks es el destino, no el permiso.",
           "nota": "Si reintentas y vuelve a fallar, abre el detalle técnico de esa línea y mándanoslo. Ahí está la respuesta literal de QuickBooks, que es lo que hace falta para arreglarlo."
+        },
+        "comisionStripe": {
+          "title": "La comisión de Stripe y dónde se ve",
+          "p1": "Cuando un cliente paga con tarjeta, Stripe se queda su comisión antes de depositarte el resto. Una factura de 5 000 $ no deja 5 000 $ en tu cuenta, y eso no es un fallo: es lo que cuesta cobrar con tarjeta.",
+          "p2": "En la factura, debajo de «tarjeta», te dice cuánto se llevó y cuánto te llegó de verdad. El dato lo saca del libro de tu propia cuenta de Stripe, no de una tarifa escrita a mano, así que es exacto aunque pague una tarjeta extranjera, que lleva recargo.",
+          "p3": "Parte de esa comisión es TPS y TVQ, porque Stripe te está facturando un servicio. Ese impuesto no es un gasto tuyo: lo recuperas en la declaración. Por eso se dice aparte y va a QuickBooks separado, como gasto bancario con su impuesto desglosado.",
+          "nota": "Tarda unos minutos en aparecer: Stripe asienta la transacción después de cobrar. Mientras tanto la factura dice que está pendiente de confirmar, y se pone sola la próxima vez que abras la facturación."
         }
       },
       "problemas": {
@@ -1973,7 +1983,8 @@
       "customer": "Cliente",
       "payment": "Cobro",
       "estimate": "Presupuesto",
-      "expense": "Gasto"
+      "expense": "Gasto",
+      "stripe_fee": "Comisión de Stripe"
     },
     "fix": {
       "tax": "A tu QuickBooks le falta un código de impuesto que se pueda usar en una venta. Créalo en Taxes → Sales tax y vuelve a intentarlo.",

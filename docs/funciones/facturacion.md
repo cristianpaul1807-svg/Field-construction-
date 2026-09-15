@@ -198,10 +198,57 @@ documento contable se manda solo en cuanto existe**. No hay nada que pulsar.
 | Cobro | Al registrarse — Stripe, a mano o por etapas | `enviarPago` |
 | Gasto | Al apuntarlo | `enviarGasto` |
 
+| Comisión de Stripe | Al confirmarla Stripe | `enviarComisionDeStripe` |
+
 **El cobro es el que faltaba.** Con las facturas sincronizadas pero los cobros
 no, la contabilidad de allí enseñaba todo pendiente de pagar mientras el dinero
 ya estaba en la cuenta. Va como `Payment` enganchado a su factura por
 `LinkedTxn`, que es lo que la cierra allí.
+
+### La comisión de Stripe
+
+Una factura de 5 748,75 $ cobrada con tarjeta **no deja 5 748,75 $ en el
+banco**. Stripe se cobra antes de depositar. Sin apuntarlo pasaban dos cosas, y
+las dos son de las que acaban en una llamada al contable: el beneficio que
+enseñaba el sistema era mayor que el real, y el depósito no cuadraba con la
+factura sin que hubiera ningún sitio donde ver por qué.
+
+El dato sale del **libro mayor de la cuenta conectada** (`server/stripeComision.ts`),
+nunca de la tarifa publicada. Es la única fuente honesta: la comisión no viene
+en la factura, y reconstruirla de la tarifa se desvía el día que Stripe la
+cambia o el día que paga una tarjeta extranjera, que lleva recargo.
+
+Se guardan cuatro cosas en el cobro: `stripe_fee`, `stripe_fee_tax`,
+`stripe_net` y `stripe_balance_txn_id`.
+
+**El impuesto va aparte a propósito.** En Canadá la comisión lleva TPS y TVQ
+encima, porque Stripe le está facturando un servicio al contratista. Ese
+impuesto **no es un coste suyo**: lo recupera en la declaración. Sumado a la
+comisión se pierde para siempre, así que se separa aquí y se manda a QuickBooks
+separado.
+
+A QuickBooks va como compra pagada desde la cuenta bancaria —que es
+literalmente lo que pasó— con `GlobalTaxCalculation: "TaxInclusive"`, para que
+el total cuadre con Stripe al centavo y sea QuickBooks quien desglose el
+impuesto con sus propias tasas, que son las que mira el contable. Si ese plan
+contable no tiene código de impuesto de compra, el gasto se manda igual y el
+importe del impuesto queda dicho en el concepto: perder la comisión entera por
+no poder separar el impuesto sería cambiar un problema pequeño por uno grande.
+
+Por lo mismo, el **cobro** se deposita en la cuenta bancaria y no en la de
+fondos sin depositar que QuickBooks usa por defecto. Si el cobro no entra donde
+sale la comisión, el banco se queda en negativo por el importe de la comisión:
+dos apuntes correctos que juntos enseñan una cuenta que no existe.
+
+**Tarda unos minutos.** Stripe asienta la transacción después de cobrar, así
+que en el momento del webhook el dato puede no existir. La factura lo dice
+(«pendiente de confirmar», nunca un cero, que sería decir que no costó nada) y
+se recoge solo: al abrir la facturación se repasan los cobros con tarjeta a los
+que les falte.
+
+En la factura del cliente **no aparece**, y no es un olvido. El cliente paga el
+total; lo que nos cueste cobrarlo es asunto nuestro, y ponerlo en su documento
+se lee como un recargo.
 
 Lo que **no** se manda, y por qué:
 
