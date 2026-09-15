@@ -22,6 +22,22 @@ export class QuickBooksNoConfigurado extends Error {
   }
 }
 
+/**
+ * La conexión murió del otro lado.
+ *
+ * Pasa cuando alguien la desconecta desde QuickBooks (Apps → Disconnect) o
+ * cuando el token de refresco caduca por estar cien días sin usarse. Tiene su
+ * propio tipo porque la respuesta es distinta: no es «falló el envío», es «hay
+ * que volver a conectar», y si no se distingue, la pantalla sigue diciendo que
+ * está conectada mientras todo falla.
+ */
+export class QuickBooksDesconectadoAlla extends Error {
+  readonly code = "quickbooks_reconnect_needed";
+  constructor() {
+    super("QuickBooks ya no acepta esta conexión. Hay que volver a conectarla.");
+  }
+}
+
 export class QuickBooksSinConectar extends Error {
   readonly code = "quickbooks_not_connected";
   constructor() {
@@ -205,9 +221,22 @@ async function tokenVivo(admin: Admin, businessId: string): Promise<Conexion> {
   const conexion = data as Conexion;
   if (new Date(conexion.access_expires_at).getTime() - Date.now() > 60_000) return conexion;
 
-  const token = await pedirToken(
-    new URLSearchParams({ grant_type: "refresh_token", refresh_token: conexion.refresh_token })
-  );
+  let token: RespuestaDeToken;
+  try {
+    token = await pedirToken(
+      new URLSearchParams({ grant_type: "refresh_token", refresh_token: conexion.refresh_token })
+    );
+  } catch (err) {
+    // `invalid_grant` es Intuit diciendo que ese refresco ya no vale. Guardar
+    // una conexión muerta es peor que no tener ninguna: la pantalla dice que
+    // está conectada, cada envío falla con un motivo distinto, y nadie sabe
+    // que lo único que hay que hacer es volver a pulsar Conectar.
+    if (err instanceof Error && /invalid_grant/i.test(err.message)) {
+      await admin.from("quickbooks_connections").delete().eq("business_id", businessId);
+      throw new QuickBooksDesconectadoAlla();
+    }
+    throw err;
+  }
 
   const ahora = Date.now();
   await admin
@@ -227,6 +256,9 @@ async function tokenVivo(admin: Admin, businessId: string): Promise<Conexion> {
   return { ...conexion, access_token: token.access_token, refresh_token: token.refresh_token };
 }
 
+/** Lo que se arregla volviendo a intentarlo dentro de un momento. */
+const PASAJEROS = new Set([429, 500, 502, 503, 504]);
+
 /** Una llamada a la API de QuickBooks de ese negocio. */
 export async function llamar<T = unknown>(
   admin: Admin,
@@ -237,19 +269,37 @@ export async function llamar<T = unknown>(
   const conexion = await tokenVivo(admin, businessId);
   const url = `${baseDeApi(conexion.environment)}/v3/company/${conexion.realm_id}/${ruta}`;
 
-  const res = await fetch(url, {
-    method: init?.method ?? "GET",
-    headers: {
-      Authorization: `Bearer ${conexion.access_token}`,
-      Accept: "application/json",
-      ...(init?.body ? { "Content-Type": "application/json" } : {}),
-    },
-    body: init?.body ? JSON.stringify(init.body) : undefined,
-  });
+  // Hasta tres intentos, y sólo para lo que se arregla esperando: un 429 es
+  // Intuit pidiendo que bajemos el ritmo y un 503 es un mal minuto suyo.
+  // Reintentar un 400 sería repetir el mismo error tres veces y tardar el
+  // triple en decirlo.
+  for (let intento = 0; ; intento++) {
+    const res = await fetch(url, {
+      method: init?.method ?? "GET",
+      headers: {
+        Authorization: `Bearer ${conexion.access_token}`,
+        Accept: "application/json",
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      },
+      body: init?.body ? JSON.stringify(init.body) : undefined,
+    });
 
-  const texto = await res.text();
-  if (!res.ok) throw new Error(`QuickBooks ${res.status} en ${ruta}: ${texto.slice(0, 300)}`);
-  return (texto ? JSON.parse(texto) : {}) as T;
+    const texto = await res.text();
+    if (res.ok) return (texto ? JSON.parse(texto) : {}) as T;
+
+    if (PASAJEROS.has(res.status) && intento < 2) {
+      await new Promise((seguir) => setTimeout(seguir, 500 * 2 ** intento));
+      continue;
+    }
+
+    // El `intuit_tid` identifica esta llamada en los registros de Intuit. Es
+    // lo primero que piden cuando les escribes, y sin guardarlo aquí ya no hay
+    // forma de saberlo: la respuesta se pierde en cuanto se lee.
+    const tid = res.headers.get("intuit_tid");
+    throw new Error(
+      `QuickBooks ${res.status} en ${ruta}: ${texto.slice(0, 300)}${tid ? ` [intuit_tid ${tid}]` : ""}`
+    );
+  }
 }
 
 /** Cómo está la conexión, sin devolver un solo token. */

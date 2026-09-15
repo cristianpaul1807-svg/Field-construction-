@@ -56,8 +56,15 @@ baja.** Por eso el componente lleva siempre a algún sitio:
   fallo (`problemas.avisoDeFallo`). El botón sólo sale donde el bot está
   puesto: el panel sí, el portal del cliente y la app del trabajador no. Lo
   decide `hayAyuda()`, para no dejar un botón que no abre nada.
-- **Escríbenos**, sólo si el despliegue define `VITE_SUPPORT_EMAIL`. Sin buzón
-  no se ofrece: un enlace a una dirección que no existe es peor que nada.
+- **Escríbenos**, sólo si el despliegue define `SUPPORT_EMAIL` (se acepta
+  `VITE_SUPPORT_EMAIL` con el mismo valor). Sin buzón no se ofrece: un enlace a
+  una dirección que no existe es peor que nada.
+
+  El valor **lo sirve el servidor** en `/api/public/config`, no se compila en
+  el paquete. Un `VITE_*` se congela al construir y casi todos los hostings
+  inyectan las variables al arrancar: puesto en el paquete, el botón no habría
+  aparecido nunca por mucho que la variable estuviera bien, y ese es un fallo
+  que no se diagnostica mirando la pantalla.
 
 El detalle técnico va debajo, plegado, y se despliega en un clic.
 

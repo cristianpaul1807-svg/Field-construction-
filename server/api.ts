@@ -988,7 +988,14 @@ apiRouter.get(
       .replace(/\/rest\/v1\/?$/, "")
       .replace(/\/+$/, "");
     const supabaseAnonKey = readAnonKey();
-    res.json({ supabaseUrl, supabaseAnonKey });
+    // El buzón al que escribir cuando algo falla. Va por aquí y no compilado
+    // en el paquete porque un `VITE_*` se congela al construir: si el hosting
+    // sólo inyecta variables al arrancar —que es lo normal— el botón de
+    // «Escríbenos» no aparecería nunca y nadie sabría por qué. Se aceptan los
+    // dos nombres por lo mismo que la clave de Supabase: una variable correcta
+    // con el nombre de al lado no puede dejar la función muerta.
+    const supportEmail = (process.env.SUPPORT_EMAIL ?? process.env.VITE_SUPPORT_EMAIL ?? "").trim();
+    res.json({ supabaseUrl, supabaseAnonKey, supportEmail });
   })
 );
 

@@ -3,6 +3,7 @@ import { AlertTriangle, ChevronDown, RefreshCw, LifeBuoy, Mail } from "lucide-re
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { abrirAyuda, hayAyuda } from "@/lib/abrirAyuda";
+import { correoDeSoporte } from "@/lib/soporte";
 
 /**
  * El aviso de que algo falló.
@@ -41,7 +42,16 @@ export function AvisoDeFallo({
   useEffect(() => setConAyuda(hayAyuda()), []);
   // Se pone en el despliegue. Sin buzón no se ofrece escribir: un botón que
   // abre un correo a una dirección que no existe es peor que no tenerlo.
-  const soporte = import.meta.env.VITE_SUPPORT_EMAIL as string | undefined;
+  const [soporte, setSoporte] = useState<string | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    correoDeSoporte().then((correo) => {
+      if (vivo) setSoporte(correo);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   return (
     <div

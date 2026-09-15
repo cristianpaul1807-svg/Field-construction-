@@ -309,6 +309,33 @@ Lo que se manda con cuidado:
 `quickbooks_links` es lo que impide duplicar: un reintento sobre algo ya
 enviado no vuelve a crearlo.
 
+### Cuando la conexión muere del otro lado
+
+Alguien puede desconectarnos desde QuickBooks (Apps → Disconnect), y el token de
+refresco caduca solo a los cien días sin usarse. En los dos casos Intuit
+contesta `invalid_grant` y **la conexión guardada ya no sirve**.
+
+Guardarla igual era lo peor de los dos mundos: la pantalla decía «conectado»,
+cada envío fallaba con un motivo distinto, y lo único que había que hacer
+—volver a pulsar Conectar— no se le ocurría a nadie. Ahora se borra en cuanto
+Intuit lo dice, la pantalla vuelve a ofrecer conectar, y lo que falló queda en
+la lista con *«la conexión caducó»*.
+
+Un fallo pasajero del refresco (un 502 suyo) **no** borra nada: eso sería tirar
+una conexión buena por un mal minuto.
+
+### Reintentos y el `intuit_tid`
+
+Un 429 es Intuit pidiendo que bajemos el ritmo y un 5xx es un mal momento suyo:
+esos se reintentan hasta tres veces, esperando el doble cada vez. Un 400 no —
+repetir el mismo error tres veces sólo tarda el triple en decirlo.
+
+Cuando el fallo es definitivo se guarda el **`intuit_tid`** de la respuesta. Es
+el identificador con el que Intuit encuentra esa llamada en sus registros, es lo
+primero que piden cuando les escribes, y no se puede recuperar después: la
+respuesta se pierde en cuanto se lee. Va dentro del detalle técnico de *lo que
+no llegó*, que es justo lo que se les manda.
+
 ### Y lo que cambian allí
 
 Al abrir la facturación se pide a QuickBooks lo que haya cambiado, con freno

@@ -868,7 +868,7 @@ export function comoArreglarlo(error: string | null): string {
   if (/tax code|GST\/HST rate|calculating tax|código de impuesto/i.test(texto)) return "tax";
   if (/cuenta bancaria|AccountType|Account.*required|cuenta de gastos/i.test(texto)) return "accounts";
   if (/Duplicate Document Number|DocNumber/i.test(texto)) return "duplicate";
-  if (/AuthenticationFailed|Token|401|invalid_grant|unauthorized/i.test(texto)) return "reconnect";
+  if (/AuthenticationFailed|Token|401|invalid_grant|unauthorized|ya no acepta esta conexión/i.test(texto)) return "reconnect";
   if (/Stale Object|SyncToken/i.test(texto)) return "stale";
   if (/todavía no está en QuickBooks|no tiene cliente/i.test(texto)) return "order";
   return "generic";
