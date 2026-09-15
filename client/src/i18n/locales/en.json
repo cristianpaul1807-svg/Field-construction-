@@ -966,7 +966,10 @@
       "equipos": "Equipment and rentals",
       "permisos": "Permits and fees",
       "otros": "Other"
-    }
+    },
+    "planned": "Planned",
+    "remaining": "Left",
+    "editExpense": "Edit expense"
   },
   "workOrders": {
     "title": "Title",
@@ -1789,6 +1792,13 @@
           "p2": "On the invoice, under \"card\", it tells you how much Stripe took and how much actually reached you. The figure comes from your own Stripe account's ledger, not from a rate typed in by hand, so it's exact even when a foreign card pays and carries a surcharge.",
           "p3": "Part of that fee is GST and QST, because Stripe is billing you for a service. That tax isn't a cost of yours: you claim it back on your return. That's why it's stated separately, and why it goes to QuickBooks split out, as a bank charge with its tax broken down.",
           "nota": "It takes a few minutes to appear: Stripe settles the transaction after charging. Until then the invoice says the fee is still to be confirmed, and it fills itself in the next time you open invoicing."
+        },
+        "costos": {
+          "title": "Spent, planned, and what's left",
+          "p1": "In {{menuProyectos}} → Cost tracking, each job has five columns: **budgeted**, **spent**, **planned**, what's **left**, and the deviation. Budgeted comes from the estimate the client accepted, plus approved change orders.",
+          "p2": "What separates spent from planned is the expense's date. A material order due in two weeks, or a subcontractor paid on completion, is recorded with its date and counts as **planned**: the money is committed but still in your bank. When the day arrives it moves to spent on its own.",
+          "p3": "What's left is the budget minus both. It's the figure you decide an extra by, which is why it also subtracts what's planned: if you've already promised that money, you don't have it even though it hasn't gone out.",
+          "nota": "An expense is corrected with the pencil on its row — no need to delete and retype it. One warning: if it already went to QuickBooks, the purchase over there doesn't correct itself; fix it in QuickBooks too."
         }
       },
       "problemas": {

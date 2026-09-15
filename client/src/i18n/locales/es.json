@@ -966,7 +966,10 @@
       "equipos": "Equipos y alquiler",
       "permisos": "Permisos y tasas",
       "otros": "Otros"
-    }
+    },
+    "planned": "Previsto",
+    "remaining": "Queda",
+    "editExpense": "Corregir gasto"
   },
   "workOrders": {
     "title": "Título",
@@ -1789,6 +1792,13 @@
           "p2": "En la factura, debajo de «tarjeta», te dice cuánto se llevó y cuánto te llegó de verdad. El dato lo saca del libro de tu propia cuenta de Stripe, no de una tarifa escrita a mano, así que es exacto aunque pague una tarjeta extranjera, que lleva recargo.",
           "p3": "Parte de esa comisión es TPS y TVQ, porque Stripe te está facturando un servicio. Ese impuesto no es un gasto tuyo: lo recuperas en la declaración. Por eso se dice aparte y va a QuickBooks separado, como gasto bancario con su impuesto desglosado.",
           "nota": "Tarda unos minutos en aparecer: Stripe asienta la transacción después de cobrar. Mientras tanto la factura dice que está pendiente de confirmar, y se pone sola la próxima vez que abras la facturación."
+        },
+        "costos": {
+          "title": "Lo gastado, lo previsto y lo que queda",
+          "p1": "En {{menuProyectos}} → Control de costos, cada obra tiene cinco columnas: lo **presupuestado**, lo **gastado**, lo **previsto**, lo que **queda** y el desvío. Presupuestado sale del presupuesto que aceptó el cliente, más las órdenes de cambio aprobadas.",
+          "p2": "La diferencia entre gastado y previsto es la fecha del gasto. Un pedido de material para dentro de dos semanas, o un subcontratista que cobra al terminar, se apunta con su fecha y cuenta como **previsto**: el dinero está comprometido pero sigue en tu banco. Cuando llega el día pasa solo a gastado.",
+          "p3": "Lo que queda es el presupuesto menos las dos cosas. Es la cifra por la que se decide si cabe un extra, y por eso descuenta también lo previsto: si ya prometiste ese dinero, no lo tienes aunque no haya salido.",
+          "nota": "Un gasto se corrige con el lápiz de su fila — no hace falta borrarlo y volver a escribirlo. Aviso: si ya viajó a QuickBooks, la compra de allí no se corrige sola; hay que arreglarla también en QuickBooks."
         }
       },
       "problemas": {

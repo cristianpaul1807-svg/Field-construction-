@@ -95,3 +95,45 @@ categoría nueva, añádela también ahí, o volverá a caer en "otros".
 
 Tabla: `expenses`. El presupuesto sale de `estimate_lines` del presupuesto
 vinculado al proyecto, más las `change_orders` en estado `aprobado`.
+
+---
+
+## Gastado, previsto y lo que queda
+
+Cinco columnas por obra: **presupuestado**, **gastado**, **previsto**, **queda**
+y el desvío.
+
+**Un gasto con fecha futura no es dinero salido.** Antes se sumaba todo junto,
+así que un pedido de material para dentro de dos semanas contaba como gastado
+hoy y la obra se leía pasada de presupuesto por un dinero que seguía en el
+banco. Al revés también dolía: lo comprometido desaparecía del cálculo de lo que
+queda, que es justo la cifra por la que se decide si cabe un extra.
+
+Ahora la fecha decide en qué columna cae, y cuando llega el día el gasto pasa
+solo de previsto a gastado. Sin ningún proceso: se compara la fecha al leer.
+
+```
+queda  = presupuestado − gastado − previsto
+desvío = (gastado + previsto − presupuestado) / presupuestado
+```
+
+El desvío mide contra lo comprometido, no sólo contra lo pagado: si el dinero ya
+está prometido, la obra está pasada aunque el pago sea el mes que viene.
+
+**Las horas fichadas caen siempre en gastado**, y es correcto: se ficha al
+trabajar, así que no hay fichaje de mañana.
+
+## Corregir un gasto
+
+El lápiz de su fila. `PATCH /api/expenses/:id` con categoría, descripción,
+importe o fecha.
+
+Faltaba, y lo único que quedaba era borrar y volver a escribirlo — que **no es
+lo mismo**: un gasto ya mandado a QuickBooks deja allí su compra, y borrar aquí
+no la borra allí. Un dedazo en el importe acababa en dos compras en su
+contabilidad, la mala y la buena.
+
+**El enlace con QuickBooks se deja como está.** Reenviarlo crearía una segunda
+compra; lo que hace falta es actualizar la que ya existe, y eso es trabajo
+aparte. Mientras tanto la ayuda lo dice en vez de fingir que los dos lados
+coinciden.

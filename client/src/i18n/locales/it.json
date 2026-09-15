@@ -966,7 +966,10 @@
       "equipos": "Attrezzature e noleggi",
       "permisos": "Permessi e tasse",
       "otros": "Altro"
-    }
+    },
+    "planned": "Previsto",
+    "remaining": "Resta",
+    "editExpense": "Correggi spesa"
   },
   "workOrders": {
     "title": "Titolo",
@@ -1789,6 +1792,13 @@
           "p2": "Sulla fattura, sotto «carta», ti dice quanto si è preso e quanto ti è arrivato davvero. Il dato esce dal registro del tuo conto Stripe, non da una tariffa scritta a mano, quindi è esatto anche quando paga una carta straniera, che ha un sovrapprezzo.",
           "p3": "Parte di quella commissione è TPS e TVQ, perché Stripe ti sta fatturando un servizio. Quell'imposta non è una tua spesa: la recuperi nella dichiarazione. Per questo si dice a parte, e va su QuickBooks separata, come spesa bancaria con la sua imposta scorporata.",
           "nota": "Ci mette qualche minuto a comparire: Stripe registra la transazione dopo l'incasso. Nel frattempo la fattura dice che la commissione è da confermare, e si riempie da sola la prossima volta che apri la fatturazione."
+        },
+        "costos": {
+          "title": "Lo speso, il previsto e quello che resta",
+          "p1": "In {{menuProyectos}} → Controllo dei costi, ogni cantiere ha cinque colonne: il **preventivato**, lo **speso**, il **previsto**, quello che **resta** e lo scostamento. Il preventivato esce dal preventivo accettato dal cliente, più le varianti approvate.",
+          "p2": "A separare lo speso dal previsto è la data della spesa. Un ordine di materiale fra due settimane, o un subappaltatore pagato alla fine, si segna con la sua data e conta come **previsto**: il denaro è impegnato ma è ancora in banca. Quando arriva il giorno passa da solo a speso.",
+          "p3": "Quello che resta è il preventivo meno le due cose. È la cifra con cui decidi se ci sta un extra, ed è per questo che sottrae anche il previsto: se quei soldi li hai già promessi, non ce li hai anche se non sono usciti.",
+          "nota": "Una spesa si corregge con la matita della sua riga — non serve cancellarla e riscriverla. Un avviso: se è già andata su QuickBooks, l'acquisto lì non si corregge da solo; va sistemato anche in QuickBooks."
         }
       },
       "problemas": {

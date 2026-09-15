@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { SelectorDeObra } from "@/components/SelectorDeObra";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
@@ -25,7 +25,10 @@ import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 interface CostRow {
   category: string;
   budgeted: number;
+  /** Lo que ya salió: gastos con fecha de hoy o de antes, más las horas. */
   actual: number;
+  /** Lo apuntado con fecha futura. Comprometido, pero todavía en el banco. */
+  planned: number;
 }
 
 interface ProjectCostTracking {
@@ -68,9 +71,32 @@ export default function CostTracking() {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Corregir un gasto reusa el mismo formulario. Un segundo diálogo idéntico
+  // es un segundo sitio donde olvidarse de validar el importe.
+  const [editando, setEditando] = useState<Expense | null>(null);
 
   // Con una obra elegida se ve la suya; en General, la de cada una.
   const obras = (data ?? []).filter((p) => !selectedProjectId || p.projectId === selectedProjectId);
+
+  const abrirEdicion = (e: Expense) => {
+    setEditando(e);
+    setCategory(e.category ?? CATEGORIES[0]);
+    setDescription(e.description ?? "");
+    setAmount(String(e.amount));
+    setDate(e.date);
+    setFormError(null);
+    setOpen(true);
+  };
+
+  const cerrar = (abierto: boolean) => {
+    setOpen(abierto);
+    if (!abierto) {
+      setEditando(null);
+      setDescription("");
+      setAmount("");
+      setFormError(null);
+    }
+  };
 
   const save = async () => {
     if (!amount || Number(amount) <= 0) {
@@ -80,15 +106,19 @@ export default function CostTracking() {
     setSaving(true);
     setFormError(null);
     try {
-      const res = await apiFetch("/api/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: selectedProjectId, category, description, amount, date }),
-      });
+      const res = editando
+        ? await apiFetch(`/api/expenses/${editando.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category, description, amount, date }),
+          })
+        : await apiFetch("/api/expenses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ projectId: selectedProjectId, category, description, amount, date }),
+          });
       if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
-      setOpen(false);
-      setDescription("");
-      setAmount("");
+      cerrar(false);
       reload();
       reloadExpenses();
     } catch (err) {
@@ -159,17 +189,30 @@ export default function CostTracking() {
                   <th className="text-left py-2 text-muted-foreground font-medium">{t("costTracking.item")}</th>
                   <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.budgeted")}</th>
                   <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.actual")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.planned")}</th>
+                  <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.remaining")}</th>
                   <th className="text-right py-2 text-muted-foreground font-medium">{t("costTracking.deviation")}</th>
                 </tr>
               </thead>
               <tbody>
                 {project.rows.map((row) => {
-                  const variance = row.budgeted > 0 ? ((row.actual - row.budgeted) / row.budgeted) * 100 : null;
+                  // El desvío se mide contra lo gastado más lo previsto: si ya
+                  // has comprometido el dinero, la obra está pasada aunque el
+                  // pago sea el mes que viene.
+                  const comprometido = row.actual + row.planned;
+                  const variance = row.budgeted > 0 ? ((comprometido - row.budgeted) / row.budgeted) * 100 : null;
+                  const queda = row.budgeted - comprometido;
                   return (
                     <tr key={row.category} className="border-b border-border hover:bg-secondary transition-colors">
                       <td className="py-3 text-foreground font-medium">{categoryLabel(row.category)}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(row.budgeted)}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(row.actual)}</td>
+                      <td className="py-3 text-right text-muted-foreground">
+                        {row.planned > 0 ? formatCurrency(row.planned) : "—"}
+                      </td>
+                      <td className={`py-3 text-right font-medium ${queda < 0 ? "text-status-error-fg" : "text-foreground"}`}>
+                        {row.budgeted > 0 ? formatCurrency(queda) : "—"}
+                      </td>
                       <td className={`py-3 text-right font-medium ${variance === null ? "text-muted-foreground" : variance > 0 ? "text-status-error-fg" : "text-status-success-fg"}`}>
                         {variance === null ? "—" : `${variance > 0 ? "+" : ""}${variance.toFixed(1)}%`}
                       </td>
@@ -182,18 +225,29 @@ export default function CostTracking() {
                     <td className="py-3 text-right text-foreground">{formatCurrency(project.approvedChangeOrders)}</td>
                     <td className="py-3 text-right text-muted-foreground">—</td>
                     <td className="py-3 text-right text-muted-foreground">—</td>
+                    <td className="py-3 text-right text-muted-foreground">—</td>
+                    <td className="py-3 text-right text-muted-foreground">—</td>
                   </tr>
                 )}
                 {(() => {
                   const totalBudgeted =
                     project.rows.reduce((s, r) => s + r.budgeted, 0) + project.approvedChangeOrders;
                   const totalActual = project.rows.reduce((s, r) => s + r.actual, 0);
-                  const totalVariance = totalBudgeted > 0 ? ((totalActual - totalBudgeted) / totalBudgeted) * 100 : null;
+                  const totalPlanned = project.rows.reduce((s, r) => s + r.planned, 0);
+                  const totalQueda = totalBudgeted - totalActual - totalPlanned;
+                  const totalVariance =
+                    totalBudgeted > 0 ? ((totalActual + totalPlanned - totalBudgeted) / totalBudgeted) * 100 : null;
                   return (
                     <tr className="bg-secondary font-semibold">
                       <td className="py-3 text-foreground">{t("costTracking.total")}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(totalBudgeted)}</td>
                       <td className="py-3 text-right text-foreground">{formatCurrency(totalActual)}</td>
+                      <td className="py-3 text-right text-muted-foreground">
+                        {totalPlanned > 0 ? formatCurrency(totalPlanned) : "—"}
+                      </td>
+                      <td className={`py-3 text-right ${totalQueda < 0 ? "text-status-error-fg" : "text-foreground"}`}>
+                        {formatCurrency(totalQueda)}
+                      </td>
                       <td className={`py-3 text-right ${totalVariance === null ? "text-muted-foreground" : totalVariance > 0 ? "text-status-error-fg" : "text-status-success-fg"}`}>
                         {totalVariance === null ? "—" : `${totalVariance > 0 ? "+" : ""}${totalVariance.toFixed(1)}%`}
                       </td>
@@ -234,7 +288,7 @@ export default function CostTracking() {
                     )}
                     <th className="text-left py-2 text-muted-foreground font-medium">{t("common.description")}</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">{t("common.amount")}</th>
-                    <th className="w-10" />
+                    <th className="w-20" />
                   </tr>
                 </thead>
                 <tbody>
@@ -249,7 +303,14 @@ export default function CostTracking() {
                       )}
                       <td className="py-3 text-muted-foreground">{e.description || "—"}</td>
                       <td className="py-3 text-right text-foreground font-medium">{formatCurrency(e.amount)}</td>
-                      <td className="py-3 text-right">
+                      <td className="py-3 text-right whitespace-nowrap">
+                        <button
+                          aria-label={t("common.edit")}
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+                          onClick={() => abrirEdicion(e)}
+                        >
+                          <Pencil size={14} strokeWidth={1.75} />
+                        </button>
                         <button
                           aria-label={t("common.delete")}
                           className="p-1.5 rounded-md text-muted-foreground hover:text-status-error-fg hover:bg-card transition-colors"
@@ -267,10 +328,10 @@ export default function CostTracking() {
         </Card>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={cerrar}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("costTracking.recordExpense")}</DialogTitle>
+            <DialogTitle>{editando ? t("costTracking.editExpense") : t("costTracking.recordExpense")}</DialogTitle>
             <DialogDescription>{t("costTracking.recordExpenseHint")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

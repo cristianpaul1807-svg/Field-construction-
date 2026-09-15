@@ -4043,6 +4043,17 @@ apiRouter.patch(
   })
 );
 
+/**
+ * Si esa fecha todavía no ha llegado.
+ *
+ * Se compara por día y en UTC, como se guardan las fechas de los gastos. Un
+ * gasto de hoy es gastado: el día en que se apunta ya se ha hecho.
+ */
+function esFuturo(fecha: string | null | undefined): boolean {
+  if (!fecha) return false;
+  return String(fecha).slice(0, 10) > new Date().toISOString().slice(0, 10);
+}
+
 // ---------- Estimate work projection ----------
 // Staged plan ("who works when, for how long") for an estimate that
 // isn't a real project yet. Accepting the estimate (below) turns every
@@ -5135,7 +5146,7 @@ apiRouter.get(
         .order("name"),
       supabase
         .from("expenses")
-        .select("project_id, category, amount")
+        .select("project_id, category, amount, date")
         .eq("business_id", req.businessId!),
       supabase
         .from("change_orders")
@@ -5196,22 +5207,40 @@ apiRouter.get(
         budgeted.set(key, (budgeted.get(key) ?? 0) + Number(line.total));
       }
 
+      // Gastado y previsto son cosas distintas y estaban sumadas juntas. Un
+      // gasto con fecha de la semana que viene —un pedido de material que aún
+      // no ha llegado, un subcontratista que cobra al terminar— se contaba
+      // como dinero ya salido, y la obra se leía pasada de presupuesto por un
+      // dinero que todavía está en el banco. Al revés también: lo previsto
+      // desaparecía del cálculo de lo que queda, que es la cifra por la que se
+      // decide si cabe un extra.
       const actual = new Map<string, number>();
+      const previsto = new Map<string, number>();
       const labour = labourByProject[project.id] ?? 0;
       if (labour > 0) actual.set("mano_obra", labour);
       for (const expense of expenses.data) {
         if (expense.project_id !== project.id) continue;
         const key = canonical(expense.category);
-        actual.set(key, (actual.get(key) ?? 0) + Number(expense.amount));
+        // Las horas fichadas son siempre pasado: se ficha al trabajar.
+        const donde = esFuturo(expense.date) ? previsto : actual;
+        donde.set(key, (donde.get(key) ?? 0) + Number(expense.amount));
       }
 
-      const rows = Array.from(new Set(Array.from(budgeted.keys()).concat(Array.from(actual.keys()))))
+      const categorias = Array.from(
+        new Set(
+          Array.from(budgeted.keys())
+            .concat(Array.from(actual.keys()))
+            .concat(Array.from(previsto.keys()))
+        )
+      );
+      const rows = categorias
         .map((category) => ({
           category,
           budgeted: budgeted.get(category) ?? 0,
           actual: actual.get(category) ?? 0,
+          planned: previsto.get(category) ?? 0,
         }))
-        .filter((r) => r.budgeted > 0 || r.actual > 0);
+        .filter((r) => r.budgeted > 0 || r.actual > 0 || r.planned > 0);
 
       return {
         projectId: project.id,
@@ -8422,6 +8451,57 @@ apiRouter.post(
     enviarEnSegundoPlano(enviarGastoAQuickBooks(getSupabaseAdmin(), req.businessId!, data.id), `gasto ${data.id}`);
 
     res.status(201).json({ id: data.id });
+  })
+);
+
+/**
+ * Corregir un gasto.
+ *
+ * Faltaba, y lo que quedaba era borrar y volver a escribirlo. Eso no es lo
+ * mismo: un gasto ya mandado a QuickBooks deja allí su compra, y borrar aquí no
+ * la borra allí — así que un dedazo en el importe acababa en dos compras en su
+ * contabilidad, la mala y la buena.
+ *
+ * El enlace con QuickBooks se deja como está a propósito. Reenviarlo crearía
+ * una segunda compra; lo que hace falta es **actualizar la que ya está**, y eso
+ * es trabajo aparte. Mientras tanto la fila lo dice, en vez de fingir que los
+ * dos lados coinciden.
+ */
+apiRouter.patch(
+  "/expenses/:id",
+  route(async (req, res) => {
+    const body = req.body ?? {};
+    const cambios: Record<string, unknown> = {};
+    if (body.category !== undefined) cambios.category = String(body.category).trim() || null;
+    if (body.description !== undefined) cambios.description = String(body.description).trim() || null;
+    if (body.date !== undefined) cambios.date = body.date || null;
+    if (body.amount !== undefined) {
+      const importe = Number(body.amount);
+      if (!Number.isFinite(importe) || importe <= 0) {
+        res.status(400).json({ error: "a positive amount is required", code: "expense_amount_invalid" });
+        return;
+      }
+      cambios.amount = importe;
+    }
+    if (Object.keys(cambios).length === 0) {
+      res.status(400).json({ error: "nothing to change" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const { data, error } = await supabase
+      .from("expenses")
+      .update(cambios)
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .select("id")
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ error: "expense not found", code: "expense_not_found" });
+      return;
+    }
+    res.json({ ok: true });
   })
 );
 

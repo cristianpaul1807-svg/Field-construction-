@@ -966,7 +966,10 @@
       "equipos": "Équipement et location",
       "permisos": "Permis et frais",
       "otros": "Autre"
-    }
+    },
+    "planned": "Prévu",
+    "remaining": "Reste",
+    "editExpense": "Corriger la dépense"
   },
   "workOrders": {
     "title": "Titre",
@@ -1789,6 +1792,13 @@
           "p2": "Sur la facture, sous « carte », on vous dit combien Stripe a pris et combien vous est réellement parvenu. Le chiffre sort du registre de votre propre compte Stripe, pas d'un tarif saisi à la main, donc il est exact même quand paie une carte étrangère, qui porte un supplément.",
           "p3": "Une partie de ces frais est de la TPS et de la TVQ, parce que Stripe vous facture un service. Cette taxe n'est pas une dépense : vous la récupérez dans votre déclaration. C'est pour ça qu'elle est dite à part, et qu'elle part vers QuickBooks séparée, en frais bancaires avec sa taxe ventilée.",
           "nota": "Ça met quelques minutes à apparaître : Stripe enregistre la transaction après l'encaissement. En attendant, la facture dit que les frais restent à confirmer, et ça se remplit tout seul la prochaine fois que vous ouvrez la facturation."
+        },
+        "costos": {
+          "title": "Le dépensé, le prévu et ce qui reste",
+          "p1": "Dans {{menuProyectos}} → Suivi des coûts, chaque chantier a cinq colonnes : le **budgété**, le **réel**, le **prévu**, ce qui **reste** et l'écart. Le budgété sort de la soumission acceptée par le client, plus les ordres de changement approuvés.",
+          "p2": "Ce qui sépare le réel du prévu, c'est la date de la dépense. Une commande de matériaux dans deux semaines, ou un sous-traitant payé à la fin, s'inscrit avec sa date et compte comme **prévu** : l'argent est engagé mais encore dans votre compte. Le jour venu, il passe tout seul au réel.",
+          "p3": "Ce qui reste, c'est le budget moins les deux. C'est le chiffre qui décide si un extra rentre, et c'est pour ça qu'il déduit aussi le prévu : si vous avez déjà promis cet argent, vous ne l'avez pas même s'il n'est pas sorti.",
+          "nota": "Une dépense se corrige avec le crayon de sa ligne — pas besoin de la supprimer et de la ressaisir. Un avertissement : si elle est déjà partie vers QuickBooks, l'achat là-bas ne se corrige pas tout seul ; il faut le reprendre dans QuickBooks aussi."
         }
       },
       "problemas": {

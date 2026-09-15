@@ -103,6 +103,9 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "cobrar", parrafos: 3, nota: true, ruta: "/settings/payments" },
       { id: "cobrarPorFuera", parrafos: 3, nota: true, ruta: "/invoicing" },
       { id: "contable", parrafos: 2, ruta: "/reports" },
+      // Lo previsto y lo gastado son cosas distintas y la pantalla lo enseña
+      // en cinco columnas. Sin explicarlo, «previsto» se lee como un error.
+      { id: "costos", parrafos: 3, nota: true, ruta: "/cost-tracking" },
       // Lo que se manda solo a QuickBooks y qué hacer cuando algo no llega.
       // Sin esto, la primera vez que una factura falla el contratista no sabe
       // ni que existe una pantalla donde mirarlo.
