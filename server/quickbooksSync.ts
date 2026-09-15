@@ -1248,17 +1248,55 @@ async function comoAsiento(admin: Admin, businessId: string, runId: string, hoja
   apunte("Debit", cuentaSalarios, Number(hoja.employer_contributions), `${concepto} · part de l'employeur`);
   apunte("Debit", cuentaSalarios, gastosDevueltos(hoja), `${concepto} · dépenses remboursées`);
 
+  // Lo que se retiene sale de los **totales** de la hoja, no de la suma de sus
+  // líneas. El desglose dice a quién se remite cada parte; el total dice
+  // cuánto. Si los dos no concuerdan —líneas que se perdieron, una hoja vieja,
+  // un ajuste hecho a mano— repartir mal es algo que el contable ve y corrige,
+  // pero un asiento descuadrado lo rechaza QuickBooks entero, y la nómina no
+  // llega. Así el debe y el haber cuadran por aritmética y no por confianza:
+  //   debe   = bruto + parte del empleador + gastos devueltos
+  //   haber  = (retenciones + parte del empleador) + neto
+  //   y el neto es bruto − retenciones + gastos devueltos.
+  const aRetener = redondear(
+    Number(hoja.employee_deductions) + Number(hoja.employer_contributions)
+  );
+
   // Agrupadas por destino: lo de Revenu Québec y lo de la CRA se remiten por
   // separado y en calendarios distintos.
   const porDestino = new Map<string, number>();
   for (const linea of hoja.lines ?? []) {
     porDestino.set(linea.remitTo, redondear((porDestino.get(linea.remitTo) ?? 0) + Number(linea.amount)));
   }
-  for (const [destino, importe] of Array.from(porDestino)) {
-    apunte("Credit", cuentaRetenciones, importe, `${concepto} · ${destino}`);
+  const desglosado = redondear(Array.from(porDestino.values()).reduce((s, x) => s + x, 0));
+
+  if (desglosado === aRetener) {
+    for (const [destino, importe] of Array.from(porDestino)) {
+      apunte("Credit", cuentaRetenciones, importe, `${concepto} · ${destino}`);
+    }
+  } else {
+    // El desglose no suma lo que dice la hoja, así que no se usa: un reparto
+    // inventado por destino es peor que uno solo bien sumado.
+    apunte("Credit", cuentaRetenciones, aRetener, `${concepto} · retenues et cotisations`);
   }
 
   apunte("Credit", cuentaBanco, Number(hoja.net), `${concepto} · net versé`);
+
+  // El cinturón, además de los tirantes. Si algún día un cambio aquí arriba
+  // rompiera la igualdad, QuickBooks contestaría con un error suyo que el
+  // contratista no puede entender ni arreglar. Mejor pararlo aquí y decirlo
+  // con nuestras palabras.
+  const suma = (tipo: "Debit" | "Credit") =>
+    redondear(
+      (lineas as { Amount: number; JournalEntryLineDetail: { PostingType: string } }[])
+        .filter((l) => l.JournalEntryLineDetail.PostingType === tipo)
+        .reduce((s, l) => s + l.Amount, 0)
+    );
+  if (suma("Debit") !== suma("Credit")) {
+    throw new Error(
+      `el asiento de esta nómina no cuadra (debe ${suma("Debit")} / haber ${suma("Credit")}). ` +
+        "Revisa el bruto, las retenciones y el neto de la hoja."
+    );
+  }
 
   const creado = await llamar<{ JournalEntry?: { Id: string; SyncToken: string } }>(
     admin,
