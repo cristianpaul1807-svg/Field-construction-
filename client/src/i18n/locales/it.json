@@ -732,7 +732,11 @@
     "showScheduleHint": "Costruita dalla proiezione dei lavori. Sapere quando si inizia e quanto dura è ciò che più rassicura il cliente prima di firmare.",
     "provinceHint": "Da qui esce l'imposta di ogni fattura. Scegli dove dichiari.",
     "provinceChangeHere": "Cambiala in {{menuAjustes}} → {{menuPagos}}",
-    "holdbackTooHigh": "Attenzione: con il {{percent}} % trattieni quella parte su ogni pagamento parziale, quindi le tue fatture chiederanno molto meno di quanto vale il lavoro. In Québec la ritenuta è del 10 %."
+    "holdbackTooHigh": "Attenzione: con il {{percent}} % trattieni quella parte su ogni pagamento parziale, quindi le tue fatture chiederanno molto meno di quanto vale il lavoro. In Québec la ritenuta è del 10 %.",
+    "ccqSubject": "Il mio lavoro è soggetto alla CCQ (loi R-20)",
+    "ccqSubjectHint": "Lo è quasi tutta l'edilizia in Québec. Se lo spunti, dovrai mandare il rapporto mensile alla CCQ entro il 15 di ogni mese, anche per un mese senza lavori.",
+    "ccqEmployerNumber": "Numero di datore di lavoro CCQ",
+    "ccqEmployerNumberHint": "Quello che ti hanno dato all'iscrizione. Compare su ogni rapporto mensile che trasmetti."
   },
   "reports": {
     "title": "Report",
@@ -1696,6 +1700,13 @@
           "p2": "Appena salvi, compare a quella persona nel calendario del telefono, con un avviso nei giorni interessati. Non devi dirglielo a parte.",
           "p3": "E quando prepari la busta paga, i giorni di assenza compaiono accanto alle ore lavorate. Così delle ore basse si spiegano da sole invece di mandarti a rivedere i rapportini.",
           "nota": "Quello che pianifichi tu è approvato subito. Quello che chiede il lavoratore resta in attesa finché non dai l'ok, e fino ad allora lui lo vede segnato come in attesa sul telefono."
+        },
+        "ccq": {
+          "title": "La CCQ: cosa segnare e dove",
+          "p1": "Se il tuo lavoro è soggetto alla loi R-20 — lo è quasi tutta l'edilizia in Québec — ogni mese bisogna mandare alla CCQ chi ha lavorato, in che mestiere, con che status, in che settore e regione, quante ore e quanto ha preso. Scade il 15 del mese dopo, e va mandato anche per un mese senza lavori.",
+          "p2": "Spunta la casella in {{menuAjustes}} → {{menuEmpresa}} e scrivici il tuo numero di datore di lavoro. Si chiede una volta sola.",
+          "p3": "Il mestiere, lo status, il settore e la regione di ognuno vanno nel suo contratto di lavoro, in {{menuTecnicos}}. Lì e non nella sua scheda perché è quanto hai pattuito con lui per quel periodo: chi cambia mestiere firma un altro contratto, e il rapporto di marzo deve continuare a dire com'era a marzo.",
+          "nota": "Il mestiere e lo status vengono stampati anche sul contratto che firma. Sono quello che fissa la sua tariffa del contratto collettivo, e chi firma ha diritto di vedere su cosa gli viene calcolata."
         }
       },
       "dinero": {
@@ -1897,6 +1908,27 @@
       "firmado": "Firmato",
       "rechazado": "Rifiutato",
       "terminado": "Concluso"
+    },
+    "ccqTitle": "Dati per la CCQ",
+    "ccqHint": "Il mestiere e lo status fissano la tariffa del contratto collettivo, e i quattro insieme sono ciò che il rapporto mensile convalida. Stanno qui e non nella sua scheda perché è quanto pattuito per questo periodo.",
+    "ccqTrade": "Mestiere o mansione",
+    "ccqStatus": "Status",
+    "ccqSector": "Settore",
+    "ccqRegion": "Regione",
+    "ccqStatusValue": {
+      "compagnon": "Operaio qualificato",
+      "apprenti_1": "Apprendista, 1º periodo",
+      "apprenti_2": "Apprendista, 2º periodo",
+      "apprenti_3": "Apprendista, 3º periodo",
+      "apprenti_4": "Apprendista, 4º periodo",
+      "apprenti_5": "Apprendista, 5º periodo",
+      "occupation": "Mansione"
+    },
+    "ccqSectorValue": {
+      "residentiel": "Residenziale",
+      "institutionnel_commercial": "Istituzionale e commerciale",
+      "industriel": "Industriale",
+      "genie_civil_voirie": "Ingegneria civile e viabilità"
     }
   },
   "workerAgreements": {

@@ -31,6 +31,8 @@ interface CompanyData {
   logoUrl: string | null;
   estimateShowMaterials: boolean;
   estimateShowSchedule: boolean;
+  ccqEmployerNumber: string | null;
+  ccqSubject: boolean;
 }
 
 interface TaxRate {
@@ -67,6 +69,8 @@ export default function SettingsCompany() {
   const [email, setEmail] = useState("");
   const [gstNumber, setGstNumber] = useState("");
   const [qstNumber, setQstNumber] = useState("");
+  const [ccqNumber, setCcqNumber] = useState("");
+  const [ccqSubject, setCcqSubject] = useState(false);
   const [holdbackPercent, setHoldbackPercent] = useState("0");
   const [estimateTerms, setEstimateTerms] = useState("");
   const [showMaterials, setShowMaterials] = useState(true);
@@ -120,6 +124,8 @@ export default function SettingsCompany() {
     setEstimateTerms(data.estimateTerms ?? "");
     setShowMaterials(data.estimateShowMaterials !== false);
     setShowSchedule(data.estimateShowSchedule !== false);
+    setCcqNumber(data.ccqEmployerNumber ?? "");
+    setCcqSubject(data.ccqSubject === true);
   }, [data]);
 
   const save = async () => {
@@ -142,6 +148,8 @@ export default function SettingsCompany() {
           estimateTerms,
           estimateShowMaterials: showMaterials,
           estimateShowSchedule: showSchedule,
+          ccqEmployerNumber: ccqNumber,
+          ccqSubject,
         }),
       });
       if (!res.ok) {
@@ -300,6 +308,32 @@ export default function SettingsCompany() {
                   placeholder="1234567890 TQ0001"
                 />
               </div>
+              {/* La CCQ. Sólo en Quebec: en el resto de Canadá no existe, y
+                  un campo que no le toca a nadie es ruido permanente. */}
+              {province === "QC" && (
+                <div className="sm:col-span-2 space-y-2 rounded-lg border border-border p-3">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <Checkbox checked={ccqSubject} onCheckedChange={(v) => setCcqSubject(v === true)} />
+                    <span className="min-w-0">
+                      <span className="block text-sm text-foreground">{t("settings.ccqSubject")}</span>
+                      <span className="block text-xs text-muted-foreground">{t("settings.ccqSubjectHint")}</span>
+                    </span>
+                  </label>
+                  {ccqSubject && (
+                    <div className="space-y-1.5 pt-1">
+                      <Label htmlFor="ccq">{t("settings.ccqEmployerNumber")}</Label>
+                      <Input
+                        id="ccq"
+                        className="sm:max-w-xs"
+                        value={ccqNumber}
+                        onChange={(e) => setCcqNumber(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">{t("settings.ccqEmployerNumberHint")}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <Label htmlFor="holdback">{t("settings.holdbackPercent")}</Label>
                 <Input

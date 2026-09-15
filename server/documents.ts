@@ -168,6 +168,9 @@ export interface AgreementDoc {
   hoursPerWeek: number | null;
   /** Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí. */
   vacationPercent: number;
+  /** Lo de la CCQ. El oficio y la región son texto libre; el estatuto y el
+   *  sector llegan como código y se traducen aquí, como el resto del documento. */
+  ccq: { trade: string | null; status: string | null; sector: string | null; region: string | null } | null;
   terms: string | null;
   notes: string | null;
   signature: { name: string; signedAt: Date } | null;
@@ -308,6 +311,13 @@ interface Copy {
   agreementPayFrequencies: Record<"semanal" | "quincenal" | "mensual" | "al_terminar", string>;
   agreementHoursPerWeek: string;
   agreementVacation: string;
+  agreementCcqTitle: string;
+  agreementCcqTrade: string;
+  agreementCcqStatus: string;
+  agreementCcqSector: string;
+  agreementCcqRegion: string;
+  agreementCcqStatuses: Record<string, string>;
+  agreementCcqSectors: Record<string, string>;
   agreementVacationNote: (p: number) => string;
   agreementTerms: string;
   agreementNotes: string;
@@ -407,6 +417,20 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementHoursPerWeek: "Horas por semana",
     agreementVacation: "Indemnidad de vacaciones",
+    agreementCcqTitle: "CCQ",
+    agreementCcqTrade: "Oficio u ocupación",
+    agreementCcqStatus: "Estatuto",
+    agreementCcqSector: "Sector",
+    agreementCcqRegion: "Región",
+    agreementCcqStatuses: {
+      compagnon: "Compañero", apprenti_1: "Aprendiz 1.º periodo", apprenti_2: "Aprendiz 2.º periodo",
+      apprenti_3: "Aprendiz 3.º periodo", apprenti_4: "Aprendiz 4.º periodo", apprenti_5: "Aprendiz 5.º periodo",
+      occupation: "Ocupación",
+    },
+    agreementCcqSectors: {
+      residentiel: "Residencial", institutionnel_commercial: "Institucional y comercial",
+      industriel: "Industrial", genie_civil_voirie: "Obra civil y viaria",
+    },
     agreementVacationNote: (p) =>
       `Se añade un ${p} % del salario bruto en concepto de vacaciones, conforme a la Ley de normas del trabajo de Quebec.`,
     agreementTerms: "Condiciones acordadas",
@@ -508,6 +532,20 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementHoursPerWeek: "Hours per week",
     agreementVacation: "Vacation pay",
+    agreementCcqTitle: "CCQ",
+    agreementCcqTrade: "Trade or occupation",
+    agreementCcqStatus: "Status",
+    agreementCcqSector: "Sector",
+    agreementCcqRegion: "Region",
+    agreementCcqStatuses: {
+      compagnon: "Journeyman", apprenti_1: "Apprentice, 1st period", apprenti_2: "Apprentice, 2nd period",
+      apprenti_3: "Apprentice, 3rd period", apprenti_4: "Apprentice, 4th period", apprenti_5: "Apprentice, 5th period",
+      occupation: "Occupation",
+    },
+    agreementCcqSectors: {
+      residentiel: "Residential", institutionnel_commercial: "Institutional and commercial",
+      industriel: "Industrial", genie_civil_voirie: "Civil engineering and roads",
+    },
     agreementVacationNote: (p) =>
       `${p} % of gross wages is added as vacation pay, in accordance with Quebec's Act respecting labour standards.`,
     agreementTerms: "Agreed terms",
@@ -608,6 +646,20 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementHoursPerWeek: "Heures par semaine",
     agreementVacation: "Indemnité de vacances",
+    agreementCcqTitle: "CCQ",
+    agreementCcqTrade: "Métier ou occupation",
+    agreementCcqStatus: "Statut",
+    agreementCcqSector: "Secteur",
+    agreementCcqRegion: "Région",
+    agreementCcqStatuses: {
+      compagnon: "Compagnon", apprenti_1: "Apprenti, 1re période", apprenti_2: "Apprenti, 2e période",
+      apprenti_3: "Apprenti, 3e période", apprenti_4: "Apprenti, 4e période", apprenti_5: "Apprenti, 5e période",
+      occupation: "Occupation",
+    },
+    agreementCcqSectors: {
+      residentiel: "Résidentiel", institutionnel_commercial: "Institutionnel et commercial",
+      industriel: "Industriel", genie_civil_voirie: "Génie civil et voirie",
+    },
     agreementVacationNote: (p) =>
       `Une indemnité de vacances de ${p} % du salaire brut s'ajoute, conformément à la Loi sur les normes du travail du Québec.`,
     agreementTerms: "Conditions convenues",
@@ -708,6 +760,20 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementHoursPerWeek: "Ore a settimana",
     agreementVacation: "Indennità di ferie",
+    agreementCcqTitle: "CCQ",
+    agreementCcqTrade: "Mestiere o mansione",
+    agreementCcqStatus: "Status",
+    agreementCcqSector: "Settore",
+    agreementCcqRegion: "Regione",
+    agreementCcqStatuses: {
+      compagnon: "Operaio qualificato", apprenti_1: "Apprendista, 1º periodo", apprenti_2: "Apprendista, 2º periodo",
+      apprenti_3: "Apprendista, 3º periodo", apprenti_4: "Apprendista, 4º periodo", apprenti_5: "Apprendista, 5º periodo",
+      occupation: "Mansione",
+    },
+    agreementCcqSectors: {
+      residentiel: "Residenziale", institutionnel_commercial: "Istituzionale e commerciale",
+      industriel: "Industriale", genie_civil_voirie: "Ingegneria civile e viabilità",
+    },
     agreementVacationNote: (p) =>
       `Si aggiunge un ${p} % della retribuzione lorda a titolo di ferie, secondo la Legge sulle norme del lavoro del Québec.`,
     agreementTerms: "Condizioni concordate",
@@ -1732,6 +1798,18 @@ export function renderAgreementPdf(data: AgreementDoc, lang: DocLang): Promise<B
       { width: CONTENT_WIDTH }
     );
     doc.y += 6;
+  }
+
+  // El oficio y el estatuto son lo que fija la tarifa del convenio, así que
+  // van impresos: quien firma tiene derecho a ver con qué se le calculó.
+  if (data.ccq && (data.ccq.trade || data.ccq.status || data.ccq.sector || data.ccq.region)) {
+    section(copy.agreementCcqTitle);
+    if (data.ccq.trade) field(copy.agreementCcqTrade, data.ccq.trade);
+    // Si llega un código que no conocemos se imprime tal cual: mejor el
+    // código que un hueco, porque el hueco parece que no se pactó nada.
+    if (data.ccq.status) field(copy.agreementCcqStatus, copy.agreementCcqStatuses[data.ccq.status] ?? data.ccq.status);
+    if (data.ccq.sector) field(copy.agreementCcqSector, copy.agreementCcqSectors[data.ccq.sector] ?? data.ccq.sector);
+    if (data.ccq.region) field(copy.agreementCcqRegion, data.ccq.region);
   }
 
   const bloqueDeTexto = (titulo: string, texto: string) => {

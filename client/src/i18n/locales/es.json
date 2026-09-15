@@ -732,7 +732,11 @@
     "showScheduleHint": "Sale de la proyección de trabajo. Saber cuándo empieza y cuánto dura es lo que más tranquiliza al cliente antes de firmar.",
     "provinceHint": "De aquí sale el impuesto de cada factura. Elige donde tributas.",
     "provinceChangeHere": "Cambiarla en {{menuAjustes}} → {{menuPagos}}",
-    "holdbackTooHigh": "Ojo: con un {{percent}} % le retienes esa parte a cada pago parcial, así que tus facturas cobrarán mucho menos de lo que vale el trabajo. En Quebec la retención es del 10 %."
+    "holdbackTooHigh": "Ojo: con un {{percent}} % le retienes esa parte a cada pago parcial, así que tus facturas cobrarán mucho menos de lo que vale el trabajo. En Quebec la retención es del 10 %.",
+    "ccqSubject": "Mi trabajo está sujeto a la CCQ (loi R-20)",
+    "ccqSubjectHint": "Casi toda la construcción en Quebec lo está. Si lo marcas, tendrás que mandar el informe mensual a la CCQ antes del día 15 de cada mes, aunque ese mes no se haya trabajado.",
+    "ccqEmployerNumber": "Número de empleador de la CCQ",
+    "ccqEmployerNumberHint": "El que te dieron al darte de alta. Sale en cada informe mensual que mandas."
   },
   "reports": {
     "title": "Informes",
@@ -1696,6 +1700,13 @@
           "p2": "En cuanto lo guardas le aparece a esa persona en el calendario de su móvil, con un aviso los días que caen dentro. No tienes que decírselo aparte.",
           "p3": "Y cuando prepares la nómina, los días fuera salen al lado de las horas trabajadas. Así unas horas bajas se explican solas en vez de mandarte a revisar los partes.",
           "nota": "Lo que planificas tú queda aprobado directamente. Lo que pide el trabajador queda pendiente hasta que le des al visto bueno, y hasta entonces él lo ve marcado como pendiente en su móvil."
+        },
+        "ccq": {
+          "title": "La CCQ: qué apuntar y dónde",
+          "p1": "Si tu trabajo está sujeto a la loi R-20 —lo está casi toda la construcción en Quebec— cada mes hay que mandarle a la CCQ quién trabajó, en qué oficio, con qué estatuto, en qué sector y en qué región, cuántas horas y cuánto cobró. Vence el día 15 del mes siguiente y hay que mandarlo aunque ese mes no se haya trabajado.",
+          "p2": "Marca la casilla en {{menuAjustes}} → {{menuEmpresa}} y escribe ahí tu número de empleador. Sólo se pide una vez.",
+          "p3": "El oficio, el estatuto, el sector y la región de cada persona van en su acuerdo de trabajo, en {{menuTecnicos}}. Van ahí y no en su ficha porque es lo que pactaste con ella para ese periodo: quien cambia de oficio firma otro acuerdo, y el informe de marzo tiene que seguir diciendo lo que era en marzo.",
+          "nota": "El oficio y el estatuto también salen impresos en el acuerdo que firma. Son lo que fija su tarifa del convenio, y quien firma tiene derecho a ver con qué se le calcula."
         }
       },
       "dinero": {
@@ -1897,6 +1908,27 @@
       "firmado": "Firmado",
       "rechazado": "Rechazado",
       "terminado": "Terminado"
+    },
+    "ccqTitle": "Datos para la CCQ",
+    "ccqHint": "El oficio y el estatuto son lo que fija la tarifa del convenio, y los cuatro juntos son lo que valida el informe mensual. Van aquí y no en su ficha porque es lo pactado para este periodo.",
+    "ccqTrade": "Oficio u ocupación",
+    "ccqStatus": "Estatuto",
+    "ccqSector": "Sector",
+    "ccqRegion": "Región",
+    "ccqStatusValue": {
+      "compagnon": "Compañero",
+      "apprenti_1": "Aprendiz 1.º periodo",
+      "apprenti_2": "Aprendiz 2.º periodo",
+      "apprenti_3": "Aprendiz 3.º periodo",
+      "apprenti_4": "Aprendiz 4.º periodo",
+      "apprenti_5": "Aprendiz 5.º periodo",
+      "occupation": "Ocupación"
+    },
+    "ccqSectorValue": {
+      "residentiel": "Residencial",
+      "institutionnel_commercial": "Institucional y comercial",
+      "industriel": "Industrial",
+      "genie_civil_voirie": "Obra civil y viaria"
     }
   },
   "workerAgreements": {

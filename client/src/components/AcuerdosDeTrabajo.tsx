@@ -46,6 +46,10 @@ interface Acuerdo {
   terms: string | null;
   notes: string | null;
   status: keyof typeof TONO;
+  ccqTrade: string | null;
+  ccqStatus: string | null;
+  ccqSector: string | null;
+  ccqRegion: string | null;
   signedAt: string | null;
   signatureName: string | null;
 }
@@ -60,9 +64,25 @@ type Borrador = {
   payFrequency: (typeof FRECUENCIAS)[number];
   hoursPerWeek: string;
   vacationPercent: string;
+  ccqTrade: string;
+  ccqStatus: string;
+  ccqSector: string;
+  ccqRegion: string;
   terms: string;
   notes: string;
 };
+
+/** Cerradas porque están en la ley; el oficio y la región se escriben. */
+const SECTORES_CCQ = ["residentiel", "institutionnel_commercial", "industriel", "genie_civil_voirie"] as const;
+const ESTATUTOS_CCQ = [
+  "compagnon",
+  "apprenti_1",
+  "apprenti_2",
+  "apprenti_3",
+  "apprenti_4",
+  "apprenti_5",
+  "occupation",
+] as const;
 
 const vacio = (kind: "empleo" | "subcontrato"): Borrador => ({
   kind,
@@ -75,6 +95,10 @@ const vacio = (kind: "empleo" | "subcontrato"): Borrador => ({
   hoursPerWeek: "",
   // Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí.
   vacationPercent: "4",
+  ccqTrade: "",
+  ccqStatus: "",
+  ccqSector: "",
+  ccqRegion: "",
   terms: "",
   notes: "",
 });
@@ -89,6 +113,10 @@ const desdeAcuerdo = (a: Acuerdo): Borrador => ({
   payFrequency: a.payFrequency,
   hoursPerWeek: a.hoursPerWeek == null ? "" : String(a.hoursPerWeek),
   vacationPercent: String(a.vacationPercent),
+  ccqTrade: a.ccqTrade ?? "",
+  ccqStatus: a.ccqStatus ?? "",
+  ccqSector: a.ccqSector ?? "",
+  ccqRegion: a.ccqRegion ?? "",
   terms: a.terms ?? "",
   notes: a.notes ?? "",
 });
@@ -301,6 +329,65 @@ export function AcuerdosDeTrabajo({
                   <p className="text-xs text-muted-foreground">{t("agreements.vacationHint")}</p>
                 </div>
               )}
+              {/* Lo de la CCQ vive en el acuerdo porque es lo que se pactó
+                  con esta persona para este periodo. Quien cambia de oficio
+                  firma otro acuerdo, y el informe de marzo tiene que seguir
+                  diciendo lo que era en marzo. */}
+              <div className="sm:col-span-2 space-y-3 rounded-lg border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{t("agreements.ccqTitle")}</p>
+                  <p className="text-xs text-muted-foreground">{t("agreements.ccqHint")}</p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ac-metier">{t("agreements.ccqTrade")}</Label>
+                    <Input
+                      id="ac-metier"
+                      value={borrador.ccqTrade}
+                      onChange={(e) => setBorrador({ ...borrador, ccqTrade: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ac-statut">{t("agreements.ccqStatus")}</Label>
+                    <Select
+                      value={borrador.ccqStatus || "—"}
+                      onValueChange={(v) => setBorrador({ ...borrador, ccqStatus: v === "—" ? "" : v })}
+                    >
+                      <SelectTrigger id="ac-statut"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="—">{t("common.optional")}</SelectItem>
+                        {ESTATUTOS_CCQ.map((x) => (
+                          <SelectItem key={x} value={x}>{t(`agreements.ccqStatusValue.${x}`)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ac-secteur">{t("agreements.ccqSector")}</Label>
+                    <Select
+                      value={borrador.ccqSector || "—"}
+                      onValueChange={(v) => setBorrador({ ...borrador, ccqSector: v === "—" ? "" : v })}
+                    >
+                      <SelectTrigger id="ac-secteur"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="—">{t("common.optional")}</SelectItem>
+                        {SECTORES_CCQ.map((x) => (
+                          <SelectItem key={x} value={x}>{t(`agreements.ccqSectorValue.${x}`)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ac-region">{t("agreements.ccqRegion")}</Label>
+                    <Input
+                      id="ac-region"
+                      value={borrador.ccqRegion}
+                      onChange={(e) => setBorrador({ ...borrador, ccqRegion: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="ac-cond">{t("agreements.terms")} ({t("common.optional")})</Label>
                 <Textarea

@@ -62,6 +62,7 @@ import { profitabilityByProject } from "./profitability";
 import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
+import { camposCcq } from "./ccq";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
 import {
@@ -8853,7 +8854,7 @@ async function construirPdfDeAcuerdo(
   const { data: a } = await admin
     .from("worker_agreements")
     .select(
-      "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, signed_at, signature_name, created_at, employees(name, role, phone), subcontractors(name, trade, phone)"
+      "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, ccq_trade, ccq_status, ccq_sector, ccq_region, terms, notes, signed_at, signature_name, created_at, employees(name, role, phone), subcontractors(name, trade, phone)"
     )
     .eq("business_id", businessId)
     .eq("id", agreementId)
@@ -8887,6 +8888,12 @@ async function construirPdfDeAcuerdo(
       payFrequency: a.pay_frequency as "semanal" | "quincenal" | "mensual" | "al_terminar",
       hoursPerWeek: a.hours_per_week == null ? null : Number(a.hours_per_week),
       vacationPercent: Number(a.vacation_percent),
+      ccq: {
+        trade: a.ccq_trade ?? null,
+        status: a.ccq_status ?? null,
+        sector: a.ccq_sector ?? null,
+        region: a.ccq_region ?? null,
+      },
       terms: a.terms,
       notes: a.notes,
       signature: a.signed_at && a.signature_name ? { name: a.signature_name, signedAt: new Date(a.signed_at) } : null,
@@ -10407,6 +10414,11 @@ function camposDelAcuerdo(body: any) {
     vacation_percent: kind === "subcontrato" ? 0 : Number(body?.vacationPercent ?? 4),
     terms: typeof body?.terms === "string" && body.terms.trim() ? body.terms.trim() : null,
     notes: typeof body?.notes === "string" && body.notes.trim() ? body.notes.trim() : null,
+    // El oficio, el estatuto, el sector y la región viven aquí y no en la ficha
+    // de la persona porque es lo que se pactó con ella para este periodo. Quien
+    // cambia de oficio firma otro acuerdo, y el informe de marzo tiene que
+    // seguir diciendo lo que era en marzo.
+    ...camposCcq(body),
   };
 }
 
@@ -10432,12 +10444,16 @@ function acuerdoParaElPanel(a: any) {
     employeeId: a.employee_id,
     subcontractorId: a.subcontractor_id,
     workerName: a.employees?.name ?? a.subcontractors?.name ?? null,
+    ccqTrade: a.ccq_trade ?? null,
+    ccqStatus: a.ccq_status ?? null,
+    ccqSector: a.ccq_sector ?? null,
+    ccqRegion: a.ccq_region ?? null,
     createdAt: a.created_at,
   };
 }
 
 const SELECT_ACUERDO =
-  "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, status, sent_at, signed_at, signature_name, employee_id, subcontractor_id, created_at, employees(name), subcontractors(name)";
+  "id, number, kind, title, start_date, end_date, pay_kind, pay_amount, pay_frequency, hours_per_week, vacation_percent, terms, notes, status, sent_at, signed_at, signature_name, employee_id, subcontractor_id, ccq_trade, ccq_status, ccq_sector, ccq_region, created_at, employees(name), subcontractors(name)";
 
 apiRouter.get(
   "/agreements",
@@ -11551,7 +11567,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule"
+        "id, name, slug, license_number, tax_config, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, ccq_employer_number, ccq_subject"
       )
       .eq("id", req.businessId!)
       .single();
@@ -11577,6 +11593,10 @@ apiRouter.get(
       logoUrl: data.logo_url ?? null,
       estimateShowMaterials: data.estimate_show_materials !== false,
       estimateShowSchedule: data.estimate_show_schedule !== false,
+      // La CCQ. Son datos suyos, no nuestros: el número se lo dieron a él y si
+      // su trabajo está sujeto a la loi R-20 lo sabe él, no nosotros.
+      ccqEmployerNumber: data.ccq_employer_number ?? null,
+      ccqSubject: data.ccq_subject === true,
     });
   })
 );
@@ -11682,6 +11702,10 @@ apiRouter.patch(
     if (body.estimateTerms !== undefined) update.estimate_terms = body.estimateTerms || null;
     if (body.estimateShowMaterials !== undefined) update.estimate_show_materials = Boolean(body.estimateShowMaterials);
     if (body.estimateShowSchedule !== undefined) update.estimate_show_schedule = Boolean(body.estimateShowSchedule);
+    if (body.ccqEmployerNumber !== undefined) {
+      update.ccq_employer_number = String(body.ccqEmployerNumber ?? "").trim().slice(0, 40) || null;
+    }
+    if (body.ccqSubject !== undefined) update.ccq_subject = Boolean(body.ccqSubject);
     if (body.holdbackPercent !== undefined) {
       const pct = Number(body.holdbackPercent);
       // El tope es 20 y no 100 a propósito. La retención del Código Civil de

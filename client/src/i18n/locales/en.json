@@ -732,7 +732,11 @@
     "showScheduleHint": "Built from the work projection. Knowing when it starts and how long it takes is what reassures a client most before signing.",
     "provinceHint": "This is where every invoice's tax comes from. Pick where you file.",
     "provinceChangeHere": "Change it in {{menuAjustes}} → {{menuPagos}}",
-    "holdbackTooHigh": "Careful: at {{percent}} % you withhold that share of every progress payment, so your invoices will charge far less than the work is worth. In Quebec the holdback is 10 %."
+    "holdbackTooHigh": "Careful: at {{percent}} % you withhold that share of every progress payment, so your invoices will charge far less than the work is worth. In Quebec the holdback is 10 %.",
+    "ccqSubject": "My work falls under the CCQ (loi R-20)",
+    "ccqSubjectHint": "Almost all construction in Quebec does. If you tick this, you have to send the CCQ monthly report by the 15th of each month — even for a month with no work.",
+    "ccqEmployerNumber": "CCQ employer number",
+    "ccqEmployerNumberHint": "The one they gave you when you registered. It appears on every monthly report you send."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1696,6 +1700,13 @@
           "p2": "The moment you save it, it appears in that person's calendar on their phone, with a notice on the days it covers. You don't have to tell them separately.",
           "p3": "And when you prepare payroll, the days away show up next to the hours worked. That way low hours explain themselves instead of sending you back through the timesheets.",
           "nota": "What you plan is approved straight away. What a worker asks for stays pending until you sign off, and until then they see it marked as pending on their phone."
+        },
+        "ccq": {
+          "title": "The CCQ: what to record and where",
+          "p1": "If your work falls under loi R-20 — almost all construction in Quebec does — every month you have to tell the CCQ who worked, in what trade, with what status, in which sector and region, how many hours and how much they were paid. It's due on the 15th of the following month, and it has to be filed even for a month with no work.",
+          "p2": "Tick the box in {{menuAjustes}} → {{menuEmpresa}} and put your employer number there. It's asked once.",
+          "p3": "Each person's trade, status, sector and region go on their work agreement, in {{menuTecnicos}}. There and not on their profile because it's what you agreed with them for that period: someone who changes trade signs a new agreement, and March's report has to keep saying what it was in March.",
+          "nota": "The trade and status also print on the agreement they sign. They're what sets their collective-agreement rate, and whoever signs has a right to see what they're being paid on."
         }
       },
       "dinero": {
@@ -1897,6 +1908,27 @@
       "firmado": "Signed",
       "rechazado": "Rejected",
       "terminado": "Ended"
+    },
+    "ccqTitle": "CCQ details",
+    "ccqHint": "The trade and status are what set the collective-agreement rate, and the four together are what the monthly report validates. They live here, not on their profile, because this is what was agreed for this period.",
+    "ccqTrade": "Trade or occupation",
+    "ccqStatus": "Status",
+    "ccqSector": "Sector",
+    "ccqRegion": "Region",
+    "ccqStatusValue": {
+      "compagnon": "Journeyman",
+      "apprenti_1": "Apprentice, 1st period",
+      "apprenti_2": "Apprentice, 2nd period",
+      "apprenti_3": "Apprentice, 3rd period",
+      "apprenti_4": "Apprentice, 4th period",
+      "apprenti_5": "Apprentice, 5th period",
+      "occupation": "Occupation"
+    },
+    "ccqSectorValue": {
+      "residentiel": "Residential",
+      "institutionnel_commercial": "Institutional and commercial",
+      "industriel": "Industrial",
+      "genie_civil_voirie": "Civil engineering and roads"
     }
   },
   "workerAgreements": {

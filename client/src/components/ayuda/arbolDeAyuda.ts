@@ -84,6 +84,10 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // cerraba la conversación en la que se dijo.
       { id: "acuerdo", parrafos: 4, nota: true, ruta: "/technicians" },
       { id: "vacaciones", parrafos: 3, nota: true, ruta: "/time-off" },
+      // Lo de la CCQ está repartido entre dos pantallas —el número en los
+      // datos de la empresa, el oficio en cada acuerdo— y sin esto nadie
+      // encuentra la segunda.
+      { id: "ccq", parrafos: 3, nota: true, ruta: "/technicians" },
     ],
   },
   {

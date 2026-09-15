@@ -141,3 +141,50 @@ cuando se le da de alta.
 el título y lo encoge hasta que entra en su mitad de la hoja, y si ni al mínimo
 entra, lo parte en dos líneas. Pasó con «CONTRAT DE SOUS-TRAITANCE», que es
 mucho más largo que «FACTURE».
+
+---
+
+## La CCQ
+
+En Quebec, un empleador de construcción sujeto a la **loi R-20** tiene que
+mandar cada mes a la Commission de la construction du Québec quién trabajó, en
+qué **oficio**, con qué **estatuto**, en qué **sector** y en qué **región**,
+cuántas horas y cuánto cobró. Vence el **15 del mes siguiente**, hay que
+mandarlo **aunque no se haya trabajado**, y la penalización llega al **20 %**.
+
+Esos cuatro datos viven **en el acuerdo**, no en la ficha de la persona. Es lo
+que se pactó con ella para ese periodo: quien cambia de oficio firma otro
+acuerdo, y el informe de marzo tiene que seguir diciendo lo que era en marzo.
+Guardarlo en la ficha lo reescribiría hacia atrás.
+
+| Campo | Qué es |
+|---|---|
+| `ccq_trade` | Métier u occupation. Texto libre |
+| `ccq_status` | `compagnon`, `apprenti_1`…`apprenti_5`, `occupation` |
+| `ccq_sector` | `residentiel`, `institutionnel_commercial`, `industriel`, `genie_civil_voirie` |
+| `ccq_region` | Texto libre |
+
+**El sector y el estatuto se validan; el oficio y la región no.** Los cuatro
+sectores están en la ley y los estatutos también, así que un valor inventado
+ahí rompería el informe. Los oficios y las regiones de la CCQ cambian con los
+convenios, y una lista cerrada que va por detrás **impide declarar a alguien**
+en vez de ayudar — que es la peor forma de fallar en algo que lleva multa.
+
+El **número de empleador** y si el negocio está sujeto van en Configuración →
+Datos de la empresa, y sólo se preguntan en Quebec: fuera de Quebec la CCQ no
+existe y el campo sería ruido permanente.
+
+El oficio y el estatuto **se imprimen en el acuerdo** que firma el trabajador.
+Son lo que fija su tarifa del convenio, y quien firma tiene derecho a ver con
+qué se le calcula.
+
+### Lo que todavía no está
+
+El **informe mensual**. La especificación del fichero no es pública —la CCQ la
+da por contacto directo— y además está cambiando: están modernizando el
+rapport mensuel y los proveedores tienen que actualizarse. Construir el fichero
+adivinando la estructura sería entregar algo que la CCQ rechaza.
+
+Lo que sí está es **el dato**, que es la parte que no cambia: con el oficio, el
+estatuto, el sector, la región y las horas aprobadas, el informe se puede armar
+en cuanto tengamos la especificación.

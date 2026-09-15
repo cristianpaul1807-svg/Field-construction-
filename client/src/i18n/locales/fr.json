@@ -732,7 +732,11 @@
     "showScheduleHint": "Construit à partir de la projection des travaux. Savoir quand ça commence et combien de temps ça dure est ce qui rassure le plus avant de signer.",
     "provinceHint": "C'est d'ici que vient la taxe de chaque facture. Choisissez où vous déclarez.",
     "provinceChangeHere": "La changer dans {{menuAjustes}} → {{menuPagos}}",
-    "holdbackTooHigh": "Attention : à {{percent}} %, vous retenez cette part sur chaque paiement partiel, donc vos factures réclameront bien moins que la valeur des travaux. Au Québec, la retenue est de 10 %."
+    "holdbackTooHigh": "Attention : à {{percent}} %, vous retenez cette part sur chaque paiement partiel, donc vos factures réclameront bien moins que la valeur des travaux. Au Québec, la retenue est de 10 %.",
+    "ccqSubject": "Mes travaux sont assujettis à la CCQ (loi R-20)",
+    "ccqSubjectHint": "C'est le cas de presque toute la construction au Québec. Si vous cochez, vous devez transmettre le rapport mensuel à la CCQ avant le 15 de chaque mois, même pour un mois sans travaux.",
+    "ccqEmployerNumber": "Numéro d'employeur CCQ",
+    "ccqEmployerNumberHint": "Celui qu'on vous a donné à l'inscription. Il figure sur chaque rapport mensuel que vous transmettez."
   },
   "reports": {
     "title": "Rapports",
@@ -1696,6 +1700,13 @@
           "p2": "Dès que vous enregistrez, ça apparaît dans le calendrier de cette personne sur son téléphone, avec un avis les jours concernés. Pas besoin de le lui dire à part.",
           "p3": "Et au moment de la paie, les jours d'absence s'affichent à côté des heures travaillées. Des heures basses s'expliquent ainsi d'elles-mêmes au lieu de vous renvoyer aux feuilles de temps.",
           "nota": "Ce que vous planifiez est approuvé d'emblée. Ce qu'un travailleur demande reste en attente jusqu'à votre accord, et d'ici là il le voit marqué en attente sur son téléphone."
+        },
+        "ccq": {
+          "title": "La CCQ : quoi inscrire et où",
+          "p1": "Si vos travaux sont assujettis à la loi R-20 — c'est le cas de presque toute la construction au Québec — chaque mois il faut transmettre à la CCQ qui a travaillé, dans quel métier, avec quel statut, dans quel secteur et quelle région, combien d'heures et combien il a été payé. C'est dû le 15 du mois suivant, et il faut le transmettre même pour un mois sans travaux.",
+          "p2": "Cochez la case dans {{menuAjustes}} → {{menuEmpresa}} et inscrivez-y votre numéro d'employeur. On ne le demande qu'une fois.",
+          "p3": "Le métier, le statut, le secteur et la région de chaque personne vont dans son contrat de travail, dans {{menuTecnicos}}. Là et non dans sa fiche parce que c'est ce que vous avez convenu avec elle pour cette période : qui change de métier signe un autre contrat, et le rapport de mars doit continuer à dire ce qu'il en était en mars.",
+          "nota": "Le métier et le statut s'impriment aussi sur le contrat qu'elle signe. C'est ce qui fixe son taux de la convention, et qui signe a le droit de voir sur quoi on le calcule."
         }
       },
       "dinero": {
@@ -1897,6 +1908,27 @@
       "firmado": "Signée",
       "rechazado": "Refusée",
       "terminado": "Terminée"
+    },
+    "ccqTitle": "Renseignements CCQ",
+    "ccqHint": "Le métier et le statut fixent le taux de la convention, et les quatre ensemble sont ce que valide le rapport mensuel. Ils vivent ici et non dans sa fiche parce que c'est ce qui a été convenu pour cette période.",
+    "ccqTrade": "Métier ou occupation",
+    "ccqStatus": "Statut",
+    "ccqSector": "Secteur",
+    "ccqRegion": "Région",
+    "ccqStatusValue": {
+      "compagnon": "Compagnon",
+      "apprenti_1": "Apprenti, 1re période",
+      "apprenti_2": "Apprenti, 2e période",
+      "apprenti_3": "Apprenti, 3e période",
+      "apprenti_4": "Apprenti, 4e période",
+      "apprenti_5": "Apprenti, 5e période",
+      "occupation": "Occupation"
+    },
+    "ccqSectorValue": {
+      "residentiel": "Résidentiel",
+      "institutionnel_commercial": "Institutionnel et commercial",
+      "industriel": "Industriel",
+      "genie_civil_voirie": "Génie civil et voirie"
     }
   },
   "workerAgreements": {
