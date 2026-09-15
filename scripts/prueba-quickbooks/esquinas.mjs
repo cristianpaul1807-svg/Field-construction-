@@ -113,5 +113,21 @@ const nuevos = (n) => enviados.slice(n);
     !!msg && /Taxes/i.test(msg), msg ? msg.slice(0, 90) : "no lanzó");
 }
 
+// 7. Una obra de Quebec en un QuickBooks que sólo tiene el impuesto de Ontario.
+//    Aceptarlo es lo que dejó una factura con HST del 13 % en los libros de
+//    un contratista quebequés, y con «enviado» en verde en nuestra pantalla.
+{
+  const a = nuevoAdmin();
+  globalThis.__soloOntario = true;
+  const i = desde();
+  let msg = null;
+  try { await sync.enviarFactura(a, N, "fac-1"); } catch (e) { msg = e.message; }
+  globalThis.__soloOntario = false;
+  di("Sin el impuesto de su provincia, no se usa el de otra",
+    !nuevos(i).some((x) => x.entidad === "invoice"), msg ? "no se mandó" : "SE MANDÓ");
+  di("Y el aviso dice qué provincia falta y dónde crearlo",
+    !!msg && /QC/.test(msg) && /Taxes/i.test(msg), msg ? msg.slice(0, 110) : "no lanzó");
+}
+
 console.log(out.join("\n"));
 console.log(`\n${out.filter((x) => x.startsWith("ok")).length} bien, ${out.filter((x) => x.startsWith("XX")).length} mal\n`);

@@ -105,16 +105,57 @@ const PISTA_DE_IMPUESTO: Record<string, RegExp> = {
 /** Lo que nunca es el impuesto normal de una factura de obra. */
 const NO_ES_IMPUESTO = /exempt|zero|out of scope|hors|esent|no tax/i;
 
+/** El código elegido, o qué falta para poder elegir uno. */
+type Impuesto = { id: string } | { falta: "ninguno" | "provincia" };
+
+/**
+ * Cuál de los códigos que tiene la empresa es el suyo.
+ *
+ * **Si no está el de su provincia, no se usa el de otra.** Antes sí: el
+ * argumento era que una factura con el impuesto equivocado se corrige en dos
+ * clics y una que no llegó no se corrige porque nadie sabe que falta.
+ *
+ * El argumento era falso, y lo demostró una factura de prueba. Una obra de
+ * Quebec de 5 000 $ aterrizó en QuickBooks con **HST de Ontario al 13 %**:
+ * 650 $ donde tenían que ir 250 $ de TPS y 498,75 $ de TVQ, remitidos a quien
+ * no toca. Y en nuestra pantalla ponía «enviado», en verde, sin nada que
+ * mirar. Un envío que falla se ve y se arregla; un impuesto que miente se
+ * queda en los libros hasta que lo encuentra el contable, o nadie.
+ */
+function elegirImpuesto(
+  candidatos: { Id: string; Name?: string }[],
+  provincia: string
+): Impuesto {
+  if (candidatos.length === 0) return { falta: "ninguno" };
+  const pista = PISTA_DE_IMPUESTO[provincia.toUpperCase()];
+  // Sin pista para esa provincia no hay nada que comprobar, y quedarse
+  // callado sería peor: el primero que cobre algo.
+  if (!pista) return { id: candidatos[0].Id };
+  const suyo = candidatos.find((c) => pista.test(c.Name ?? ""));
+  return suyo ? { id: suyo.Id } : { falta: "provincia" };
+}
+
+/** Qué decirle al contratista, que es quien puede arreglarlo en su QuickBooks. */
+function faltaElImpuesto(falta: "ninguno" | "provincia", provincia: string): string {
+  if (falta === "ninguno") {
+    return "tu QuickBooks no tiene ningún código de impuesto que se pueda usar. Créalo en Taxes → Sales tax y vuelve a intentarlo.";
+  }
+  const cuales = provincia.toUpperCase() === "QC" ? " —la TPS y la TVQ—" : "";
+  return `tu QuickBooks no tiene ningún código de impuesto de ${provincia.toUpperCase()}${cuales}. Créalo en Taxes → Sales tax y vuelve a intentarlo. Mandar la factura con el impuesto de otra provincia dejaría mal los libros sin que se notara.`;
+}
+
 /**
  * El código de impuesto de esa empresa, elegido entre los que tiene.
  *
- * Se piden todos los activos y se queda con el que lleva el impuesto
- * provincial en el nombre; si no hay ninguno, con el primero que cobre algo.
- * Quedarse sin código no es una opción: QuickBooks Canadá rechaza la factura
+ * Se piden todos los activos y elige `elegirImpuesto`, que es donde está la
+ * regla: el de su provincia, o ninguno.
+ *
+ * Quedarse sin código tampoco es gratis —QuickBooks Canadá rechaza la factura
  * entera, y el mensaje que devuelve no dice que falte un código, dice que
- * falta una tasa.
+ * falta una tasa— pero eso se ve y se arregla. Por eso el mensaje que damos
+ * nosotros nombra la provincia y la pantalla.
  */
-async function idDelImpuesto(admin: Admin, businessId: string, provincia: string): Promise<string | null> {
+async function idDelImpuesto(admin: Admin, businessId: string, provincia: string): Promise<Impuesto> {
   try {
     const res = await llamar<{
       QueryResponse?: {
@@ -143,16 +184,9 @@ async function idDelImpuesto(admin: Admin, businessId: string, provincia: string
         (c.SalesTaxRateList?.TaxRateDetail?.length ?? 0) > 0 &&
         !NO_ES_IMPUESTO.test(c.Name ?? "")
     );
-    if (candidatos.length === 0) return null;
-
-    const pista = PISTA_DE_IMPUESTO[provincia.toUpperCase()];
-    const dePorvincia = pista ? candidatos.find((c) => pista.test(c.Name ?? "")) : undefined;
-    // Y si no hay de la provincia, el primero que cobre algo: una factura con
-    // el impuesto de otra provincia se corrige en dos clics; una factura que
-    // no llegó no se corrige, porque nadie sabe que falta.
-    return (dePorvincia ?? candidatos[0]).Id;
+    return elegirImpuesto(candidatos, provincia);
   } catch {
-    return null;
+    return { falta: "ninguno" };
   }
 }
 
@@ -278,14 +312,13 @@ export async function enviarFactura(admin: Admin, businessId: string, invoiceId:
       idDelImpuesto(admin, businessId, String(negocio?.province ?? "QC")),
     ]);
 
-    // Mandarla sin código es mandarla para que la rechacen. Mejor no gastar la
-    // llamada y dejar escrito qué falta, que es lo que el contratista puede
-    // arreglar en su QuickBooks.
-    if (!impuesto) {
-      throw new Error(
-        "tu QuickBooks no tiene ningún código de impuesto que se pueda usar. Créalo en Taxes → Sales tax y vuelve a intentarlo."
-      );
+    // Mandarla sin código es mandarla para que la rechacen; mandarla con el de
+    // otra provincia es peor, porque esa sí la aceptan. Se para aquí y se
+    // escribe qué falta, que es lo que el contratista puede arreglar.
+    if ("falta" in impuesto) {
+      throw new Error(faltaElImpuesto(impuesto.falta, String(negocio?.province ?? "QC")));
     }
+    const codigoDeImpuesto = impuesto.id;
 
     const proyecto = (factura.projects as unknown as { name: string } | null)?.name ?? null;
     const descripcion = [factura.description, proyecto].filter(Boolean).join(" — ") || "Travaux de construction";
@@ -313,7 +346,7 @@ export async function enviarFactura(admin: Admin, businessId: string, invoiceId:
                 ...(servicio ? { ItemRef: { value: servicio } } : {}),
                 Qty: 1,
                 UnitPrice: Number(factura.subtotal),
-                ...(impuesto ? { TaxCodeRef: { value: impuesto } } : {}),
+                TaxCodeRef: { value: codigoDeImpuesto },
               },
             },
           ],
@@ -365,11 +398,10 @@ export async function enviarNotaDeCredito(admin: Admin, businessId: string, cred
       idDelImpuesto(admin, businessId, String(negocio?.province ?? "QC")),
     ]);
 
-    if (!impuesto) {
-      throw new Error(
-        "tu QuickBooks no tiene ningún código de impuesto que se pueda usar. Créalo en Taxes → Sales tax y vuelve a intentarlo."
-      );
+    if ("falta" in impuesto) {
+      throw new Error(faltaElImpuesto(impuesto.falta, String(negocio?.province ?? "QC")));
     }
+    const codigoDeImpuesto = impuesto.id;
 
     const creada = await llamar<{ CreditMemo?: { Id: string; SyncToken: string } }>(
       admin,
@@ -391,7 +423,7 @@ export async function enviarNotaDeCredito(admin: Admin, businessId: string, cred
                 ...(servicio ? { ItemRef: { value: servicio } } : {}),
                 Qty: 1,
                 UnitPrice: Number(nota.subtotal),
-                ...(impuesto ? { TaxCodeRef: { value: impuesto } } : {}),
+                TaxCodeRef: { value: codigoDeImpuesto },
               },
             },
           ],
@@ -716,11 +748,10 @@ export async function enviarPresupuesto(admin: Admin, businessId: string, estima
       idDelServicio(admin, businessId),
       idDelImpuesto(admin, businessId, String((negocio.data as any)?.province ?? "QC")),
     ]);
-    if (!impuesto) {
-      throw new Error(
-        "tu QuickBooks no tiene ningún código de impuesto que se pueda usar. Créalo en Taxes → Sales tax y vuelve a intentarlo."
-      );
+    if ("falta" in impuesto) {
+      throw new Error(faltaElImpuesto(impuesto.falta, String((negocio.data as any)?.province ?? "QC")));
     }
+    const codigoDeImpuesto = impuesto.id;
 
     const creado = await llamar<{ Estimate?: { Id: string; SyncToken: string } }>(
       admin,
@@ -741,7 +772,7 @@ export async function enviarPresupuesto(admin: Admin, businessId: string, estima
                 ...(servicio ? { ItemRef: { value: servicio } } : {}),
                 Qty: 1,
                 UnitPrice: subtotal,
-                TaxCodeRef: { value: impuesto },
+                TaxCodeRef: { value: codigoDeImpuesto },
               },
             },
           ],
@@ -987,7 +1018,7 @@ async function idDeCuentaPorSubtipo(
  * acertar: la TPS y la TVQ que Stripe cobra sobre su comisión son un crédito
  * que el contratista recupera, y si entran como parte del gasto se pierden.
  */
-async function idDelImpuestoDeCompra(admin: Admin, businessId: string, provincia: string): Promise<string | null> {
+async function idDelImpuestoDeCompra(admin: Admin, businessId: string, provincia: string): Promise<Impuesto> {
   try {
     const res = await llamar<{
       QueryResponse?: {
@@ -1012,13 +1043,9 @@ async function idDelImpuestoDeCompra(admin: Admin, businessId: string, provincia
         (c.PurchaseTaxRateList?.TaxRateDetail?.length ?? 0) > 0 &&
         !NO_ES_IMPUESTO.test(c.Name ?? "")
     );
-    if (candidatos.length === 0) return null;
-
-    const pista = PISTA_DE_IMPUESTO[provincia.toUpperCase()];
-    const suyo = pista ? candidatos.find((c) => pista.test(c.Name ?? "")) : undefined;
-    return (suyo ?? candidatos[0]).Id;
+    return elegirImpuesto(candidatos, provincia);
   } catch {
-    return null;
+    return { falta: "ninguno" };
   }
 }
 
@@ -1073,7 +1100,8 @@ export async function enviarComisionDeStripe(admin: Admin, businessId: string, p
     }
 
     const factura = (pago.invoices as unknown as { number: string } | null)?.number ?? null;
-    const conImpuesto = Boolean(impuesto);
+    const codigoDeCompra = impuesto && "id" in impuesto ? impuesto.id : null;
+    const conImpuesto = Boolean(codigoDeCompra);
     // Si su plan no tiene código de compra no se deja de mandar el gasto: se
     // manda entero y se dice en el concepto cuánto era impuesto, para que su
     // contable lo pueda reclasificar. Perder la comisión entera por no poder
@@ -1104,7 +1132,7 @@ export async function enviarComisionDeStripe(admin: Admin, businessId: string, p
               Description: ["Stripe", factura, aviso].filter(Boolean).join(" · "),
               AccountBasedExpenseLineDetail: {
                 AccountRef: { value: cuentaComision },
-                ...(conImpuesto ? { TaxCodeRef: { value: impuesto } } : {}),
+                ...(codigoDeCompra ? { TaxCodeRef: { value: codigoDeCompra } } : {}),
               },
             },
           ],

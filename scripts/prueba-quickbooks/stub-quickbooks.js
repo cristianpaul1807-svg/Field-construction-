@@ -16,6 +16,20 @@ export async function llamar(admin, businessId, ruta, opciones) {
     const q = decodeURIComponent(ruta).toLowerCase();
     if (q.includes("from taxcode")) {
       if (globalThis.__sinImpuesto) return { QueryResponse: {} };
+      // Lo que tiene una empresa canadiense recién creada: el impuesto de
+      // Ontario y nada de Quebec. Es exactamente el caso que mandó una obra
+      // de Quebec con HST del 13 %.
+      if (globalThis.__soloOntario) {
+        return {
+          QueryResponse: {
+            TaxCode: [
+              { Id: "TAX-HST-ON", Name: "HST ON", Active: true,
+                SalesTaxRateList: { TaxRateDetail: [{ TaxRateRef: { value: "9", name: "HST 13%" } }] },
+                PurchaseTaxRateList: { TaxRateDetail: [{ TaxRateRef: { value: "9", name: "HST 13%" } }] } },
+            ],
+          },
+        };
+      }
       return {
         QueryResponse: {
           TaxCode: [
