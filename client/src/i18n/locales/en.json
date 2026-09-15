@@ -1599,7 +1599,7 @@
         },
         "misDatos": {
           "title": "Where is my data and who sees it?",
-          "p1": "In Montreal, Canada. The database and the files sit in the provider's Canadian region, so your data, your clients' and your people's never leaves the country. That is what Quebec's Law 25 requires.",
+          "p1": "Stored, in Montreal, Canada: the database and the files do not move from there. While you work they also pass through the server that serves the software, which is in Frankfurt, Germany, and stores nothing. It is all written down in the privacy policy.",
           "p2": "Four services see it and nothing else, each only its own part: the one that stores the database, Stripe when you take card payments, QuickBooks if you connect your accounting, and the service that sends the emails. It is not sold, not used for advertising and not used to train any model.",
           "p3": "GPS position is stored only at the moment of clocking in or out, to know where the punch happened. There is no continuous tracking: between punches the system does not know where anyone is.",
           "nota": "It is all written down, with names and addresses, in the privacy policy. The button below opens it."
@@ -2188,8 +2188,9 @@
         "id": "donde",
         "title": "Where they are",
         "body": [
-          "**In Canada.** The database and the files are hosted on Supabase, in its Montreal region (`ca-central-1`). The data of a Quebec contractor and their workers does not leave the country.",
-          "My being in Italy does not change that: I administer the system from here, but the data stays there."
+          "**Stored, in Canada.** The database and the files are hosted on Supabase, in its Montreal region (`ca-central-1`). That is where everything lives and it does not move from there.",
+          "**In use, they pass through Germany.** The server that serves the software is in Frankfurt. It stores nothing: it asks Montreal for what a screen or a PDF needs, and lets go of it when done. But while you work, the data passes through there, and that belongs in plain sight rather than in the fine print. Germany is under the European GDPR, which gives protection equivalent to what Quebec requires.",
+          "My being in Italy adds nothing to that: I administer the system from here, but there is no copy of your data on my computer."
         ]
       },
       {
@@ -2198,6 +2199,7 @@
         "body": [
           "Only these, and only what each one needs:",
           "**Supabase** — holds the database and the files. Montreal, Canada.",
+          "**Hostinger** — rents the server the software runs on. Frankfurt, Germany. It stores nothing; the data passes through while you work.",
           "**Stripe** — processes card payments. It receives the amount and the payer's details; the card never passes through our server.",
           "**Intuit (QuickBooks)** — only if the contractor connects their accounting. It then receives their clients, invoices, payments and expenses, which is exactly what goes in their books.",
           "**Resend** — sends the system's emails. It receives the address and the content.",

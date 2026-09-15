@@ -87,26 +87,31 @@ PRIVACIDAD = [
     }),
     ("donde", {
         "es": ("Dónde están", [
-            "**En Canadá.** La base de datos y los archivos están alojados en Supabase, en su región de Montreal (`ca-central-1`). Los datos de un contratista quebequés y de sus trabajadores no salen del país.",
-            "Que yo esté en Italia no cambia eso: administro el sistema desde aquí, pero los datos siguen allí.",
+            "**Guardados, en Canadá.** La base de datos y los archivos están alojados en Supabase, en su región de Montreal (`ca-central-1`). Ahí es donde vive todo y de ahí no se mueve.",
+            "**En uso, pasan por Alemania.** El servidor que sirve el programa está en Fráncfort. No guarda nada: pide a Montreal lo que hace falta para pintar una pantalla o generar un PDF, y lo suelta al terminar. Pero mientras trabajas, los datos pasan por ahí, y eso hay que decirlo en vez de dejarlo en la letra pequeña. Alemania está bajo el RGPD europeo, que da una protección equivalente a la que exige Quebec.",
+            "Que yo esté en Italia no añade nada: administro el sistema desde aquí, pero no hay copia de tus datos en mi ordenador.",
         ]),
         "en": ("Where they are", [
-            "**In Canada.** The database and the files are hosted on Supabase, in its Montreal region (`ca-central-1`). The data of a Quebec contractor and their workers does not leave the country.",
-            "My being in Italy does not change that: I administer the system from here, but the data stays there.",
+            "**Stored, in Canada.** The database and the files are hosted on Supabase, in its Montreal region (`ca-central-1`). That is where everything lives and it does not move from there.",
+            "**In use, they pass through Germany.** The server that serves the software is in Frankfurt. It stores nothing: it asks Montreal for what a screen or a PDF needs, and lets go of it when done. But while you work, the data passes through there, and that belongs in plain sight rather than in the fine print. Germany is under the European GDPR, which gives protection equivalent to what Quebec requires.",
+            "My being in Italy adds nothing to that: I administer the system from here, but there is no copy of your data on my computer.",
         ]),
         "fr": ("Où elles se trouvent", [
-            "**Au Canada.** La base de données et les fichiers sont hébergés chez Supabase, dans sa région de Montréal (`ca-central-1`). Les données d'un entrepreneur québécois et de ses travailleurs ne quittent pas le pays.",
-            "Le fait que je sois en Italie n'y change rien : j'administre le système depuis ici, mais les données restent là-bas.",
+            "**Conservées, au Canada.** La base de données et les fichiers sont hébergés chez Supabase, dans sa région de Montréal (`ca-central-1`). C'est là que tout vit et ça n'en bouge pas.",
+            "**En cours d'utilisation, elles passent par l'Allemagne.** Le serveur qui sert le logiciel est à Francfort. Il ne conserve rien : il demande à Montréal ce qu'il faut pour afficher un écran ou produire un PDF, et le relâche une fois terminé. Mais pendant que vous travaillez, les données passent par là, et cela se dit à voix haute plutôt qu'en petits caractères. L'Allemagne relève du RGPD européen, qui offre une protection équivalente à celle qu'exige le Québec.",
+            "Le fait que je sois en Italie n'y ajoute rien : j'administre le système depuis ici, mais il n'y a aucune copie de vos données sur mon ordinateur.",
         ]),
         "it": ("Dove si trovano", [
-            "**In Canada.** Il database e i file sono ospitati su Supabase, nella sua regione di Montréal (`ca-central-1`). I dati di un'impresa del Québec e dei suoi lavoratori non escono dal paese.",
-            "Che io stia in Italia non cambia questo: amministro il sistema da qui, ma i dati restano là.",
+            "**Conservati, in Canada.** Il database e i file sono ospitati su Supabase, nella sua regione di Montréal (`ca-central-1`). È lì che vive tutto e da lì non si sposta.",
+            "**Mentre si usano, passano dalla Germania.** Il server che serve il programma sta a Francoforte. Non conserva nulla: chiede a Montréal quello che serve per disegnare una schermata o generare un PDF, e lo lascia andare appena finito. Ma mentre lavori i dati passano da lì, e questo si dice ad alta voce invece che in caratteri piccoli. La Germania rientra nel GDPR europeo, che dà una protezione equivalente a quella che il Québec richiede.",
+            "Che io stia in Italia non aggiunge nulla: amministro il sistema da qui, ma non c'è nessuna copia dei tuoi dati sul mio computer.",
         ]),
     }),
     ("terceros", {
         "es": ("Quién más los ve", [
             "Sólo estos, y sólo lo que cada uno necesita:",
             "**Supabase** — guarda la base de datos y los archivos. Montreal, Canadá.",
+            "**Hostinger** — alquila el servidor donde corre el programa. Fráncfort, Alemania. No guarda nada; los datos pasan por ahí mientras trabajas.",
             "**Stripe** — procesa los pagos con tarjeta. Recibe el importe y los datos del pagador; la tarjeta no pasa nunca por nuestro servidor.",
             "**Intuit (QuickBooks)** — sólo si el contratista conecta su contabilidad. Entonces recibe sus clientes, facturas, cobros y gastos, que es exactamente lo que va a su libro.",
             "**Resend** — envía los correos del sistema. Recibe la dirección y el contenido del correo.",
@@ -116,6 +121,7 @@ PRIVACIDAD = [
         "en": ("Who else sees them", [
             "Only these, and only what each one needs:",
             "**Supabase** — holds the database and the files. Montreal, Canada.",
+            "**Hostinger** — rents the server the software runs on. Frankfurt, Germany. It stores nothing; the data passes through while you work.",
             "**Stripe** — processes card payments. It receives the amount and the payer's details; the card never passes through our server.",
             "**Intuit (QuickBooks)** — only if the contractor connects their accounting. It then receives their clients, invoices, payments and expenses, which is exactly what goes in their books.",
             "**Resend** — sends the system's emails. It receives the address and the content.",
@@ -125,6 +131,7 @@ PRIVACIDAD = [
         "fr": ("Qui d'autre les voit", [
             "Seulement ceux-ci, et seulement ce dont chacun a besoin :",
             "**Supabase** — conserve la base de données et les fichiers. Montréal, Canada.",
+            "**Hostinger** — loue le serveur sur lequel tourne le logiciel. Francfort, Allemagne. Il ne conserve rien ; les données y passent pendant que vous travaillez.",
             "**Stripe** — traite les paiements par carte. Il reçoit le montant et les coordonnées du payeur ; la carte ne passe jamais par notre serveur.",
             "**Intuit (QuickBooks)** — uniquement si l'entrepreneur branche sa comptabilité. Il reçoit alors ses clients, factures, paiements et dépenses, c'est-à-dire exactement ce qui va dans ses livres.",
             "**Resend** — envoie les courriels du système. Il reçoit l'adresse et le contenu.",
@@ -134,6 +141,7 @@ PRIVACIDAD = [
         "it": ("Chi altro li vede", [
             "Solo questi, e solo quello che a ciascuno serve:",
             "**Supabase** — conserva il database e i file. Montréal, Canada.",
+            "**Hostinger** — affitta il server su cui gira il programma. Francoforte, Germania. Non conserva nulla; i dati ci passano mentre lavori.",
             "**Stripe** — elabora i pagamenti con carta. Riceve l'importo e i dati di chi paga; la carta non passa mai dal nostro server.",
             "**Intuit (QuickBooks)** — solo se l'impresa collega la sua contabilità. Riceve allora i suoi clienti, fatture, incassi e spese, cioè esattamente quello che va nei suoi libri.",
             "**Resend** — invia le email del sistema. Riceve l'indirizzo e il contenuto.",

@@ -1599,7 +1599,7 @@
         },
         "misDatos": {
           "title": "¿Dónde están mis datos y quién los ve?",
-          "p1": "En Montreal, Canadá. La base de datos y los archivos están en la región canadiense del proveedor, así que lo tuyo, lo de tus clientes y lo de tu gente no sale del país. Eso es lo que exige la Ley 25 de Quebec.",
+          "p1": "Guardados, en Montreal (Canadá): la base de datos y los archivos no se mueven de ahí. Mientras trabajas pasan además por el servidor que sirve el programa, que está en Fráncfort (Alemania) y no guarda nada. Está todo escrito en la política de privacidad.",
           "p2": "Los ven cuatro servicios y nada más, y cada uno sólo lo suyo: quien guarda la base de datos, Stripe cuando cobras con tarjeta, QuickBooks si conectas tu contabilidad, y el servicio que manda los correos. No se venden, no se usan para publicidad y no se usan para entrenar ningún modelo.",
           "p3": "La posición GPS se guarda sólo en el momento del fichaje, para saber desde dónde se fichó. No hay seguimiento continuo: entre un fichaje y otro el sistema no sabe dónde está nadie.",
           "nota": "Está todo escrito, con nombres y direcciones, en la política de privacidad. El botón de abajo la abre."
@@ -2188,8 +2188,9 @@
         "id": "donde",
         "title": "Dónde están",
         "body": [
-          "**En Canadá.** La base de datos y los archivos están alojados en Supabase, en su región de Montreal (`ca-central-1`). Los datos de un contratista quebequés y de sus trabajadores no salen del país.",
-          "Que yo esté en Italia no cambia eso: administro el sistema desde aquí, pero los datos siguen allí."
+          "**Guardados, en Canadá.** La base de datos y los archivos están alojados en Supabase, en su región de Montreal (`ca-central-1`). Ahí es donde vive todo y de ahí no se mueve.",
+          "**En uso, pasan por Alemania.** El servidor que sirve el programa está en Fráncfort. No guarda nada: pide a Montreal lo que hace falta para pintar una pantalla o generar un PDF, y lo suelta al terminar. Pero mientras trabajas, los datos pasan por ahí, y eso hay que decirlo en vez de dejarlo en la letra pequeña. Alemania está bajo el RGPD europeo, que da una protección equivalente a la que exige Quebec.",
+          "Que yo esté en Italia no añade nada: administro el sistema desde aquí, pero no hay copia de tus datos en mi ordenador."
         ]
       },
       {
@@ -2198,6 +2199,7 @@
         "body": [
           "Sólo estos, y sólo lo que cada uno necesita:",
           "**Supabase** — guarda la base de datos y los archivos. Montreal, Canadá.",
+          "**Hostinger** — alquila el servidor donde corre el programa. Fráncfort, Alemania. No guarda nada; los datos pasan por ahí mientras trabajas.",
           "**Stripe** — procesa los pagos con tarjeta. Recibe el importe y los datos del pagador; la tarjeta no pasa nunca por nuestro servidor.",
           "**Intuit (QuickBooks)** — sólo si el contratista conecta su contabilidad. Entonces recibe sus clientes, facturas, cobros y gastos, que es exactamente lo que va a su libro.",
           "**Resend** — envía los correos del sistema. Recibe la dirección y el contenido del correo.",
