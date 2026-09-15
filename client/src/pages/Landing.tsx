@@ -145,6 +145,14 @@ export default function Landing() {
               </Card>
             </Link>
           </div>
+
+          {/* La única puerta a los dos documentos legales desde fuera. Sin
+              esto existen pero no los encuentra nadie, que para la Ley 25 y
+              para la revisión de Intuit es lo mismo que no tenerlos. */}
+          <div className="flex justify-center gap-4 pt-1 text-[10px] text-muted-foreground">
+            <Link href="/privacy" className="hover:text-foreground">{t("legal.privacyTitle")}</Link>
+            <Link href="/terms" className="hover:text-foreground">{t("legal.termsTitle")}</Link>
+          </div>
         </div>
       </div>
     </div>

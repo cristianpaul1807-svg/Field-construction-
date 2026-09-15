@@ -48,6 +48,7 @@ directamente al paso a paso.
 | Portal del cliente | [funciones/clientes.md](funciones/clientes.md#portal-del-cliente) |
 | Comunicación | [funciones/comunicacion.md](funciones/comunicacion.md) |
 | *(sin menú)* Chat público `/c/tu-negocio` | [funciones/chat-publico.md](funciones/chat-publico.md) |
+| *(sin menú)* Privacidad y condiciones `/privacy`, `/terms` | [funciones/paginas-legales.md](funciones/paginas-legales.md) |
 
 ### Proyectos
 

@@ -273,6 +273,24 @@ export default function AuthBusiness() {
                   {t("auth.forgotPassword")}
                 </Link>
               )}
+
+              {/* El aviso va aquí y no en un cartel de cookies porque aquí es
+                  donde hay algo que aceptar: la frase y los enlaces separados
+                  para que cada idioma escriba su propia frase entera sin
+                  pelearse con los artículos de un enlace incrustado. */}
+              {mode === "register" && (
+                <div className="space-y-1 pt-1 text-center text-[11px] text-muted-foreground">
+                  <p>{t("legal.signupNotice")}</p>
+                  <div className="flex justify-center gap-3">
+                    <Link href="/terms" className="hover:text-foreground underline underline-offset-2">
+                      {t("legal.termsTitle")}
+                    </Link>
+                    <Link href="/privacy" className="hover:text-foreground underline underline-offset-2">
+                      {t("legal.privacyTitle")}
+                    </Link>
+                  </div>
+                </div>
+              )}
             </form>
           )}
         </Card>

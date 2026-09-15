@@ -15,6 +15,7 @@ import AuthForgotPassword from "@/pages/AuthForgotPassword";
 import WorkerAccess from "@/pages/WorkerAccess";
 import PublicBusinessChat from "@/pages/PublicBusinessChat";
 import ClientPortalMe from "@/pages/ClientPortalMe";
+import PaginaLegal from "@/pages/PaginaLegal";
 import NotFound from "@/pages/NotFound";
 import Dashboard from "@/pages/Dashboard";
 import Crm from "@/pages/Crm";
@@ -159,6 +160,11 @@ function Router() {
       <Route path={"/campo"} component={WorkerAccess} />
       <Route path={"/c/:slug"} component={PublicBusinessChat} />
       <Route path={"/portal"} component={ClientPortalRoute} />
+      {/* Sin sesión a propósito: Intuit y Stripe las abren desde fuera para
+          revisarlas, y la Ley 25 exige que cualquiera pueda leer qué se hace
+          con sus datos sin tener que entrar en ninguna parte. */}
+      <Route path={"/privacy"}>{() => <PaginaLegal cual="privacy" />}</Route>
+      <Route path={"/terms"}>{() => <PaginaLegal cual="terms" />}</Route>
       {/* Everything else is the authenticated business panel */}
       <Route component={BusinessPanel} />
     </Switch>

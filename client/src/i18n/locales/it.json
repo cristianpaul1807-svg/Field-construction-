@@ -1596,6 +1596,13 @@
           "title": "Cambiare lingua",
           "p1": "In alto a destra c'è un'icona delle lingue. Español, English, français e italiano.",
           "p2": "Cambia solo il tuo pannello. Ogni persona del team può avere il suo, e i documenti escono nella lingua in cui li generi."
+        },
+        "misDatos": {
+          "title": "Dove sono i miei dati e chi li vede?",
+          "p1": "A Montréal, in Canada. Il database e i file stanno nella regione canadese del fornitore, quindi i tuoi dati, quelli dei tuoi clienti e della tua gente non escono dal paese. È quello che impone la Legge 25 del Québec.",
+          "p2": "Li vedono quattro servizi e nient'altro, ognuno solo la sua parte: chi conserva il database, Stripe quando incassi con carta, QuickBooks se colleghi la contabilità, e il servizio che invia le email. Non si vendono, non si usano per pubblicità e non si usano per addestrare nessun modello.",
+          "p3": "La posizione GPS si registra solo al momento della timbratura, per sapere da dove è stata fatta. Non c'è tracciamento continuo: fra una timbratura e l'altra il sistema non sa dove si trovi nessuno.",
+          "nota": "È tutto scritto, con nomi e indirizzi, nell'informativa sulla privacy. Il pulsante qui sotto la apre."
         }
       },
       "clientes": {
@@ -2136,5 +2143,160 @@
     "hide": "Smetti di condividerlo",
     "share": "Condividilo con lui",
     "mine": "I miei documenti ({{count}})"
+  },
+  "legal": {
+    "updatedOn": "2026-09-15",
+    "holder": "Christhian Paul Rodriguez Almarales",
+    "address": "Via Damiano Chiesa 1, 43036 Fidenza, Italia",
+    "email": "progetmanagement@gmail.com",
+    "privacyTitle": "Informativa sulla privacy",
+    "termsTitle": "Condizioni d'uso",
+    "updated": "Aggiornato il {{date}}",
+    "back": "Indietro",
+    "privacyLead": "Quali dati ci sono qui, chi li vede e cosa puoi pretendere su di essi. Scritto per essere letto, non per coprirmi.",
+    "termsLead": "Cos'è questo programma, cosa non è, e cosa ci aspettiamo l'uno dall'altro.",
+    "signupNotice": "Creando l'account accetti le condizioni d'uso e l'informativa sulla privacy.",
+    "privacy": [
+      {
+        "id": "quien",
+        "title": "Chi risponde dei tuoi dati",
+        "body": [
+          "**Christhian Paul Rodriguez Almarales**, persona fisica, con domicilio in Via Damiano Chiesa 1, 43036 Fidenza, Italia. Non c'è una società dietro: ne rispondo io.",
+          "Per qualsiasi cosa riguardi i tuoi dati — sapere cosa ho, correggerlo, portartelo via o cancellarlo — scrivi a **progetmanagement@gmail.com**. Rispondo io, non un modulo."
+        ]
+      },
+      {
+        "id": "que",
+        "title": "Quali dati ci sono qui dentro",
+        "body": [
+          "**Dell'impresa che usa il servizio:** nome, indirizzo, telefono, email, numero di licenza e numeri fiscali. Vengono stampati su ogni preventivo e ogni fattura che emette, perché la legge del Québec lo impone.",
+          "**Dei suoi clienti:** nome, telefono, email e indirizzo del cantiere. Li inserisce l'impresa, non noi.",
+          "**Dei suoi lavoratori e subappaltatori:** nome, telefono, mestiere, tariffa oraria, ore timbrate e — timbrando dal telefono — la posizione GPS di quel momento. Se l'impresa li carica, anche i suoi documenti come il contratto o il T4.",
+          "**Di quanto si fattura e si incassa:** importi, imposte, date e mezzo di pagamento."
+        ]
+      },
+      {
+        "id": "paraque",
+        "title": "A cosa servono",
+        "body": [
+          "A far funzionare il programma, e a nient'altro. Non si vendono, non si affittano, non si usano per pubblicità e non si usano per addestrare nessun modello.",
+          "La posizione GPS si registra **solo al momento della timbratura**, per poter dire da dove è stata fatta. Non c'è tracciamento continuo: l'app non sa dove si trovi nessuno fra una timbratura e l'altra.",
+          "Un lavoratore non vede mai la paga né la tariffa di un altro. Quello che ognuno guadagna riguarda quella persona e l'ufficio."
+        ]
+      },
+      {
+        "id": "donde",
+        "title": "Dove si trovano",
+        "body": [
+          "**In Canada.** Il database e i file sono ospitati su Supabase, nella sua regione di Montréal (`ca-central-1`). I dati di un'impresa del Québec e dei suoi lavoratori non escono dal paese.",
+          "Che io stia in Italia non cambia questo: amministro il sistema da qui, ma i dati restano là."
+        ]
+      },
+      {
+        "id": "terceros",
+        "title": "Chi altro li vede",
+        "body": [
+          "Solo questi, e solo quello che a ciascuno serve:",
+          "**Supabase** — conserva il database e i file. Montréal, Canada.",
+          "**Stripe** — elabora i pagamenti con carta. Riceve l'importo e i dati di chi paga; la carta non passa mai dal nostro server.",
+          "**Intuit (QuickBooks)** — solo se l'impresa collega la sua contabilità. Riceve allora i suoi clienti, fatture, incassi e spese, cioè esattamente quello che va nei suoi libri.",
+          "**Resend** — invia le email del sistema. Riceve l'indirizzo e il contenuto.",
+          "**OpenStreetMap** — disegna le mappe e trasforma un indirizzo in coordinate. Riceve l'indirizzo cercato.",
+          "Nessuno di loro riceve nulla per i propri scopi."
+        ]
+      },
+      {
+        "id": "cuanto",
+        "title": "Per quanto tempo si conservano",
+        "body": [
+          "Finché l'impresa usa il servizio. Se smette e me lo chiede, cancello tutto il suo.",
+          "Con un'eccezione che non dipende da noi: **le fatture emesse non si cancellano** finché la legge obbliga a conservarle. In Canada sono sei anni. Per questo, quando un cliente chiede di cancellare i suoi dati e ha fatture, il sistema rifiuta e lo dice — scrivimi e lo risolviamo senza rompere la contabilità di nessuno."
+        ]
+      },
+      {
+        "id": "derechos",
+        "title": "I tuoi diritti",
+        "body": [
+          "Puoi chiedere di **vedere** quello che esiste su di te, **correggerlo**, **portartelo via** in un file, **cancellarlo** oppure **opporti** al suo uso. Scrivi a progetmanagement@gmail.com e rispondo entro un mese al massimo — di solito in pochi giorni.",
+          "Se sei un lavoratore di un'impresa che usa questo, parti dal tuo ufficio: i dati sono suoi ed è lui che li inserisce. Se non ti rispondono, scrivimi lo stesso.",
+          "Se pensi che non me ne sia occupato bene, puoi reclamare alla **Commission d'accès à l'information du Québec** se sei in Québec, o al **Garante per la protezione dei dati personali** in Italia."
+        ]
+      },
+      {
+        "id": "navegador",
+        "title": "Cosa si conserva nel tuo browser",
+        "body": [
+          "La tua sessione, la lingua che hai scelto e un paio di preferenze di schermo. Nient'altro.",
+          "**Non ci sono cookie pubblicitari né di tracciamento**, né nostri né di nessuno. Per questo non vedrai nemmeno un banner dei cookie: non c'è nulla da acconsentire."
+        ]
+      },
+      {
+        "id": "cambios",
+        "title": "Se questo cambia",
+        "body": [
+          "Cambierà: il prodotto è giovane. Quando cambia qualcosa che conta, lo comunico via email all'impresa prima che entri in vigore, e la data qui sopra viene aggiornata.",
+          "Il giorno in cui ci sarà una società dietro invece di una persona, si dirà anche questo qui."
+        ]
+      }
+    ],
+    "terms": [
+      {
+        "id": "que",
+        "title": "Che cos'è",
+        "body": [
+          "Un programma di gestione per imprese edili: preventivi, cantieri, ore, fatture, incassi e la contabilità che ne esce.",
+          "Lo offre **Christhian Paul Rodriguez Almarales**, persona fisica, Via Damiano Chiesa 1, 43036 Fidenza, Italia. Contatto: progetmanagement@gmail.com."
+        ]
+      },
+      {
+        "id": "noesasesoria",
+        "title": "Cosa non è",
+        "body": [
+          "**Non è consulenza fiscale, contabile né legale.** Il programma calcola imposte e ritenute con le aliquote pubblicate e produce documenti nella forma che il Québec richiede, ma non presenta nessuna dichiarazione a nessun ente e non sostituisce né un commercialista né un avvocato.",
+          "Le aliquote cambiano ogni gennaio e la configurazione di ogni impresa decide cosa viene stampato. **Controlla le cifre prima di usarle sul serio.** Chi firma una dichiarazione ne risponde.",
+          "I contratti e gli accordi che genera sono documenti di gestione interna. Non sostituiscono un contratto rivisto da un avvocato."
+        ]
+      },
+      {
+        "id": "tuscosas",
+        "title": "Quello che inserisci è tuo",
+        "body": [
+          "I tuoi clienti, i tuoi preventivi, le tue fatture e i tuoi documenti restano tuoi. Non li uso per nulla che non sia far funzionare il servizio, e puoi portarteli via quando vuoi: le tabelle si esportano in Excel e in PDF dal programma stesso.",
+          "Sta a te avere il diritto di inserire i dati che inserisci — quelli dei tuoi clienti e della tua gente — e di avvisarli che vengono trattati qui."
+        ]
+      },
+      {
+        "id": "pagos",
+        "title": "Gli incassi dai tuoi clienti",
+        "body": [
+          "Se attivi i pagamenti con carta, il denaro va **direttamente sul tuo conto Stripe**, non sul mio. Il rapporto di pagamento è fra Stripe e te, con le loro condizioni e le loro commissioni.",
+          "La commissione che Stripe trattiene su ogni incasso viene annotata sulla fattura perché tu la veda, con l'imposta che ci sta sopra indicata a parte."
+        ]
+      },
+      {
+        "id": "disponibilidad",
+        "title": "Disponibilità e guasti",
+        "body": [
+          "Faccio il possibile perché resti in piedi, ma non prometto nessuna percentuale di disponibilità e non risarcisco interruzioni. È un prodotto giovane con un solo sviluppatore: preferisco dirtelo piuttosto che scrivere una garanzia che non potrei mantenere.",
+          "Se qualcosa non va, il programma stesso te lo dice nella tua lingua e ti offre di scrivere all'assistenza. Rispondo io."
+        ]
+      },
+      {
+        "id": "terminar",
+        "title": "Smettere di usarlo",
+        "body": [
+          "Quando vuoi e senza spiegazioni. Esporta il tuo prima, e dimmelo così cancello quello che resta.",
+          "Da parte mia, toglierei l'accesso solo a chi lo usi per qualcosa di illegale, o a chi provi a romperlo o a entrare nei dati di un'altra impresa. Avvisando prima, salvo che avvisare sia proprio quello che non va fatto."
+        ]
+      },
+      {
+        "id": "ley",
+        "title": "Legge applicabile",
+        "body": [
+          "Si applica la legge italiana, essendo dove si trova il titolare. Se usi il servizio come consumatore, questo non ti toglie la protezione che ti dà la legge del tuo paese.",
+          "Per quello che si fattura e si dichiara in Québec vale ovviamente la legge del Québec — e il programma è fatto per rispettarla."
+        ]
+      }
+    ]
   }
 }

@@ -41,6 +41,10 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       { id: "accesoTrabajador", parrafos: 3, nota: true, ruta: "/technicians" },
       { id: "accesoCliente", parrafos: 3, nota: true, ruta: "/crm" },
       { id: "idioma", parrafos: 2 },
+      // Es la pregunta que hace todo el mundo antes de meter a sus clientes
+      // y a su gente, y hasta ahora la respuesta no estaba en ninguna parte
+      // del producto: sólo en dos páginas que nadie sabía que existían.
+      { id: "misDatos", parrafos: 3, nota: true, ruta: "/privacy" },
     ],
   },
   {

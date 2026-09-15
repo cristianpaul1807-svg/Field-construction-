@@ -1596,6 +1596,13 @@
           "title": "Changer la langue",
           "p1": "En haut à droite, il y a une icône de langues. Español, English, français et italiano.",
           "p2": "Cela ne change que votre panneau. Chaque membre de votre équipe peut avoir le sien, et les documents sortent dans la langue où vous les générez."
+        },
+        "misDatos": {
+          "title": "Où sont mes données et qui les voit ?",
+          "p1": "À Montréal, au Canada. La base de données et les fichiers sont dans la région canadienne du fournisseur, donc vos données, celles de vos clients et de vos gens ne quittent pas le pays. C'est ce qu'exige la Loi 25 du Québec.",
+          "p2": "Quatre services les voient et rien d'autre, chacun seulement sa part : celui qui conserve la base de données, Stripe quand vous encaissez par carte, QuickBooks si vous branchez votre comptabilité, et le service qui envoie les courriels. Elles ne sont ni vendues, ni utilisées pour de la publicité, ni utilisées pour entraîner un modèle.",
+          "p3": "La position GPS n'est enregistrée qu'au moment du pointage, pour savoir d'où il a été fait. Il n'y a aucun suivi continu : entre deux pointages, le système ne sait pas où se trouve qui que ce soit.",
+          "nota": "Tout est écrit, avec les noms et les adresses, dans la politique de confidentialité. Le bouton ci-dessous l'ouvre."
         }
       },
       "clientes": {
@@ -2136,5 +2143,160 @@
     "hide": "Cesser de le partager",
     "share": "Le partager avec elle",
     "mine": "Mes documents ({{count}})"
+  },
+  "legal": {
+    "updatedOn": "2026-09-15",
+    "holder": "Christhian Paul Rodriguez Almarales",
+    "address": "Via Damiano Chiesa 1, 43036 Fidenza, Italia",
+    "email": "progetmanagement@gmail.com",
+    "privacyTitle": "Politique de confidentialité",
+    "termsTitle": "Conditions d'utilisation",
+    "updated": "Mis à jour le {{date}}",
+    "back": "Retour",
+    "privacyLead": "Quelles données se trouvent ici, qui les voit et ce que vous pouvez exiger à leur sujet. Écrit pour être lu, pas pour me couvrir.",
+    "termsLead": "Ce qu'est ce logiciel, ce qu'il n'est pas, et ce qu'on attend l'un de l'autre.",
+    "signupNotice": "En créant un compte, vous acceptez les conditions d'utilisation et la politique de confidentialité.",
+    "privacy": [
+      {
+        "id": "quien",
+        "title": "Qui répond de vos données",
+        "body": [
+          "**Christhian Paul Rodriguez Almarales**, personne physique, domicilié au Via Damiano Chiesa 1, 43036 Fidenza, Italia. Il n'y a pas de société derrière : j'en réponds moi-même.",
+          "Pour tout ce qui touche à vos données — savoir ce que je détiens, le corriger, l'emporter ou l'effacer — écrivez à **progetmanagement@gmail.com**. C'est moi qui réponds, pas un formulaire."
+        ]
+      },
+      {
+        "id": "que",
+        "title": "Quelles données se trouvent ici",
+        "body": [
+          "**De l'entreprise qui utilise le service :** nom, adresse, téléphone, courriel, numéro de licence et numéros de taxes. Ils s'impriment sur chaque soumission et chaque facture qu'elle émet, parce que la loi québécoise l'exige.",
+          "**De ses clients :** nom, téléphone, courriel et adresse du chantier. C'est l'entrepreneur qui les saisit, pas nous.",
+          "**De ses travailleurs et sous-traitants :** nom, téléphone, métier, taux horaire, heures pointées et — au pointage depuis le téléphone — la position GPS à ce moment-là. Si l'entrepreneur les téléverse, aussi ses documents comme le contrat ou le T4.",
+          "**De ce qui est facturé et encaissé :** montants, taxes, dates et mode de paiement."
+        ]
+      },
+      {
+        "id": "paraque",
+        "title": "À quoi elles servent",
+        "body": [
+          "À faire fonctionner le logiciel, et à rien d'autre. Elles ne sont ni vendues, ni louées, ni utilisées pour de la publicité, ni utilisées pour entraîner un modèle.",
+          "La position GPS n'est enregistrée **qu'au moment du pointage**, afin de pouvoir dire d'où il a été fait. Il n'y a aucun suivi continu : l'application ne sait pas où se trouve qui que ce soit entre deux pointages.",
+          "Un travailleur ne voit jamais la paie ni le taux d'un autre. Ce que chacun gagne regarde cette personne et le bureau."
+        ]
+      },
+      {
+        "id": "donde",
+        "title": "Où elles se trouvent",
+        "body": [
+          "**Au Canada.** La base de données et les fichiers sont hébergés chez Supabase, dans sa région de Montréal (`ca-central-1`). Les données d'un entrepreneur québécois et de ses travailleurs ne quittent pas le pays.",
+          "Le fait que je sois en Italie n'y change rien : j'administre le système depuis ici, mais les données restent là-bas."
+        ]
+      },
+      {
+        "id": "terceros",
+        "title": "Qui d'autre les voit",
+        "body": [
+          "Seulement ceux-ci, et seulement ce dont chacun a besoin :",
+          "**Supabase** — conserve la base de données et les fichiers. Montréal, Canada.",
+          "**Stripe** — traite les paiements par carte. Il reçoit le montant et les coordonnées du payeur ; la carte ne passe jamais par notre serveur.",
+          "**Intuit (QuickBooks)** — uniquement si l'entrepreneur branche sa comptabilité. Il reçoit alors ses clients, factures, paiements et dépenses, c'est-à-dire exactement ce qui va dans ses livres.",
+          "**Resend** — envoie les courriels du système. Il reçoit l'adresse et le contenu.",
+          "**OpenStreetMap** — dessine les cartes et convertit une adresse en coordonnées. Il reçoit l'adresse recherchée.",
+          "Aucun d'eux ne reçoit quoi que ce soit pour ses propres fins."
+        ]
+      },
+      {
+        "id": "cuanto",
+        "title": "Combien de temps elles sont conservées",
+        "body": [
+          "Tant que l'entreprise utilise le service. Si elle cesse et me le demande, j'efface tout ce qui lui appartient.",
+          "Avec une exception qui ne vient pas de nous : **les factures émises ne s'effacent pas** tant que la loi oblige à les conserver. Au Canada, c'est six ans. C'est pourquoi, quand un client demande l'effacement de ses données et qu'il a des factures, le système refuse et le dit — écrivez-moi et on règle ça sans casser la comptabilité de personne."
+        ]
+      },
+      {
+        "id": "derechos",
+        "title": "Vos droits",
+        "body": [
+          "Vous pouvez demander à **voir** ce qui existe à votre sujet, à le **corriger**, à l'**emporter** dans un fichier, à l'**effacer** ou à vous **opposer** à son utilisation. Écrivez à progetmanagement@gmail.com et je réponds dans un mois au plus — normalement en quelques jours.",
+          "Si vous êtes travailleur dans une entreprise qui utilise ceci, commencez par votre bureau : les données sont les siennes et c'est lui qui les saisit. S'il ne vous répond pas, écrivez-moi quand même.",
+          "Si vous estimez que je m'y suis mal pris, vous pouvez porter plainte auprès de la **Commission d'accès à l'information du Québec** si vous êtes au Québec, ou du **Garante per la protezione dei dati personali** en Italie."
+        ]
+      },
+      {
+        "id": "navegador",
+        "title": "Ce qui est gardé dans votre navigateur",
+        "body": [
+          "Votre session, la langue que vous avez choisie et deux ou trois préférences d'affichage. Rien d'autre.",
+          "**Il n'y a aucun témoin publicitaire ni de suivi**, ni les nôtres ni ceux de qui que ce soit. C'est aussi pour ça que vous ne verrez pas de bandeau de témoins : il n'y a rien à consentir."
+        ]
+      },
+      {
+        "id": "cambios",
+        "title": "Si ceci change",
+        "body": [
+          "Ça changera : le produit est jeune. Quand quelque chose d'important change, je préviens l'entreprise par courriel avant que ça prenne effet, et la date ci-dessus est mise à jour.",
+          "Le jour où il y aura une société derrière plutôt qu'une personne, ce sera dit ici aussi."
+        ]
+      }
+    ],
+    "terms": [
+      {
+        "id": "que",
+        "title": "Ce que c'est",
+        "body": [
+          "Un logiciel de gestion pour entreprises de construction : soumissions, chantiers, heures, factures, encaissements et la comptabilité qui en découle.",
+          "Il est offert par **Christhian Paul Rodriguez Almarales**, personne physique, Via Damiano Chiesa 1, 43036 Fidenza, Italia. Contact : progetmanagement@gmail.com."
+        ]
+      },
+      {
+        "id": "noesasesoria",
+        "title": "Ce que ce n'est pas",
+        "body": [
+          "**Ce n'est pas un conseil fiscal, comptable ni juridique.** Le logiciel calcule les taxes et les retenues avec les taux publiés et produit des documents dans la forme qu'exige le Québec, mais il ne transmet aucune déclaration à aucun organisme et ne remplace ni un comptable ni un avocat.",
+          "Les taux changent chaque janvier et la configuration de chaque entreprise décide de ce qui s'imprime. **Vérifiez les chiffres avant de vous en servir pour de vrai.** Celui qui signe une déclaration en répond.",
+          "Les contrats et ententes qu'il génère sont des documents de gestion interne. Ils ne remplacent pas un contrat révisé par un avocat."
+        ]
+      },
+      {
+        "id": "tuscosas",
+        "title": "Ce que vous y mettez est à vous",
+        "body": [
+          "Vos clients, vos soumissions, vos factures et vos documents restent les vôtres. Je ne m'en sers pour rien d'autre que faire fonctionner le service, et vous pouvez les emporter quand vous voulez : les tableaux s'exportent en Excel et en PDF depuis le logiciel même.",
+          "Il vous revient d'avoir le droit de saisir les données que vous saisissez — celles de vos clients et de vos gens — et de les avertir qu'elles sont traitées ici."
+        ]
+      },
+      {
+        "id": "pagos",
+        "title": "Les encaissements auprès de vos clients",
+        "body": [
+          "Si vous activez les paiements par carte, l'argent va **directement dans votre propre compte Stripe**, pas dans le mien. La relation de paiement est entre Stripe et vous, selon leurs conditions et leurs frais.",
+          "Les frais que Stripe retient sur chaque encaissement sont inscrits sur la facture pour que vous les voyiez, avec la taxe qui s'y ajoute indiquée à part."
+        ]
+      },
+      {
+        "id": "disponibilidad",
+        "title": "Disponibilité et pannes",
+        "body": [
+          "Je fais ce que je peux pour que ça reste debout, mais je ne promets aucun pourcentage de disponibilité et je ne compense aucune panne. C'est un produit jeune avec un seul développeur : je préfère vous le dire plutôt qu'écrire une garantie que je ne pourrais pas tenir.",
+          "Si quelque chose échoue, le logiciel vous le dit lui-même dans votre langue et vous propose d'écrire au soutien. C'est moi qui réponds."
+        ]
+      },
+      {
+        "id": "terminar",
+        "title": "Arrêter de l'utiliser",
+        "body": [
+          "Quand vous voulez et sans vous justifier. Exportez ce qui est à vous avant, et dites-le-moi pour que j'efface ce qui reste.",
+          "De mon côté, je ne couperais l'accès qu'à quelqu'un qui s'en sert pour quelque chose d'illégal, ou qui tente de le casser ou d'entrer dans les données d'une autre entreprise. En prévenant, sauf si prévenir est justement ce qu'il ne faut pas faire."
+        ]
+      },
+      {
+        "id": "ley",
+        "title": "Droit applicable",
+        "body": [
+          "Le droit italien s'applique, puisque c'est là que se trouve le fournisseur. Si vous utilisez le service comme consommateur, cela ne vous retire pas la protection que vous donne le droit de votre propre pays.",
+          "Pour ce qui est facturé et déclaré au Québec, c'est évidemment le droit québécois qui régit — et le logiciel est fait pour le respecter."
+        ]
+      }
+    ]
   }
 }
