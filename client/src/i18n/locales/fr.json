@@ -746,7 +746,32 @@
     "ccqEmployerNumber": "Numéro d'employeur CCQ",
     "ccqEmployerNumberHint": "Celui qu'on vous a donné à l'inscription. Il figure sur chaque rapport mensuel que vous transmettez.",
     "country": "Pays",
-    "countryHint": "C'est de là que sortent les renseignements fiscaux qu'on vous demande et les règles qui s'appliquent. Pour l'instant le Canada seulement : c'est le seul endroit dont on sait faire les règles au complet. Si vous êtes ailleurs, dites-le-nous et on l'ajoute."
+    "countryHint": "C'est de là que sortent les renseignements fiscaux qu'on vous demande et les règles qui s'appliquent. Pour l'instant le Canada seulement : c'est le seul endroit dont on sait faire les règles au complet. Si vous êtes ailleurs, dites-le-nous et on l'ajoute.",
+    "whatTheySee": "Ce que cette personne voit",
+    "seesAll": "Administrateur général",
+    "seesAllHint": "Voit et fait tout, comme vous.",
+    "seesSome": "Seulement certaines parties",
+    "seesSomeHint": "Choisissez ci-dessous ce qu'elle peut voir. Le reste n'apparaît pas à sa connexion.",
+    "pickAtLeastOne": "Cochez au moins une partie, sinon cette personne ne verra rien en se connectant.",
+    "areasTitle": "Les parties du système",
+    "areasHint": "Voici ce que vous pouvez accorder ou retirer à chaque personne.",
+    "area": {
+      "campo": "Terrain",
+      "clientes": "Clients",
+      "dinero": "Argent",
+      "personas": "Dossiers du personnel",
+      "ajustes": "Paramètres"
+    },
+    "areaHint": {
+      "campo": "Chantiers, bons de travail, horaire, pointages, GPS, absences, photos et qui est chaque travailleur.",
+      "clientes": "CRM, portail client, conversations et rendez-vous.",
+      "dinero": "Soumissions, factures, encaissements, dépenses, paies, rapports, coûts et QuickBooks. C'est là qu'est le bénéfice de l'entreprise.",
+      "personas": "Les ententes de travail et les documents de chacun : son contrat, son T4, ce qu'il gagne.",
+      "ajustes": "Les données de l'entreprise, les utilisateurs, les taxes et les connexions."
+    },
+    "credentialsTitle": "Ses accès",
+    "credentialsHint": "Transmettez-les par où vous vous parlez déjà. Avec ça, elle se connecte sur la page de connexion.",
+    "credentialsOnce": "Ce mot de passe s'affiche une seule fois et n'est stocké nulle part. S'il est perdu, il faudra en donner un autre."
   },
   "reports": {
     "title": "Rapports",

@@ -746,7 +746,32 @@
     "ccqEmployerNumber": "Numero di datore di lavoro CCQ",
     "ccqEmployerNumberHint": "Quello che ti hanno dato all'iscrizione. Compare su ogni rapporto mensile che trasmetti.",
     "country": "Paese",
-    "countryHint": "Da qui esce quali dati fiscali ti vengono chiesti e quali regole ti si applicano. Per ora solo il Canada: è l'unico posto di cui sappiamo fare le regole per intero. Se sei altrove, diccelo e lo aggiungiamo."
+    "countryHint": "Da qui esce quali dati fiscali ti vengono chiesti e quali regole ti si applicano. Per ora solo il Canada: è l'unico posto di cui sappiamo fare le regole per intero. Se sei altrove, diccelo e lo aggiungiamo.",
+    "whatTheySee": "Cosa vede questa persona",
+    "seesAll": "Amministratore generale",
+    "seesAllHint": "Vede e fa tutto, come te.",
+    "seesSome": "Solo alcune parti",
+    "seesSomeHint": "Scegli sotto cosa può vedere. Il resto non compare quando entra.",
+    "pickAtLeastOne": "Spunta almeno una parte, o questa persona non vedrà nulla entrando.",
+    "areasTitle": "Le parti del sistema",
+    "areasHint": "Questo è ciò che puoi dare o togliere a ogni persona.",
+    "area": {
+      "campo": "Cantiere",
+      "clientes": "Clienti",
+      "dinero": "Denaro",
+      "personas": "Documenti del personale",
+      "ajustes": "Impostazioni"
+    },
+    "areaHint": {
+      "campo": "Cantieri, ordini di lavoro, agenda, timbrature, GPS, assenze, foto e chi è ogni lavoratore.",
+      "clientes": "CRM, portale cliente, conversazioni e appuntamenti.",
+      "dinero": "Preventivi, fatture, incassi, spese, buste paga, report, costi e QuickBooks. Qui c'è l'utile dell'impresa.",
+      "personas": "Gli accordi di lavoro e i documenti di ciascuno: il contratto, il T4, quanto guadagna.",
+      "ajustes": "I dati dell'impresa, gli utenti, le imposte e le connessioni."
+    },
+    "credentialsTitle": "I suoi dati d'accesso",
+    "credentialsHint": "Passaglieli come già vi parlate. Con questi entra dalla pagina di accesso.",
+    "credentialsOnce": "Questa password si mostra una volta sola e non viene salvata da nessuna parte. Se si perde, bisognerà darne un'altra."
   },
   "reports": {
     "title": "Report",

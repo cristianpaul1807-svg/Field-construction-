@@ -746,7 +746,32 @@
     "ccqEmployerNumber": "Número de empleador de la CCQ",
     "ccqEmployerNumberHint": "El que te dieron al darte de alta. Sale en cada informe mensual que mandas.",
     "country": "País",
-    "countryHint": "De aquí sale qué datos fiscales se te piden y qué reglas se te aplican. Por ahora sólo Canadá: es el único sitio cuyas reglas sabemos hacer enteras. Si estás en otro país, dínoslo y lo añadimos."
+    "countryHint": "De aquí sale qué datos fiscales se te piden y qué reglas se te aplican. Por ahora sólo Canadá: es el único sitio cuyas reglas sabemos hacer enteras. Si estás en otro país, dínoslo y lo añadimos.",
+    "whatTheySee": "Qué ve esta persona",
+    "seesAll": "Administrador general",
+    "seesAllHint": "Ve y hace todo, igual que tú.",
+    "seesSome": "Sólo algunas partes",
+    "seesSomeHint": "Elige abajo qué puede ver. Lo demás no le aparece al entrar.",
+    "pickAtLeastOne": "Marca al menos una parte, o esa persona no verá nada al entrar.",
+    "areasTitle": "Las partes del sistema",
+    "areasHint": "Esto es lo que puedes dar o quitar a cada persona.",
+    "area": {
+      "campo": "Campo",
+      "clientes": "Clientes",
+      "dinero": "Dinero",
+      "personas": "Papeles del personal",
+      "ajustes": "Configuración"
+    },
+    "areaHint": {
+      "campo": "Obras, órdenes de trabajo, agenda, fichajes, GPS, ausencias, fotos y quién es cada trabajador.",
+      "clientes": "CRM, portal del cliente, conversaciones y citas.",
+      "dinero": "Presupuestos, facturas, cobros, gastos, nóminas, reportes, costos y QuickBooks. Aquí está el beneficio de la empresa.",
+      "personas": "Los acuerdos de trabajo y los papeles de cada uno: su contrato, su T4, lo que cobra.",
+      "ajustes": "Los datos de la empresa, los usuarios, los impuestos y las conexiones."
+    },
+    "credentialsTitle": "Sus datos para entrar",
+    "credentialsHint": "Pásaselos por donde ya habléis. Con esto entra en la página de inicio de sesión.",
+    "credentialsOnce": "Esta contraseña se enseña una sola vez y no se guarda en ninguna parte. Si se pierde, habrá que darle otra."
   },
   "reports": {
     "title": "Informes",

@@ -63,7 +63,7 @@ import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
-import { areaDeLaRuta, puede, recortar, PAPELES } from "../shared/permisos";
+import { areaDeLaRuta, puede, recortar, AREAS } from "../shared/permisos";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -8999,56 +8999,107 @@ apiRouter.patch(
 // invitation email being delivered.
 
 /**
- * El identificador de un papel, creándolo si el negocio aún no lo tiene.
+ * El rol que corresponde a un conjunto de áreas, creándolo si no existe.
  *
- * Los papeles de fábrica no se siembran al crear el negocio: la mayoría nunca
- * hará falta, y una pantalla de roles con tres filas que nadie usa es ruido.
- * Se crean el día que alguien los asigna.
+ * El rol es un detalle de la base: quien invita a alguien elige áreas, no
+ * roles. Se reutiliza el que ya tenga exactamente esas áreas para no llenar la
+ * tabla de filas iguales, y el nombre se deriva de ellas para que quien mire
+ * la base entienda qué es sin abrir el producto.
+ *
+ * Sin áreas —administrador general— no hay rol: `role_id` se queda en nulo,
+ * que es como se dice «sin límite» en todo el resto del sistema.
  */
-async function rolDelPapel(req: Request, preset: string): Promise<string | null> {
-  const areas = PAPELES[preset];
-  if (!areas) return null;
+async function rolDeAreas(req: Request, areas: unknown): Promise<string | null> {
+  if (!Array.isArray(areas)) return null;
+  const buenas = AREAS.filter((a) => (areas as unknown[]).includes(a));
+  if (buenas.length === 0 || buenas.length === AREAS.length) return null;
+
+  const nombre = `areas:${buenas.join("+")}`;
   const supabase = req.supabase!;
   const { data: existe } = await supabase
     .from("roles")
     .select("id")
     .eq("business_id", req.businessId!)
-    .eq("name", preset)
+    .eq("name", nombre)
     .maybeSingle();
   if (existe) return existe.id;
+
   const { data, error } = await supabase
     .from("roles")
-    .insert({ business_id: req.businessId!, name: preset, permissions: areas })
+    .insert({ business_id: req.businessId!, name: nombre, permissions: buenas })
     .select("id")
     .single();
   if (error) throw error;
   return data.id;
 }
 
+/**
+ * La cuenta con la que esa persona va a entrar.
+ *
+ * Hasta ahora invitar a alguien creaba una fila y nada más: no había cuenta, no
+ * había contraseña, y esa persona no podía entrar de ninguna manera. El rol que
+ * se le diera daba igual.
+ *
+ * Se genera una contraseña y **se enseña una sola vez**, como el código de
+ * acceso de un trabajador: quien invita se la pasa por donde ya hablan. No se
+ * guarda en ninguna tabla nuestra ni se manda por correo — un correo con una
+ * contraseña dentro se queda en la bandeja para siempre.
+ */
+async function crearAcceso(email: string): Promise<{ authUserId: string; password: string | null }> {
+  const admin = getSupabaseAdmin();
+  const password = randomBytes(9).toString("base64url");
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (!error && data.user) return { authUserId: data.user.id, password };
+
+  // Ya tenía cuenta —se dio de alta por su cuenta, o es cliente de otro
+  // negocio—. Se engancha a la que hay en vez de fallar, y no se le toca la
+  // contraseña: es suya, no nuestra.
+  const { data: lista } = await admin.auth.admin.listUsers();
+  const suyo = lista?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+  if (suyo) return { authUserId: suyo.id, password: null };
+  throw error ?? new Error("no se pudo crear el acceso");
+}
+
 apiRouter.post(
   "/settings/users",
   route(async (req, res) => {
-    const { name, email, phone, roleId, preset } = req.body ?? {};
-    const rol = preset ? await rolDelPapel(req, String(preset)) : roleId || null;
+    const { name, email, phone, areas } = req.body ?? {};
     if (!name?.trim()) {
       res.status(400).json({ error: "name is required" });
       return;
     }
     const supabase = req.supabase!;
+    const correo = email?.trim() || null;
+    const rol = await rolDeAreas(req, areas);
+
+    // Sin correo no hay cuenta posible, así que se dice en vez de crear una
+    // fila que no sirve para entrar.
+    if (!correo) {
+      res.status(400).json({ error: "email is required", code: "falta_correo" });
+      return;
+    }
+
+    const acceso = await crearAcceso(correo);
     const { data, error } = await supabase
       .from("users")
       .insert({
         business_id: req.businessId!,
         name: name.trim(),
-        email: email?.trim() || null,
+        email: correo,
         phone: phone?.trim() || null,
         role_id: rol,
+        auth_user_id: acceso.authUserId,
         status: "activo",
       })
       .select("id")
       .single();
     if (error) throw error;
-    res.status(201).json({ id: data.id });
+    // La contraseña sale aquí y no vuelve a salir nunca.
+    res.status(201).json({ id: data.id, email: correo, password: acceso.password });
   })
 );
 
@@ -9060,8 +9111,7 @@ apiRouter.patch(
     if (body.name !== undefined) update.name = String(body.name).trim();
     if (body.email !== undefined) update.email = body.email || null;
     if (body.phone !== undefined) update.phone = body.phone || null;
-    if (body.preset !== undefined) update.role_id = await rolDelPapel(req, String(body.preset));
-    else if (body.roleId !== undefined) update.role_id = body.roleId || null;
+    if (body.areas !== undefined) update.role_id = await rolDeAreas(req, body.areas);
     if (body.status !== undefined) update.status = body.status;
     const supabase = req.supabase!;
     const { error } = await supabase
@@ -12525,14 +12575,11 @@ apiRouter.get(
         status: u.status,
         roleId: u.role_id ?? null,
         role: u.roles?.name ?? null,
+        // Las áreas que ve esta persona, o `null` si las ve todas. Es lo que
+        // la pantalla enseña y edita; el rol de debajo es cosa de la base.
+        areas: areasDelRol(u.roles),
       })),
       roles: roles.data.map((r) => ({ id: r.id, name: r.name, permissions: r.permissions })),
-      // Los papeles de fábrica que este negocio todavía no tiene. Se ofrecen
-      // como si existieran y se crean al asignarlos: obligar a crear el rol en
-      // una pantalla y asignarlo en otra es cómo se queda a medias.
-      presets: Object.entries(PAPELES)
-        .filter(([clave]) => !roles.data!.some((r) => r.name === clave))
-        .map(([clave, areas]) => ({ preset: clave, areas })),
     });
   })
 );

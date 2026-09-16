@@ -39,16 +39,34 @@ Son pocas a propósito. Un permiso por pantalla parece más fino y acaba en una
 cuadrícula de cuarenta casillas que nadie configura bien, donde la pantalla
 nueva del mes que viene nace sin marcar.
 
-## Los papeles de fábrica
+## Cómo se invita a alguien
 
-| Papel | Áreas |
-|---|---|
-| **Jefe de obra** | campo |
-| **Oficina** | campo, clientes |
-| **Contabilidad** | dinero, clientes |
+Configuración → Usuarios y roles → **Invitar**. Se pide nombre, correo y
+teléfono, y luego una sola decisión:
 
-No se siembran al crear el negocio: se crean el día que alguien los asigna. Una
-pantalla de roles con tres filas que nadie usa es ruido.
+- **Administrador general** — ve y hace todo, igual que el dueño.
+- **Sólo algunas partes** — y se marcan las áreas.
+
+No hay lista de roles que elegir. Quien invita piensa en «lo ve todo» o «sólo
+esto», no en el nombre de un papel; el rol lo arma el servidor por debajo,
+reutilizando el que ya tenga esas mismas áreas para no llenar la tabla de filas
+iguales. Por eso los roles se llaman `areas:campo+clientes`: son un detalle de
+la base, no algo que nadie tenga que nombrar.
+
+### Y sus credenciales
+
+Hasta ahora invitar a alguien **creaba una fila y nada más**: no había cuenta,
+no había contraseña, y esa persona no podía entrar de ninguna manera. El rol
+que se le diera daba igual.
+
+Ahora se le crea la cuenta y se genera una contraseña que **se enseña una sola
+vez**, como el código de acceso de un trabajador. No se guarda en ninguna tabla
+nuestra y no se manda por correo: un correo con una contraseña dentro se queda
+en la bandeja para siempre. Quien invita se la pasa por donde ya hablan.
+
+Si esa dirección ya tenía cuenta —se dio de alta por su cuenta, o es cliente de
+otro negocio— se engancha a la que hay y **no se le toca la contraseña**: es
+suya, no nuestra.
 
 ---
 

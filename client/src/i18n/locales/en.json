@@ -746,7 +746,32 @@
     "ccqEmployerNumber": "CCQ employer number",
     "ccqEmployerNumberHint": "The one they gave you when you registered. It appears on every monthly report you send.",
     "country": "Country",
-    "countryHint": "This decides which tax details you're asked for and which rules apply to you. Canada only for now — it's the one place whose rules we can do in full. If you're somewhere else, tell us and we'll add it."
+    "countryHint": "This decides which tax details you're asked for and which rules apply to you. Canada only for now — it's the one place whose rules we can do in full. If you're somewhere else, tell us and we'll add it.",
+    "whatTheySee": "What this person sees",
+    "seesAll": "Full administrator",
+    "seesAllHint": "Sees and does everything, same as you.",
+    "seesSome": "Only some areas",
+    "seesSomeHint": "Choose below what they can see. The rest doesn't show up when they sign in.",
+    "pickAtLeastOne": "Tick at least one area, or this person will see nothing when they sign in.",
+    "areasTitle": "The areas of the system",
+    "areasHint": "This is what you can grant or withhold from each person.",
+    "area": {
+      "campo": "Field",
+      "clientes": "Clients",
+      "dinero": "Money",
+      "personas": "Staff paperwork",
+      "ajustes": "Settings"
+    },
+    "areaHint": {
+      "campo": "Jobs, work orders, scheduling, clock-ins, GPS, time off, photos and who each worker is.",
+      "clientes": "CRM, client portal, conversations and appointments.",
+      "dinero": "Estimates, invoices, payments, expenses, payroll, reports, costs and QuickBooks. This is where the company's profit lives.",
+      "personas": "Work agreements and each person's paperwork: their contract, their T4, what they earn.",
+      "ajustes": "Company details, users, taxes and connections."
+    },
+    "credentialsTitle": "Their sign-in details",
+    "credentialsHint": "Pass them on however you already talk. With these they sign in on the login page.",
+    "credentialsOnce": "This password is shown once and is not stored anywhere. If it's lost, you'll have to issue another."
   },
   "reports": {
     "title": "Reports & Analytics",

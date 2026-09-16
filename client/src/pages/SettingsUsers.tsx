@@ -20,6 +20,8 @@ import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 import { DobleFactor } from "@/components/DobleFactor";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AREAS, type Area } from "@shared/permisos";
 
 interface AppUser {
   id: string;
@@ -29,18 +31,25 @@ interface AppUser {
   role: string | null;
   roleId?: string | null;
   phone?: string | null;
+  /** Las áreas que ve, o `null` si las ve todas. */
+  areas: Area[] | null;
 }
 
 interface SettingsUsersData {
   users: AppUser[];
   roles: { id?: string; name: string; permissions: string[] }[];
-  /** Papeles de fábrica que este negocio aún no tiene. Se crean al asignarlos. */
-  presets?: { preset: string; areas: string[] }[];
 }
 
-type Draft = { id: string | null; name: string; email: string; phone: string; roleId: string };
+type Draft = {
+  id: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  /** `null` es administrador general: lo ve todo. */
+  areas: Area[] | null;
+};
 
-const EMPTY: Draft = { id: null, name: "", email: "", phone: "", roleId: "" };
+const EMPTY: Draft = { id: null, name: "", email: "", phone: "", areas: null };
 
 export default function SettingsUsers() {
   const { t } = useTranslation();
@@ -48,9 +57,15 @@ export default function SettingsUsers() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // La contraseña recién creada. Se enseña una vez y no vuelve: no se guarda
+  // en ninguna tabla nuestra ni se manda por correo.
+  const [credenciales, setCredenciales] = useState<{ email: string; password: string } | null>(null);
 
-  const roleLabel = (role: string | null) =>
-    role ? t(`settings.roles.${role}`, { defaultValue: role }) : "—";
+  /** Qué ve esta persona, dicho como lo entendería quien la invitó. */
+  const queVe = (areas: Area[] | null) =>
+    areas === null
+      ? t("settings.seesAll")
+      : areas.map((a) => t(`settings.area.${a}`)).join(" · ");
 
   const save = async () => {
     if (!draft || !draft.name.trim()) return;
@@ -64,12 +79,12 @@ export default function SettingsUsers() {
           name: draft.name,
           email: draft.email,
           phone: draft.phone,
-          ...(draft.roleId.startsWith("preset:")
-            ? { preset: draft.roleId.slice("preset:".length) }
-            : { roleId: draft.roleId || null }),
+          areas: draft.areas,
         }),
       });
-      if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
+      const cuerpo = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(serverMessage(cuerpo, t, t("common.genericError")));
+      if (cuerpo?.password) setCredenciales({ email: cuerpo.email, password: cuerpo.password });
       setDraft(null);
       reload();
     } catch (err) {
@@ -128,7 +143,7 @@ export default function SettingsUsers() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <StatusBadge tone="neutral">{roleLabel(user.role)}</StatusBadge>
+                    <StatusBadge tone="neutral">{queVe(user.areas)}</StatusBadge>
                     <StatusBadge tone={user.status === "activo" ? "success" : "warning"}>
                       {user.status === "activo" ? t("settings.userActive") : t("settings.userInvited")}
                     </StatusBadge>
@@ -142,7 +157,7 @@ export default function SettingsUsers() {
                           name: user.name,
                           email: user.email ?? "",
                           phone: user.phone ?? "",
-                          roleId: user.roleId ?? "",
+                          areas: user.areas,
                         });
                       }}
                     >
@@ -158,22 +173,58 @@ export default function SettingsUsers() {
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-base font-semibold text-foreground mb-4">{t("settings.permissionsByRole")}</h2>
+            <h2 className="text-base font-semibold text-foreground mb-1">{t("settings.areasTitle")}</h2>
+            <p className="text-sm text-muted-foreground mb-4">{t("settings.areasHint")}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {data.roles.map((role) => (
-                <div key={role.name} className="border border-border rounded-lg p-4">
-                  <p className="text-sm font-medium text-foreground mb-2">{roleLabel(role.name)}</p>
-                  <ul className="space-y-1">
-                    {role.permissions.map((perm) => (
-                      <li key={perm} className="text-xs text-muted-foreground">· {perm}</li>
-                    ))}
-                  </ul>
+              {AREAS.map((area) => (
+                <div key={area} className="border border-border rounded-lg p-4">
+                  <p className="text-sm font-medium text-foreground mb-1">{t(`settings.area.${area}`)}</p>
+                  <p className="text-xs text-muted-foreground">{t(`settings.areaHint.${area}`)}</p>
                 </div>
               ))}
             </div>
           </Card>
         </>
       )}
+
+      {/* La contraseña, una sola vez.
+          No se guarda en ninguna tabla nuestra y no se manda por correo: un
+          correo con una contraseña dentro se queda en la bandeja para siempre.
+          Se pasa por donde ya hablen, como el código de un trabajador. */}
+      <Dialog open={credenciales !== null} onOpenChange={(open) => !open && setCredenciales(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("settings.credentialsTitle")}</DialogTitle>
+            <DialogDescription>{t("settings.credentialsHint")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border p-3 space-y-2">
+              <div>
+                <p className="text-xs text-muted-foreground">{t("common.email")}</p>
+                <p className="text-sm text-foreground select-all break-all">{credenciales?.email}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{t("auth.password")}</p>
+                <p className="text-base font-mono text-foreground select-all break-all">{credenciales?.password}</p>
+              </div>
+            </div>
+            <p className="text-xs text-status-warning-fg">{t("settings.credentialsOnce")}</p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                navigator.clipboard
+                  ?.writeText(`${credenciales?.email}\n${credenciales?.password}`)
+                  .catch(() => null);
+              }}
+              variant="outline"
+            >
+              {t("common.copy")}
+            </Button>
+            <Button onClick={() => setCredenciales(null)}>{t("common.done")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={draft !== null} onOpenChange={(open) => !open && setDraft(null)}>
         <DialogContent className="sm:max-w-md">
@@ -210,36 +261,75 @@ export default function SettingsUsers() {
                 onChange={(e) => setDraft((d) => (d ? { ...d, phone: e.target.value } : d))}
               />
             </div>
-            {((data?.roles ?? []).some((r) => r.id) || (data?.presets ?? []).length > 0) && (
-              <div className="space-y-1.5">
-                <Label>{t("settings.role")}</Label>
-                <Select
-                  value={draft?.roleId || undefined}
-                  onValueChange={(v) => setDraft((d) => (d ? { ...d, roleId: v } : d))}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t("common.none")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(data?.roles ?? [])
-                      .filter((r) => r.id)
-                      .map((r) => (
-                        <SelectItem key={r.id} value={r.id!}>{roleLabel(r.name)}</SelectItem>
-                      ))}
-                    {(data?.presets ?? []).map((p) => (
-                      <SelectItem key={p.preset} value={`preset:${p.preset}`}>
-                        {t(`settings.roles.${p.preset}`, { defaultValue: p.preset })}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-2">
+              <Label>{t("settings.whatTheySee")}</Label>
+              {/* Dos opciones y no una lista de roles: quien invita piensa en
+                  «lo ve todo» o «sólo esto», no en el nombre de un papel. El
+                  rol de debajo lo arma el servidor. */}
+              <div className="grid gap-2">
+                <label className="flex items-start gap-2.5 cursor-pointer rounded-lg border border-border p-3">
+                  <input
+                    type="radio"
+                    className="mt-0.5"
+                    checked={draft?.areas === null}
+                    onChange={() => setDraft((d) => (d ? { ...d, areas: null } : d))}
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm text-foreground">{t("settings.seesAll")}</span>
+                    <span className="block text-xs text-muted-foreground">{t("settings.seesAllHint")}</span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2.5 cursor-pointer rounded-lg border border-border p-3">
+                  <input
+                    type="radio"
+                    className="mt-0.5"
+                    checked={draft?.areas !== null}
+                    onChange={() => setDraft((d) => (d ? { ...d, areas: ["campo"] } : d))}
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm text-foreground">{t("settings.seesSome")}</span>
+                    <span className="block text-xs text-muted-foreground">{t("settings.seesSomeHint")}</span>
+                  </span>
+                </label>
               </div>
-            )}
+
+              {draft?.areas !== null && (
+                <div className="space-y-2 rounded-lg border border-border p-3">
+                  {AREAS.map((area) => (
+                    <label key={area} className="flex items-start gap-2.5 cursor-pointer">
+                      <Checkbox
+                        checked={(draft?.areas ?? []).includes(area)}
+                        onCheckedChange={(v: boolean | "indeterminate") =>
+                          setDraft((d) => {
+                            if (!d) return d;
+                            const puestas = new Set(d.areas ?? []);
+                            if (v === true) puestas.add(area);
+                            else puestas.delete(area);
+                            return { ...d, areas: AREAS.filter((a) => puestas.has(a)) };
+                          })
+                        }
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm text-foreground">{t(`settings.area.${area}`)}</span>
+                        <span className="block text-xs text-muted-foreground">{t(`settings.areaHint.${area}`)}</span>
+                      </span>
+                    </label>
+                  ))}
+                  {(draft?.areas ?? []).length === 0 && (
+                    <p className="text-xs text-status-warning-fg">{t("settings.pickAtLeastOne")}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {saveError && <p className="text-sm text-status-error-fg">{saveError}</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDraft(null)}>{t("common.cancel")}</Button>
-            <Button onClick={save} disabled={saving || !draft?.name.trim()}>
+            <Button
+              onClick={save}
+              disabled={saving || !draft?.name.trim() || (draft?.areas !== null && draft?.areas.length === 0)}
+            >
               {saving ? t("common.loading") : t("common.save")}
             </Button>
           </DialogFooter>
