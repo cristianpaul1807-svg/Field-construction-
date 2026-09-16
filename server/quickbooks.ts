@@ -83,8 +83,53 @@ function baseDeApi(entorno: EntornoQuickBooks): string {
     : "https://sandbox-quickbooks.api.intuit.com";
 }
 
-const AUTORIZAR = "https://appcenter.intuit.com/connect/oauth2";
-const TOKEN = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer";
+/**
+ * Las direcciones de Intuit, preguntadas a Intuit.
+ *
+ * Estaban escritas aquí a mano y funcionaban — hoy siguen siendo estas dos.
+ * El problema es el día que no lo sean: la conexión dejaría de ir y el fallo
+ * diría cualquier cosa menos que han movido una dirección.
+ *
+ * Intuit publica un documento con las suyas, que es lo que se lee ahora. Las
+ * constantes se quedan como red: si el documento no contesta —y esto corre en
+ * mitad de un inicio de sesión, con una persona esperando— se usa lo último
+ * que sabíamos en vez de no dejar conectar.
+ */
+const POR_DEFECTO = {
+  autorizar: "https://appcenter.intuit.com/connect/oauth2",
+  token: "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+  revocar: "https://developer.api.intuit.com/v2/oauth2/tokens/revoke",
+};
+
+const DESCUBRIMIENTO: Record<EntornoQuickBooks, string> = {
+  production: "https://developer.api.intuit.com/.well-known/openid_configuration",
+  sandbox: "https://developer.api.intuit.com/.well-known/openid_sandbox_configuration",
+};
+
+type Direcciones = typeof POR_DEFECTO;
+const UN_DIA = 24 * 60 * 60 * 1000;
+const recordadas = new Map<EntornoQuickBooks, { cuando: number; cuales: Direcciones }>();
+
+async function direcciones(): Promise<Direcciones> {
+  const { entorno } = configuracion();
+  const guardadas = recordadas.get(entorno);
+  if (guardadas && Date.now() - guardadas.cuando < UN_DIA) return guardadas.cuales;
+
+  try {
+    const res = await fetch(DESCUBRIMIENTO[entorno], { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(String(res.status));
+    const d = (await res.json()) as Record<string, unknown>;
+    const cuales: Direcciones = {
+      autorizar: typeof d.authorization_endpoint === "string" ? d.authorization_endpoint : POR_DEFECTO.autorizar,
+      token: typeof d.token_endpoint === "string" ? d.token_endpoint : POR_DEFECTO.token,
+      revocar: typeof d.revocation_endpoint === "string" ? d.revocation_endpoint : POR_DEFECTO.revocar,
+    };
+    recordadas.set(entorno, { cuando: Date.now(), cuales });
+    return cuales;
+  } catch {
+    return POR_DEFECTO;
+  }
+}
 
 /** Sólo la contabilidad. Cada permiso de más es una pregunta más en la revisión de Intuit. */
 const ALCANCE = "com.intuit.quickbooks.accounting";
@@ -114,7 +159,7 @@ export async function urlDeAutorizacion(admin: Admin, businessId: string): Promi
     redirect_uri: redirectUri,
     state: data.state,
   });
-  return `${AUTORIZAR}?${params.toString()}`;
+  return `${(await direcciones()).autorizar}?${params.toString()}`;
 }
 
 interface RespuestaDeToken {
@@ -127,7 +172,7 @@ interface RespuestaDeToken {
 /** El intercambio con Intuit. Las claves van en Basic, no en el cuerpo. */
 async function pedirToken(cuerpo: URLSearchParams): Promise<RespuestaDeToken> {
   const { clientId, clientSecret } = configuracion();
-  const res = await fetch(TOKEN, {
+  const res = await fetch((await direcciones()).token, {
     method: "POST",
     headers: {
       Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
@@ -374,5 +419,38 @@ export async function refrescarNombreDeEmpresa(admin: Admin, businessId: string)
 }
 
 export async function desconectar(admin: Admin, businessId: string): Promise<void> {
+  // Se le retira el permiso a Intuit, no sólo a nosotros.
+  //
+  // Antes esto borraba nuestra fila y ya. El token seguía vivo al otro lado
+  // hasta caducar solo, así que «desconectado» aquí y «esta app tiene acceso a
+  // tu contabilidad» allí convivían durante meses. Nuestra propia política de
+  // privacidad dice que la conexión se borra; borrar sólo nuestra mitad no es
+  // eso.
+  const { data } = await admin
+    .from("quickbooks_connections")
+    .select("refresh_token")
+    .eq("business_id", businessId)
+    .maybeSingle();
+
+  if (data?.refresh_token) {
+    try {
+      const { clientId, clientSecret } = configuracion();
+      await fetch((await direcciones()).revocar, {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ token: data.refresh_token }),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      // Que Intuit no conteste no puede dejar a nadie atado a una conexión que
+      // quiere quitarse. Se borra igual: la nuestra desaparece seguro, y la
+      // suya caduca sola.
+    }
+  }
+
   await admin.from("quickbooks_connections").delete().eq("business_id", businessId);
 }

@@ -239,6 +239,27 @@ de una empresa de pruebas no existe en producción. Al cambiar de entorno hay
 que volver a conectar desde la pantalla; las conexiones viejas dan
 `invalid_grant` y el sistema las borra solo.
 
+### Las direcciones de Intuit, preguntadas a Intuit
+
+Las dos direcciones del flujo de permisos —a dónde mandar al contratista y a
+dónde pedir el token— **no están escritas a mano**. Se leen del documento que
+Intuit publica:
+
+| Entorno | Documento |
+|---|---|
+| Producción | `developer.api.intuit.com/.well-known/openid_configuration` |
+| Pruebas | `developer.api.intuit.com/.well-known/openid_sandbox_configuration` |
+
+Se recuerdan un día. Si el documento no contesta se usan las de siempre, que
+siguen en el código como red: esto corre en mitad de una conexión, con una
+persona esperando, y no poder conectar porque Intuit tarda en servir un JSON
+sería cambiar un problema improbable por uno seguro.
+
+De ahí sale también la dirección de **revocar**, que se usa al desconectar.
+Antes se borraba nuestra fila y el token seguía vivo al otro lado hasta
+caducar solo: «desconectado» aquí y «esta app tiene acceso a tu contabilidad»
+allí convivían durante meses.
+
 ### Las direcciones que pide Intuit
 
 Para desbloquear las claves de producción, Intuit pide en **Keys &
