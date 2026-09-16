@@ -56,8 +56,6 @@ di("Y uno que sí reconocemos se respeta", planDe("chantier") === "chantier" && 
 const RUTAS = [
   ["/payroll", "nomina"],
   ["/payroll/2026-01/lines", "nomina"],
-  ["/agreements", "nomina"],
-  ["/worker-documents/abc", "nomina"],
   ["/ccq/monthly", "cumplimiento"],
   ["/cost-tracking", "margen"],
   ["/quickbooks/status", "contabilidad"],
@@ -72,6 +70,14 @@ for (const [ruta, esperada] of RUTAS) {
 for (const ruta of ["/projects", "/invoices", "/clients", "/work-orders", "/settings/company", "/loquesea"]) {
   const c = capacidadDeLaRuta(ruta);
   di(`${ruta} no pide nada y entra en los dos planes`, c === null || tiene("chantier", c));
+}
+
+// Lo que vive DENTRO de una pantalla que todos tienen no se puede cobrar
+// aparte: dejaba un error a media ficha del técnico, que es de campo. Fue un
+// fallo de verdad del primer mapa.
+for (const ruta of ["/agreements", "/agreements/abc", "/worker-documents", "/worker-documents/abc?employee_id=1"]) {
+  const c = capacidadDeLaRuta(ruta);
+  di(`${ruta} vive en la ficha del técnico y entra en todos los planes`, c === null, c ?? "ninguna");
 }
 
 // El caso que importa de verdad: un Chantier pidiendo la nómina.

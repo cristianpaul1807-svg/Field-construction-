@@ -116,6 +116,7 @@ directamente al paso a paso.
 | Usuarios y roles | [funciones/configuracion.md](funciones/configuracion.md#usuarios-y-roles) |
 | *(dentro de Usuarios)* Segundo paso al entrar | [funciones/segundo-paso.md](funciones/segundo-paso.md) |
 | *(dentro de Usuarios)* Quién ve qué: áreas y roles | [funciones/permisos.md](funciones/permisos.md) |
+| *(en todo el panel)* Qué entra en cada plan | [funciones/planes.md](funciones/planes.md) |
 | Conexión WhatsApp | [funciones/configuracion.md](funciones/configuracion.md#conexión-whatsapp) |
 | Automatizaciones | [funciones/configuracion.md](funciones/configuracion.md#automatizaciones) |
 

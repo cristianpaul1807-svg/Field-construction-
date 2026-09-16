@@ -1479,7 +1479,8 @@
     "subcontractor_has_history": "Suppression impossible : cette personne a déjà des heures pointées ou des payes émises. Ces heures sont le coût d'un chantier.",
     "client_not_found": "Ce client n'existe plus.",
     "estimate_not_found": "Cette soumission n'existe plus.",
-    "subcontractor_not_found": "Cette personne n'existe plus."
+    "subcontractor_not_found": "Cette personne n'existe plus.",
+    "plan_no_incluye": "Cette partie n'est pas dans le forfait de votre entreprise. Écrivez-nous et on l'active."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2387,5 +2388,46 @@
     "download": "Télécharger la feuille",
     "employerNumber": "Nº d'employeur : {{number}}",
     "note": "Ceci n'est pas transmis à la CCQ : c'est pour le recopier dans leur formulaire. Échéance le 15 du mois suivant."
+  },
+  "planes": {
+    "estaEnEntreprisePrecio": "Cette partie fait partie du forfait Entreprise, {{precio}} {{moneda}} par mois. Les travailleurs sur le terrain restent illimités.",
+    "estaEnEntreprise": "Cette partie fait partie du forfait Entreprise.",
+    "escribenos": "Écrivez-nous",
+    "loActivamos": "On l'active la journée même.",
+    "asuntoCorreo": "Je veux activer le forfait Entreprise",
+    "capacidad": {
+      "nomina": {
+        "titulo": "La paie n'est pas dans votre forfait",
+        "cuerpo": "C'est ici qu'on paie les heures déjà pointées, qu'on sort les T4 et qu'on garde l'entente et les papiers de chaque personne, sans rien retaper."
+      },
+      "cumplimiento": {
+        "titulo": "Le rapport de la CCQ n'est pas dans votre forfait",
+        "cuerpo": "Il prépare votre rapport mensuel avec les heures déjà saisies, semaine par semaine comme la CCQ les demande, pour que vous le révisiez et le transmettiez le 15."
+      },
+      "margen": {
+        "titulo": "Le suivi des coûts n'est pas dans votre forfait",
+        "cuerpo": "Montre ce que vous avez dépensé et facturé sur chaque chantier, et la marge qui reste. Aujourd'hui, pas en mars."
+      },
+      "contabilidad": {
+        "titulo": "La comptabilité connectée n'est pas dans votre forfait",
+        "cuerpo": "Envoie vos clients, factures, notes de crédit, encaissements et dépenses vers QuickBooks tout seuls, et rapporte ce que votre comptable y change."
+      },
+      "reportes": {
+        "titulo": "Les rapports ne sont pas dans votre forfait",
+        "cuerpo": "Qui vous doit de l'argent et depuis quand, quel chantier laisse vraiment une marge, combien dort dans Stripe, et tout prêt pour votre comptable."
+      },
+      "campo": {
+        "titulo": "Cette partie n'est pas dans votre forfait",
+        "cuerpo": "Les chantiers, l'équipe et le pointage sont dans tous les forfaits."
+      },
+      "facturacion": {
+        "titulo": "Cette partie n'est pas dans votre forfait",
+        "cuerpo": "Les soumissions, les factures et les encaissements sont dans tous les forfaits."
+      },
+      "equipo": {
+        "titulo": "Les accès limités ne sont pas dans votre forfait",
+        "cuerpo": "Faites entrer qui vous voulez avec accès à sa partie seulement : un chef de chantier qui voit les chantiers et jamais le profit ni la paie de personne."
+      }
+    }
   }
 }

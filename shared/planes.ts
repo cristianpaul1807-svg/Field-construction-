@@ -108,8 +108,13 @@ export function tiene(plan: Plan, capacidad: Capacidad): boolean {
  */
 export const CAPACIDAD_DE: Record<string, Capacidad> = {
   payroll: "nomina",
-  agreements: "nomina",
-  "worker-documents": "nomina",
+  // `agreements` y `worker-documents` **no** entran aquí, aunque el acuerdo
+  // diga lo que cobra alguien. Viven dentro de la ficha del técnico, que es de
+  // campo y la tienen todos: cobrarlos dejaba un error a media pantalla que sí
+  // es suya. Y aunque se pudieran separar, no habría que hacerlo — un
+  // contratista contrata gente aunque no nos compre la nómina, y sus contratos
+  // son suyos. Lo que cobra cada uno ya lo tapan los permisos por áreas, que
+  // es donde toca.
 
   ccq: "cumplimiento",
 

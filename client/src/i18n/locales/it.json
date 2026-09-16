@@ -1479,7 +1479,8 @@
     "subcontractor_has_history": "Non si può eliminare: questa persona ha già ore timbrate o paghe emesse. Quelle ore sono il costo di un cantiere.",
     "client_not_found": "Quel cliente non esiste più.",
     "estimate_not_found": "Quel preventivo non esiste più.",
-    "subcontractor_not_found": "Quella persona non esiste più."
+    "subcontractor_not_found": "Quella persona non esiste più.",
+    "plan_no_incluye": "Questa parte non è nel piano della tua azienda. Scrivici e te la attiviamo."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2387,5 +2388,46 @@
     "download": "Scarica il foglio",
     "employerNumber": "N. datore: {{number}}",
     "note": "Questo non viene inviato alla CCQ: serve per copiarlo nel loro modulo. Scade il 15 del mese successivo."
+  },
+  "planes": {
+    "estaEnEntreprisePrecio": "Questa parte è nel piano Entreprise, {{precio}} {{moneda}} al mese. I lavoratori sul campo restano illimitati.",
+    "estaEnEntreprise": "Questa parte è nel piano Entreprise.",
+    "escribenos": "Scrivici",
+    "loActivamos": "Te lo attiviamo in giornata.",
+    "asuntoCorreo": "Voglio attivare il piano Entreprise",
+    "capacidad": {
+      "nomina": {
+        "titulo": "Le buste paga non sono nel tuo piano",
+        "cuerpo": "Qui si pagano le ore già timbrate, escono i T4 e si tengono l'accordo e i documenti di ogni persona, senza riscrivere niente."
+      },
+      "cumplimiento": {
+        "titulo": "Il rapporto della CCQ non è nel tuo piano",
+        "cuerpo": "Prepara il rapporto mensile con le ore già dentro, settimana per settimana come le chiede la CCQ, così lo controlli e lo presenti il 15."
+      },
+      "margen": {
+        "titulo": "Il controllo dei costi non è nel tuo piano",
+        "cuerpo": "Mostra quanto hai speso e quanto hai fatturato su ogni cantiere, e quanto margine resta. Oggi, non a marzo."
+      },
+      "contabilidad": {
+        "titulo": "La contabilità collegata non è nel tuo piano",
+        "cuerpo": "Manda clienti, fatture, note di credito, incassi e spese a QuickBooks da sole, e riporta indietro quello che il tuo commercialista cambia lì."
+      },
+      "reportes": {
+        "titulo": "I report non sono nel tuo piano",
+        "cuerpo": "Chi ti deve dei soldi e da quando, quale cantiere lascia davvero margine, quanto c'è su Stripe, e tutto pronto per il commercialista."
+      },
+      "campo": {
+        "titulo": "Questa parte non è nel tuo piano",
+        "cuerpo": "Cantieri, squadra e timbratura sono in tutti i piani."
+      },
+      "facturacion": {
+        "titulo": "Questa parte non è nel tuo piano",
+        "cuerpo": "Preventivi, fatture e incassi sono in tutti i piani."
+      },
+      "equipo": {
+        "titulo": "Gli accessi limitati non sono nel tuo piano",
+        "cuerpo": "Fai entrare chi ti serve con accesso solo alla sua parte: un capocantiere che vede i cantieri e non vede mai il profitto né la paga di nessuno."
+      }
+    }
   }
 }

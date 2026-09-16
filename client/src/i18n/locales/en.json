@@ -1479,7 +1479,8 @@
     "subcontractor_has_history": "Can't delete: this person already has logged hours or issued pay sheets. Those hours are a job's cost.",
     "client_not_found": "That client no longer exists.",
     "estimate_not_found": "That estimate no longer exists.",
-    "subcontractor_not_found": "That person no longer exists."
+    "subcontractor_not_found": "That person no longer exists.",
+    "plan_no_incluye": "This part isn't in your business's plan. Write to us and we'll switch it on."
   },
   "workLog": {
     "title": "Work log",
@@ -2387,5 +2388,46 @@
     "download": "Download the sheet",
     "employerNumber": "Employer no.: {{number}}",
     "note": "This is not sent to the CCQ: it's for you to copy into their form. Due on the 15th of the following month."
+  },
+  "planes": {
+    "estaEnEntreprisePrecio": "This is part of the Entreprise plan, {{precio}} {{moneda}} a month. Field workers stay unlimited.",
+    "estaEnEntreprise": "This is part of the Entreprise plan.",
+    "escribenos": "Write to us",
+    "loActivamos": "We turn it on the same day.",
+    "asuntoCorreo": "I want to switch on the Entreprise plan",
+    "capacidad": {
+      "nomina": {
+        "titulo": "Payroll isn't in your plan",
+        "cuerpo": "This is where you pay the hours already clocked, produce T4s, and keep each person's agreement and paperwork — without retyping anything."
+      },
+      "cumplimiento": {
+        "titulo": "The CCQ report isn't in your plan",
+        "cuerpo": "It builds your monthly report from the hours already in the system, week by week the way the CCQ asks for them, so you review it and file it on the 15th."
+      },
+      "margen": {
+        "titulo": "Cost tracking isn't in your plan",
+        "cuerpo": "Shows what you've spent and what you've billed on each job, and how much margin is left. Today, not in March."
+      },
+      "contabilidad": {
+        "titulo": "Connected accounting isn't in your plan",
+        "cuerpo": "Sends your clients, invoices, credit notes, payments and expenses to QuickBooks on their own, and brings back whatever your accountant changes there."
+      },
+      "reportes": {
+        "titulo": "Reports aren't in your plan",
+        "cuerpo": "Who owes you money and since when, which job actually leaves a margin, how much is sitting in Stripe, and everything ready for your accountant."
+      },
+      "campo": {
+        "titulo": "This isn't in your plan",
+        "cuerpo": "Jobs, crew and clock-in are in every plan."
+      },
+      "facturacion": {
+        "titulo": "This isn't in your plan",
+        "cuerpo": "Estimates, invoices and payments are in every plan."
+      },
+      "equipo": {
+        "titulo": "Limited access isn't in your plan",
+        "cuerpo": "Let in whoever you need with access to their part only: a foreman who sees the jobs and never sees the profit or anyone's pay."
+      }
+    }
   }
 }

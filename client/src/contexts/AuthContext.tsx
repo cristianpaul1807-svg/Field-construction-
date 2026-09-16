@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson } from "@/lib/api";
 import { anuncioDeFallo } from "@/lib/fallos";
 import type { Area } from "@shared/permisos";
+import { planDe, type Plan } from "@shared/planes";
 
 // "none" means the server positively answered that this account isn't linked
 // to a business or a client yet — that's the signal to send someone into
@@ -20,6 +21,8 @@ interface AuthState {
   personaError: string | null;
   /** Las áreas que esta persona ve, o `null` si las ve todas. */
   areas: Area[] | null;
+  /** El plan del negocio. Decide qué partes existen, no quién las ve. */
+  plan: Plan;
   businessId: string | null;
   clientId: string | null;
   refreshPersona: () => Promise<void>;
@@ -33,6 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [persona, setPersona] = useState<Persona | null>(null);
   const [areas, setAreas] = useState<Area[] | null>(null);
+  // Nace en `pilot`, que lo abre todo. Mientras `/auth/me` no conteste, esconder
+  // el menú a medias sería peor que enseñarlo entero un segundo.
+  const [plan, setPlan] = useState<Plan>("pilot");
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
@@ -58,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const body = await readJson(res);
       setPersona(body.persona);
       setAreas(Array.isArray(body.areas) ? body.areas : null);
+      setPlan(planDe(body.plan));
       setPersonaError(null);
       setBusinessId(body.businessId ?? null);
       setClientId(body.clientId ?? null);
@@ -101,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, loading, persona, personaError, areas, businessId, clientId, refreshPersona: loadPersona, signOut }}
+      value={{ session, loading, persona, personaError, areas, plan, businessId, clientId, refreshPersona: loadPersona, signOut }}
     >
       {children}
     </AuthContext.Provider>

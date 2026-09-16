@@ -1479,7 +1479,8 @@
     "subcontractor_has_history": "No se puede borrar: esta persona ya tiene horas fichadas o pagas emitidas. Esas horas son el coste de una obra.",
     "client_not_found": "Ese cliente ya no existe.",
     "estimate_not_found": "Ese presupuesto ya no existe.",
-    "subcontractor_not_found": "Esa persona ya no existe."
+    "subcontractor_not_found": "Esa persona ya no existe.",
+    "plan_no_incluye": "Esta parte no entra en el plan de tu negocio. Escríbenos y te la activamos."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2387,5 +2388,46 @@
     "download": "Descargar la hoja",
     "employerNumber": "Nº de empleador: {{number}}",
     "note": "Esto no se manda a la CCQ: es para que lo copies en su formulario. Vence el día 15 del mes siguiente."
+  },
+  "planes": {
+    "estaEnEntreprisePrecio": "Esta parte entra en el plan Entreprise, {{precio}} $ {{moneda}} al mes. Los trabajadores de campo siguen siendo ilimitados.",
+    "estaEnEntreprise": "Esta parte entra en el plan Entreprise.",
+    "escribenos": "Escríbenos",
+    "loActivamos": "Te lo activamos el mismo día.",
+    "asuntoCorreo": "Quiero activar el plan Entreprise",
+    "capacidad": {
+      "nomina": {
+        "titulo": "Las nóminas no están en tu plan",
+        "cuerpo": "Aquí se pagan las horas que ya están fichadas, salen los T4 y se guardan los acuerdos y los papeles de cada persona, sin volver a teclear nada."
+      },
+      "cumplimiento": {
+        "titulo": "El informe de la CCQ no está en tu plan",
+        "cuerpo": "Prepara tu informe mensual con las horas que ya están dentro, semana por semana como lo pide la CCQ, para que lo repases y lo presentes el día 15."
+      },
+      "margen": {
+        "titulo": "El control de costos no está en tu plan",
+        "cuerpo": "Enseña lo que llevas gastado y lo que llevas cobrado en cada obra, y cuánto margen queda. Hoy, no en marzo."
+      },
+      "contabilidad": {
+        "titulo": "La contabilidad conectada no está en tu plan",
+        "cuerpo": "Manda tus clientes, facturas, notas de crédito, cobros y gastos a QuickBooks solos, y trae de vuelta lo que tu contable cambie allí."
+      },
+      "reportes": {
+        "titulo": "Los reportes no están en tu plan",
+        "cuerpo": "Quién te debe dinero y desde cuándo, qué obra deja margen de verdad, cuánto hay en Stripe, y todo listo para tu contable."
+      },
+      "campo": {
+        "titulo": "Esta parte no está en tu plan",
+        "cuerpo": "Las obras, la cuadrilla y el fichaje entran en todos los planes."
+      },
+      "facturacion": {
+        "titulo": "Esta parte no está en tu plan",
+        "cuerpo": "Los presupuestos, las facturas y los cobros entran en todos los planes."
+      },
+      "equipo": {
+        "titulo": "Los accesos limitados no están en tu plan",
+        "cuerpo": "Deja entrar a quien necesites con acceso sólo a su parte: un jefe de obra que ve las obras y no ve el beneficio ni lo que cobra nadie."
+      }
+    }
   }
 }

@@ -51,6 +51,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 import { areaDeLaPantalla, puede } from "@shared/permisos";
+import { capacidadDeLaPantalla, tiene } from "@shared/planes";
 
 // Monochrome line icons only — no emoji, no fills, no per-item colour. The
 // icon inherits the surrounding text colour so the whole chrome reads as one
@@ -192,13 +193,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // El menú no enseña lo que va a rebotar. Es comodidad y no seguridad: quien
   // escriba la dirección a mano se choca igual contra el servidor, que es
   // donde está el bloqueo de verdad.
-  const { areas, signOut } = useAuth();
+  const { areas, plan, signOut } = useAuth();
   const secciones = navSections
     .map((seccion) => ({
       ...seccion,
       items: seccion.items.filter((item) => {
+        // Dos filtros seguidos que responden cosas distintas: el área es «esta
+        // persona no», la capacidad es «esta empresa no lo ha contratado».
         const area = areaDeLaPantalla(item.path);
-        return !area || puede(areas, area);
+        if (area && !puede(areas, area)) return false;
+        const capacidad = capacidadDeLaPantalla(item.path);
+        return !capacidad || tiene(plan, capacidad);
       }),
     }))
     .filter((seccion) => seccion.items.length > 0);

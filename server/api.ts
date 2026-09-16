@@ -64,7 +64,7 @@ import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, puede, recortar, AREAS } from "../shared/permisos";
-import { capacidadDeLaRuta, tiene } from "../shared/planes";
+import { capacidadDeLaRuta, planDe, tiene } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -1278,18 +1278,26 @@ apiRouter.get(
   route(async (req, res) => {
     const admin = getSupabaseAdmin();
     const [userRow, clientRow] = await Promise.all([
-      admin.from("users").select("business_id, roles(permissions)").eq("auth_user_id", req.authUserId!).maybeSingle(),
+      admin
+        .from("users")
+        .select("business_id, roles(permissions), businesses(subscription_plan)")
+        .eq("auth_user_id", req.authUserId!)
+        .maybeSingle(),
       admin.from("clients").select("id").eq("auth_user_id", req.authUserId!).maybeSingle(),
     ]);
 
     if (userRow.data) {
-      // Las áreas viajan aquí para que el menú no enseñe lo que va a rebotar.
-      // Es comodidad, no seguridad: quien las quite del navegador se choca
-      // igual contra el servidor.
+      // Las áreas y el plan viajan aquí para que el menú no enseñe lo que va a
+      // rebotar. Es comodidad, no seguridad: quien los cambie en el navegador
+      // se choca igual contra el servidor.
       res.json({
         persona: "business",
         businessId: userRow.data.business_id,
         areas: areasDelRol((userRow.data as { roles?: { permissions?: unknown } | null }).roles),
+        plan: planDe(
+          (userRow.data as { businesses?: { subscription_plan?: string | null } | null }).businesses
+            ?.subscription_plan
+        ),
       });
     } else if (clientRow.data) {
       res.json({ persona: "client", clientId: clientRow.data.id });
