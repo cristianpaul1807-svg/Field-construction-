@@ -19,6 +19,7 @@ import { Plus, Pencil } from "lucide-react";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { DobleFactor } from "@/components/DobleFactor";
 
 interface AppUser {
   id: string;
@@ -107,6 +108,8 @@ export default function SettingsUsers() {
 
       {!loading && !error && data && (
         <>
+          <DobleFactor />
+
           <Card className="p-6">
             <div className="space-y-3">
               {data.users.map((user) => (

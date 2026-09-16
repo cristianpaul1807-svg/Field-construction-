@@ -2310,5 +2310,23 @@
         ]
       }
     ]
+  },
+  "security": {
+    "title": "Secondo passo all'accesso",
+    "description": "Oltre alla password, sei cifre che cambiano ogni mezzo minuto in un'app del tuo telefono. Se qualcuno ottiene la tua password, da sola non gli basta.",
+    "on": "Attivo",
+    "off": "Disattivato",
+    "turnOn": "Attiva",
+    "turnOff": "Rimuovi",
+    "step1": "1. Scansiona questo codice con la tua app di autenticazione: Google Authenticator, Microsoft Authenticator, Authy o quella che già usi.",
+    "step2": "2. Scrivi le sei cifre che ti mostra.",
+    "qrAlt": "Codice QR per la tua app di autenticazione",
+    "orType": "Se non puoi scansionare, scrivi questa chiave a mano:",
+    "secondStep": "Secondo passo",
+    "enterCode": "Scrivi le sei cifre della tua app di autenticazione.",
+    "wrongCode": "Quel codice non va. Guarda quello che vedi adesso nell'app: cambiano ogni mezzo minuto.",
+    "couldNotStart": "Non è stato possibile avviare l'attivazione. Riprova.",
+    "couldNotRemove": "Non è stato possibile rimuoverlo. Riprova.",
+    "lostPhone": "Se perdi il telefono non potrai entrare da solo: scrivi all'assistenza e lo togliamo dopo aver verificato chi sei. Per questo conviene attivarlo su un telefono che usi ogni giorno."
   }
 }

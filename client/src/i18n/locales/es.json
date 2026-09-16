@@ -2310,5 +2310,23 @@
         ]
       }
     ]
+  },
+  "security": {
+    "title": "Segundo paso al entrar",
+    "description": "Además de tu contraseña, seis dígitos que cambian cada medio minuto en una app de tu móvil. Si alguien consigue tu contraseña, con ella sola no entra.",
+    "on": "Activado",
+    "off": "Desactivado",
+    "turnOn": "Activar",
+    "turnOff": "Quitar",
+    "step1": "1. Escanea este código con tu app de autenticación: Google Authenticator, Microsoft Authenticator, Authy o la que ya uses.",
+    "step2": "2. Escribe los seis dígitos que te muestre.",
+    "qrAlt": "Código QR para tu app de autenticación",
+    "orType": "Si no puedes escanear, escribe esta clave a mano:",
+    "secondStep": "Segundo paso",
+    "enterCode": "Escribe los seis dígitos de tu app de autenticación.",
+    "wrongCode": "Ese código no vale. Mira el que tienes ahora en la app: cambian cada medio minuto.",
+    "couldNotStart": "No se pudo empezar la activación. Inténtalo otra vez.",
+    "couldNotRemove": "No se pudo quitar. Inténtalo otra vez.",
+    "lostPhone": "Si pierdes el móvil no podrás entrar por tu cuenta: escríbenos a soporte y lo quitamos después de comprobar quién eres. Por eso conviene activarlo en un móvil que uses a diario."
   }
 }

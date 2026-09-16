@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { tomarDestino } from "@/lib/destino";
+import { faltanLosSeisDigitos, comprobarLosSeisDigitos } from "@/lib/dobleFactor";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -21,6 +23,10 @@ export default function Landing() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Quien tiene el doble factor puesto entra en dos pasos. Quien no, en uno:
+  // esto sólo aparece si su cuenta lo lleva.
+  const [pideCodigo, setPideCodigo] = useState(false);
+  const [codigo, setCodigo] = useState("");
 
   const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +37,41 @@ export default function Landing() {
       if (signInError) throw signInError;
       await refreshPersona();
 
-      const res = await apiFetch("/api/auth/me");
-      const body = await readJson(res);
-      if (body.persona === "client") setLocation("/portal");
-      else setLocation(tomarDestino() ?? "/");
+      // La contraseña es correcta, pero la sesión todavía no está entera si
+      // esta persona tiene el segundo paso puesto.
+      if (await faltanLosSeisDigitos()) {
+        setPideCodigo(true);
+        return;
+      }
+      await entrar();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("auth.wrongCredentials"));
     } finally {
       setBusy(false);
     }
+  };
+
+  const entrar = async () => {
+    const res = await apiFetch("/api/auth/me");
+    const body = await readJson(res);
+    if (body.persona === "client") setLocation("/portal");
+    else setLocation(tomarDestino() ?? "/");
+  };
+
+  const comprobar = async (valor: string) => {
+    if (valor.length !== 6) return;
+    setError(null);
+    setBusy(true);
+    const fallo = await comprobarLosSeisDigitos(valor);
+    if (fallo) {
+      setCodigo("");
+      setBusy(false);
+      setError(t("security.wrongCode"));
+      return;
+    }
+    await refreshPersona();
+    await entrar();
+    setBusy(false);
   };
 
   return (
@@ -72,6 +104,44 @@ export default function Landing() {
               </div>
             </div>
 
+            {/* El segundo paso sustituye al formulario en vez de aparecer
+                debajo: la contraseña ya está dada, y dejarla en pantalla
+                invita a volver a pulsar Iniciar sesión, que es lo que hace
+                que el código caduque antes de escribirlo. */}
+            {pideCodigo ? (
+              <div className="space-y-3">
+                <p className="text-[11px] text-muted-foreground text-center">{t("security.enterCode")}</p>
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={codigo}
+                    autoFocus
+                    onChange={(v) => {
+                      setCodigo(v);
+                      if (v.length === 6) comprobar(v);
+                    }}
+                  >
+                    <InputOTPGroup>
+                      {[0, 1, 2, 3, 4, 5].map((i) => (
+                        <InputOTPSlot key={i} index={i} />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+                {error && <p className="text-[11px] text-status-error-fg bg-status-error-bg/30 p-2 rounded-md">{error}</p>}
+                <button
+                  type="button"
+                  className="text-[10px] text-muted-foreground hover:text-foreground w-full text-center"
+                  onClick={() => {
+                    setPideCodigo(false);
+                    setCodigo("");
+                    setError(null);
+                  }}
+                >
+                  {t("common.back")}
+                </button>
+              </div>
+            ) : (
             <form onSubmit={submitLogin} className="space-y-2.5">
               <div className="space-y-1">
                 <Label htmlFor="quick-email" className="text-[11px] font-medium">{t("common.email")}</Label>
@@ -110,6 +180,7 @@ export default function Landing() {
                 <LogIn size={14} /> {t("auth.loginTitle")}
               </Button>
             </form>
+            )}
 
             <div className="pt-2 border-t border-border/80 text-center">
               <Link href="/negocio/acceso" className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-medium">

@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { tomarDestino } from "@/lib/destino";
+import { faltanLosSeisDigitos, comprobarLosSeisDigitos } from "@/lib/dobleFactor";
 import { useTranslation } from "react-i18next";
 
 function formatError(err: unknown, fallback: string): string {
@@ -36,6 +37,10 @@ export default function AuthBusiness() {
   const [error, setError] = useState<string | null>(null);
   const [needsCode, setNeedsCode] = useState(false);
   const [code, setCode] = useState("");
+  // El segundo paso de quien lo tenga puesto. No es el código de alta de
+  // arriba: aquel llega por correo una vez, éste lo da su móvil cada medio
+  // minuto.
+  const [pideDoble, setPideDoble] = useState(false);
   const [resent, setResent] = useState(false);
 
   const submit = async () => {
@@ -100,6 +105,11 @@ export default function AuthBusiness() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
         await refreshPersona();
+        if (await faltanLosSeisDigitos()) {
+          setPideDoble(true);
+          setCode("");
+          return;
+        }
         // Quien venía de un enlace a una pantalla concreta vuelve a ella. El
         // alta de más abajo no lo hace: un negocio recién creado no venía de
         // ninguna parte.
@@ -153,6 +163,21 @@ export default function AuthBusiness() {
     }
   };
 
+  const comprobarDoble = async (valor: string) => {
+    if (valor.length !== 6) return;
+    setError(null);
+    setBusy(true);
+    const fallo = await comprobarLosSeisDigitos(valor);
+    setBusy(false);
+    if (fallo) {
+      setCode("");
+      setError(t("security.wrongCode"));
+      return;
+    }
+    await refreshPersona();
+    setLocation(tomarDestino() ?? "/");
+  };
+
   const resendCode = async () => {
     setError(null);
     setResent(false);
@@ -185,19 +210,59 @@ export default function AuthBusiness() {
         <div className="text-center space-y-2">
           <Briefcase className="mx-auto text-foreground" size={28} strokeWidth={1.5} />
           <h1 className="text-xl font-semibold text-foreground">
-            {needsCode ? t("auth.verifyYourEmail") : mode === "register" ? t("auth.createBusinessAccount") : t("auth.signInBusiness")}
+            {pideDoble
+              ? t("security.secondStep")
+              : needsCode
+                ? t("auth.verifyYourEmail")
+                : mode === "register"
+                  ? t("auth.createBusinessAccount")
+                  : t("auth.signInBusiness")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {needsCode
-              ? t("auth.codeSentTo", { email })
-              : mode === "register"
-                ? t("auth.registerHint")
-                : t("auth.signInBusinessHint")}
+            {pideDoble
+              ? t("security.enterCode")
+              : needsCode
+                ? t("auth.codeSentTo", { email })
+                : mode === "register"
+                  ? t("auth.registerHint")
+                  : t("auth.signInBusinessHint")}
           </p>
         </div>
 
         <Card className="p-6">
-          {needsCode ? (
+          {pideDoble ? (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <InputOTP
+                  maxLength={6}
+                  value={code}
+                  autoFocus
+                  onChange={(v) => {
+                    setCode(v);
+                    if (v.length === 6) comprobarDoble(v);
+                  }}
+                >
+                  <InputOTPGroup>
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <InputOTPSlot key={i} index={i} />
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              {error && <p className="text-sm text-status-error-fg text-center">{error}</p>}
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground block mx-auto"
+                onClick={() => {
+                  setPideDoble(false);
+                  setCode("");
+                  setError(null);
+                }}
+              >
+                {t("common.back")}
+              </button>
+            </div>
+          ) : needsCode ? (
             <form
               className="space-y-4"
               onSubmit={(e) => {

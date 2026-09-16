@@ -2310,5 +2310,23 @@
         ]
       }
     ]
+  },
+  "security": {
+    "title": "Deuxième étape à la connexion",
+    "description": "En plus de votre mot de passe, six chiffres qui changent toutes les trente secondes dans une application de votre téléphone. Si quelqu'un obtient votre mot de passe, il ne lui suffira pas.",
+    "on": "Activé",
+    "off": "Désactivé",
+    "turnOn": "Activer",
+    "turnOff": "Retirer",
+    "step1": "1. Scannez ce code avec votre application d'authentification : Google Authenticator, Microsoft Authenticator, Authy ou celle que vous utilisez déjà.",
+    "step2": "2. Saisissez les six chiffres qu'elle affiche.",
+    "qrAlt": "Code QR pour votre application d'authentification",
+    "orType": "Si vous ne pouvez pas scanner, saisissez cette clé à la main :",
+    "secondStep": "Deuxième étape",
+    "enterCode": "Saisissez les six chiffres de votre application d'authentification.",
+    "wrongCode": "Ce code n'est pas valide. Regardez celui affiché maintenant dans l'application : ils changent toutes les trente secondes.",
+    "couldNotStart": "Impossible de démarrer l'activation. Réessayez.",
+    "couldNotRemove": "Impossible de le retirer. Réessayez.",
+    "lostPhone": "Si vous perdez votre téléphone, vous ne pourrez pas entrer seul : écrivez au soutien et nous le retirerons après avoir vérifié qui vous êtes. C'est pourquoi il vaut mieux l'activer sur un téléphone que vous utilisez tous les jours."
   }
 }

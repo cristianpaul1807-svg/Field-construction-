@@ -113,6 +113,7 @@ directamente al paso a paso.
 | *(dentro de Pagos)* La comisión de Stripe | [funciones/facturacion.md](funciones/facturacion.md#la-comisión-de-stripe) |
 | Márgenes y reglas | [funciones/configuracion.md](funciones/configuracion.md#márgenes-y-reglas) |
 | Usuarios y roles | [funciones/configuracion.md](funciones/configuracion.md#usuarios-y-roles) |
+| *(dentro de Usuarios)* Segundo paso al entrar | [funciones/segundo-paso.md](funciones/segundo-paso.md) |
 | Conexión WhatsApp | [funciones/configuracion.md](funciones/configuracion.md#conexión-whatsapp) |
 | Automatizaciones | [funciones/configuracion.md](funciones/configuracion.md#automatizaciones) |
 

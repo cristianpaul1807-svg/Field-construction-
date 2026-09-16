@@ -2310,5 +2310,23 @@
         ]
       }
     ]
+  },
+  "security": {
+    "title": "Second step when signing in",
+    "description": "On top of your password, six digits that change every half minute in an app on your phone. If someone gets your password, it alone won't let them in.",
+    "on": "On",
+    "off": "Off",
+    "turnOn": "Turn on",
+    "turnOff": "Turn off",
+    "step1": "1. Scan this code with your authenticator app: Google Authenticator, Microsoft Authenticator, Authy or whichever you already use.",
+    "step2": "2. Type the six digits it shows you.",
+    "qrAlt": "QR code for your authenticator app",
+    "orType": "If you can't scan, type this key by hand:",
+    "secondStep": "Second step",
+    "enterCode": "Type the six digits from your authenticator app.",
+    "wrongCode": "That code isn't valid. Check the one showing now in the app: they change every half minute.",
+    "couldNotStart": "Couldn't start setup. Try again.",
+    "couldNotRemove": "Couldn't turn it off. Try again.",
+    "lostPhone": "If you lose your phone you won't be able to get in on your own: write to support and we'll remove it after checking who you are. That's why it's worth setting up on a phone you use every day."
   }
 }
