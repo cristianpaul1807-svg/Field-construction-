@@ -2086,7 +2086,8 @@
     "payrollTheirs": "Le mie paghe le fa QuickBooks Payroll",
     "payrollTheirsHint": "Spuntalo se paghi la tua gente da QuickBooks. Se lo lasci vuoto, la scrittura di ogni foglio che emetti qui parte là da sola.",
     "payrollTheirsNote": "Con questo spuntato non mandiamo la scrittura delle paghe, così gli stipendi non risultano contati due volte. Quello che paghi ai subappaltatori continua ad andare: non è busta paga e QuickBooks Payroll non lo registra.",
-    "sandboxBeforeConnect": "Ancora in prova. Questa connessione va a un QuickBooks di prova, non al tuo: quello che mandi non comparirà nella tua contabilità vera. Non collegare ancora il tuo QuickBooks reale — ti avvisiamo appena è pronto. Nel frattempo esporta fatture, incassi e spese da Report e passali al tuo commercialista."
+    "soonBadge": "Presto",
+    "soonBody": "L'integrazione è fatta e aspetta che Intuit approvi l'applicazione. Appena danno il via si attiva qui e le tue fatture, gli incassi e le spese cominciano ad andare da sole. Nel frattempo esportale da Report e passale al tuo commercialista: niente di quello che fai ora va perso — all'attivazione parte quello che manca."
   },
   "creditNotes": {
     "issue": "Nota di credito",

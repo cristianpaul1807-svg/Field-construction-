@@ -314,6 +314,20 @@ export async function estado(
   environment: EntornoQuickBooks | null;
   connectedAt: string | null;
   refreshExpiresAt: string | null;
+  /**
+   * Si en pruebas se deja conectar igualmente.
+   *
+   * Mientras Intuit no apruebe la app, la pantalla enseña la integración como
+   * lo que es —hecha y esperando permiso— y no deja pulsar: un contratista que
+   * conecta su contabilidad de verdad contra un servidor de pruebas se queda
+   * con una conexión que parece buena y no manda nada.
+   *
+   * Pero alguien tiene que poder seguir probándola, o la primera factura que
+   * compruebe que la TPS y la TVQ salen bien será una de verdad, de un cliente
+   * de verdad. `QUICKBOOKS_SANDBOX_CONNECT=1` abre esa puerta y no está puesta
+   * en producción.
+   */
+  sandboxConnect: boolean;
 }> {
   const configured = estaConfigurado();
   const { data } = await admin
@@ -330,6 +344,7 @@ export async function estado(
     environment: (data?.environment as EntornoQuickBooks) ?? null,
     connectedAt: data?.connected_at ?? null,
     refreshExpiresAt: data?.refresh_expires_at ?? null,
+    sandboxConnect: process.env.QUICKBOOKS_SANDBOX_CONNECT?.trim() === "1",
   };
 }
 

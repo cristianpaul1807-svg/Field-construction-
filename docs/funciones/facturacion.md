@@ -217,6 +217,18 @@ botón que iba a fallar.
 | `QUICKBOOKS_CLIENT_SECRET` | Ídem. No sale del servidor |
 | `QUICKBOOKS_REDIRECT_URI` | `https://…/api/quickbooks/callback` |
 | `QUICKBOOKS_ENVIRONMENT` | `production`, o cualquier otra cosa para pruebas |
+| `QUICKBOOKS_SANDBOX_CONNECT` | `1` para poder conectar estando en pruebas |
+
+Mientras Intuit no apruebe la app, la pantalla enseña la integración como lo
+que es —hecha y esperando permiso— y **no deja pulsar Conectar**. Un
+contratista que conecta su contabilidad de verdad contra un servidor de
+pruebas se queda con una conexión que parece buena y no manda nada a ninguna
+parte.
+
+`QUICKBOOKS_SANDBOX_CONNECT=1` reabre ese botón, y existe para una sola cosa:
+poder seguir probando la integración contra un sandbox. Sin ella, la primera
+factura que compruebe que la TPS y la TVQ salen bien sería una de verdad, de
+un cliente de verdad. **No se pone en producción.**
 
 El entorno es deliberadamente desconfiado: **sólo la palabra exacta
 `production` es producción**. Al revés —dar por bueno lo que no se entiende—
