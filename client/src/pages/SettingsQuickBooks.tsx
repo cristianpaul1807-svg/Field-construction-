@@ -337,6 +337,20 @@ export default function SettingsQuickBooks() {
                 <h2 className="text-base font-semibold text-foreground">{t("quickbooks.connectTitle")}</h2>
                 <p className="text-sm text-muted-foreground mt-1">{t("quickbooks.connectBody")}</p>
               </div>
+              {/* El aviso de pruebas estaba sólo después de conectar, que es
+                  tarde: para entonces la persona ya autorizó su contabilidad
+                  de verdad contra un servidor de pruebas y se quedó con una
+                  conexión que parece buena y no manda nada a ninguna parte.
+                  El momento de decirlo es antes de que pulse. */}
+              {estado.environment === "sandbox" && (
+                <div className="rounded-lg border border-status-warning-bg bg-status-warning-bg/40 p-3">
+                  <p className="text-xs text-status-warning-fg">{t("quickbooks.sandboxBeforeConnect")}</p>
+                </div>
+              )}
+              {/* Y no se bloquea el botón: en pruebas es exactamente lo que
+                  hay que pulsar para conectar la empresa de pruebas. Avisar
+                  es suficiente; cerrar la puerta rompería lo que el aviso
+                  está describiendo. */}
               <Button className="gap-2" onClick={conectar} disabled={ocupado}>
                 {ocupado ? <Spinner className="size-4" /> : <ExternalLink size={15} />}
                 {t("quickbooks.connect")}

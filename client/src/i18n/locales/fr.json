@@ -2085,7 +2085,8 @@
     "payrollHint": "QuickBooks a son propre produit de paie, à part et payant. Si vous l'utilisez, il écrit déjà l'écriture de chaque paie dans vos livres.",
     "payrollTheirs": "Ma paie se fait sur QuickBooks Payroll",
     "payrollTheirsHint": "Cochez si vous payez vos gens depuis QuickBooks. Si vous laissez décoché, l'écriture de chaque feuille émise ici part là-bas toute seule.",
-    "payrollTheirsNote": "Coché, on n'envoie pas l'écriture de paie, pour que les salaires ne soient pas comptés deux fois. Ce que vous payez aux sous-traitants continue de partir : ce n'est pas de la paie et QuickBooks Payroll ne l'inscrit pas."
+    "payrollTheirsNote": "Coché, on n'envoie pas l'écriture de paie, pour que les salaires ne soient pas comptés deux fois. Ce que vous payez aux sous-traitants continue de partir : ce n'est pas de la paie et QuickBooks Payroll ne l'inscrit pas.",
+    "sandboxBeforeConnect": "Encore en test. Cette connexion mène à un QuickBooks de test, pas au vôtre : ce que vous enverrez n'apparaîtra pas dans votre vraie comptabilité. Ne branchez pas encore votre vrai QuickBooks — on vous prévient dès que c'est prêt. En attendant, exportez vos factures, encaissements et dépenses depuis Rapports et transmettez-les à votre comptable."
   },
   "creditNotes": {
     "issue": "Note de crédit",

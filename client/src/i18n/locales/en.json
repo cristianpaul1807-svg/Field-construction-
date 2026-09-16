@@ -2085,7 +2085,8 @@
     "payrollHint": "QuickBooks has its own payroll product, separate and paid. If you use it, it already writes each pay run's journal entry into your books.",
     "payrollTheirs": "My payroll runs on QuickBooks Payroll",
     "payrollTheirsHint": "Tick this if you pay your people from QuickBooks. Left unticked, the journal entry for every sheet you issue here is sent there on its own.",
-    "payrollTheirsNote": "With this ticked we don't send the payroll entry, so wages aren't counted twice. What you pay subcontractors still goes: that isn't payroll and QuickBooks Payroll doesn't record it."
+    "payrollTheirsNote": "With this ticked we don't send the payroll entry, so wages aren't counted twice. What you pay subcontractors still goes: that isn't payroll and QuickBooks Payroll doesn't record it.",
+    "sandboxBeforeConnect": "Still in testing. This connection goes to a test QuickBooks, not yours: whatever you send will not appear in your real books. Don't connect your real QuickBooks yet — we'll tell you as soon as it's ready. In the meantime, export your invoices, payments and expenses from Reports and pass them to your accountant."
   },
   "creditNotes": {
     "issue": "Credit note",

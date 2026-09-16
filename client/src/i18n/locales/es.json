@@ -2085,7 +2085,8 @@
     "payrollHint": "QuickBooks tiene su propio producto de nóminas, aparte y de pago. Si lo usas, él ya escribe el asiento de cada paga en tus libros.",
     "payrollTheirs": "Mi nómina la lleva QuickBooks Payroll",
     "payrollTheirsHint": "Márcalo si pagas a tu gente desde QuickBooks. Si lo dejas sin marcar, el asiento de cada hoja que emitas aquí se manda allí solo.",
-    "payrollTheirsNote": "Con esto marcado no mandamos el asiento de nómina, para que los salarios no queden contados dos veces. Lo que pagas a subcontratistas sí sigue yendo: eso no es nómina y QuickBooks Payroll no lo apunta."
+    "payrollTheirsNote": "Con esto marcado no mandamos el asiento de nómina, para que los salarios no queden contados dos veces. Lo que pagas a subcontratistas sí sigue yendo: eso no es nómina y QuickBooks Payroll no lo apunta.",
+    "sandboxBeforeConnect": "Todavía en pruebas. Esta conexión va a un QuickBooks de pruebas, no al tuyo: lo que mandes no aparecerá en tu contabilidad de verdad. No conectes aún tu QuickBooks real — te avisamos en cuanto esté listo. Mientras tanto, exporta tus facturas, cobros y gastos desde Reportes y pásaselos a tu contable."
   },
   "creditNotes": {
     "issue": "Nota de crédito",
