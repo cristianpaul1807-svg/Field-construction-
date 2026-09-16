@@ -46,6 +46,12 @@ PROSA = {
     "settings.pasteInWhatsapp",
     "help.topic.presupuestos.crear.p2",
     "quickbooks.fix.tax",
+    # Igual que el anterior: estos dos recitan el menú de QuickBooks —Impuestos
+    # → Impuesto sobre las ventas, y engranaje → Cuenta y configuración— para
+    # decirle a la persona dónde crear el código de impuesto de su provincia.
+    # Son pantallas de Intuit; si Intuit las renombra, lo arreglamos a mano.
+    "help.topic.dinero.impuestoQuickBooks.p2",
+    "help.topic.dinero.impuestoQuickBooks.p3",
 }
 
 MARCADOR = re.compile(r"\{\{[^}]*\}\}")

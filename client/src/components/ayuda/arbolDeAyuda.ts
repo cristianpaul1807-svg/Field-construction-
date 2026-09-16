@@ -115,6 +115,11 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // ni que existe una pantalla donde mirarlo.
       { id: "quickbooks", parrafos: 4, nota: true, ruta: "/settings/quickbooks" },
       { id: "quickbooksFalla", parrafos: 3, nota: true, ruta: "/settings/quickbooks" },
+      // El motivo más frecuente de que una factura no llegue, y el único que
+      // se arregla en el QuickBooks de la persona y no aquí. Va aparte de
+      // `quickbooksFalla` porque la respuesta no es «reintenta», son cuatro
+      // pasos en una pantalla que no es nuestra.
+      { id: "impuestoQuickBooks", parrafos: 4, nota: true, ruta: "/settings/quickbooks" },
       // Lo que Stripe se lleva de cada cobro. Es la primera pregunta que hace
       // alguien que mira su banco después de cobrar una factura grande.
       { id: "comisionStripe", parrafos: 3, nota: true, ruta: "/invoicing" },

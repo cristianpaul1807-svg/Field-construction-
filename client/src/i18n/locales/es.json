@@ -1806,6 +1806,14 @@
           "p2": "La diferencia entre gastado y previsto es la fecha del gasto. Un pedido de material para dentro de dos semanas, o un subcontratista que cobra al terminar, se apunta con su fecha y cuenta como **previsto**: el dinero está comprometido pero sigue en tu banco. Cuando llega el día pasa solo a gastado.",
           "p3": "Lo que queda es el presupuesto menos las dos cosas. Es la cifra por la que se decide si cabe un extra, y por eso descuenta también lo previsto: si ya prometiste ese dinero, no lo tienes aunque no haya salido.",
           "nota": "Un gasto se corrige con el lápiz de su fila — no hace falta borrarlo y volver a escribirlo. Aviso: si ya viajó a QuickBooks, la compra de allí no se corrige sola; hay que arreglarla también en QuickBooks."
+        },
+        "impuestoQuickBooks": {
+          "title": "QuickBooks dice que falta el impuesto de tu provincia",
+          "p1": "Tu QuickBooks tiene códigos de impuesto, pero ninguno de tu provincia. La factura no se manda, y es a propósito: mandarla con el impuesto de otra provincia sí la aceptaría QuickBooks, y te quedaría en los libros una obra de Quebec cobrada al 13 % de Ontario sin que nada lo avisara.",
+          "p2": "Se crea en QuickBooks, no aquí. En su menú: Impuestos → Impuesto sobre las ventas → Administrar impuesto sobre las ventas → Añadir impuesto, y eliges tu provincia. Para Quebec crea los dos de una vez: TPS al 5 % y TVQ al 9,975 %.",
+          "p3": "Si no te deja elegir Quebec es porque la empresa está registrada allí en otra provincia. Cámbialo en QuickBooks: engranaje ⚙ → Cuenta y configuración → Empresa → Dirección, guarda, y vuelve a la pantalla de impuestos.",
+          "p4": "Cuando esté creado, vuelve a {{menuAjustes}} → {{menuQuickBooks}} y dale a reintentar. Lo que no llegó se manda solo, ya con el impuesto bueno. No hay que rehacer ninguna factura.",
+          "nota": "Nosotros no creamos códigos de impuesto en tu QuickBooks, y no es pereza: van atados a tus números de TPS y TVQ y a las agencias a las que remites. Crear una TVQ a alguien que aún no está registrado sería ayudarle a cobrar un impuesto que no puede remitir."
         }
       },
       "problemas": {
@@ -2065,7 +2073,7 @@
       "payroll": "Nómina"
     },
     "fix": {
-      "tax": "A tu QuickBooks le falta un código de impuesto que se pueda usar en una venta. Créalo en Taxes → Sales tax y vuelve a intentarlo.",
+      "tax": "A tu QuickBooks le falta el código de impuesto de tu provincia, o no tiene ninguno que se pueda usar en una venta. Se crea allí, en Taxes → Sales tax. En el bot de ayuda está el paso a paso.",
       "accounts": "Tu QuickBooks necesita una cuenta bancaria y una de gastos para registrar compras. Créalas en su plan contable y vuelve a intentarlo.",
       "duplicate": "Ya existe allí un documento con ese número. Búscalo en QuickBooks: puede que se subiera a mano antes.",
       "reconnect": "La conexión con QuickBooks caducó. Desconéctala y vuelve a conectarla aquí arriba.",

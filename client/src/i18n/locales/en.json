@@ -1806,6 +1806,14 @@
           "p2": "What separates spent from planned is the expense's date. A material order due in two weeks, or a subcontractor paid on completion, is recorded with its date and counts as **planned**: the money is committed but still in your bank. When the day arrives it moves to spent on its own.",
           "p3": "What's left is the budget minus both. It's the figure you decide an extra by, which is why it also subtracts what's planned: if you've already promised that money, you don't have it even though it hasn't gone out.",
           "nota": "An expense is corrected with the pencil on its row — no need to delete and retype it. One warning: if it already went to QuickBooks, the purchase over there doesn't correct itself; fix it in QuickBooks too."
+        },
+        "impuestoQuickBooks": {
+          "title": "QuickBooks says your province's tax is missing",
+          "p1": "Your QuickBooks has tax codes, but none for your province. The invoice is not sent, and that is deliberate: sending it with another province's tax would be accepted by QuickBooks, and you would end up with a Quebec job charged at Ontario's 13% in your books with nothing to warn you.",
+          "p2": "You create it in QuickBooks, not here. In their menu: Taxes → Sales tax → Manage sales tax → Add tax, and pick your province. For Quebec it creates both at once: GST at 5% and QST at 9.975%.",
+          "p3": "If it will not let you pick Quebec, it is because the company is registered there under another province. Change it in QuickBooks: gear ⚙ → Account and settings → Company → Address, save, and go back to the tax screen.",
+          "p4": "Once it exists, come back to {{menuAjustes}} → {{menuQuickBooks}} and hit retry. Whatever did not arrive goes on its own, now with the right tax. No invoice has to be redone.",
+          "nota": "We do not create tax codes in your QuickBooks, and it is not laziness: they are tied to your GST and QST numbers and to the agencies you remit to. Creating a QST code for someone not yet registered would be helping them charge a tax they cannot remit."
         }
       },
       "problemas": {
@@ -2065,7 +2073,7 @@
       "payroll": "Payroll"
     },
     "fix": {
-      "tax": "Your QuickBooks is missing a tax code that can be used on a sale. Create one under Taxes → Sales tax and try again.",
+      "tax": "Your QuickBooks is missing your province's tax code, or has none that can be used on a sale. You create it there, under Taxes → Sales tax. The help bot has the step by step.",
       "accounts": "Your QuickBooks needs a bank account and an expense account to record purchases. Create them in its chart of accounts and try again.",
       "duplicate": "A document with that number already exists there. Look for it in QuickBooks — it may have been entered by hand first.",
       "reconnect": "The QuickBooks connection expired. Disconnect it and connect again up above.",

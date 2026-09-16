@@ -1806,6 +1806,14 @@
           "p2": "Ce qui sépare le réel du prévu, c'est la date de la dépense. Une commande de matériaux dans deux semaines, ou un sous-traitant payé à la fin, s'inscrit avec sa date et compte comme **prévu** : l'argent est engagé mais encore dans votre compte. Le jour venu, il passe tout seul au réel.",
           "p3": "Ce qui reste, c'est le budget moins les deux. C'est le chiffre qui décide si un extra rentre, et c'est pour ça qu'il déduit aussi le prévu : si vous avez déjà promis cet argent, vous ne l'avez pas même s'il n'est pas sorti.",
           "nota": "Une dépense se corrige avec le crayon de sa ligne — pas besoin de la supprimer et de la ressaisir. Un avertissement : si elle est déjà partie vers QuickBooks, l'achat là-bas ne se corrige pas tout seul ; il faut le reprendre dans QuickBooks aussi."
+        },
+        "impuestoQuickBooks": {
+          "title": "QuickBooks dit qu'il manque la taxe de votre province",
+          "p1": "Votre QuickBooks a des codes de taxe, mais aucun de votre province. La facture n'est pas envoyée, et c'est voulu : l'envoyer avec la taxe d'une autre province, QuickBooks l'accepterait, et vous vous retrouveriez avec un chantier québécois facturé au 13 % de l'Ontario dans vos livres, sans aucun avertissement.",
+          "p2": "Ça se crée dans QuickBooks, pas ici. Dans leur menu : Taxes → Taxe de vente → Gérer la taxe de vente → Ajouter une taxe, et vous choisissez votre province. Pour le Québec, il crée les deux d'un coup : TPS à 5 % et TVQ à 9,975 %.",
+          "p3": "S'il ne vous laisse pas choisir le Québec, c'est que l'entreprise y est enregistrée sous une autre province. Changez-le dans QuickBooks : engrenage ⚙ → Compte et paramètres → Entreprise → Adresse, enregistrez, et revenez à l'écran des taxes.",
+          "p4": "Une fois créé, revenez à {{menuAjustes}} → {{menuQuickBooks}} et appuyez sur réessayer. Ce qui n'était pas passé part tout seul, cette fois avec la bonne taxe. Aucune facture n'est à refaire.",
+          "nota": "Nous ne créons pas de codes de taxe dans votre QuickBooks, et ce n'est pas de la paresse : ils sont liés à vos numéros de TPS et de TVQ et aux agences auxquelles vous remettez. Créer une TVQ à quelqu'un qui n'est pas encore inscrit, ce serait l'aider à percevoir une taxe qu'il ne peut pas remettre."
         }
       },
       "problemas": {
@@ -2065,7 +2073,7 @@
       "payroll": "Paie"
     },
     "fix": {
-      "tax": "Il manque à votre QuickBooks un code de taxe utilisable sur une vente. Créez-le sous Taxes → Sales tax et réessayez.",
+      "tax": "Il manque à votre QuickBooks le code de taxe de votre province, ou il n'en a aucun utilisable sur une vente. Ça se crée là-bas, dans Taxes → Taxe de vente. Le robot d'aide a la marche à suivre.",
       "accounts": "Votre QuickBooks a besoin d'un compte bancaire et d'un compte de dépenses pour enregistrer des achats. Créez-les dans son plan comptable et réessayez.",
       "duplicate": "Un document avec ce numéro existe déjà là-bas. Cherchez-le dans QuickBooks : il a peut-être été saisi à la main avant.",
       "reconnect": "La connexion à QuickBooks a expiré. Déconnectez-la et reconnectez-la ci-dessus.",
