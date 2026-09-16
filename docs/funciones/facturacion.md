@@ -217,18 +217,18 @@ botón que iba a fallar.
 | `QUICKBOOKS_CLIENT_SECRET` | Ídem. No sale del servidor |
 | `QUICKBOOKS_REDIRECT_URI` | `https://…/api/quickbooks/callback` |
 | `QUICKBOOKS_ENVIRONMENT` | `production`, o cualquier otra cosa para pruebas |
-| `QUICKBOOKS_SANDBOX_CONNECT` | `1` para poder conectar estando en pruebas |
 
-Mientras Intuit no apruebe la app, la pantalla enseña la integración como lo
-que es —hecha y esperando permiso— y **no deja pulsar Conectar**. Un
-contratista que conecta su contabilidad de verdad contra un servidor de
-pruebas se queda con una conexión que parece buena y no manda nada a ninguna
-parte.
+Las redirect URI de producción se registran **aparte** de las de desarrollo,
+en la pestaña Production del panel de Intuit. Es el olvido clásico: claves
+buenas, y la vuelta de Intuit rebotando.
 
-`QUICKBOOKS_SANDBOX_CONNECT=1` reabre ese botón, y existe para una sola cosa:
-poder seguir probando la integración contra un sandbox. Sin ella, la primera
-factura que compruebe que la TPS y la TVQ salen bien sería una de verdad, de
-un cliente de verdad. **No se pone en producción.**
+Hubo un tiempo en que la pantalla enseñaba la integración con un «Pronto» y
+no dejaba pulsar Conectar, porque Intuit todavía no había aprobado la app.
+Ya la aprobó. **El botón no se bloquea nunca**; lo único que queda es el
+aviso de en qué QuickBooks estás, que sale cuando el entorno es de pruebas y
+no impide nada. Con `QUICKBOOKS_SANDBOX_CONNECT` pasó lo mismo: era la puerta
+para poder probar con el botón apagado, y al desaparecer el bloqueo dejó de
+tener sentido.
 
 El entorno es deliberadamente desconfiado: **sólo la palabra exacta
 `production` es producción**. Al revés —dar por bueno lo que no se entiende—

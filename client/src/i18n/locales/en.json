@@ -2113,8 +2113,8 @@
     "payrollTheirs": "My payroll runs on QuickBooks Payroll",
     "payrollTheirsHint": "Tick this if you pay your people from QuickBooks. Left unticked, the journal entry for every sheet you issue here is sent there on its own.",
     "payrollTheirsNote": "With this ticked we don't send the payroll entry, so wages aren't counted twice. What you pay subcontractors still goes: that isn't payroll and QuickBooks Payroll doesn't record it.",
-    "soonBadge": "Coming soon",
-    "soonBody": "The integration is built and waiting for Intuit to approve the app. As soon as they do, it switches on right here and your invoices, payments and expenses start going on their own. In the meantime, export them from Reports and pass them to your accountant: nothing you do now is lost — when it switches on, whatever is missing gets sent."
+    "sandboxBadge": "Test mode",
+    "sandboxBody": "This server is pointing at Intuit's test QuickBooks. You can connect and try everything, but whatever is sent there never reaches your real books."
   },
   "creditNotes": {
     "issue": "Credit note",

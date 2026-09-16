@@ -2113,8 +2113,8 @@
     "payrollTheirs": "Ma paie se fait sur QuickBooks Payroll",
     "payrollTheirsHint": "Cochez si vous payez vos gens depuis QuickBooks. Si vous laissez décoché, l'écriture de chaque feuille émise ici part là-bas toute seule.",
     "payrollTheirsNote": "Coché, on n'envoie pas l'écriture de paie, pour que les salaires ne soient pas comptés deux fois. Ce que vous payez aux sous-traitants continue de partir : ce n'est pas de la paie et QuickBooks Payroll ne l'inscrit pas.",
-    "soonBadge": "Bientôt",
-    "soonBody": "L'intégration est faite et attend qu'Intuit approuve l'application. Dès leur feu vert, elle s'active ici même et vos factures, encaissements et dépenses partent tout seuls. En attendant, exportez-les depuis Rapports et transmettez-les à votre comptable : rien de ce que vous faites maintenant n'est perdu — à l'activation, ce qui manque part."
+    "sandboxBadge": "Test",
+    "sandboxBody": "Ce serveur pointe vers le QuickBooks de test d'Intuit. Vous pouvez vous connecter et tout essayer, mais ce qui y est envoyé n'arrive jamais dans votre vraie comptabilité."
   },
   "creditNotes": {
     "issue": "Note de crédit",

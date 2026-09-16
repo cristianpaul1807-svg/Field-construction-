@@ -196,7 +196,6 @@ interface Estado {
   environment: "sandbox" | "production" | null;
   connectedAt: string | null;
   refreshExpiresAt: string | null;
-  sandboxConnect: boolean;
 }
 
 export default function SettingsQuickBooks() {
@@ -205,9 +204,10 @@ export default function SettingsQuickBooks() {
   const [recarga, setRecarga] = useState(0);
   const { data: estado, loading } = useApi<Estado>(`/api/quickbooks/status?_r=${recarga}`);
 
-  // En pruebas y sin la puerta abierta a mano: la integración se enseña, pero
-  // no se conecta. `sandboxConnect` es lo que nos deja seguir probándola.
-  const enEspera = estado?.environment === "sandbox" && !estado?.sandboxConnect;
+  // Contra qué QuickBooks habla este servidor. Sin conexión es el del
+  // servidor; con conexión manda el de la fila, porque se puede estar
+  // enganchado a una empresa de pruebas desde un servidor de producción.
+  const enPruebas = estado?.environment === "sandbox";
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -342,24 +342,25 @@ export default function SettingsQuickBooks() {
                 <h2 className="text-base font-semibold text-foreground">{t("quickbooks.connectTitle")}</h2>
                 <p className="text-sm text-muted-foreground mt-1">{t("quickbooks.connectBody")}</p>
               </div>
-              {/* Mientras Intuit no apruebe la app, esto se enseña pero no se
-                  puede pulsar. La pantalla existe a propósito: que el
-                  contratista vea que la integración está hecha y sepa que
-                  llega, en vez de descubrirla el día que aparezca. Lo que no
-                  puede es conectar su contabilidad de verdad contra un
-                  servidor de pruebas y quedarse con una conexión que parece
-                  buena y no manda nada a ninguna parte. */}
-              {enEspera && (
+              {/* El botón ya no se bloquea: Intuit aprobó la aplicación y este
+                  servidor habla con el QuickBooks de verdad.
+
+                  Lo que sí se sigue diciendo es contra cuál. Un servidor
+                  apuntando al sandbox conecta igual de bien, pero lo que se
+                  manda allí no existe para nadie — y una contabilidad que
+                  parece estar yéndose y no se va es peor que una que no se va.
+                  Avisa, no impide: en pruebas es donde hay que poder probar. */}
+              {enPruebas && (
                 <div className="rounded-lg border border-status-warning-bg bg-status-warning-bg/40 p-3 space-y-1.5">
-                  <StatusBadge tone="warning">{t("quickbooks.soonBadge")}</StatusBadge>
-                  <p className="text-xs text-status-warning-fg">{t("quickbooks.soonBody")}</p>
+                  <StatusBadge tone="warning">{t("quickbooks.sandboxBadge")}</StatusBadge>
+                  <p className="text-xs text-status-warning-fg">{t("quickbooks.sandboxBody")}</p>
                 </div>
               )}
-              <Button className="gap-2" onClick={conectar} disabled={ocupado || enEspera}>
+              <Button className="gap-2" onClick={conectar} disabled={ocupado}>
                 {ocupado ? <Spinner className="size-4" /> : <ExternalLink size={15} />}
                 {t("quickbooks.connect")}
               </Button>
-              {!enEspera && <p className="text-xs text-muted-foreground">{t("quickbooks.connectNote")}</p>}
+              <p className="text-xs text-muted-foreground">{t("quickbooks.connectNote")}</p>
             </Card>
           )}
 

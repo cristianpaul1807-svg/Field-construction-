@@ -2113,8 +2113,8 @@
     "payrollTheirs": "Mi nómina la lleva QuickBooks Payroll",
     "payrollTheirsHint": "Márcalo si pagas a tu gente desde QuickBooks. Si lo dejas sin marcar, el asiento de cada hoja que emitas aquí se manda allí solo.",
     "payrollTheirsNote": "Con esto marcado no mandamos el asiento de nómina, para que los salarios no queden contados dos veces. Lo que pagas a subcontratistas sí sigue yendo: eso no es nómina y QuickBooks Payroll no lo apunta.",
-    "soonBadge": "Pronto",
-    "soonBody": "La integración está hecha y a la espera de que Intuit apruebe la aplicación. En cuanto den el visto bueno se activa aquí mismo y tus facturas, cobros y gastos empiezan a ir solos. Mientras tanto, expórtalos desde Reportes y pásaselos a tu contable: nada de lo que hagas ahora se pierde, cuando se active se manda lo que falte."
+    "sandboxBadge": "Pruebas",
+    "sandboxBody": "Este servidor está apuntando al QuickBooks de pruebas de Intuit. Puedes conectar y probarlo todo, pero lo que se mande allí no llega a tu contabilidad de verdad."
   },
   "creditNotes": {
     "issue": "Nota de crédito",
