@@ -64,6 +64,7 @@ import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, puede, recortar, AREAS } from "../shared/permisos";
+import { capacidadDeLaRuta, tiene } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -3616,6 +3617,29 @@ apiRouter.use((req, res, next) => {
   const json = res.json.bind(res);
   res.json = (cuerpo: unknown) => json(recortar(cuerpo, req.areas ?? null));
   next();
+});
+
+/**
+ * Lo que el plan del negocio no incluye.
+ *
+ * Al lado del de permisos y separado de él porque contestan cosas distintas, y
+ * el aviso de la pantalla también: «no es para ti» y «no lo has contratado» no
+ * se arreglan igual. El código del error lo dice, para que el cliente pueda
+ * ofrecer subir de plan en vez de un cartel de prohibido.
+ *
+ * Al revés que los permisos, aquí **lo que no está en el mapa pasa**. Allí el
+ * riesgo es enseñar de más; aquí es apagarle a alguien una pantalla que pagó.
+ */
+apiRouter.use((req, res, next) => {
+  const plan = req.plan ?? "pilot";
+  const capacidad = capacidadDeLaRuta(req.path);
+  if (!capacidad || tiene(plan, capacidad)) return next();
+  res.status(402).json({
+    error: "Tu plan no incluye esta parte",
+    code: "plan_no_incluye",
+    capacidad,
+    plan,
+  });
 });
 
 // ---------- Materials & Costs ----------

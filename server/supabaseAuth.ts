@@ -5,6 +5,7 @@ import { createHash } from "crypto";
 import WebSocket from "ws";
 // Relativo y no `@shared`: el alias sólo existe en el cliente.
 import { AREAS, type Area } from "../shared/permisos";
+import { planDe, type Plan } from "../shared/planes";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 
 // Same hand-pasted-into-a-panel hazard as in supabaseAdmin: strip stray
@@ -47,6 +48,8 @@ declare global {
        * propio sistema.
        */
       areas?: Area[] | null;
+      /** El plan contratado por el negocio de esta persona. */
+      plan?: Plan;
     }
   }
 }
@@ -140,7 +143,7 @@ export const requireBusinessAuth = guarded(async (req: Request, res: Response, n
   const scoped = getSupabaseForToken(token);
   const { data: userRow, error: rowError } = await scoped
     .from("users")
-    .select("business_id, roles(permissions)")
+    .select("business_id, roles(permissions), businesses(subscription_plan)")
     .eq("auth_user_id", userData.user.id)
     .single();
 
@@ -153,6 +156,12 @@ export const requireBusinessAuth = guarded(async (req: Request, res: Response, n
   req.businessId = userRow.business_id;
   req.supabase = scoped;
   req.areas = areasDelRol((userRow as { roles?: { permissions?: unknown } | null }).roles);
+  // Un valor que no reconocemos cae en `pilot`, que lo abre todo. Al revés
+  // —cerrar lo que no se entiende— un dato raro en una fila dejaría a un
+  // contratista sin sus nóminas un lunes por la mañana.
+  req.plan = planDe(
+    (userRow as { businesses?: { subscription_plan?: string | null } | null }).businesses?.subscription_plan
+  );
   next();
 });
 
