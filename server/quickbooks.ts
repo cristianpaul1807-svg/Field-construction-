@@ -386,7 +386,15 @@ export async function estado(
     connected: Boolean(data),
     companyName: data?.company_name ?? null,
     realmId: data?.realm_id ?? null,
-    environment: (data?.environment as EntornoQuickBooks) ?? null,
+    // Conectado, manda el entorno de la conexión: se puede estar enganchado a
+    // una empresa de pruebas con el servidor en producción, y eso hay que
+    // decirlo. Sin conexión, el que vale es el del servidor — es el que va a
+    // tener la conexión siguiente.
+    //
+    // Antes esto era `null` a secas, y por eso al desconectar desaparecía el
+    // aviso de «esto todavía es de pruebas» justo cuando hacía falta: delante
+    // del botón de conectar.
+    environment: (data?.environment as EntornoQuickBooks) ?? (configured ? configuracion().entorno : null),
     connectedAt: data?.connected_at ?? null,
     refreshExpiresAt: data?.refresh_expires_at ?? null,
     sandboxConnect: process.env.QUICKBOOKS_SANDBOX_CONNECT?.trim() === "1",
