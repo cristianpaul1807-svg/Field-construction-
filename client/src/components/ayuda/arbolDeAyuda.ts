@@ -103,6 +103,12 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
     temas: [
       { id: "crearFactura", parrafos: 3, nota: true, ruta: "/invoicing" },
       { id: "impuestos", parrafos: 3 },
+      // Tres líneas de la nómina nacen a 0 % porque nadie de fuera las puede
+      // saber: dependen del TD1 de cada persona, de la clasificación CNESST
+      // de la empresa y de su masa salarial. La pantalla lo dice en la nota
+      // de cada línea, pero a un 0 % se le pregunta al bot antes que leer una
+      // nota — y hasta hoy el bot no tenía nada que contestar.
+      { id: "tasasEnCero", parrafos: 4, nota: true, ruta: "/payroll" },
       { id: "numeroFactura", parrafos: 2 },
       { id: "cobrar", parrafos: 3, nota: true, ruta: "/settings/payments" },
       { id: "cobrarPorFuera", parrafos: 3, nota: true, ruta: "/invoicing" },

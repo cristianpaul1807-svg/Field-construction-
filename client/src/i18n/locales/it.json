@@ -1849,6 +1849,14 @@
           "p3": "Se non ti fa scegliere il Québec è perché l'impresa è registrata lì sotto un'altra provincia. Cambialo in QuickBooks: ingranaggio ⚙ → Account e impostazioni → Azienda → Indirizzo, salva, e torna alla schermata delle imposte.",
           "p4": "Quando esiste, torna a {{menuAjustes}} → {{menuQuickBooks}} e premi riprova. Quello che non era arrivato parte da solo, ora con l'imposta giusta. Nessuna fattura va rifatta.",
           "nota": "Noi non creiamo codici d'imposta nel tuo QuickBooks, e non è pigrizia: sono legati ai tuoi numeri di TPS e TVQ e agli enti a cui versi. Creare una TVQ a chi non è ancora registrato sarebbe aiutarlo a incassare un'imposta che non può versare."
+        },
+        "tasasEnCero": {
+          "title": "Ci sono aliquote della busta paga a 0 %",
+          "p1": "Sono a zero di proposito, e sono sempre le stesse tre: l'imposta trattenuta alla fonte, la CNESST e il FSS. Le altre — RRQ, RQAP, AE e le quote del datore di lavoro — arrivano con le cifre pubblicate per il Québec e calcolano dal primo giorno.",
+          "p2": "Sono a zero perché **nessuno fuori dalla tua azienda può conoscerle**. L'imposta trattenuta viene dal TP-1015.3-V e dal TD1 che ogni persona firma, quindi cambia da una all'altra. La CNESST dipende dalla tua unità di classificazione. E il FSS dipende dalla tua massa salariale totale e dal tuo settore.",
+          "p3": "Uno zero non rompe la busta paga: si fa lo stesso e le altre righe calcolano. Quello che succede è che quella riga non trattiene niente, quindi il netto esce più alto di quello che sarà davvero, e la differenza te la chiedono dopo. Per questo è una delle prime cose da mettere.",
+          "p4": "Si mettono in {{menuNominas}}, nella scheda delle regole: ogni riga ha il suo campo di percentuale e, sotto, una nota che dice da dove viene quel numero. L'imposta trattenuta viene dal tuo commercialista o dalla tabella di Revenu Québec; la tua aliquota CNESST è sul tuo avviso di contributo annuale; quella del FSS te la dice Revenu Québec in base alla massa salariale.",
+          "nota": "Nemmeno le altre sono eterne: le aliquote del Québec si aggiornano ogni gennaio. Ogni riga porta scritto di che anno è la sua cifra, così si può verificare invece di crederci."
         }
       },
       "problemas": {

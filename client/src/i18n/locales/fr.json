@@ -1849,6 +1849,14 @@
           "p3": "S'il ne vous laisse pas choisir le Québec, c'est que l'entreprise y est enregistrée sous une autre province. Changez-le dans QuickBooks : engrenage ⚙ → Compte et paramètres → Entreprise → Adresse, enregistrez, et revenez à l'écran des taxes.",
           "p4": "Une fois créé, revenez à {{menuAjustes}} → {{menuQuickBooks}} et appuyez sur réessayer. Ce qui n'était pas passé part tout seul, cette fois avec la bonne taxe. Aucune facture n'est à refaire.",
           "nota": "Nous ne créons pas de codes de taxe dans votre QuickBooks, et ce n'est pas de la paresse : ils sont liés à vos numéros de TPS et de TVQ et aux agences auxquelles vous remettez. Créer une TVQ à quelqu'un qui n'est pas encore inscrit, ce serait l'aider à percevoir une taxe qu'il ne peut pas remettre."
+        },
+        "tasasEnCero": {
+          "title": "Certains taux de paie sont à 0 %",
+          "p1": "Ils sont à zéro volontairement, et ce sont toujours les mêmes trois : l'impôt retenu à la source, la CNESST et le FSS. Les autres — RRQ, RQAP, AE et les parts de l'employeur — arrivent avec les chiffres publiés pour le Québec et calculent dès le premier jour.",
+          "p2": "Ils sont à zéro parce que **personne à l'extérieur de votre entreprise ne peut les connaître**. L'impôt retenu vient du TP-1015.3-V et du TD1 que chaque personne signe, il change donc de l'une à l'autre. La CNESST dépend de votre unité de classification. Et le FSS dépend de votre masse salariale totale et de votre secteur.",
+          "p3": "Un zéro ne brise pas la paie : elle se fait quand même et les autres lignes calculent. Ce qui arrive, c'est que cette ligne ne retient rien, donc le net sort plus élevé qu'il ne le sera vraiment, et la différence vous est réclamée plus tard. C'est pour ça que c'est une des premières choses à mettre.",
+          "p4": "Ils se mettent dans {{menuNominas}}, dans l'onglet des règles : chaque ligne a son champ de pourcentage et, en dessous, une note qui dit d'où vient ce chiffre. L'impôt retenu vient de votre comptable ou de la table de Revenu Québec ; votre taux de CNESST est sur votre avis de cotisation annuel ; celui du FSS vient de Revenu Québec selon votre masse salariale.",
+          "nota": "Les autres ne sont pas éternels non plus : les taux du Québec sont mis à jour chaque janvier. Chaque ligne porte l'année de son chiffre, pour qu'on puisse le vérifier au lieu de le croire."
         }
       },
       "problemas": {

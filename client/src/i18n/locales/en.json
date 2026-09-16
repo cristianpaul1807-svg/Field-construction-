@@ -1849,6 +1849,14 @@
           "p3": "If it will not let you pick Quebec, it is because the company is registered there under another province. Change it in QuickBooks: gear ⚙ → Account and settings → Company → Address, save, and go back to the tax screen.",
           "p4": "Once it exists, come back to {{menuAjustes}} → {{menuQuickBooks}} and hit retry. Whatever did not arrive goes on its own, now with the right tax. No invoice has to be redone.",
           "nota": "We do not create tax codes in your QuickBooks, and it is not laziness: they are tied to your GST and QST numbers and to the agencies you remit to. Creating a QST code for someone not yet registered would be helping them charge a tax they cannot remit."
+        },
+        "tasasEnCero": {
+          "title": "Some payroll rates are sitting at 0%",
+          "p1": "They are at zero on purpose, and it is always the same three: income tax withheld at source, the CNESST and the FSS. The rest — RRQ, RQAP, EI and their employer shares — come preloaded with the published Quebec figures and do calculate from day one.",
+          "p2": "They are at zero because **nobody outside your company can know them**. The tax withheld comes from the TP-1015.3-V and from the TD1 each person signs, so it changes from one to the next. The CNESST depends on your classification unit. And the FSS depends on your total payroll and your sector.",
+          "p3": "A zero does not break payroll: it still runs and every other line calculates. What happens is that line deducts nothing, so the net comes out higher than it really will be, and the difference gets claimed from you later. That is why it is one of the first things to set.",
+          "p4": "You set them in {{menuNominas}}, on the rules tab: each line has its percentage field and, underneath, a note saying where that number comes from. The withheld tax comes from your accountant or the Revenu Québec table; your CNESST rate is on your annual assessment notice; the FSS one comes from Revenu Québec based on your payroll.",
+          "nota": "The others are not forever either: Quebec rates are updated every January. Each line carries which year its figure is from, so it can be checked instead of trusted."
         }
       },
       "problemas": {

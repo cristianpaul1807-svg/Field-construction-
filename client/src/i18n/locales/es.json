@@ -1849,6 +1849,14 @@
           "p3": "Si no te deja elegir Quebec es porque la empresa está registrada allí en otra provincia. Cámbialo en QuickBooks: engranaje ⚙ → Cuenta y configuración → Empresa → Dirección, guarda, y vuelve a la pantalla de impuestos.",
           "p4": "Cuando esté creado, vuelve a {{menuAjustes}} → {{menuQuickBooks}} y dale a reintentar. Lo que no llegó se manda solo, ya con el impuesto bueno. No hay que rehacer ninguna factura.",
           "nota": "Nosotros no creamos códigos de impuesto en tu QuickBooks, y no es pereza: van atados a tus números de TPS y TVQ y a las agencias a las que remites. Crear una TVQ a alguien que aún no está registrado sería ayudarle a cobrar un impuesto que no puede remitir."
+        },
+        "tasasEnCero": {
+          "title": "Hay tasas de nómina que están en 0 %",
+          "p1": "Están a cero a propósito, y son siempre las mismas tres: el impuesto retenido en la fuente, la CNESST y el FSS. Las demás —RRQ, RQAP, AE y sus partes de empleador— vienen con las cifras publicadas para Quebec y sí calculan desde el primer día.",
+          "p2": "Están a cero porque **nadie de fuera de tu empresa las puede saber**. El impuesto retenido sale del TP-1015.3-V y del TD1 que firma cada persona, así que cambia de una a otra. La CNESST depende de tu unidad de clasificación. Y el FSS depende de tu masa salarial total y de tu sector.",
+          "p3": "Un cero no rompe la nómina: se paga igual y el resto de las líneas calculan. Lo que pasa es que esa línea no descuenta nada, así que el neto sale más alto de lo que va a ser de verdad y la diferencia te la reclaman después. Por eso es de las primeras cosas que hay que poner.",
+          "p4": "Se ponen en {{menuNominas}}, en la pestaña de reglas: cada línea tiene su campo de porcentaje y, debajo, una nota que dice de dónde sale ese número. El impuesto retenido lo saca tu contable o la tabla de Revenu Québec; la tasa de la CNESST viene en tu aviso de cotización anual; la del FSS te la dice Revenu Québec según tu masa salarial.",
+          "nota": "Las demás tampoco son eternas: las tasas de Quebec se actualizan cada enero. Cada línea trae escrito de qué año es su cifra, para que se pueda comprobar en vez de creérsela."
         }
       },
       "problemas": {

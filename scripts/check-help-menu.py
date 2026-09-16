@@ -26,6 +26,11 @@ import sys
 
 LOCALES = ["es", "en", "fr", "it"]
 BASE = "client/src/i18n/locales"
+NOMBRES = "client/src/lib/nombresDelMenu.ts"
+
+# `menuAjustes: t("nav.settings"),` y `{{menuAjustes}}`.
+DEFINIDO = re.compile(r"^\s*(menu[A-ZÁÉÍÓÚ][A-Za-z]*)\s*:", re.M)
+USADO = re.compile(r"\{\{(menu[A-Za-z]+)\}\}")
 
 # Textos con flecha que no mandan a ninguna pantalla nuestra:
 # `budgets.description` describe la jerarquía de un presupuesto (Zona →
@@ -54,7 +59,6 @@ PROSA = {
     "help.topic.dinero.impuestoQuickBooks.p3",
 }
 
-MARCADOR = re.compile(r"\{\{[^}]*\}\}")
 
 
 def plano(d, prefijo=""):
@@ -69,13 +73,17 @@ def plano(d, prefijo=""):
 
 def main():
     fallos = []
+    usados = set()
     for lang in LOCALES:
         datos = json.load(open(f"{BASE}/{lang}.json"))
 
         for clave, valor in plano(datos).items():
+            if not isinstance(valor, str):
+                continue
+            usados.update(USADO.findall(valor))
             if clave in PROSA or clave.startswith("nav."):
                 continue
-            if not isinstance(valor, str) or "→" not in valor:
+            if "→" not in valor:
                 continue
 
             # Lo que abre el camino tiene que ser un marcador.
@@ -100,7 +108,27 @@ def main():
         )
         return 1
 
-    print("menu ok — ningún texto nombra una pantalla a mano")
+    # La otra mitad del mismo problema.
+    #
+    # Interpolar está bien, pero un marcador que no existe se imprime tal cual:
+    # el contratista lee «{{menuNominas}}» en mitad de una frase y nadie se
+    # entera, porque no falla nada. Pasó al añadir el tema de las tasas en
+    # cero, y la comprobación de arriba lo dejó pasar — decía la verdad: no
+    # había ningún nombre escrito a mano.
+    disponibles = set(DEFINIDO.findall(open(NOMBRES, encoding="utf-8").read()))
+    inventados = sorted(usados - disponibles)
+    if inventados:
+        print("marcadores de menú que no existen:", file=sys.stderr)
+        for m in inventados:
+            print(f"  {{{{{m}}}}}", file=sys.stderr)
+        print(
+            f"\nAñádelos a {NOMBRES} apuntando a su clave de nav.*, o usa uno\n"
+            f"de los que ya hay: {', '.join(sorted(disponibles))}.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(f"menu ok — ningún texto nombra una pantalla a mano, {len(usados)} marcadores existen")
     return 0
 
 

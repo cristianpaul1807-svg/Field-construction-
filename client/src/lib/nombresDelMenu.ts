@@ -38,6 +38,7 @@ export function useNombresDelMenu() {
       menuFichaje: t("nav.checkIn"),
       menuFinanzas: t("nav.finance"),
       menuFacturacion: t("nav.invoicing"),
+      menuNominas: t("nav.payroll"),
       menuInformes: t("nav.reports"),
       menuCrm: t("nav.crm"),
       menuPagos: t("nav.payments"),
