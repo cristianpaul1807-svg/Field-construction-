@@ -2073,7 +2073,6 @@
     "failed": "We couldn't finish the connection. Try again; if it keeps failing, get in touch.",
     "notConfiguredTitle": "Not available yet",
     "notConfiguredBody": "The QuickBooks connection isn't switched on for this server yet. As soon as it is, the button will appear here.",
-    "sandboxWarning": "You're connected to a test company. Anything sent won't show up in your real books.",
     "rowSent": "In QuickBooks",
     "rowNotSent": "Didn't reach QuickBooks",
     "rowRetry": "Try again",
@@ -2112,9 +2111,7 @@
     "payrollHint": "QuickBooks has its own payroll product, separate and paid. If you use it, it already writes each pay run's journal entry into your books.",
     "payrollTheirs": "My payroll runs on QuickBooks Payroll",
     "payrollTheirsHint": "Tick this if you pay your people from QuickBooks. Left unticked, the journal entry for every sheet you issue here is sent there on its own.",
-    "payrollTheirsNote": "With this ticked we don't send the payroll entry, so wages aren't counted twice. What you pay subcontractors still goes: that isn't payroll and QuickBooks Payroll doesn't record it.",
-    "sandboxBadge": "Test mode",
-    "sandboxBody": "This server is pointing at Intuit's test QuickBooks. You can connect and try everything, but whatever is sent there never reaches your real books."
+    "payrollTheirsNote": "With this ticked we don't send the payroll entry, so wages aren't counted twice. What you pay subcontractors still goes: that isn't payroll and QuickBooks Payroll doesn't record it."
   },
   "creditNotes": {
     "issue": "Credit note",

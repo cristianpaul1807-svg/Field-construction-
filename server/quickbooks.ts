@@ -13,8 +13,6 @@ import type { getSupabaseAdmin } from "./supabaseAdmin";
 
 type Admin = ReturnType<typeof getSupabaseAdmin>;
 
-export type EntornoQuickBooks = "sandbox" | "production";
-
 export class QuickBooksNoConfigurado extends Error {
   readonly code = "quickbooks_not_configured";
   constructor() {
@@ -50,21 +48,12 @@ export function configuracion(): {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
-  entorno: EntornoQuickBooks;
 } {
   const clientId = process.env.QUICKBOOKS_CLIENT_ID?.trim();
   const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET?.trim();
   const redirectUri = process.env.QUICKBOOKS_REDIRECT_URI?.trim();
   if (!clientId || !clientSecret || !redirectUri) throw new QuickBooksNoConfigurado();
-  return {
-    clientId,
-    clientSecret,
-    redirectUri,
-    // Cualquier cosa que no sea exactamente 'production' es pruebas. Al revés
-    // —dar por producción lo que no se entiende— mandaría facturas de verdad
-    // desde un servidor mal configurado.
-    entorno: process.env.QUICKBOOKS_ENVIRONMENT?.trim() === "production" ? "production" : "sandbox",
-  };
+  return { clientId, clientSecret, redirectUri };
 }
 
 export function estaConfigurado(): boolean {
@@ -76,12 +65,24 @@ export function estaConfigurado(): boolean {
   }
 }
 
-/** La base de la API según el entorno. Las pruebas viven en otro dominio. */
-function baseDeApi(entorno: EntornoQuickBooks): string {
-  return entorno === "production"
-    ? "https://quickbooks.api.intuit.com"
-    : "https://sandbox-quickbooks.api.intuit.com";
-}
+/**
+ * La API de QuickBooks. Una sola, la de verdad.
+ *
+ * Hubo un entorno de pruebas, con su dominio, su documento de descubrimiento y
+ * una variable `QUICKBOOKS_ENVIRONMENT` para elegir. Existía porque Intuit no
+ * había aprobado la aplicación y no se podía tocar la contabilidad real.
+ *
+ * Aprobada la aplicación, esa variable pasó de útil a peligrosa: la regla era
+ * «lo que no sea exactamente `production` es pruebas», así que un `Production`
+ * con mayúscula mandaba las facturas de un contratista a una empresa
+ * inventada **sin un solo error por ningún sitio**. Un fallo silencioso en la
+ * contabilidad de alguien es de los peores que se pueden dejar puestos.
+ *
+ * Lo que comprueba que lo que sale es correcto son las pruebas de
+ * `scripts/prueba-quickbooks/`, que revisan el cuerpo de cada llamada sin
+ * llamar a Intuit. Ésas son las que hay que mantener.
+ */
+const API = "https://quickbooks.api.intuit.com";
 
 /**
  * Las direcciones de Intuit, preguntadas a Intuit.
@@ -101,22 +102,17 @@ const POR_DEFECTO = {
   revocar: "https://developer.api.intuit.com/v2/oauth2/tokens/revoke",
 };
 
-const DESCUBRIMIENTO: Record<EntornoQuickBooks, string> = {
-  production: "https://developer.api.intuit.com/.well-known/openid_configuration",
-  sandbox: "https://developer.api.intuit.com/.well-known/openid_sandbox_configuration",
-};
+const DESCUBRIMIENTO = "https://developer.api.intuit.com/.well-known/openid_configuration";
 
 type Direcciones = typeof POR_DEFECTO;
 const UN_DIA = 24 * 60 * 60 * 1000;
-const recordadas = new Map<EntornoQuickBooks, { cuando: number; cuales: Direcciones }>();
+let recordadas: { cuando: number; cuales: Direcciones } | null = null;
 
 async function direcciones(): Promise<Direcciones> {
-  const { entorno } = configuracion();
-  const guardadas = recordadas.get(entorno);
-  if (guardadas && Date.now() - guardadas.cuando < UN_DIA) return guardadas.cuales;
+  if (recordadas && Date.now() - recordadas.cuando < UN_DIA) return recordadas.cuales;
 
   try {
-    const res = await fetch(DESCUBRIMIENTO[entorno], { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(DESCUBRIMIENTO, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error(String(res.status));
     const d = (await res.json()) as Record<string, unknown>;
     const cuales: Direcciones = {
@@ -124,7 +120,7 @@ async function direcciones(): Promise<Direcciones> {
       token: typeof d.token_endpoint === "string" ? d.token_endpoint : POR_DEFECTO.token,
       revocar: typeof d.revocation_endpoint === "string" ? d.revocation_endpoint : POR_DEFECTO.revocar,
     };
-    recordadas.set(entorno, { cuando: Date.now(), cuales });
+    recordadas = { cuando: Date.now(), cuales };
     return cuales;
   } catch {
     return POR_DEFECTO;
@@ -195,7 +191,7 @@ export async function completarAutorizacion(
   admin: Admin,
   args: { code: string; state: string; realmId: string }
 ): Promise<{ businessId: string }> {
-  const { redirectUri, entorno } = configuracion();
+  const { redirectUri } = configuracion();
 
   const { data: pendiente } = await admin
     .from("quickbooks_oauth_states")
@@ -229,7 +225,10 @@ export async function completarAutorizacion(
       refresh_expires_at: token.x_refresh_token_expires_in
         ? new Date(ahora + token.x_refresh_token_expires_in * 1000).toISOString()
         : null,
-      environment: entorno,
+      // La columna se queda escrita aunque ya no haya nada que elegir: es el
+      // registro de contra qué se conectó esta empresa, y borrar historia para
+      // ahorrar una palabra no sale a cuenta.
+      environment: "production",
       connected_at: new Date(ahora).toISOString(),
     },
     { onConflict: "business_id" }
@@ -245,7 +244,6 @@ interface Conexion {
   access_token: string;
   refresh_token: string;
   access_expires_at: string;
-  environment: EntornoQuickBooks;
 }
 
 /**
@@ -258,7 +256,7 @@ interface Conexion {
 async function tokenVivo(admin: Admin, businessId: string): Promise<Conexion> {
   const { data } = await admin
     .from("quickbooks_connections")
-    .select("business_id, realm_id, access_token, refresh_token, access_expires_at, environment")
+    .select("business_id, realm_id, access_token, refresh_token, access_expires_at")
     .eq("business_id", businessId)
     .maybeSingle();
   if (!data) throw new QuickBooksSinConectar();
@@ -312,7 +310,7 @@ export async function llamar<T = unknown>(
   init?: { method?: string; body?: unknown }
 ): Promise<T> {
   const conexion = await tokenVivo(admin, businessId);
-  const url = `${baseDeApi(conexion.environment)}/v3/company/${conexion.realm_id}/${ruta}`;
+  const url = `${API}/v3/company/${conexion.realm_id}/${ruta}`;
 
   // Hasta tres intentos, y sólo para lo que se arregla esperando: un 429 es
   // Intuit pidiendo que bajemos el ritmo y un 503 es un mal minuto suyo.
@@ -356,14 +354,13 @@ export async function estado(
   connected: boolean;
   companyName: string | null;
   realmId: string | null;
-  environment: EntornoQuickBooks | null;
   connectedAt: string | null;
   refreshExpiresAt: string | null;
 }> {
   const configured = estaConfigurado();
   const { data } = await admin
     .from("quickbooks_connections")
-    .select("realm_id, company_name, environment, connected_at, refresh_expires_at")
+    .select("realm_id, company_name, connected_at, refresh_expires_at")
     .eq("business_id", businessId)
     .maybeSingle();
 
@@ -372,15 +369,6 @@ export async function estado(
     connected: Boolean(data),
     companyName: data?.company_name ?? null,
     realmId: data?.realm_id ?? null,
-    // Conectado, manda el entorno de la conexión: se puede estar enganchado a
-    // una empresa de pruebas con el servidor en producción, y eso hay que
-    // decirlo. Sin conexión, el que vale es el del servidor — es el que va a
-    // tener la conexión siguiente.
-    //
-    // Antes esto era `null` a secas, y por eso al desconectar desaparecía el
-    // aviso de «esto todavía es de pruebas» justo cuando hacía falta: delante
-    // del botón de conectar.
-    environment: (data?.environment as EntornoQuickBooks) ?? (configured ? configuracion().entorno : null),
     connectedAt: data?.connected_at ?? null,
     refreshExpiresAt: data?.refresh_expires_at ?? null,
   };

@@ -2073,7 +2073,6 @@
     "failed": "Non siamo riusciti a completare il collegamento. Riprova; se continua a fallire, scrivici.",
     "notConfiguredTitle": "Non ancora disponibile",
     "notConfiguredBody": "Il collegamento con QuickBooks non è ancora attivo su questo server. Appena lo sarà, il pulsante comparirà qui.",
-    "sandboxWarning": "Sei collegato a un'azienda di prova. Quello che viene mandato non comparirà nella tua contabilità vera.",
     "rowSent": "In QuickBooks",
     "rowNotSent": "Non è arrivata su QuickBooks",
     "rowRetry": "Riprova",
@@ -2112,9 +2111,7 @@
     "payrollHint": "QuickBooks ha il suo prodotto per le paghe, separato e a pagamento. Se lo usi, scrive già la scrittura di ogni paga nei tuoi libri.",
     "payrollTheirs": "Le mie paghe le fa QuickBooks Payroll",
     "payrollTheirsHint": "Spuntalo se paghi la tua gente da QuickBooks. Se lo lasci vuoto, la scrittura di ogni foglio che emetti qui parte là da sola.",
-    "payrollTheirsNote": "Con questo spuntato non mandiamo la scrittura delle paghe, così gli stipendi non risultano contati due volte. Quello che paghi ai subappaltatori continua ad andare: non è busta paga e QuickBooks Payroll non lo registra.",
-    "sandboxBadge": "Prova",
-    "sandboxBody": "Questo server punta al QuickBooks di prova di Intuit. Puoi collegarti e provare tutto, ma quello che viene mandato lì non arriva alla tua contabilità vera."
+    "payrollTheirsNote": "Con questo spuntato non mandiamo la scrittura delle paghe, così gli stipendi non risultano contati due volte. Quello che paghi ai subappaltatori continua ad andare: non è busta paga e QuickBooks Payroll non lo registra."
   },
   "creditNotes": {
     "issue": "Nota di credito",

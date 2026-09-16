@@ -2073,7 +2073,6 @@
     "failed": "Nous n'avons pas pu terminer la connexion. Réessayez ; si ça continue, écrivez-nous.",
     "notConfiguredTitle": "Pas encore disponible",
     "notConfiguredBody": "La connexion à QuickBooks n'est pas encore activée sur ce serveur. Dès qu'elle le sera, le bouton apparaîtra ici.",
-    "sandboxWarning": "Vous êtes connecté à une entreprise de test. Ce qui est envoyé n'apparaîtra pas dans votre vraie comptabilité.",
     "rowSent": "Dans QuickBooks",
     "rowNotSent": "N'est pas arrivée dans QuickBooks",
     "rowRetry": "Réessayer",
@@ -2112,9 +2111,7 @@
     "payrollHint": "QuickBooks a son propre produit de paie, à part et payant. Si vous l'utilisez, il écrit déjà l'écriture de chaque paie dans vos livres.",
     "payrollTheirs": "Ma paie se fait sur QuickBooks Payroll",
     "payrollTheirsHint": "Cochez si vous payez vos gens depuis QuickBooks. Si vous laissez décoché, l'écriture de chaque feuille émise ici part là-bas toute seule.",
-    "payrollTheirsNote": "Coché, on n'envoie pas l'écriture de paie, pour que les salaires ne soient pas comptés deux fois. Ce que vous payez aux sous-traitants continue de partir : ce n'est pas de la paie et QuickBooks Payroll ne l'inscrit pas.",
-    "sandboxBadge": "Test",
-    "sandboxBody": "Ce serveur pointe vers le QuickBooks de test d'Intuit. Vous pouvez vous connecter et tout essayer, mais ce qui y est envoyé n'arrive jamais dans votre vraie comptabilité."
+    "payrollTheirsNote": "Coché, on n'envoie pas l'écriture de paie, pour que les salaires ne soient pas comptés deux fois. Ce que vous payez aux sous-traitants continue de partir : ce n'est pas de la paie et QuickBooks Payroll ne l'inscrit pas."
   },
   "creditNotes": {
     "issue": "Note de crédit",

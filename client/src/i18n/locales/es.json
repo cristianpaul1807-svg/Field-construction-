@@ -2073,7 +2073,6 @@
     "failed": "No pudimos completar la conexión. Vuelve a intentarlo; si sigue fallando, escríbenos.",
     "notConfiguredTitle": "Todavía no está disponible",
     "notConfiguredBody": "La conexión con QuickBooks aún no está activada en este servidor. En cuanto lo esté, este botón aparecerá aquí.",
-    "sandboxWarning": "Estás conectado a una empresa de pruebas. Lo que se mande no aparecerá en tu contabilidad de verdad.",
     "rowSent": "En QuickBooks",
     "rowNotSent": "No llegó a QuickBooks",
     "rowRetry": "Reintentar",
@@ -2112,9 +2111,7 @@
     "payrollHint": "QuickBooks tiene su propio producto de nóminas, aparte y de pago. Si lo usas, él ya escribe el asiento de cada paga en tus libros.",
     "payrollTheirs": "Mi nómina la lleva QuickBooks Payroll",
     "payrollTheirsHint": "Márcalo si pagas a tu gente desde QuickBooks. Si lo dejas sin marcar, el asiento de cada hoja que emitas aquí se manda allí solo.",
-    "payrollTheirsNote": "Con esto marcado no mandamos el asiento de nómina, para que los salarios no queden contados dos veces. Lo que pagas a subcontratistas sí sigue yendo: eso no es nómina y QuickBooks Payroll no lo apunta.",
-    "sandboxBadge": "Pruebas",
-    "sandboxBody": "Este servidor está apuntando al QuickBooks de pruebas de Intuit. Puedes conectar y probarlo todo, pero lo que se mande allí no llega a tu contabilidad de verdad."
+    "payrollTheirsNote": "Con esto marcado no mandamos el asiento de nómina, para que los salarios no queden contados dos veces. Lo que pagas a subcontratistas sí sigue yendo: eso no es nómina y QuickBooks Payroll no lo apunta."
   },
   "creditNotes": {
     "issue": "Nota de crédito",

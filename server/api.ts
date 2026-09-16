@@ -1036,7 +1036,6 @@ apiRouter.get(
       stripeWebhookSecretConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
       resendApiKeyConfigured: Boolean(process.env.RESEND_API_KEY),
       quickbooksConfigured: quickbooksConfigurado(),
-      quickbooksEnvironment: process.env.QUICKBOOKS_ENVIRONMENT?.trim() === "production" ? "production" : "sandbox",
     };
 
     // The project ref is the subdomain, which is already public (the browser

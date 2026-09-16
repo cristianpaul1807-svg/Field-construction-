@@ -207,37 +207,43 @@ ya estaba en la cuenta. Va como `Payment` enganchado a su factura por
 
 ### Lo que el servidor necesita
 
-Cuatro variables de entorno. Si falta cualquiera de las tres primeras, la
-pantalla de QuickBooks dice que no está configurado en vez de dejar pulsar un
-botón que iba a fallar.
+Tres variables de entorno. Si falta cualquiera, la pantalla de QuickBooks
+dice que no está configurado en vez de dejar pulsar un botón que iba a
+fallar.
 
 | Variable | Qué es |
 |---|---|
-| `QUICKBOOKS_CLIENT_ID` | Del panel de Intuit, de la app |
+| `QUICKBOOKS_CLIENT_ID` | Del panel de Intuit, pestaña **Production** |
 | `QUICKBOOKS_CLIENT_SECRET` | Ídem. No sale del servidor |
 | `QUICKBOOKS_REDIRECT_URI` | `https://…/api/quickbooks/callback` |
-| `QUICKBOOKS_ENVIRONMENT` | `production`, o cualquier otra cosa para pruebas |
 
 Las redirect URI de producción se registran **aparte** de las de desarrollo,
 en la pestaña Production del panel de Intuit. Es el olvido clásico: claves
 buenas, y la vuelta de Intuit rebotando.
 
-Hubo un tiempo en que la pantalla enseñaba la integración con un «Pronto» y
-no dejaba pulsar Conectar, porque Intuit todavía no había aprobado la app.
-Ya la aprobó. **El botón no se bloquea nunca**; lo único que queda es el
-aviso de en qué QuickBooks estás, que sale cuando el entorno es de pruebas y
-no impide nada. Con `QUICKBOOKS_SANDBOX_CONNECT` pasó lo mismo: era la puerta
-para poder probar con el botón apagado, y al desaparecer el bloqueo dejó de
-tener sentido.
+### Por qué no hay entorno que elegir
 
-El entorno es deliberadamente desconfiado: **sólo la palabra exacta
-`production` es producción**. Al revés —dar por bueno lo que no se entiende—
-un servidor mal configurado mandaría facturas de verdad.
+Hubo un sandbox, con su dominio, su documento de descubrimiento y una
+`QUICKBOOKS_ENVIRONMENT` para escoger. Existía porque Intuit no había
+aprobado la aplicación y no se podía tocar una contabilidad real.
 
-Las claves de sandbox y las de producción son **distintas**, y el `realmId`
-de una empresa de pruebas no existe en producción. Al cambiar de entorno hay
-que volver a conectar desde la pantalla; las conexiones viejas dan
-`invalid_grant` y el sistema las borra solo.
+Aprobada la aplicación, esa variable pasó de útil a peligrosa. La regla era
+«lo que no sea exactamente `production` es pruebas», así que un `Production`
+con mayúscula, un espacio de más o un `prod` mandaba las facturas de un
+contratista a una empresa inventada **sin un solo error por ningún sitio**.
+Un fallo silencioso en la contabilidad de alguien no compensa la comodidad
+de poder cambiar de entorno con una variable.
+
+Así que ahora hay una sola dirección de API y un solo documento de
+descubrimiento, escritos en el código. Lo que comprueba que lo que sale es
+correcto son las pruebas de `scripts/prueba-quickbooks/`, que revisan el
+cuerpo de cada llamada **sin llamar a Intuit**. Ésas son las que hay que
+mantener; volver a tener sandbox, si alguna vez hiciera falta, es deshacer
+este commit.
+
+La columna `environment` de `quickbooks_connections` sigue escribiéndose
+—siempre `production`— porque es el registro de contra qué se conectó cada
+empresa, y nadie decide ya nada con ella.
 
 ### Las direcciones de Intuit, preguntadas a Intuit
 
