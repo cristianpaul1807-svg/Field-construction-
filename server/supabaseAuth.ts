@@ -3,6 +3,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Request, Response, NextFunction } from "express";
 import { createHash } from "crypto";
 import WebSocket from "ws";
+// Relativo y no `@shared`: el alias sólo existe en el cliente.
+import { AREAS, type Area } from "../shared/permisos";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 
 // Same hand-pasted-into-a-panel hazard as in supabaseAdmin: strip stray
@@ -37,6 +39,14 @@ declare global {
       workerId?: string;
       workerKind?: "employee" | "subcontractor";
       workerBusinessId?: string;
+      /**
+       * Las áreas que esta persona puede ver, o `null` si las ve todas.
+       *
+       * `null` no es «ninguna»: es «sin límite». Quien lleva el negocio no
+       * tiene rol asignado, y así encender esto no dejó a nadie fuera de su
+       * propio sistema.
+       */
+      areas?: Area[] | null;
     }
   }
 }
@@ -130,7 +140,7 @@ export const requireBusinessAuth = guarded(async (req: Request, res: Response, n
   const scoped = getSupabaseForToken(token);
   const { data: userRow, error: rowError } = await scoped
     .from("users")
-    .select("business_id")
+    .select("business_id, roles(permissions)")
     .eq("auth_user_id", userData.user.id)
     .single();
 
@@ -142,6 +152,7 @@ export const requireBusinessAuth = guarded(async (req: Request, res: Response, n
   req.authUserId = userData.user.id;
   req.businessId = userRow.business_id;
   req.supabase = scoped;
+  req.areas = areasDelRol((userRow as { roles?: { permissions?: unknown } | null }).roles);
   next();
 });
 
@@ -250,3 +261,28 @@ export const requireWorkerAuth = guarded(async (req: Request, res: Response, nex
   req.workerBusinessId = worker.business_id;
   next();
 });
+
+
+/**
+ * Las áreas de un rol, saneadas.
+ *
+ * **Una lista sin ningún área reconocida significa «sin límite», no «nada».**
+ * Eso no es una comodidad: es lo único que hace que esto se pueda encender sin
+ * dejar a nadie fuera de su propio sistema.
+ *
+ * La columna `permissions` existía desde el principio, nadie la miraba, y lo
+ * que hay dentro son etiquetas escritas a mano en castellano —«Acceso total»,
+ * «Facturación», «Check-in/Check-out»— más un `[]` por defecto que tienen los
+ * roles de admin. Ninguna es una clave de área. Leer eso como «esta persona no
+ * puede ver nada» habría echado del sistema a todos los usuarios que hay hoy,
+ * empezando por los dueños.
+ *
+ * Así que un rol que no dice nada en nuestro vocabulario es un rol que nadie
+ * configuró, y se comporta como se comportaba ayer. En cuanto tenga **un área
+ * de verdad**, manda la lista y se aplica a rajatabla.
+ */
+export function areasDelRol(rol: { permissions?: unknown } | null | undefined): Area[] | null {
+  if (!rol || !Array.isArray(rol.permissions)) return null;
+  const areas = (rol.permissions as unknown[]).filter((p): p is Area => AREAS.includes(p as Area));
+  return areas.length > 0 ? areas : null;
+}

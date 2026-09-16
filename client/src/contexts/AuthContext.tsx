@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson } from "@/lib/api";
 import { anuncioDeFallo } from "@/lib/fallos";
+import type { Area } from "@shared/permisos";
 
 // "none" means the server positively answered that this account isn't linked
 // to a business or a client yet — that's the signal to send someone into
@@ -17,6 +18,8 @@ interface AuthState {
   loading: boolean;
   persona: Persona | null;
   personaError: string | null;
+  /** Las áreas que esta persona ve, o `null` si las ve todas. */
+  areas: Area[] | null;
   businessId: string | null;
   clientId: string | null;
   refreshPersona: () => Promise<void>;
@@ -29,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [persona, setPersona] = useState<Persona | null>(null);
+  const [areas, setAreas] = useState<Area[] | null>(null);
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
@@ -53,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const body = await readJson(res);
       setPersona(body.persona);
+      setAreas(Array.isArray(body.areas) ? body.areas : null);
       setPersonaError(null);
       setBusinessId(body.businessId ?? null);
       setClientId(body.clientId ?? null);
@@ -96,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, loading, persona, personaError, businessId, clientId, refreshPersona: loadPersona, signOut }}
+      value={{ session, loading, persona, personaError, areas, businessId, clientId, refreshPersona: loadPersona, signOut }}
     >
       {children}
     </AuthContext.Provider>

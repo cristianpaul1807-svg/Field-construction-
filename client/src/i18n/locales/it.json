@@ -699,9 +699,11 @@
     "noUsers": "Nessun utente in questa impresa finora.",
     "roles": {
       "admin": "Admin",
-      "oficina": "Ufficio",
+      "oficina": "Ufficio — cantiere e clienti",
       "tecnico": "Tecnico",
-      "subcontratista": "Subappaltatore"
+      "subcontratista": "Subappaltatore",
+      "jefe_de_obra": "Capocantiere — solo il cantiere",
+      "contabilidad": "Contabilità — numeri e clienti"
     },
     "slugWarning": "Cambiare questo rompe ogni link già condiviso — chi ha il vecchio link non potrà più usarlo.",
     "billingIdentity": "Dati per preventivi e fatture",

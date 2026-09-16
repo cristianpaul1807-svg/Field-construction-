@@ -699,9 +699,11 @@
     "noUsers": "No users in this business yet.",
     "roles": {
       "admin": "Admin",
-      "oficina": "Office",
+      "oficina": "Office — field and clients",
       "tecnico": "Technician",
-      "subcontratista": "Subcontractor"
+      "subcontratista": "Subcontractor",
+      "jefe_de_obra": "Site manager — field only",
+      "contabilidad": "Bookkeeping — numbers and clients"
     },
     "slugWarning": "Changing this breaks every link you've already shared — anyone with the old link will no longer be able to use it.",
     "billingIdentity": "Estimate and invoice details",

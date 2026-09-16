@@ -63,6 +63,7 @@ import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
+import { areaDeLaRuta, puede, recortar, PAPELES } from "../shared/permisos";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -101,6 +102,7 @@ import {
 import {
   requireAuthenticatedUser,
   requireBusinessAuth,
+  areasDelRol,
   requireClientAuth,
   requireWorkerAuth,
   hashToken,
@@ -1276,12 +1278,19 @@ apiRouter.get(
   route(async (req, res) => {
     const admin = getSupabaseAdmin();
     const [userRow, clientRow] = await Promise.all([
-      admin.from("users").select("business_id").eq("auth_user_id", req.authUserId!).maybeSingle(),
+      admin.from("users").select("business_id, roles(permissions)").eq("auth_user_id", req.authUserId!).maybeSingle(),
       admin.from("clients").select("id").eq("auth_user_id", req.authUserId!).maybeSingle(),
     ]);
 
     if (userRow.data) {
-      res.json({ persona: "business", businessId: userRow.data.business_id });
+      // Las áreas viajan aquí para que el menú no enseñe lo que va a rebotar.
+      // Es comodidad, no seguridad: quien las quite del navegador se choca
+      // igual contra el servidor.
+      res.json({
+        persona: "business",
+        businessId: userRow.data.business_id,
+        areas: areasDelRol((userRow.data as { roles?: { permissions?: unknown } | null }).roles),
+      });
     } else if (clientRow.data) {
       res.json({ persona: "client", clientId: clientRow.data.id });
     } else {
@@ -3578,6 +3587,37 @@ apiRouter.get(
 );
 
 apiRouter.use(requireBusinessAuth);
+
+/**
+ * El área de cada ruta, comprobada en un solo sitio.
+ *
+ * Aquí y no en cada ruta: 186 rutas con su comprobación a mano es una lista
+ * que se rompe en la primera que alguien añada sin acordarse, y ese olvido no
+ * falla —deja pasar—. Así una ruta nueva o entra en el mapa o no la ve nadie
+ * que tenga rol, que es el error seguro en vez del error silencioso.
+ *
+ * Y recorta la respuesta: esconder el menú no sirve de nada si `/employees`
+ * sigue devolviendo el sueldo de cada uno en la misma lista que el teléfono.
+ */
+apiRouter.use((req, res, next) => {
+  if (req.areas === null || req.areas === undefined) return next();
+
+  const area = areaDeLaRuta(req.path);
+  if (!area) {
+    // Una familia de rutas que nadie clasificó. Se niega, y `check-permisos.py`
+    // existe para que esto no llegue nunca a producción.
+    res.status(403).json({ error: "Sin permiso para esta parte", code: "sin_permiso" });
+    return;
+  }
+  if (!puede(req.areas, area)) {
+    res.status(403).json({ error: "Sin permiso para esta parte", code: "sin_permiso" });
+    return;
+  }
+
+  const json = res.json.bind(res);
+  res.json = (cuerpo: unknown) => json(recortar(cuerpo, req.areas ?? null));
+  next();
+});
 
 // ---------- Materials & Costs ----------
 // Materials, labor rates and subcontractor trades live in three separate
@@ -8957,10 +8997,39 @@ apiRouter.patch(
 // they claim it themselves by signing up with this email, which links to the
 // row by email — the same reason nothing in this product depends on an
 // invitation email being delivered.
+
+/**
+ * El identificador de un papel, creándolo si el negocio aún no lo tiene.
+ *
+ * Los papeles de fábrica no se siembran al crear el negocio: la mayoría nunca
+ * hará falta, y una pantalla de roles con tres filas que nadie usa es ruido.
+ * Se crean el día que alguien los asigna.
+ */
+async function rolDelPapel(req: Request, preset: string): Promise<string | null> {
+  const areas = PAPELES[preset];
+  if (!areas) return null;
+  const supabase = req.supabase!;
+  const { data: existe } = await supabase
+    .from("roles")
+    .select("id")
+    .eq("business_id", req.businessId!)
+    .eq("name", preset)
+    .maybeSingle();
+  if (existe) return existe.id;
+  const { data, error } = await supabase
+    .from("roles")
+    .insert({ business_id: req.businessId!, name: preset, permissions: areas })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
 apiRouter.post(
   "/settings/users",
   route(async (req, res) => {
-    const { name, email, phone, roleId } = req.body ?? {};
+    const { name, email, phone, roleId, preset } = req.body ?? {};
+    const rol = preset ? await rolDelPapel(req, String(preset)) : roleId || null;
     if (!name?.trim()) {
       res.status(400).json({ error: "name is required" });
       return;
@@ -8973,7 +9042,7 @@ apiRouter.post(
         name: name.trim(),
         email: email?.trim() || null,
         phone: phone?.trim() || null,
-        role_id: roleId || null,
+        role_id: rol,
         status: "activo",
       })
       .select("id")
@@ -8991,7 +9060,8 @@ apiRouter.patch(
     if (body.name !== undefined) update.name = String(body.name).trim();
     if (body.email !== undefined) update.email = body.email || null;
     if (body.phone !== undefined) update.phone = body.phone || null;
-    if (body.roleId !== undefined) update.role_id = body.roleId || null;
+    if (body.preset !== undefined) update.role_id = await rolDelPapel(req, String(body.preset));
+    else if (body.roleId !== undefined) update.role_id = body.roleId || null;
     if (body.status !== undefined) update.status = body.status;
     const supabase = req.supabase!;
     const { error } = await supabase
@@ -12457,6 +12527,12 @@ apiRouter.get(
         role: u.roles?.name ?? null,
       })),
       roles: roles.data.map((r) => ({ id: r.id, name: r.name, permissions: r.permissions })),
+      // Los papeles de fábrica que este negocio todavía no tiene. Se ofrecen
+      // como si existieran y se crean al asignarlos: obligar a crear el rol en
+      // una pantalla y asignarlo en otra es cómo se queda a medias.
+      presets: Object.entries(PAPELES)
+        .filter(([clave]) => !roles.data!.some((r) => r.name === clave))
+        .map(([clave, areas]) => ({ preset: clave, areas })),
     });
   })
 );

@@ -699,9 +699,11 @@
     "noUsers": "Todavía no hay usuarios en este negocio.",
     "roles": {
       "admin": "Admin",
-      "oficina": "Oficina",
+      "oficina": "Oficina — terreno y clientes",
       "tecnico": "Técnico",
-      "subcontratista": "Subcontratista"
+      "subcontratista": "Subcontratista",
+      "jefe_de_obra": "Jefe de obra — sólo el terreno",
+      "contabilidad": "Contabilidad — números y clientes"
     },
     "slugWarning": "Cambiar esto rompe cualquier link que ya hayas compartido — quien tenga el link viejo dejará de poder usarlo.",
     "billingIdentity": "Datos para presupuestos y facturas",

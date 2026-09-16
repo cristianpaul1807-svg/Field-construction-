@@ -34,6 +34,8 @@ interface AppUser {
 interface SettingsUsersData {
   users: AppUser[];
   roles: { id?: string; name: string; permissions: string[] }[];
+  /** Papeles de fábrica que este negocio aún no tiene. Se crean al asignarlos. */
+  presets?: { preset: string; areas: string[] }[];
 }
 
 type Draft = { id: string | null; name: string; email: string; phone: string; roleId: string };
@@ -62,7 +64,9 @@ export default function SettingsUsers() {
           name: draft.name,
           email: draft.email,
           phone: draft.phone,
-          roleId: draft.roleId || null,
+          ...(draft.roleId.startsWith("preset:")
+            ? { preset: draft.roleId.slice("preset:".length) }
+            : { roleId: draft.roleId || null }),
         }),
       });
       if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
@@ -206,7 +210,7 @@ export default function SettingsUsers() {
                 onChange={(e) => setDraft((d) => (d ? { ...d, phone: e.target.value } : d))}
               />
             </div>
-            {(data?.roles ?? []).some((r) => r.id) && (
+            {((data?.roles ?? []).some((r) => r.id) || (data?.presets ?? []).length > 0) && (
               <div className="space-y-1.5">
                 <Label>{t("settings.role")}</Label>
                 <Select
@@ -222,6 +226,11 @@ export default function SettingsUsers() {
                       .map((r) => (
                         <SelectItem key={r.id} value={r.id!}>{roleLabel(r.name)}</SelectItem>
                       ))}
+                    {(data?.presets ?? []).map((p) => (
+                      <SelectItem key={p.preset} value={`preset:${p.preset}`}>
+                        {t(`settings.roles.${p.preset}`, { defaultValue: p.preset })}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

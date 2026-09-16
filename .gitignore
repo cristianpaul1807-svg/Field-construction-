@@ -117,3 +117,4 @@ client/public/__manus__/version.json
 
 # Claude Code personal settings (permissions, not shared)
 .claude/settings.local.json
+scripts/prueba-permisos/permisos.mjs

@@ -115,6 +115,7 @@ directamente al paso a paso.
 | Márgenes y reglas | [funciones/configuracion.md](funciones/configuracion.md#márgenes-y-reglas) |
 | Usuarios y roles | [funciones/configuracion.md](funciones/configuracion.md#usuarios-y-roles) |
 | *(dentro de Usuarios)* Segundo paso al entrar | [funciones/segundo-paso.md](funciones/segundo-paso.md) |
+| *(dentro de Usuarios)* Quién ve qué: áreas y roles | [funciones/permisos.md](funciones/permisos.md) |
 | Conexión WhatsApp | [funciones/configuracion.md](funciones/configuracion.md#conexión-whatsapp) |
 | Automatizaciones | [funciones/configuracion.md](funciones/configuracion.md#automatizaciones) |
 

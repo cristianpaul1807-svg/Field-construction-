@@ -5,10 +5,13 @@ import { useTranslation } from "react-i18next";
 import { ServerUnreachable } from "@/components/ServerUnreachable";
 import { Spinner } from "@/components/ui/spinner";
 import { recordarDestino } from "@/lib/destino";
+import { areaDeLaPantalla, puede, primeraPantalla } from "@shared/permisos";
+import { useLocation } from "wouter";
 
 export function RequireBusinessAuth({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const { session, loading, persona, personaError } = useAuth();
+  const { session, loading, persona, personaError, areas } = useAuth();
+  const [ruta] = useLocation();
 
   if (loading) {
     return (
@@ -29,6 +32,13 @@ export function RequireBusinessAuth({ children }: { children: ReactNode }) {
   if (personaError) return <ServerUnreachable message={personaError} />;
   if (persona === "client") return <Redirect to="/portal" />;
   if (persona === "none") return <Redirect to="/negocio/acceso" />;
+
+  // Escribir la dirección a mano tampoco entra. Se manda a la primera pantalla
+  // que sí es suya en vez de a un cartel de «sin permiso»: un jefe de obra que
+  // aterriza en una pantalla en blanco el primer día cree que el sistema está
+  // roto, no que esa parte no es para él.
+  const area = areaDeLaPantalla(ruta);
+  if (area && !puede(areas, area)) return <Redirect to={primeraPantalla(areas)} />;
 
   return <>{children}</>;
 }

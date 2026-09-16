@@ -699,9 +699,11 @@
     "noUsers": "Aucun utilisateur dans cette entreprise pour le moment.",
     "roles": {
       "admin": "Admin",
-      "oficina": "Bureau",
+      "oficina": "Bureau — terrain et clients",
       "tecnico": "Technicien",
-      "subcontratista": "Sous-traitant"
+      "subcontratista": "Sous-traitant",
+      "jefe_de_obra": "Chargé de chantier — le terrain seulement",
+      "contabilidad": "Comptabilité — chiffres et clients"
     },
     "slugWarning": "Changer ceci brise tous les liens déjà partagés — quiconque a l'ancien lien ne pourra plus l'utiliser.",
     "billingIdentity": "Coordonnées pour soumissions et factures",

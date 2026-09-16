@@ -50,6 +50,7 @@ import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
+import { areaDeLaPantalla, puede } from "@shared/permisos";
 
 // Monochrome line icons only — no emoji, no fills, no per-item colour. The
 // icon inherits the surrounding text colour so the whole chrome reads as one
@@ -188,9 +189,22 @@ interface NotificationFeed {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  // El menú no enseña lo que va a rebotar. Es comodidad y no seguridad: quien
+  // escriba la dirección a mano se choca igual contra el servidor, que es
+  // donde está el bloqueo de verdad.
+  const { areas, signOut } = useAuth();
+  const secciones = navSections
+    .map((seccion) => ({
+      ...seccion,
+      items: seccion.items.filter((item) => {
+        const area = areaDeLaPantalla(item.path);
+        return !area || puede(areas, area);
+      }),
+    }))
+    .filter((seccion) => seccion.items.length > 0);
+
   const isMobile = useIsMobile();
   const { t } = useTranslation();
-  const { signOut } = useAuth();
   const { data: company } = useApi<{ name: string; logoUrl: string | null }>("/api/settings/company");
   const { data: notifications } = useApi<NotificationFeed>("/api/notifications");
   const [location] = useLocation();
@@ -209,7 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // most likely place to want to go next is next door.
   useEffect(() => {
     if (!mobileNavOpen) return;
-    const current = navSections.find((section) => sectionContainsActive(section, location));
+    const current = secciones.find((section) => sectionContainsActive(section, location));
     setOpenSection(current?.id ?? null);
   }, [mobileNavOpen, location]);
 
@@ -313,7 +327,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               En el móvil vuelve, porque allí no compite con nada. */}
           {!isMobile && (
             <nav className="flex items-center gap-0.5 min-w-0 overflow-x-auto ml-1 xl:ml-2">
-              {navSections.map((section) => (
+              {secciones.map((section) => (
                 <SectionMenu key={section.id} section={section} />
               ))}
             </nav>
@@ -380,7 +394,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {isMobile && mobileNavOpen && (
           <div className="border-t border-border max-h-[75vh] overflow-y-auto px-3 py-2">
-            {navSections.map((section) => {
+            {secciones.map((section) => {
               const active = sectionContainsActive(section, location);
               // A one-item section has nothing to expand into, so it stays a
               // plain link rather than a header that opens to reveal itself.
