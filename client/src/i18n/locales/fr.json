@@ -2328,5 +2328,40 @@
     "couldNotStart": "Impossible de démarrer l'activation. Réessayez.",
     "couldNotRemove": "Impossible de le retirer. Réessayez.",
     "lostPhone": "Si vous perdez votre téléphone, vous ne pourrez pas entrer seul : écrivez au soutien et nous le retirerons après avoir vérifié qui vous êtes. C'est pourquoi il vaut mieux l'activer sur un téléphone que vous utilisez tous les jours."
+  },
+  "ccq": {
+    "sectorValue": {
+      "residentiel": "Résidentiel",
+      "institutionnel_commercial": "Institutionnel et commercial",
+      "industriel": "Industriel",
+      "genie_civil_voirie": "Génie civil et voirie"
+    },
+    "statusValue": {
+      "compagnon": "Compagnon",
+      "apprenti_1": "Apprenti 1",
+      "apprenti_2": "Apprenti 2",
+      "apprenti_3": "Apprenti 3",
+      "apprenti_4": "Apprenti 4",
+      "apprenti_5": "Apprenti 5",
+      "occupation": "Occupation"
+    },
+    "title": "Rapport mensuel CCQ",
+    "description": "Ce que vous devez saisir dans le formulaire de la CCQ, déjà totalisé par semaine et par travailleur. Ça vient des pointages ; rien à refaire.",
+    "worker": "Travailleur",
+    "week": "Semaine (dimanche)",
+    "hours": "Heures",
+    "overtime": "Supp.",
+    "trade": "Métier",
+    "status": "Statut",
+    "sector": "Secteur",
+    "region": "Région",
+    "missing": "manquant",
+    "totalHours": "{{hours}} heures au total",
+    "incomplete": "{{count}} lignes incomplètes",
+    "fixIt": "Ce qui est marqué « manquant » se remplit dans l'entente de cette personne, dans sa fiche. Sans métier, statut, secteur et région, la CCQ n'accepte pas la ligne.",
+    "noHours": "Aucune heure pointée ce mois-là. Il faut quand même déclarer : la CCQ exige le rapport même sans travail, et la pénalité pour non-transmission atteint 20 %.",
+    "download": "Télécharger la feuille",
+    "employerNumber": "Nº d'employeur : {{number}}",
+    "note": "Ceci n'est pas transmis à la CCQ : c'est pour le recopier dans leur formulaire. Échéance le 15 du mois suivant."
   }
 }

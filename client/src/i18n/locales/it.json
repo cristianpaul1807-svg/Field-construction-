@@ -2328,5 +2328,40 @@
     "couldNotStart": "Non è stato possibile avviare l'attivazione. Riprova.",
     "couldNotRemove": "Non è stato possibile rimuoverlo. Riprova.",
     "lostPhone": "Se perdi il telefono non potrai entrare da solo: scrivi all'assistenza e lo togliamo dopo aver verificato chi sei. Per questo conviene attivarlo su un telefono che usi ogni giorno."
+  },
+  "ccq": {
+    "sectorValue": {
+      "residentiel": "Résidentiel",
+      "institutionnel_commercial": "Institutionnel et commercial",
+      "industriel": "Industriel",
+      "genie_civil_voirie": "Génie civil et voirie"
+    },
+    "statusValue": {
+      "compagnon": "Compagnon",
+      "apprenti_1": "Apprenti 1",
+      "apprenti_2": "Apprenti 2",
+      "apprenti_3": "Apprenti 3",
+      "apprenti_4": "Apprenti 4",
+      "apprenti_5": "Apprenti 5",
+      "occupation": "Occupation"
+    },
+    "title": "Rapporto mensile CCQ",
+    "description": "Quello che devi digitare nel modulo della CCQ, già sommato per settimana e per lavoratore. Viene dalle timbrature; niente da rifare.",
+    "worker": "Lavoratore",
+    "week": "Settimana (domenica)",
+    "hours": "Ore",
+    "overtime": "Extra",
+    "trade": "Mestiere",
+    "status": "Statuto",
+    "sector": "Settore",
+    "region": "Regione",
+    "missing": "manca",
+    "totalHours": "{{hours}} ore in totale",
+    "incomplete": "{{count}} righe incomplete",
+    "fixIt": "Quello che dice «manca» si completa nell'accordo di quella persona, nella sua scheda. Senza mestiere, statuto, settore e regione, la CCQ non accetta la riga.",
+    "noHours": "Quel mese non ci sono ore timbrate. Bisogna comunque dichiarare: la CCQ esige il rapporto anche senza lavoro, e la sanzione per non inviarlo arriva al 20 %.",
+    "download": "Scarica il foglio",
+    "employerNumber": "N. datore: {{number}}",
+    "note": "Questo non viene inviato alla CCQ: serve per copiarlo nel loro modulo. Scade il 15 del mese successivo."
   }
 }

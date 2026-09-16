@@ -2328,5 +2328,40 @@
     "couldNotStart": "No se pudo empezar la activación. Inténtalo otra vez.",
     "couldNotRemove": "No se pudo quitar. Inténtalo otra vez.",
     "lostPhone": "Si pierdes el móvil no podrás entrar por tu cuenta: escríbenos a soporte y lo quitamos después de comprobar quién eres. Por eso conviene activarlo en un móvil que uses a diario."
+  },
+  "ccq": {
+    "sectorValue": {
+      "residentiel": "Résidentiel",
+      "institutionnel_commercial": "Institutionnel et commercial",
+      "industriel": "Industriel",
+      "genie_civil_voirie": "Génie civil et voirie"
+    },
+    "statusValue": {
+      "compagnon": "Compagnon",
+      "apprenti_1": "Apprenti 1",
+      "apprenti_2": "Apprenti 2",
+      "apprenti_3": "Apprenti 3",
+      "apprenti_4": "Apprenti 4",
+      "apprenti_5": "Apprenti 5",
+      "occupation": "Occupation"
+    },
+    "title": "Informe mensual CCQ",
+    "description": "Lo que tienes que teclear en el formulario de la CCQ, ya sumado por semana y por trabajador. Sale de los fichajes, no hay que rehacer nada.",
+    "worker": "Trabajador",
+    "week": "Semana (domingo)",
+    "hours": "Horas",
+    "overtime": "Extra",
+    "trade": "Oficio",
+    "status": "Estatuto",
+    "sector": "Sector",
+    "region": "Región",
+    "missing": "falta",
+    "totalHours": "{{hours}} horas en total",
+    "incomplete": "{{count}} líneas sin completar",
+    "fixIt": "Lo que pone «falta» se completa en el acuerdo de esa persona, en su ficha. Sin oficio, estatuto, sector y región, la CCQ no acepta la línea.",
+    "noHours": "Ese mes no hay horas fichadas. Aun así hay que declarar: la CCQ exige el informe aunque no se haya trabajado, y la multa por no mandarlo llega al 20 %.",
+    "download": "Descargar la hoja",
+    "employerNumber": "Nº de empleador: {{number}}",
+    "note": "Esto no se manda a la CCQ: es para que lo copies en su formulario. Vence el día 15 del mes siguiente."
   }
 }

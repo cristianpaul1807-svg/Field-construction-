@@ -81,3 +81,102 @@ export function loQueFaltaParaLaCcq(acuerdo: Partial<DatosCcq>): (keyof DatosCcq
   const campos: (keyof DatosCcq)[] = ["ccq_trade", "ccq_status", "ccq_sector", "ccq_region"];
   return campos.filter((c) => !acuerdo[c]);
 }
+
+// ---------- El informe mensual ----------
+
+/**
+ * La hoja que el contratista copia en la página de la CCQ.
+ *
+ * No es el archivo que la CCQ importa: ese formato no lo publican, hay que
+ * pedírselo como proveedor y lo están cambiando. Esto es el paso anterior y el
+ * que de verdad ahorra la tarde — tener delante, ya sumado y clasificado, lo
+ * que si no habría que reconstruir a mano de las hojas de fichaje.
+ *
+ * **Por semana y no por mes.** La CCQ declara por semana de trabajo, de domingo
+ * a sábado. Un total mensual por trabajador no se puede teclear en su
+ * formulario, así que sería una cifra bonita e inútil.
+ */
+
+/** Una línea de la hoja: una persona, una semana. */
+export interface LineaCcq {
+  trabajador: string;
+  /** El domingo de esa semana, en `YYYY-MM-DD`. */
+  semana: string;
+  horas: number;
+  horasExtra: number;
+  oficio: string | null;
+  estatuto: string | null;
+  sector: string | null;
+  region: string | null;
+  /** Lo que falta para poder declarar esta línea. */
+  falta: (keyof DatosCcq)[];
+}
+
+/** El domingo de la semana a la que pertenece una fecha. */
+export function domingoDeLaSemana(fecha: Date): string {
+  const d = new Date(Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate()));
+  d.setUTCDate(d.getUTCDate() - d.getUTCDay());
+  return d.toISOString().slice(0, 10);
+}
+
+/** Las horas de un fichaje, redondeadas al centésimo como las declara la CCQ. */
+export function horasDe(entrada: string | null, salida: string | null): number {
+  if (!entrada || !salida) return 0;
+  const ms = new Date(salida).getTime() - new Date(entrada).getTime();
+  if (!Number.isFinite(ms) || ms <= 0) return 0;
+  return Math.round((ms / 3_600_000) * 100) / 100;
+}
+
+/** El primer día del mes y el primero del siguiente, que es el rango que se pide. */
+export function rangoDelMes(mes: string): { desde: string; hasta: string } | null {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) return null;
+  const [anio, m] = mes.split("-").map(Number);
+  const desde = new Date(Date.UTC(anio, m - 1, 1));
+  const hasta = new Date(Date.UTC(anio, m, 1));
+  return { desde: desde.toISOString().slice(0, 10), hasta: hasta.toISOString().slice(0, 10) };
+}
+
+/**
+ * Agrupar los fichajes en líneas de la hoja.
+ *
+ * Las horas extra se cuentan aparte porque la CCQ las declara aparte: no es un
+ * detalle de nómina, es una casilla distinta de su formulario.
+ */
+export function armarLineas(
+  fichajes: { quien: string; entrada: string | null; salida: string | null; extra: boolean }[],
+  datos: Map<string, DatosCcq>
+): LineaCcq[] {
+  const porClave = new Map<string, LineaCcq>();
+
+  for (const f of fichajes) {
+    const horas = horasDe(f.entrada, f.salida);
+    if (horas <= 0) continue;
+    const semana = domingoDeLaSemana(new Date(f.entrada!));
+    const clave = `${f.quien}·${semana}`;
+
+    let linea = porClave.get(clave);
+    if (!linea) {
+      const d = datos.get(f.quien) ?? { ccq_trade: null, ccq_status: null, ccq_sector: null, ccq_region: null };
+      linea = {
+        trabajador: f.quien,
+        semana,
+        horas: 0,
+        horasExtra: 0,
+        oficio: d.ccq_trade,
+        estatuto: d.ccq_status,
+        sector: d.ccq_sector,
+        region: d.ccq_region,
+        falta: loQueFaltaParaLaCcq(d),
+      };
+      porClave.set(clave, linea);
+    }
+
+    if (f.extra) linea.horasExtra = Math.round((linea.horasExtra + horas) * 100) / 100;
+    else linea.horas = Math.round((linea.horas + horas) * 100) / 100;
+  }
+
+  // Por persona y luego por semana: así se teclea, y así se revisa.
+  return Array.from(porClave.values()).sort(
+    (a, b) => a.trabajador.localeCompare(b.trabajador) || a.semana.localeCompare(b.semana)
+  );
+}

@@ -2328,5 +2328,40 @@
     "couldNotStart": "Couldn't start setup. Try again.",
     "couldNotRemove": "Couldn't turn it off. Try again.",
     "lostPhone": "If you lose your phone you won't be able to get in on your own: write to support and we'll remove it after checking who you are. That's why it's worth setting up on a phone you use every day."
+  },
+  "ccq": {
+    "sectorValue": {
+      "residentiel": "Résidentiel",
+      "institutionnel_commercial": "Institutionnel et commercial",
+      "industriel": "Industriel",
+      "genie_civil_voirie": "Génie civil et voirie"
+    },
+    "statusValue": {
+      "compagnon": "Compagnon",
+      "apprenti_1": "Apprenti 1",
+      "apprenti_2": "Apprenti 2",
+      "apprenti_3": "Apprenti 3",
+      "apprenti_4": "Apprenti 4",
+      "apprenti_5": "Apprenti 5",
+      "occupation": "Occupation"
+    },
+    "title": "CCQ monthly report",
+    "description": "What you have to type into the CCQ form, already totalled by week and by worker. It comes from the clock-ins; nothing to redo.",
+    "worker": "Worker",
+    "week": "Week (Sunday)",
+    "hours": "Hours",
+    "overtime": "Overtime",
+    "trade": "Trade",
+    "status": "Status",
+    "sector": "Sector",
+    "region": "Region",
+    "missing": "missing",
+    "totalHours": "{{hours}} hours in total",
+    "incomplete": "{{count}} lines incomplete",
+    "fixIt": "Anything marked “missing” is filled in on that person's agreement, in their file. Without trade, status, sector and region, the CCQ won't accept the line.",
+    "noHours": "No hours were clocked that month. You still have to file: the CCQ requires the report even with no work done, and the penalty for not sending it reaches 20%.",
+    "download": "Download the sheet",
+    "employerNumber": "Employer no.: {{number}}",
+    "note": "This is not sent to the CCQ: it's for you to copy into their form. Due on the 15th of the following month."
   }
 }

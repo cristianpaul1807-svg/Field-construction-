@@ -99,6 +99,7 @@ directamente al paso a paso.
 | *(dentro de Reportes)* Rentabilidad por obra | [funciones/finanzas.md](funciones/finanzas.md#rentabilidad-por-obra) |
 | *(dentro de Reportes)* Dinero en Stripe | [funciones/finanzas.md](funciones/finanzas.md#dinero-en-stripe) |
 | *(dentro de Reportes)* Exportar para el contable | [funciones/finanzas.md](funciones/finanzas.md#exportar-para-el-contable) |
+| *(dentro de Reportes)* Informe mensual de la CCQ | [funciones/ccq.md](funciones/ccq.md) |
 
 ### Configuración
 

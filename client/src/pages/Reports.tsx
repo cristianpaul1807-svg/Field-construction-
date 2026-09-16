@@ -16,6 +16,7 @@ import {
 import { ReceivablesPanel } from "@/components/ReceivablesPanel";
 import { ProfitabilityPanel } from "@/components/ProfitabilityPanel";
 import { AccountingExportCard } from "@/components/AccountingExportCard";
+import { HojaCcq } from "@/components/HojaCcq";
 import { StripeBalanceCard } from "@/components/StripeBalanceCard";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -141,6 +142,7 @@ export default function Reports() {
       {/* Outside the loading gate above: it fetches on its own, and money
           owed is the thing on this page somebody actually acts on. */}
       <StripeBalanceCard />
+      <HojaCcq />
       <AccountingExportCard />
       <ProfitabilityPanel />
       <ReceivablesPanel />

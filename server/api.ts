@@ -62,7 +62,7 @@ import { profitabilityByProject } from "./profitability";
 import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
-import { camposCcq } from "./ccq";
+import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -7298,6 +7298,116 @@ apiRouter.get(
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${result.filename}"`);
     res.send(result.csv);
+  })
+);
+
+/**
+ * La hoja mensual de la CCQ.
+ *
+ * Lo que el contratista copia en el formulario de la CCQ, ya sumado por semana
+ * y clasificado. No es el archivo que ellos importan —ese formato no lo
+ * publican— pero es el paso que de verdad cuesta una tarde: reconstruir de las
+ * hojas de fichaje quién trabajó, cuántas horas, en qué oficio y en qué sector.
+ *
+ * **Sólo empleados.** Un subcontratista factura y declara a los suyos él. Meter
+ * sus horas aquí sería declarar dos veces a la misma gente.
+ */
+apiRouter.get(
+  "/ccq/monthly",
+  route(async (req, res) => {
+    const mes = String(req.query.month ?? new Date().toISOString().slice(0, 7));
+    const rango = rangoDelMes(mes);
+    if (!rango) {
+      res.status(400).json({ error: "month must be YYYY-MM", code: "bad_month" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const { data: negocio } = await supabase
+      .from("businesses")
+      .select("name, province, ccq_subject, ccq_employer_number")
+      .eq("id", req.businessId!)
+      .maybeSingle();
+
+    const { data: fichajes, error } = await supabase
+      .from("time_entries")
+      .select("employee_id, check_in_time, check_out_time, overtime, employees(name)")
+      .eq("business_id", req.businessId!)
+      .not("employee_id", "is", null)
+      .not("check_out_time", "is", null)
+      .gte("check_in_time", rango.desde)
+      .lt("check_in_time", rango.hasta);
+    if (error) throw error;
+
+    // El acuerdo de cada uno, que es donde vive su oficio y su sector. El más
+    // reciente: si alguien cambió de oficio, lo que declara es el de ahora.
+    const { data: acuerdos } = await supabase
+      .from("worker_agreements")
+      .select("employee_id, ccq_trade, ccq_status, ccq_sector, ccq_region, created_at")
+      .eq("business_id", req.businessId!)
+      .not("employee_id", "is", null)
+      .order("created_at", { ascending: false });
+
+    const porEmpleado = new Map<string, string>();
+    const datos = new Map<string, DatosCcq>();
+    for (const f of (fichajes ?? []) as any[]) {
+      const nombre = f.employees?.name ?? "—";
+      porEmpleado.set(String(f.employee_id), nombre);
+    }
+    for (const a of (acuerdos ?? []) as any[]) {
+      const nombre = porEmpleado.get(String(a.employee_id));
+      if (!nombre || datos.has(nombre)) continue;
+      datos.set(nombre, {
+        ccq_trade: a.ccq_trade ?? null,
+        ccq_status: a.ccq_status ?? null,
+        ccq_sector: a.ccq_sector ?? null,
+        ccq_region: a.ccq_region ?? null,
+      });
+    }
+
+    const lineas = armarLineas(
+      ((fichajes ?? []) as any[]).map((f) => ({
+        quien: f.employees?.name ?? "—",
+        entrada: f.check_in_time,
+        salida: f.check_out_time,
+        extra: f.overtime === true,
+      })),
+      datos
+    );
+
+    if (String(req.query.format ?? "") === "csv") {
+      const filas = [
+        ["Travailleur", "Semaine", "Heures", "Heures supp.", "Métier", "Statut", "Secteur", "Région"],
+        ...lineas.map((l) => [
+          l.trabajador,
+          l.semana,
+          l.horas.toFixed(2),
+          l.horasExtra.toFixed(2),
+          l.oficio ?? "",
+          l.estatuto ?? "",
+          l.sector ?? "",
+          l.region ?? "",
+        ]),
+      ];
+      const csv = filas
+        .map((f) => f.map((c) => (/[",;\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c)).join(";"))
+        .join("\n");
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="ccq-${mes}.csv"`);
+      // El punto y coma y el BOM son para que Excel en francés lo abra en
+      // columnas en vez de en una sola con todo dentro.
+      res.send("\uFEFF" + csv);
+      return;
+    }
+
+    res.json({
+      month: mes,
+      subject: negocio?.ccq_subject === true,
+      employerNumber: negocio?.ccq_employer_number ?? null,
+      lines: lineas,
+      totalHours: Math.round(lineas.reduce((s, l) => s + l.horas + l.horasExtra, 0) * 100) / 100,
+      incomplete: lineas.filter((l) => l.falta.length > 0).length,
+    });
   })
 );
 

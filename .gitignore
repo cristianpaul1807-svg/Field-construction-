@@ -8,6 +8,7 @@ build/
 *.dist
 # El paquete que arma la prueba de QuickBooks al vuelo.
 scripts/prueba-quickbooks/sync.mjs
+scripts/prueba-ccq/ccq.mjs
 
 # Environment variables
 .env
