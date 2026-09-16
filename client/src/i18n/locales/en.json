@@ -705,7 +705,7 @@
       "jefe_de_obra": "Site manager — field only",
       "contabilidad": "Bookkeeping — numbers and clients"
     },
-    "slugWarning": "Changing this breaks every link you've already shared — anyone with the old link will no longer be able to use it.",
+    "publicLinkFixed": "The system builds it from your business name and it doesn't change — your clients already have it. If you need a different one, write to us and we'll change it.",
     "billingIdentity": "Estimate and invoice details",
     "billingIdentityHint": "This prints in the header of every document you send. In Quebec the GST and QST numbers are mandatory on an invoice.",
     "addressPlaceholder": "Street, city, province, postal code",

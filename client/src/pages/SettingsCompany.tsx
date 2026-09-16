@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Check, Upload, Trash2 } from "lucide-react";
+import { Check, Upload, Trash2, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
@@ -63,7 +63,7 @@ export default function SettingsCompany() {
   const { data, loading, error, reload, detalle } = useApi<CompanyData>("/api/settings/company");
   const { data: taxRates } = useApi<TaxRate[]>("/api/canada-tax-rates");
   const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
+  const [copiado, setCopiado] = useState(false);
   const [license, setLicense] = useState("");
   const [country, setCountry] = useState("CA");
   const [province, setProvince] = useState("");
@@ -119,7 +119,6 @@ export default function SettingsCompany() {
   useEffect(() => {
     if (!data) return;
     setName(data.name);
-    setSlug(data.slug ?? "");
     setLicense(data.licenseNumber ?? "");
     setCountry(data.country ?? "CA");
     setProvince(data.province ?? "");
@@ -136,6 +135,17 @@ export default function SettingsCompany() {
     setCcqSubject(data.ccqSubject === true);
   }, [data]);
 
+  // El link entero y no sólo el trozo final: es lo que el negocio va a pegar
+  // en su bio de Instagram o en WhatsApp, y nadie lo arma a mano.
+  const linkPublico = data?.slug ? `${window.location.origin}/c/${data.slug}` : "";
+
+  const copiarLink = async () => {
+    if (!linkPublico) return;
+    await navigator.clipboard.writeText(linkPublico);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 1500);
+  };
+
   const save = async () => {
     setSaving(true);
     setSaveError(null);
@@ -145,7 +155,6 @@ export default function SettingsCompany() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          slug,
           licenseNumber: license,
           country,
           address,
@@ -265,10 +274,39 @@ export default function SettingsCompany() {
                   />
                 </div>
               )}
+              {/* Se enseña, no se edita. Era un campo libre con un cartel rojo
+                  debajo avisando de que cambiarlo rompe los links ya
+                  compartidos: el enlace está en el chat público, en el mensaje
+                  de bienvenida de WhatsApp y en cada sitio donde el negocio lo
+                  haya pegado. Un control cuyo único aviso es «esto te va a
+                  romper algo» no es una opción, es una trampa.
+
+                  Lo genera el sistema con el nombre del negocio al darse de
+                  alta. Si alguna vez hay que cambiarlo de verdad, lo hacemos
+                  nosotros: la ruta lo sigue aceptando y comprueba que no lo
+                  tenga otro. */}
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="slug">{t("settings.publicLinkAutomations")}</Label>
-                <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
-                <p className="text-xs text-status-warning-fg">{t("settings.slugWarning")}</p>
+                <div className="flex flex-col sm:flex-row gap-2 min-w-0">
+                  <Input
+                    id="slug"
+                    readOnly
+                    value={linkPublico}
+                    className="font-mono text-xs truncate break-all flex-1 min-w-0"
+                    onFocus={(e) => e.target.select()}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2 flex-shrink-0"
+                    onClick={copiarLink}
+                    disabled={!linkPublico}
+                  >
+                    {copiado ? <Check size={15} strokeWidth={1.75} /> : <Copy size={15} strokeWidth={1.75} />}
+                    {copiado ? t("invoicing.copied") : t("common.copy")}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">{t("settings.publicLinkFixed")}</p>
               </div>
               {/* Aquí había una casilla de texto libre y un porcentaje a mano
                   que no leía nadie: vivían en tax_config, mientras la factura

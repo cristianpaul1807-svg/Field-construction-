@@ -705,7 +705,7 @@
       "jefe_de_obra": "Capocantiere — solo il cantiere",
       "contabilidad": "Contabilità — numeri e clienti"
     },
-    "slugWarning": "Cambiare questo rompe ogni link già condiviso — chi ha il vecchio link non potrà più usarlo.",
+    "publicLinkFixed": "Lo genera il sistema dal nome della tua azienda e non cambia: i tuoi clienti ce l'hanno già. Se te ne serve un altro, scrivici e te lo cambiamo.",
     "billingIdentity": "Dati per preventivi e fatture",
     "billingIdentityHint": "Questo viene stampato nell'intestazione di ogni documento che invii. In Quebec i numeri GST e QST sono obbligatori su una fattura.",
     "addressPlaceholder": "Via, città, provincia, codice postale",

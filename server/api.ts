@@ -12501,6 +12501,12 @@ apiRouter.patch(
       update.holdback_percent = pct;
     }
 
+    // El panel ya no manda `slug`: cambiarlo rompe el link del chat público que
+    // el negocio tiene repartido por sus clientes y por su WhatsApp, así que
+    // Ajustes → Empresa lo enseña y no lo deja tocar. Esto se queda para
+    // cambiarlo nosotros cuando alguien lo pida de verdad, que con la
+    // comprobación de abajo es más seguro que un UPDATE a mano en la base.
+    //
     // Slug uniqueness spans every business, not just this one's own RLS-visible
     // row, so checking it needs the admin client — the update itself still
     // goes through req.supabase so RLS keeps enforcing "only your own row".

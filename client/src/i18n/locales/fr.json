@@ -705,7 +705,7 @@
       "jefe_de_obra": "Chargé de chantier — le terrain seulement",
       "contabilidad": "Comptabilité — chiffres et clients"
     },
-    "slugWarning": "Changer ceci brise tous les liens déjà partagés — quiconque a l'ancien lien ne pourra plus l'utiliser.",
+    "publicLinkFixed": "Le système le crée à partir du nom de votre entreprise et il ne change pas : vos clients l'ont déjà. S'il vous en faut un autre, écrivez-nous et nous le changerons.",
     "billingIdentity": "Coordonnées pour soumissions et factures",
     "billingIdentityHint": "Ceci s'imprime dans l'en-tête de chaque document que vous envoyez. Au Québec, les numéros de TPS et de TVQ sont obligatoires sur une facture.",
     "addressPlaceholder": "Rue, ville, province, code postal",

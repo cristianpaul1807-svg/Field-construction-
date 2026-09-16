@@ -705,7 +705,7 @@
       "jefe_de_obra": "Jefe de obra — sólo el terreno",
       "contabilidad": "Contabilidad — números y clientes"
     },
-    "slugWarning": "Cambiar esto rompe cualquier link que ya hayas compartido — quien tenga el link viejo dejará de poder usarlo.",
+    "publicLinkFixed": "Lo genera el sistema con el nombre de tu negocio y no cambia: tus clientes ya lo tienen. Si necesitas otro, escríbenos y te lo cambiamos.",
     "billingIdentity": "Datos para presupuestos y facturas",
     "billingIdentityHint": "Esto se imprime en la cabecera de cada documento que envías. En Quebec, los números de TPS y TVQ son obligatorios en una factura.",
     "addressPlaceholder": "Calle, ciudad, provincia, código postal",
