@@ -3662,7 +3662,7 @@ apiRouter.get(
     const [materials, laborRates, subcontractors] = await Promise.all([
       supabase
         .from("materials_catalog")
-        .select("id, name, unit, price, category, supplier, is_reference_only")
+        .select("id, name, unit, price, category, supplier, is_reference_only, sku, description")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -3690,6 +3690,8 @@ apiRouter.get(
         category: m.category,
         supplier: m.supplier,
         isReferenceOnly: m.is_reference_only,
+        sku: m.sku,
+        description: m.description,
       })),
       laborRates: laborRates.data.map((l) => ({
         id: l.id,
@@ -8460,9 +8462,13 @@ apiRouter.post(
 apiRouter.post(
   "/materials",
   route(async (req, res) => {
-    const { name, unit, price, category, supplier } = req.body ?? {};
-    if (!name?.trim() || !unit?.trim()) {
-      res.status(400).json({ error: "name and unit are required" });
+    const { name, unit, price, category, supplier, sku, description } = req.body ?? {};
+    // Sólo el nombre es obligatorio. La unidad dejó de serlo cuando el catálogo
+    // pasó a poder nacer de un archivo del proveedor: obligarla aquí habría
+    // forzado a inventarse un «sac» para algo que se vende por m³, y ese
+    // invento no falla —hace que el presupuesto salga mal en silencio—.
+    if (!name?.trim()) {
+      res.status(400).json({ error: "name is required" });
       return;
     }
     const supabase = req.supabase!;
@@ -8471,10 +8477,12 @@ apiRouter.post(
       .insert({
         business_id: req.businessId!,
         name: name.trim(),
-        unit: unit.trim(),
+        unit: unit?.trim() || null,
         price: price === undefined || price === null || price === "" ? null : Number(price),
         category: category?.trim() || null,
         supplier: supplier?.trim() || null,
+        sku: sku?.trim() || null,
+        description: description?.trim() || null,
       })
       .select("id")
       .single();
@@ -8489,10 +8497,14 @@ apiRouter.patch(
     const body = req.body ?? {};
     const update: Record<string, unknown> = {};
     if (body.name !== undefined) update.name = String(body.name).trim();
-    if (body.unit !== undefined) update.unit = String(body.unit).trim();
+    // Vaciar la unidad la deja en «por definir», igual que vaciar el precio lo
+    // deja en «solo referencia». Guardar "" sería una unidad que no es ninguna.
+    if (body.unit !== undefined) update.unit = String(body.unit).trim() || null;
     if (body.price !== undefined) update.price = body.price === "" ? null : Number(body.price);
     if (body.category !== undefined) update.category = body.category || null;
     if (body.supplier !== undefined) update.supplier = body.supplier || null;
+    if (body.sku !== undefined) update.sku = String(body.sku).trim() || null;
+    if (body.description !== undefined) update.description = String(body.description).trim() || null;
     if (Object.keys(update).length === 0) {
       res.json({ ok: true });
       return;

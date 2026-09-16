@@ -811,7 +811,6 @@
     "quotedPerProject": "Quoted per project",
     "noResults": "No materials found.",
     "deleteConfirm": "Delete this catalog entry?",
-    "nameUnitRequired": "Enter a name and a unit.",
     "nameRateRequired": "Enter a name and an hourly rate.",
     "materialDialogHint": "This price is used when building estimates.",
     "laborDialogHint": "The rate is used to price the labor on each line item.",
@@ -819,7 +818,15 @@
     "unitPlaceholder": "e.g. unit, sq ft, bag",
     "categoryPlaceholder": "e.g. Finishes",
     "supplierPlaceholder": "e.g. RONA",
-    "laborNamePlaceholder": "e.g. Carpenter"
+    "laborNamePlaceholder": "e.g. Carpenter",
+    "nameRequired": "Enter a name.",
+    "unitPending": "To be set",
+    "onlyPending": "{{count}} still to complete",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Reinforcing steel bar for footings, walls and slabs",
+    "descriptionHint": "This is what appears on the estimate line, and what your client reads.",
+    "skuLabel": "Supplier code (SKU)",
+    "skuHint": "Used to match this material with the same item in your accounting. Leave it empty if you don't use codes."
   },
   "projects": {
     "title": "Projects",

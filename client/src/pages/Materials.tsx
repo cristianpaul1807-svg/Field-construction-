@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Search, Pencil, Trash2, HardHat } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, HardHat, CircleAlert } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
@@ -23,11 +23,14 @@ import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 interface MaterialRow {
   id: string;
   name: string;
-  unit: string;
+  /** Nula mientras no se sepa cómo se compra. Ver `docs/funciones/materiales.md`. */
+  unit: string | null;
   price: number | null;
   category: string | null;
   supplier: string | null;
   isReferenceOnly: boolean;
+  sku: string | null;
+  description: string | null;
 }
 
 interface LaborRow {
@@ -42,16 +45,28 @@ interface MaterialsResponse {
   subcontractors: { id: string; name: string; trade: string | null; rating: number | null }[];
 }
 
-type MaterialDraft = { id: string | null; name: string; unit: string; price: string; category: string; supplier: string };
+type MaterialDraft = {
+  id: string | null;
+  name: string;
+  unit: string;
+  price: string;
+  category: string;
+  supplier: string;
+  sku: string;
+  description: string;
+};
 type LaborDraft = { id: string | null; name: string; hourlyRate: string };
 
-const EMPTY_MATERIAL: MaterialDraft = { id: null, name: "", unit: "", price: "", category: "", supplier: "" };
+const EMPTY_MATERIAL: MaterialDraft = {
+  id: null, name: "", unit: "", price: "", category: "", supplier: "", sku: "", description: "",
+};
 const EMPTY_LABOR: LaborDraft = { id: null, name: "", hourlyRate: "" };
 
 export default function Materials() {
   const { t } = useTranslation();
   const { data, loading, error, reload, detalle } = useApi<MaterialsResponse>("/api/materials");
   const [query, setQuery] = useState("");
+  const [soloFaltan, setSoloFaltan] = useState(false);
   const [material, setMaterial] = useState<MaterialDraft | null>(null);
   const [labor, setLabor] = useState<LaborDraft | null>(null);
   const [saving, setSaving] = useState(false);
@@ -68,9 +83,12 @@ export default function Materials() {
       key: `material-${m.id}`,
       name: m.name,
       category: m.category ?? t("materials.categoryMaterials"),
-      unit: m.unit,
+      // Sin unidad no se enseña un guion: se dice que falta, porque es lo
+      // único que hay que hacer con esa fila.
+      unit: m.unit ?? t("materials.unitPending"),
       supplier: m.supplier ?? "—",
       price: m.isReferenceOnly ? null : m.price,
+      falta: m.unit === null || m.price === null,
       source: m,
     }));
     const laborRows = data.laborRates.map((l) => ({
@@ -82,6 +100,7 @@ export default function Materials() {
       unit: t("materials.hour"),
       supplier: "—",
       price: l.hourlyRate,
+      falta: false,
       source: l,
     }));
     const subRows = data.subcontractors.map((s) => ({
@@ -93,17 +112,28 @@ export default function Materials() {
       unit: t("materials.service"),
       supplier: s.trade ?? "—",
       price: null as number | null,
+      falta: false,
       source: s,
     }));
-    return [...materialRows, ...laborRows, ...subRows].filter((r) =>
+    const todas = [...materialRows, ...laborRows, ...subRows].filter((r) =>
       r.name.toLowerCase().includes(query.toLowerCase())
     );
-  }, [data, query, t]);
+    return soloFaltan ? todas.filter((r) => r.falta) : todas;
+  }, [data, query, soloFaltan, t]);
+
+  // A un material le falta algo mientras no se sepa cómo se compra o cuánto
+  // cuesta: hasta entonces no suma en ningún presupuesto.
+  const porCompletar = useMemo(
+    () => (data?.materials ?? []).filter((m) => m.unit === null || m.price === null).length,
+    [data]
+  );
 
   const saveMaterial = async () => {
     if (!material) return;
-    if (!material.name.trim() || !material.unit.trim()) {
-      setFormError(t("materials.nameUnitRequired"));
+    // Sólo el nombre. La unidad se completa al usar el material por primera
+    // vez, que es cuando el contratista sabe de verdad cómo lo compra.
+    if (!material.name.trim()) {
+      setFormError(t("materials.nameRequired"));
       return;
     }
     setSaving(true);
@@ -118,6 +148,8 @@ export default function Materials() {
           price: material.price,
           category: material.category,
           supplier: material.supplier,
+          sku: material.sku,
+          description: material.description,
         }),
       });
       if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
@@ -200,6 +232,20 @@ export default function Materials() {
             onChange={(e) => setQuery(e.target.value)}
             className="max-w-xs"
           />
+          {/* Un catálogo que nace de un archivo del proveedor llega entero y sin
+              precios. Sin esto habría que ir buscando a ojo cuáles faltan entre
+              cientos de filas, que es como no completarlos nunca. */}
+          {porCompletar > 0 && (
+            <Button
+              variant={soloFaltan ? "default" : "outline"}
+              size="sm"
+              className="gap-2 flex-shrink-0"
+              onClick={() => setSoloFaltan((v) => !v)}
+            >
+              <CircleAlert size={15} strokeWidth={1.75} />
+              {t("materials.onlyPending", { count: porCompletar })}
+            </Button>
+          )}
         </div>
 
         {loading && (
@@ -258,10 +304,12 @@ export default function Materials() {
                                 setMaterial({
                                   id: m.id,
                                   name: m.name,
-                                  unit: m.unit,
+                                  unit: m.unit ?? "",
                                   price: m.price === null ? "" : String(m.price),
                                   category: m.category ?? "",
                                   supplier: m.supplier ?? "",
+                                  sku: m.sku ?? "",
+                                  description: m.description ?? "",
                                 });
                               } else {
                                 const l = row.source as LaborRow;
@@ -354,6 +402,27 @@ export default function Materials() {
                   placeholder={t("materials.supplierPlaceholder")}
                 />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="material-description">{t("materials.descriptionLabel")}</Label>
+              <Input
+                id="material-description"
+                value={material?.description ?? ""}
+                onChange={(e) => setMaterial((m) => (m ? { ...m, description: e.target.value } : m))}
+                placeholder={t("materials.descriptionPlaceholder")}
+              />
+              <p className="text-xs text-muted-foreground">{t("materials.descriptionHint")}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="material-sku">{t("materials.skuLabel")}</Label>
+              <Input
+                id="material-sku"
+                value={material?.sku ?? ""}
+                onChange={(e) => setMaterial((m) => (m ? { ...m, sku: e.target.value } : m))}
+                placeholder="MAT-BET-001"
+                className="font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground">{t("materials.skuHint")}</p>
             </div>
             {formError && <p className="text-sm text-status-error-fg">{formError}</p>}
           </div>

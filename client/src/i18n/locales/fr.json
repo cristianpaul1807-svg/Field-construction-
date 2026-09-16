@@ -811,7 +811,6 @@
     "quotedPerProject": "Devis par projet",
     "noResults": "Aucun matériau trouvé.",
     "deleteConfirm": "Supprimer cette entrée du catalogue ?",
-    "nameUnitRequired": "Saisissez un nom et une unité.",
     "nameRateRequired": "Saisissez un nom et un taux horaire.",
     "materialDialogHint": "Ce prix est utilisé lors de la création des soumissions.",
     "laborDialogHint": "Le taux sert à chiffrer la main-d'œuvre de chaque poste.",
@@ -819,7 +818,15 @@
     "unitPlaceholder": "Ex. unité, pi², sac",
     "categoryPlaceholder": "Ex. Finitions",
     "supplierPlaceholder": "Ex. RONA",
-    "laborNamePlaceholder": "Ex. Charpentier"
+    "laborNamePlaceholder": "Ex. Charpentier",
+    "nameRequired": "Entrez un nom.",
+    "unitPending": "À définir",
+    "onlyPending": "{{count}} à compléter",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Barre d'acier d'armature pour semelles, murs et dalles",
+    "descriptionHint": "C'est ce qui paraît sur la ligne de la soumission, et ce que votre client lit.",
+    "skuLabel": "Code du fournisseur (SKU)",
+    "skuHint": "Sert à lier ce matériau au même article dans votre comptabilité. Laissez vide si vous n'utilisez pas de codes."
   },
   "projects": {
     "title": "Projets",

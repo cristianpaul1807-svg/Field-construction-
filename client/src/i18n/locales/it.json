@@ -811,7 +811,6 @@
     "quotedPerProject": "Preventivo per progetto",
     "noResults": "Nessun materiale trovato.",
     "deleteConfirm": "Eliminare questa voce dal catalogo?",
-    "nameUnitRequired": "Inserisci un nome e un'unità.",
     "nameRateRequired": "Inserisci un nome e una tariffa oraria.",
     "materialDialogHint": "Questo prezzo viene usato per creare i preventivi.",
     "laborDialogHint": "La tariffa serve a calcolare la manodopera di ogni voce.",
@@ -819,7 +818,15 @@
     "unitPlaceholder": "Es. unità, m², sacco",
     "categoryPlaceholder": "Es. Finiture",
     "supplierPlaceholder": "Es. RONA",
-    "laborNamePlaceholder": "Es. Carpentiere"
+    "laborNamePlaceholder": "Es. Carpentiere",
+    "nameRequired": "Scrivi un nome.",
+    "unitPending": "Da definire",
+    "onlyPending": "{{count}} da completare",
+    "descriptionLabel": "Descrizione",
+    "descriptionPlaceholder": "Barra d'acciaio d'armatura per fondazioni, muri e solette",
+    "descriptionHint": "È quello che esce sulla riga del preventivo, e quello che legge il tuo cliente.",
+    "skuLabel": "Codice del fornitore (SKU)",
+    "skuHint": "Serve per collegare questo materiale allo stesso articolo nella tua contabilità. Lascialo vuoto se non usi codici."
   },
   "projects": {
     "title": "Progetti",

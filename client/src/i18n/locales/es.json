@@ -811,7 +811,6 @@
     "quotedPerProject": "Cotiza por proyecto",
     "noResults": "No se encontraron materiales.",
     "deleteConfirm": "¿Eliminar esta línea del catálogo?",
-    "nameUnitRequired": "Escribe un nombre y una unidad.",
     "nameRateRequired": "Escribe un nombre y una tarifa por hora.",
     "materialDialogHint": "Este precio se usará al armar presupuestos.",
     "laborDialogHint": "La tarifa se usa para calcular la mano de obra de cada partida.",
@@ -819,7 +818,15 @@
     "unitPlaceholder": "Ej. unidad, m², saco",
     "categoryPlaceholder": "Ej. Acabados",
     "supplierPlaceholder": "Ej. RONA",
-    "laborNamePlaceholder": "Ej. Carpintero"
+    "laborNamePlaceholder": "Ej. Carpintero",
+    "nameRequired": "Escribe un nombre.",
+    "unitPending": "Por definir",
+    "onlyPending": "Faltan {{count}} por completar",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "Barra de acero de refuerzo para zapatas, muros y losas",
+    "descriptionHint": "Es lo que sale en la línea del presupuesto, y lo que lee tu cliente.",
+    "skuLabel": "Código del proveedor (SKU)",
+    "skuHint": "Sirve para casar este material con el mismo artículo en tu contabilidad. Déjalo vacío si no usas códigos."
   },
   "projects": {
     "title": "Proyectos",
