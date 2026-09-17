@@ -154,10 +154,15 @@ function render(dataUri, size, fill) {
       //
       // An earlier version also flattened everything to grey and pinned the
       // dark end to black. That was right for the logo it was written for —
-      // black line art — and quietly wrong for a logo with colour in it: the
+      // black line art — and quietly wrong for a logo with colour in it: a
       // navy outline reads as luminance 35, so it came out pure black, and the
-      // blue went grey. The icon on the phone stopped looking like the logo.
-      // Compression is not worth repainting the artwork.
+      // blue next to it went grey. The icon on the phone stopped looking like
+      // the logo. Compression is not worth repainting the artwork.
+      //
+      // The logo this ships with is greyscale, but that is a decision made in
+      // the source file, where it can be looked at and changed. It is not this
+      // script's to make: hand it a colour logo tomorrow and it comes out in
+      // colour.
       const out2 = octx.getImageData(0, 0, size, size);
       const px = out2.data;
       for (let i = 0; i < px.length; i += 4) {
