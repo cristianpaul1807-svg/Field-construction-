@@ -64,7 +64,18 @@ import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
-import { capacidadDeLaRuta, planDe, tiene } from "../shared/planes";
+import {
+  capacidadDeLaRuta,
+  claveDelPrecio,
+  esPlanDePago,
+  planDe,
+  tiene,
+  DIAS_DE_PRUEBA,
+  PERIODOS,
+  PRECIO,
+  type Periodo,
+  type PlanDePago,
+} from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -802,6 +813,78 @@ async function apuntarYmandarComision(
   if (apuntada) await enviarComisionAQuickBooks(admin, businessId, paymentId);
 }
 
+/** Lo que Stripe manda de una suscripción, en lo que nos interesa. */
+type SuscripcionDeStripe = {
+  id: string;
+  status: string;
+  customer: string | { id: string };
+  cancel_at_period_end?: boolean;
+  current_period_end?: number | null;
+  trial_end?: number | null;
+  items?: {
+    data?: {
+      current_period_end?: number | null;
+      price?: { id: string; metadata?: Record<string, string>; recurring?: { interval?: string } | null };
+    }[];
+  };
+  metadata?: Record<string, string>;
+};
+
+/**
+ * Guarda lo que Stripe acaba de decirnos de una suscripción.
+ *
+ * **El plan sale del precio, no de lo que pidió el navegador.** Quien elige en
+ * la pantalla manda un `plan` que acaba en los metadatos de la sesión, pero
+ * eso es lo que alguien pidió; lo que de verdad se le está cobrando es el
+ * precio que quedó en la suscripción. Si un día no coinciden —un cambio de
+ * plan desde el portal de Stripe, por ejemplo, que nunca pasa por nuestra
+ * pantalla— el que vale es el precio. Fiarse de lo otro sería abrirle a
+ * alguien un plan que no paga.
+ *
+ * Se localiza por el cliente de Stripe y no por el negocio, porque el evento
+ * llega sin saber nada de nuestros negocios: esa fila es la única traducción
+ * que existe entre los dos mundos.
+ */
+function renovacion(sub: SuscripcionDeStripe): number | null {
+  return sub.items?.data?.[0]?.current_period_end ?? sub.current_period_end ?? null;
+}
+
+async function guardarSuscripcion(sub: SuscripcionDeStripe) {
+  const articulo = sub.items?.data?.[0];
+  const precio = articulo?.price;
+  const plan = precio?.metadata?.plan;
+  if (!plan) {
+    console.error("[stripe] una suscripción sin plan en los metadatos del precio", sub.id, precio?.id);
+    return;
+  }
+
+  const cliente = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+  if (!cliente) return;
+
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from("businesses")
+    .update({
+      // `trialing` cuenta como pagando: son los 30 días, y durante ellos se
+      // usa el plan entero. Es lo que se prometió en el sitio.
+      subscription_plan: sub.status === "active" || sub.status === "trialing" ? plan : "prueba",
+      subscription_status: sub.status,
+      stripe_subscription_id: sub.id,
+      subscription_interval: precio?.recurring?.interval === "year" ? "ano" : "mes",
+      // Cuándo vuelve a cobrar. Stripe lo movió de la suscripción al artículo:
+      // leyéndolo sólo de arriba se guardaba vacío, y la pantalla no podía
+      // decir «se renueva el 14» aunque Stripe lo supiera perfectamente. Se
+      // miran los dos sitios porque una cuenta con una versión anterior de la
+      // API lo sigue mandando arriba.
+      subscription_period_end: renovacion(sub) ? new Date(renovacion(sub)! * 1000).toISOString() : null,
+      subscription_cancel_at_period_end: Boolean(sub.cancel_at_period_end),
+      trial_ends_at: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+    })
+    .eq("stripe_customer_id", cliente);
+
+  if (error) console.error("[stripe] no se pudo guardar la suscripción", sub.id, error);
+}
+
 // Stripe fires this on the CONNECTED account's events (since these are
 // direct charges) — the webhook endpoint itself still lives on the
 // platform, Stripe just tags each event with the originating account id.
@@ -905,6 +988,64 @@ async function stripeWebhookHandler(req: Request, res: Response) {
       })
       .eq("stripe_account_id", account.id);
     if (error) console.error("[stripe] account.updated could not be stored", account.id, error);
+  }
+
+  /* ---------- Nuestra suscripción ----------
+   *
+   * Estos eventos llegan de la cuenta de **plataforma**, no de la del
+   * contratista: nuestra suscripción no pasa por Connect. Por eso se
+   * distinguen de los de más arriba, que sí vienen de una cuenta conectada.
+   *
+   * Esto es lo que hace que el bloqueo por plan signifique algo. Sin ello
+   * `subscription_plan` se queda en `pilot` para siempre, que lo abre todo:
+   * alguien pagaría Chantier y seguiría viendo las nóminas, y alguien que
+   * cancela también.
+   */
+  if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+    await guardarSuscripcion(event.data.object as SuscripcionDeStripe);
+  }
+
+  /**
+   * Se acabó: o canceló, o Stripe se rindió tras reintentar el cobro.
+   *
+   * Vuelve a `prueba`, que no abre nada, y **no se borra el cliente de
+   * Stripe**: si mañana vuelve, tiene que reengancharse a lo suyo y no nacer
+   * como cliente nuevo con una segunda suscripción al lado.
+   */
+  if (event.type === "customer.subscription.deleted") {
+    const sub = event.data.object as SuscripcionDeStripe;
+    const admin = getSupabaseAdmin();
+    const { error } = await admin
+      .from("businesses")
+      .update({
+        subscription_plan: "prueba",
+        subscription_status: sub.status ?? "canceled",
+        stripe_subscription_id: null,
+        subscription_cancel_at_period_end: false,
+      })
+      .eq("stripe_subscription_id", sub.id);
+    if (error) console.error("[stripe] no se pudo cerrar la suscripción", sub.id, error);
+  }
+
+  /**
+   * Le rebotó la tarjeta.
+   *
+   * Se apunta el estado y **no se le quita el plan**. Stripe reintenta durante
+   * días, y la mayoría de estos son una tarjeta caducada, no alguien que se
+   * va. Cerrarle el sistema a un contratista el primer día de impago, con sus
+   * facturas dentro, por una tarjeta que sólo hay que renovar, es cómo se
+   * pierde a un cliente que no quería irse. Cuando Stripe se rinde de verdad
+   * manda `subscription.deleted`, y ahí sí.
+   */
+  if (event.type === "invoice.payment_failed") {
+    const factura = event.data.object as { subscription?: string | null };
+    if (typeof factura.subscription === "string") {
+      const admin = getSupabaseAdmin();
+      await admin
+        .from("businesses")
+        .update({ subscription_status: "past_due" })
+        .eq("stripe_subscription_id", factura.subscription);
+    }
   }
 
   res.json({ received: true });
@@ -3796,6 +3937,179 @@ apiRouter.post(
     });
 
     res.json({ ok: resultado.estado === "enviado", code: resultado.estado });
+  })
+);
+
+/* ---------- Nuestra suscripción ----------
+ *
+ * Lo que el negocio nos paga a nosotros por usar el software. **No pasa por
+ * Connect.** Connect es lo otro: que el negocio cobre a sus clientes, con el
+ * dinero yendo a la cuenta del negocio. Si nuestro cobro llevara
+ * `{ stripeAccount }` como el de las facturas, le estaríamos pagando al
+ * contratista su propia suscripción. Por eso aquí no hay ningún
+ * `stripeAccount`, y por eso este comentario está aquí y no en el commit.
+ */
+
+/** El precio de Stripe, buscado por su nombre y no por su identificador. */
+async function precioDeStripe(plan: PlanDePago, periodo: Periodo) {
+  const stripe = getStripe();
+  const clave = claveDelPrecio(plan, periodo);
+  const encontrados = await stripe.prices.list({ lookup_keys: [clave], active: true, limit: 1 });
+  const precio = encontrados.data[0];
+  if (!precio) {
+    throw new CodedError(
+      "precio_no_existe",
+      `En Stripe no hay ningún precio activo con la clave ${clave}. Créalo antes de poder cobrarlo.`
+    );
+  }
+  return precio;
+}
+
+/**
+ * El cliente de Stripe del negocio, creándolo la primera vez.
+ *
+ * Se guarda porque sin él un negocio que vuelve a pagar nace como cliente
+ * nuevo: dos clientes, dos suscripciones, y el contratista pagando dos veces
+ * sin que nada falle por ninguna parte.
+ */
+async function clienteDeStripe(businessId: string, correo: string | null, nombre: string | null) {
+  const admin = getSupabaseAdmin();
+  const { data: negocio } = await admin
+    .from("businesses")
+    .select("stripe_customer_id")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  const guardado = (negocio as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
+  if (guardado) return guardado;
+
+  const stripe = getStripe();
+  const cliente = await stripe.customers.create({
+    email: correo ?? undefined,
+    name: nombre ?? undefined,
+    // Para poder ir de un cobro de Stripe al negocio sin buscar a mano.
+    metadata: { businessId },
+  });
+  await admin.from("businesses").update({ stripe_customer_id: cliente.id }).eq("id", businessId);
+  return cliente.id;
+}
+
+/** En qué anda la suscripción del negocio, para la pantalla. */
+apiRouter.get(
+  "/suscripcion",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data } = await admin
+      .from("businesses")
+      .select(
+        "subscription_plan, subscription_status, subscription_interval, subscription_period_end, subscription_cancel_at_period_end, trial_ends_at, stripe_customer_id"
+      )
+      .eq("id", req.businessId!)
+      .maybeSingle();
+
+    const fila = (data ?? {}) as Record<string, unknown>;
+    res.json({
+      plan: planDe(fila.subscription_plan as string | null),
+      estado: (fila.subscription_status as string | null) ?? null,
+      periodo: (fila.subscription_interval as string | null) ?? null,
+      renuevaEl: (fila.subscription_period_end as string | null) ?? null,
+      seCancelaAlFinal: Boolean(fila.subscription_cancel_at_period_end),
+      pruebaHasta: (fila.trial_ends_at as string | null) ?? null,
+      // Sin cliente de Stripe no hay portal que abrir, y la pantalla tiene que
+      // saberlo para no ofrecer un botón que devolvería un error.
+      tienePortal: Boolean(fila.stripe_customer_id),
+      precios: PRECIO,
+    });
+  })
+);
+
+/**
+ * Empezar a pagar: la pasarela de Stripe.
+ *
+ * Los 30 días van aquí dentro, en `trial_period_days`, y no en una fecha
+ * nuestra: así es Stripe quien cuenta los días y quien cobra el día 31 solo.
+ * Contarlos nosotros significaría un trabajo que hay que acordarse de correr
+ * todas las noches, y el día que no corra nadie cobra.
+ */
+apiRouter.post(
+  "/suscripcion/checkout",
+  route(async (req, res) => {
+    const plan = String(req.body?.plan ?? "");
+    const periodo = String(req.body?.periodo ?? "mes");
+    if (!esPlanDePago(plan) || !PERIODOS.includes(periodo as Periodo)) {
+      res.status(400).json({ error: "Ese plan no se vende", code: "plan_no_valido" });
+      return;
+    }
+
+    const admin = getSupabaseAdmin();
+    const { data: negocio } = await admin
+      .from("businesses")
+      .select("name, email, subscription_plan")
+      .eq("id", req.businessId!)
+      .maybeSingle();
+    const datos = (negocio ?? {}) as { name?: string | null; email?: string | null };
+
+    const precio = await precioDeStripe(plan, periodo as Periodo);
+    const cliente = await clienteDeStripe(req.businessId!, datos.email ?? null, datos.name ?? null);
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const lang = normalizeDocLang(req.body?.lang);
+
+    const stripe = getStripe();
+    const sesion = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: cliente,
+      line_items: [{ price: precio.id, quantity: 1 }],
+      // La pasarela entera en su idioma. Sin esto Stripe elige por el
+      // navegador, que no tiene por qué ser el idioma en el que trabaja.
+      locale: lang,
+      subscription_data: {
+        trial_period_days: DIAS_DE_PRUEBA,
+        metadata: { businessId: req.businessId!, plan, periodo },
+      },
+      // Para que el negocio pueda meter su número de TPS/TVQ en la factura.
+      tax_id_collection: { enabled: true },
+      billing_address_collection: "required",
+      allow_promotion_codes: true,
+      success_url: `${baseUrl}/suscripcion?pago=exitoso`,
+      cancel_url: `${baseUrl}/suscripcion?pago=cancelado`,
+      metadata: { tipo: "suscripcion", businessId: req.businessId!, plan, periodo },
+    });
+
+    res.json({ url: sesion.url });
+  })
+);
+
+/**
+ * El portal de Stripe: cambiar de plan, cancelar, la tarjeta y las facturas.
+ *
+ * No se reimplementa nada de eso. Stripe ya lo tiene traducido, con sus
+ * confirmaciones, sus recibos descargables y sus reglas de prorrateo — y cada
+ * una de esas pantallas escrita aquí sería una pantalla más que mantener y una
+ * forma más de equivocarse con el dinero de alguien.
+ */
+apiRouter.post(
+  "/suscripcion/portal",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data } = await admin
+      .from("businesses")
+      .select("stripe_customer_id")
+      .eq("id", req.businessId!)
+      .maybeSingle();
+    const cliente = (data as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
+    if (!cliente) {
+      res.status(400).json({ error: "Este negocio todavía no tiene nada contratado", code: "sin_suscripcion" });
+      return;
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const stripe = getStripe();
+    const sesion = await stripe.billingPortal.sessions.create({
+      customer: cliente,
+      locale: normalizeDocLang(req.body?.lang),
+      return_url: `${baseUrl}/suscripcion`,
+    });
+    res.json({ url: sesion.url });
   })
 );
 

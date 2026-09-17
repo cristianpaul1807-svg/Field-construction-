@@ -95,7 +95,8 @@
     "clientPortalShort": "Portail",
     "serviceTypes": "Types de travaux",
     "timeOff": "Congés et absences",
-    "quickbooks": "QuickBooks"
+    "quickbooks": "QuickBooks",
+    "subscription": "Abonnement"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -2452,7 +2453,8 @@
         "titulo": "Les accès limités ne sont pas dans votre forfait",
         "cuerpo": "Faites entrer qui vous voulez avec accès à sa partie seulement : un chef de chantier qui voit les chantiers et jamais le profit ni la paie de personne."
       }
-    }
+    },
+    "verPlanes": "Voir les forfaits"
   },
   "instalar": {
     "titulo": "Mettez-la sur votre téléphone",
@@ -2467,5 +2469,37 @@
     "androidOtro": "Ouvrez le menu du navigateur (les trois points) et choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
     "copiar": "Copier l'adresse",
     "copiada": "Copiée"
+  },
+  "susc": {
+    "titulo": "Votre abonnement",
+    "entradilla": "Ce que vous payez pour utiliser le système. Encaisser vos propres clients est autre chose et se trouve dans Paiements.",
+    "planActual": "Votre forfait",
+    "sinPlan": "Vous n'avez pas encore choisi de forfait",
+    "mensual": "Par mois",
+    "anual": "Par année",
+    "dosMesesGratis": "Deux mois gratuits",
+    "porMes": "{{precio}} {{moneda}} / mois",
+    "porAno": "{{precio}} {{moneda}} / an",
+    "impuestosAparte": "Taxes en sus. La TPS et la TVQ s'ajoutent au paiement.",
+    "elegir": "Choisir ce forfait",
+    "abriendo": "Ouverture du paiement…",
+    "pruebaIncluida": "Essai de 30 jours. Rien n'est facturé avant le 31e jour, et vous pouvez annuler avant depuis ici même.",
+    "gestionar": "Changer de forfait, de carte ou annuler",
+    "gestionarNota": "Cela ouvre la page de Stripe, où vos factures sont aussi téléchargeables.",
+    "renuevaEl": "Se renouvelle le {{fecha}}",
+    "terminaEl": "Annulé. Ça fonctionne jusqu'au {{fecha}}.",
+    "pruebaHasta": "Essai jusqu'au {{fecha}}. Le premier paiement est ce jour-là.",
+    "estado": {
+      "trialing": "En essai",
+      "active": "À jour",
+      "past_due": "Le paiement n'est pas passé",
+      "canceled": "Annulé",
+      "incomplete": "Non terminé"
+    },
+    "impagoAviso": "Le dernier paiement n'est pas passé. Stripe réessaie pendant quelques jours ; si vous mettez la carte à jour maintenant, vous ne perdez rien. On ne va pas vous fermer le système pour ça.",
+    "pagoExitoso": "C'est fait. Votre forfait est actif — si vous ne le voyez pas encore ci-dessous, rechargez dans quelques secondes.",
+    "pagoCancelado": "Rien n'a été facturé. Vous pouvez réessayer quand vous voulez.",
+    "noSePudo": "Le paiement n'a pas pu s'ouvrir. Réessayez dans un instant.",
+    "stripeSinConfigurar": "Les paiements ne sont pas encore configurés sur ce déploiement. Écrivez-nous et on s'en occupe."
   }
 }

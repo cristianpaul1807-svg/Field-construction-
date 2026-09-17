@@ -95,7 +95,8 @@
     "clientPortalShort": "Portal",
     "serviceTypes": "Tipos de trabajo",
     "timeOff": "Vacaciones y ausencias",
-    "quickbooks": "QuickBooks"
+    "quickbooks": "QuickBooks",
+    "subscription": "Suscripción"
   },
   "dashboard": {
     "title": "Panel",
@@ -2452,7 +2453,8 @@
         "titulo": "Los accesos limitados no están en tu plan",
         "cuerpo": "Deja entrar a quien necesites con acceso sólo a su parte: un jefe de obra que ve las obras y no ve el beneficio ni lo que cobra nadie."
       }
-    }
+    },
+    "verPlanes": "Ver los planes"
   },
   "instalar": {
     "titulo": "Llévala en el móvil",
@@ -2467,5 +2469,37 @@
     "androidOtro": "Abre el menú del navegador (los tres puntos) y elige «Instalar aplicación» o «Añadir a pantalla de inicio».",
     "copiar": "Copiar la dirección",
     "copiada": "Copiada"
+  },
+  "susc": {
+    "titulo": "Tu suscripción",
+    "entradilla": "Lo que pagas por usar el sistema. Los cobros a tus clientes son otra cosa y están en Pagos.",
+    "planActual": "Tu plan",
+    "sinPlan": "Todavía no has elegido plan",
+    "mensual": "Al mes",
+    "anual": "Al año",
+    "dosMesesGratis": "Dos meses gratis",
+    "porMes": "{{precio}} {{moneda}} / mes",
+    "porAno": "{{precio}} {{moneda}} / año",
+    "impuestosAparte": "Impuestos aparte. La TPS y la TVQ se añaden al pagar.",
+    "elegir": "Elegir este plan",
+    "abriendo": "Abriendo el pago…",
+    "pruebaIncluida": "30 días de prueba. No se cobra nada hasta el día 31, y puedes cancelar antes desde aquí mismo.",
+    "gestionar": "Cambiar plan, tarjeta o cancelar",
+    "gestionarNota": "Se abre la página de Stripe, donde también están tus facturas para descargar.",
+    "renuevaEl": "Se renueva el {{fecha}}",
+    "terminaEl": "Cancelada. Sigue funcionando hasta el {{fecha}}.",
+    "pruebaHasta": "Prueba hasta el {{fecha}}. El primer cobro es ese día.",
+    "estado": {
+      "trialing": "En prueba",
+      "active": "Al día",
+      "past_due": "El cobro no pasó",
+      "canceled": "Cancelada",
+      "incomplete": "Sin terminar"
+    },
+    "impagoAviso": "El último cobro no pasó. Stripe vuelve a intentarlo unos días; si actualizas la tarjeta ahora, no pierdes nada. No te vamos a cerrar el sistema por esto.",
+    "pagoExitoso": "Listo. Tu plan ya está activo — si aquí abajo todavía no lo ves, dale a recargar en unos segundos.",
+    "pagoCancelado": "No se ha cobrado nada. Puedes volver a intentarlo cuando quieras.",
+    "noSePudo": "No se pudo abrir el pago. Inténtalo otra vez en un momento.",
+    "stripeSinConfigurar": "Los pagos todavía no están configurados en este despliegue. Escríbenos y lo dejamos listo."
   }
 }

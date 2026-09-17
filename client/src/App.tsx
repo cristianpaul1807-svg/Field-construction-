@@ -6,6 +6,7 @@ import { RequireBusinessAuth } from "@/components/RequireBusinessAuth";
 import { RequireClientAuth } from "@/components/RequireClientAuth";
 import { ServerUnreachable } from "@/components/ServerUnreachable";
 import Landing from "@/pages/Landing";
+import Suscripcion from "@/pages/Suscripcion";
 import { getWorkerSession } from "@/lib/workerSession";
 import { getClientSession } from "@/lib/clientSession";
 import AuthBusiness from "@/pages/AuthBusiness";
@@ -88,6 +89,7 @@ function BusinessPanel() {
         <Route path={"/settings/quickbooks"} component={SettingsQuickBooks} />
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
+        <Route path={"/suscripcion"} component={Suscripcion} />
         <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
         {/* Era una pantalla aparte que enseñaba el mismo link que la de
             WhatsApp. Al fusionarlas, quien tuviera esto guardado o llegara

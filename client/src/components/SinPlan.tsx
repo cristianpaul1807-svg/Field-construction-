@@ -8,16 +8,19 @@
  * su jefe algo que su jefe tampoco puede darle.
  *
  * Y no se escribe como un error, porque no lo es: la pantalla existe, funciona
- * y no está contratada. Se dice qué hace, en qué plan está, y se ofrece lo
- * único que de verdad funciona hoy — escribirnos. En cuanto haya pantalla de
- * suscripción, aquí va el botón que lleva a ella; hasta entonces no se pone un
- * botón que no lleva a ningún sitio.
+ * y no está contratada. Se dice qué hace, en qué plan está, y se lleva a
+ * Suscripción, que es donde se arregla.
+ *
+ * El botón estuvo un tiempo sin poner, a propósito: hasta que hubo pantalla de
+ * suscripción no llevaba a ningún sitio, y un botón que no lleva a ningún
+ * sitio es peor que no tener botón.
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, Mail } from "lucide-react";
+import { ArrowRight, Lock, Mail } from "lucide-react";
 import { correoDeSoporte } from "@/lib/soporte";
 import { PRECIO, type Capacidad } from "@shared/planes";
 
@@ -60,17 +63,24 @@ export function SinPlan({ capacidad }: { capacidad: Capacidad }) {
           </p>
         </div>
 
-        {soporte && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <Button asChild className="gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <Button asChild className="gap-2">
+            <Link href="/suscripcion">
+              {t("planes.verPlanes")}
+              <ArrowRight size={15} strokeWidth={1.75} />
+            </Link>
+          </Button>
+          {/* Y el correo detrás, para quien prefiera preguntar antes de pagar.
+              Sólo si hay buzón: sin él sería un botón muerto. */}
+          {soporte && (
+            <Button asChild variant="outline" className="gap-2">
               <a href={`mailto:${soporte}?subject=${encodeURIComponent(t("planes.asuntoCorreo"))}`}>
                 <Mail size={15} strokeWidth={1.75} />
                 {t("planes.escribenos")}
               </a>
             </Button>
-            <p className="text-xs text-muted-foreground">{t("planes.loActivamos")}</p>
-          </div>
-        )}
+          )}
+        </div>
       </Card>
     </div>
   );

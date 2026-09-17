@@ -81,6 +81,10 @@ export const AREA_DE: Record<string, Area> = {
   "worker-documents": "personas",
 
   settings: "ajustes",
+  // Lo que le pagamos a Stripe por usar esto. Va en ajustes porque es
+  // dinero de la empresa y no del trabajo: un jefe de obra no cancela la
+  // suscripción de la que cuelga toda la cuadrilla.
+  suscripcion: "ajustes",
   notifications: "ajustes",
   "admin-assistant": "ajustes",
 };

@@ -73,6 +73,7 @@ npm run build                         # client AND server — not just `vite bui
 python3 scripts/check-route-gate.py   # every route on its correct side
 python3 scripts/check-help-menu.py    # help answers name screens via {{menu…}}
 node scripts/comprobar-ancho.mjs      # no page scrolls sideways on a phone
+node scripts/prueba-suscripcion/mapeo.mjs   # Stripe -> plan, over real payloads
 ```
 
 `npm run build` is the marketing site generator, then `vite build`, then

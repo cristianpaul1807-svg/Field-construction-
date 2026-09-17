@@ -161,10 +161,44 @@ export function capacidadDeLaPantalla(ruta: string): Capacidad | null {
  * eso, `entreprise` se queda corto y sube — y subirlo antes del primer cliente
  * es gratis, mientras que subírselo a quien ya entró no se hace nunca.
  */
-export const PRECIO: Partial<Record<Plan, { mes: number; moneda: "CAD" }>> = {
-  chantier: { mes: 99, moneda: "CAD" },
-  entreprise: { mes: 249, moneda: "CAD" },
+export const PRECIO: Partial<Record<Plan, { mes: number; ano: number; moneda: "CAD" }>> = {
+  chantier: { mes: 99, ano: 990, moneda: "CAD" },
+  entreprise: { mes: 249, ano: 2490, moneda: "CAD" },
 };
+
+/**
+ * Pagar el año sale dos meses gratis.
+ *
+ * Diez por doce y no un porcentaje: «paga diez meses, usa doce» se explica en
+ * una frase y se recuerda. Un 20 % dejaría el Chantier en 950,40 $, un número
+ * que nadie retiene y que parece calculado para confundir.
+ */
+export const MESES_QUE_SE_PAGAN_AL_ANO = 10;
+
+export type Periodo = "mes" | "ano";
+export const PERIODOS: readonly Periodo[] = ["mes", "ano"];
+
+/**
+ * El nombre por el que el servidor le pide a Stripe cada precio.
+ *
+ * Por `lookup_key` y no por el identificador del precio. Un `price_1UGd4T…`
+ * hay que guardarlo en una variable de entorno, es distinto en la cuenta de
+ * pruebas y en la real, y el día que alguien cambie un precio en Stripe —que
+ * obliga a crear uno nuevo, porque no se editan— la variable apunta al viejo y
+ * se sigue cobrando lo de antes sin que nada falle. La clave de búsqueda se
+ * mueve al precio nuevo y no hay nada que actualizar aquí.
+ */
+export function claveDelPrecio(plan: Plan, periodo: Periodo): string {
+  return `${plan}_${periodo}`;
+}
+
+/** Los planes que se pueden contratar. Los otros tres no se venden. */
+export const PLANES_DE_PAGO = ["chantier", "entreprise"] as const;
+export type PlanDePago = (typeof PLANES_DE_PAGO)[number];
+
+export function esPlanDePago(valor: string): valor is PlanDePago {
+  return (PLANES_DE_PAGO as readonly string[]).includes(valor);
+}
 
 /** Días de prueba. Un mes entero porque lo que convence pasa al cerrar el mes. */
 export const DIAS_DE_PRUEBA = 30;
