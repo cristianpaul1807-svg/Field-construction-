@@ -236,9 +236,27 @@ son código:
    «impuestos aparte» y los precios están creados con `tax_behavior: exclusive`.
    Sin registro, o se cobra sin impuestos y se deben igual, o hay que corregir
    facturas después.
-3. **Volver a crear los cuatro precios en la cuenta real**, con las mismas
-   claves de búsqueda y los mismos `metadata.plan`. Si las claves coinciden, en
-   el código no hay nada que cambiar.
+3. **Crear los cuatro precios en la cuenta real.** No a mano:
+
+   ```bash
+   STRIPE_SECRET_KEY=sk_live_… node --experimental-strip-types scripts/stripe-precios.mjs
+   ```
+
+   Se puede correr las veces que haga falta. Si el precio ya está y cuesta lo
+   mismo, no toca nada; si cuesta otra cosa, crea el nuevo y le traslada la
+   clave de búsqueda, dejando el viejo vivo para quien ya lo pagaba —los
+   precios de Stripe no se editan, cambiar 99 por 109 es crear otro—. Con
+   `--dry` dice lo que haría sin escribir nada.
+
+   Hacerlo a mano en el panel sale mal una de cada tres veces, y la forma de
+   salir mal no da ningún error: un precio sin su `lookup_key` deja la pasarela
+   contestando que no encuentra el precio, y un `metadata.plan` mal escrito
+   deja cobrando de verdad sin abrirle el plan a quien pagó.
+
+4. **Volver a provisionar el webhook** (`POST /api/stripe/webhook/provision`).
+   Stripe guarda la lista de eventos en su endpoint: uno creado antes de esto
+   sigue mandando sólo los dos de Connect, y el plan del negocio no cambiaría
+   nunca al pagar.
 
 Lo del día 31 ya está resuelto, arriba: se bloquea el panel y quedan abiertas
 la suscripción, el acceso, el soporte y la descarga de los datos.
