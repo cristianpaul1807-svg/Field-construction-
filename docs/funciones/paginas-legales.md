@@ -45,6 +45,13 @@ que entrar al panel para leerlas en el suyo.
 | Las rutas, sobre la puerta de autenticación | `client/src/App.tsx`, en `Router()` |
 | El texto | `client/src/i18n/locales/{es,en,fr,it}.json`, bajo `legal.` |
 
+El sitio de presentación enseña **ese mismo texto**: `paginaLegal()` en
+`sitio/construir.mjs` lee los mismos archivos y genera `/fr/confidentialite`,
+`/en/privacy` y sus equivalentes. No hay una segunda copia que mantener, y no
+puede pasar que lo que se le enseñó al cliente antes de firmar diga algo
+distinto de lo que lee después de entrar — que es la versión que cuenta si
+alguna vez hay que discutirlo.
+
 `PaginaLegal` recibe `cual="privacy"` o `cual="terms"` y renderiza lo mismo
 en los dos casos: cabecera, fecha de actualización, secciones numeradas, pie
 con el titular y el enlace a la otra. Escribir dos componentes casi iguales

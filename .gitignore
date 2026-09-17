@@ -6,6 +6,10 @@
 dist/
 build/
 *.dist
+# Las 28 páginas del sitio las escribe `sitio/construir.mjs` en cada build, a
+# partir de `sitio/textos/`. Guardarlas sería guardar dos veces lo mismo, y la
+# copia guardada envejece sin avisar.
+sitio/publico/
 # El paquete que arma la prueba de QuickBooks al vuelo.
 scripts/prueba-quickbooks/sync.mjs
 scripts/prueba-ccq/ccq.mjs

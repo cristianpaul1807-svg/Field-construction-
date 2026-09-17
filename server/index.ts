@@ -1,4 +1,5 @@
 import express from "express";
+import fs from "fs";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -27,40 +28,57 @@ async function startServer() {
    * página entera sin esperar a que baje un paquete de JavaScript, y Google la
    * indexa sin tener que ejecutar nada.
    *
-   * Sólo se atienden las direcciones que existen. Lo que no esté en esta lista
-   * cae a la aplicación como siempre — el panel, el portal del cliente, la app
-   * del trabajador y el chat público siguen intactos.
+   * Las 28 páginas —siete por idioma— y el mapa de direcciones los genera
+   * `sitio/construir.mjs`. El mapa se lee de ahí y no se escribe aquí: añadir
+   * una página no puede depender de que alguien se acuerde de tocar este
+   * archivo.
+   *
+   * Sólo se atienden las direcciones del mapa. Lo que no esté cae a la
+   * aplicación como siempre — el panel, el portal del cliente, la app del
+   * trabajador y el chat público siguen intactos, y `/` sigue siendo la
+   * pantalla de arranque de la PWA.
    */
   const sitioPath =
     process.env.NODE_ENV === "production"
       ? path.resolve(__dirname, "sitio")
-      : path.resolve(__dirname, "..", "sitio");
+      : path.resolve(__dirname, "..", "sitio", "publico");
 
-  //
-  // La portada vive en `/accueil` y no en `/` porque la raíz es la aplicación:
-  // es la pantalla de arranque de la PWA —el trabajador que la tiene instalada
-  // vuelve ahí— y la puerta de quien ya tiene sesión. Quitársela dejaría a la
-  // cuadrilla aterrizando en un anuncio.
-  //
-  // Para que el sitio sea de verdad la puerta de entrada, la aplicación se muda
-  // a `app.logiciel-construction.com` y entonces esto pasa a `"/"`. Es un
-  // cambio de una línea aquí, y de DNS y de la URL de retorno de Intuit fuera.
-  const PAGINAS: Record<string, string> = {
-    "/accueil": "index.html",
-    "/fonctionnalites": "fonctionnalites.html",
-    "/ccq-taxes": "ccq-taxes.html",
-    "/tarifs": "tarifs.html",
-    "/contact": "contact.html",
-  };
+  try {
+    const mapa = JSON.parse(fs.readFileSync(path.join(sitioPath, "rutas.json"), "utf-8")) as {
+      ruta: string;
+      fichero: string;
+    }[];
 
-  for (const [ruta, fichero] of Object.entries(PAGINAS)) {
-    app.get(ruta, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
-  }
+    for (const { ruta, fichero } of mapa) {
+      // `/fr` sin la barra es lo que la gente escribe. Redirección permanente
+      // para que Google no acabe con dos direcciones del mismo contenido.
+      //
+      // Va **antes** que el archivo y mira el camino de verdad porque Express,
+      // sin `strict routing`, atiende `/fr` y `/fr/` con la misma ruta: puesta
+      // después, nunca llegaba a ejecutarse y las dos direcciones devolvían la
+      // página con un 200. Y puesta antes sin la comprobación, `/fr/` se
+      // redirigiría a sí misma para siempre.
+      if (ruta.endsWith("/")) {
+        app.get(ruta.slice(0, -1), (req, res, next) => {
+          if (req.path.endsWith("/")) return next();
+          res.redirect(301, ruta);
+        });
+      }
+      app.get(ruta, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
+    }
 
-  // Los ficheros sueltos del sitio: la hoja de estilo, su script, y los dos
-  // que le dicen a Google qué hay y qué no mirar.
-  for (const fichero of ["estilo.css", "sitio.js", "robots.txt", "sitemap.xml"]) {
-    app.get(`/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
+    for (const fichero of ["estilo.css", "sitio.js"]) {
+      app.get(`/sitio/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
+    }
+    for (const fichero of ["robots.txt", "sitemap.xml"]) {
+      app.get(`/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
+    }
+
+    console.log(`Sitio de presentación: ${mapa.length} páginas`);
+  } catch (err) {
+    // Sin sitio la aplicación tiene que arrancar igual. Un fallo al generar las
+    // páginas de marketing no puede dejar sin panel a quien está facturando.
+    console.error("El sitio de presentación no se pudo cargar:", err instanceof Error ? err.message : err);
   }
 
   app.use(express.static(staticPath));

@@ -50,7 +50,7 @@ directamente al paso a paso.
 | Comunicación | [funciones/comunicacion.md](funciones/comunicacion.md) |
 | *(sin menú)* Chat público `/c/tu-negocio` | [funciones/chat-publico.md](funciones/chat-publico.md) |
 | *(sin menú)* Privacidad y condiciones `/privacy`, `/terms` | [funciones/paginas-legales.md](funciones/paginas-legales.md) |
-| *(sin menú)* El sitio de presentación `/accueil`, `/tarifs`… | [funciones/sitio-web.md](funciones/sitio-web.md) |
+| *(sin menú)* El sitio de presentación `/fr/`, `/en/`, `/es/`, `/it/` | [funciones/sitio-web.md](funciones/sitio-web.md) |
 
 ### Proyectos
 
