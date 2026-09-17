@@ -2444,5 +2444,19 @@
         "cuerpo": "Deja entrar a quien necesites con acceso sólo a su parte: un jefe de obra que ve las obras y no ve el beneficio ni lo que cobra nadie."
       }
     }
+  },
+  "instalar": {
+    "titulo": "Llévala en el móvil",
+    "entradilla": "Se abre como una aplicación, sin pasar por el navegador. No hay que bajar nada de ninguna tienda.",
+    "ver": "Cómo se instala",
+    "boton": "Instalar",
+    "iosPaso1": "Toca Compartir, en la barra de abajo.",
+    "iosPaso2": "Baja y elige «Añadir a pantalla de inicio».",
+    "iosPaso3": "Toca «Añadir». Ya la tienes con el casco en tu pantalla.",
+    "iosOtro": "En este navegador no se puede instalar. Abre esta misma dirección en Safari y el aviso volverá a salir con los pasos.",
+    "iosOtroPorque": "Suele pasar cuando el enlace se abre desde dentro de WhatsApp.",
+    "androidOtro": "Abre el menú del navegador (los tres puntos) y elige «Instalar aplicación» o «Añadir a pantalla de inicio».",
+    "copiar": "Copiar la dirección",
+    "copiada": "Copiada"
   }
 }

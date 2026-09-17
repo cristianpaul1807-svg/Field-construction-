@@ -51,6 +51,7 @@ directamente al paso a paso.
 | *(sin menú)* Chat público `/c/tu-negocio` | [funciones/chat-publico.md](funciones/chat-publico.md) |
 | *(sin menú)* Privacidad y condiciones `/privacy`, `/terms` | [funciones/paginas-legales.md](funciones/paginas-legales.md) |
 | *(sin menú)* El sitio de presentación `/fr/`, `/en/`, `/es/`, `/it/` | [funciones/sitio-web.md](funciones/sitio-web.md) |
+| *(sin menú)* Instalar la aplicación en el móvil | [funciones/instalar-en-el-movil.md](funciones/instalar-en-el-movil.md) |
 
 ### Proyectos
 

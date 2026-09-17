@@ -2444,5 +2444,19 @@
         "cuerpo": "Fai entrare chi ti serve con accesso solo alla sua parte: un capocantiere che vede i cantieri e non vede mai il profitto né la paga di nessuno."
       }
     }
+  },
+  "instalar": {
+    "titulo": "Mettila sul telefono",
+    "entradilla": "Si apre come un'applicazione, senza passare dal browser. Non c'è niente da scaricare da nessuno store.",
+    "ver": "Come installarla",
+    "boton": "Installa",
+    "iosPaso1": "Tocca Condividi, nella barra in basso.",
+    "iosPaso2": "Scorri e scegli «Aggiungi a Home».",
+    "iosPaso3": "Tocca «Aggiungi». Il casco è ora sulla tua schermata.",
+    "iosOtro": "Da questo browser non si può installare. Apri questo stesso indirizzo in Safari e l'avviso tornerà con i passaggi.",
+    "iosOtroPorque": "Succede spesso quando il link si apre da dentro WhatsApp.",
+    "androidOtro": "Apri il menu del browser (i tre puntini) e scegli «Installa app» o «Aggiungi a schermata Home».",
+    "copiar": "Copia l'indirizzo",
+    "copiada": "Copiato"
   }
 }

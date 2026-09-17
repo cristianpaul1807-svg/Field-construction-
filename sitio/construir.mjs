@@ -33,6 +33,21 @@ const REFERENCIA = fr;
 
 const PRECIOS = { chantier: 99, entreprise: 249 };
 
+/**
+ * A dónde lleva «probar 30 días».
+ *
+ * A crear la cuenta, no al formulario de contacto. El botón dice «sin tarjeta»
+ * y eso promete entrar ahora mismo; llevar a un formulario donde se deja el
+ * teléfono y se espera una llamada es prometer una cosa y hacer otra — y para
+ * un contratista que mira esto entre dos obras, esperar es no volver.
+ *
+ * El formulario de contacto no desaparece ni se queda huérfano: sigue a un
+ * clic desde el pie de todas las páginas, y ahí tiene sentido propio, porque
+ * ofrece algo que el alta automática no puede — que le metamos sus tres
+ * últimas obras con él.
+ */
+const REGISTRO = "/negocio/acceso";
+
 // ---------- Paridad ----------
 
 function claves(objeto, prefijo = "") {
@@ -168,7 +183,7 @@ function cabecera(idioma, pagina) {
       ${item("precios", idioma.nav.precios)}
       ${selectorIdioma(idioma, pagina)}
       <a href="/" class="boton boton-secundario">${esc(idioma.nav.entrar)}</a>
-      <a href="${url(idioma, "contacto")}" class="boton boton-principal solo-ancho">${esc(idioma.nav.contacto)}</a>
+      <a href="${REGISTRO}" class="boton boton-principal solo-ancho">${esc(idioma.nav.probar)}</a>
     </nav>
   </div>
 </header>`;
@@ -194,7 +209,8 @@ function pie(idioma) {
       <div>
         <h4>${esc(idioma.pie.empezar)}</h4>
         <ul>
-          ${l("contacto", idioma.pie.ensayo)}
+          <li><a href="${REGISTRO}">${esc(idioma.pie.ensayo)}</a></li>
+          ${l("contacto", idioma.nav.hablar)}
           <li><a href="/">${esc(idioma.nav.entrar)}</a></li>
         </ul>
       </div>
@@ -311,7 +327,7 @@ function paginaInicio(idioma) {
       <h1>${esc(t.h1)}</h1>
       <p class="entradilla">${esc(t.entradilla)}</p>
       <div class="acciones">
-        <a href="${url(idioma, "contacto")}" class="boton boton-principal">${esc(t.cta)}
+        <a href="${REGISTRO}" class="boton boton-principal">${esc(t.cta)}
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
         <a href="${url(idioma, "funciones")}" class="boton boton-secundario">${esc(t.cta2)}</a>
@@ -459,7 +475,7 @@ ${cierre(idioma, {
   h2: t.cierreH2,
   p: t.cierreP,
   cta: t.cierreCta,
-  ctaHref: url(idioma, "contacto"),
+  ctaHref: REGISTRO,
   cta2: t.cierreCta2,
   cta2Href: url(idioma, "precios"),
 })}`,
@@ -522,7 +538,7 @@ ${cierre(idioma, {
   h2: t.cierreH2,
   p: t.cierreP,
   cta: t.cierreCta,
-  ctaHref: url(idioma, "contacto"),
+  ctaHref: REGISTRO,
   cta2: t.cierreCta2,
   cta2Href: url(idioma, "precios"),
 })}`,
@@ -608,7 +624,7 @@ ${cierre(idioma, {
   h2: t.cierreH2,
   p: t.cierreP,
   cta: t.cierreCta,
-  ctaHref: url(idioma, "contacto"),
+  ctaHref: REGISTRO,
   cta2: t.cierreCta2,
   cta2Href: url(idioma, "funciones"),
 })}`,
@@ -624,7 +640,7 @@ function paginaPrecios(idioma) {
           <div class="precio"><span class="n">${precio} $</span><span class="u">${esc(t.mes)}</span></div>
           <p class="pie-nota">${esc(p.limite)}</p>
           <ul>${p.items.map((i) => `<li>${CHECK}<span>${fuerte(i)}</span></li>`).join("")}</ul>
-          <a href="${url(idioma, "contacto")}" class="boton ${destacado ? "boton-principal" : "boton-secundario"}">${esc(t.probar)}</a>
+          <a href="${REGISTRO}" class="boton ${destacado ? "boton-principal" : "boton-secundario"}">${esc(t.probar)}</a>
         </div>`;
 
   return documento(idioma, "precios", {
@@ -674,7 +690,7 @@ function paginaPrecios(idioma) {
     </div>
   </section>
 
-${cierre(idioma, { h2: t.cierreH2, p: t.cierreP, cta: t.cierreCta, ctaHref: url(idioma, "contacto") })}`,
+${cierre(idioma, { h2: t.cierreH2, p: t.cierreP, cta: t.cierreCta, ctaHref: REGISTRO })}`,
   });
 }
 
@@ -855,8 +871,7 @@ function escribir() {
  */
 function comprobarEnlaces(rutas) {
   const validas = new Set(rutas.map((r) => r.ruta));
-  // La raíz es la aplicación: no está en el mapa del sitio y es correcta.
-  const APLICACION = "/";
+  const deLaAplicacion = rutasDeLaAplicacion();
   // Lo que no es una página tiene que ser un archivo que exista de verdad. Se
   // comprueba en el disco en vez de llevar una lista de excepciones escrita a
   // mano: una lista hay que acordarse de ampliarla, y olvidarse significa o
@@ -879,7 +894,7 @@ function comprobarEnlaces(rutas) {
       // igual de mal que un enlace roto.
       for (const [, destino] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
         if (/^(https?:|mailto:|#|data:)/.test(destino)) continue;
-        if (destino === APLICACION || validas.has(destino)) {
+        if (validas.has(destino) || deLaAplicacion.has(destino)) {
           paginas += 1;
           continue;
         }
@@ -894,6 +909,33 @@ function comprobarEnlaces(rutas) {
     process.exit(1);
   }
   console.log(`enlaces ok — ${paginas} a páginas que existen, ${ficheros} a archivos que están`);
+}
+
+/**
+ * Las direcciones de la aplicación a las que el sitio puede mandar gente.
+ *
+ * El sitio ya no lleva sólo a `/`: el botón de «probar 30 días» lleva a crear
+ * la cuenta. Eso es un enlace que sale del sitio y entra en la aplicación, y
+ * si esa pantalla se renombra el botón no falla — cae al catch-all y devuelve
+ * el panel con un 200, que es la misma trampa de siempre.
+ *
+ * Así que se leen del router de verdad en vez de escribirlas aquí. Sólo las
+ * públicas: las del panel están detrás de la sesión y mandar a un desconocido
+ * a una de ellas es mandarle a un inicio de sesión que no pidió.
+ */
+function rutasDeLaAplicacion() {
+  const app = fs.readFileSync(path.join(RAIZ, "client", "src", "App.tsx"), "utf-8");
+  // `Router()` es lo que hay antes de que el panel tome el control; las rutas
+  // del panel viven en su propio componente, más arriba del archivo.
+  const router = app.slice(app.indexOf("function Router("));
+  const encontradas = [...router.matchAll(/<Route\s+path=\{"([^"]+)"\}/g)].map((m) => m[1]);
+  const publicas = new Set(encontradas.filter((r) => !r.includes(":")));
+
+  if (!publicas.has(REGISTRO)) {
+    console.error(`El sitio manda a ${REGISTRO} y esa pantalla ya no está en el router de la aplicación.`);
+    process.exit(1);
+  }
+  return publicas;
 }
 
 escribir();

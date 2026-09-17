@@ -4,6 +4,7 @@ import "./index.css";
 // component that calls useTranslation() renders.
 import "./i18n";
 import { loadSupabaseConfig } from "@/lib/supabaseConfig";
+import { escucharLaInstalacion } from "@/lib/instalar";
 
 // This screen has to work when the app never mounted, so it can't reach
 // react-i18next — it picks its own wording from the browser's language
@@ -61,6 +62,11 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+// El aviso de «se puede instalar» llega una sola vez y pronto, casi siempre
+// antes de que React haya montado nada. Escucharlo desde un componente es
+// llegar tarde al único aviso que da el navegador.
+escucharLaInstalacion();
 
 loadSupabaseConfig()
   .then(async () => {

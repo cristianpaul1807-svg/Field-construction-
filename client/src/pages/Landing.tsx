@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HardHat, LogIn, UserRound, ArrowRight, Building2, KeyRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { InstalarApp } from "@/components/InstalarApp";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { supabase } from "@/lib/supabaseClient";
@@ -217,6 +218,12 @@ export default function Landing() {
               </Card>
             </Link>
           </div>
+
+          {/* Debajo de las puertas y no encima: quien llega aquí viene a
+              entrar, y esto es lo que se ofrece después de haber entrado. Se
+              quita solo cuando ya está instalada o cuando el navegador no
+              puede instalarla. */}
+          <InstalarApp />
 
           {/* La única puerta a los dos documentos legales desde fuera. Sin
               esto existen pero no los encuentra nadie, que para la Ley 25 y

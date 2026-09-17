@@ -2444,5 +2444,19 @@
         "cuerpo": "Let in whoever you need with access to their part only: a foreman who sees the jobs and never sees the profit or anyone's pay."
       }
     }
+  },
+  "instalar": {
+    "titulo": "Put it on your phone",
+    "entradilla": "It opens like an app, without going through the browser. Nothing to download from any store.",
+    "ver": "How to install it",
+    "boton": "Install",
+    "iosPaso1": "Tap Share, in the bar at the bottom.",
+    "iosPaso2": "Scroll down and choose “Add to Home Screen”.",
+    "iosPaso3": "Tap “Add”. The hard hat is now on your home screen.",
+    "iosOtro": "You can't install from this browser. Open this same address in Safari and the notice will come back with the steps.",
+    "iosOtroPorque": "This usually happens when the link is opened from inside WhatsApp.",
+    "androidOtro": "Open the browser menu (the three dots) and choose “Install app” or “Add to Home screen”.",
+    "copiar": "Copy the address",
+    "copiada": "Copied"
   }
 }

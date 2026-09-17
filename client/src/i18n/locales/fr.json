@@ -2444,5 +2444,19 @@
         "cuerpo": "Faites entrer qui vous voulez avec accès à sa partie seulement : un chef de chantier qui voit les chantiers et jamais le profit ni la paie de personne."
       }
     }
+  },
+  "instalar": {
+    "titulo": "Mettez-la sur votre téléphone",
+    "entradilla": "Elle s'ouvre comme une application, sans passer par le navigateur. Rien à télécharger d'aucune boutique.",
+    "ver": "Comment l'installer",
+    "boton": "Installer",
+    "iosPaso1": "Touchez Partager, dans la barre du bas.",
+    "iosPaso2": "Descendez et choisissez « Sur l'écran d'accueil ».",
+    "iosPaso3": "Touchez « Ajouter ». Le casque est maintenant sur votre écran.",
+    "iosOtro": "Impossible d'installer depuis ce navigateur. Ouvrez cette même adresse dans Safari et l'avis reviendra avec les étapes.",
+    "iosOtroPorque": "Cela arrive souvent quand le lien est ouvert depuis WhatsApp.",
+    "androidOtro": "Ouvrez le menu du navigateur (les trois points) et choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil ».",
+    "copiar": "Copier l'adresse",
+    "copiada": "Copiée"
   }
 }

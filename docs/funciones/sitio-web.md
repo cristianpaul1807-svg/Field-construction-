@@ -173,6 +173,34 @@ Si cambias el logo: sustituye `assets/logo-source.png`, vuelve a correr
 `node scripts/build-icons.mjs assets/logo-source.png` y regenera también
 `sitio/logo.png`.
 
+## A dónde lleva cada botón
+
+| Botón | Dónde está | A dónde va |
+|---|---|---|
+| «Probar 30 días — sin tarjeta» | Portada, cierre de cada página, cada plan | `/negocio/acceso` — crear la cuenta |
+| «Prueba» (naranja) | Cabecera, sólo en pantalla ancha | `/negocio/acceso` |
+| «Entrar» | Cabecera y pie | `/` — la aplicación |
+| «Hablar con nosotros» | Pie de todas las páginas | La página de contacto |
+| «Ver qué hace» | Portada | La página de funciones |
+
+**La llamada principal lleva a crear la cuenta, no al formulario.** El botón
+dice «sin tarjeta», y eso promete entrar ahora mismo. Llevar a un formulario
+donde se deja el teléfono y se espera una llamada es prometer una cosa y hacer
+otra — y para un contratista que mira esto entre dos obras, esperar es no
+volver.
+
+La página de contacto no desaparece ni se queda huérfana: está a un clic desde
+el pie de las 28 páginas, y tiene sentido propio porque ofrece algo que el alta
+automática no puede — que le metamos sus tres últimas obras con él. Es el
+camino acompañado, no el único camino.
+
+`rutasDeLaAplicacion()` lee `client/src/App.tsx` y comprueba que la pantalla a
+la que manda el botón siga existiendo en el router. Si alguien renombra
+`/negocio/acceso`, el botón no fallaría solo: caería al catch-all y devolvería
+el panel con un 200, que es la trampa de siempre. Sólo se admiten rutas
+públicas: mandar a un desconocido a una pantalla del panel es mandarle a un
+inicio de sesión que no pidió.
+
 ## El selector de idioma
 
 Arriba, en la cabecera de las siete páginas, y lleva **a la misma página en el
