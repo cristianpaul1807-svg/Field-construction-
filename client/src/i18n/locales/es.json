@@ -2500,6 +2500,12 @@
     "pagoExitoso": "Listo. Tu plan ya está activo — si aquí abajo todavía no lo ves, dale a recargar en unos segundos.",
     "pagoCancelado": "No se ha cobrado nada. Puedes volver a intentarlo cuando quieras.",
     "noSePudo": "No se pudo abrir el pago. Inténtalo otra vez en un momento.",
-    "stripeSinConfigurar": "Los pagos todavía no están configurados en este despliegue. Escríbenos y lo dejamos listo."
+    "stripeSinConfigurar": "Los pagos todavía no están configurados en este despliegue. Escríbenos y lo dejamos listo.",
+    "bloqueadoTitulo": "Se acabó la prueba",
+    "bloqueadoCuerpo": "El resto del sistema está en pausa hasta que elijas un plan. Nada se ha borrado: tus obras, tus facturas y tus horas siguen ahí, y vuelven en cuanto pagues.",
+    "bloqueadoDatos": "Y si decides no seguir, puedes descargarte todo lo tuyo igual. Es tuyo, no nuestro.",
+    "descargarTodo": "Descargar mis datos",
+    "pruebaQuedan": "Te quedan {{dias}} días de prueba. El día que se acabe, el sistema se queda en pausa hasta que elijas un plan.",
+    "pruebaUltimoDia": "Hoy es el último día de prueba."
   }
 }

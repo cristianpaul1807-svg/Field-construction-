@@ -20,9 +20,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
 import { Spinner } from "@/components/ui/spinner";
-import { Check, ExternalLink, TriangleAlert } from "lucide-react";
+import { Check, Download, ExternalLink, Lock, TriangleAlert } from "lucide-react";
 import { apiFetch, readJson } from "@/lib/api";
 import { PLANES_DE_PAGO, type Periodo, type PlanDePago } from "@shared/planes";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Estado = {
   plan: string;
@@ -37,6 +38,7 @@ type Estado = {
 
 export default function Suscripcion() {
   const { t, i18n } = useTranslation();
+  const { acceso, pruebaHasta } = useAuth();
   const [ubicacion, navegar] = useLocation();
   const [estado, setEstado] = useState<Estado | null>(null);
   const [periodo, setPeriodo] = useState<Periodo>("mes");
@@ -109,6 +111,41 @@ export default function Suscripcion() {
       {vuelta === "cancelado" && (
         <Card className="p-4">
           <p className="text-sm text-muted-foreground">{t("susc.pagoCancelado")}</p>
+        </Card>
+      )}
+
+      {/* El bloqueo, primero y sin rodeos. Quien llega aquí redirigido desde
+          otra pantalla necesita entender en dos líneas por qué no está donde
+          quería, y qué hace para volver. */}
+      {acceso === "bloqueado" && (
+        <Card className="p-5 border-status-danger-fg/30 bg-status-danger-bg space-y-3">
+          <div className="flex gap-3">
+            <Lock size={18} className="text-status-danger-fg shrink-0 mt-0.5" />
+            <div className="space-y-1.5">
+              <h2 className="font-semibold text-status-danger-fg">{t("susc.bloqueadoTitulo")}</h2>
+              <p className="text-sm text-status-danger-fg/90">{t("susc.bloqueadoCuerpo")}</p>
+              <p className="text-sm text-status-danger-fg/90">{t("susc.bloqueadoDatos")}</p>
+            </div>
+          </div>
+          <Button asChild variant="outline" size="sm" className="gap-2">
+            <a href="/api/suscripcion/mis-datos" download>
+              <Download size={14} strokeWidth={1.75} />
+              {t("susc.descargarTodo")}
+            </a>
+          </Button>
+        </Card>
+      )}
+
+      {/* Y avisar antes, no el día que pasa. Un contratista que se entera el
+          día 30 de que se le para el sistema se entera el peor día posible. */}
+      {acceso === "prueba" && pruebaHasta && (
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">
+            {(() => {
+              const dias = Math.ceil((new Date(pruebaHasta).getTime() - Date.now()) / 86_400_000);
+              return dias <= 1 ? t("susc.pruebaUltimoDia") : t("susc.pruebaQuedan", { dias });
+            })()}
+          </p>
         </Card>
       )}
 

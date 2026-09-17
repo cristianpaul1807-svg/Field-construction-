@@ -2500,6 +2500,12 @@
     "pagoExitoso": "Done. Your plan is active — if you don't see it below yet, reload in a few seconds.",
     "pagoCancelado": "Nothing was charged. You can try again whenever you want.",
     "noSePudo": "Checkout couldn't be opened. Try again in a moment.",
-    "stripeSinConfigurar": "Payments aren't configured on this deployment yet. Write to us and we'll set it up."
+    "stripeSinConfigurar": "Payments aren't configured on this deployment yet. Write to us and we'll set it up.",
+    "bloqueadoTitulo": "The trial is over",
+    "bloqueadoCuerpo": "The rest of the system is on hold until you choose a plan. Nothing has been deleted: your projects, invoices and hours are still there, and they come back the moment you pay.",
+    "bloqueadoDatos": "And if you decide not to continue, you can still download everything of yours. It's yours, not ours.",
+    "descargarTodo": "Download my data",
+    "pruebaQuedan": "You have {{dias}} days of trial left. When it ends, the system pauses until you choose a plan.",
+    "pruebaUltimoDia": "Today is the last day of the trial."
   }
 }

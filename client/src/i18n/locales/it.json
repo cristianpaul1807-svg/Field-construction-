@@ -2500,6 +2500,12 @@
     "pagoExitoso": "Fatto. Il tuo piano è attivo — se qui sotto non lo vedi ancora, ricarica tra qualche secondo.",
     "pagoCancelado": "Non è stato addebitato nulla. Puoi riprovare quando vuoi.",
     "noSePudo": "Non è stato possibile aprire il pagamento. Riprova tra un momento.",
-    "stripeSinConfigurar": "I pagamenti non sono ancora configurati su questo deploy. Scrivici e lo sistemiamo."
+    "stripeSinConfigurar": "I pagamenti non sono ancora configurati su questo deploy. Scrivici e lo sistemiamo.",
+    "bloqueadoTitulo": "La prova è finita",
+    "bloqueadoCuerpo": "Il resto del sistema è in pausa finché non scegli un piano. Non è stato cancellato nulla: i tuoi cantieri, le tue fatture e le tue ore sono ancora lì, e tornano appena paghi.",
+    "bloqueadoDatos": "E se decidi di non continuare, puoi comunque scaricare tutto il tuo. È tuo, non nostro.",
+    "descargarTodo": "Scarica i miei dati",
+    "pruebaQuedan": "Ti restano {{dias}} giorni di prova. Quando finisce, il sistema va in pausa finché non scegli un piano.",
+    "pruebaUltimoDia": "Oggi è l'ultimo giorno di prova."
   }
 }

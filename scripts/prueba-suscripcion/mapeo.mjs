@@ -106,5 +106,41 @@ const apiVieja = {
 };
 ok("La API antigua también se entiende", loQueGuardariamos(apiVieja).subscription_period_end, new Date(1792235357 * 1000).toISOString());
 
+/* ---------- Quién puede entrar ---------- */
+
+const { accesoDe, abiertoSinSuscripcion } = await import("/home/user/Field-construction-/shared/planes.ts");
+
+const AHORA = new Date("2026-09-17T12:00:00Z");
+const enUnaSemana = "2026-09-24T12:00:00Z";
+const laSemanaPasada = "2026-09-10T12:00:00Z";
+
+ok("Pilot no caduca nunca, aunque la prueba venciera hace un año",
+   accesoDe({ plan: "pilot", estadoSuscripcion: null, pruebaHasta: "2025-01-01T00:00:00Z" }, AHORA), "activo");
+ok("Pagando, se entra",
+   accesoDe({ plan: "chantier", estadoSuscripcion: "active", pruebaHasta: null }, AHORA), "activo");
+ok("En los 30 días de Stripe, se entra",
+   accesoDe({ plan: "chantier", estadoSuscripcion: "trialing", pruebaHasta: enUnaSemana }, AHORA), "activo");
+ok("Un impago NO bloquea: Stripe sigue reintentando",
+   accesoDe({ plan: "chantier", estadoSuscripcion: "past_due", pruebaHasta: null }, AHORA), "activo");
+ok("Prueba sin tarjeta, aún viva",
+   accesoDe({ plan: "prueba", estadoSuscripcion: null, pruebaHasta: enUnaSemana }, AHORA), "prueba");
+ok("Prueba vencida y nada contratado: bloqueado",
+   accesoDe({ plan: "prueba", estadoSuscripcion: null, pruebaHasta: laSemanaPasada }, AHORA), "bloqueado");
+ok("Cancelada y la prueba ya pasó: bloqueado",
+   accesoDe({ plan: "chantier", estadoSuscripcion: "canceled", pruebaHasta: laSemanaPasada }, AHORA), "bloqueado");
+ok("Cancelada pero el periodo pagado sigue corriendo: se entra hasta el final",
+   accesoDe({ plan: "chantier", estadoSuscripcion: "active", pruebaHasta: null }, AHORA), "activo");
+ok("Sin fecha y sin nada: bloqueado",
+   accesoDe({ plan: "prueba", estadoSuscripcion: null, pruebaHasta: null }, AHORA), "bloqueado");
+ok("Una fecha ilegible no bloquea a nadie por un fallo nuestro",
+   accesoDe({ plan: "prueba", estadoSuscripcion: null, pruebaHasta: "vete a saber" }, AHORA), "bloqueado");
+
+ok("Bloqueado, se puede pagar", abiertoSinSuscripcion("/suscripcion/checkout"), true);
+ok("Bloqueado, se puede entrar y salir", abiertoSinSuscripcion("/auth/me"), true);
+ok("Bloqueado, se puede escribir a soporte", abiertoSinSuscripcion("/soporte/ticket"), true);
+ok("Bloqueado, se puede llevar sus datos", abiertoSinSuscripcion("/suscripcion/mis-datos"), true);
+ok("Bloqueado, NO se factura", abiertoSinSuscripcion("/invoices"), false);
+ok("Bloqueado, NO se hace nómina", abiertoSinSuscripcion("/payroll"), false);
+
 console.log(`\n${bien} bien, ${mal} mal`);
 process.exit(mal ? 1 : 0);

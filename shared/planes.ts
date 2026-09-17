@@ -202,3 +202,70 @@ export function esPlanDePago(valor: string): valor is PlanDePago {
 
 /** Días de prueba. Un mes entero porque lo que convence pasa al cerrar el mes. */
 export const DIAS_DE_PRUEBA = 30;
+
+export type Acceso = "activo" | "prueba" | "bloqueado";
+
+/**
+ * Si este negocio puede entrar al panel hoy.
+ *
+ * Una sola función para el servidor y para la pantalla. Si cada uno decidiera
+ * por su cuenta acabarían discrepando, y la forma en que discrepan es la peor
+ * posible: el panel enseña las pantallas y cada cosa que se toca devuelve un
+ * error, o al revés — se cobra a alguien que no puede entrar.
+ *
+ * Las reglas, por orden:
+ *
+ * **`pilot` no caduca nunca.** Es el plan de la casa: Néstor y quien venga
+ * detrás como cliente de referencia. No hay suscripción que mirar porque no
+ * paga, y bloquearle sería bloquear a quien nos está haciendo el favor.
+ *
+ * **Un impago no bloquea.** `past_due` sigue siendo acceso. Stripe reintenta
+ * durante días y la mayoría son una tarjeta caducada; cerrarle el sistema a
+ * alguien el primer día por eso es perder a un cliente que no quería irse.
+ * Cuando Stripe se rinde de verdad, la suscripción pasa a `canceled` y
+ * entonces cae por su propio peso.
+ *
+ * **Lo que queda es la fecha.** Mientras la prueba no haya vencido, se entra
+ * entero. Vencida y sin nada contratado, se bloquea.
+ */
+export function accesoDe(
+  negocio: { plan: string | null; estadoSuscripcion: string | null; pruebaHasta: string | null },
+  ahora: Date = new Date()
+): Acceso {
+  if (planDe(negocio.plan) === "pilot") return "activo";
+
+  const suscripcion = negocio.estadoSuscripcion;
+  if (suscripcion === "active" || suscripcion === "trialing" || suscripcion === "past_due") return "activo";
+
+  if (negocio.pruebaHasta) {
+    const vence = new Date(negocio.pruebaHasta);
+    // Una fecha ilegible no puede bloquear a nadie: el fallo sería nuestro y
+    // lo pagaría un contratista que no puede facturar el día 30.
+    if (!Number.isNaN(vence.getTime()) && vence.getTime() > ahora.getTime()) return "prueba";
+  }
+
+  return "bloqueado";
+}
+
+/**
+ * Lo que sigue abierto con el acceso bloqueado.
+ *
+ * Tres cosas, y ninguna es caridad:
+ *
+ * `suscripcion` es por dónde se sale del bloqueo. Sin ella el bloqueo sería
+ * una puerta cerrada sin cerradura.
+ *
+ * `auth` es poder entrar y salir. Bloquear el inicio de sesión dejaría a
+ * alguien sin poder ni llegar a la pantalla de pago.
+ *
+ * `export` es llevarse sus datos. Sus facturas, sus horas y su informe de la
+ * CCQ son **suyos**, no nuestros, y la Ley 25 dice lo mismo. Y en lo práctico:
+ * un contratista al que encerramos sus facturas un día 30 no vuelve nunca; uno
+ * que puede sacarlas y marcharse a veces se lo piensa y se queda.
+ */
+export const ABIERTO_SIN_SUSCRIPCION: readonly string[] = ["suscripcion", "auth", "export", "soporte"];
+
+export function abiertoSinSuscripcion(ruta: string): boolean {
+  const familia = ruta.replace(/^\/+/, "").split(/[/?]/)[0];
+  return ABIERTO_SIN_SUSCRIPCION.includes(familia);
+}

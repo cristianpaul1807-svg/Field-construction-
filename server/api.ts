@@ -65,6 +65,8 @@ import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
 import {
+  abiertoSinSuscripcion,
+  accesoDe,
   capacidadDeLaRuta,
   claveDelPrecio,
   esPlanDePago,
@@ -1402,9 +1404,18 @@ apiRouter.post(
     // por el de verdad desde Ajustes cuando el negocio tiene nombre.
     const slug = await generateUniqueSlug(admin, `obra-${randomBytes(3).toString("hex")}`);
 
+    // La prueba empieza a contar aquí y no el día que alguien se acuerde.
+    //
+    // El valor por defecto de la columna es `pilot`, que no caduca nunca: es
+    // el plan de la casa. Un negocio que se da de alta solo no es eso — entra
+    // con `prueba`, que abre todo durante 30 días y luego se acaba. Naciendo
+    // en `pilot` tendríamos a todo el mundo usándolo gratis para siempre sin
+    // que nada fallara y sin que nadie se enterara.
+    const finDeLaPrueba = new Date(Date.now() + DIAS_DE_PRUEBA * 24 * 60 * 60 * 1000).toISOString();
+
     const { data: business, error: businessError } = await admin
       .from("businesses")
-      .insert({ name: businessName, slug })
+      .insert({ name: businessName, slug, subscription_plan: "prueba", trial_ends_at: finDeLaPrueba })
       .select("id")
       .single();
     if (businessError) throw businessError;
@@ -1489,7 +1500,7 @@ apiRouter.get(
     const [userRow, clientRow] = await Promise.all([
       admin
         .from("users")
-        .select("business_id, roles(permissions), businesses(subscription_plan)")
+        .select("business_id, roles(permissions), businesses(subscription_plan, subscription_status, trial_ends_at)")
         .eq("auth_user_id", req.authUserId!)
         .maybeSingle(),
       admin.from("clients").select("id").eq("auth_user_id", req.authUserId!).maybeSingle(),
@@ -1499,14 +1510,23 @@ apiRouter.get(
       // Las áreas y el plan viajan aquí para que el menú no enseñe lo que va a
       // rebotar. Es comodidad, no seguridad: quien los cambie en el navegador
       // se choca igual contra el servidor.
+      const negocio = (userRow.data as {
+        businesses?: { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null } | null;
+      }).businesses;
       res.json({
         persona: "business",
         businessId: userRow.data.business_id,
         areas: areasDelRol((userRow.data as { roles?: { permissions?: unknown } | null }).roles),
-        plan: planDe(
-          (userRow.data as { businesses?: { subscription_plan?: string | null } | null }).businesses
-            ?.subscription_plan
-        ),
+        plan: planDe(negocio?.subscription_plan),
+        // Con la misma función que usa el servidor para bloquear. Calculado
+        // aquí a mano acabaría discrepando, y el panel enseñaría pantallas que
+        // rebotan una a una en vez de decir de una vez lo que pasa.
+        acceso: accesoDe({
+          plan: negocio?.subscription_plan ?? null,
+          estadoSuscripcion: negocio?.subscription_status ?? null,
+          pruebaHasta: negocio?.trial_ends_at ?? null,
+        }),
+        pruebaHasta: negocio?.trial_ends_at ?? null,
       });
     } else if (clientRow.data) {
       res.json({ persona: "client", clientId: clientRow.data.id });
@@ -3849,6 +3869,30 @@ apiRouter.use((req, res, next) => {
  * Al revés que los permisos, aquí **lo que no está en el mapa pasa**. Allí el
  * riesgo es enseñar de más; aquí es apagarle a alguien una pantalla que pagó.
  */
+/**
+ * Se acabó la prueba y no hay nada contratado.
+ *
+ * Va **delante** del bloqueo por plan porque es más fuerte: aquel apaga una
+ * parte, este apaga el panel entero menos por donde se sale.
+ *
+ * Lo que queda abierto está en `ABIERTO_SIN_SUSCRIPCION` y no es caridad:
+ * pagar, entrar, escribirnos, y llevarse sus datos. Sus facturas y sus horas
+ * son suyas, la Ley 25 dice lo mismo, y un contratista al que le encerramos
+ * sus facturas un día 30 no vuelve nunca.
+ *
+ * El trabajador y el cliente **no pasan por aquí**: sus rutas van por encima
+ * de esta puerta. Es a propósito. Quien no ha pagado es el jefe, y dejar sin
+ * fichar a una cuadrilla que no puede arreglarlo es castigar a quien no tiene
+ * la culpa — y encima borra las horas de ese día, que son de ellos.
+ */
+apiRouter.use((req, res, next) => {
+  if (req.acceso !== "bloqueado" || abiertoSinSuscripcion(req.path)) return next();
+  res.status(402).json({
+    error: "La prueba terminó y no hay ningún plan contratado",
+    code: "suscripcion_caducada",
+  });
+});
+
 apiRouter.use((req, res, next) => {
   const plan = req.plan ?? "pilot";
   const capacidad = capacidadDeLaRuta(req.path);
@@ -4110,6 +4154,77 @@ apiRouter.post(
       return_url: `${baseUrl}/suscripcion`,
     });
     res.json({ url: sesion.url });
+  })
+);
+
+/**
+ * Llevarse todo lo suyo, en un archivo.
+ *
+ * Existe por el bloqueo. Cuando la prueba se acaba y el panel se cierra, el
+ * contratista se queda sin poder abrir ni una pantalla — y sus facturas, sus
+ * horas y su informe de la CCQ son **suyos**, no nuestros. La Ley 25 dice lo
+ * mismo, pero incluso sin ella: encerrarle sus papeles un día 30 para forzar
+ * un pago es lo que hace que alguien no vuelva nunca y lo cuente.
+ *
+ * Por eso vive en `/suscripcion`, que es lo único que sigue abierto con el
+ * acceso bloqueado, y no en `/export`, que es una parte del panel como otra
+ * cualquiera.
+ *
+ * Se mandan las tablas del negocio tal cual, sin dar formato. No es un informe
+ * bonito: es el dato, para que se lo pueda llevar a otro sitio o abrirlo con
+ * lo que quiera. Lo que **no** va son las credenciales —los enganches de
+ * QuickBooks y de Stripe— porque no son datos suyos, son llaves nuestras.
+ */
+const TABLAS_QUE_SE_LLEVA = [
+  "clients",
+  "projects",
+  "estimates",
+  "estimate_lines",
+  "invoices",
+  "credit_notes",
+  "payments",
+  "expenses",
+  "employees",
+  "subcontractors",
+  "time_entries",
+  "time_off",
+  "work_orders",
+  "schedule_events",
+  "payroll_runs",
+  "payroll_deductions",
+  "materials_catalog",
+  "labor_rates",
+  "change_orders",
+  "worker_agreements",
+  "documents",
+  "photos",
+  "business_settings",
+] as const;
+
+apiRouter.get(
+  "/suscripcion/mis-datos",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const salida: Record<string, unknown[]> = {};
+
+    for (const tabla of TABLAS_QUE_SE_LLEVA) {
+      const { data, error } = await admin.from(tabla).select("*").eq("business_id", req.businessId!);
+      // Una tabla que falla no puede dejar sin el resto a quien se está
+      // marchando: se apunta vacía y sigue. Peor que un hueco es un botón que
+      // no descarga nada.
+      if (error) console.error("[mis-datos] no se pudo leer", tabla, error.message);
+      salida[tabla] = data ?? [];
+    }
+
+    const { data: negocio } = await admin
+      .from("businesses")
+      .select("name, slug, created_at")
+      .eq("id", req.businessId!)
+      .maybeSingle();
+
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="mis-datos-${new Date().toISOString().slice(0, 10)}.json"`);
+    res.send(JSON.stringify({ negocio, exportado: new Date().toISOString(), datos: salida }, null, 2));
   })
 );
 

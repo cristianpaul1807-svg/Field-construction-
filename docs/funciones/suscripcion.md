@@ -144,13 +144,78 @@ suscripción al lado.
 
 ---
 
+## Qué pasa cuando se acaba
+
+Tres estados, y los decide **una sola función** (`accesoDe`, en
+`shared/planes.ts`) que usan el servidor y la pantalla. Si cada lado decidiera
+por su cuenta acabarían discrepando, y discrepan de la peor manera: el panel
+enseña las pantallas y cada cosa que se toca devuelve un error.
+
+| Estado | Cuándo | Qué se puede hacer |
+|---|---|---|
+| `activo` | Pagando, en los 30 días de Stripe, o en `pilot` | Todo lo del plan |
+| `prueba` | Sin contratar, con la prueba viva | Todo, y se avisa de los días que quedan |
+| `bloqueado` | Prueba vencida y nada contratado | Sólo pagar, entrar, escribirnos y llevarse los datos |
+
+La prueba empieza a contar **en el alta** (`trial_ends_at`), no el día que
+alguien se acuerde. El valor por defecto de la columna es `pilot`, que no
+caduca: un negocio que se da de alta solo entra con `prueba`, o tendríamos a
+todo el mundo usándolo gratis para siempre sin que nada fallara.
+
+### `pilot` no caduca
+
+Es el plan de la casa — Néstor y quien venga detrás como cliente de
+referencia. No hay suscripción que mirar porque no paga.
+
+### Un impago no bloquea
+
+`past_due` sigue siendo acceso. Stripe reintenta durante días y la mayoría son
+una tarjeta caducada. Cuando Stripe se rinde de verdad, la suscripción pasa a
+`canceled` y el bloqueo cae por su propio peso.
+
+### Bloqueado no es secuestrado
+
+Con el acceso bloqueado siguen abiertas cuatro familias de rutas, y ninguna es
+caridad:
+
+- **`suscripcion`** — por donde se sale del bloqueo. Sin ella sería una puerta
+  cerrada sin cerradura.
+- **`auth`** — poder entrar y salir. Bloquear el inicio de sesión dejaría a
+  alguien sin poder ni llegar a la pantalla de pago.
+- **`soporte`** — poder preguntar qué pasa.
+- **`export`** y `GET /suscripcion/mis-datos` — **llevarse sus datos**. Sus
+  facturas, sus horas y su informe de la CCQ son suyos, no nuestros, y la Ley
+  25 dice lo mismo. Y en lo práctico: un contratista al que le encerramos sus
+  facturas un día 30 no vuelve nunca y lo cuenta; uno que puede sacarlas y
+  marcharse a veces se lo piensa y se queda.
+
+`mis-datos` manda las tablas del negocio en un JSON, sin dar formato. No es un
+informe bonito: es el dato. Lo que **no** va son las credenciales —los
+enganches de QuickBooks y de Stripe— porque no son datos suyos, son llaves
+nuestras.
+
+### El trabajador y el cliente no se bloquean
+
+El bloqueo está debajo de `requireBusinessAuth`, así que las rutas del
+trabajador y del portal del cliente no pasan por él. Es a propósito: quien no
+ha pagado es el jefe, y dejar sin fichar a una cuadrilla que no puede
+arreglarlo castiga a quien no tiene la culpa — y borra las horas de ese día,
+que son de ellos.
+
+### Se avisa antes
+
+La pantalla dice los días que quedan mientras la prueba está viva. Enterarse el
+día 30 de que se para el sistema es enterarse el peor día posible.
+
 ## Comprobar
 
 ```bash
-node scripts/prueba-suscripcion/mapeo.mjs
+node --experimental-strip-types scripts/prueba-suscripcion/mapeo.mjs
 ```
 
-Trece comprobaciones sobre **respuestas reales de la API**, copiadas tal cual.
+Veintinueve comprobaciones: el mapeo de Stripe sobre **respuestas reales de la
+API** copiadas tal cual, y quién se queda fuera con cada combinación de estado
+y fecha.
 Eso no es un detalle: el fallo que esta prueba encontró la primera vez fue
 justo el de inventarse el objeto. `current_period_end` ya no está en la
 suscripción sino dentro del artículo, y leyéndolo del sitio de siempre la fecha
@@ -175,8 +240,5 @@ son código:
    claves de búsqueda y los mismos `metadata.plan`. Si las claves coinciden, en
    el código no hay nada que cambiar.
 
-Y una decisión que no es técnica: **qué pasa el día 31 si no ha pagado**. Hoy
-un negocio sin suscripción se queda en el plan que tuviera. La recomendación es
-dejar leer y descargar todo pero no crear nada nuevo — cerrarle la puerta a
-alguien con sus facturas dentro es cómo se gana una mala reseña que no se
-borra.
+Lo del día 31 ya está resuelto, arriba: se bloquea el panel y quedan abiertas
+la suscripción, el acceso, el soporte y la descarga de los datos.
