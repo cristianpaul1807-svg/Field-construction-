@@ -212,6 +212,11 @@ día 30 de que se para el sistema es enterarse el peor día posible.
 **Facturamos desde Italia a empresas de Quebec.** Eso decide dos cosas del
 producto, y por eso está escrito aquí y no sólo en la cabeza de alguien.
 
+Es un arreglo **de esta etapa, no para siempre**: la idea es montar la sociedad
+en Canadá con Néstor más adelante. Hasta ese día se factura desde Italia. Queda
+apuntado porque el día que cambie, cambian cosas de este archivo y no de las
+que se notan solas —ver «Si algún día la sociedad es canadiense», al final.
+
 **El precio es el precio.** Un servicio prestado a una empresa de fuera de la
 UE queda fuera del ámbito del IVA italiano, y la empresa canadiense se
 autoliquida lo suyo. Al contratista se le cobra exactamente lo que pone: 99 o
@@ -233,6 +238,28 @@ cualquier otra cosa de esta página — Stripe se activa en un día, esto no.
 
 Nada de esto es asesoramiento fiscal: es lo que se asumió al construirlo, para
 que quien lo revise con un contable sepa qué mirar.
+
+### Si algún día la sociedad es canadiense
+
+No es una nota al pie: es lo que hay que repasar ese día, porque casi nada de
+esto falla solo si se olvida.
+
+1. **Los impuestos pasan a existir.** Una sociedad canadiense que vende a
+   empresas de Quebec cobra TPS y TVQ en cuanto pasa de pequeño proveedor —
+   30 000 $ en cuatro trimestres seguidos—. Los precios ya están creados con
+   `tax_behavior: "exclusive"`, que es lo correcto para ese momento, así que no
+   hay que rehacerlos. Lo que hay que encender es Stripe Tax y volver a poner
+   en el sitio lo que ahora dice que no se añade nada. **Cobrar de menos no
+   falla**: se deben igual y se descubre en la primera declaración.
+2. **La cuenta de Stripe es otra.** Los clientes, las suscripciones y los
+   precios no se mudan de una cuenta a otra. Hay que crear los precios en la
+   nueva con `scripts/stripe-precios.mjs`, y migrar a quien ya esté pagando —
+   que es un trabajo a mano y con cuidado, no un script.
+3. **Se acaba la conversión de moneda.** Cobrando en CAD desde una cuenta
+   canadiense se liquida en CAD, y desaparece la comisión de cambio de abajo.
+4. **La política de privacidad cambia de titular**, y con ella quién responde
+   de los datos bajo la Ley 25. Está en `legal.privacy`, en los cuatro idiomas,
+   y se toca con `scripts/legal-i18n.py`.
 
 ### Se cobra en CAD y se liquida en EUR
 
