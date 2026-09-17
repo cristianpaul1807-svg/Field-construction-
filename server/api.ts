@@ -990,6 +990,68 @@ function route(handler: Handler) {
 // JS bundle today, and RLS is what actually protects the data), so this
 // exposes nothing that wasn't public already. The service-role key is never
 // part of this response.
+/**
+ * El formulario del sitio de presentación.
+ *
+ * Va aquí arriba, encima de `requireBusinessAuth`, porque lo rellena alguien
+ * que todavía no tiene cuenta — que es justo de lo que se trata.
+ *
+ * Sin `SUPPORT_EMAIL` no hay a quién avisar. En ese caso contesta 200 igual y
+ * lo dice en el cuerpo: el contratista ya escribió sus datos y enseñarle un
+ * error rojo por una variable que no puso él es echarle la culpa de lo
+ * nuestro. La página le ofrece entonces el correo directo, que sí funciona.
+ */
+apiRouter.post(
+  "/public/demo",
+  route(async (req, res) => {
+    const texto = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+    const nombre = texto(req.body?.nombre, 120);
+    const empresa = texto(req.body?.empresa, 160);
+    const telefono = texto(req.body?.telefono, 40);
+    const correo = texto(req.body?.correo, 160);
+    const gente = texto(req.body?.gente, 40);
+    const mensaje = texto(req.body?.mensaje, 2000);
+
+    if (!nombre || (!telefono && !correo)) {
+      res.status(400).json({ error: "Falta el nombre y una forma de contestarte", code: "faltan_datos" });
+      return;
+    }
+
+    const buzon = (process.env.SUPPORT_EMAIL ?? process.env.VITE_SUPPORT_EMAIL ?? "").trim();
+    if (!buzon) {
+      res.json({ ok: false, code: "sin_buzon" });
+      return;
+    }
+
+    const filas = [
+      ["Nom", nombre],
+      ["Entreprise", empresa],
+      ["Téléphone", telefono],
+      ["Courriel", correo],
+      ["Travailleurs", gente],
+      ["Message", mensaje],
+    ].filter(([, v]) => v);
+
+    const resultado = await enviarCorreo({
+      para: buzon,
+      asunto: `Demande d'essai — ${empresa || nombre}`,
+      texto: filas.map(([k, v]) => `${k}: ${v}`).join("\n"),
+      html: plantilla({
+        titulo: "Demande d'essai",
+        cuerpo: filas
+          .map(([k, v]) => `<p style="margin:0 0 10px"><strong>${esc(k)}</strong><br>${esc(v)}</p>`)
+          .join(""),
+        negocio: "Logiciel Construction",
+        pie: "Envoyé depuis le formulaire du site.",
+      }),
+      // Para poder contestarle dándole a Responder, sin copiar la dirección.
+      responderA: correo || null,
+    });
+
+    res.json({ ok: resultado.estado === "enviado", code: resultado.estado });
+  })
+);
+
 apiRouter.get(
   "/public/config",
   route(async (_req, res) => {

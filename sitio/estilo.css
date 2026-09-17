@@ -1,0 +1,375 @@
+/* Logiciel Construction — el sitio de presentación.
+ *
+ * Aparte de la aplicación y sin React a propósito. Esto lo abre alguien que
+ * llegó de Google con el móvil en la furgoneta: HTML servido tal cual se lee
+ * entero antes de que un paquete de JavaScript termine de bajar, y se indexa
+ * sin que Google tenga que ejecutar nada.
+ *
+ * El acento es azul de Quebec, no el índigo de cualquier SaaS. El naranja es
+ * el de la pintura de replanteo y sale **una sola vez por pantalla**: en el
+ * botón que queremos que pulsen.
+ */
+
+:root {
+  --fondo: #F1F4F8;
+  --superficie: #FFFFFF;
+  --superficie-2: #E7ECF3;
+  --linea: #D6DDE7;
+  --linea-suave: #E6EBF1;
+  --tinta: #0F151E;
+  --tinta-2: #38455A;
+  --apagado: #667585;
+  --azul: #1546A0;
+  --azul-claro: #E5EDFA;
+  --azul-oscuro: #0E3271;
+  --senal: #D9541B;
+  --senal-clara: #FDEDE4;
+  --verde: #1F6B4C;
+
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --texto: "Barlow", -apple-system, "Segoe UI", sans-serif;
+
+  --radio: 14px;
+  --sombra: 0 1px 2px rgba(15, 21, 30, .04), 0 8px 24px -12px rgba(15, 21, 30, .16);
+  --sombra-alta: 0 2px 4px rgba(15, 21, 30, .05), 0 18px 48px -18px rgba(15, 21, 30, .22);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: var(--texto);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+
+.envoltura { width: 100%; max-width: 1140px; margin: 0 auto; padding-inline: 20px; }
+.estrecho { max-width: 760px; }
+
+/* ---------- Tipografía ---------- */
+
+h1, h2, h3, h4 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: clamp(42px, 7.4vw, 82px); line-height: .96; font-weight: 700; }
+h2 { font-size: clamp(30px, 4.6vw, 48px); line-height: 1.04; font-weight: 700; }
+h3 { font-size: clamp(21px, 2.6vw, 26px); line-height: 1.15; font-weight: 600; }
+h4 { font-size: 18px; line-height: 1.25; font-weight: 600; }
+p { margin: 0; }
+
+.sobretitulo {
+  font-family: var(--texto);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--azul);
+  margin: 0;
+}
+.entradilla { font-size: clamp(17px, 2vw, 20px); color: var(--tinta-2); max-width: 58ch; }
+.pie-nota { font-size: 14px; color: var(--apagado); }
+
+/* ---------- Botones ---------- */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--texto);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 13px 22px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
+  white-space: nowrap;
+}
+.boton:focus-visible { outline: 3px solid var(--azul); outline-offset: 3px; }
+
+/* El naranja aparece una sola vez por pantalla, en lo que queremos que pulsen. */
+.boton-principal { background: var(--senal); color: #fff; box-shadow: var(--sombra); }
+.boton-principal:hover { background: #C24A16; transform: translateY(-1px); box-shadow: var(--sombra-alta); }
+
+.boton-secundario { background: var(--superficie); color: var(--tinta); border-color: var(--linea); }
+.boton-secundario:hover { background: var(--superficie-2); }
+
+.boton-azul { background: var(--azul); color: #fff; }
+.boton-azul:hover { background: var(--azul-oscuro); }
+
+.boton-fantasma { color: var(--tinta-2); padding-inline: 12px; }
+.boton-fantasma:hover { color: var(--tinta); }
+
+@media (prefers-reduced-motion: reduce) { .boton:hover { transform: none; } }
+
+/* ---------- Cabecera ---------- */
+
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(241, 244, 248, .88);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--linea-suave);
+}
+.cabecera .envoltura { display: flex; align-items: center; gap: 16px; height: 68px; }
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--display); font-weight: 700; font-size: 21px; letter-spacing: -0.01em; }
+.marca .cubo { width: 30px; height: 30px; border-radius: 8px; background: var(--azul); display: grid; place-items: center; flex-shrink: 0; }
+.marca .cubo svg { width: 17px; height: 17px; }
+.menu { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.menu a { text-decoration: none; font-size: 15.5px; font-weight: 500; color: var(--tinta-2); padding: 8px 12px; border-radius: 8px; }
+.menu a:hover { background: var(--superficie-2); color: var(--tinta); }
+.menu a[aria-current="page"] { background: var(--azul); color: #fff; }
+.menu .boton { font-size: 15px; padding: 10px 18px; }
+@media (max-width: 900px) {
+  .menu a:not(.boton) { display: none; }
+  .menu { gap: 8px; }
+}
+
+/* ---------- Portada ---------- */
+
+.portada { padding-block: clamp(48px, 8vw, 92px) clamp(40px, 6vw, 72px); }
+.portada h1 { max-width: 15ch; }
+.portada .entradilla { margin-top: 20px; }
+.acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.bajo-acciones { margin-top: 14px; font-size: 14.5px; color: var(--apagado); }
+
+/* ---------- La escena con tarjetas flotantes ---------- */
+
+.escena {
+  position: relative;
+  margin-top: clamp(40px, 6vw, 64px);
+  display: grid;
+  place-items: center;
+  min-height: 460px;
+}
+.escena-centro {
+  position: relative;
+  z-index: 2;
+  width: min(280px, 72vw);
+  aspect-ratio: 9 / 18.5;
+  border-radius: 34px;
+  background: #0F151E;
+  padding: 9px;
+  box-shadow: var(--sombra-alta);
+}
+.pantalla {
+  width: 100%; height: 100%;
+  border-radius: 26px;
+  background: var(--superficie);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* Las tarjetas que se salen. En escritorio flotan alrededor; en móvil se
+   apilan debajo, porque encima tapan el teléfono y no se lee ninguna. */
+.flotante {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-alta);
+  padding: 14px 16px;
+  width: 260px;
+}
+.flotante h4 { font-family: var(--texto); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--apagado); margin-bottom: 8px; }
+
+@media (min-width: 1000px) {
+  .escena { min-height: 620px; }
+  .flotante { position: absolute; }
+  .f-gps { top: 6%; left: 0; }
+  .f-nomina { top: 40%; left: -2%; width: 280px; }
+  .f-factura { top: 8%; right: 0; width: 290px; }
+  .f-integra { bottom: 4%; right: 2%; width: 300px; }
+}
+@media (max-width: 999px) {
+  .escena { gap: 16px; }
+  .flotante { width: 100%; max-width: 420px; }
+}
+
+/* ---------- Secciones ---------- */
+
+.seccion { padding-block: clamp(56px, 8vw, 96px); }
+.seccion-clara { background: var(--superficie); border-block: 1px solid var(--linea-suave); }
+.seccion-oscura { background: var(--tinta); color: #E9EEF5; }
+.seccion-oscura h2, .seccion-oscura h3 { color: #fff; }
+.seccion-oscura .entradilla { color: #A9B6C7; }
+.seccion-oscura .sobretitulo { color: #7FA5E8; }
+
+.encabezado-seccion { max-width: 62ch; }
+.encabezado-seccion h2 { margin-top: 10px; }
+.encabezado-seccion .entradilla { margin-top: 14px; }
+
+/* ---------- Rejillas ---------- */
+
+.rejilla { display: grid; gap: 18px; margin-top: 40px; }
+.rejilla-2 { grid-template-columns: repeat(2, 1fr); }
+.rejilla-3 { grid-template-columns: repeat(3, 1fr); }
+.rejilla-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) { .rejilla-3, .rejilla-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .rejilla-2, .rejilla-3, .rejilla-4 { grid-template-columns: 1fr; } }
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 24px;
+}
+.tarjeta h3 { margin-bottom: 10px; }
+.tarjeta p { color: var(--tinta-2); font-size: 16px; }
+.seccion-clara .tarjeta { background: var(--fondo); }
+.seccion-oscura .tarjeta { background: #1A222E; border-color: #2A3442; }
+.seccion-oscura .tarjeta p { color: #A9B6C7; }
+
+.icono {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  background: var(--azul-claro);
+  color: var(--azul);
+  display: grid; place-items: center;
+  margin-bottom: 16px;
+}
+.icono svg { width: 21px; height: 21px; }
+.seccion-oscura .icono { background: #16294C; color: #7FA5E8; }
+
+/* ---------- Las cuatro razones ---------- */
+
+.razones { display: grid; gap: 1px; margin-top: 44px; background: var(--linea); border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; }
+@media (min-width: 860px) { .razones { grid-template-columns: repeat(2, 1fr); } }
+.razon { background: var(--superficie); padding: 28px; }
+.razon .cifra { font-family: var(--display); font-size: 13px; font-weight: 600; letter-spacing: .12em; color: var(--senal); }
+.razon h3 { margin: 10px 0; }
+.razon p { color: var(--tinta-2); font-size: 16px; }
+
+/* ---------- Cifras reales ---------- */
+
+.cifras { display: grid; gap: 16px; margin-top: 40px; grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) { .cifras { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .cifras { grid-template-columns: 1fr; } }
+.cifra-caja { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio); padding: 22px; }
+.cifra-caja .valor { font-family: var(--display); font-size: clamp(32px, 4.4vw, 44px); font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.cifra-caja .etiqueta { margin-top: 10px; font-size: 15px; color: var(--tinta-2); }
+.seccion-oscura .cifra-caja { background: #1A222E; border-color: #2A3442; }
+.seccion-oscura .cifra-caja .etiqueta { color: #A9B6C7; }
+
+/* ---------- Precios ---------- */
+
+.planes { display: grid; gap: 20px; margin-top: 44px; }
+@media (min-width: 880px) { .planes { grid-template-columns: repeat(2, 1fr); align-items: start; } }
+.plan { background: var(--superficie); border: 1px solid var(--linea); border-radius: 18px; padding: 30px; }
+.plan.destacado { border-color: var(--azul); box-shadow: 0 0 0 1px var(--azul), var(--sombra-alta); }
+.plan .insignia { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; background: var(--azul); color: #fff; padding: 4px 10px; border-radius: 6px; margin-bottom: 14px; }
+.plan .precio { display: flex; align-items: baseline; gap: 6px; margin: 16px 0 6px; }
+.plan .precio .n { font-family: var(--display); font-size: 58px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+.plan .precio .u { font-size: 16px; color: var(--apagado); }
+.plan .para { color: var(--tinta-2); font-size: 16px; }
+.plan ul { list-style: none; margin: 22px 0 26px; padding: 0; display: grid; gap: 11px; }
+.plan li { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; color: var(--tinta-2); }
+.plan li svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 3px; color: var(--verde); }
+.plan .boton { width: 100%; justify-content: center; }
+
+/* ---------- Preguntas ---------- */
+
+.preguntas { margin-top: 40px; border-top: 1px solid var(--linea); }
+.pregunta { border-bottom: 1px solid var(--linea); }
+.pregunta summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 20px 40px 20px 0;
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 600;
+  position: relative;
+}
+.pregunta summary::-webkit-details-marker { display: none; }
+.pregunta summary::after {
+  content: "+";
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  font-size: 26px; font-weight: 400; color: var(--apagado);
+}
+.pregunta[open] summary::after { content: "−"; }
+.pregunta summary:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.pregunta .respuesta { padding: 0 40px 22px 0; color: var(--tinta-2); display: grid; gap: 12px; }
+
+/* ---------- Llamada final ---------- */
+
+.cierre { background: var(--azul); color: #fff; border-radius: 20px; padding: clamp(32px, 6vw, 60px); text-align: center; }
+.cierre h2 { color: #fff; max-width: 20ch; margin-inline: auto; }
+.cierre p { color: #C7D8F5; margin-top: 16px; max-width: 52ch; margin-inline: auto; }
+.cierre .acciones { justify-content: center; }
+
+/* ---------- Pie ---------- */
+
+.pie { background: var(--tinta); color: #9FADBF; padding-block: 52px 36px; font-size: 15px; }
+.pie a { color: #C6D2E1; text-decoration: none; }
+.pie a:hover { color: #fff; text-decoration: underline; }
+.pie-rejilla { display: grid; gap: 30px; grid-template-columns: 1.4fr repeat(3, 1fr); }
+@media (max-width: 800px) { .pie-rejilla { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .pie-rejilla { grid-template-columns: 1fr; } }
+.pie h4 { color: #fff; font-family: var(--texto); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; }
+.pie ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.pie .abajo { margin-top: 40px; padding-top: 24px; border-top: 1px solid #222C3A; display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; font-size: 14px; }
+
+/* ---------- Trocitos de interfaz para las tarjetas flotantes ---------- */
+
+.mini-fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; padding: 5px 0; }
+.mini-fila + .mini-fila { border-top: 1px solid var(--linea-suave); }
+.mini-fila .val { font-variant-numeric: tabular-nums; font-weight: 600; }
+.mini-total { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--tinta); font-size: 16px; font-weight: 700; }
+.mini-total .val { font-variant-numeric: tabular-nums; }
+.pastilla { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+.pastilla-verde { background: #E2F0E9; color: var(--verde); }
+.pastilla-azul { background: var(--azul-claro); color: var(--azul); }
+
+.logos-integra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.logo-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--superficie-2); border-radius: 9px; padding: 7px 11px; font-size: 13.5px; font-weight: 600; }
+.logo-chip svg { width: 16px; height: 16px; }
+
+/* ---------- Oscuro ---------- */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: #0C1118;
+    --superficie: #141B24;
+    --superficie-2: #1D2732;
+    --linea: #28323F;
+    --linea-suave: #1F2833;
+    --tinta: #E8EEF6;
+    --tinta-2: #B3C0D0;
+    --apagado: #8593A4;
+    --azul: #6E9BE8;
+    --azul-claro: #16294C;
+    --azul-oscuro: #8FB4EE;
+    --senal: #E8724A;
+    --senal-clara: #2E1A11;
+    --verde: #62B891;
+  }
+  :root:not([data-theme="light"]) .cabecera { background: rgba(12, 17, 24, .88); }
+  :root:not([data-theme="light"]) .escena-centro { background: #28323F; }
+  :root:not([data-theme="light"]) .seccion-oscura { background: #060A0F; }
+  :root:not([data-theme="light"]) .boton-principal,
+  :root:not([data-theme="light"]) .boton-azul,
+  :root:not([data-theme="light"]) .plan .insignia { color: #0C1118; }
+  :root:not([data-theme="light"]) .cierre { background: var(--azul-claro); }
+  :root:not([data-theme="light"]) .cierre p { color: #A9B6C7; }
+  :root:not([data-theme="light"]) .pastilla-verde { background: #12301F; }
+  :root:not([data-theme="light"]) .pastilla-azul { background: var(--azul-claro); }
+  :root:not([data-theme="light"]) .pie { background: #060A0F; }
+}
+
+/* ---------- Entradas al hacer scroll ---------- */
+
+/* La entrada al hacer scroll se activa desde `<html class="js">`, que pone el
+ * propio script en cuanto corre. Escrito al revés —esconder por defecto y
+ * enseñar con JavaScript— un bloqueador, un fallo de red o el rastreador de
+ * Google dejarían la página en blanco con todo el texto dentro del HTML. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .aparece { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; }
+  .js .aparece.visible { opacity: 1; transform: none; }
+}
