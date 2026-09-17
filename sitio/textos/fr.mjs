@@ -329,7 +329,7 @@ export default {
     sobretitulo: "Tarifs",
     h1: "Deux forfaits. Le prix affiché est le prix.",
     entradilla:
-      "En dollars canadiens, par mois, taxes en sus. Mois par mois, sans contrat. Pas de négociation par en dessous : tout le monde paie la même chose.",
+      "En dollars canadiens, par mois. C'est le montant exact qui est débité : rien ne s'ajoute au paiement. Mois par mois, sans contrat, et pas de négociation par en dessous — tout le monde paie la même chose.",
     mes: "CAD / mois",
     destacado: "Le plus choisi",
     probar: "Essayer 30 jours",

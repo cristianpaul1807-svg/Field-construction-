@@ -2480,7 +2480,7 @@
     "dosMesesGratis": "Dos meses gratis",
     "porMes": "{{precio}} {{moneda}} / mes",
     "porAno": "{{precio}} {{moneda}} / año",
-    "impuestosAparte": "Impuestos aparte. La TPS y la TVQ se añaden al pagar.",
+    "impuestosAparte": "Es lo que se cobra exactamente. No se añade nada al pagar.",
     "elegir": "Elegir este plan",
     "abriendo": "Abriendo el pago…",
     "pruebaIncluida": "30 días de prueba. No se cobra nada hasta el día 31, y puedes cancelar antes desde aquí mismo.",

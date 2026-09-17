@@ -323,7 +323,7 @@ export default {
     sobretitulo: "Prezzi",
     h1: "Due piani. Il prezzo scritto è il prezzo.",
     entradilla:
-      "In dollari canadesi, al mese, tasse escluse. Mese per mese, senza contratto. Niente trattative sottobanco: pagano tutti uguale.",
+      "In dollari canadesi, al mese. È esattamente quello che viene addebitato: al pagamento non si aggiunge nulla. Mese per mese, senza contratto, e niente trattative sottobanco — pagano tutti uguale.",
     mes: "CAD / mese",
     destacado: "Il più scelto",
     probar: "Prova 30 giorni",

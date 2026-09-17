@@ -207,6 +207,40 @@ que son de ellos.
 La pantalla dice los días que quedan mientras la prueba está viva. Enterarse el
 día 30 de que se para el sistema es enterarse el peor día posible.
 
+## Quién factura, y por qué no se cobran impuestos
+
+**Facturamos desde Italia a empresas de Quebec.** Eso decide dos cosas del
+producto, y por eso está escrito aquí y no sólo en la cabeza de alguien.
+
+**El precio es el precio.** Un servicio prestado a una empresa de fuera de la
+UE queda fuera del ámbito del IVA italiano, y la empresa canadiense se
+autoliquida lo suyo. Al contratista se le cobra exactamente lo que pone: 99 o
+249. El sitio decía «impuestos aparte» y era falso — se corrigió en los cuatro
+idiomas.
+
+Los precios se crearon con `tax_behavior: "exclusive"`, que hoy no añade nada
+porque no hay ningún impuesto configurado, y es lo correcto **si algún día** se
+pasa a cobrarlos. `tax_behavior` no se puede cambiar en un precio existente, así
+que dejarlo así ahorra rehacerlos.
+
+`tax_id_collection` sigue encendido en la pasarela, y no es decorativo: que el
+contratista ponga su número de TPS/TVQ en la factura es justo lo que documenta
+por qué no se le cobró impuesto.
+
+**Y hace falta poder facturar.** En Italia no se emiten facturas recurrentes sin
+partita IVA. Esto no es una decisión de código y bloquea el primer cobro más que
+cualquier otra cosa de esta página — Stripe se activa en un día, esto no.
+
+Nada de esto es asesoramiento fiscal: es lo que se asumió al construirlo, para
+que quien lo revise con un contable sepa qué mirar.
+
+### Se cobra en CAD y se liquida en EUR
+
+El precio está en dólares canadienses porque el mercado es Quebec y pedirle a
+un contratista de allá que pague en euros es una fricción que no hace falta.
+Stripe convierte al liquidar y cobra su comisión de cambio. Se asume a
+propósito: vale más que la conversión.
+
 ## Comprobar
 
 ```bash
@@ -229,13 +263,8 @@ prueba sin enterarse.
 **Está montado contra el *sandbox*.** Para cobrar hacen falta tres cosas que no
 son código:
 
-1. **Activar la cuenta de Stripe**: datos de la empresa, número de empresa,
-   cuenta bancaria canadiense e identificación.
-2. **Registrarse para la TPS y la TVQ.** Vendiendo desde Quebec a empresas de
-   Quebec, nuestra propia suscripción lleva impuestos — el sitio ya dice
-   «impuestos aparte» y los precios están creados con `tax_behavior: exclusive`.
-   Sin registro, o se cobra sin impuestos y se deben igual, o hay que corregir
-   facturas después.
+1. **Activar la cuenta de Stripe** con los datos de quien factura.
+2. **Poder facturar.** Ver abajo — es lo que más tarda y no es código.
 3. **Crear los cuatro precios en la cuenta real.** No a mano:
 
    ```bash

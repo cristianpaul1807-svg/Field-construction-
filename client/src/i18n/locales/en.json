@@ -2480,7 +2480,7 @@
     "dosMesesGratis": "Two months free",
     "porMes": "{{precio}} {{moneda}} / month",
     "porAno": "{{precio}} {{moneda}} / year",
-    "impuestosAparte": "Taxes on top. GST and QST are added at checkout.",
+    "impuestosAparte": "That is the exact amount charged. Nothing is added at checkout.",
     "elegir": "Choose this plan",
     "abriendo": "Opening checkout…",
     "pruebaIncluida": "30-day trial. Nothing is charged until day 31, and you can cancel before that from right here.",

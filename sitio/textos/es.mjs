@@ -323,7 +323,7 @@ export default {
     sobretitulo: "Precios",
     h1: "Dos planes. El precio que pone es el precio.",
     entradilla:
-      "En dólares canadienses, al mes, impuestos aparte. Mes a mes, sin contrato. Sin negociaciones por debajo: todo el mundo paga lo mismo.",
+      "En dólares canadienses, al mes. Es lo que se cobra exactamente: no se añade nada al pagar. Mes a mes, sin contrato, y sin negociaciones por debajo — todo el mundo paga lo mismo.",
     mes: "CAD / mes",
     destacado: "El más elegido",
     probar: "Probar 30 días",

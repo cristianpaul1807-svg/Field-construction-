@@ -2480,7 +2480,7 @@
     "dosMesesGratis": "Deux mois gratuits",
     "porMes": "{{precio}} {{moneda}} / mois",
     "porAno": "{{precio}} {{moneda}} / an",
-    "impuestosAparte": "Taxes en sus. La TPS et la TVQ s'ajoutent au paiement.",
+    "impuestosAparte": "C'est le montant exact qui est débité. Rien ne s'ajoute au paiement.",
     "elegir": "Choisir ce forfait",
     "abriendo": "Ouverture du paiement…",
     "pruebaIncluida": "Essai de 30 jours. Rien n'est facturé avant le 31e jour, et vous pouvez annuler avant depuis ici même.",

@@ -323,7 +323,7 @@ export default {
     sobretitulo: "Pricing",
     h1: "Two plans. The listed price is the price.",
     entradilla:
-      "In Canadian dollars, per month, taxes extra. Month to month, no contract. No quiet negotiating: everybody pays the same.",
+      "In Canadian dollars, per month. That is the exact amount charged: nothing is added at checkout. Month to month, no contract, and no quiet negotiating — everybody pays the same.",
     mes: "CAD / month",
     destacado: "Most chosen",
     probar: "Try 30 days",

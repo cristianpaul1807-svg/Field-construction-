@@ -2480,7 +2480,7 @@
     "dosMesesGratis": "Due mesi gratis",
     "porMes": "{{precio}} {{moneda}} / mese",
     "porAno": "{{precio}} {{moneda}} / anno",
-    "impuestosAparte": "Tasse escluse. TPS e TVQ si aggiungono al pagamento.",
+    "impuestosAparte": "È esattamente quello che viene addebitato. Al pagamento non si aggiunge nulla.",
     "elegir": "Scegli questo piano",
     "abriendo": "Apertura del pagamento…",
     "pruebaIncluida": "30 giorni di prova. Non si addebita nulla fino al giorno 31, e puoi annullare prima da qui.",
