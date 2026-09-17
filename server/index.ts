@@ -67,9 +67,29 @@ async function startServer() {
       app.get(ruta, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
     }
 
-    for (const fichero of ["estilo.css", "sitio.js"]) {
+    for (const fichero of ["estilo.css", "sitio.js", "logo.png"]) {
       app.get(`/sitio/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
     }
+
+    /**
+     * Las letras del sitio, servidas desde aquí y no desde Google.
+     *
+     * Un año de caché porque el nombre del archivo lleva el peso y el
+     * subconjunto dentro: si algún día cambia el tipo de letra, cambia el
+     * nombre, y nadie se queda con el anterior pegado en el navegador.
+     *
+     * `immutable` es lo que evita que el navegador pregunte «¿sigue siendo
+     * esta?» en cada visita — una vuelta al servidor por archivo, que es
+     * justo lo que se gana quitándolas de un dominio ajeno.
+     */
+    app.use(
+      "/sitio/fuentes",
+      express.static(path.join(sitioPath, "fuentes"), {
+        maxAge: "1y",
+        immutable: true,
+        fallthrough: false,
+      }),
+    );
     for (const fichero of ["robots.txt", "sitemap.xml"]) {
       app.get(`/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
     }

@@ -72,14 +72,22 @@ npx tsc --noEmit                      # must be silent
 npm run build                         # client AND server — not just `vite build`
 python3 scripts/check-route-gate.py   # every route on its correct side
 python3 scripts/check-help-menu.py    # help answers name screens via {{menu…}}
+node scripts/comprobar-ancho.mjs      # no page scrolls sideways on a phone
 ```
 
-`npm run build` is `vite build && esbuild server/…`. Running only the first
-half checks the client and silently skips the server bundle — which is the
-half that has to boot in production.
+`npm run build` is the marketing site generator, then `vite build`, then
+`esbuild server/…`. Running only `vite build` checks the client and silently
+skips the server bundle — which is the half that has to boot in production.
+
+`comprobar-ancho.mjs` reads what the generator wrote, so it goes **after** the
+build. It opens the 28 public pages at 320 and 390 px with the real fonts and
+fails if anything is wider than the screen — the failure that makes a page
+draggable sideways on a phone, which is where this gets read.
 
 Then check locale parity (`docs/desarrollo/idiomas.md`) and, for anything
 user-visible, look at it in a browser. Screenshots caught real layout bugs
-in this project that typechecking never would.
+in this project that typechecking never would — and so did measuring: the
+header overflowed on a phone while every automated check said it was fine,
+because nothing was measuring the rendered page.
 
 Deployment reads from `main`. Merge there when the work is verified.

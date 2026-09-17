@@ -27,6 +27,7 @@
 import { readFileSync, writeFileSync, mkdirSync, globSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { execSync } from "node:child_process";
 
 // Playwright arrives as a transitive dependency, so pnpm never links it at the
 // top level and a plain import fails. Looking it up where pnpm actually put it
@@ -35,16 +36,29 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 
 function loadChromium() {
-  try {
-    return require("playwright").chromium;
-  } catch {
-    const [dir] = globSync("node_modules/.pnpm/playwright@*/node_modules/playwright");
-    if (!dir) {
-      console.error("Playwright is not installed. Run: pnpm add -D playwright");
-      process.exit(1);
+  // Three places, none of them certain: the top level, pnpm's store, or a
+  // global install. Trying all three keeps a one-off script from failing over
+  // where somebody's machine happens to keep its browser.
+  const places = [
+    () => require("playwright"),
+    () => {
+      const [dir] = globSync("node_modules/.pnpm/playwright@*/node_modules/playwright");
+      return dir ? require(path.resolve(dir)) : null;
+    },
+    () => require(path.join(execSync("npm root -g", { encoding: "utf-8" }).trim(), "playwright")),
+  ];
+
+  for (const place of places) {
+    try {
+      const mod = place();
+      if (mod?.chromium) return mod.chromium;
+    } catch {
+      // Next place.
     }
-    return require(path.resolve(dir)).chromium;
   }
+
+  console.error("Playwright is not installed anywhere. Run: pnpm add -D playwright");
+  process.exit(1);
 }
 
 const OUT_DIR = path.resolve("client/public/icons");
@@ -130,24 +144,25 @@ function render(dataUri, size, fill) {
       octx.imageSmoothingQuality = "high";
       octx.drawImage(source, minX, minY, boxW, boxH, (size - drawW) / 2, (size - drawH) / 2, drawW, drawH);
 
-      // Flatten to grey and snap the extremes.
+      // Snap the paper to pure white, and touch nothing else.
       //
-      // The source is black line art, but every "white" pixel in it is a
-      // slightly different white and every black a slightly different black —
-      // scanner noise, or an export that went through a lossy step. PNG
-      // compresses runs of identical pixels, so that invisible noise was
-      // costing more than the drawing: a 1024 icon came out at 651 kB. Pinning
-      // the paper to pure white and the ink to pure black, while leaving the
-      // midtones alone so the edges stay smooth, changes nothing anyone can
-      // see and shrinks the file by an order of magnitude.
+      // Every "white" pixel in an exported logo is a slightly different white —
+      // noise from whatever lossy step it passed through. PNG compresses runs
+      // of identical pixels, so that invisible variation was costing more than
+      // the drawing itself: a 1024 icon came out at 651 kB. The paper is most
+      // of the area, so pinning it alone recovers nearly all of that.
+      //
+      // An earlier version also flattened everything to grey and pinned the
+      // dark end to black. That was right for the logo it was written for —
+      // black line art — and quietly wrong for a logo with colour in it: the
+      // navy outline reads as luminance 35, so it came out pure black, and the
+      // blue went grey. The icon on the phone stopped looking like the logo.
+      // Compression is not worth repainting the artwork.
       const out2 = octx.getImageData(0, 0, size, size);
       const px = out2.data;
       for (let i = 0; i < px.length; i += 4) {
-        let grey = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
-        if (grey >= 236) grey = 255;
-        else if (grey <= 40) grey = 0;
-        else grey = Math.round(grey);
-        px[i] = px[i + 1] = px[i + 2] = grey;
+        const luminance = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+        if (luminance >= 246) px[i] = px[i + 1] = px[i + 2] = 255;
         px[i + 3] = 255;
       }
       octx.putImageData(out2, 0, 0);

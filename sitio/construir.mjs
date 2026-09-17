@@ -87,11 +87,31 @@ const url = (idioma, pagina) => {
 
 // ---------- Piezas ----------
 
-const LOGO = `<svg class="mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <rect width="40" height="40" rx="9" fill="#1546A0"/>
-  <path d="M8 29V17.6L20 9l12 8.6V29" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M15.5 29v-7.2h9V29" stroke="#D9541B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
+/**
+ * El casco. Es el mismo archivo del que salen los iconos de la aplicación
+ * (`assets/logo-source.png` → `scripts/build-icons.mjs`), así que el icono
+ * que el trabajador tiene en la pantalla del teléfono y la marca de la
+ * cabecera son el mismo dibujo y no dos parecidos.
+ *
+ * Con medidas escritas en el propio `<img>` para que el navegador reserve el
+ * hueco antes de bajarlo: sin eso la cabecera da un salto al cargar y empuja
+ * el titular hacia abajo cuando ya se estaba leyendo.
+ */
+const LOGO = `<img class="mark" src="/sitio/logo.png" width="192" height="192" alt="" decoding="async">`;
+
+/**
+ * Las tres caras que se ven antes de bajar la página: el titular y el texto.
+ * Se piden por delante para que no haya el parpadeo de leer media frase con
+ * la letra de reserva y verla cambiar de golpe. Las demás —negritas,
+ * seminegritas— llegan cuando toque, que es más abajo.
+ */
+const PRECARGA = [
+  "plus-jakarta-sans-800-latin.woff2",
+  "public-sans-400-latin.woff2",
+  "public-sans-600-latin.woff2",
+]
+  .map((f) => `<link rel="preload" href="/sitio/fuentes/${f}" as="font" type="font/woff2" crossorigin>`)
+  .join("\n");
 
 const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 
@@ -148,7 +168,7 @@ function cabecera(idioma, pagina) {
       ${item("precios", idioma.nav.precios)}
       ${selectorIdioma(idioma, pagina)}
       <a href="/" class="boton boton-secundario">${esc(idioma.nav.entrar)}</a>
-      <a href="${url(idioma, "contacto")}" class="boton boton-principal">${esc(idioma.nav.contacto)}</a>
+      <a href="${url(idioma, "contacto")}" class="boton boton-principal solo-ancho">${esc(idioma.nav.contacto)}</a>
     </nav>
   </div>
 </header>`;
@@ -242,10 +262,11 @@ ${alternos}
 <meta property="og:description" content="${esc(meta.desc)}">
 <meta property="og:url" content="${DOMINIO}${url(idioma, pagina)}">
 <meta name="theme-color" content="#1546A0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="icon" href="/icons/favicon.ico" sizes="any">
+<link rel="icon" href="/sitio/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="/sitio/estilo.css">
+${PRECARGA}
 ${estiloExtra}
 ${jsonLd.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
 </head>
@@ -810,7 +831,14 @@ function escribir() {
     `User-agent: *\nAllow: /\n\n# El panel, el portal y la app del trabajador no se indexan: son pantallas\n# detrás de credenciales y en los resultados de búsqueda no le sirven a nadie.\nDisallow: /api/\nDisallow: /campo\nDisallow: /portal\n\nSitemap: ${DOMINIO}/sitemap.xml\n`
   );
 
-  for (const f of ["estilo.css", "sitio.js"]) fs.copyFileSync(path.join(AQUI, f), path.join(SALIDA, f));
+  for (const f of ["estilo.css", "sitio.js", "logo.png"]) fs.copyFileSync(path.join(AQUI, f), path.join(SALIDA, f));
+
+  // Las letras se copian enteras y sin lista escrita a mano: añadir un peso
+  // nuevo en `estilo.css` no puede depender de que alguien se acuerde de
+  // nombrarlo también aquí, porque el fallo sería una página que pinta bien
+  // en local y con la letra de reserva en producción.
+  fs.rmSync(path.join(SALIDA, "fuentes"), { recursive: true, force: true });
+  fs.cpSync(path.join(AQUI, "fuentes"), path.join(SALIDA, "fuentes"), { recursive: true });
 
   comprobarEnlaces(rutas);
   console.log(`sitio ok — ${rutas.length} páginas en ${IDIOMAS.length} idiomas, ${IDIOMAS.map((i) => i.codigo).join(" ")}`);
@@ -827,28 +855,45 @@ function escribir() {
  */
 function comprobarEnlaces(rutas) {
   const validas = new Set(rutas.map((r) => r.ruta));
-  // Fuera del mapa y legítimas: la aplicación y los dos ficheros del sitio.
-  const FUERA = new Set(["/", "/sitio/estilo.css", "/sitio/sitio.js"]);
+  // La raíz es la aplicación: no está en el mapa del sitio y es correcta.
+  const APLICACION = "/";
+  // Lo que no es una página tiene que ser un archivo que exista de verdad. Se
+  // comprueba en el disco en vez de llevar una lista de excepciones escrita a
+  // mano: una lista hay que acordarse de ampliarla, y olvidarse significa o
+  // bien un aviso falso, o bien —peor— apuntar a una fuente que no se copió y
+  // que en producción sale como letra de reserva sin que nadie se entere.
+  const donde = (camino) =>
+    camino.startsWith("/sitio/")
+      ? path.join(SALIDA, camino.slice("/sitio/".length))
+      : path.join(RAIZ, "client", "public", camino.slice(1));
+
   const rotos = [];
-  let total = 0;
+  let paginas = 0;
+  let ficheros = 0;
 
   for (const idioma of IDIOMAS) {
     const dir = path.join(SALIDA, idioma.codigo);
     for (const fichero of fs.readdirSync(dir)) {
       const html = fs.readFileSync(path.join(dir, fichero), "utf-8");
-      for (const [, href] of html.matchAll(/href="([^"]+)"/g)) {
-        if (/^(https?:|mailto:|#)/.test(href)) continue;
-        total += 1;
-        if (!validas.has(href) && !FUERA.has(href)) rotos.push(`${idioma.codigo}/${fichero} → ${href}`);
+      // `href` y `src`: el logo entra por `src`, y una imagen que falta se ve
+      // igual de mal que un enlace roto.
+      for (const [, destino] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
+        if (/^(https?:|mailto:|#|data:)/.test(destino)) continue;
+        if (destino === APLICACION || validas.has(destino)) {
+          paginas += 1;
+          continue;
+        }
+        ficheros += 1;
+        if (!fs.existsSync(donde(destino))) rotos.push(`${idioma.codigo}/${fichero} → ${destino}`);
       }
     }
   }
 
   if (rotos.length) {
-    console.error("Enlaces que no llevan a ninguna página:\n" + [...new Set(rotos)].map((r) => `  · ${r}`).join("\n"));
+    console.error("Enlaces que no llevan a ninguna parte:\n" + [...new Set(rotos)].map((r) => `  · ${r}`).join("\n"));
     process.exit(1);
   }
-  console.log(`enlaces ok — ${total} internos, todos a una página que existe`);
+  console.log(`enlaces ok — ${paginas} a páginas que existen, ${ficheros} a archivos que están`);
 }
 
 escribir();

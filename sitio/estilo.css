@@ -14,6 +14,87 @@
  * botón que queremos que pulsen.
  */
 
+/* ---------- Las letras, servidas desde aquí ----------
+ *
+ * No se piden a Google. Un `<link>` a fonts.googleapis.com es una descarga
+ * que bloquea el pintado, en un dominio distinto, con su DNS y su saludo TLS
+ * — y quien abre esto está en la furgoneta con media raya de cobertura, que
+ * es justo cuando eso se nota. Servidas desde el mismo sitio llegan por la
+ * conexión que ya estaba abierta.
+ *
+ * De paso, nadie manda la IP del visitante a un tercero por el hecho de
+ * abrir la página, que es un problema menos que explicar en la política de
+ * privacidad bajo la Ley 25.
+ *
+ * `swap` y no `block`: si la letra tarda, se lee con la de reserva y luego
+ * cambia. Un texto invisible esperando una fuente es una página en blanco.
+ *
+ * Cada cara viene partida en `latin` y `latin-ext` con su `unicode-range`,
+ * como las sirve Google: una página que no usa ninguna letra del segundo
+ * archivo no lo descarga.
+ */
+
+@font-face {
+  font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/sitio/fuentes/plus-jakarta-sans-700-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/sitio/fuentes/plus-jakarta-sans-700-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 800; font-display: swap;
+  src: url("/sitio/fuentes/plus-jakarta-sans-800-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans"; font-style: normal; font-weight: 800; font-display: swap;
+  src: url("/sitio/fuentes/plus-jakarta-sans-800-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-500-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-500-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-600-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-600-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-700-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Public Sans"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/sitio/fuentes/public-sans-700-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --fondo: #FFFFFF;
   --fondo-2: #F7F9FC;
@@ -106,16 +187,49 @@ p { margin: 0; }
   backdrop-filter: saturate(160%) blur(12px);
   border-bottom: 1px solid var(--linea-suave);
 }
-.cabecera .envoltura { display: flex; align-items: center; gap: 14px; height: 70px; }
+.cabecera .envoltura { display: flex; align-items: center; gap: 14px; height: 70px; min-width: 0; }
 
-.marca { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; }
-.marca .mark { width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px; }
+.marca { display: flex; align-items: center; gap: 11px; text-decoration: none; flex-shrink: 0; min-width: 0; }
+.marca .mark { width: 36px; height: 36px; flex-shrink: 0; object-fit: contain; }
 .marca .nombre {
   font-family: var(--display); font-weight: 800; font-size: 18px;
   letter-spacing: -0.03em; line-height: 1.05; white-space: nowrap;
 }
 .marca .nombre small { display: block; font-weight: 600; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--apagado); }
-@media (max-width: 420px) { .marca .nombre { font-size: 16px; } }
+
+/* ---------- La cabecera en un teléfono ----------
+ *
+ * Aquí no cabe todo, y lo que no cabe no se encoge: se sale, y el navegador
+ * deja la página arrastrable de lado. Así que se decide qué se va, por orden
+ * de lo que menos falta hace.
+ *
+ * Primero el botón naranja. Es el único elemento de la cabecera que está
+ * repetido: todas las páginas llevan la misma llamada abajo del todo, y la
+ * portada la lleva además a dos dedos del titular. «Iniciar sesión» no está
+ * repetido en ningún sitio, y es lo que busca quien ya es cliente, así que
+ * ese se queda.
+ *
+ * Después el nombre escrito. El casco es el mismo icono que la aplicación
+ * tiene en la pantalla de inicio del teléfono; a 36 px se reconoce, y el
+ * nombre completo está en el título de la pestaña, en el pie y en el propio
+ * titular de la portada.
+ *
+ * `scripts/comprobar-ancho.mjs` mide las 28 páginas a 320 y 390 px con las
+ * letras de verdad y falla si algo se sale. Los cortes de abajo salieron de
+ * esa medición, no de una estimación. */
+@media (max-width: 760px) {
+  .cabecera .envoltura { gap: 10px; height: 64px; }
+  .menu .boton { font-size: 14.5px; padding: 9px 14px; }
+  .menu > .solo-ancho { display: none; }
+  .marca .nombre { font-size: 16px; }
+  .marca .nombre small { font-size: 10px; }
+}
+@media (max-width: 430px) {
+  /* Sin el nombre al lado, un casco de 36 px se queda flotando en un hueco
+     vacío y parece que falta algo. A 44 es la marca, no un resto. */
+  .marca .mark { width: 44px; height: 44px; }
+  .marca .nombre { display: none; }
+}
 
 .menu { display: flex; align-items: center; gap: 2px; margin-left: auto; }
 .menu > a { text-decoration: none; font-size: 15.5px; font-weight: 500; color: var(--tinta-2); padding: 9px 13px; border-radius: 9px; transition: background .14s ease, color .14s ease; }

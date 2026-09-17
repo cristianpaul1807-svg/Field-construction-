@@ -28,8 +28,10 @@ Así que el texto vive separado del HTML:
 | Qué | Dónde |
 |---|---|
 | Todo lo que se lee, por idioma | `sitio/textos/{fr,en,es,it}.mjs` |
-| El HTML, el selector, el logo, los datos estructurados | `sitio/construir.mjs` |
-| El estilo | `sitio/estilo.css` |
+| El HTML, el selector, los datos estructurados | `sitio/construir.mjs` |
+| El estilo y las caras de letra | `sitio/estilo.css` |
+| Los archivos de letra | `sitio/fuentes/*.woff2` |
+| El casco de la cabecera | `sitio/logo.png` |
 | El único JavaScript | `sitio/sitio.js` |
 | Lo generado | `sitio/publico/` — **no se guarda en el repositorio** |
 
@@ -44,15 +46,18 @@ lo mismo que hace `scripts/i18n-add-keys.py` con el producto, y por lo mismo:
 una sección que existe en francés y no en italiano no se ve hasta que alguien
 abre esa página en italiano.
 
-`comprobarEnlaces()` recorre los 592 enlaces internos que salen del generador y
-falla si alguno apunta a una dirección que no está en el mapa. Un botón que
-lleva a un 404 es exactamente el tipo de error que nadie encuentra probando en
-su propio idioma.
+`comprobarEnlaces()` recorre todos los `href` y `src` que salen del generador.
+Si apuntan a una página, tiene que estar en el mapa; si apuntan a un archivo
+—la hoja de estilo, el logo, una letra, un icono— tiene que existir en el
+disco. Se comprueba de verdad en vez de llevar una lista de excepciones
+escrita a mano, porque una lista hay que acordarse de ampliarla: el día que
+alguien añada un peso de letra y no lo copie, la página saldrá en producción
+con la letra de reserva y aquí no habría saltado nada.
 
 Salida esperada:
 
 ```
-enlaces ok — 592 internos, todos a una página que existe
+enlaces ok — 564 a páginas que existen, 280 a archivos que están
 sitio ok — 28 páginas en 4 idiomas, fr en es it
 ```
 
@@ -93,6 +98,80 @@ datos estructurados de preguntas frecuentes, y de paso presentarnos.
 
 Es la más aburrida de mantener y la que más va a rendir. Cuando cambien las
 reglas, se actualiza.
+
+## Que quepa en un teléfono
+
+Es donde más se va a leer, y es donde falló. La cabecera llevaba la marca con
+su nombre, el selector de idioma, «Iniciar sesión» y el botón naranja: a 390 px
+eso mide 526, y el navegador deja la página arrastrable de lado. Se lee una
+línea empujando a izquierda y derecha y parece que está todo roto, aunque cada
+pieza por separado esté bien.
+
+**Ninguna comprobación lo vio.** `tsc` no mide páginas, el comprobador de
+enlaces sólo sabe a dónde llevan, y en el navegador de escritorio cabe de
+sobra. Por eso ahora hay una que mide:
+
+```bash
+node scripts/comprobar-ancho.mjs
+```
+
+Abre las 28 páginas a 320 px (el iPhone SE, que sigue vivo en obra) y a 390, y
+falla si el documento ocupa más de lo que cabe. Cuando falla dice **qué** se
+sale, con su nombre y sus coordenadas — saber que la portada mide 526 no sirve;
+saber que quien la estira es el botón de la cabecera sí.
+
+Dos cosas de este guardia no son adorno:
+
+**Levanta un servidor.** Los enlaces del sitio son absolutos, como en
+producción. Abiertos con `file://` apuntan a la raíz del disco, el navegador no
+encuentra la hoja de estilos y mide HTML desnudo, donde no se sale nada. La
+primera versión hacía eso y decía que todo estaba bien mientras la cabecera se
+salía en el teléfono de verdad.
+
+**Exige que las letras hayan cargado**, y se niega a medir si no. Otro tipo de
+letra es otro ancho: medir con la de reserva es volver a medir una página que
+nadie va a ver.
+
+### Qué se quita en un teléfono, y por qué ese orden
+
+Está en `estilo.css`, en los dos `@media` de la cabecera, y salió de la
+medición y no de una estimación.
+
+Primero se va **el botón naranja**. Es el único elemento de la cabecera que
+está repetido: todas las páginas llevan la misma llamada al final, y la portada
+la lleva además a dos dedos del titular. «Iniciar sesión» no está repetido en
+ninguna parte y es lo que busca quien ya es cliente, así que ese se queda.
+
+Después, por debajo de 430 px, **el nombre escrito**. El casco es el mismo
+icono que la aplicación tiene en la pantalla de inicio del teléfono; a 44 px se
+reconoce, y el nombre completo sigue en el título de la pestaña, en el pie y en
+el titular de la portada.
+
+## Las letras y el logo
+
+**Las letras se sirven desde aquí**, no desde Google. Un `<link>` a
+fonts.googleapis.com es una descarga que bloquea el pintado, en otro dominio,
+con su DNS y su saludo TLS — y quien abre esto está en la furgoneta con media
+raya, que es justo cuando eso se nota. De paso, nadie manda la IP del visitante
+a un tercero por abrir la página, que es un problema menos bajo la Ley 25.
+
+Cada cara viene partida en `latin` y `latin-ext` con su `unicode-range`, como
+las sirve Google, así que una página que no usa ninguna letra del segundo
+archivo no lo descarga. Las tres que se ven antes de bajar —el titular y el
+texto— van con `preload`. El servidor las manda con un año de caché e
+`immutable`: el nombre del archivo lleva el peso y el subconjunto dentro, así
+que si algún día cambia el tipo de letra cambia el nombre.
+
+**El logo es el mismo archivo que los iconos de la aplicación.**
+`assets/logo-source.png` es la fuente; `scripts/build-icons.mjs` saca de ahí
+los nueve iconos de la PWA y el `favicon.ico`, y `sitio/logo.png` es el mismo
+casco recortado para la cabecera. El icono que el trabajador tiene en la
+pantalla del teléfono y la marca del sitio son el mismo dibujo, no dos
+parecidos.
+
+Si cambias el logo: sustituye `assets/logo-source.png`, vuelve a correr
+`node scripts/build-icons.mjs assets/logo-source.png` y regenera también
+`sitio/logo.png`.
 
 ## El selector de idioma
 
@@ -184,7 +263,8 @@ no transmitimos a la CCQ, no reemplazamos al contable, todavía no hay varias
 empresas en una cuenta. Es más fácil de vender y mucho más barato que
 desdecirse después.
 
-**Míralo en el navegador.** Los guardias comprueban que las páginas existen y
-que los enlaces llevan a alguna parte; no comprueban que se vea bien. En este
-proyecto las capturas han encontrado errores de maquetación reales que ninguna
-comprobación automática iba a ver.
+**Míralo en el navegador, y en un teléfono.** Los guardias comprueban que las
+páginas existen, que los enlaces llevan a alguna parte y que nada se sale de
+ancho; no comprueban que se vea bien. Cuando el nombre de la marca se ocultó a
+390 px, el ancho pasaba y la cabecera quedaba con el logo flotando en un hueco
+vacío. Eso se arregló mirando la captura, no midiendo.
