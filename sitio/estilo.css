@@ -130,8 +130,8 @@ body {
   background: var(--fondo);
   color: var(--tinta);
   font-family: var(--texto);
-  font-size: 17px;
-  line-height: 1.62;
+  font-size: 16px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -142,7 +142,23 @@ a { color: inherit; }
 .envoltura { width: 100%; max-width: 1160px; margin: 0 auto; padding-inline: 20px; }
 .estrecho { max-width: 780px; }
 
-/* ---------- Tipografía ---------- */
+/* ---------- Tipografía ----------
+ *
+ * Los títulos mandan y el texto que los acompaña se aparta. No es cuestión de
+ * encoger la página entera —eso la escala y no cambia nada—, sino de separar
+ * las dos cosas: los tamaños de `h1`, `h2` y `h3` son los que eran, y lo que
+ * baja es la descripción.
+ *
+ * El texto corriente está a 16 px, que es el mínimo con el que se lee un móvil
+ * a la luz del sol y en el que no vale la pena ahorrar. Lo que se recorta es
+ * sólo lo que estaba de más: el cuerpo estaba a 17 y el `h4` también, de modo
+ * que un encabezado medía exactamente lo mismo que su propio párrafo. Ahora el
+ * `h4` queda por encima sin tocarlo.
+ *
+ * Los párrafos secundarios —lo que describe una tarjeta, un plan o una razón—
+ * van a 15,5 px y en `--tinta-2`. Son apoyo del titular que tienen encima, no
+ * compiten con él.
+ */
 
 h1, h2, h3, h4 { font-family: var(--display); margin: 0; text-wrap: balance; }
 h1 { font-size: clamp(38px, 6.2vw, 68px); line-height: 1.02; font-weight: 800; letter-spacing: -0.035em; }
@@ -157,7 +173,7 @@ p { margin: 0; }
   letter-spacing: .13em; text-transform: uppercase;
   color: var(--azul); margin: 0;
 }
-.entradilla { font-size: clamp(17px, 1.9vw, 20px); line-height: 1.55; color: var(--tinta-2); max-width: 58ch; }
+.entradilla { font-size: clamp(16.5px, 1.6vw, 18.5px); line-height: 1.58; color: var(--tinta-2); max-width: 58ch; }
 .pie-nota { font-size: 14px; color: var(--apagado); }
 
 /* ---------- Botones ---------- */
@@ -275,7 +291,7 @@ p { margin: 0; }
 .portada h1 { max-width: 15ch; }
 .portada .entradilla { margin-top: 20px; }
 .acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
-.bajo-acciones { margin-top: 15px; font-size: 14.5px; color: var(--apagado); }
+.bajo-acciones { margin-top: 15px; font-size: 14px; color: var(--apagado); }
 
 /* ---------- La escena con tarjetas flotantes ---------- */
 
@@ -355,7 +371,7 @@ p { margin: 0; }
 .tarjeta:hover { transform: translateY(-3px); box-shadow: var(--sombra-2); }
 @media (prefers-reduced-motion: reduce) { .tarjeta:hover { transform: none; } }
 .tarjeta h3 { margin-bottom: 11px; }
-.tarjeta p { color: var(--tinta-2); font-size: 16px; }
+.tarjeta p { color: var(--tinta-2); font-size: 15.5px; }
 .seccion-oscura .tarjeta { background: #151E2C; border-color: #26313F; box-shadow: none; }
 .seccion-oscura .tarjeta p { color: #9FB0C4; }
 
@@ -375,7 +391,7 @@ p { margin: 0; }
 .razon:hover { background: var(--fondo-2); }
 .razon .cifra { font-family: var(--display); font-size: 13px; font-weight: 800; letter-spacing: .1em; color: var(--senal); }
 .razon h3 { margin: 11px 0; }
-.razon p { color: var(--tinta-2); font-size: 16px; }
+.razon p { color: var(--tinta-2); font-size: 15.5px; }
 
 /* ---------- Cifras reales ---------- */
 
@@ -384,7 +400,7 @@ p { margin: 0; }
 @media (max-width: 500px) { .cifras { grid-template-columns: 1fr; } }
 .cifra-caja { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio); padding: 24px; box-shadow: var(--sombra-1); }
 .cifra-caja .valor { font-family: var(--display); font-size: clamp(32px, 4.2vw, 46px); font-weight: 800; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: var(--azul); }
-.cifra-caja .etiqueta { margin-top: 12px; font-size: 15px; color: var(--tinta-2); }
+.cifra-caja .etiqueta { margin-top: 12px; font-size: 14.5px; color: var(--tinta-2); }
 .seccion-oscura .cifra-caja { background: #151E2C; border-color: #26313F; box-shadow: none; }
 .seccion-oscura .cifra-caja .valor { color: #7FA5E8; }
 .seccion-oscura .cifra-caja .etiqueta { color: #9FB0C4; }
@@ -399,9 +415,9 @@ p { margin: 0; }
 .plan .precio { display: flex; align-items: baseline; gap: 7px; margin: 17px 0 7px; }
 .plan .precio .n { font-family: var(--display); font-size: 58px; font-weight: 800; line-height: 1; letter-spacing: -0.045em; }
 .plan .precio .u { font-size: 16px; color: var(--apagado); }
-.plan .para { color: var(--tinta-2); font-size: 16px; }
+.plan .para { color: var(--tinta-2); font-size: 15.5px; }
 .plan ul { list-style: none; margin: 24px 0 28px; padding: 0; display: grid; gap: 12px; }
-.plan li { display: flex; gap: 11px; align-items: flex-start; font-size: 16px; color: var(--tinta-2); }
+.plan li { display: flex; gap: 11px; align-items: flex-start; font-size: 15.5px; color: var(--tinta-2); }
 .plan li svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 4px; color: var(--verde); }
 .plan .boton { width: 100%; }
 
@@ -481,7 +497,7 @@ p { margin: 0; }
 .aviso p + p { margin-top: 12px; }
 
 .tabla-scroll { overflow-x: auto; margin-top: 26px; }
-table { border-collapse: collapse; width: 100%; min-width: 440px; font-size: 16px; }
+table { border-collapse: collapse; width: 100%; min-width: 440px; font-size: 15.5px; }
 th, td { text-align: left; padding: 13px 16px 13px 0; border-bottom: 1px solid var(--linea); vertical-align: top; }
 th { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--apagado); font-weight: 700; }
 td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
@@ -514,7 +530,7 @@ form { display: grid; gap: 16px; }
 .lista-limpia li { display: flex; gap: 12px; align-items: flex-start; }
 .lista-limpia > li > svg { width: 19px; height: 19px; flex-shrink: 0; margin-top: 4px; color: var(--azul); }
 .lista-limpia strong { display: block; }
-.lista-limpia span { color: var(--tinta-2); font-size: 16px; }
+.lista-limpia span { color: var(--tinta-2); font-size: 15.5px; }
 
 /* ---------- Oscuro ---------- */
 
