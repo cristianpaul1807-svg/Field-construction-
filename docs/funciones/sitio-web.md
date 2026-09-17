@@ -57,7 +57,7 @@ con la letra de reserva y aquí no habría saltado nada.
 Salida esperada:
 
 ```
-enlaces ok — 564 a páginas que existen, 280 a archivos que están
+enlaces ok — 596 a páginas que existen, 280 a archivos que están
 sitio ok — 28 páginas en 4 idiomas, fr en es it
 ```
 
@@ -72,7 +72,7 @@ teclea `/pricing`— y por eso no se puede deducir la ruta del francés:
 | Funciones | `/fr/fonctionnalites` | `/en/features` | `/es/funciones` | `/it/funzioni` |
 | CCQ e impuestos | `/fr/ccq-taxes` | `/en/ccq-taxes` | `/es/ccq-impuestos` | `/it/ccq-tasse` |
 | Precios | `/fr/tarifs` | `/en/pricing` | `/es/precios` | `/it/prezzi` |
-| Contacto | `/fr/contact` | `/en/contact` | `/es/contacto` | `/it/contatto` |
+| Soporte | `/fr/support` | `/en/support` | `/es/soporte` | `/it/supporto` |
 | Privacidad | `/fr/confidentialite` | `/en/privacy` | `/es/privacidad` | `/it/privacy` |
 | Condiciones | `/fr/conditions` | `/en/terms` | `/es/condiciones` | `/it/condizioni` |
 
@@ -147,6 +147,23 @@ icono que la aplicación tiene en la pantalla de inicio del teléfono; a 44 px s
 reconoce, y el nombre completo sigue en el título de la pestaña, en el pie y en
 el titular de la portada.
 
+### La tipografía francesa
+
+En francés el espacio antes de `? ! ; :` y dentro de las comillas es
+**insecable**, y el navegador no lo sabe: parte la línea ahí. El titular de
+soporte salía como «Un problème» / «? On répond», con el signo solo al
+principio del renglón. Es de lo primero que ve un francófono de Quebec, y la
+Loi 96 no va sólo de traducir.
+
+`tipografiaFrancesa()` lo arregla sobre **el texto** de `textos/fr.mjs`, antes
+de que llegue al HTML. No sobre el documento montado: un reemplazo ahí acabaría
+metiendo un espacio insecable dentro de un `style` o de un `!important` y
+rompiendo el CSS sin que nada avise.
+
+También junta los millares y las unidades — `5 000 $`, `10 %` — para que un
+importe no se parta en dos renglones. Los otros tres idiomas no lo llevan
+porque no es su regla, y las rutas se quedan intactas.
+
 ## Las letras y el logo
 
 **Las letras se sirven desde aquí**, no desde Google. Un `<link>` a
@@ -180,7 +197,7 @@ Si cambias el logo: sustituye `assets/logo-source.png`, vuelve a correr
 | «Probar 30 días — sin tarjeta» | Portada, cierre de cada página, cada plan | `/negocio/acceso` — crear la cuenta |
 | «Prueba» (naranja) | Cabecera, sólo en pantalla ancha | `/negocio/acceso` |
 | «Entrar» | Cabecera y pie | `/` — la aplicación |
-| «Hablar con nosotros» | Pie de todas las páginas | La página de contacto |
+| «Soporte» | Pie de todas las páginas | La página de soporte |
 | «Ver qué hace» | Portada | La página de funciones |
 
 **La llamada principal lleva a crear la cuenta, no al formulario.** El botón
@@ -189,10 +206,8 @@ donde se deja el teléfono y se espera una llamada es prometer una cosa y hacer
 otra — y para un contratista que mira esto entre dos obras, esperar es no
 volver.
 
-La página de contacto no desaparece ni se queda huérfana: está a un clic desde
-el pie de las 28 páginas, y tiene sentido propio porque ofrece algo que el alta
-automática no puede — que le metamos sus tres últimas obras con él. Es el
-camino acompañado, no el único camino.
+Esa página dejó de ser un formulario de venta. Ahora es **soporte**, y está a
+un clic desde el pie de las 28 páginas.
 
 `rutasDeLaAplicacion()` lee `client/src/App.tsx` y comprueba que la pantalla a
 la que manda el botón siga existiendo en el router. Si alguien renombra
@@ -256,11 +271,31 @@ creado mete la carpeta **dentro de sí misma** —`dist/sitio/sitio`— y deja
 servida la copia anterior. Se vio porque una corrección del formulario no
 aparecía en la página.
 
+### La página de soporte, y por qué el bot va primero
+
+`/fr/support` no pide el teléfono para llamar a vender: es donde se escribe
+cuando algo falla. Y lo primero de la página, antes del formulario, es un
+recuadro que manda al **bot de ayuda que está dentro del sistema**.
+
+Ese orden es la decisión, no la maquetación. El bot contesta en dos toques y
+al instante; nosotros contestamos en un día. Poner el formulario primero sería
+cambiarle a alguien una respuesta inmediata por una espera, y encima
+quedándonos el trabajo. Está explicado en
+[funciones/ayuda.md](ayuda.md#cuando-el-árbol-no-llega-el-ticket).
+
+El formulario de aquí es para quien **no puede entrar** — que muchas veces es
+el problema por el que escribe. Un formulario de soporte detrás de un inicio
+de sesión sólo atiende a quien no lo necesita.
+
 ### El formulario
 
-`POST /api/public/demo`, por encima de `requireBusinessAuth` porque lo rellena
-alguien que todavía no tiene cuenta. Manda un correo a `SUPPORT_EMAIL` por
-Resend.
+`POST /api/public/soporte`, por encima de `requireBusinessAuth` por lo
+anterior. Manda un correo a `SUPPORT_EMAIL` por Resend, con **Responder-a**
+puesto en quien escribe.
+
+El mensaje es obligatorio, y antes no lo era. Un formulario de soporte sin
+contar qué pasa obliga a escribir de vuelta sólo para preguntarlo, y eso es un
+día perdido para alguien que no puede facturar.
 
 Sin `SUPPORT_EMAIL` contesta 200 con `ok: false`, y la página ofrece entonces
 el buzón de verdad en un enlace `mailto:` **con lo que la persona ya escribió

@@ -63,7 +63,7 @@ import { exportAccounting, type ExportKind } from "./accountingExport";
 import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
-import { areaDeLaRuta, puede, recortar, AREAS } from "../shared/permisos";
+import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
 import { capacidadDeLaRuta, planDe, tiene } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
@@ -991,29 +991,36 @@ function route(handler: Handler) {
 // exposes nothing that wasn't public already. The service-role key is never
 // part of this response.
 /**
- * El formulario del sitio de presentación.
+ * El formulario de soporte del sitio de presentación.
  *
  * Va aquí arriba, encima de `requireBusinessAuth`, porque lo rellena alguien
- * que todavía no tiene cuenta — que es justo de lo que se trata.
+ * que no puede entrar — y no poder entrar es, muchas veces, el problema por el
+ * que escribe. Un formulario de soporte detrás de un inicio de sesión sólo
+ * atiende a quien no lo necesita.
+ *
+ * El otro camino, para quien sí está dentro, es `/soporte/ticket`: llega con
+ * quién escribe y desde dónde, y por eso vale mucho más. Este es el de fuera.
  *
  * Sin `SUPPORT_EMAIL` no hay a quién avisar. En ese caso contesta 200 igual y
- * lo dice en el cuerpo: el contratista ya escribió sus datos y enseñarle un
- * error rojo por una variable que no puso él es echarle la culpa de lo
+ * lo dice en el cuerpo: la persona ya escribió lo que le pasaba y enseñarle un
+ * error rojo por una variable que no puso ella es echarle la culpa de lo
  * nuestro. La página le ofrece entonces el correo directo, que sí funciona.
  */
 apiRouter.post(
-  "/public/demo",
+  "/public/soporte",
   route(async (req, res) => {
     const texto = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
     const nombre = texto(req.body?.nombre, 120);
     const empresa = texto(req.body?.empresa, 160);
     const telefono = texto(req.body?.telefono, 40);
     const correo = texto(req.body?.correo, 160);
-    const gente = texto(req.body?.gente, 40);
-    const mensaje = texto(req.body?.mensaje, 2000);
+    const mensaje = texto(req.body?.mensaje, 4000);
 
-    if (!nombre || (!telefono && !correo)) {
-      res.status(400).json({ error: "Falta el nombre y una forma de contestarte", code: "faltan_datos" });
+    // El mensaje ahora sí es obligatorio: un formulario de soporte sin contar
+    // qué pasa obliga a escribir de vuelta para preguntarlo, y eso es un día
+    // perdido para alguien que no puede facturar.
+    if (!nombre || (!telefono && !correo) || !mensaje) {
+      res.status(400).json({ error: "Falta el nombre, una forma de contestarte, o qué ocurre", code: "faltan_datos" });
       return;
     }
 
@@ -1028,21 +1035,20 @@ apiRouter.post(
       ["Entreprise", empresa],
       ["Téléphone", telefono],
       ["Courriel", correo],
-      ["Travailleurs", gente],
       ["Message", mensaje],
     ].filter(([, v]) => v);
 
     const resultado = await enviarCorreo({
       para: buzon,
-      asunto: `Demande d'essai — ${empresa || nombre}`,
+      asunto: `Support — ${empresa || nombre}`,
       texto: filas.map(([k, v]) => `${k}: ${v}`).join("\n"),
       html: plantilla({
-        titulo: "Demande d'essai",
+        titulo: "Support",
         cuerpo: filas
           .map(([k, v]) => `<p style="margin:0 0 10px"><strong>${esc(k)}</strong><br>${esc(v)}</p>`)
           .join(""),
         negocio: "Logiciel Construction",
-        pie: "Envoyé depuis le formulaire du site.",
+        pie: "Envoyé depuis le formulaire de support du site.",
       }),
       // Para poder contestarle dándole a Responder, sin copiar la dirección.
       responderA: correo || null,
@@ -3671,6 +3677,8 @@ apiRouter.use(requireBusinessAuth);
  */
 apiRouter.use((req, res, next) => {
   if (req.areas === null || req.areas === undefined) return next();
+  // Pedir ayuda no es un área del negocio y no se le niega a ningún papel.
+  if (esDeTodos(req.path)) return next();
 
   const area = areaDeLaRuta(req.path);
   if (!area) {
@@ -3711,6 +3719,85 @@ apiRouter.use((req, res, next) => {
     plan,
   });
 });
+
+/**
+ * Un ticket de soporte desde dentro del sistema.
+ *
+ * Lo abre el bot de ayuda cuando su respuesta no resuelve el caso, que es la
+ * última salida y no la primera: el bot contesta en dos toques y sin esperar,
+ * y mandar a todo el mundo a escribir un correo por una pregunta que ya está
+ * respondida es hacerle perder un día a quien pregunta y a nosotros.
+ *
+ * Lo que hace que valga más que el formulario público es que aquí sabemos
+ * quién escribe. Un ticket que llega con el negocio, el plan, la pantalla
+ * donde estaba y el tema de ayuda que acababa de leer se puede contestar a la
+ * primera; uno que dice «no me funciona» cuesta tres correos de ida y vuelta
+ * antes de empezar a mirarlo, y esos tres correos los paga alguien que
+ * mientras tanto no puede facturar.
+ *
+ * No se guarda en ninguna tabla a propósito: un ticket que se guarda y nadie
+ * atiende es una bandeja de entrada falsa. Se manda al buzón donde ya miramos.
+ */
+apiRouter.post(
+  "/soporte/ticket",
+  route(async (req, res) => {
+    const mensaje = String(req.body?.mensaje ?? "").trim().slice(0, 4000);
+    if (!mensaje) {
+      res.status(400).json({ error: "Falta contar qué ocurre", code: "faltan_datos" });
+      return;
+    }
+
+    const buzon = (process.env.SUPPORT_EMAIL ?? process.env.VITE_SUPPORT_EMAIL ?? "").trim();
+    if (!buzon) {
+      // Igual que en el formulario público: la persona ya escribió lo que le
+      // pasaba, y un error rojo por una variable que no puso ella sobra.
+      res.json({ ok: false, code: "sin_buzon" });
+      return;
+    }
+
+    const supabase = req.supabase!;
+    const negocio = await supabase.from("businesses").select("name").eq("id", req.businessId!).maybeSingle();
+    const quien = await supabase
+      .from("users")
+      .select("email, full_name")
+      .eq("auth_user_id", req.authUserId!)
+      .maybeSingle();
+
+    // Contexto que manda la pantalla: dónde estaba y qué tema de ayuda leyó.
+    // Se recorta y se escapa como todo lo demás — viene del navegador.
+    const desde = String(req.body?.pantalla ?? "").trim().slice(0, 120);
+    const tema = String(req.body?.tema ?? "").trim().slice(0, 120);
+
+    const filas: [string, string][] = [
+      ["Entreprise", (negocio.data as { name?: string } | null)?.name ?? ""],
+      ["Personne", (quien.data as { full_name?: string } | null)?.full_name ?? ""],
+      ["Courriel", (quien.data as { email?: string } | null)?.email ?? ""],
+      ["Forfait", req.plan ?? ""],
+      ["Écran", desde],
+      ["Sujet d'aide", tema],
+      ["Message", mensaje],
+    ];
+
+    const resultado = await enviarCorreo({
+      para: buzon,
+      asunto: `Support — ${(negocio.data as { name?: string } | null)?.name ?? "sans nom"}`,
+      texto: filas.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n"),
+      html: plantilla({
+        titulo: "Billet de support",
+        cuerpo: filas
+          .filter(([, v]) => v)
+          .map(([k, v]) => `<p style="margin:0 0 10px"><strong>${esc(k)}</strong><br>${esc(v)}</p>`)
+          .join(""),
+        negocio: "Logiciel Construction",
+        pie: "Ouvert depuis l'aide, dans le système.",
+      }),
+      // Para contestarle dándole a Responder y no buscando su dirección.
+      responderA: (quien.data as { email?: string } | null)?.email ?? null,
+    });
+
+    res.json({ ok: resultado.estado === "enviado", code: resultado.estado });
+  })
+);
 
 // ---------- Materials & Costs ----------
 // Materials, labor rates and subcontractor trades live in three separate

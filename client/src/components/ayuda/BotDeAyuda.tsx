@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { LifeBuoy, ChevronDown, ChevronLeft, RotateCcw, ArrowRight, Bot, UserRound } from "lucide-react";
+import { LifeBuoy, ChevronDown, ChevronLeft, RotateCcw, ArrowRight, Bot, UserRound, Check } from "lucide-react";
+import { apiFetch, readJson } from "@/lib/api";
+import { correoDeSoporte } from "@/lib/soporte";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
@@ -11,7 +13,8 @@ import { EVENTO_AYUDA, registrarAyuda, type PeticionDeAyuda } from "@/lib/abrirA
 type Paso =
   | { tipo: "secciones" }
   | { tipo: "temas"; seccion: SeccionDeAyuda }
-  | { tipo: "respuesta"; seccion: SeccionDeAyuda; tema: TemaDeAyuda };
+  | { tipo: "respuesta"; seccion: SeccionDeAyuda; tema: TemaDeAyuda }
+  | { tipo: "ticket"; seccion: SeccionDeAyuda; tema: TemaDeAyuda };
 
 /**
  * El bot de ayuda del panel.
@@ -242,7 +245,25 @@ export function BotDeAyuda() {
                 )}
                 <Opcion onClick={atras}>{t("help.otherQuestion")}</Opcion>
                 <Opcion onClick={reiniciar}>{t("help.restart")}</Opcion>
+                {/* La última salida, y la última a propósito: el árbol
+                    contesta al instante y un correo tarda un día. Ofrecerlo
+                    antes de haber intentado responder sería cambiar una
+                    respuesta inmediata por una espera. */}
+                <Opcion
+                  onClick={() => setCamino((c) => [...c, { tipo: "ticket", seccion: paso.seccion, tema: paso.tema }])}
+                >
+                  <span className="text-muted-foreground">{t("help.notSolved")}</span>
+                </Opcion>
               </Opciones>
+            )}
+
+            {paso.tipo === "ticket" && (
+              <Ticket
+                pantalla={ruta}
+                tema={`${paso.seccion.id}.${paso.tema.id}`}
+                onAtras={atras}
+                onReiniciar={reiniciar}
+              />
             )}
 
             <div ref={finRef} />
@@ -258,6 +279,124 @@ export function BotDeAyuda() {
         <LifeBuoy size={16} strokeWidth={1.75} className="text-muted-foreground flex-shrink-0" />
         <span className="flex-1 text-sm text-muted-foreground">{t("help.openHelp")}</span>
       </button>
+    </div>
+  );
+}
+
+/**
+ * El ticket, cuando el árbol no llega.
+ *
+ * Va con la pantalla y el tema que se acababa de leer. Eso es la diferencia
+ * entre contestar a la primera y tres correos preguntando dónde estaba —
+ * tres correos que paga alguien que mientras tanto no puede facturar.
+ *
+ * Si no se pudo mandar, **lo escrito se queda en la caja**. Perder lo que
+ * alguien acaba de teclear cuando ya venía enfadado es la forma más rápida de
+ * que no vuelva a escribir nunca.
+ */
+function Ticket({
+  pantalla,
+  tema,
+  onAtras,
+  onReiniciar,
+}: {
+  pantalla: string;
+  tema: string;
+  onAtras: () => void;
+  onReiniciar: () => void;
+}) {
+  const { t } = useTranslation();
+  const [mensaje, setMensaje] = useState("");
+  const [estado, setEstado] = useState<"escribiendo" | "mandando" | "hecho" | "fallo">("escribiendo");
+  const [buzon, setBuzon] = useState<string | null>(null);
+
+  async function mandar() {
+    if (!mensaje.trim()) return;
+    setEstado("mandando");
+    try {
+      const res = await apiFetch("/api/soporte/ticket", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensaje, pantalla, tema }),
+      });
+      const cuerpo = await readJson<{ ok?: boolean }>(res);
+      if (cuerpo.ok) {
+        setEstado("hecho");
+        return;
+      }
+      setEstado("fallo");
+      // Sólo cuando ha fallado: ofrecer el buzón antes es invitar a saltarse
+      // el camino que sí llega con el contexto puesto.
+      setBuzon(await correoDeSoporte());
+    } catch {
+      setEstado("fallo");
+      setBuzon(await correoDeSoporte());
+    }
+  }
+
+  if (estado === "hecho") {
+    return (
+      <div className="space-y-3">
+        <div className="flex gap-2 justify-start">
+          <div className="w-6 h-6 rounded-full bg-status-success-bg flex items-center justify-center flex-shrink-0">
+            <Check size={12} className="text-status-success-fg" />
+          </div>
+          <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-secondary px-3 py-2 text-sm">
+            {t("help.ticketSent")}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 pl-8">
+          <button
+            onClick={onReiniciar}
+            className="rounded-full border border-border bg-background px-3 py-1.5 text-sm hover:bg-secondary"
+          >
+            {t("help.restart")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 pl-8">
+      <p className="text-xs text-muted-foreground leading-snug">{t("help.ticketIntro")}</p>
+      <textarea
+        value={mensaje}
+        onChange={(e) => setMensaje(e.target.value)}
+        placeholder={t("help.ticketPlaceholder")}
+        rows={3}
+        maxLength={4000}
+        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm resize-y"
+      />
+      {estado === "fallo" && (
+        <p className="text-xs text-status-danger-fg leading-snug">
+          {t("help.ticketFailed")}
+          {buzon && (
+            <>
+              {" "}
+              {t("help.ticketWriteTo")}{" "}
+              <a href={`mailto:${buzon}`} className="underline font-medium">
+                {buzon}
+              </a>
+            </>
+          )}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => void mandar()}
+          disabled={!mensaje.trim() || estado === "mandando"}
+          className="rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+        >
+          {estado === "mandando" ? t("help.ticketSending") : t("help.ticketSend")}
+        </button>
+        <button
+          onClick={onAtras}
+          className="rounded-full border border-border bg-background px-3 py-1.5 text-sm hover:bg-secondary"
+        >
+          {t("common.back")}
+        </button>
+      </div>
     </div>
   );
 }

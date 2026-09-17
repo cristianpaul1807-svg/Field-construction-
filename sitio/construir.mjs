@@ -27,9 +27,57 @@ const RAIZ = path.resolve(AQUI, "..");
 const SALIDA = path.join(AQUI, "publico");
 const DOMINIO = "https://logiciel-construction.com";
 
+/**
+ * La tipografía francesa, aplicada al texto y no al HTML.
+ *
+ * En francés el espacio antes de `? ! ; :` y dentro de las comillas es
+ * **insecable**, y el navegador no lo sabe: parte la línea ahí. El titular de
+ * soporte salía como «Un problème» / «? On répond», con el signo solo al
+ * principio del renglón. Es el error que un francófono de Quebec ve antes que
+ * cualquier otra cosa de la página, y la Loi 96 no va sólo de traducir.
+ *
+ * Se aplica al texto tal y como sale de `textos/fr.mjs`, no al HTML montado:
+ * un reemplazo sobre el documento entero acabaría metiendo un espacio
+ * insecable dentro de un `style` o de un `!important` y rompiendo el CSS sin
+ * que nada avise. Aquí sólo pasan frases.
+ *
+ * ` ` es el espacio fino insecable, que es el que corresponde a `? ! ;` y
+ * a los millares; ` ` es el normal insecable, que es el de `:` y el de
+ * las unidades — `10 %`, `5 000 $`.
+ */
+function tipografiaFrancesa(texto) {
+  return texto
+    .replace(/ ([?!;])/g, " $1")
+    .replace(/ :/g, " :")
+    .replace(/ ([%$])/g, " $1")
+    .replace(/« /g, "« ")
+    .replace(/ »/g, " »")
+    // El separador de millares: «5 000» no puede partirse en dos renglones.
+    .replace(/(\d) (\d{3})/g, "$1 $2");
+}
+
+function conTipografia(valor) {
+  if (typeof valor === "string") return tipografiaFrancesa(valor);
+  if (Array.isArray(valor)) return valor.map(conTipografia);
+  if (valor && typeof valor === "object") {
+    return Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, conTipografia(v)]));
+  }
+  return valor;
+}
+
+/**
+ * Las direcciones se quedan como están.
+ *
+ * No son texto que nadie lee: son la dirección. Un espacio insecable dentro de
+ * `fonctionnalites` no llegaría a pasar —no hay espacios—, pero dejarlo
+ * explícito evita que alguien meta mañana un slug con un signo y se encuentre
+ * con una página que no abre.
+ */
+const frances = { ...conTipografia(fr), rutas: fr.rutas, codigo: fr.codigo, lang: fr.lang };
+
 /** El francés manda: es la lengua del mercado y la que exige la Loi 96. */
-const IDIOMAS = [fr, en, es, it];
-const REFERENCIA = fr;
+const IDIOMAS = [frances, en, es, it];
+const REFERENCIA = frances;
 
 const PRECIOS = { chantier: 99, entreprise: 249 };
 
@@ -705,7 +753,18 @@ function paginaContacto(idioma) {
           <p class="sobretitulo">${esc(t.sobretitulo)}</p>
           <h1 style="font-size:clamp(32px,4.6vw,52px);margin-top:12px;max-width:15ch">${esc(t.h1)}</h1>
           <p class="entradilla" style="margin-top:18px">${esc(t.entradilla)}</p>
-          <div class="rejilla" style="grid-template-columns:1fr;gap:12px;margin-top:32px">
+
+          <!-- El bot primero y el formulario después, y en ese orden en la
+               página: el bot contesta ahora y nosotros mañana. Ponerlos al
+               revés sería cambiarle a alguien una respuesta inmediata por una
+               espera de un día, y encima quedándonos el trabajo. -->
+          <div class="tarjeta" style="padding:22px;margin-top:30px;border-color:var(--azul);background:var(--azul-claro)">
+            <h4>${esc(t.primeroTitulo)}</h4>
+            <p style="margin-top:8px;font-size:15.5px;color:var(--tinta-2)">${esc(t.primeroP)}</p>
+            <a href="/" class="boton boton-secundario" style="margin-top:16px">${esc(t.primeroCta)}</a>
+          </div>
+
+          <div class="rejilla" style="grid-template-columns:1fr;gap:12px;margin-top:22px">
             ${t.ventajas.map((v) => `<div class="tarjeta" style="padding:19px"><h4>${esc(v.t)}</h4><p style="margin-top:7px;font-size:15.5px">${esc(v.p)}</p></div>`).join("\n            ")}
           </div>
         </div>
@@ -724,15 +783,8 @@ function paginaContacto(idioma) {
               <div class="campo"><label for="correo">${esc(t.campoCorreo)}</label><input id="correo" name="correo" type="email" autocomplete="email" inputmode="email"></div>
             </div>
             <div class="campo">
-              <label for="gente">${esc(t.campoGente)}</label>
-              <select id="gente" name="gente">
-                <option value="">${esc(t.campoGenteElegir)}</option>
-                ${t.gente.map((g) => `<option>${esc(g)}</option>`).join("")}
-              </select>
-            </div>
-            <div class="campo">
-              <label for="mensaje">${esc(t.campoMensaje)} <span style="font-weight:400;color:var(--apagado)">${esc(t.opcional)}</span></label>
-              <textarea id="mensaje" name="mensaje" placeholder="${esc(t.mensajePlaceholder)}"></textarea>
+              <label for="mensaje">${esc(t.campoMensaje)}</label>
+              <textarea id="mensaje" name="mensaje" placeholder="${esc(t.mensajePlaceholder)}" required></textarea>
             </div>
             <button type="submit" class="boton boton-principal" id="enviar">${esc(t.enviar)}</button>
             <div id="resultado" hidden></div>

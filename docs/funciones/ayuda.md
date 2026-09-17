@@ -59,6 +59,68 @@ entero y no hay estados imposibles: el recorrido *es* el estado.
 
 ---
 
+## Cuando el árbol no llega: el ticket
+
+La cuarta salida de la respuesta es **«Esto no me lo resuelve»**, y está la
+última a propósito.
+
+El árbol contesta al instante; un correo tarda un día. Ofrecer el ticket antes
+de haber intentado responder es cambiarle a alguien una respuesta inmediata por
+una espera, y encima quedándonos el trabajo. Por eso el orden no es un detalle
+de maquetación: **el bot primero, el ticket sólo si el bot no llegó**.
+
+Se escribe en una caja ahí mismo y se manda a `POST /soporte/ticket`. Lo que
+sale con él, sin que nadie lo teclee:
+
+| Qué va | De dónde sale |
+|---|---|
+| El negocio | `businesses.name` por `req.businessId` |
+| Quién escribe y su correo | `users` por `req.authUserId` |
+| El plan | `req.plan` |
+| La pantalla donde estaba | La ruta actual de wouter |
+| El tema de ayuda que acababa de leer | `seccion.id` + `tema.id` |
+
+Eso es la diferencia entre contestar a la primera y tres correos preguntando
+dónde estaba — tres correos que paga alguien que mientras tanto no puede
+facturar.
+
+El correo sale con **Responder-a** puesto en su dirección, así que se contesta
+dándole a Responder.
+
+**No se guarda en ninguna tabla.** Un ticket que se guarda y nadie atiende es
+una bandeja de entrada falsa: parece que hay un sistema de soporte y lo que hay
+es una lista que nadie abre. Se manda al buzón donde ya miramos.
+
+Si falla el envío, **lo escrito se queda en la caja** y se ofrece el buzón en
+un enlace. Perder lo que alguien acaba de teclear cuando ya venía enfadado es la
+forma más rápida de que no vuelva a escribir nunca.
+
+### Pedir ayuda no tiene área
+
+`/soporte/*` está en `DE_TODOS`, en `shared/permisos.ts`: la puede usar
+cualquier papel.
+
+Quien se topa con el problema en la obra es justo quien tiene el papel más
+limitado —un jefe de obra sólo ve campo—, y un sistema de permisos que le
+conteste 403 a «no puedo seguir, ayúdame» está trabajando en contra del
+producto. No enseña ningún dato: el mensaje lo escribe él.
+
+Esa lista tiene que seguir siendo corta, porque cada entrada es una puerta que
+los permisos no miran. Lo vigila `scripts/check-permisos.py`, que la lee del
+mismo archivo en vez de repetirla — una lista de excepciones escrita en el
+guardia se desincroniza de lo que vigila, y entonces protege de mentira.
+
+### Y para quien no puede entrar
+
+El ticket de aquí dentro necesita sesión. Quien no puede entrar —que muchas
+veces es *el* problema— escribe desde la página de soporte del sitio:
+`/fr/support` y sus equivalentes, que manda a `POST /public/soporte`. Ese va
+por encima de la puerta de autenticación a propósito, y por eso llega sin
+contexto: hay que preguntarle todo. Es el camino peor, y es el único que
+existe para ese caso.
+
+---
+
 ## Añadir un tema
 
 Dos sitios, a propósito: la forma en TypeScript y las palabras en los idiomas.

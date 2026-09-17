@@ -1955,7 +1955,16 @@
           "nota": "Mandar dos veces no duplica nada. Cada documento se queda emparejado con el suyo de allí, así que un reintento lo actualiza en vez de crear otro."
         }
       }
-    }
+    },
+    "notSolved": "Esto no me lo resuelve",
+    "ticketIntro": "Cuéntanos qué ocurre y te contestamos en un día laborable. Va con tu empresa y la pantalla donde estás, así que no hace falta que lo escribas.",
+    "ticketPlaceholder": "Qué hiciste y qué pasó en su lugar…",
+    "ticketSend": "Mandar",
+    "ticketSending": "Mandando…",
+    "ticketSent": "Recibido. Te contestamos en un día laborable.",
+    "ticketEmpty": "Escribe qué ocurre antes de mandarlo.",
+    "ticketFailed": "No se pudo mandar desde aquí. Lo que escribiste sigue ahí.",
+    "ticketWriteTo": "Escríbenos a"
   },
   "agreements": {
     "open": "Acuerdos de trabajo",

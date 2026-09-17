@@ -1955,7 +1955,16 @@
           "nota": "Mandarlo due volte non duplica niente. Ogni documento resta appaiato con il suo di là, quindi un nuovo tentativo lo aggiorna invece di crearne un altro."
         }
       }
-    }
+    },
+    "notSolved": "Questo non risolve",
+    "ticketIntro": "Raccontaci cosa succede e ti rispondiamo entro un giorno lavorativo. Parte con la tua azienda e la schermata in cui sei, così non devi scriverlo.",
+    "ticketPlaceholder": "Cosa hai fatto e cosa è successo invece…",
+    "ticketSend": "Invia",
+    "ticketSending": "Invio…",
+    "ticketSent": "Ricevuto. Ti rispondiamo entro un giorno lavorativo.",
+    "ticketEmpty": "Scrivi cosa succede prima di inviarlo.",
+    "ticketFailed": "Non è stato possibile inviarlo da qui. Quello che hai scritto è ancora lì.",
+    "ticketWriteTo": "Scrivici a"
   },
   "agreements": {
     "open": "Accordi di lavoro",

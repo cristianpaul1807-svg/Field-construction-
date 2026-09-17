@@ -85,10 +85,32 @@ export const AREA_DE: Record<string, Area> = {
   "admin-assistant": "ajustes",
 };
 
+/**
+ * Familias que no son de ningún área: las usa cualquiera, tenga el papel que
+ * tenga.
+ *
+ * Es una lista corta y tiene que seguir siéndolo, porque cada entrada es una
+ * puerta que los permisos no miran. Lo que entra aquí es lo que **no es una
+ * parte del negocio**, sino la salida de emergencia.
+ *
+ * Pedir ayuda es justo eso. Quien se topa con el problema en la obra es quien
+ * tiene el papel más limitado —un jefe de obra sólo ve campo—, y un sistema de
+ * permisos que le conteste 403 a «no puedo seguir, ayúdame» está trabajando en
+ * contra del producto. El ticket no enseña ningún dato: lo escribe él.
+ */
+export const DE_TODOS: readonly string[] = ["soporte"];
+
+function familiaDe(ruta: string): string {
+  return ruta.replace(/^\/+/, "").split(/[/?]/)[0];
+}
+
+export function esDeTodos(ruta: string): boolean {
+  return DE_TODOS.includes(familiaDe(ruta));
+}
+
 /** El área de una ruta del panel, o `null` si esa familia no está en el mapa. */
 export function areaDeLaRuta(ruta: string): Area | null {
-  const familia = ruta.replace(/^\/+/, "").split(/[/?]/)[0];
-  return AREA_DE[familia] ?? null;
+  return AREA_DE[familiaDe(ruta)] ?? null;
 }
 
 /**

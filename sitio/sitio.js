@@ -86,11 +86,14 @@ document.documentElement.classList.add("js");
     var datos = Object.fromEntries(new FormData(form).entries());
     var hayNombre = String(datos.nombre || "").trim();
     var hayContacto = String(datos.telefono || "").trim() || String(datos.correo || "").trim();
-    if (!hayNombre || !hayContacto) { decir("resultado-mal", d.faltan); return; }
+    /* El mensaje es lo único que no se puede deducir ni preguntar después sin
+       perder un día, así que sin él no se manda. */
+    var hayMensaje = String(datos.mensaje || "").trim();
+    if (!hayNombre || !hayContacto || !hayMensaje) { decir("resultado-mal", d.faltan); return; }
 
     boton.disabled = true;
     boton.textContent = d.enviando;
-    fetch("/api/public/demo", {
+    fetch("/api/public/soporte", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(datos),

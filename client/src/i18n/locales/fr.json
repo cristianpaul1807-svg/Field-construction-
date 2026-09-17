@@ -1955,7 +1955,16 @@
           "nota": "Envoyer deux fois ne duplique rien. Chaque document reste apparié au sien là-bas, donc un nouvel essai le met à jour au lieu d'en créer un autre."
         }
       }
-    }
+    },
+    "notSolved": "Ça ne règle pas mon cas",
+    "ticketIntro": "Dites-nous ce qui se passe et on répond d'ici un jour ouvrable. Votre entreprise et l'écran où vous êtes partent avec le message, vous n'avez pas à les écrire.",
+    "ticketPlaceholder": "Ce que vous avez fait, et ce qui s'est passé à la place…",
+    "ticketSend": "Envoyer",
+    "ticketSending": "Envoi…",
+    "ticketSent": "C'est reçu. On vous répond d'ici un jour ouvrable.",
+    "ticketEmpty": "Écrivez ce qui se passe avant de l'envoyer.",
+    "ticketFailed": "On n'a pas réussi à l'envoyer d'ici. Ce que vous avez écrit est encore là.",
+    "ticketWriteTo": "Écrivez-nous à"
   },
   "agreements": {
     "open": "Ententes de travail",

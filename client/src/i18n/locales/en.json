@@ -1955,7 +1955,16 @@
           "nota": "Sending twice doesn't duplicate anything. Each document stays paired with its counterpart there, so a retry updates it instead of creating another."
         }
       }
-    }
+    },
+    "notSolved": "This doesn't solve it",
+    "ticketIntro": "Tell us what's happening and we'll reply within one business day. It goes out with your company and the screen you're on, so you don't have to write that part.",
+    "ticketPlaceholder": "What you did, and what happened instead…",
+    "ticketSend": "Send",
+    "ticketSending": "Sending…",
+    "ticketSent": "Got it. We'll reply within one business day.",
+    "ticketEmpty": "Write what's happening before sending it.",
+    "ticketFailed": "It couldn't be sent from here. What you wrote is still there.",
+    "ticketWriteTo": "Write to us at"
   },
   "agreements": {
     "open": "Work agreements",

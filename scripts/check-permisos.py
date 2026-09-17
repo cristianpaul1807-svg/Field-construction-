@@ -37,17 +37,37 @@ def familias_del_panel() -> set[str]:
 def familias_del_mapa() -> set[str]:
     with open(PERMISOS, encoding="utf-8") as f:
         codigo = f.read()
-    cuerpo = codigo[codigo.index("export const AREA_DE"): codigo.index("export function areaDeLaRuta")]
+    cuerpo = codigo[codigo.index("export const AREA_DE"): codigo.index("export const DE_TODOS")]
     # Las claves van con comillas cuando llevan guion y sin ellas cuando no.
     return set(re.findall(r'^\s*"?([a-z0-9-]+)"?\s*:\s*"[a-z]+"', cuerpo, re.M))
+
+
+def familias_de_todos() -> set[str]:
+    """Las que no son de ningún área porque las usa cualquier papel.
+
+    Se leen del mismo archivo en vez de repetirlas aquí. Una lista de
+    excepciones escrita en el guardia se desincroniza del código que vigila, y
+    entonces el guardia protege de mentira: o avisa de algo que ya está bien,
+    o —peor— deja de avisar de una puerta que alguien abrió sin pensarlo.
+    """
+    with open(PERMISOS, encoding="utf-8") as f:
+        codigo = f.read()
+    linea = re.search(r"export const DE_TODOS[^=]*=\s*\[([^\]]*)\]", codigo, re.S)
+    return set(re.findall(r'"([a-z0-9-]+)"', linea.group(1))) if linea else set()
 
 
 def main() -> int:
     panel = familias_del_panel()
     mapa = familias_del_mapa()
+    de_todos = familias_de_todos()
 
-    sin_area = sorted(panel - mapa)
+    sin_area = sorted(panel - mapa - de_todos)
     de_sobra = sorted(mapa - panel)
+    # Una excepción que ya no corresponde a ninguna ruta es una puerta abierta
+    # a nada, y la siguiente ruta que se llame así la hereda sin querer.
+    huerfanas = sorted(de_todos - panel)
+    if huerfanas:
+        print("aviso — en DE_TODOS y ya no en la API: " + ", ".join(huerfanas))
 
     if sin_area:
         print("Estas familias de rutas del panel no tienen área en shared/permisos.ts:")
@@ -61,7 +81,8 @@ def main() -> int:
         # Pero un mapa lleno de nombres muertos deja de leerse.
         print("aviso — en el mapa y ya no en la API: " + ", ".join(de_sobra))
 
-    print(f"permisos ok — {len(panel)} familias del panel, todas con área")
+    print(f"permisos ok — {len(panel)} familias del panel: {len(panel - de_todos)} con área, "
+          f"{len(panel & de_todos)} de todos ({', '.join(sorted(panel & de_todos))})")
     return 0
 
 
