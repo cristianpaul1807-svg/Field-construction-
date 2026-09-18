@@ -49,6 +49,39 @@ async function startServer() {
       fichero: string;
     }[];
 
+    /** El dominio desnudo es la puerta pública, no el inicio de la PWA. */
+    const idiomasLanding = new Set(["fr", "en", "es", "it"]);
+    const idiomaDesdeNavegador = (acceptLanguage: string | undefined) => {
+      const preferencias = (acceptLanguage ?? "")
+        .toLowerCase()
+        .split(",")
+        .map((preferencia) => {
+          const [codigo, ...parametros] = preferencia.trim().split(";");
+          const calidad = parametros.find((parametro) => parametro.trim().startsWith("q="));
+          return {
+            codigo: codigo.split("-")[0],
+            calidad: calidad ? Number.parseFloat(calidad.split("=")[1]) : 1,
+          };
+        })
+        .filter(({ calidad }) => calidad > 0)
+        .sort((a, b) => b.calidad - a.calidad);
+
+      return preferencias.find(({ codigo }) => idiomasLanding.has(codigo))?.codigo ?? "fr";
+    };
+
+    const portadas = new Map(
+      mapa
+        .filter(({ ruta }) => /^\/(fr|en|es|it)\/$/.test(ruta))
+        .map(({ ruta, fichero }) => [ruta.slice(1, -1), fichero]),
+    );
+
+    app.get("/", (req, res) => {
+      const idioma = idiomaDesdeNavegador(req.get("accept-language"));
+      const fichero = portadas.get(idioma) ?? portadas.get("fr");
+      if (!fichero) return res.sendStatus(503);
+      return res.sendFile(path.join(sitioPath, fichero));
+    });
+
     for (const { ruta, fichero } of mapa) {
       // `/fr` sin la barra es lo que la gente escribe. Redirección permanente
       // para que Google no acabe con dos direcciones del mismo contenido.

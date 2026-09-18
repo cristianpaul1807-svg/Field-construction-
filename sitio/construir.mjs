@@ -230,7 +230,7 @@ function cabecera(idioma, pagina) {
       ${item("ccq", idioma.nav.ccq)}
       ${item("precios", idioma.nav.precios)}
       ${selectorIdioma(idioma, pagina)}
-      <a href="/" class="boton boton-secundario">${esc(idioma.nav.entrar)}</a>
+      <a href="/iniciar-sesion" class="boton boton-secundario">${esc(idioma.nav.entrar)}</a>
       <a href="${REGISTRO}" class="boton boton-principal solo-ancho">${esc(idioma.nav.probar)}</a>
     </nav>
   </div>
@@ -259,7 +259,7 @@ function pie(idioma) {
         <ul>
           <li><a href="${REGISTRO}">${esc(idioma.pie.ensayo)}</a></li>
           ${l("contacto", idioma.nav.hablar)}
-          <li><a href="/">${esc(idioma.nav.entrar)}</a></li>
+          <li><a href="/iniciar-sesion">${esc(idioma.nav.entrar)}</a></li>
         </ul>
       </div>
       <div>
@@ -422,7 +422,14 @@ function paginaInicio(idioma) {
         </div>
 
         <div class="escena-centro">
+          <div class="telefono-marco" aria-hidden="true">
+            <div class="telefono-boton telefono-boton-silencio"></div>
+            <div class="telefono-boton telefono-boton-volumen telefono-boton-volumen-1"></div>
+            <div class="telefono-boton telefono-boton-volumen telefono-boton-volumen-2"></div>
+            <div class="telefono-boton telefono-boton-encendido"></div>
+          </div>
           <div class="pantalla">
+            <div class="telefono-isla" aria-hidden="true"><span></span></div>
             <div style="background:var(--azul);color:#fff;padding:17px 15px 15px">
               <p style="font-size:12px;opacity:.82;margin-bottom:3px">${esc(e.telFecha)}</p>
               <p style="font-family:var(--display);font-size:22px;font-weight:800;line-height:1.1;letter-spacing:-.03em">${esc(e.telObra)}</p>
