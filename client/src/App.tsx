@@ -6,7 +6,6 @@ import { RequireBusinessAuth } from "@/components/RequireBusinessAuth";
 import { RequireClientAuth } from "@/components/RequireClientAuth";
 import { ServerUnreachable } from "@/components/ServerUnreachable";
 import Landing from "@/pages/Landing";
-import Suscripcion from "@/pages/Suscripcion";
 import { getWorkerSession } from "@/lib/workerSession";
 import { getClientSession } from "@/lib/clientSession";
 import AuthBusiness from "@/pages/AuthBusiness";
@@ -18,6 +17,7 @@ import PublicBusinessChat from "@/pages/PublicBusinessChat";
 import ClientPortalMe from "@/pages/ClientPortalMe";
 import PaginaLegal from "@/pages/PaginaLegal";
 import NotFound from "@/pages/NotFound";
+import Subscription from "@/pages/Subscription";
 import Dashboard from "@/pages/Dashboard";
 import Crm from "@/pages/Crm";
 import ClientDetail from "@/pages/ClientDetail";
@@ -89,8 +89,8 @@ function BusinessPanel() {
         <Route path={"/settings/quickbooks"} component={SettingsQuickBooks} />
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
-        <Route path={"/suscripcion"} component={Suscripcion} />
-        <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
+      <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
+      <Route path={"/settings/subscription"} component={Subscription} />
         {/* Era una pantalla aparte que enseñaba el mismo link que la de
             WhatsApp. Al fusionarlas, quien tuviera esto guardado o llegara
             desde un enlace viejo aterrizaría en el 404. */}

@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson } from "@/lib/api";
 import { anuncioDeFallo } from "@/lib/fallos";
 import type { Area } from "@shared/permisos";
-import { planDe, type Acceso, type Plan } from "@shared/planes";
+import { planDe, type Plan } from "@shared/planes";
 
 // "none" means the server positively answered that this account isn't linked
 // to a business or a client yet — that's the signal to send someone into
@@ -23,10 +23,9 @@ interface AuthState {
   areas: Area[] | null;
   /** El plan del negocio. Decide qué partes existen, no quién las ve. */
   plan: Plan;
-  /** Si puede entrar al panel, o sólo a la pantalla de suscripción. */
-  acceso: Acceso;
-  /** Cuándo se acaba la prueba, para poder avisar antes de que pase. */
-  pruebaHasta: string | null;
+  subscriptionStatus: string | null;
+  trialEndsAt: string | null;
+  subscriptionPeriodEnd: string | null;
   businessId: string | null;
   clientId: string | null;
   refreshPersona: () => Promise<void>;
@@ -43,8 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Nace en `pilot`, que lo abre todo. Mientras `/auth/me` no conteste, esconder
   // el menú a medias sería peor que enseñarlo entero un segundo.
   const [plan, setPlan] = useState<Plan>("pilot");
-  const [acceso, setAcceso] = useState<Acceso>("activo");
-  const [pruebaHasta, setPruebaHasta] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [subscriptionPeriodEnd, setSubscriptionPeriodEnd] = useState<string | null>(null);
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
@@ -71,10 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPersona(body.persona);
       setAreas(Array.isArray(body.areas) ? body.areas : null);
       setPlan(planDe(body.plan));
-      // `activo` por defecto: si el servidor no lo dijo, el fallo es nuestro y
-      // no puede acabar en un contratista bloqueado sin deberlo.
-      setAcceso(body.acceso === "bloqueado" || body.acceso === "prueba" ? body.acceso : "activo");
-      setPruebaHasta(typeof body.pruebaHasta === "string" ? body.pruebaHasta : null);
+      setSubscriptionStatus(body.subscriptionStatus ?? null);
+      setTrialEndsAt(body.trialEndsAt ?? null);
+      setSubscriptionPeriodEnd(body.subscriptionPeriodEnd ?? null);
       setPersonaError(null);
       setBusinessId(body.businessId ?? null);
       setClientId(body.clientId ?? null);
@@ -103,6 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPersonaError(null);
         setBusinessId(null);
         setClientId(null);
+        setSubscriptionStatus(null);
+        setTrialEndsAt(null);
+        setSubscriptionPeriodEnd(null);
       }
     });
 
@@ -118,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, loading, persona, personaError, areas, plan, acceso, pruebaHasta, businessId, clientId, refreshPersona: loadPersona, signOut }}
+      value={{ session, loading, persona, personaError, areas, plan, subscriptionStatus, trialEndsAt, subscriptionPeriodEnd, businessId, clientId, refreshPersona: loadPersona, signOut }}
     >
       {children}
     </AuthContext.Provider>
