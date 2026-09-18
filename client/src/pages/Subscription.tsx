@@ -36,11 +36,12 @@ const plans: Plan[] = [
 ];
 
 export default function Subscription() {
-  const { subscriptionStatus, trialEndsAt, subscriptionPeriodEnd } = useAuth();
+  const { plan, subscriptionStatus, trialEndsAt, subscriptionPeriodEnd } = useAuth();
   const [, navigate] = useLocation();
   const [billing, setBilling] = useState<Billing>("month");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isFounder = plan === "pilot" || plan === "fondateur";
 
   const checkout = async (priceId: string) => {
     setBusy(priceId);
@@ -69,7 +70,8 @@ export default function Subscription() {
             <p className="text-sm text-muted-foreground">Activa el plan que corresponde a la forma en que trabajas.</p>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p>Estado actual: <strong>{subscriptionStatus ?? "sin suscripción"}</strong></p>
+            <p>Plan actual: <strong>{isFounder ? "Fundador — acceso completo" : (subscriptionStatus ?? "sin suscripción")}</strong></p>
+            {isFounder && <p className="text-sm text-muted-foreground">Esta cuenta pertenece al programa fundador y no necesita una suscripción de Stripe.</p>}
             {trialEndsAt && <p className="text-sm text-muted-foreground">La prueba termina el {new Date(trialEndsAt).toLocaleDateString()}.</p>}
             {subscriptionPeriodEnd && <p className="text-sm text-muted-foreground">Próxima renovación: {new Date(subscriptionPeriodEnd).toLocaleDateString()}.</p>}
             <p className="text-sm text-muted-foreground">El acceso se activa únicamente cuando Stripe confirma el pago.</p>
@@ -77,16 +79,16 @@ export default function Subscription() {
           </CardContent>
         </Card>
 
-        <div className="mx-auto flex w-fit rounded-full border bg-background p-1 shadow-sm" role="tablist" aria-label="Periodicidad de pago">
+        {!isFounder && <div className="mx-auto flex w-fit rounded-full border bg-background p-1 shadow-sm" role="tablist" aria-label="Periodicidad de pago">
           <button type="button" role="tab" aria-selected={billing === "month"} onClick={() => setBilling("month")} className={`rounded-full px-5 py-2 text-sm font-medium transition ${billing === "month" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
             Mensual
           </button>
           <button type="button" role="tab" aria-selected={billing === "year"} onClick={() => setBilling("year")} className={`rounded-full px-5 py-2 text-sm font-medium transition ${billing === "year" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
             Anual <span className="ml-1 text-xs opacity-80">2 meses gratis</span>
           </button>
-        </div>
+        </div>}
 
-        <div className="grid gap-5 md:grid-cols-2">
+        {!isFounder && <div className="grid gap-5 md:grid-cols-2">
           {plans.map((plan) => {
             const option = billing === "month" ? plan.monthly : plan.yearly;
             return (
@@ -113,7 +115,7 @@ export default function Subscription() {
               </Card>
             );
           })}
-        </div>
+        </div>}
         <Button variant="ghost" onClick={() => navigate("/")}>Volver</Button>
       </div>
     </main>

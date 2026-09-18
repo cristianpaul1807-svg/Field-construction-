@@ -208,6 +208,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const area = areaDeLaPantalla(item.path);
         if (area && !puede(areas, area)) return false;
         const capacidad = capacidadDeLaPantalla(item.path);
+        if (item.id === "subscription" && (plan === "pilot" || plan === "fondateur")) return false;
         return !capacidad || tiene(plan, capacidad);
       }),
     }))
