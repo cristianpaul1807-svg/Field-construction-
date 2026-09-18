@@ -315,6 +315,8 @@ function documento(idioma, pagina, { meta, cuerpo, jsonLd = [], estiloExtra = ""
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="logiciel-construction">
+<meta name="mobile-web-app-capable" content="yes">
 <title>${esc(meta.title)}</title>
 <meta name="description" content="${esc(meta.desc)}">
 <link rel="canonical" href="${DOMINIO}${url(idioma, pagina)}">
@@ -329,6 +331,7 @@ ${alternos}
 <link rel="icon" href="/icons/favicon.ico" sizes="any">
 <link rel="icon" href="/sitio/logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="stylesheet" href="/sitio/estilo.css">
 ${PRECARGA}
 ${estiloExtra}
