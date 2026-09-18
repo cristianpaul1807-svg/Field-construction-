@@ -90,6 +90,7 @@ function BusinessPanel() {
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
       <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
+      <Route path={"/suscripcion"} component={Subscription} />
       <Route path={"/settings/subscription"} component={Subscription} />
         {/* Era una pantalla aparte que enseñaba el mismo link que la de
             WhatsApp. Al fusionarlas, quien tuviera esto guardado o llegara

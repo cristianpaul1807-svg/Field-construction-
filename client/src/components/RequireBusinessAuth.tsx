@@ -37,8 +37,8 @@ export function RequireBusinessAuth({ children }: { children: ReactNode }) {
 
   // Una cuenta suspendida conserva únicamente la puerta de suscripción. Los
   // clientes y trabajadores tienen sus propios accesos y no pasan por aquí.
-  if (subscriptionStatus && !["trialing", "active"].includes(subscriptionStatus) && ruta !== "/settings/subscription") {
-    return <Redirect to="/settings/subscription" />;
+  if (subscriptionStatus && !["trialing", "active"].includes(subscriptionStatus) && ruta !== "/suscripcion" && ruta !== "/settings/subscription") {
+    return <Redirect to="/suscripcion" />;
   }
 
   // Escribir la dirección a mano tampoco entra. Se manda a la primera pantalla
