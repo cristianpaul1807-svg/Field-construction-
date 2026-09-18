@@ -819,3 +819,27 @@ body {
 .pantalla::after { content: ""; position: absolute; z-index: 7; left: 50%; bottom: 8px; width: 92px; height: 4px; transform: translateX(-50%); border-radius: 999px; background: rgba(10,18,31,.76); pointer-events: none; }
 @media (max-width: 1039px) { .escena-centro { width: min(300px, 76vw); } }
 @media (prefers-reduced-motion: reduce) { .escena:hover .escena-centro { transform: none; } }
+
+
+/* Contraste explícito para botones sobre la landing oscura en dispositivos que
+   siguen la preferencia del sistema. Evita texto claro sobre fondo gris claro. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .cabecera .boton-secundario,
+  :root:not([data-theme="light"]) .portada .boton-secundario {
+    background: #17263b;
+    color: #f4f8ff;
+    border-color: rgba(190, 211, 240, .26);
+    box-shadow: 0 5px 14px -8px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  :root:not([data-theme="light"]) .cabecera .boton-secundario:hover,
+  :root:not([data-theme="light"]) .portada .boton-secundario:hover {
+    background: #203552;
+    color: #fff;
+    border-color: rgba(145, 184, 255, .5);
+  }
+  :root:not([data-theme="light"]) .idiomas > summary {
+    background: #111f33;
+    color: #e9f1ff;
+    border-color: rgba(190, 211, 240, .22);
+  }
+}
