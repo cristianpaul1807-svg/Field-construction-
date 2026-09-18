@@ -75,7 +75,10 @@ async function startServer() {
         .map(({ ruta, fichero }) => [ruta.slice(1, -1), fichero]),
     );
 
-    app.get("/", (req, res) => {
+    app.get("/", (req, res, next) => {
+      // La PWA usa `/?app=1` para entrar en la pantalla de roles de React.
+      // La raíz sin ese parámetro sigue siendo la landing indexable.
+      if (req.query.app === "1") return next();
       const idioma = idiomaDesdeNavegador(req.get("accept-language"));
       const fichero = portadas.get(idioma) ?? portadas.get("fr");
       if (!fichero) return res.sendStatus(503);
