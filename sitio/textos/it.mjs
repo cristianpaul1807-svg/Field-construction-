@@ -325,6 +325,10 @@ export default {
     entradilla:
       "In dollari canadesi, al mese. È esattamente quello che viene addebitato: al pagamento non si aggiunge nulla. Mese per mese, senza contratto, e niente trattative sottobanco — pagano tutti uguale.",
     mes: "CAD / mese",
+    ano: "CAD / anno",
+    mensual: "Mensile",
+    anual: "Annuale",
+    ahorro: "2 mesi gratis",
     destacado: "Il più scelto",
     probar: "Prova 30 giorni",
     chantier: {

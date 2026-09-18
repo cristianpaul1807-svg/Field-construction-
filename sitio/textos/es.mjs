@@ -325,6 +325,10 @@ export default {
     entradilla:
       "En dólares canadienses, al mes. Es lo que se cobra exactamente: no se añade nada al pagar. Mes a mes, sin contrato, y sin negociaciones por debajo — todo el mundo paga lo mismo.",
     mes: "CAD / mes",
+    ano: "CAD / año",
+    mensual: "Mensual",
+    anual: "Anual",
+    ahorro: "2 meses gratis",
     destacado: "El más elegido",
     probar: "Probar 30 días",
     chantier: {

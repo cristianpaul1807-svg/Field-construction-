@@ -118,3 +118,34 @@ document.documentElement.classList.add("js");
       });
   });
 })();
+
+/* ---------- Selector mensual / anual ---------- */
+(function () {
+  var toggle = document.querySelector(".periodo-toggle");
+  if (!toggle) return;
+  var botones = toggle.querySelectorAll("[data-periodo]");
+  var planes = document.querySelectorAll(".plan");
+
+  function cambiar(periodo) {
+    botones.forEach(function (b) {
+      b.classList.toggle("activo", b.getAttribute("data-periodo") === periodo);
+      b.setAttribute("aria-selected", b.getAttribute("data-periodo") === periodo ? "true" : "false");
+    });
+    planes.forEach(function (plan) {
+      var mes = plan.querySelector(".dato-mes");
+      var ano = plan.querySelector(".dato-ano");
+      if (!mes || !ano) return;
+      if (periodo === "ano") {
+        mes.hidden = true;
+        ano.hidden = false;
+      } else {
+        mes.hidden = false;
+        ano.hidden = true;
+      }
+    });
+  }
+
+  botones.forEach(function (b) {
+    b.addEventListener("click", function () { cambiar(b.getAttribute("data-periodo")); });
+  });
+})();
