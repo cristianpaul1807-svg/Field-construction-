@@ -3819,6 +3819,7 @@ apiRouter.post(
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
+      payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/settings/subscription?checkout=success`,
       cancel_url: `${baseUrl}/settings/subscription?checkout=cancelled`,

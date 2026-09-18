@@ -69,7 +69,7 @@ export default function Subscription() {
             <p className="text-sm text-muted-foreground">Activa el plan que corresponde a la forma en que trabajas.</p>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p>Estado actual: <strong>{subscriptionStatus ?? "prueba"}</strong></p>
+            <p>Estado actual: <strong>{subscriptionStatus ?? "sin suscripción"}</strong></p>
             {trialEndsAt && <p className="text-sm text-muted-foreground">La prueba termina el {new Date(trialEndsAt).toLocaleDateString()}.</p>}
             {subscriptionPeriodEnd && <p className="text-sm text-muted-foreground">Próxima renovación: {new Date(subscriptionPeriodEnd).toLocaleDateString()}.</p>}
             <p className="text-sm text-muted-foreground">El acceso se activa únicamente cuando Stripe confirma el pago.</p>
