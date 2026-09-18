@@ -3824,7 +3824,11 @@ apiRouter.post(
       cancel_url: `${baseUrl}/settings/subscription?checkout=cancelled`,
       metadata: { businessId: business.id, priceId },
       subscription_data: { metadata: { businessId: business.id, priceId } },
-    });
+      // Este SaaS usa el Checkout estándar de Stripe y gestiona sus impuestos
+      // fuera de Managed Payments. La cuenta Live lo tiene activado por defecto;
+      // desactivarlo aquí evita exigir un tax_code de producto para la suscripción.
+      managed_payments: { enabled: false },
+    } as any);
     if (!session.url) throw new Error("Stripe no devolvió una URL de suscripción");
     res.json({ url: session.url });
   })
