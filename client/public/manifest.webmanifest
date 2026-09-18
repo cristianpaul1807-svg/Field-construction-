@@ -2,7 +2,7 @@
   "name": "logiciel-construction",
   "short_name": "logiciel-construction",
   "description": "Gestión completa para empresas de construcción: presupuestos, obras, equipo y cobros.",
-  "start_url": "/iniciar-sesion",
+  "start_url": "/?app=1",
   "scope": "/",
   "display": "standalone",
   "display_override": [
