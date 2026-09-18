@@ -26,6 +26,9 @@ interface AuthState {
   subscriptionStatus: string | null;
   trialEndsAt: string | null;
   subscriptionPeriodEnd: string | null;
+  /** Compatibilidad con la pantalla de suscripción existente en main. */
+  acceso: "activo" | "prueba" | "bloqueado";
+  pruebaHasta: string | null;
   businessId: string | null;
   clientId: string | null;
   refreshPersona: () => Promise<void>;
@@ -118,9 +121,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const acceso: AuthState["acceso"] =
+    subscriptionStatus && !["active", "trialing"].includes(subscriptionStatus)
+      ? "bloqueado"
+      : subscriptionStatus === "trialing"
+        ? "prueba"
+        : "activo";
+
   return (
     <AuthContext.Provider
-      value={{ session, loading, persona, personaError, areas, plan, subscriptionStatus, trialEndsAt, subscriptionPeriodEnd, businessId, clientId, refreshPersona: loadPersona, signOut }}
+      value={{ session, loading, persona, personaError, areas, plan, subscriptionStatus, trialEndsAt, subscriptionPeriodEnd, acceso, pruebaHasta: trialEndsAt, businessId, clientId, refreshPersona: loadPersona, signOut }}
     >
       {children}
     </AuthContext.Provider>
