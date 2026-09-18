@@ -12,7 +12,7 @@ import { useLocation } from "wouter";
 
 export function RequireBusinessAuth({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const { session, loading, persona, personaError, areas, plan } = useAuth();
+  const { session, loading, persona, personaError, areas, plan, subscriptionStatus } = useAuth();
   const [ruta] = useLocation();
 
   if (loading) {
@@ -34,6 +34,12 @@ export function RequireBusinessAuth({ children }: { children: ReactNode }) {
   if (personaError) return <ServerUnreachable message={personaError} />;
   if (persona === "client") return <Redirect to="/portal" />;
   if (persona === "none") return <Redirect to="/negocio/acceso" />;
+
+  // Una cuenta suspendida conserva únicamente la puerta de suscripción. Los
+  // clientes y trabajadores tienen sus propios accesos y no pasan por aquí.
+  if (subscriptionStatus && !["trialing", "active"].includes(subscriptionStatus) && ruta !== "/settings/subscription") {
+    return <Redirect to="/settings/subscription" />;
+  }
 
   // Escribir la dirección a mano tampoco entra. Se manda a la primera pantalla
   // que sí es suya en vez de a un cartel de «sin permiso»: un jefe de obra que

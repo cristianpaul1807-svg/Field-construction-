@@ -1,4 +1,5 @@
 import express, { Router, type Request, type Response, type NextFunction } from "express";
+import type Stripe from "stripe";
 import multer from "multer";
 import { randomUUID, randomBytes } from "crypto";
 import { getSupabaseAdmin, SupabaseNotConfiguredError } from "./supabaseAdmin";
@@ -72,6 +73,15 @@ import { capacidadDeLaRuta, planDe, tiene } from "../shared/planes";
 import { aplicaLaCcq, esPaisConocido, esRegionDe, PAIS_POR_DEFECTO } from "../shared/paises";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
+import {
+  STRIPE_PRICE_IDS,
+  intervalFromPriceId,
+  planFromPriceId,
+  subscriptionPeriodEnd,
+  subscriptionPriceId,
+  updateBusinessSubscription,
+  findBusinessByStripeSubscription,
+} from "./subscription";
 import {
   annualTotals,
   approvedHours,
@@ -844,6 +854,62 @@ async function stripeWebhookHandler(req: Request, res: Response) {
     return;
   }
 
+  // Subscription access is changed only from verified Stripe events, never
+  // from the browser redirect after Checkout.
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as { mode?: string; metadata?: { businessId?: string; priceId?: string }; customer?: string | null; subscription?: string | { id: string } | null };
+    if (session.mode === "subscription" && session.metadata?.businessId && session.subscription) {
+      const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
+      const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
+      const priceId = subscriptionPriceId(subscription) ?? session.metadata.priceId ?? null;
+      const plan = planFromPriceId(priceId);
+      if (plan) {
+        await updateBusinessSubscription(session.metadata.businessId, {
+          stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
+          stripe_subscription_id: subscription.id,
+          subscription_plan: plan,
+          subscription_status: subscription.status === "active" ? "active" : subscription.status,
+          subscription_interval: intervalFromPriceId(priceId),
+          subscription_price_id: priceId,
+          subscription_started_at: new Date().toISOString(),
+          subscription_period_end: subscriptionPeriodEnd(subscription),
+          subscription_cancel_at_period_end: !!subscription.cancel_at_period_end,
+          subscription_block_reason: null,
+        });
+      }
+    }
+  }
+
+  if (event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as { customer?: string | null; subscription?: string | null; status?: string | null };
+    if (typeof invoice.subscription === "string") {
+      const subscription = await getStripe().subscriptions.retrieve(invoice.subscription);
+      const business = await findBusinessByStripeSubscription(subscription.id);
+      if (business) {
+        await updateBusinessSubscription(business.id, {
+          subscription_status: event.type === "invoice.payment_succeeded" ? "active" : "payment_failed",
+          subscription_last_payment_at: event.type === "invoice.payment_succeeded" ? new Date().toISOString() : undefined,
+          subscription_period_end: subscriptionPeriodEnd(subscription),
+        });
+      }
+    }
+  }
+
+  if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+    const business = await findBusinessByStripeSubscription(subscription.id);
+    if (business) {
+      const priceId = subscriptionPriceId(subscription);
+      await updateBusinessSubscription(business.id, {
+        subscription_status: event.type === "customer.subscription.deleted" ? "cancelled" : subscription.status,
+        subscription_period_end: subscriptionPeriodEnd(subscription),
+        subscription_cancel_at_period_end: !!subscription.cancel_at_period_end,
+        subscription_price_id: priceId,
+        subscription_block_reason: event.type === "customer.subscription.deleted" ? "stripe_cancelled" : null,
+      });
+    }
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as { id: string; metadata?: { invoiceId?: string; businessId?: string }; payment_intent?: string | null; amount_total?: number | null };
     const invoiceId = session.metadata?.invoiceId;
@@ -1263,7 +1329,7 @@ apiRouter.post(
 
     const { data: business, error: businessError } = await admin
       .from("businesses")
-      .insert({ name: businessName, slug })
+      .insert({ name: businessName, slug, primary_auth_user_id: req.authUserId!, subscription_plan: "prueba", subscription_status: "trialing", trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), subscription_language: "es" })
       .select("id")
       .single();
     if (businessError) throw businessError;
@@ -1348,7 +1414,7 @@ apiRouter.get(
     const [userRow, clientRow] = await Promise.all([
       admin
         .from("users")
-        .select("business_id, roles(permissions), businesses(subscription_plan)")
+        .select("business_id, roles(permissions), businesses(subscription_plan, subscription_status, trial_ends_at, subscription_period_end, subscription_price_id, subscription_cancel_at_period_end)")
         .eq("auth_user_id", req.authUserId!)
         .maybeSingle(),
       admin.from("clients").select("id").eq("auth_user_id", req.authUserId!).maybeSingle(),
@@ -1358,6 +1424,7 @@ apiRouter.get(
       // Las áreas y el plan viajan aquí para que el menú no enseñe lo que va a
       // rebotar. Es comodidad, no seguridad: quien los cambie en el navegador
       // se choca igual contra el servidor.
+      const businessSubscription = (userRow.data as { businesses?: { subscription_status?: string | null; trial_ends_at?: string | null; subscription_period_end?: string | null; subscription_price_id?: string | null; subscription_cancel_at_period_end?: boolean | null } | null }).businesses;
       res.json({
         persona: "business",
         businessId: userRow.data.business_id,
@@ -1366,6 +1433,11 @@ apiRouter.get(
           (userRow.data as { businesses?: { subscription_plan?: string | null } | null }).businesses
             ?.subscription_plan
         ),
+        subscriptionStatus: businessSubscription?.subscription_status ?? null,
+        trialEndsAt: businessSubscription?.trial_ends_at ?? null,
+        subscriptionPeriodEnd: businessSubscription?.subscription_period_end ?? null,
+        subscriptionPriceId: businessSubscription?.subscription_price_id ?? null,
+        subscriptionCancelAtPeriodEnd: businessSubscription?.subscription_cancel_at_period_end ?? false,
       });
     } else if (clientRow.data) {
       res.json({ persona: "client", clientId: clientRow.data.id });
@@ -3719,6 +3791,44 @@ apiRouter.use((req, res, next) => {
     plan,
   });
 });
+
+// Checkout de suscripción. El cliente solo puede elegir uno de los precios
+// Live declarados en el servidor; Stripe confirma después el estado real.
+apiRouter.post(
+  "/subscription/checkout",
+  route(async (req, res) => {
+    const priceId = String(req.body?.priceId ?? "");
+    if (!Object.values(STRIPE_PRICE_IDS).includes(priceId as (typeof STRIPE_PRICE_IDS)[keyof typeof STRIPE_PRICE_IDS])) {
+      res.status(400).json({ error: "Precio de suscripción no válido", code: "invalid_subscription_price" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data: business, error } = await admin
+      .from("businesses")
+      .select("id, name, email, stripe_customer_id")
+      .eq("id", req.businessId!)
+      .single();
+    if (error || !business) throw error ?? new Error("business not found");
+    const stripe = getStripe();
+    const customer = business.stripe_customer_id
+      ? await stripe.customers.retrieve(business.stripe_customer_id)
+      : await stripe.customers.create({ name: business.name, email: business.email ?? undefined, metadata: { businessId: business.id } });
+    const customerId = typeof customer === "string" ? customer : customer.id;
+    if (!business.stripe_customer_id) await updateBusinessSubscription(business.id, { stripe_customer_id: customerId });
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${baseUrl}/settings/subscription?checkout=success`,
+      cancel_url: `${baseUrl}/settings/subscription?checkout=cancelled`,
+      metadata: { businessId: business.id, priceId },
+      subscription_data: { metadata: { businessId: business.id, priceId } },
+    });
+    if (!session.url) throw new Error("Stripe no devolvió una URL de suscripción");
+    res.json({ url: session.url });
+  })
+);
 
 /**
  * Un ticket de soporte desde dentro del sistema.
@@ -9259,6 +9369,10 @@ async function crearAcceso(email: string): Promise<{ authUserId: string; passwor
 apiRouter.post(
   "/settings/users",
   route(async (req, res) => {
+    if (req.plan === "chantier" || req.plan === "prueba") {
+      res.status(402).json({ error: "Los usuarios y roles están disponibles en el plan Entreprise", code: "plan_no_incluye", capacidad: "equipo", plan: req.plan });
+      return;
+    }
     const { name, email, phone, areas } = req.body ?? {};
     if (!name?.trim()) {
       res.status(400).json({ error: "name is required" });
