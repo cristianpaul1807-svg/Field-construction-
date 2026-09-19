@@ -36,7 +36,29 @@ const CONFIG_KEY = "stripe_webhook_secrets";
  * system that silently never confirms anything.
  */
 const SCOPE = "@accounts";
-const EVENTS = ["checkout.session.completed", "account.updated"];
+/**
+ * Lo que le pedimos a Stripe que nos cuente.
+ *
+ * Los dos primeros son de Connect: el cliente de un contratista pagando una
+ * factura, y Stripe cambiando de opinión sobre la cuenta del contratista.
+ *
+ * Los cuatro de abajo son **nuestra** suscripción, y sin ellos nada de la
+ * pantalla de Suscripción sirve para nada: el plan del negocio se quedaría en
+ * el que tenía para siempre. Alguien pagaría Entreprise y seguiría sin ver las
+ * nóminas, y alguien que cancela las seguiría viendo un año.
+ *
+ * Añadir uno aquí no basta para un despliegue que ya tiene su endpoint creado:
+ * Stripe guarda la lista en el suyo. Hay que volver a provisionarlo, o
+ * añadirlo a mano en el panel de Stripe.
+ */
+const EVENTS = [
+  "checkout.session.completed",
+  "account.updated",
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "invoice.payment_failed",
+];
 
 /** Accounts v2 refuses a request with no explicit version. Pinned so a change
  *  at Stripe cannot reshape this without somebody choosing it. */

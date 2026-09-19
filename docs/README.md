@@ -52,6 +52,7 @@ directamente al paso a paso.
 | *(sin menú)* Privacidad y condiciones `/privacy`, `/terms` | [funciones/paginas-legales.md](funciones/paginas-legales.md) |
 | *(sin menú)* El sitio de presentación `/fr/`, `/en/`, `/es/`, `/it/` | [funciones/sitio-web.md](funciones/sitio-web.md) |
 | *(sin menú)* Instalar la aplicación en el móvil | [funciones/instalar-en-el-movil.md](funciones/instalar-en-el-movil.md) |
+| *(dentro de Configuración)* Suscripción — lo que nos paga el negocio | [funciones/suscripcion.md](funciones/suscripcion.md) |
 
 ### Proyectos
 

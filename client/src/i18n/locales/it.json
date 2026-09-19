@@ -95,7 +95,8 @@
     "clientPortalShort": "Portale",
     "serviceTypes": "Tipi di lavoro",
     "timeOff": "Ferie e assenze",
-    "quickbooks": "QuickBooks"
+    "quickbooks": "QuickBooks",
+    "subscription": "Abbonamento"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2458,7 +2459,8 @@
         "titulo": "Gli accessi limitati non sono nel tuo piano",
         "cuerpo": "Fai entrare chi ti serve con accesso solo alla sua parte: un capocantiere che vede i cantieri e non vede mai il profitto né la paga di nessuno."
       }
-    }
+    },
+    "verPlanes": "Vedi i piani"
   },
   "instalar": {
     "titulo": "Mettila sul telefono",
@@ -2473,5 +2475,43 @@
     "androidOtro": "Apri il menu del browser (i tre puntini) e scegli «Installa app» o «Aggiungi a schermata Home».",
     "copiar": "Copia l'indirizzo",
     "copiada": "Copiato"
+  },
+  "susc": {
+    "titulo": "Il tuo abbonamento",
+    "entradilla": "Quello che paghi per usare il sistema. Incassare dai tuoi clienti è un'altra cosa e sta in Pagamenti.",
+    "planActual": "Il tuo piano",
+    "sinPlan": "Non hai ancora scelto un piano",
+    "mensual": "Mensile",
+    "anual": "Annuale",
+    "dosMesesGratis": "Due mesi gratis",
+    "porMes": "{{precio}} {{moneda}} / mese",
+    "porAno": "{{precio}} {{moneda}} / anno",
+    "impuestosAparte": "È esattamente quello che viene addebitato. Al pagamento non si aggiunge nulla.",
+    "elegir": "Scegli questo piano",
+    "abriendo": "Apertura del pagamento…",
+    "pruebaIncluida": "30 giorni di prova. Non si addebita nulla fino al giorno 31, e puoi annullare prima da qui.",
+    "gestionar": "Cambia piano, carta o annulla",
+    "gestionarNota": "Si apre la pagina di Stripe, dove ci sono anche le tue fatture da scaricare.",
+    "renuevaEl": "Si rinnova il {{fecha}}",
+    "terminaEl": "Annullato. Funziona fino al {{fecha}}.",
+    "pruebaHasta": "Prova fino al {{fecha}}. Il primo addebito è quel giorno.",
+    "estado": {
+      "trialing": "In prova",
+      "active": "Attivo",
+      "past_due": "Il pagamento non è andato a buon fine",
+      "canceled": "Annullato",
+      "incomplete": "Incompleto"
+    },
+    "impagoAviso": "L'ultimo addebito non è andato a buon fine. Stripe riprova per qualche giorno; se aggiorni la carta ora, non perdi nulla. Non ti chiuderemo il sistema per questo.",
+    "pagoExitoso": "Fatto. Il tuo piano è attivo — se qui sotto non lo vedi ancora, ricarica tra qualche secondo.",
+    "pagoCancelado": "Non è stato addebitato nulla. Puoi riprovare quando vuoi.",
+    "noSePudo": "Non è stato possibile aprire il pagamento. Riprova tra un momento.",
+    "stripeSinConfigurar": "I pagamenti non sono ancora configurati su questo deploy. Scrivici e lo sistemiamo.",
+    "bloqueadoTitulo": "La prova è finita",
+    "bloqueadoCuerpo": "Il resto del sistema è in pausa finché non scegli un piano. Non è stato cancellato nulla: i tuoi cantieri, le tue fatture e le tue ore sono ancora lì, e tornano appena paghi.",
+    "bloqueadoDatos": "E se decidi di non continuare, puoi comunque scaricare tutto il tuo. È tuo, non nostro.",
+    "descargarTodo": "Scarica i miei dati",
+    "pruebaQuedan": "Ti restano {{dias}} giorni di prova. Quando finisce, il sistema va in pausa finché non scegli un piano.",
+    "pruebaUltimoDia": "Oggi è l'ultimo giorno di prova."
   }
 }

@@ -14,6 +14,14 @@ async function startServer() {
 
   app.use("/api", apiApp);
 
+  // Claude's custom connector UI expects the public MCP URL in the form
+  // https://host/mcp. Keep /api/mcp for existing clients, but delegate only
+  // the MCP and OAuth discovery paths here; never expose the whole API root.
+  app.all("/mcp", (req, res, next) => apiApp(req, res, next));
+  app.get("/.well-known/oauth-protected-resource/mcp", (req, res, next) => apiApp(req, res, next));
+  app.get("/.well-known/oauth-authorization-server", (req, res, next) => apiApp(req, res, next));
+  app.all(/^\/oauth\/(register|authorize|token|revoke)$/, (req, res, next) => apiApp(req, res, next));
+
   // Serve static files from dist/public in production
   const staticPath =
     process.env.NODE_ENV === "production"
@@ -75,9 +83,31 @@ async function startServer() {
         .map(({ ruta, fichero }) => [ruta.slice(1, -1), fichero]),
     );
 
+    // Algunos clientes OAuth conservan /campo como ruta antigua de acceso.
+    // Si llegan parámetros OAuth completos, reenviamos únicamente ese flujo
+    // al endpoint real; una visita normal a /campo sigue entrando en la PWA.
+    const reenviarOAuthSiEsNecesario = (req: express.Request, res: express.Response, next: express.NextFunction): boolean => {
+      // `state` is recommended but optional in OAuth; Claude may omit it in
+      // some connector flows. The authorization endpoint validates the rest.
+      const required = ["client_id", "redirect_uri", "code_challenge", "code_challenge_method"];
+      if (!required.every((key) => typeof req.query[key] === "string" && req.query[key])) {
+        next();
+        return false;
+      }
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(req.query)) {
+        if (typeof value === "string") query.set(key, value);
+      }
+      res.redirect(302, `/api/oauth/authorize?${query.toString()}`);
+      return true;
+    };
+
+    app.get("/campo", reenviarOAuthSiEsNecesario);
+
     app.get("/", (req, res, next) => {
       // La PWA usa `/?app=1` para entrar en la pantalla de roles de React.
       // La raíz sin ese parámetro sigue siendo la landing indexable.
+      if (reenviarOAuthSiEsNecesario(req, res, () => undefined)) return;
       if (req.query.app === "1") return next();
       const idioma = idiomaDesdeNavegador(req.get("accept-language"));
       const fichero = portadas.get(idioma) ?? portadas.get("fr");

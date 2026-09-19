@@ -34,6 +34,7 @@ import {
   BookOpen,
   HardHat,
   Palmtree,
+  BadgeCheck,
   Settings,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -164,6 +165,10 @@ const navSections: NavSection[] = [
       { id: "margins-rules", labelKey: "nav.margins", Icon: Percent, path: "/settings/margins" },
       { id: "users-roles", labelKey: "nav.users", Icon: UserCog, path: "/settings/users" },
       { id: "whatsapp-connection", labelKey: "nav.whatsapp", Icon: Smartphone, path: "/settings/whatsapp" },
+      // La última de Ajustes: es la que menos se abre y la que no se busca
+      // hasta que hace falta. Y va aquí y no junto a Pagos a propósito —
+      // Pagos es con qué cobra él, esto es qué nos paga a nosotros.
+      { id: "subscription", labelKey: "nav.subscription", Icon: BadgeCheck, path: "/suscripcion" },
     ],
   },
 ];
@@ -203,6 +208,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const area = areaDeLaPantalla(item.path);
         if (area && !puede(areas, area)) return false;
         const capacidad = capacidadDeLaPantalla(item.path);
+        if (item.id === "subscription" && (plan === "pilot" || plan === "fondateur")) return false;
         return !capacidad || tiene(plan, capacidad);
       }),
     }))

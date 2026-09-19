@@ -218,6 +218,94 @@ function vitePluginApiRouter(): Plugin {
 }
 
 /**
+ * El sitio de presentación en desarrollo.
+ *
+ * En producción lo sirve server/index.ts con la misma lógica. Aquí se replica
+ * para que `pnpm dev` también enseñe las páginas de marketing (/fr/, /en/,
+ * /es/, /it/ y sus subpáginas) sin tener que hacer un build completo.
+ *
+ * Las páginas se generan con `node sitio/construir.mjs` → `sitio/publico/`.
+ * Si aún no se ha ejecutado, el plugin no hace nada y la app arranca igual.
+ */
+function vitePluginSitio(): Plugin {
+  const sitioPath = path.resolve(PROJECT_ROOT, "sitio", "publico");
+  const rutasPath = path.join(sitioPath, "rutas.json");
+
+  return {
+    name: "fsm-sitio",
+    configureServer(server: ViteDevServer) {
+      let mapa: { ruta: string; fichero: string }[] = [];
+      try {
+        mapa = JSON.parse(fs.readFileSync(rutasPath, "utf-8"));
+      } catch {
+        console.warn("Sitio de presentación no encontrado — ejecuta `node sitio/construir.mjs`");
+        return;
+      }
+
+      // Rutas de las páginas HTML
+      for (const { ruta, fichero } of mapa) {
+        // Redirección /fr → /fr/  (sin barra → con barra)
+        if (ruta.endsWith("/")) {
+          const sinBarra = ruta.slice(0, -1);
+          if (sinBarra) {
+            server.middlewares.use(sinBarra, (req, res, next) => {
+              if (req.url === "/" || req.url === "") {
+                res.writeHead(301, { Location: ruta });
+                res.end();
+                return;
+              }
+              next();
+            });
+          }
+        }
+        server.middlewares.use(ruta, (req, res, next) => {
+          if (req.url !== "/" && req.url !== "") return next();
+          const filePath = path.join(sitioPath, fichero);
+          if (!fs.existsSync(filePath)) return next();
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          fs.createReadStream(filePath).pipe(res);
+        });
+      }
+
+      // Assets estáticos del sitio: CSS, JS, logo
+      for (const fichero of ["estilo.css", "sitio.js", "logo.png"]) {
+        server.middlewares.use(`/sitio/${fichero}`, (req, res, next) => {
+          if (req.url !== "/" && req.url !== "") return next();
+          const filePath = path.join(sitioPath, fichero);
+          if (!fs.existsSync(filePath)) return next();
+          const ext = path.extname(fichero);
+          const mimeTypes: Record<string, string> = {
+            ".css": "text/css",
+            ".js": "application/javascript",
+            ".png": "image/png",
+          };
+          res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
+          fs.createReadStream(filePath).pipe(res);
+        });
+      }
+
+      // Fuentes
+      server.middlewares.use("/sitio/fuentes", (req, res, next) => {
+        const cleanUrl = (req.url || "/").split("?")[0];
+        const filePath = path.join(sitioPath, "fuentes", cleanUrl);
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) return next();
+        const ext = path.extname(filePath);
+        const mimeTypes: Record<string, string> = {
+          ".woff2": "font/woff2",
+          ".woff": "font/woff",
+          ".ttf": "font/ttf",
+        };
+        res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        fs.createReadStream(filePath).pipe(res);
+      });
+
+      console.log(`Sitio de presentación (dev): ${mapa.length} páginas`);
+    },
+  };
+}
+
+/**
  * El andamiaje del entorno de desarrollo no tiene por qué viajar al cliente.
  *
  * Estos tres son herramientas de edición y depuración: el runtime de Manus
@@ -234,6 +322,7 @@ const plugins = [
   soloEnDesarrollo(jsxLocPlugin() as Plugin),
   soloEnDesarrollo(vitePluginManusRuntime() as Plugin),
   soloEnDesarrollo(vitePluginManusDebugCollector()),
+  vitePluginSitio(),
   vitePluginStorageProxy(),
   vitePluginApiRouter(),
 ];

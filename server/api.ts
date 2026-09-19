@@ -118,6 +118,8 @@ import {
   requireWorkerAuth,
   hashToken,
 } from "./supabaseAuth";
+import { mcpHandler } from "./mcp";
+import { mcpOAuthRoutes } from "./mcpOAuth";
 
 export const apiRouter = Router();
 
@@ -3819,12 +3821,17 @@ apiRouter.post(
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
+      payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/settings/subscription?checkout=success`,
       cancel_url: `${baseUrl}/settings/subscription?checkout=cancelled`,
       metadata: { businessId: business.id, priceId },
       subscription_data: { metadata: { businessId: business.id, priceId } },
-    });
+      // Este SaaS usa el Checkout estándar de Stripe y gestiona sus impuestos
+      // fuera de Managed Payments. La cuenta Live lo tiene activado por defecto;
+      // desactivarlo aquí evita exigir un tax_code de producto para la suscripción.
+      managed_payments: { enabled: false },
+    } as any);
     if (!session.url) throw new Error("Stripe no devolvió una URL de suscripción");
     res.json({ url: session.url });
   })
@@ -12921,6 +12928,15 @@ apiApp.post("/public/stripe/webhook", express.raw({ type: "application/json" }),
   stripeWebhookHandler(req, res).catch(next);
 });
 apiApp.use(express.json());
+// The OAuth consent page is a native HTML form, so browsers submit it as
+// application/x-www-form-urlencoded rather than JSON. Keep both parsers so
+// Claude's worker code reaches authorizePost instead of appearing empty.
+apiApp.use(express.urlencoded({ extended: false }));
+mcpOAuthRoutes(apiApp);
+// MCP authenticates a worker access token itself and must not inherit the
+// business Supabase-JWT middleware. The first version is read-only and uses
+// stateless HTTP so the worker token remains the source of identity on every request.
+apiApp.all("/mcp", mcpHandler);
 apiApp.use(apiRouter);
 
 // Every API failure has to answer JSON. Without this, an unhandled error
@@ -12947,6 +12963,10 @@ apiApp.use((err: unknown, _req: express.Request, res: express.Response, _next: e
 
   console.error("[api]", detail.message, (detail as { stack?: string }).stack ?? "");
   if (res.headersSent) return;
+  if (err instanceof SupabaseNotConfiguredError) {
+    res.status(503).json({ error: detail.message, code: "backend_unavailable" });
+    return;
+  }
   res.status(500).json({
     error: detail.message || "Unexpected server error",
     ...(detail.code ? { code: detail.code } : {}),

@@ -79,7 +79,10 @@ const frances = { ...conTipografia(fr), rutas: fr.rutas, codigo: fr.codigo, lang
 const IDIOMAS = [frances, en, es, it];
 const REFERENCIA = frances;
 
-const PRECIOS = { chantier: 99, entreprise: 249 };
+const PRECIOS = {
+  chantier:   { mes: 99,  ano: 990 },
+  entreprise: { mes: 249, ano: 2490 },
+};
 
 /**
  * A dónde lleva «probar 30 días».
@@ -367,8 +370,8 @@ function paginaInicio(idioma) {
         description: t.meta.desc,
         areaServed: { "@type": "AdministrativeArea", name: "Québec, Canada" },
         offers: [
-          { "@type": "Offer", name: "Chantier", price: String(PRECIOS.chantier), priceCurrency: "CAD" },
-          { "@type": "Offer", name: "Entreprise", price: String(PRECIOS.entreprise), priceCurrency: "CAD" },
+          { "@type": "Offer", name: "Chantier", price: String(PRECIOS.chantier.mes), priceCurrency: "CAD" },
+          { "@type": "Offer", name: "Entreprise", price: String(PRECIOS.entreprise.mes), priceCurrency: "CAD" },
         ],
       },
     ],
@@ -691,11 +694,12 @@ ${cierre(idioma, {
 
 function paginaPrecios(idioma) {
   const t = idioma.precios;
-  const plan = (p, precio, destacado) => `<div class="plan${destacado ? " destacado" : ""}">
+  const plan = (p, precios, destacado) => `<div class="plan${destacado ? " destacado" : ""}">
           ${destacado ? `<span class="insignia">${esc(t.destacado)}</span>` : ""}
           <h3>${esc(p.nombre)}</h3>
           <p class="para">${esc(p.para)}</p>
-          <div class="precio"><span class="n">${precio} $</span><span class="u">${esc(t.mes)}</span></div>
+          <div class="precio dato-mes">${precios.mes} $<span class="u">${esc(t.mes)}</span></div>
+          <div class="precio dato-ano" hidden>${precios.ano} $<span class="u">${esc(t.ano)}</span><span class="ahorro">${esc(t.ahorro)}</span></div>
           <p class="pie-nota">${esc(p.limite)}</p>
           <ul>${p.items.map((i) => `<li>${CHECK}<span>${fuerte(i)}</span></li>`).join("")}</ul>
           <a href="${REGISTRO}" class="boton ${destacado ? "boton-principal" : "boton-secundario"}">${esc(t.probar)}</a>
@@ -712,9 +716,9 @@ function paginaPrecios(idioma) {
         offers: {
           "@type": "AggregateOffer",
           priceCurrency: "CAD",
-          lowPrice: String(PRECIOS.chantier),
-          highPrice: String(PRECIOS.entreprise),
-          offerCount: 2,
+          lowPrice: String(PRECIOS.chantier.mes),
+          highPrice: String(PRECIOS.entreprise.ano),
+          offerCount: 4,
         },
       },
     ],
@@ -728,6 +732,10 @@ function paginaPrecios(idioma) {
 
   <section class="seccion" style="padding-top:36px">
     <div class="envoltura">
+      <div class="periodo-toggle" role="tablist" aria-label="${esc(t.periodoLabel)}">
+        <button type="button" role="tab" class="activo" data-periodo="mes">${esc(t.mesBoton)}</button>
+        <button type="button" role="tab" data-periodo="ano">${esc(t.anoBoton)}<span class="etiqueta-ahorro">${esc(t.ahorro)}</span></button>
+      </div>
       <div class="planes">
         ${plan(t.chantier, PRECIOS.chantier, false)}
         ${plan(t.entreprise, PRECIOS.entreprise, true)}

@@ -95,7 +95,8 @@
     "clientPortalShort": "Portal",
     "serviceTypes": "Job types",
     "timeOff": "Time off",
-    "quickbooks": "QuickBooks"
+    "quickbooks": "QuickBooks",
+    "subscription": "Subscription"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2458,7 +2459,8 @@
         "titulo": "Limited access isn't in your plan",
         "cuerpo": "Let in whoever you need with access to their part only: a foreman who sees the jobs and never sees the profit or anyone's pay."
       }
-    }
+    },
+    "verPlanes": "See the plans"
   },
   "instalar": {
     "titulo": "Put it on your phone",
@@ -2473,5 +2475,43 @@
     "androidOtro": "Open the browser menu (the three dots) and choose “Install app” or “Add to Home screen”.",
     "copiar": "Copy the address",
     "copiada": "Copied"
+  },
+  "susc": {
+    "titulo": "Your subscription",
+    "entradilla": "What you pay to use the system. Charging your own clients is a different thing and lives in Payments.",
+    "planActual": "Your plan",
+    "sinPlan": "You haven't chosen a plan yet",
+    "mensual": "Monthly",
+    "anual": "Yearly",
+    "dosMesesGratis": "Two months free",
+    "porMes": "{{precio}} {{moneda}} / month",
+    "porAno": "{{precio}} {{moneda}} / year",
+    "impuestosAparte": "That is the exact amount charged. Nothing is added at checkout.",
+    "elegir": "Choose this plan",
+    "abriendo": "Opening checkout…",
+    "pruebaIncluida": "30-day trial. Nothing is charged until day 31, and you can cancel before that from right here.",
+    "gestionar": "Change plan, card or cancel",
+    "gestionarNota": "This opens Stripe's page, where your invoices are also available to download.",
+    "renuevaEl": "Renews on {{fecha}}",
+    "terminaEl": "Cancelled. It keeps working until {{fecha}}.",
+    "pruebaHasta": "Trial until {{fecha}}. The first charge is that day.",
+    "estado": {
+      "trialing": "On trial",
+      "active": "Active",
+      "past_due": "Payment didn't go through",
+      "canceled": "Cancelled",
+      "incomplete": "Incomplete"
+    },
+    "impagoAviso": "The last charge didn't go through. Stripe retries for a few days; if you update the card now, you lose nothing. We are not going to shut the system on you over this.",
+    "pagoExitoso": "Done. Your plan is active — if you don't see it below yet, reload in a few seconds.",
+    "pagoCancelado": "Nothing was charged. You can try again whenever you want.",
+    "noSePudo": "Checkout couldn't be opened. Try again in a moment.",
+    "stripeSinConfigurar": "Payments aren't configured on this deployment yet. Write to us and we'll set it up.",
+    "bloqueadoTitulo": "The trial is over",
+    "bloqueadoCuerpo": "The rest of the system is on hold until you choose a plan. Nothing has been deleted: your projects, invoices and hours are still there, and they come back the moment you pay.",
+    "bloqueadoDatos": "And if you decide not to continue, you can still download everything of yours. It's yours, not ours.",
+    "descargarTodo": "Download my data",
+    "pruebaQuedan": "You have {{dias}} days of trial left. When it ends, the system pauses until you choose a plan.",
+    "pruebaUltimoDia": "Today is the last day of the trial."
   }
 }
