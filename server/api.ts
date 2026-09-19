@@ -12926,6 +12926,10 @@ apiApp.post("/public/stripe/webhook", express.raw({ type: "application/json" }),
   stripeWebhookHandler(req, res).catch(next);
 });
 apiApp.use(express.json());
+// The OAuth consent page is a native HTML form, so browsers submit it as
+// application/x-www-form-urlencoded rather than JSON. Keep both parsers so
+// Claude's worker code reaches authorizePost instead of appearing empty.
+apiApp.use(express.urlencoded({ extended: false }));
 mcpOAuthRoutes(apiApp);
 // MCP authenticates a worker access token itself and must not inherit the
 // business Supabase-JWT middleware. The first version is read-only and uses
