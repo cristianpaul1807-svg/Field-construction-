@@ -60,6 +60,8 @@ Content-Type: application/json
 
 No se debe pegar un token de trabajador en una conversación de ChatGPT o Claude. El token que recibe el cliente externo es el access token OAuth limitado al recurso MCP.
 
+La guía paso a paso para Claude está en [conectar-mcp-claude.md](./conectar-mcp-claude.md). Incluye la URL del servidor, el Client ID específico de Claude y la indicación de dejar vacío el Client Secret.
+
 ## Criterios para la siguiente fase
 
 Antes de activar acciones de escritura se debe comprobar que la lectura funciona con un trabajador de prueba, que un trabajador no puede ver proyectos de otro negocio, que un trabajador eliminado deja de autenticar, que revocar la conexión invalida sus tokens y que el plan bloqueado no recibe datos. Después se podrán diseñar herramientas de escritura independientes, con confirmación explícita y auditoría ampliada.
