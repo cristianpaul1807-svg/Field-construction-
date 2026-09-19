@@ -5738,6 +5738,7 @@ apiRouter.get(
       // The project hub links out to the estimate PDF, the client's chat and
       // a map, so it needs the ids and the address to build those links.
       clientAddress: project.data.address ?? client?.address ?? null,
+      projectAddress: project.data.address ?? null,
       estimateId: project.data.estimate_id ?? null,
       // Lo que vale el contrato, la misma cifra que enseña el listado de obras.
       estimateTotal: Number((project.data as any).estimates?.total ?? 0),
@@ -9056,6 +9057,7 @@ apiRouter.patch(
     const update: Record<string, unknown> = {};
     if (body.name !== undefined) update.name = String(body.name).trim();
     if (body.type !== undefined) update.type = body.type || null;
+    if (body.address !== undefined) update.address = typeof body.address === "string" && body.address.trim() ? body.address.trim() : null;
     if (body.startDate !== undefined) update.start_date = body.startDate || null;
     if (body.endDate !== undefined) update.end_date = body.endDate || null;
     if (body.status !== undefined) {

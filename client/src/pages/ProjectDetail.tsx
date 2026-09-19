@@ -32,6 +32,7 @@ interface ProjectDetailResponse {
   clientId: string | null;
   clientName: string | null;
   clientAddress: string | null;
+  projectAddress: string | null;
   estimateId: string | null;
   estimateTotal: number;
   name: string;
@@ -59,6 +60,8 @@ interface ProjectDetailResponse {
 }
 
 const CHANGE_ORDER_STATUSES = ["borrador", "enviado", "aprobado", "rechazado"] as const;
+
+interface ClientOption { id: string; name: string; address?: string | null }
 
 const changeOrderTone: Record<string, "neutral" | "info" | "success" | "error"> = {
   borrador: "neutral",
@@ -109,6 +112,8 @@ export default function ProjectDetailPage() {
   // la obra otra vez y perder lo que ya colgaba de ella.
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState("");
+  const [addressMode, setAddressMode] = useState<"none" | "client" | "custom">("none");
+  const [customAddress, setCustomAddress] = useState("");
   const [inicio, setInicio] = useState("");
   const [fin, setFin] = useState("");
   const [saving, setSaving] = useState(false);
@@ -120,6 +125,8 @@ export default function ProjectDetailPage() {
   const [coAmount, setCoAmount] = useState("");
   const [coSaving, setCoSaving] = useState(false);
   const [coError, setCoError] = useState<string | null>(null);
+  const { data: clients } = useApi<ClientOption[]>(editing ? "/api/clients" : null);
+  const selectedClient = (clients ?? []).find((client) => client.id === project?.clientId);
 
   const createChangeOrder = async () => {
     if (!coTitle.trim()) {
@@ -162,9 +169,13 @@ export default function ProjectDetailPage() {
     setProgress(project.progressPercent);
     setNombre(project.name ?? "");
     setTipo(project.type ?? "");
+    const projectAddress = project.projectAddress?.trim() ?? "";
+    const clientAddress = selectedClient?.address?.trim() ?? "";
+    setAddressMode(!projectAddress ? "none" : clientAddress && projectAddress === clientAddress ? "client" : "custom");
+    setCustomAddress(projectAddress);
     setInicio(project.startDate ?? "");
     setFin(project.endDate ?? "");
-  }, [project]);
+  }, [project, selectedClient]);
 
   const downloadEstimate = async () => {
     if (!project?.estimateId) return;
@@ -191,6 +202,7 @@ export default function ProjectDetailPage() {
           progressPercent: progress,
           name: nombre.trim(),
           type: tipo.trim() || null,
+          address: addressMode === "client" ? selectedClient?.address?.trim() || null : addressMode === "custom" ? customAddress.trim() || null : null,
           startDate: inicio || null,
           endDate: fin || null,
         }),
@@ -593,6 +605,22 @@ export default function ProjectDetailPage() {
                 onChange={(e) => setTipo(e.target.value)}
                 placeholder={t("projects.typePlaceholder")}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("common.address")} ({t("common.optional")})</Label>
+              <Select value={addressMode} onValueChange={(value: "none" | "client" | "custom") => setAddressMode(value)}>
+                <SelectTrigger className="w-full"><SelectValue placeholder={t("projects.selectAddressOption")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t("projects.noProjectAddress")}</SelectItem>
+                  <SelectItem value="client" disabled={!selectedClient?.address?.trim()}>
+                    {selectedClient?.address?.trim() ? t("projects.useClientAddress", { address: selectedClient.address }) : t("projects.clientHasNoAddress")}
+                  </SelectItem>
+                  <SelectItem value="custom">{t("projects.enterProjectAddress")}</SelectItem>
+                </SelectContent>
+              </Select>
+              {addressMode === "custom" && (
+                <Input value={customAddress} onChange={(e) => setCustomAddress(e.target.value)} placeholder={t("projects.addressPlaceholder")} />
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
