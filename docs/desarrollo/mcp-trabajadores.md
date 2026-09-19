@@ -30,8 +30,22 @@ No se deben implementar todavía herramientas MCP como `clock_in`, `clock_out`, 
 | `get_my_tasks` | Tareas asignadas, con opción de incluir completadas. |
 | `get_my_time_entries` | Horas propias registradas, sin posibilidad de modificarlas. |
 | `get_my_documents` | Documentos del trabajador marcados explícitamente como visibles. |
+| `get_projects` | Proyectos del perímetro de un encargado u oficina, derivados de sus asignaciones. |
+| `get_project` | Detalle de un proyecto dentro del perímetro autorizado. |
+| `get_project_schedule` | Eventos y órdenes de un proyecto autorizado. |
+| `get_work_orders` | Órdenes de los proyectos autorizados, sin modificación. |
+| `get_workers` | Equipo vinculado a los proyectos autorizados, sin salarios ni tokens. |
+| `get_business_summary` | Resumen agregado para roles de administración u oficina con reportes. |
+| `get_invoices` | Facturas del negocio en modo consulta. |
+| `get_receivables` | Cuentas por cobrar mediante el reporte financiero existente. |
+| `get_expenses` | Gastos registrados, opcionalmente por proyecto. |
+| `get_payments` | Pagos recibidos y sus referencias. |
+| `get_profitability` | Rentabilidad por obra para el propietario principal. |
+| `audit_quickbooks_sync` | Estado y errores de QuickBooks, sin sincronizar. |
 
 El servidor aplica la función de acceso y la capacidad de campo del plan antes de ejecutar una herramienta. Cuando el negocio está bloqueado o el plan no incluye el área de campo, responde con un error de autorización y registra el intento.
+
+Las herramientas operativas de encargado exigen un rol reconocido y limitan los resultados a proyectos donde la identidad está vinculada por asignación, agenda u orden. Las herramientas financieras exigen el rol correspondiente y la capacidad del plan. Todas son de lectura; las herramientas de creación, modificación, envío y sincronización siguen fuera del servidor MCP.
 
 ## Seguridad y borrado
 

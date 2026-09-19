@@ -6,6 +6,8 @@ import { z } from "zod";
 import { accesoDe, planDe, tiene, type Plan } from "../shared/planes";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { hashToken } from "./supabaseAuth";
+import { profitabilityByProject } from "./profitability";
+import { receivables } from "./receivables";
 
 const MCP_PROTOCOL_VERSION = "2025-06-18";
 const MAX_ROWS = 100;
@@ -155,6 +157,43 @@ function requireReadable(context: ReadToolContext, toolName: string) {
     return errorResult("Esta herramienta no está incluida en el plan del negocio.", "plan_capability_required");
   }
   return null;
+}
+
+type McpRole = "worker" | "manager" | "office" | "admin";
+
+function roleOf(identity: WorkerIdentity): McpRole {
+  if (identity.workerKind !== "employee") return "worker";
+  const role = (identity.workerRole ?? "").trim().toLocaleLowerCase();
+  if (/(admin|administrador|propietario|owner|dueno|dueño)/.test(role)) return "admin";
+  if (/(contab|account|oficina|office)/.test(role)) return "office";
+  if (/(jefe|encargado|supervisor|foreman|manager)/.test(role)) return "manager";
+  return "worker";
+}
+
+function requireRole(context: ReadToolContext, toolName: string, roles: McpRole[], capability: "campo" | "facturacion" | "reportes" | "contabilidad" | "margen" = "campo") {
+  const readable = requireReadable(context, toolName);
+  if (readable) return readable;
+  if (!roles.includes(roleOf(context.identity))) {
+    return errorResult("Esta herramienta no está disponible para el rol MCP autenticado.", "mcp_role_required");
+  }
+  if (!tiene(context.identity.plan, capability)) {
+    return errorResult("Esta herramienta no está incluida en el plan del negocio.", "plan_capability_required");
+  }
+  return null;
+}
+
+async function managedProjectIds(admin: ReturnType<typeof getSupabaseAdmin>, context: ReadToolContext) {
+  const workerColumn = context.identity.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+  const assignedColumn = context.identity.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
+  const [assignments, events, orders] = await Promise.all([
+    admin.from("assignments").select("project_id").eq("business_id", context.identity.businessId).eq(workerColumn, context.identity.workerId).limit(MAX_ROWS),
+    admin.from("schedule_events").select("project_id").eq("business_id", context.identity.businessId).eq(assignedColumn, context.identity.workerId).limit(MAX_ROWS),
+    admin.from("work_orders").select("project_id").eq("business_id", context.identity.businessId).eq(assignedColumn, context.identity.workerId).limit(MAX_ROWS),
+  ]);
+  if (assignments.error) throw assignments.error;
+  if (events.error) throw events.error;
+  if (orders.error) throw orders.error;
+  return Array.from(new Set([...(assignments.data ?? []), ...(events.data ?? []), ...(orders.data ?? [])].map((row) => row.project_id).filter(Boolean)));
 }
 
 function dateRange(date: string | undefined, timezoneOffsetMinutes: number | undefined) {
@@ -365,6 +404,322 @@ function createMcpServer(context: ReadToolContext) {
       if (error) throw error;
       await audit(context, "get_my_documents", true, { count: data?.length ?? 0 });
       return jsonResult({ documents: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_projects",
+    {
+      title: "Projets de mon périmètre",
+      description: "Consulte les projets opérationnels auxquels un chef de chantier ou une personne de bureau est rattaché.",
+      inputSchema: {},
+    },
+    async () => {
+      const denied = requireRole(context, "get_projects", ["manager", "office"]);
+      if (denied) {
+        await audit(context, "get_projects", false, { code: "access_denied" });
+        return denied;
+      }
+      const ids = await managedProjectIds(admin, context);
+      if (!ids.length) {
+        await audit(context, "get_projects", true, { count: 0 });
+        return jsonResult({ projects: [] });
+      }
+      const { data, error } = await admin
+        .from("projects")
+        .select("id, code, name, status, progress_percent, start_date, end_date, address, client_id, clients(name)")
+        .eq("business_id", context.identity.businessId)
+        .in("id", ids)
+        .order("start_date", { ascending: false })
+        .limit(MAX_ROWS);
+      if (error) throw error;
+      await audit(context, "get_projects", true, { count: data?.length ?? 0 });
+      return jsonResult({ projects: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_project",
+    {
+      title: "Détail du projet",
+      description: "Consulta el detalle de un proyecto dentro del perímetro operativo del encargado.",
+      inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
+    },
+    async ({ projectId }) => {
+      const denied = requireRole(context, "get_project", ["manager", "office"]);
+      if (denied) {
+        await audit(context, "get_project", false, { code: "access_denied" });
+        return denied;
+      }
+      const ids = await managedProjectIds(admin, context);
+      if (!ids.includes(projectId)) {
+        await audit(context, "get_project", false, { code: "project_out_of_scope" });
+        return errorResult("El proyecto no está dentro del perímetro autorizado.", "project_out_of_scope");
+      }
+      const { data, error } = await admin
+        .from("projects")
+        .select("id, code, name, type, status, progress_percent, start_date, end_date, address, client_id, clients(name, email)")
+        .eq("business_id", context.identity.businessId)
+        .eq("id", projectId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return errorResult("Proyecto no encontrado.", "project_not_found");
+      await audit(context, "get_project", true, { projectId });
+      return jsonResult({ project: data });
+    },
+  );
+
+  server.registerTool(
+    "get_project_schedule",
+    {
+      title: "Agenda del proyecto",
+      description: "Consulta eventos y órdenes planificadas de un proyecto autorizado.",
+      inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
+    },
+    async ({ projectId }) => {
+      const denied = requireRole(context, "get_project_schedule", ["manager", "office"]);
+      if (denied) {
+        await audit(context, "get_project_schedule", false, { code: "access_denied" });
+        return denied;
+      }
+      const ids = await managedProjectIds(admin, context);
+      if (!ids.includes(projectId)) return errorResult("El proyecto no está dentro del perímetro autorizado.", "project_out_of_scope");
+      const [events, orders] = await Promise.all([
+        admin.from("schedule_events").select("id, title, start_time, end_time, type, notes, service_type, assigned_employee_id, assigned_subcontractor_id").eq("business_id", context.identity.businessId).eq("project_id", projectId).order("start_time").limit(MAX_ROWS),
+        admin.from("work_orders").select("id, title, description, priority, status, scheduled_start, duration_minutes, service_type, assigned_employee_id, assigned_subcontractor_id").eq("business_id", context.identity.businessId).eq("project_id", projectId).order("scheduled_start").limit(MAX_ROWS),
+      ]);
+      if (events.error) throw events.error;
+      if (orders.error) throw orders.error;
+      await audit(context, "get_project_schedule", true, { projectId, events: events.data?.length ?? 0, workOrders: orders.data?.length ?? 0 });
+      return jsonResult({ projectId, events: events.data ?? [], workOrders: orders.data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_work_orders",
+    {
+      title: "Órdenes de mi perímetro",
+      description: "Consulta las órdenes de trabajo de los proyectos autorizados, sin modificarlas.",
+      inputSchema: { status: z.string().optional().describe("Filtrar por estado Field") },
+    },
+    async ({ status }) => {
+      const denied = requireRole(context, "get_work_orders", ["manager", "office"]);
+      if (denied) {
+        await audit(context, "get_work_orders", false, { code: "access_denied" });
+        return denied;
+      }
+      const ids = await managedProjectIds(admin, context);
+      if (!ids.length) return jsonResult({ workOrders: [] });
+      let query = admin.from("work_orders").select("id, project_id, title, description, priority, status, scheduled_start, duration_minutes, service_type, assigned_employee_id, assigned_subcontractor_id, projects(name)").eq("business_id", context.identity.businessId).in("project_id", ids).order("scheduled_start", { ascending: false }).limit(MAX_ROWS);
+      if (status) query = query.eq("status", status);
+      const { data, error } = await query;
+      if (error) throw error;
+      await audit(context, "get_work_orders", true, { count: data?.length ?? 0 });
+      return jsonResult({ workOrders: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_workers",
+    {
+      title: "Équipe de mon périmètre",
+      description: "Consulta los empleados y subcontratistas vinculados a los proyectos autorizados, sin salarios ni datos sensibles.",
+      inputSchema: {},
+    },
+    async () => {
+      const denied = requireRole(context, "get_workers", ["manager", "office"]);
+      if (denied) {
+        await audit(context, "get_workers", false, { code: "access_denied" });
+        return denied;
+      }
+      const ids = await managedProjectIds(admin, context);
+      if (!ids.length) return jsonResult({ workers: [] });
+      const [assignments, events, orders] = await Promise.all([
+        admin.from("assignments").select("employee_id, subcontractor_id").eq("business_id", context.identity.businessId).in("project_id", ids).limit(MAX_ROWS),
+        admin.from("schedule_events").select("assigned_employee_id, assigned_subcontractor_id").eq("business_id", context.identity.businessId).in("project_id", ids).limit(MAX_ROWS),
+        admin.from("work_orders").select("assigned_employee_id, assigned_subcontractor_id").eq("business_id", context.identity.businessId).in("project_id", ids).limit(MAX_ROWS),
+      ]);
+      if (assignments.error) throw assignments.error;
+      if (events.error) throw events.error;
+      if (orders.error) throw orders.error;
+      const employeeIds = new Set<string>();
+      const subcontractorIds = new Set<string>();
+      for (const row of [...(assignments.data ?? []), ...(events.data ?? []), ...(orders.data ?? [])] as any[]) {
+        if (row.employee_id || row.assigned_employee_id) employeeIds.add(row.employee_id ?? row.assigned_employee_id);
+        if (row.subcontractor_id || row.assigned_subcontractor_id) subcontractorIds.add(row.subcontractor_id ?? row.assigned_subcontractor_id);
+      }
+      const [employees, subcontractors] = await Promise.all([
+        employeeIds.size ? admin.from("employees").select("id, name, role, status").eq("business_id", context.identity.businessId).in("id", Array.from(employeeIds)).limit(MAX_ROWS) : Promise.resolve({ data: [], error: null }),
+        subcontractorIds.size ? admin.from("subcontractors").select("id, name, trade, status").eq("business_id", context.identity.businessId).in("id", Array.from(subcontractorIds)).limit(MAX_ROWS) : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (employees.error) throw employees.error;
+      if (subcontractors.error) throw subcontractors.error;
+      const workers = [
+        ...(employees.data ?? []).map((row: any) => ({ id: row.id, kind: "employee", name: row.name, role: row.role, status: row.status })),
+        ...(subcontractors.data ?? []).map((row: any) => ({ id: row.id, kind: "subcontractor", name: row.name, trade: row.trade, status: row.status })),
+      ];
+      await audit(context, "get_workers", true, { count: workers.length });
+      return jsonResult({ workers });
+    },
+  );
+
+  server.registerTool(
+    "get_business_summary",
+    {
+      title: "Resumen de la empresa",
+      description: "Devuelve un resumen agregado de la empresa para roles de administración, oficina o contabilidad.",
+      inputSchema: {},
+    },
+    async () => {
+      const denied = requireRole(context, "get_business_summary", ["admin", "office"], "reportes");
+      if (denied) {
+        await audit(context, "get_business_summary", false, { code: "access_denied" });
+        return denied;
+      }
+      const businessId = context.identity.businessId;
+      const [projects, delayedProjects, employees, subcontractors, workOrders, receivableReport] = await Promise.all([
+        admin.from("projects").select("id", { count: "exact", head: true }).eq("business_id", businessId),
+        admin.from("projects").select("id", { count: "exact", head: true }).eq("business_id", businessId).in("status", ["retrasada", "atrasada", "delayed"]),
+        admin.from("employees").select("id", { count: "exact", head: true }).eq("business_id", businessId),
+        admin.from("subcontractors").select("id", { count: "exact", head: true }).eq("business_id", businessId),
+        admin.from("work_orders").select("id", { count: "exact", head: true }).eq("business_id", businessId).neq("status", "completada"),
+        receivables(admin, businessId),
+      ]);
+      for (const result of [projects, delayedProjects, employees, subcontractors, workOrders]) if (result.error) throw result.error;
+      const result = {
+        projectsActive: projects.count ?? 0,
+        projectsDelayed: delayedProjects.count ?? 0,
+        invoicesPending: receivableReport.invoices.length,
+        receivables: receivableReport.total,
+        workers: (employees.count ?? 0) + (subcontractors.count ?? 0),
+        openWorkOrders: workOrders.count ?? 0,
+      };
+      await audit(context, "get_business_summary", true, result);
+      return jsonResult(result);
+    },
+  );
+
+  server.registerTool(
+    "get_invoices",
+    {
+      title: "Factures",
+      description: "Consulta facturas del negocio sin crearlas, modificarlas ni enviarlas.",
+      inputSchema: { status: z.string().optional().describe("Filtrar por estado de factura") },
+    },
+    async ({ status }) => {
+      const denied = requireRole(context, "get_invoices", ["admin", "office"], "facturacion");
+      if (denied) {
+        await audit(context, "get_invoices", false, { code: "access_denied" });
+        return denied;
+      }
+      let query = admin.from("invoices").select("id, number, type, amount, subtotal, tax_amount, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name)").eq("business_id", context.identity.businessId).order("created_at", { ascending: false }).limit(MAX_ROWS);
+      if (status) query = query.eq("status", status);
+      const { data, error } = await query;
+      if (error) throw error;
+      await audit(context, "get_invoices", true, { count: data?.length ?? 0 });
+      return jsonResult({ invoices: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_receivables",
+    {
+      title: "Cuentas por cobrar",
+      description: "Consulta el saldo pendiente y su antigüedad mediante el reporte financiero existente.",
+      inputSchema: {},
+    },
+    async () => {
+      const denied = requireRole(context, "get_receivables", ["admin", "office"], "reportes");
+      if (denied) {
+        await audit(context, "get_receivables", false, { code: "access_denied" });
+        return denied;
+      }
+      const result = await receivables(admin, context.identity.businessId);
+      await audit(context, "get_receivables", true, { total: result.total, invoices: result.invoices.length });
+      return jsonResult(result);
+    },
+  );
+
+  server.registerTool(
+    "get_expenses",
+    {
+      title: "Gastos",
+      description: "Consulta gastos registrados del negocio sin modificarlos.",
+      inputSchema: { projectId: z.string().uuid().optional().describe("Filtrar por proyecto") },
+    },
+    async ({ projectId }) => {
+      const denied = requireRole(context, "get_expenses", ["admin", "office"], "reportes");
+      if (denied) {
+        await audit(context, "get_expenses", false, { code: "access_denied" });
+        return denied;
+      }
+      let query = admin.from("expenses").select("id, project_id, category, description, amount, date, projects(name)").eq("business_id", context.identity.businessId).order("date", { ascending: false }).limit(MAX_ROWS);
+      if (projectId) query = query.eq("project_id", projectId);
+      const { data, error } = await query;
+      if (error) throw error;
+      await audit(context, "get_expenses", true, { count: data?.length ?? 0 });
+      return jsonResult({ expenses: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_payments",
+    {
+      title: "Pagos recibidos",
+      description: "Consulta pagos recibidos y su referencia sin enviar ni registrar nuevos pagos.",
+      inputSchema: {},
+    },
+    async () => {
+      const denied = requireRole(context, "get_payments", ["admin", "office"], "facturacion");
+      if (denied) {
+        await audit(context, "get_payments", false, { code: "access_denied" });
+        return denied;
+      }
+      const { data, error } = await admin.from("payments").select("id, invoice_id, amount, paid_at, method, reference, stripe_fee, stripe_fee_tax, stripe_net, invoices(number, project_id, clients(name))").eq("business_id", context.identity.businessId).order("paid_at", { ascending: false }).limit(MAX_ROWS);
+      if (error) throw error;
+      await audit(context, "get_payments", true, { count: data?.length ?? 0 });
+      return jsonResult({ payments: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_profitability",
+    {
+      title: "Rentabilidad por obra",
+      description: "Consulta la rentabilidad calculada por los servicios financieros existentes; nunca modifica datos.",
+      inputSchema: {},
+    },
+    async () => {
+      const denied = requireRole(context, "get_profitability", ["admin"], "margen");
+      if (denied) {
+        await audit(context, "get_profitability", false, { code: "access_denied" });
+        return denied;
+      }
+      const result = await profitabilityByProject(admin, admin, context.identity.businessId);
+      await audit(context, "get_profitability", true, { count: result.length });
+      return jsonResult({ projects: result });
+    },
+  );
+
+  server.registerTool(
+    "audit_quickbooks_sync",
+    {
+      title: "Auditoría de QuickBooks",
+      description: "Consulta el estado y los errores registrados de la sincronización de QuickBooks, sin sincronizar nada.",
+      inputSchema: {},
+    },
+    async () => {
+      const denied = requireRole(context, "audit_quickbooks_sync", ["admin", "office"], "contabilidad");
+      if (denied) {
+        await audit(context, "audit_quickbooks_sync", false, { code: "access_denied" });
+        return denied;
+      }
+      const { data, error } = await admin.from("quickbooks_links").select("local_id, kind, status, error, diverged, remote").eq("business_id", context.identity.businessId).order("status").limit(MAX_ROWS);
+      if (error) throw error;
+      const links = data ?? [];
+      const result = { total: links.length, errors: links.filter((row: any) => row.error || row.status === "error").length, diverged: links.filter((row: any) => row.diverged === true).length, links };
+      await audit(context, "audit_quickbooks_sync", true, { total: result.total, errors: result.errors, diverged: result.diverged });
+      return jsonResult(result);
     },
   );
 

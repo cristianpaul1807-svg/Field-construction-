@@ -12,7 +12,8 @@ print("MCP tools:", ", ".join(names))
 if not names:
     raise SystemExit("No MCP tools found")
 
-non_read_names = [name for name in names if not name.startswith("get_")]
+read_only_exceptions = {"audit_quickbooks_sync"}
+non_read_names = [name for name in names if not name.startswith("get_") and name not in read_only_exceptions]
 if non_read_names:
     raise SystemExit(f"Non-read-only MCP tool names found: {', '.join(non_read_names)}")
 

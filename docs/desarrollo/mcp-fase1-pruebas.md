@@ -25,6 +25,12 @@ La auditoría de accesos puede escribir en `mcp_audit_log`; esa escritura técni
 | Consulta de proyectos propios | Trabajador activo | Solo devuelve proyectos vinculados por asignación, agenda u orden | Pendiente de ejecutar con datos de prueba |
 | Consulta de horas propias | Trabajador activo | Solo devuelve fichajes del trabajador autenticado | Pendiente de ejecutar con datos de prueba |
 | Consulta de documentos | Trabajador activo | Solo devuelve documentos con `visible_to_worker = true` | Pendiente de ejecutar con datos de prueba |
+| Lectura de proyectos | Encargado u oficina | Solo devuelve proyectos vinculados por asignación, agenda u orden | Pendiente de ejecutar con datos de prueba |
+| Detalle fuera de perímetro | Encargado u oficina | Devuelve `project_out_of_scope` y no revela si existe | Pendiente de ejecutar con datos de prueba |
+| Lectura de equipo | Encargado u oficina | Solo devuelve personas vinculadas a proyectos autorizados y nunca salarios o tokens | Pendiente de ejecutar con datos de prueba |
+| Lectura financiera | Administración u oficina | Requiere el rol y la capacidad del plan correspondiente | Pendiente de ejecutar con datos de prueba |
+| Rentabilidad | Propietario principal | Devuelve el reporte existente, sin escritura | Pendiente de ejecutar cuando exista identidad de propietario MCP |
+| QuickBooks | Administración autorizada | Solo devuelve estado, errores y divergencias; no sincroniza | Pendiente de ejecutar con conexión contable |
 | Negocio distinto | Token de trabajador A | Nunca devuelve filas del negocio B | Pendiente de ejecutar con dos negocios |
 | Plan sin capacidad `campo` | Trabajador de negocio restringido | Devuelve `plan_capability_required` y registra rechazo | Pendiente de ejecutar con plan de prueba |
 | Negocio bloqueado | Trabajador de negocio bloqueado | Devuelve `business_access_blocked` | Pendiente de ejecutar con suscripción bloqueada |
@@ -36,6 +42,8 @@ La auditoría de accesos puede escribir en `mcp_audit_log`; esa escritura técni
 ## Alcance de esta fase
 
 Durante esta fase no se implementan `clock_in`, `clock_out`, `report_incident`, `create_work_order`, `assign_worker`, `update_work_order`, `create_invoice` ni sincronizaciones con QuickBooks mediante MCP. Los roles distintos del propietario principal permanecen en solo lectura.
+
+Las herramientas de administración que ya están registradas son únicamente de consulta: `get_business_summary`, `get_invoices`, `get_receivables`, `get_expenses`, `get_payments`, `get_profitability` y `audit_quickbooks_sync`. Su disponibilidad efectiva todavía depende de que la conexión MCP de negocio y la identidad de propietario se revisen en la siguiente etapa.
 
 Las pruebas con OAuth y clientes externos se realizarán en una etapa separada, después de cerrar la implementación interna y revisar las conexiones.
 
