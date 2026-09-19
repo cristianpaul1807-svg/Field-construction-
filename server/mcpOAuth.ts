@@ -146,16 +146,36 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
       permissionRole = (userRow as any).roles?.name ?? "tecnico";
     }
   }
-  if (!resolvedBusiness) return null;
-  const plan = planDe(resolvedBusiness.subscription_plan);
+  if (resolvedBusiness) {
+    const plan = planDe(resolvedBusiness.subscription_plan);
+    return {
+      workerId: data.user.id,
+      workerKind: "owner",
+      businessId: resolvedBusiness.id,
+      name: resolvedBusiness.name ?? null,
+      workerRole: permissionRole,
+      plan,
+      access: accesoDe({ plan, estadoSuscripcion: resolvedBusiness.subscription_status, pruebaHasta: resolvedBusiness.trial_ends_at }),
+    };
+  }
+
+  const [employee, subcontractor] = await Promise.all([
+    admin.from("employees").select("id, business_id, name, role, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
+    admin.from("subcontractors").select("id, business_id, name, trade, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
+  ]);
+  const row = employee.data ?? subcontractor.data;
+  if (employee.error && subcontractor.error) throw employee.error;
+  if (!row) return null;
+  const workerBusiness = (row as any).businesses as { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null } | null;
+  const plan = planDe(workerBusiness?.subscription_plan);
   return {
-    workerId: data.user.id,
-    workerKind: "owner",
-    businessId: resolvedBusiness.id,
-    name: resolvedBusiness.name ?? null,
-    workerRole: permissionRole,
+    workerId: row.id,
+    workerKind: employee.data ? "employee" : "subcontractor",
+    businessId: row.business_id,
+    name: row.name ?? null,
+    workerRole: (row as any).roles?.name ?? ((row as any).role ?? (row as any).trade ?? null),
     plan,
-    access: accesoDe({ plan, estadoSuscripcion: resolvedBusiness.subscription_status, pruebaHasta: resolvedBusiness.trial_ends_at }),
+    access: accesoDe({ plan, estadoSuscripcion: workerBusiness?.subscription_status ?? null, pruebaHasta: workerBusiness?.trial_ends_at ?? null }),
   };
 }
 
