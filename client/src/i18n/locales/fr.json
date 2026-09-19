@@ -1640,6 +1640,28 @@
           "p1": "En haut à droite, il y a une icône de langues. Español, English, français et italiano.",
           "p2": "Cela ne change que votre panneau. Chaque membre de votre équipe peut avoir le sien, et les documents sortent dans la langue où vous les générez."
         },
+        "conectarMcp": {
+          "title": "Connecter Claude au MCP de Field",
+          "p1": "Allez dans {{menuAjustes}} → MCP Conexiones AI et ouvrez la carte Claude. Vous y trouverez l’URL MCP et le Client ID OAuth; utilisez les boutons Copier et ne partagez jamais vos mots de passe ou codes dans le chat.",
+          "p2": "Dans Claude, ajoutez un connecteur MCP personnalisé et collez l’URL et le Client ID. Quand Claude ouvre Field, connectez-vous avec l’e-mail et le mot de passe du compte autorisé, ou utilisez le code pour un travailleur de terrain ou un sous-traitant.",
+          "p3": "Vérifiez l’autorisation mcp:read, qui est en lecture seule, puis cliquez sur Autoriser. Claude ne pourra consulter que les informations permises par votre rôle, votre périmètre et le forfait de l’entreprise.",
+          "p4": "Si vous changez de rôle, l’accès change automatiquement. Pour couper une connexion, revenez sur cette carte et cliquez sur Révoquer la connexion.",
+          "nota": "La phase actuelle ne permet pas à Claude de créer, modifier ou supprimer des données."
+        },
+        "rolesMcp": {
+          "title": "Ce que chaque rôle peut consulter avec MCP",
+          "p1": "L’administrateur ou le propriétaire peut consulter la vue complète autorisée par le forfait: projets, opérations, factures, paiements, dépenses, rentabilité et audit QuickBooks. Le bureau et la comptabilité consultent les informations opérationnelles ou financières qui leur sont attribuées.",
+          "p2": "Le chef de chantier consulte ses projets et son périmètre: agenda, ordres de travail, tâches, équipe, documents et heures. Le technicien consulte uniquement son travail assigné et ses propres enregistrements.",
+          "p3": "Le travailleur de terrain et le sous-traitant se connectent avec un code et consultent seulement leurs projets, ordres, tâches, horaire, heures et documents autorisés. Ils ne voient pas les informations financières ni les données des collègues.",
+          "p4": "Exemple: un chef de chantier peut demander «Quelles ordres sont en attente dans mon projet?»; un administrateur peut demander «Quelles factures sont en retard?». MCP filtre toujours par entreprise, rôle, périmètre et forfait.",
+          "nota": "Tous les rôles sont en lecture seule pendant cette première phase."
+        },
+        "estadoMcp": {
+          "title": "La signification du statut vert de Claude",
+          "p1": "OAuth prêt signifie que Field possède un Client ID valide pour que Claude commence l’autorisation. Cela ne signifie pas encore qu’une connexion active existe.",
+          "p2": "Connecté signifie qu’une autorisation active existe pour votre entreprise. Vous pouvez la révoquer depuis la carte Claude; Claude ne pourra alors plus consulter Field.",
+          "nota": "La connexion utilise OAuth et PKCE; vous ne devez jamais donner votre mot de passe à Claude."
+        },
         "misDatos": {
           "title": "Où sont mes données et qui les voit ?",
           "p1": "Conservées, à Montréal (Canada) : la base de données et les fichiers n'en bougent pas. Pendant que vous travaillez, elles passent aussi par le serveur qui sert le logiciel, à Francfort (Allemagne), qui ne conserve rien. Tout est écrit dans la politique de confidentialité.",

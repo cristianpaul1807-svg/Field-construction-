@@ -1640,6 +1640,28 @@
           "p1": "Top right there's a languages icon. Español, English, français and italiano.",
           "p2": "It only changes your own panel. Everyone on your team can have theirs in their own, and documents come out in the language you generate them in."
         },
+        "conectarMcp": {
+          "title": "Connect Claude to Field MCP",
+          "p1": "Go to {{menuAjustes}} → MCP Conexiones AI and open the Claude card. You will find the MCP URL and OAuth Client ID there; use the Copy buttons and never share passwords or codes in chat.",
+          "p2": "In Claude, add a custom MCP connector and paste the URL and Client ID. When Claude opens Field, sign in with the authorized account's email and password, or use the worker code for a field worker or subcontractor.",
+          "p3": "Check the mcp:read permission, which is read-only, and press Authorize. Claude can only query information allowed by your role, project perimeter and company plan.",
+          "p4": "If you change roles, access changes automatically. To cut off a connection, return to this card and press Revoke connection.",
+          "nota": "The current phase does not allow Claude to create, edit or delete data."
+        },
+        "rolesMcp": {
+          "title": "What each role can query with MCP",
+          "p1": "The administrator or owner can query the full view allowed by the plan: projects, operations, invoices, payments, expenses, profitability and QuickBooks audit. Office and accounting can query the operational or financial information assigned to them.",
+          "p2": "A project manager can query their projects and perimeter: schedule, work orders, tasks, team, documents and hours. A technician can query only their assigned work and their own records.",
+          "p3": "A field worker or subcontractor signs in with a code and can only query their projects, orders, tasks, schedule, hours and authorized documents. They cannot see financial information or other teammates' data.",
+          "p4": "Example: a project manager can ask “What pending orders are in my project?”; an administrator can ask “Which invoices are overdue?”. MCP always filters by company, role, perimeter and plan.",
+          "nota": "Every role is read-only in this first phase."
+        },
+        "estadoMcp": {
+          "title": "What Claude's green status means",
+          "p1": "OAuth ready means Field has a valid Client ID registered so Claude can start authorization. It does not mean an active connection exists yet.",
+          "p2": "Connected means there is an active authorization for your company. You can revoke it from the Claude card; Claude will then stop querying Field.",
+          "nota": "The connection uses OAuth and PKCE; you never need to give your password to Claude."
+        },
         "misDatos": {
           "title": "Where is my data and who sees it?",
           "p1": "Stored, in Montreal, Canada: the database and the files do not move from there. While you work they also pass through the server that serves the software, which is in Frankfurt, Germany, and stores nothing. It is all written down in the privacy policy.",

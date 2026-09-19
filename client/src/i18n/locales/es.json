@@ -1640,6 +1640,28 @@
           "p1": "Arriba a la derecha hay un icono de idiomas. Español, English, français e italiano.",
           "p2": "Cambia solo tu panel. Cada persona de tu equipo puede tenerlo en el suyo, y los documentos salen en el idioma en que los generes."
         },
+        "conectarMcp": {
+          "title": "Conectar Claude al MCP de Field",
+          "p1": "Ve a {{menuAjustes}} → MCP Conexiones AI y abre la tarjeta de Claude. Ahí encontrarás la URL MCP y el OAuth Client ID; usa los botones Copiar, no compartas contraseñas ni códigos en el chat.",
+          "p2": "En Claude añade un conector MCP personalizado y pega la URL y el Client ID. Cuando Claude abra Field, inicia sesión con el correo y contraseña de la cuenta autorizada o usa el código de trabajador si entras como trabajador de campo o subcontratista.",
+          "p3": "Revisa el permiso mcp:read, que es solo lectura, y pulsa Autorizar. Claude podrá consultar únicamente la información que permitan tu rol, tu perímetro y el plan de la empresa.",
+          "p4": "Si cambias de rol, el acceso cambia automáticamente. Para cortar una conexión, vuelve a esta tarjeta y pulsa Revocar conexión.",
+          "nota": "La fase actual no permite crear, editar ni borrar datos desde Claude."
+        },
+        "rolesMcp": {
+          "title": "Qué puede consultar cada rol con MCP",
+          "p1": "El administrador o propietario puede consultar la visión completa autorizada por el plan: proyectos, operaciones, facturas, cobros, gastos, rentabilidad y auditoría de QuickBooks. Oficina y contabilidad consultan la información operativa o financiera que les corresponde.",
+          "p2": "El jefe de obra consulta sus proyectos y perímetro: agenda, órdenes, tareas, equipo, documentos y horas. El técnico consulta únicamente su trabajo asignado y sus propios registros.",
+          "p3": "El trabajador de campo y el subcontratista entran con su código y solo consultan sus proyectos, órdenes, tareas, horario, horas y documentos autorizados. No ven información financiera ni datos de otros compañeros.",
+          "p4": "Ejemplo: un jefe de obra puede preguntar «¿Qué órdenes pendientes hay en mi obra?»; el administrador puede preguntar «¿Qué facturas están vencidas?». MCP siempre filtra por empresa, rol, perímetro y plan.",
+          "nota": "Todos los roles son de solo lectura en esta primera fase."
+        },
+        "estadoMcp": {
+          "title": "Qué significa el estado verde de Claude",
+          "p1": "OAuth listo significa que Field tiene registrado un Client ID válido para que Claude pueda iniciar la autorización. No significa todavía que exista una conexión activa.",
+          "p2": "Conectado significa que ya hay una autorización activa para tu empresa. Puedes revocarla desde la tarjeta de Claude; al hacerlo, Claude dejará de consultar Field.",
+          "nota": "La conexión utiliza OAuth y PKCE; nunca necesitas entregar tu contraseña a Claude."
+        },
         "misDatos": {
           "title": "¿Dónde están mis datos y quién los ve?",
           "p1": "Guardados, en Montreal (Canadá): la base de datos y los archivos no se mueven de ahí. Mientras trabajas pasan además por el servidor que sirve el programa, que está en Fráncfort (Alemania) y no guarda nada. Está todo escrito en la política de privacidad.",
