@@ -48,6 +48,7 @@ import SettingsQuickBooks from "@/pages/SettingsQuickBooks";
 import SettingsMargins from "@/pages/SettingsMargins";
 import SettingsUsers from "@/pages/SettingsUsers";
 import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
+import SettingsMcpConnections from "@/pages/SettingsMcpConnections";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -89,6 +90,7 @@ function BusinessPanel() {
         <Route path={"/settings/quickbooks"} component={SettingsQuickBooks} />
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
+        <Route path={"/settings/mcp-connections"} component={SettingsMcpConnections} />
       <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
       <Route path={"/suscripcion"} component={Subscription} />
       <Route path={"/settings/subscription"} component={Subscription} />

@@ -3794,6 +3794,68 @@ apiRouter.use((req, res, next) => {
   });
 });
 
+// ---------- MCP Conexiones AI ----------
+// The panel may show public OAuth client metadata, but connections are always
+// scoped to the currently authenticated business owner. Client secrets and
+// external subjects never leave the server.
+apiRouter.get(
+  "/settings/mcp-connections",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const [clients, connections] = await Promise.all([
+      admin.from("mcp_oauth_clients").select("client_id, client_name, redirect_uris, token_endpoint_auth_method, created_at").order("created_at", { ascending: true }).limit(50),
+      admin.from("mcp_connections").select("id, provider, status, scopes, created_at, last_used_at, revoked_at, owner_auth_user_id").eq("business_id", req.businessId!).eq("owner_auth_user_id", req.authUserId!).order("created_at", { ascending: false }).limit(50),
+    ]);
+    if (clients.error) throw clients.error;
+    if (connections.error) throw connections.error;
+
+    const configuredProviders = new Map<string, any[]>();
+    for (const client of clients.data ?? []) {
+      const name = `${client.client_name} ${client.client_id}`.toLowerCase();
+      const provider = name.includes("claude") || name.includes("anthropic")
+        ? "claude"
+        : name.includes("chatgpt") || name.includes("openai")
+          ? "chatgpt"
+          : name.includes("manus")
+            ? "manus"
+            : "other";
+      const list = configuredProviders.get(provider) ?? [];
+      const redirectUris = (client.redirect_uris ?? []) as string[];
+      const valid = provider === "other" || !redirectUris.some((uri) => uri.includes("claude.ai")) || provider === "claude";
+      list.push({ clientId: client.client_id, clientName: client.client_name, redirectUris, tokenEndpointAuthMethod: client.token_endpoint_auth_method, createdAt: client.created_at, valid });
+      configuredProviders.set(provider, list);
+    }
+
+    const platforms = [
+      { id: "claude", name: "Claude", description: "Conecta Claude con los datos de Field autorizados.", docsUrl: "https://claude.ai" },
+      { id: "chatgpt", name: "ChatGPT", description: "Conecta ChatGPT con los datos de Field autorizados.", docsUrl: "https://chatgpt.com" },
+      { id: "manus", name: "Manus", description: "Conecta Manus con los datos de Field autorizados.", docsUrl: "https://manus.im" },
+      { id: "gemini", name: "Gemini", description: "Prepara una conexión de Gemini con los datos de Field autorizados.", docsUrl: "https://gemini.google.com" },
+    ].map((platform) => ({
+      ...platform,
+      clients: configuredProviders.get(platform.id) ?? [],
+      configured: (configuredProviders.get(platform.id) ?? []).some((client) => client.valid),
+      connections: (connections.data ?? []).filter((connection) => connection.provider === platform.id).map((connection) => ({
+        id: connection.id, status: connection.status, scopes: connection.scopes, createdAt: connection.created_at, lastUsedAt: connection.last_used_at, revokedAt: connection.revoked_at,
+      })),
+    }));
+    res.json({ mcpUrl: `${req.protocol}://${req.get("host")}/mcp`, scope: "mcp:read", platforms });
+  })
+);
+
+apiRouter.post(
+  "/settings/mcp-connections/:id/revoke",
+  route(async (req, res) => {
+    const { data, error } = await getSupabaseAdmin().from("mcp_connections").update({ status: "revoked", revoked_at: new Date().toISOString() }).eq("id", req.params.id).eq("business_id", req.businessId!).eq("owner_auth_user_id", req.authUserId!).select("id").maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ error: "connection not found", code: "mcp_connection_not_found" });
+      return;
+    }
+    res.json({ ok: true });
+  })
+);
+
 // Checkout de suscripción. El cliente solo puede elegir uno de los precios
 // Live declarados en el servidor; Stripe confirma después el estado real.
 apiRouter.post(

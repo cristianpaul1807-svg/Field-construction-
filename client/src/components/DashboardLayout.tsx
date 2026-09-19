@@ -33,6 +33,7 @@ import {
   FolderKanban,
   BookOpen,
   HardHat,
+  Bot,
   Palmtree,
   BadgeCheck,
   Settings,
@@ -164,6 +165,7 @@ const navSections: NavSection[] = [
       { id: "quickbooks", labelKey: "nav.quickbooks", Icon: BookOpen, path: "/settings/quickbooks" },
       { id: "margins-rules", labelKey: "nav.margins", Icon: Percent, path: "/settings/margins" },
       { id: "users-roles", labelKey: "nav.users", Icon: UserCog, path: "/settings/users" },
+      { id: "mcp-connections", labelKey: "nav.mcpConnections", Icon: Bot, path: "/settings/mcp-connections" },
       { id: "whatsapp-connection", labelKey: "nav.whatsapp", Icon: Smartphone, path: "/settings/whatsapp" },
       // La última de Ajustes: es la que menos se abre y la que no se busca
       // hasta que hace falta. Y va aquí y no junto a Pagos a propósito —
