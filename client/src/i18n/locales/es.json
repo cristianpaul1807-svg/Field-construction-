@@ -1641,7 +1641,7 @@
           "p2": "Cambia solo tu panel. Cada persona de tu equipo puede tenerlo en el suyo, y los documentos salen en el idioma en que los generes."
         },
         "conectarMcp": {
-          "title": "Conectar Claude al MCP de Field",
+          "title": "Conectar Claude al MCP de Logiciel Construction",
           "p1": "Ve a {{menuAjustes}} → MCP Conexiones AI y abre la tarjeta de Claude. Ahí encontrarás la URL MCP y el OAuth Client ID; usa los botones Copiar, no compartas contraseñas ni códigos en el chat.",
           "p2": "En Claude añade un conector MCP personalizado y pega la URL y el Client ID. Cuando Claude abra Field, inicia sesión con el correo y contraseña de la cuenta autorizada o usa el código de trabajador si entras como trabajador de campo o subcontratista.",
           "p3": "Revisa el permiso mcp:read, que es solo lectura, y pulsa Autorizar. Claude podrá consultar únicamente la información que permitan tu rol, tu perímetro y el plan de la empresa.",
