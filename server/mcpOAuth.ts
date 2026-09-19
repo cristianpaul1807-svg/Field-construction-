@@ -84,8 +84,22 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
     : clientLabel.includes("chatgpt") || clientLabel.includes("openai")
       ? "chatgpt"
       : "other";
+  const existing = await admin.from("mcp_connections")
+    .select("id")
+    .eq("business_id", identity.businessId)
+    .eq(column, identity.workerId)
+    .eq("provider", provider)
+    .in("status", ["active", "revoked"])
+    .or(`external_subject.eq.${client.client_id},external_subject.eq.${client.client_id}:${identity.workerId}`)
+    .maybeSingle();
+  if (existing.error) throw existing.error;
+  if (existing.data) {
+    const { error } = await admin.from("mcp_connections").update({ status: "active", scopes: [scope], revoked_at: null }).eq("id", existing.data.id);
+    if (error) throw error;
+    return existing.data.id as string;
+  }
   const { data, error } = await admin.from("mcp_connections").insert({
-    business_id: identity.businessId, [column]: identity.workerId, provider, external_subject: client.client_id,
+    business_id: identity.businessId, [column]: identity.workerId, provider, external_subject: `${client.client_id}:${identity.workerId}`,
     status: "active", scopes: [scope],
   }).select("id").single();
   if (error) throw error;
