@@ -78,8 +78,14 @@ async function persistCimdClient(client: OAuthClient) {
 async function issueConnection(identity: WorkerIdentity, client: OAuthClient, scope: string) {
   const admin = getSupabaseAdmin();
   const column = identity.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+  const clientLabel = `${client.client_id} ${client.client_name}`.toLowerCase();
+  const provider = clientLabel.includes("claude") || clientLabel.includes("anthropic")
+    ? "claude"
+    : clientLabel.includes("chatgpt") || clientLabel.includes("openai")
+      ? "chatgpt"
+      : "other";
   const { data, error } = await admin.from("mcp_connections").insert({
-    business_id: identity.businessId, [column]: identity.workerId, provider: client.client_name.slice(0, 120), external_subject: client.client_id,
+    business_id: identity.businessId, [column]: identity.workerId, provider, external_subject: client.client_id,
     status: "active", scopes: [scope],
   }).select("id").single();
   if (error) throw error;
