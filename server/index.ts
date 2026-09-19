@@ -79,7 +79,9 @@ async function startServer() {
     // Si llegan parámetros OAuth completos, reenviamos únicamente ese flujo
     // al endpoint real; una visita normal a /campo sigue entrando en la PWA.
     const reenviarOAuthSiEsNecesario = (req: express.Request, res: express.Response, next: express.NextFunction): boolean => {
-      const required = ["client_id", "redirect_uri", "state", "code_challenge", "code_challenge_method"];
+      // `state` is recommended but optional in OAuth; Claude may omit it in
+      // some connector flows. The authorization endpoint validates the rest.
+      const required = ["client_id", "redirect_uri", "code_challenge", "code_challenge_method"];
       if (!required.every((key) => typeof req.query[key] === "string" && req.query[key])) {
         next();
         return false;
