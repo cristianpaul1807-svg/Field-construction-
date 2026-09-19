@@ -75,9 +75,29 @@ async function startServer() {
         .map(({ ruta, fichero }) => [ruta.slice(1, -1), fichero]),
     );
 
+    // Algunos clientes OAuth conservan /campo como ruta antigua de acceso.
+    // Si llegan parámetros OAuth completos, reenviamos únicamente ese flujo
+    // al endpoint real; una visita normal a /campo sigue entrando en la PWA.
+    const reenviarOAuthSiEsNecesario = (req: express.Request, res: express.Response, next: express.NextFunction): boolean => {
+      const required = ["client_id", "redirect_uri", "state", "code_challenge", "code_challenge_method"];
+      if (!required.every((key) => typeof req.query[key] === "string" && req.query[key])) {
+        next();
+        return false;
+      }
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(req.query)) {
+        if (typeof value === "string") query.set(key, value);
+      }
+      res.redirect(302, `/api/oauth/authorize?${query.toString()}`);
+      return true;
+    };
+
+    app.get("/campo", reenviarOAuthSiEsNecesario);
+
     app.get("/", (req, res, next) => {
       // La PWA usa `/?app=1` para entrar en la pantalla de roles de React.
       // La raíz sin ese parámetro sigue siendo la landing indexable.
+      if (reenviarOAuthSiEsNecesario(req, res, () => undefined)) return;
       if (req.query.app === "1") return next();
       const idioma = idiomaDesdeNavegador(req.get("accept-language"));
       const fichero = portadas.get(idioma) ?? portadas.get("fr");
