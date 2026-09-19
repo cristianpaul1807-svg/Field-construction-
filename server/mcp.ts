@@ -373,9 +373,12 @@ function createMcpServer(context: ReadToolContext) {
 
 export function mcpHandler(req: Request, res: Response, next: NextFunction) {
   const token = bearerToken(req);
+  const metadataPath = req.originalUrl.startsWith("/api/")
+    ? "/api/.well-known/oauth-protected-resource/mcp"
+    : "/.well-known/oauth-protected-resource/mcp";
   if (!token) {
     const scheme = req.protocol;
-    const metadata = `${scheme}://${req.get("host")}/api/.well-known/oauth-protected-resource/mcp`;
+    const metadata = `${scheme}://${req.get("host")}${metadataPath}`;
     res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${metadata}"`);
     res.status(401).json({ error: "Missing worker bearer token", code: "missing_token" });
     return;
@@ -384,7 +387,7 @@ export function mcpHandler(req: Request, res: Response, next: NextFunction) {
   resolveWorker(token)
     .then(async (identity) => {
       if (!identity) {
-        const metadata = `${req.protocol}://${req.get("host")}/api/.well-known/oauth-protected-resource/mcp`;
+        const metadata = `${req.protocol}://${req.get("host")}${metadataPath}`;
         res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${metadata}"`);
         res.status(401).json({ error: "Invalid or expired worker token", code: "invalid_worker_token" });
         return;

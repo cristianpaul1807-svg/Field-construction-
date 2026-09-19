@@ -13,7 +13,10 @@ type PendingAuthorization = { client: OAuthClient; redirectUri: string; state: s
 
 function baseUrl(req: Request) {
   const configured = process.env.MCP_OAUTH_ISSUER?.trim().replace(/\/$/, "");
-  return configured || `${req.protocol}://${req.get("host")}/api`;
+  if (configured) return configured;
+  const originalPath = req.originalUrl.split("?", 1)[0];
+  const prefix = originalPath.startsWith("/api/") ? "/api" : "";
+  return `${req.protocol}://${req.get("host")}${prefix}`;
 }
 function resourceUrl(req: Request) { return `${baseUrl(req)}/mcp`; }
 function b64url(bytes: Buffer) { return bytes.toString("base64url"); }

@@ -14,6 +14,14 @@ async function startServer() {
 
   app.use("/api", apiApp);
 
+  // Claude's custom connector UI expects the public MCP URL in the form
+  // https://host/mcp. Keep /api/mcp for existing clients, but delegate only
+  // the MCP and OAuth discovery paths here; never expose the whole API root.
+  app.all("/mcp", (req, res, next) => apiApp(req, res, next));
+  app.get("/.well-known/oauth-protected-resource/mcp", (req, res, next) => apiApp(req, res, next));
+  app.get("/.well-known/oauth-authorization-server", (req, res, next) => apiApp(req, res, next));
+  app.all(/^\/oauth\/(register|authorize|token|revoke)$/, (req, res, next) => apiApp(req, res, next));
+
   // Serve static files from dist/public in production
   const staticPath =
     process.env.NODE_ENV === "production"
