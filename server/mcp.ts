@@ -461,7 +461,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_projects", ["manager", "office"]);
+      const denied = requireRole(context, "get_projects", ["manager", "office", "admin"]);
       if (denied) {
         await audit(context, "get_projects", false, { code: "access_denied" });
         return denied;
@@ -492,7 +492,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
     },
     async ({ projectId }) => {
-      const denied = requireRole(context, "get_project", ["manager", "office"]);
+      const denied = requireRole(context, "get_project", ["manager", "office", "admin"]);
       if (denied) {
         await audit(context, "get_project", false, { code: "access_denied" });
         return denied;
@@ -523,7 +523,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
     },
     async ({ projectId }) => {
-      const denied = requireRole(context, "get_project_schedule", ["manager", "office"]);
+      const denied = requireRole(context, "get_project_schedule", ["manager", "office", "admin"]);
       if (denied) {
         await audit(context, "get_project_schedule", false, { code: "access_denied" });
         return denied;
@@ -549,7 +549,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { status: z.string().optional().describe("Filtrar por estado Field") },
     },
     async ({ status }) => {
-      const denied = requireRole(context, "get_work_orders", ["manager", "office"]);
+      const denied = requireRole(context, "get_work_orders", ["manager", "office", "admin"]);
       if (denied) {
         await audit(context, "get_work_orders", false, { code: "access_denied" });
         return denied;
@@ -573,7 +573,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_workers", ["manager", "office"]);
+      const denied = requireRole(context, "get_workers", ["manager", "office", "admin"]);
       if (denied) {
         await audit(context, "get_workers", false, { code: "access_denied" });
         return denied;
