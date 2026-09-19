@@ -3826,11 +3826,10 @@ apiRouter.get(
       configuredProviders.set(provider, list);
     }
 
+    // Field officially supports Claude first. Other platform registrations are
+    // deliberately not exposed until their redirect URIs are verified.
     const platforms = [
       { id: "claude", name: "Claude", description: "Conecta Claude con los datos de Field autorizados.", docsUrl: "https://claude.ai" },
-      { id: "chatgpt", name: "ChatGPT", description: "Conecta ChatGPT con los datos de Field autorizados.", docsUrl: "https://chatgpt.com" },
-      { id: "manus", name: "Manus", description: "Conecta Manus con los datos de Field autorizados.", docsUrl: "https://manus.im" },
-      { id: "gemini", name: "Gemini", description: "Prepara una conexión de Gemini con los datos de Field autorizados.", docsUrl: "https://gemini.google.com" },
     ].map((platform) => ({
       ...platform,
       clients: configuredProviders.get(platform.id) ?? [],

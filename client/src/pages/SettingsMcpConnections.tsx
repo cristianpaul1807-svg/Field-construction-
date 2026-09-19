@@ -77,7 +77,7 @@ export default function SettingsMcpConnections() {
   };
 
   return <div className="p-4 sm:p-8 space-y-6 max-w-5xl mx-auto">
-    <PageHeader title="MCP Conexiones AI" description="Conecta asistentes de IA a los datos de Field que tu rol y tu plan permiten consultar." />
+    <PageHeader title="MCP Conexiones AI" description="Conecta Claude a los datos de Field que tu rol y tu plan permiten consultar." />
     <Card className="p-5 sm:p-6 border-primary/20 bg-primary/[0.03]">
       <div className="flex items-start gap-3">
         <div className="rounded-lg bg-primary/10 p-2 text-primary"><ShieldCheck size={20} /></div>
