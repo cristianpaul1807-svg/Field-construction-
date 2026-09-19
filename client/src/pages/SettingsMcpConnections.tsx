@@ -50,6 +50,9 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 
 function Logo({ id }: { id: Platform["id"] }) {
   const item = brand[id];
+  if (id === "claude") {
+    return <div className={`size-11 rounded-xl ${item.bg} flex items-center justify-center overflow-hidden`}><img src="/brand/claude-logo.png" alt="Claude" className="size-8 object-contain" /></div>;
+  }
   return <div className={`size-11 rounded-xl ${item.bg} ${item.fg} flex items-center justify-center font-bold text-xl`} aria-hidden="true">{item.mark}</div>;
 }
 
@@ -100,12 +103,13 @@ export default function SettingsMcpConnections() {
         return <Card key={platform.id} className="overflow-hidden">
           <button type="button" className="w-full text-left p-5 flex items-start gap-3 hover:bg-secondary/40 transition-colors" onClick={() => setOpen(isOpen ? null : platform.id)} aria-expanded={isOpen}>
             <Logo id={platform.id} />
-            <span className="min-w-0 flex-1"><span className="flex items-center gap-2 font-semibold">{platform.name}{platform.configured && <span className="text-[11px] rounded-full bg-status-success-bg text-status-success-fg px-2 py-0.5">Configurado</span>}</span><span className="block text-sm text-muted-foreground mt-1">{platform.description}</span></span>
+            <span className="min-w-0 flex-1"><span className="flex items-center gap-2 font-semibold">{platform.name}{platform.configured && <span title="Hay un Client ID OAuth válido registrado para Claude" className="text-[11px] rounded-full bg-status-success-bg text-status-success-fg px-2 py-0.5">OAuth listo</span>}{platform.connections.some((connection) => connection.status === "active") && <span title="Existe una autorización activa para esta empresa" className="text-[11px] rounded-full bg-status-success-bg text-status-success-fg px-2 py-0.5">Conectado</span>}</span><span className="block text-sm text-muted-foreground mt-1">{platform.description}</span></span>
             {isOpen ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
           </button>
           {isOpen && <div className="border-t border-border p-5 space-y-5">
             <div className="space-y-3 text-sm">
               <p className="font-medium">Cómo conectarlo</p>
+              <p className="text-xs text-muted-foreground"><strong>OAuth listo</strong> significa que Field tiene registrado un Client ID válido. <strong>Conectado</strong> significa que ya existe una autorización activa para esta empresa.</p>
               <ol className="list-decimal pl-5 space-y-1.5 text-muted-foreground"><li>Abre {platform.name} y añade un conector MCP personalizado.</li><li>Copia la URL MCP y el Client ID que aparecen abajo.</li><li>Cuando {platform.name} abra Field, inicia sesión como propietario o usa el código del trabajador.</li><li>Revisa que diga <strong>solo lectura</strong> y pulsa autorizar.</li></ol>
             </div>
             <div className="space-y-2"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5"><Link2 size={13} /> URL MCP</p><div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2"><code className="min-w-0 flex-1 truncate text-xs">{data?.mcpUrl ?? "https://logiciel-construction.com/mcp"}</code><CopyButton value={data?.mcpUrl ?? "https://logiciel-construction.com/mcp"} label="Copiar" /></div></div>
