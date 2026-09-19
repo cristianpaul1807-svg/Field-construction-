@@ -51,7 +51,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 function Logo({ id }: { id: Platform["id"] }) {
   const item = brand[id];
   if (id === "claude") {
-    return <div className={`size-11 rounded-xl ${item.bg} flex items-center justify-center overflow-hidden`}><img src="/brand/claude-logo.png" alt="Claude" className="size-8 object-contain" /></div>;
+    return <div className={`size-11 rounded-xl ${item.bg} flex items-center justify-center overflow-hidden`}><img src="/brand/claude-logo.svg" alt="Claude" className="size-8 object-contain" /></div>;
   }
   return <div className={`size-11 rounded-xl ${item.bg} ${item.fg} flex items-center justify-center font-bold text-xl`} aria-hidden="true">{item.mark}</div>;
 }
