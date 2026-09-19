@@ -110,27 +110,50 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
 
 async function resolveOwnerCredentials(email: string, password: string): Promise<WorkerIdentity | null> {
   const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
-  const anon = (process.env.VITE_SUPABASE_ANON_KEY ?? "").replace(/\s+/g, "");
+  const anon = (process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? "").replace(/\s+/g, "");
   if (!url || !anon) return null;
   const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const { data, error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
   if (error || !data.user) return null;
-  const { data: business, error: businessError } = await getSupabaseAdmin()
+  const admin = getSupabaseAdmin();
+  const { data: business, error: businessError } = await admin
     .from("businesses")
     .select("id, name, subscription_plan, subscription_status, trial_ends_at, primary_auth_user_id")
     .eq("primary_auth_user_id", data.user.id)
     .maybeSingle();
   if (businessError) throw businessError;
-  if (!business) return null;
-  const plan = planDe(business.subscription_plan);
+  let resolvedBusiness = business;
+  // Older/provisioned accounts may have the auth link on public.users but not
+  // yet on businesses.primary_auth_user_id. Accept that canonical link too.
+  if (!resolvedBusiness) {
+    const { data: userRow, error: userError } = await admin
+      .from("users")
+      .select("business_id")
+      .eq("auth_user_id", data.user.id)
+      .eq("status", "activo")
+      .limit(1)
+      .maybeSingle();
+    if (userError) throw userError;
+    if (userRow?.business_id) {
+      const { data: linkedBusiness, error: linkedBusinessError } = await admin
+        .from("businesses")
+        .select("id, name, subscription_plan, subscription_status, trial_ends_at, primary_auth_user_id")
+        .eq("id", userRow.business_id)
+        .maybeSingle();
+      if (linkedBusinessError) throw linkedBusinessError;
+      resolvedBusiness = linkedBusiness;
+    }
+  }
+  if (!resolvedBusiness) return null;
+  const plan = planDe(resolvedBusiness.subscription_plan);
   return {
     workerId: data.user.id,
     workerKind: "owner",
-    businessId: business.id,
-    name: business.name ?? null,
+    businessId: resolvedBusiness.id,
+    name: resolvedBusiness.name ?? null,
     workerRole: "admin",
     plan,
-    access: accesoDe({ plan, estadoSuscripcion: business.subscription_status, pruebaHasta: business.trial_ends_at }),
+    access: accesoDe({ plan, estadoSuscripcion: resolvedBusiness.subscription_status, pruebaHasta: resolvedBusiness.trial_ends_at }),
   };
 }
 

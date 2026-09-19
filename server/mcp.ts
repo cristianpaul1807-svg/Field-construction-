@@ -190,6 +190,28 @@ function requireRole(context: ReadToolContext, toolName: string, roles: McpRole[
   return null;
 }
 
+const TOOL_ACCESS: Record<string, { roles: McpRole[]; capability: "campo" | "facturacion" | "reportes" | "contabilidad" | "margen" }> = {
+  get_projects: { roles: ["manager", "office", "admin"], capability: "campo" },
+  get_project: { roles: ["manager", "office", "admin"], capability: "campo" },
+  get_project_schedule: { roles: ["manager", "office", "admin"], capability: "campo" },
+  get_work_orders: { roles: ["manager", "office", "admin"], capability: "campo" },
+  get_workers: { roles: ["manager", "office", "admin"], capability: "campo" },
+  get_business_summary: { roles: ["admin"], capability: "reportes" },
+  get_invoices: { roles: ["office", "admin"], capability: "facturacion" },
+  get_receivables: { roles: ["office", "admin"], capability: "reportes" },
+  get_expenses: { roles: ["office", "admin"], capability: "reportes" },
+  get_payments: { roles: ["office", "admin"], capability: "facturacion" },
+  get_profitability: { roles: ["admin"], capability: "margen" },
+  audit_quickbooks_sync: { roles: ["office", "admin"], capability: "contabilidad" },
+};
+
+function toolIsVisible(context: ReadToolContext, toolName: string) {
+  if (!tiene(context.identity.plan, "campo")) return false;
+  if (toolName.startsWith("get_my_")) return true;
+  const access = TOOL_ACCESS[toolName];
+  return Boolean(access && access.roles.includes(roleOf(context.identity)) && tiene(context.identity.plan, access.capability));
+}
+
 async function managedProjectIds(admin: ReturnType<typeof getSupabaseAdmin>, context: ReadToolContext) {
   if (context.identity.workerKind === "owner") {
     const { data, error } = await admin.from("projects").select("id").eq("business_id", context.identity.businessId).limit(MAX_ROWS);
@@ -225,6 +247,13 @@ function dateRange(date: string | undefined, timezoneOffsetMinutes: number | und
 
 function createMcpServer(context: ReadToolContext) {
   const server = new McpServer({ name: "field-construction", version: "0.1.0" });
+  // The MCP client builds its menu from tools/list. Do not register tools the
+  // identity cannot use; handler-level guards remain as a second security wall.
+  const originalRegisterTool = server.registerTool.bind(server);
+  (server as any).registerTool = (name: string, config: unknown, handler: unknown) => {
+    if (!toolIsVisible(context, name)) return undefined;
+    return originalRegisterTool(name as never, config as never, handler as never);
+  };
   const admin = getSupabaseAdmin();
   const assignedColumn = context.identity.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
   const workerColumn = context.identity.workerKind === "employee" ? "employee_id" : "subcontractor_id";
