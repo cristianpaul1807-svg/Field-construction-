@@ -2,7 +2,7 @@
 
 ## Antes de empezar
 
-La empresa debe tener un trabajador de campo creado en Field y ese trabajador debe tener un código de acceso activo para `/campo`. El código no se debe enviar por el chat de Claude ni por correo sin protección. Solo se debe introducir en la pantalla segura de autorización de Field.
+Para probar un trabajador o subcontratista, debe existir en Field y tener un código de acceso activo para `/campo`. Para probar al propietario principal, se puede usar el email y la contraseña de la cuenta que creó la empresa en la pantalla segura de autorización. Las credenciales no se guardan y nunca deben enviarse por el chat de Claude.
 
 ## Configuración en Claude
 
@@ -25,9 +25,10 @@ La empresa debe tener un trabajador de campo creado en Field y ese trabajador de
 7. Deje **OAuth Client Secret** vacío.
 8. Guarde el conector y pulse **Conectar**.
 9. En la ventana de autorización de Field, compruebe que la aplicación solicita acceso de **solo lectura**.
-10. Introduzca el código de acceso del trabajador de `/campo`.
-11. Pulse **Autorizar acceso de solo lectura**.
-12. Espere a que Claude vuelva automáticamente y confirme que el conector está conectado.
+10. Para trabajador o subcontratista, introduzca el código de acceso de `/campo`. Para el propietario principal, introduzca el email y la contraseña de la cuenta que creó la empresa.
+11. Compruebe que la pantalla indica **solo lectura**.
+12. Pulse **Autorizar acceso de solo lectura**.
+13. Espere a que Claude vuelva automáticamente y confirme que el conector está conectado.
 
 ## Permisos de esta primera versión
 
@@ -41,6 +42,8 @@ El conector solo puede consultar la información que corresponde al trabajador a
 - documentos visibles para el trabajador.
 
 El conector no puede crear, modificar ni borrar datos.
+
+El propietario principal obtiene las lecturas administrativas permitidas por su plan, como resumen de empresa, facturas, cuentas por cobrar, pagos, gastos, rentabilidad y auditoría de QuickBooks. Los demás roles solo reciben el área que corresponda a su identidad y permisos.
 
 ## Si vuelve a abrir `/campo`
 

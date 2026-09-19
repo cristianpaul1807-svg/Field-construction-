@@ -1,8 +1,10 @@
 import type { NextFunction, Request, Response, Router } from "express";
 import { randomBytes, randomUUID, timingSafeEqual, createHash } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { hashToken } from "./supabaseAuth";
 import { resolveWorker, type WorkerIdentity } from "./mcp";
+import { accesoDe, planDe } from "../shared/planes";
 
 const DEFAULT_SCOPE = "mcp:read";
 const ACCESS_TTL_SECONDS = 3600;
@@ -77,7 +79,7 @@ async function persistCimdClient(client: OAuthClient) {
 
 async function issueConnection(identity: WorkerIdentity, client: OAuthClient, scope: string) {
   const admin = getSupabaseAdmin();
-  const column = identity.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+  const column = identity.workerKind === "employee" ? "employee_id" : identity.workerKind === "subcontractor" ? "subcontractor_id" : "owner_auth_user_id";
   const clientLabel = `${client.client_id} ${client.client_name}`.toLowerCase();
   const provider = clientLabel.includes("claude") || clientLabel.includes("anthropic")
     ? "claude"
@@ -106,9 +108,35 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
   return data.id as string;
 }
 
+async function resolveOwnerCredentials(email: string, password: string): Promise<WorkerIdentity | null> {
+  const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
+  const anon = (process.env.VITE_SUPABASE_ANON_KEY ?? "").replace(/\s+/g, "");
+  if (!url || !anon) return null;
+  const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  const { data, error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
+  if (error || !data.user) return null;
+  const { data: business, error: businessError } = await getSupabaseAdmin()
+    .from("businesses")
+    .select("id, name, subscription_plan, subscription_status, trial_ends_at, primary_auth_user_id")
+    .eq("primary_auth_user_id", data.user.id)
+    .maybeSingle();
+  if (businessError) throw businessError;
+  if (!business) return null;
+  const plan = planDe(business.subscription_plan);
+  return {
+    workerId: data.user.id,
+    workerKind: "owner",
+    businessId: business.id,
+    name: business.name ?? null,
+    workerRole: "admin",
+    plan,
+    access: accesoDe({ plan, estadoSuscripcion: business.subscription_status, pruebaHasta: business.trial_ends_at }),
+  };
+}
+
 function consentPage(pending: PendingAuthorization, error?: string) {
   const hidden = (key: string, value: string | undefined) => value ? `<input type="hidden" name="${key}" value="${esc(value)}">` : "";
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Autoriser Field</title><style>body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#171717;margin:0;padding:32px}.card{max-width:440px;margin:7vh auto;background:white;border-radius:20px;padding:28px;box-shadow:0 10px 40px #0001}h1{font-size:24px;margin:0 0 8px}p{color:#555;line-height:1.5}label{font-weight:600;font-size:14px;display:block;margin:22px 0 7px}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}.scope{background:#f5f5f7;border-radius:12px;padding:12px;margin:18px 0;font-size:14px}.error{color:#a40000;background:#fff0f0;padding:10px;border-radius:10px;font-size:14px}button{width:100%;border:0;border-radius:11px;padding:13px;background:#111;color:#fff;font-weight:650;font-size:15px;margin-top:20px}</style></head><body><main class="card"><h1>Conectar Field</h1><p><strong>${esc(pending.client.client_name)}</strong> solicita acceso a tus datos de Field.</p><div class="scope">Solo lectura: agenda, órdenes, proyectos, tareas, horas y documentos autorizados.</div>${error ? `<div class="error">${esc(error)}</div>` : ""}<form method="post">${hidden("client_id", pending.client.client_id)}${hidden("redirect_uri", pending.redirectUri)}${hidden("state", pending.state)}${hidden("scope", pending.scope)}${hidden("resource", pending.resource)}${hidden("code_challenge", pending.codeChallenge)}<label for="worker_token">Código de acceso de trabajador</label><input id="worker_token" name="worker_token" autocomplete="current-password" autocapitalize="none" required><button type="submit">Autorizar acceso de solo lectura</button></form></main></body></html>`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Autorizar Field</title><style>body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#171717;margin:0;padding:32px}.card{max-width:440px;margin:7vh auto;background:white;border-radius:20px;padding:28px;box-shadow:0 10px 40px #0001}h1{font-size:24px;margin:0 0 8px}p{color:#555;line-height:1.5}label{font-weight:600;font-size:14px;display:block;margin:18px 0 7px}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}.scope{background:#f5f5f7;border-radius:12px;padding:12px;margin:18px 0;font-size:14px}.section{border-top:1px solid #eee;margin-top:20px;padding-top:5px}.hint{font-size:13px;color:#666}.error{color:#a40000;background:#fff0f0;padding:10px;border-radius:10px;font-size:14px}button{width:100%;border:0;border-radius:11px;padding:13px;background:#111;color:#fff;font-weight:650;font-size:15px;margin-top:20px}</style></head><body><main class="card"><h1>Conectar Field</h1><p><strong>${esc(pending.client.client_name)}</strong> solicita acceso a tus datos de Field.</p><div class="scope"><strong>Solo lectura.</strong> Agenda, órdenes, proyectos, tareas, horas, documentos y reportes permitidos por tu rol.</div>${error ? `<div class="error">${esc(error)}</div>` : ""}<form method="post">${hidden("client_id", pending.client.client_id)}${hidden("redirect_uri", pending.redirectUri)}${hidden("state", pending.state)}${hidden("scope", pending.scope)}${hidden("resource", pending.resource)}${hidden("code_challenge", pending.codeChallenge)}<div class="section"><label for="worker_token">Código de acceso de trabajador</label><input id="worker_token" name="worker_token" autocomplete="off" autocapitalize="none"><p class="hint">Úsalo para conectar un trabajador o subcontratista.</p></div><div class="section"><label for="owner_email">Email de la cuenta propietaria</label><input id="owner_email" name="owner_email" type="email" autocomplete="username" autocapitalize="none"><label for="owner_password">Contraseña de la cuenta propietaria</label><input id="owner_password" name="owner_password" type="password" autocomplete="current-password"><p class="hint">Solo se valida contra Supabase Auth; no se guarda la contraseña.</p></div><button type="submit">Autorizar acceso de solo lectura</button></form></main></body></html>`;
 }
 
 async function authorizeGet(req: Request, res: Response) {
@@ -126,8 +154,12 @@ async function authorizePost(req: Request, res: Response) {
   if (!client || !client.redirect_uris.includes(redirectUri)) { res.status(400).send("OAuth client or redirect URI is not registered."); return; }
   const pending: PendingAuthorization = { client, redirectUri, state, scope: DEFAULT_SCOPE, resource, codeChallenge: challenge };
   if (resource !== resourceUrl(req) || !challenge) { res.status(400).send("Invalid MCP resource or PKCE challenge."); return; }
-  const identity = await resolveWorker(bodyString(req, "worker_token"));
-  if (!identity || identity.access === "bloqueado") { res.status(401).type("html").send(consentPage(pending, "El código de trabajador no es válido o el acceso del negocio está bloqueado.")); return; }
+  const ownerEmail = bodyString(req, "owner_email");
+  const ownerPassword = bodyString(req, "owner_password");
+  const identity = ownerEmail && ownerPassword
+    ? await resolveOwnerCredentials(ownerEmail, ownerPassword)
+    : await resolveWorker(bodyString(req, "worker_token"));
+  if (!identity || identity.access === "bloqueado") { res.status(401).type("html").send(consentPage(pending, "Las credenciales no son válidas o el acceso del negocio está bloqueado.")); return; }
   await persistCimdClient(client);
   const connectionId = await issueConnection(identity, client, DEFAULT_SCOPE);
   const rawCode = opaqueToken("mcp_code");

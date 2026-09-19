@@ -51,8 +51,8 @@ Las herramientas operativas de encargado exigen un rol reconocido y limitan los 
 
 Supabase contiene dos tablas nuevas:
 
-- `mcp_connections`: preparada para registrar futuras conexiones de ChatGPT, Claude u otro proveedor, con estado revocable, alcance y referencia al trabajador.
-- `mcp_audit_log`: registra negocio, trabajador, herramienta, autorización y resultado resumido, sin guardar tokens.
+- `mcp_connections`: registra conexiones de ChatGPT, Claude u otro proveedor, con estado revocable, alcance y referencia a trabajador, subcontratista o propietario principal.
+- `mcp_audit_log`: registra negocio, identidad, herramienta, autorización y resultado resumido, sin guardar tokens.
 
 Ambas tablas tienen claves foráneas `ON DELETE CASCADE` hacia `businesses`, `employees` y `subcontractors`. Por tanto, eliminar un negocio elimina sus conexiones y auditorías; eliminar un trabajador elimina únicamente los registros que le pertenecen.
 
@@ -71,7 +71,7 @@ El servidor implementa **OAuth 2.1 Authorization Code con PKCE S256**. ChatGPT o
 
 El recurso canónico es `https://logiciel-construction.com/api/mcp` y el único alcance de esta fase es `mcp:read`. Se aceptan redirecciones HTTPS y redirecciones HTTP únicamente para `localhost`.
 
-La autorización abre una pantalla de consentimiento de Field. El trabajador introduce su código de acceso de `/campo`, Field comprueba su identidad, negocio, estado de suscripción y plan, y después crea una conexión revocable en `mcp_connections`. El código de autorización dura cinco minutos, el access token dura una hora y el refresh token dura treinta días con rotación: cada renovación revoca el token anterior.
+La autorización abre una pantalla de consentimiento de Field. El trabajador introduce su código de acceso de `/campo`; el propietario principal introduce el email y la contraseña de la cuenta que creó la empresa. Field comprueba la identidad, el vínculo con el negocio, el estado de suscripción y el plan, y después crea una conexión revocable en `mcp_connections`. La contraseña del propietario solo se valida contra Supabase Auth y no se guarda. El código de autorización dura cinco minutos, el access token dura una hora y el refresh token dura treinta días con rotación: cada renovación revoca el token anterior.
 
 Los access tokens, refresh tokens y códigos se almacenan solamente como hashes en `mcp_oauth_tokens` y `mcp_oauth_codes`. El registro de cliente y sus URI exactas se guardan en `mcp_oauth_clients`. La service role key nunca sale del servidor.
 

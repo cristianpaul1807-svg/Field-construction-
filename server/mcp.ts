@@ -12,7 +12,7 @@ import { receivables } from "./receivables";
 const MCP_PROTOCOL_VERSION = "2025-06-18";
 const MAX_ROWS = 100;
 
-type WorkerKind = "employee" | "subcontractor";
+type WorkerKind = "employee" | "subcontractor" | "owner";
 
 export type WorkerIdentity = {
   workerId: string;
@@ -52,7 +52,7 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
   const admin = getSupabaseAdmin();
   const { data: oauth, error: oauthError } = await admin
     .from("mcp_oauth_tokens")
-    .select("connection_id, scope, resource, access_expires_at, revoked_at, mcp_connections(business_id, employee_id, subcontractor_id, status)")
+    .select("connection_id, scope, resource, access_expires_at, revoked_at, mcp_connections(business_id, employee_id, subcontractor_id, owner_auth_user_id, status)")
     .eq("access_token_hash", hashToken(token))
     .maybeSingle();
   if (oauthError) {
@@ -63,10 +63,17 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
   }
   if (!oauth || oauth.revoked_at || new Date(oauth.access_expires_at).getTime() <= Date.now()) return null;
   if (oauth.resource !== `${process.env.MCP_OAUTH_ISSUER?.trim().replace(/\/$/, "") || ""}/mcp` && process.env.MCP_OAUTH_ISSUER) return null;
-  const connection = oauth.mcp_connections as unknown as { business_id: string; employee_id: string | null; subcontractor_id: string | null; status: string } | null;
+  const connection = oauth.mcp_connections as unknown as { business_id: string; employee_id: string | null; subcontractor_id: string | null; owner_auth_user_id: string | null; status: string } | null;
   if (!connection || connection.status !== "active" || oauth.scope !== "mcp:read") return null;
-  const id = connection.employee_id ?? connection.subcontractor_id;
+  const id = connection.employee_id ?? connection.subcontractor_id ?? connection.owner_auth_user_id;
   if (!id) return null;
+  if (connection.owner_auth_user_id) {
+    const { data: business, error } = await admin.from("businesses").select("id, name, subscription_plan, subscription_status, trial_ends_at, primary_auth_user_id").eq("id", connection.business_id).eq("primary_auth_user_id", connection.owner_auth_user_id).maybeSingle();
+    if (error) throw error;
+    if (!business) return null;
+    const plan = planDe(business.subscription_plan);
+    return { workerId: connection.owner_auth_user_id, workerKind: "owner", businessId: business.id, name: business.name ?? null, workerRole: "admin", plan, access: accesoDe({ plan, estadoSuscripcion: business.subscription_status ?? null, pruebaHasta: business.trial_ends_at ?? null }) };
+  }
   const table = connection.employee_id ? "employees" : "subcontractors";
   const select = connection.employee_id
     ? "id, business_id, name, role, businesses(subscription_plan, subscription_status, trial_ends_at)"
@@ -137,7 +144,7 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
 
 async function audit(context: ReadToolContext, toolName: string, allowed: boolean, detail?: unknown) {
   const admin = getSupabaseAdmin();
-  const column = context.identity.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+  const column = context.identity.workerKind === "employee" ? "employee_id" : context.identity.workerKind === "subcontractor" ? "subcontractor_id" : "owner_auth_user_id";
   const { error } = await admin.from("mcp_audit_log").insert({
     request_id: context.requestId,
     business_id: context.identity.businessId,
@@ -162,6 +169,7 @@ function requireReadable(context: ReadToolContext, toolName: string) {
 type McpRole = "worker" | "manager" | "office" | "admin";
 
 function roleOf(identity: WorkerIdentity): McpRole {
+  if (identity.workerKind === "owner") return "admin";
   if (identity.workerKind !== "employee") return "worker";
   const role = (identity.workerRole ?? "").trim().toLocaleLowerCase();
   if (/(admin|administrador|propietario|owner|dueno|dueño)/.test(role)) return "admin";
@@ -183,6 +191,11 @@ function requireRole(context: ReadToolContext, toolName: string, roles: McpRole[
 }
 
 async function managedProjectIds(admin: ReturnType<typeof getSupabaseAdmin>, context: ReadToolContext) {
+  if (context.identity.workerKind === "owner") {
+    const { data, error } = await admin.from("projects").select("id").eq("business_id", context.identity.businessId).limit(MAX_ROWS);
+    if (error) throw error;
+    return (data ?? []).map((row) => row.id);
+  }
   const workerColumn = context.identity.workerKind === "employee" ? "employee_id" : "subcontractor_id";
   const assignedColumn = context.identity.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
   const [assignments, events, orders] = await Promise.all([

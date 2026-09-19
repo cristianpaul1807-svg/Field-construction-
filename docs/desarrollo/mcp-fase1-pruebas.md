@@ -29,7 +29,7 @@ La auditoría de accesos puede escribir en `mcp_audit_log`; esa escritura técni
 | Detalle fuera de perímetro | Encargado u oficina | Devuelve `project_out_of_scope` y no revela si existe | Pendiente de ejecutar con datos de prueba |
 | Lectura de equipo | Encargado u oficina | Solo devuelve personas vinculadas a proyectos autorizados y nunca salarios o tokens | Pendiente de ejecutar con datos de prueba |
 | Lectura financiera | Administración u oficina | Requiere el rol y la capacidad del plan correspondiente | Pendiente de ejecutar con datos de prueba |
-| Rentabilidad | Propietario principal | Devuelve el reporte existente, sin escritura | Pendiente de ejecutar cuando exista identidad de propietario MCP |
+| Rentabilidad | Propietario principal | Devuelve el reporte existente, sin escritura | Pendiente de ejecutar con la cuenta del propietario |
 | QuickBooks | Administración autorizada | Solo devuelve estado, errores y divergencias; no sincroniza | Pendiente de ejecutar con conexión contable |
 | Negocio distinto | Token de trabajador A | Nunca devuelve filas del negocio B | Pendiente de ejecutar con dos negocios |
 | Plan sin capacidad `campo` | Trabajador de negocio restringido | Devuelve `plan_capability_required` y registra rechazo | Pendiente de ejecutar con plan de prueba |
@@ -43,7 +43,7 @@ La auditoría de accesos puede escribir en `mcp_audit_log`; esa escritura técni
 
 Durante esta fase no se implementan `clock_in`, `clock_out`, `report_incident`, `create_work_order`, `assign_worker`, `update_work_order`, `create_invoice` ni sincronizaciones con QuickBooks mediante MCP. Los roles distintos del propietario principal permanecen en solo lectura.
 
-Las herramientas de administración que ya están registradas son únicamente de consulta: `get_business_summary`, `get_invoices`, `get_receivables`, `get_expenses`, `get_payments`, `get_profitability` y `audit_quickbooks_sync`. Su disponibilidad efectiva todavía depende de que la conexión MCP de negocio y la identidad de propietario se revisen en la siguiente etapa.
+Las herramientas de administración que ya están registradas son únicamente de consulta: `get_business_summary`, `get_invoices`, `get_receivables`, `get_expenses`, `get_payments`, `get_profitability` y `audit_quickbooks_sync`. La conexión OAuth del propietario principal ya está implementada; queda ejecutar la prueba real con sus credenciales en la pantalla segura de autorización.
 
 Las pruebas con OAuth y clientes externos se realizarán en una etapa separada, después de cerrar la implementación interna y revisar las conexiones.
 
