@@ -11,7 +11,7 @@ La empresa debe tener un trabajador de campo creado en Field y ese trabajador de
 3. Introduzca esta URL MCP:
 
    ```text
-   https://logiciel-construction.com/api/mcp
+   https://logiciel-construction.com/mcp
    ```
 
 4. En **Cliente OAuth**, seleccione primero **Usar la identidad publicada de Claude**.
@@ -46,7 +46,7 @@ El conector no puede crear, modificar ni borrar datos.
 
 Cierre la ventana de autorización y elimine el conector incompleto en Claude. Vuelva a crearlo usando exactamente la URL MCP y el Client ID anteriores. No utilice la URL `/campo` como URL del conector.
 
-La URL `/campo` es la aplicación normal del trabajador; no es la URL del servidor MCP.
+La URL `/campo` es la aplicación normal del trabajador; no es la URL del servidor MCP. La ruta `/api/mcp` continúa disponible para clientes antiguos, pero Claude debe usar la ruta pública `/mcp`.
 
 ## Si Claude muestra un error OAuth
 
