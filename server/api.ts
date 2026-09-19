@@ -5598,7 +5598,7 @@ apiRouter.get(
     const [projects, expenses, assignments] = await Promise.all([
       supabase
         .from("projects")
-        .select("id, code, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address)")
+        .select("id, code, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, address, clients(name, address)")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase.from("expenses").select("project_id, amount").eq("business_id", req.businessId!),
@@ -5632,6 +5632,7 @@ apiRouter.get(
         code: p.code ?? null,
         clientId: p.client_id,
         clientName: p.clients?.name ?? null,
+        clientAddress: p.address ?? p.clients?.address ?? null,
         name: p.name,
         type: p.type,
         status: p.status,
@@ -5665,7 +5666,7 @@ apiRouter.get(
         // usar una en el listado y la otra en la ficha hacía que la misma obra
         // enseñara dos cifras distintas con el mismo rótulo.
         .select(
-          "id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, clients(name, address), estimates!projects_estimate_id_fkey(total)"
+          "id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, address, clients(name, address), estimates!projects_estimate_id_fkey(total)"
         )
         .eq("business_id", req.businessId!)
         .eq("id", projectId)
@@ -5729,7 +5730,7 @@ apiRouter.get(
       clientName: client?.name ?? null,
       // The project hub links out to the estimate PDF, the client's chat and
       // a map, so it needs the ids and the address to build those links.
-      clientAddress: client?.address ?? null,
+      clientAddress: project.data.address ?? client?.address ?? null,
       estimateId: project.data.estimate_id ?? null,
       // Lo que vale el contrato, la misma cifra que enseña el listado de obras.
       estimateTotal: Number((project.data as any).estimates?.total ?? 0),
@@ -5797,7 +5798,7 @@ apiRouter.get(
 apiRouter.post(
   "/projects",
   route(async (req, res) => {
-    const { clientId, name, type, startDate, endDate, estimateId } = req.body ?? {};
+    const { clientId, name, type, address, startDate, endDate, estimateId } = req.body ?? {};
     if (!clientId || !name?.trim()) {
       res.status(400).json({ error: "clientId and name are required" });
       return;
@@ -5821,6 +5822,7 @@ apiRouter.post(
         estimate_id: estimateId ?? null,
         name: name.trim(),
         type: type?.trim() || null,
+        address: typeof address === "string" && address.trim() ? address.trim() : null,
         status: "planificacion",
         origin: originFromClientSource(client?.source),
         progress_percent: 0,

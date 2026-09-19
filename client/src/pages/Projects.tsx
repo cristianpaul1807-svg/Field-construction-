@@ -30,9 +30,10 @@ interface Project {
   budgetTotal: number;
   budgetUsed: number;
   team: string[];
+  clientAddress?: string | null;
 }
 
-interface ClientOption { id: string; name: string }
+interface ClientOption { id: string; name: string; address?: string | null }
 
 function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
   const { t } = useTranslation();
@@ -40,13 +41,16 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
   const [clientId, setClientId] = useState("");
   const [name, setName] = useState("");
   const [type, setType] = useState("");
+  const [addressMode, setAddressMode] = useState<"none" | "client" | "custom">("none");
+  const [customAddress, setCustomAddress] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data: clients } = useApi<ClientOption[]>(open ? "/api/clients" : null);
+  const selectedClient = (clients ?? []).find((client) => client.id === clientId);
 
-  const reset = () => { setClientId(""); setName(""); setType(""); setStartDate(""); setEndDate(""); setError(null); };
+  const reset = () => { setClientId(""); setName(""); setType(""); setAddressMode("none"); setCustomAddress(""); setStartDate(""); setEndDate(""); setError(null); };
 
   const create = async () => {
     if (!clientId || !name.trim()) return;
@@ -55,7 +59,14 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
       const res = await apiFetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientId, name: name.trim(), type, startDate: startDate || undefined, endDate: endDate || undefined }),
+        body: JSON.stringify({
+          clientId,
+          name: name.trim(),
+          type,
+          address: addressMode === "client" ? selectedClient?.address?.trim() : addressMode === "custom" ? customAddress.trim() : undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(serverMessage(body, t, t("projects.createError")));
@@ -85,12 +96,28 @@ function NewProjectDialog({ onCreated }: { onCreated: () => void }) {
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label>{t("common.client")}</Label>
-            <Select value={clientId} onValueChange={setClientId}>
+            <Select value={clientId} onValueChange={(value) => { setClientId(value); setAddressMode("none"); setCustomAddress(""); }}>
               <SelectTrigger><SelectValue placeholder={t("projects.selectClient")} /></SelectTrigger>
               <SelectContent>
                 {(clients ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t("common.address")} ({t("common.optional")})</Label>
+            <Select value={addressMode} onValueChange={(value: "none" | "client" | "custom") => setAddressMode(value)}>
+              <SelectTrigger><SelectValue placeholder={t("projects.selectAddressOption")} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t("projects.noProjectAddress")}</SelectItem>
+                <SelectItem value="client" disabled={!selectedClient?.address?.trim()}>
+                  {selectedClient?.address?.trim() ? t("projects.useClientAddress", { address: selectedClient.address }) : t("projects.clientHasNoAddress")}
+                </SelectItem>
+                <SelectItem value="custom">{t("projects.enterProjectAddress")}</SelectItem>
+              </SelectContent>
+            </Select>
+            {addressMode === "custom" && (
+              <Input value={customAddress} onChange={(e) => setCustomAddress(e.target.value)} placeholder={t("projects.addressPlaceholder")} />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>{t("projects.projectName")}</Label>
@@ -186,6 +213,7 @@ export default function Projects() {
                     )}
                     <h3 className="font-semibold text-foreground mt-0.5 truncate">{project.name}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{project.clientName}</p>
+                    {project.clientAddress && <p className="text-xs text-muted-foreground mt-1 truncate">{project.clientAddress}</p>}
                   </div>
                   <StatusBadge tone={projectStatusTone[project.status]}>
                     {t(`projects.statuses.${project.status}`)}
