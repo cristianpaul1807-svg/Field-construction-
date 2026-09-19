@@ -119,6 +119,7 @@ import {
   hashToken,
 } from "./supabaseAuth";
 import { mcpHandler } from "./mcp";
+import { mcpOAuthRoutes } from "./mcpOAuth";
 
 export const apiRouter = Router();
 
@@ -12925,6 +12926,7 @@ apiApp.post("/public/stripe/webhook", express.raw({ type: "application/json" }),
   stripeWebhookHandler(req, res).catch(next);
 });
 apiApp.use(express.json());
+mcpOAuthRoutes(apiApp);
 // MCP authenticates a worker access token itself and must not inherit the
 // business Supabase-JWT middleware. The first version is read-only and uses
 // stateless HTTP so the worker token remains the source of identity on every request.
@@ -12955,6 +12957,10 @@ apiApp.use((err: unknown, _req: express.Request, res: express.Response, _next: e
 
   console.error("[api]", detail.message, (detail as { stack?: string }).stack ?? "");
   if (res.headersSent) return;
+  if (err instanceof SupabaseNotConfiguredError) {
+    res.status(503).json({ error: detail.message, code: "backend_unavailable" });
+    return;
+  }
   res.status(500).json({
     error: detail.message || "Unexpected server error",
     ...(detail.code ? { code: detail.code } : {}),

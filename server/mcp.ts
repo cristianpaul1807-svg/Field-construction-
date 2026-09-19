@@ -12,7 +12,7 @@ const MAX_ROWS = 100;
 
 type WorkerKind = "employee" | "subcontractor";
 
-type WorkerIdentity = {
+export type WorkerIdentity = {
   workerId: string;
   workerKind: WorkerKind;
   businessId: string;
@@ -46,7 +46,46 @@ function errorResult(message: string, code: string) {
   };
 }
 
-async function resolveWorker(token: string): Promise<WorkerIdentity | null> {
+async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentity | null> {
+  const admin = getSupabaseAdmin();
+  const { data: oauth, error: oauthError } = await admin
+    .from("mcp_oauth_tokens")
+    .select("connection_id, scope, resource, access_expires_at, revoked_at, mcp_connections(business_id, employee_id, subcontractor_id, status)")
+    .eq("access_token_hash", hashToken(token))
+    .maybeSingle();
+  if (oauthError) {
+    // Before the OAuth migration is applied, preserve the original worker-token
+    // flow rather than turning every MCP request into a generic 500.
+    if (oauthError.code === "42P01" || oauthError.code === "PGRST205") return null;
+    throw oauthError;
+  }
+  if (!oauth || oauth.revoked_at || new Date(oauth.access_expires_at).getTime() <= Date.now()) return null;
+  if (oauth.resource !== `${process.env.MCP_OAUTH_ISSUER?.trim().replace(/\/$/, "") || ""}/mcp` && process.env.MCP_OAUTH_ISSUER) return null;
+  const connection = oauth.mcp_connections as unknown as { business_id: string; employee_id: string | null; subcontractor_id: string | null; status: string } | null;
+  if (!connection || connection.status !== "active" || oauth.scope !== "mcp:read") return null;
+  const id = connection.employee_id ?? connection.subcontractor_id;
+  if (!id) return null;
+  const table = connection.employee_id ? "employees" : "subcontractors";
+  const select = connection.employee_id
+    ? "id, business_id, name, role, businesses(subscription_plan, subscription_status, trial_ends_at)"
+    : "id, business_id, name, trade, businesses(subscription_plan, subscription_status, trial_ends_at)";
+  const { data: row, error } = await admin.from(table).select(select).eq("id", id).eq("business_id", connection.business_id).maybeSingle();
+  if (error) throw error;
+  if (!row) return null;
+  const business = (row as any).businesses as { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null } | null;
+  const plan = planDe(business?.subscription_plan);
+  return {
+    workerId: row.id,
+    workerKind: connection.employee_id ? "employee" : "subcontractor",
+    businessId: row.business_id,
+    name: row.name ?? null,
+    workerRole: connection.employee_id ? (row as any).role ?? null : (row as any).trade ?? null,
+    plan,
+    access: accesoDe({ plan, estadoSuscripcion: business?.subscription_status ?? null, pruebaHasta: business?.trial_ends_at ?? null }),
+  };
+}
+
+export async function resolveWorker(token: string): Promise<WorkerIdentity | null> {
   const admin = getSupabaseAdmin();
   const hash = hashToken(token);
   const [employee, subcontractor] = await Promise.all([
@@ -62,9 +101,13 @@ async function resolveWorker(token: string): Promise<WorkerIdentity | null> {
       .maybeSingle(),
   ]);
 
-  if (employee.error && subcontractor.error) throw new Error("Worker directory unavailable");
+  if (employee.error && subcontractor.error) {
+    const oauthIdentity = await resolveWorkerFromOAuthToken(token);
+    if (oauthIdentity) return oauthIdentity;
+    throw new Error("Worker directory unavailable");
+  }
   const row = employee.data ?? subcontractor.data;
-  if (!row) return null;
+  if (!row) return (await resolveWorkerFromOAuthToken(token));
 
   const workerKind: WorkerKind = employee.data ? "employee" : "subcontractor";
   const business = (row as any).businesses as {
@@ -331,6 +374,9 @@ function createMcpServer(context: ReadToolContext) {
 export function mcpHandler(req: Request, res: Response, next: NextFunction) {
   const token = bearerToken(req);
   if (!token) {
+    const scheme = req.protocol;
+    const metadata = `${scheme}://${req.get("host")}/api/.well-known/oauth-protected-resource/mcp`;
+    res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${metadata}"`);
     res.status(401).json({ error: "Missing worker bearer token", code: "missing_token" });
     return;
   }
@@ -338,6 +384,8 @@ export function mcpHandler(req: Request, res: Response, next: NextFunction) {
   resolveWorker(token)
     .then(async (identity) => {
       if (!identity) {
+        const metadata = `${req.protocol}://${req.get("host")}/api/.well-known/oauth-protected-resource/mcp`;
+        res.setHeader("WWW-Authenticate", `Bearer resource_metadata="${metadata}"`);
         res.status(401).json({ error: "Invalid or expired worker token", code: "invalid_worker_token" });
         return;
       }

@@ -34,17 +34,32 @@ Ambas tablas tienen claves foráneas `ON DELETE CASCADE` hacia `businesses`, `em
 
 La tabla MCP tiene RLS activado y el servidor utiliza exclusivamente el cliente service-role en backend, nunca desde el navegador. No se debe exponer la service role key ni guardar tokens sin hash.
 
-## Conexión técnica provisional
+## OAuth 2.1 y conexión externa
 
-La versión actual usa el token bearer de trabajador como credencial de primera fase. Esto permite validar el modelo con una cuenta real de campo sin crear todavía un flujo OAuth público. El cliente MCP debe enviar:
+El servidor implementa **OAuth 2.1 Authorization Code con PKCE S256**. ChatGPT o Claude descubren automáticamente la autorización mediante:
+
+- `GET /api/.well-known/oauth-protected-resource/mcp`
+- `GET /api/.well-known/oauth-authorization-server`
+- `POST /api/oauth/register`
+- `GET/POST /api/oauth/authorize`
+- `POST /api/oauth/token`
+- `POST /api/oauth/revoke`
+
+El recurso canónico es `https://logiciel-construction.com/api/mcp` y el único alcance de esta fase es `mcp:read`. Se aceptan redirecciones HTTPS y redirecciones HTTP únicamente para `localhost`.
+
+La autorización abre una pantalla de consentimiento de Field. El trabajador introduce su código de acceso de `/campo`, Field comprueba su identidad, negocio, estado de suscripción y plan, y después crea una conexión revocable en `mcp_connections`. El código de autorización dura cinco minutos, el access token dura una hora y el refresh token dura treinta días con rotación: cada renovación revoca el token anterior.
+
+Los access tokens, refresh tokens y códigos se almacenan solamente como hashes en `mcp_oauth_tokens` y `mcp_oauth_codes`. El registro de cliente y sus URI exactas se guardan en `mcp_oauth_clients`. La service role key nunca sale del servidor.
+
+Después de la autorización, el cliente MCP envía:
 
 ```http
-Authorization: Bearer TOKEN_DEL_TRABAJADOR
+Authorization: Bearer MCP_ACCESS_TOKEN
 Content-Type: application/json
 ```
 
-La conexión externa de ChatGPT o Claude no debe hacerse todavía con un token pegado en una conversación. El siguiente paso seguro será añadir OAuth 2.1 con autorización por negocio y trabajador, crear el registro correspondiente en `mcp_connections` y permitir revocación desde el panel.
+No se debe pegar un token de trabajador en una conversación de ChatGPT o Claude. El token que recibe el cliente externo es el access token OAuth limitado al recurso MCP.
 
 ## Criterios para la siguiente fase
 
-Antes de activar acciones de escritura se debe comprobar que la lectura funciona con un trabajador de prueba, que un trabajador no puede ver proyectos de otro negocio, que un trabajador eliminado deja de autenticar y que el plan bloqueado no recibe datos. Después se podrán diseñar herramientas de escritura independientes, con confirmación explícita y auditoría ampliada.
+Antes de activar acciones de escritura se debe comprobar que la lectura funciona con un trabajador de prueba, que un trabajador no puede ver proyectos de otro negocio, que un trabajador eliminado deja de autenticar, que revocar la conexión invalida sus tokens y que el plan bloqueado no recibe datos. Después se podrán diseñar herramientas de escritura independientes, con confirmación explícita y auditoría ampliada.
