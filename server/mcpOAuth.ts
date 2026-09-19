@@ -110,7 +110,7 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
 
 async function resolveOwnerCredentials(email: string, password: string): Promise<WorkerIdentity | null> {
   const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
-  const anon = (process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? "").replace(/\s+/g, "");
+  const anon = (process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "").replace(/\s+/g, "");
   if (!url || !anon) return null;
   const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const { data, error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
