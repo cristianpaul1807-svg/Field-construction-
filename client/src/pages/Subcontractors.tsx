@@ -16,6 +16,7 @@ import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 import { BorrarConHistorial } from "@/components/BorrarConHistorial";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Subcontractor {
   id: string;
@@ -32,9 +33,12 @@ interface Subcontractor {
 
 function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
   const { t } = useTranslation();
+  const { data: roles } = useApi<{ id: string; name: string }[]>("/api/worker-roles");
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [trade, setTrade] = useState("");
+  const [roleId, setRoleId] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +46,8 @@ function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
   const reset = () => {
     setName("");
     setTrade("");
+    setRoleId("");
+    setEmail("");
     setPhone("");
     setError(null);
   };
@@ -54,7 +60,7 @@ function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
       const res = await apiFetch("/api/subcontractors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), trade: trade.trim() || undefined, phone: phone.trim() || undefined }),
+        body: JSON.stringify({ name: name.trim(), trade: trade.trim() || undefined, roleId, email: email.trim() || undefined, phone: phone.trim() || undefined }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(serverMessage(body, t, t("subcontractors.createError")));
@@ -85,6 +91,8 @@ function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
             <Label>{t("common.name")}</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("subcontractors.companyOrName")} autoFocus />
           </div>
+          <div className="space-y-1.5"><Label>Rol de acceso</Label><Select value={roleId} onValueChange={setRoleId}><SelectTrigger><SelectValue placeholder="Selecciona un rol" /></SelectTrigger><SelectContent>{(roles ?? []).map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent></Select></div>
+          {roles?.find((r) => r.id === roleId)?.name !== "trabajador_de_campo" && roles?.find((r) => r.id === roleId)?.name !== "subcontratista" && <div className="space-y-1.5"><Label>Email de acceso</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>}
           <div className="space-y-1.5">
             <Label>{t("subcontractors.trade")} ({t("common.optional")})</Label>
             <Input value={trade} onChange={(e) => setTrade(e.target.value)} placeholder={t("subcontractors.tradePlaceholder")} />
@@ -94,7 +102,7 @@ function NewSubcontractorDialog({ onCreated }: { onCreated: () => void }) {
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           {error && <p className="text-sm text-status-error-fg">{error}</p>}
-          <Button className="w-full" onClick={create} disabled={!name.trim() || saving}>
+          <Button className="w-full" onClick={create} disabled={!name.trim() || !roleId || saving}>
             {saving ? t("common.creating") : t("subcontractors.createSubcontractor")}
           </Button>
         </div>

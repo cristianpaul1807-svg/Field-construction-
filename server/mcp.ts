@@ -100,12 +100,12 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
   const [employee, subcontractor] = await Promise.all([
     admin
       .from("employees")
-      .select("id, business_id, name, role, status, businesses(subscription_plan, subscription_status, trial_ends_at)")
+      .select("id, business_id, name, role, role_id, status, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)")
       .eq("access_token_hash", hash)
       .maybeSingle(),
     admin
       .from("subcontractors")
-      .select("id, business_id, name, trade, businesses(subscription_plan, subscription_status, trial_ends_at)")
+      .select("id, business_id, name, trade, role_id, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)")
       .eq("access_token_hash", hash)
       .maybeSingle(),
   ]);
@@ -136,7 +136,7 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
     workerKind,
     businessId: row.business_id,
     name: row.name ?? null,
-    workerRole: workerKind === "employee" ? (row as any).role ?? null : (row as any).trade ?? null,
+    workerRole: (row as any).roles?.name ?? (workerKind === "employee" ? (row as any).role ?? null : (row as any).trade ?? null),
     plan,
     access,
   };
@@ -169,7 +169,11 @@ function requireReadable(context: ReadToolContext, toolName: string) {
 type McpRole = "worker" | "manager" | "office" | "admin";
 
 function roleOf(identity: WorkerIdentity): McpRole {
-  if (identity.workerKind === "owner") return "admin";
+  if (identity.workerKind === "owner") {
+    const configuredRole = (identity.workerRole ?? "admin").trim().toLocaleLowerCase();
+    if (configuredRole !== "admin") return roleOf({ ...identity, workerKind: "employee", workerRole: configuredRole });
+    return "admin";
+  }
   if (identity.workerKind !== "employee") return "worker";
   const role = (identity.workerRole ?? "").trim().toLocaleLowerCase();
   if (/(admin|administrador|propietario|owner|dueno|dueño)/.test(role)) return "admin";

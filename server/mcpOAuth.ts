@@ -123,12 +123,13 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
     .maybeSingle();
   if (businessError) throw businessError;
   let resolvedBusiness = business;
+  let permissionRole = "admin";
   // Older/provisioned accounts may have the auth link on public.users but not
   // yet on businesses.primary_auth_user_id. Accept that canonical link too.
   if (!resolvedBusiness) {
     const { data: userRow, error: userError } = await admin
       .from("users")
-      .select("business_id")
+      .select("business_id, roles(name)")
       .eq("auth_user_id", data.user.id)
       .eq("status", "activo")
       .limit(1)
@@ -142,6 +143,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
         .maybeSingle();
       if (linkedBusinessError) throw linkedBusinessError;
       resolvedBusiness = linkedBusiness;
+      permissionRole = (userRow as any).roles?.name ?? "tecnico";
     }
   }
   if (!resolvedBusiness) return null;
@@ -151,7 +153,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
     workerKind: "owner",
     businessId: resolvedBusiness.id,
     name: resolvedBusiness.name ?? null,
-    workerRole: "admin",
+    workerRole: permissionRole,
     plan,
     access: accesoDe({ plan, estadoSuscripcion: resolvedBusiness.subscription_status, pruebaHasta: resolvedBusiness.trial_ends_at }),
   };

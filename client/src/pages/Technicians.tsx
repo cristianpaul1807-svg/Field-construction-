@@ -19,16 +19,19 @@ import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
   const { t } = useTranslation();
+  const { data: roles } = useApi<{ id: string; name: string }[]>("/api/worker-roles");
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [role, setRole] = useState("");
+  const [roleId, setRoleId] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
     setName("");
-    setRole("");
+    setRoleId("");
+    setEmail("");
     setPhone("");
     setError(null);
   };
@@ -41,7 +44,7 @@ function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
       const res = await apiFetch("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), role: role.trim() || undefined, phone: phone.trim() || undefined }),
+        body: JSON.stringify({ name: name.trim(), roleId, email: email.trim() || undefined, phone: phone.trim() || undefined }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(serverMessage(body, t, t("technicians.createError")));
@@ -72,16 +75,14 @@ function NewEmployeeDialog({ onCreated }: { onCreated: () => void }) {
             <Label>{t("common.name")}</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("technicians.fullName")} autoFocus />
           </div>
-          <div className="space-y-1.5">
-            <Label>{t("technicians.role")} ({t("common.optional")})</Label>
-            <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder={t("technicians.rolePlaceholder")} />
-          </div>
+          <div className="space-y-1.5"><Label>Rol de acceso</Label><Select value={roleId} onValueChange={setRoleId}><SelectTrigger><SelectValue placeholder="Selecciona un rol" /></SelectTrigger><SelectContent>{(roles ?? []).map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent></Select></div>
+          {roles?.find((r) => r.id === roleId)?.name !== "trabajador_de_campo" && roles?.find((r) => r.id === roleId)?.name !== "subcontratista" && <div className="space-y-1.5"><Label>Email de acceso</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>}
           <div className="space-y-1.5">
             <Label>{t("common.phone")} ({t("common.optional")})</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           {error && <p className="text-sm text-status-error-fg">{error}</p>}
-          <Button className="w-full" onClick={create} disabled={!name.trim() || saving}>
+          <Button className="w-full" onClick={create} disabled={!name.trim() || !roleId || saving}>
             {saving ? t("common.creating") : t("technicians.createEmployee")}
           </Button>
         </div>

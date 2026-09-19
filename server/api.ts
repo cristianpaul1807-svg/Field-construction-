@@ -6090,6 +6090,38 @@ apiRouter.get(
 
 // ---------- Technicians & Crew ----------
 
+const TOKEN_ONLY_ROLES = new Set(["trabajador_de_campo", "subcontratista"]);
+
+apiRouter.get(
+  "/worker-roles",
+  route(async (req, res) => {
+    const { data, error } = await req.supabase!
+      .from("roles")
+      .select("id, name, permissions")
+      .eq("business_id", req.businessId!)
+      .order("name");
+    if (error) throw error;
+    res.json(data ?? []);
+  })
+);
+
+async function prepareWorkerIdentity(req: Request, roleId: unknown, email: unknown) {
+  if (typeof roleId !== "string" || !roleId) throw new Error("role_id is required");
+  const { data: role, error } = await req.supabase!
+    .from("roles")
+    .select("id, name")
+    .eq("id", roleId)
+    .eq("business_id", req.businessId!)
+    .maybeSingle();
+  if (error) throw error;
+  if (!role) throw new Error("invalid role");
+  if (TOKEN_ONLY_ROLES.has(role.name)) return { role, authUserId: null, password: null };
+  const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+  if (!normalizedEmail) throw new Error("email is required for this role");
+  const access = await crearAcceso(normalizedEmail);
+  return { role, authUserId: access.authUserId, password: access.password };
+}
+
 apiRouter.get(
   "/employees",
   route(async (req, res) => {
@@ -6098,7 +6130,7 @@ apiRouter.get(
     const [employees, assignments, timeEntries] = await Promise.all([
       supabase
         .from("employees")
-        .select("id, name, role, phone, status, hourly_rate, access_token")
+        .select("id, name, role, role_id, email, phone, status, hourly_rate, access_token, roles(name)")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -6130,6 +6162,9 @@ apiRouter.get(
           id: e.id,
           name: e.name,
           role: e.role,
+          roleId: e.role_id,
+          permissionRole: (e as any).roles?.name ?? null,
+          email: e.email ?? null,
           phone: e.phone,
           status: e.status,
           // Para poder reenviarlo sin invalidar el que ya tiene.
@@ -6148,15 +6183,18 @@ apiRouter.get(
 apiRouter.post(
   "/employees",
   route(async (req, res) => {
-    const { name, role, phone } = req.body ?? {};
+    const { name, role, roleId, email, phone } = req.body ?? {};
     if (!name) {
       res.status(400).json({ error: "name is required" });
       return;
     }
     const supabase = req.supabase!;
+    let identity;
+    try { identity = await prepareWorkerIdentity(req, roleId, email); }
+    catch (error) { res.status(400).json({ error: error instanceof Error ? error.message : "invalid worker role" }); return; }
     const { data, error } = await supabase
       .from("employees")
-      .insert({ business_id: req.businessId!, name, role: role ?? null, phone: phone ?? null, status: "disponible" })
+      .insert({ business_id: req.businessId!, name, role: role ?? null, role_id: identity.role.id, email: email ?? null, auth_user_id: identity.authUserId, phone: phone ?? null, status: "disponible" })
       .select("id")
       .single();
     if (error) throw error;
@@ -6170,7 +6208,7 @@ apiRouter.post(
       status: "invitado",
     });
 
-    res.status(201).json({ id: data.id });
+    res.status(201).json({ id: data.id, email: identity.authUserId ? email : null, password: identity.password, accessMode: TOKEN_ONLY_ROLES.has(identity.role.name) ? "worker_token" : "account" });
   })
 );
 
@@ -6204,7 +6242,7 @@ apiRouter.get(
     const [subcontractors, assignments] = await Promise.all([
       supabase
         .from("subcontractors")
-        .select("id, name, trade, phone, rating, hourly_rate, access_token, access_token_hash")
+        .select("id, name, trade, role_id, email, phone, rating, hourly_rate, access_token, access_token_hash, roles(name)")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
@@ -6222,6 +6260,9 @@ apiRouter.get(
         id: s.id,
         name: s.name,
         trade: s.trade,
+        roleId: s.role_id,
+        permissionRole: (s as any).roles?.name ?? null,
+        email: s.email ?? null,
         phone: s.phone,
         rating: s.rating,
         hourlyRate: s.hourly_rate === null ? null : Number(s.hourly_rate),
@@ -6242,15 +6283,18 @@ apiRouter.get(
 apiRouter.post(
   "/subcontractors",
   route(async (req, res) => {
-    const { name, trade, phone } = req.body ?? {};
+    const { name, trade, roleId, email, phone } = req.body ?? {};
     if (!name) {
       res.status(400).json({ error: "name is required" });
       return;
     }
     const supabase = req.supabase!;
+    let identity;
+    try { identity = await prepareWorkerIdentity(req, roleId, email); }
+    catch (error) { res.status(400).json({ error: error instanceof Error ? error.message : "invalid worker role" }); return; }
     const { data, error } = await supabase
       .from("subcontractors")
-      .insert({ business_id: req.businessId!, name, trade: trade ?? null, phone: phone ?? null })
+      .insert({ business_id: req.businessId!, name, trade: trade ?? null, role_id: identity.role.id, email: email ?? null, auth_user_id: identity.authUserId, phone: phone ?? null })
       .select("id")
       .single();
     if (error) throw error;
@@ -6264,7 +6308,7 @@ apiRouter.post(
       status: "invitado",
     });
 
-    res.status(201).json({ id: data.id });
+    res.status(201).json({ id: data.id, email: identity.authUserId ? email : null, password: identity.password, accessMode: TOKEN_ONLY_ROLES.has(identity.role.name) ? "worker_token" : "account" });
   })
 );
 
@@ -10519,6 +10563,14 @@ apiRouter.patch(
     if (body.name !== undefined) update.name = String(body.name).trim();
     if (body.phone !== undefined) update.phone = body.phone || null;
     if (body.role !== undefined) update.role = body.role || null;
+    let newIdentity: { role: { id: string; name: string }; authUserId: string | null; password: string | null } | null = null;
+    if (body.roleId !== undefined) {
+      try { newIdentity = await prepareWorkerIdentity(req, body.roleId, body.email); }
+      catch (error) { res.status(400).json({ error: error instanceof Error ? error.message : "invalid worker role" }); return; }
+      update.role_id = newIdentity.role.id;
+      update.email = body.email || null;
+      update.auth_user_id = newIdentity.authUserId;
+    }
     if (body.status !== undefined) {
       if (!["disponible", "en_proyecto", "descanso"].includes(body.status)) {
         res.status(400).json({ error: "invalid status" });
@@ -10544,7 +10596,7 @@ apiRouter.patch(
       .eq("business_id", req.businessId!)
       .eq("id", req.params.id);
     if (error) throw error;
-    res.json({ ok: true });
+    res.json({ ok: true, password: newIdentity?.password ?? null, accessMode: newIdentity && TOKEN_ONLY_ROLES.has(newIdentity.role.name) ? "worker_token" : "account" });
   })
 );
 
