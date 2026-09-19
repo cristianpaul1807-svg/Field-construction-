@@ -10,6 +10,16 @@ La identidad se obtiene del mismo bearer token que ya usa la PWA `/campo`. El se
 
 Cada herramienta filtra explícitamente por el negocio y por el trabajador autenticado. Las herramientas no crean, actualizan ni eliminan información.
 
+## Política de fases
+
+La **Fase 1 y las primeras fases de lectura** son exclusivamente informativas para todos los roles. Ninguna identidad MCP puede crear, modificar, eliminar ni ejecutar acciones externas. La IA puede resumir, comparar y analizar únicamente los datos que su identidad, rol, plan y asignaciones le permitan consultar.
+
+Esto se aplica a trabajadores, subcontratistas, jefes de obra, oficina, contabilidad, administradores secundarios y propietarios. El hecho de que una persona tenga permisos de escritura dentro del panel web no le concede escritura mediante MCP durante esta fase.
+
+La **Fase 2** solo podrá activar autonomía controlada inicialmente para el propietario principal que creó la cuenta de empresa. Esa autorización será independiente del nombre genérico `admin` y deberá comprobar el vínculo de propietario principal, el plan, el estado del negocio, la herramienta concreta y la confirmación explícita de la acción. Los demás roles continuarán en solo lectura salvo decisión posterior documentada.
+
+No se deben implementar todavía herramientas MCP como `clock_in`, `clock_out`, `report_incident`, `create_work_order`, `assign_worker`, `update_work_order`, `create_invoice` o sincronizaciones con QuickBooks. Primero deben completarse y probarse las herramientas de lectura y sus límites de seguridad.
+
 ## Herramientas iniciales
 
 | Herramienta | Función |
@@ -65,3 +75,5 @@ La guía paso a paso para Claude está en [conectar-mcp-claude.md](./conectar-mc
 ## Criterios para la siguiente fase
 
 Antes de activar acciones de escritura se debe comprobar que la lectura funciona con un trabajador de prueba, que un trabajador no puede ver proyectos de otro negocio, que un trabajador eliminado deja de autenticar, que revocar la conexión invalida sus tokens y que el plan bloqueado no recibe datos. Después se podrán diseñar herramientas de escritura independientes, con confirmación explícita y auditoría ampliada.
+
+Además, la validación debe confirmar que todos los roles permanecen en solo lectura y que no existe ninguna herramienta MCP registrada cuyo nombre o comportamiento cree, actualice o elimine datos. La autonomía del propietario principal se evaluará únicamente después de cerrar esta batería de pruebas.

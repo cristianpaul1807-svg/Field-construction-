@@ -20,6 +20,7 @@ la plataforma para gestionar su empresa, y quien va a extender el código.
 | Añadir una función nueva de principio a fin | [desarrollo/anadir-una-funcion.md](desarrollo/anadir-una-funcion.md) |
 | Añadir o corregir textos en los cuatro idiomas | [desarrollo/idiomas.md](desarrollo/idiomas.md) |
 | Cambiar el esquema de la base de datos | [desarrollo/base-de-datos.md](desarrollo/base-de-datos.md) |
+| Revisar las pruebas de Fase 1 de MCP | [desarrollo/mcp-fase1-pruebas.md](desarrollo/mcp-fase1-pruebas.md) |
 | Desplegar, o arreglar un despliegue caído | [desarrollo/despliegue.md](desarrollo/despliegue.md) |
 | Diagnosticar un error que ya está pasando | [desarrollo/solucion-de-problemas.md](desarrollo/solucion-de-problemas.md) |
 | Probar lo que sale hacia QuickBooks, sin llamar a Intuit | [desarrollo/probar-quickbooks.md](desarrollo/probar-quickbooks.md) |

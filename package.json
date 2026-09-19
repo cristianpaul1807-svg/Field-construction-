@@ -12,6 +12,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
+    "check:mcp-readonly": "python3 scripts/check-mcp-readonly.py",
     "format": "prettier --write ."
   },
   "dependencies": {
