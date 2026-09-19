@@ -89,7 +89,7 @@ function consentPage(pending: PendingAuthorization, error?: string) {
 }
 
 async function authorizeGet(req: Request, res: Response) {
-  const clientId = String(req.query.client_id ?? ""); const redirectUri = String(req.query.redirect_uri ?? ""); const responseType = String(req.query.response_type ?? ""); const challenge = String(req.query.code_challenge ?? ""); const method = String(req.query.code_challenge_method ?? ""); const resource = String(req.query.resource ?? ""); const scope = String(req.query.scope ?? DEFAULT_SCOPE);
+  const clientId = String(req.query.client_id ?? ""); const redirectUri = String(req.query.redirect_uri ?? ""); const responseType = String(req.query.response_type ?? ""); const challenge = String(req.query.code_challenge ?? ""); const method = String(req.query.code_challenge_method ?? ""); const resource = String(req.query.resource ?? resourceUrl(req)); const scope = String(req.query.scope ?? DEFAULT_SCOPE);
   const client = await findClient(clientId);
   if (!client || !client.redirect_uris.includes(redirectUri)) { res.status(400).send("OAuth client or redirect URI is not registered."); return; }
   if (responseType !== "code" || method !== "S256" || !challenge || resource !== resourceUrl(req)) { redirectError(res, redirectUri, "invalid_request", "OAuth requires response_type=code, PKCE S256 and the MCP resource parameter.", String(req.query.state ?? "")); return; }
@@ -99,7 +99,7 @@ async function authorizeGet(req: Request, res: Response) {
 }
 
 async function authorizePost(req: Request, res: Response) {
-  const clientId = bodyString(req, "client_id"); const redirectUri = bodyString(req, "redirect_uri"); const state = bodyString(req, "state") || undefined; const challenge = bodyString(req, "code_challenge"); const resource = bodyString(req, "resource"); const scope = bodyString(req, "scope") || DEFAULT_SCOPE; const client = await findClient(clientId);
+  const clientId = bodyString(req, "client_id"); const redirectUri = bodyString(req, "redirect_uri"); const state = bodyString(req, "state") || undefined; const challenge = bodyString(req, "code_challenge"); const resource = bodyString(req, "resource") || resourceUrl(req); const scope = bodyString(req, "scope") || DEFAULT_SCOPE; const client = await findClient(clientId);
   if (!client || !client.redirect_uris.includes(redirectUri)) { res.status(400).send("OAuth client or redirect URI is not registered."); return; }
   const pending: PendingAuthorization = { client, redirectUri, state, scope: DEFAULT_SCOPE, resource, codeChallenge: challenge };
   if (resource !== resourceUrl(req) || !challenge) { res.status(400).send("Invalid MCP resource or PKCE challenge."); return; }
@@ -114,7 +114,7 @@ async function authorizePost(req: Request, res: Response) {
 }
 
 async function token(req: Request, res: Response) {
-  const grant = bodyString(req, "grant_type"); const resource = bodyString(req, "resource"); const clientId = bodyString(req, "client_id"); const code = bodyString(req, "code"); const verifier = bodyString(req, "code_verifier"); const refresh = bodyString(req, "refresh_token");
+  const grant = bodyString(req, "grant_type"); const resource = bodyString(req, "resource") || resourceUrl(req); const clientId = bodyString(req, "client_id"); const code = bodyString(req, "code"); const verifier = bodyString(req, "code_verifier"); const refresh = bodyString(req, "refresh_token");
   if (resource !== resourceUrl(req)) { res.status(400).json({ error: "invalid_target", error_description: "The resource must be the Field MCP server." }); return; }
   if (grant === "authorization_code") {
     const { data: row, error } = await getSupabaseAdmin().from("mcp_oauth_codes").select("id, client_id, redirect_uri, code_challenge, scope, connection_id, expires_at, consumed_at").eq("code_hash", hashToken(code)).maybeSingle(); if (error) throw error;
