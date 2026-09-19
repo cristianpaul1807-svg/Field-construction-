@@ -12,6 +12,8 @@
  * sin conexión al modelo y no cuesta nada por pregunta.
  */
 
+import type { Area } from "@shared/permisos";
+
 export interface TemaDeAyuda {
   id: string;
   /** Cuántos párrafos lleva la respuesta: `p1`, `p2`… en el archivo de idioma. */
@@ -25,6 +27,8 @@ export interface TemaDeAyuda {
 export interface SeccionDeAyuda {
   id: string;
   temas: TemaDeAyuda[];
+  /** Áreas permitidas para ver esta ayuda; sin valor significa ayuda común. */
+  areas?: Area[];
   /**
    * Pantallas del panel a las que pertenece esta sección. Sirve para abrir la
    * ayuda ya colocada donde está la persona: quien pide ayuda desde Facturación
@@ -52,6 +56,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
   },
   {
     id: "clientes",
+    areas: ["clientes"],
     rutas: ["/crm", "/client-portal", "/communication"],
     temas: [
       { id: "nuevoContacto", parrafos: 2, ruta: "/crm" },
@@ -63,6 +68,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
   },
   {
     id: "presupuestos",
+    areas: ["dinero"],
     rutas: ["/budgets", "/materials"],
     temas: [
       { id: "crear", parrafos: 3, ruta: "/budgets" },
@@ -79,6 +85,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
   },
   {
     id: "trabajo",
+    areas: ["campo"],
     rutas: ["/projects", "/work-orders", "/scheduling", "/check-in", "/work-log", "/technicians", "/gps-routing", "/time-off"],
     temas: [
       { id: "crearOrden", parrafos: 3, ruta: "/work-orders" },
@@ -102,6 +109,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
   },
   {
     id: "dinero",
+    areas: ["dinero"],
     rutas: ["/invoicing", "/payroll", "/reports", "/cost-tracking", "/settings/payments", "/settings/quickbooks"],
     temas: [
       { id: "crearFactura", parrafos: 3, nota: true, ruta: "/invoicing" },

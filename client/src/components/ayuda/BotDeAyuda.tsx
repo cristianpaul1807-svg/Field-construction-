@@ -8,6 +8,8 @@ import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 import { ARBOL_DE_AYUDA, seccionSegunRuta, type SeccionDeAyuda, type TemaDeAyuda } from "./arbolDeAyuda";
 import { EVENTO_AYUDA, registrarAyuda, type PeticionDeAyuda } from "@/lib/abrirAyuda";
+import { useAuth } from "@/contexts/AuthContext";
+import { puede } from "@shared/permisos";
 
 /** Dónde está la conversación ahora mismo. */
 type Paso =
@@ -33,6 +35,7 @@ type Paso =
  */
 export function BotDeAyuda() {
   const { t } = useTranslation();
+  const { areas } = useAuth();
   const [ruta, navegar] = useLocation();
   const [abierto, setAbierto] = useState(false);
   const [camino, setCamino] = useState<Paso[]>([{ tipo: "secciones" }]);
@@ -44,14 +47,25 @@ export function BotDeAyuda() {
   // rellenan con el nombre que esa pantalla tiene de verdad en este idioma.
   const menu = useNombresDelMenu();
 
+  // El mismo mapa de áreas que protege las pantallas decide qué ayuda existe
+  // para esta persona. `null` significa administrador sin rol restringido.
+  const seccionesPermitidas = useMemo(
+    () => ARBOL_DE_AYUDA.filter((seccion) => !seccion.areas || seccion.areas.some((area) => puede(areas, area))),
+    [areas],
+  );
+
   // La sección de la pantalla en la que está, para ofrecerla primero. Quien
-  // pide ayuda desde Facturación pregunta por facturas.
-  const suya = useMemo(() => seccionSegunRuta(ruta), [ruta]);
+  // pide ayuda desde Facturación pregunta por facturas, pero nunca se prioriza
+  // una sección que el rol no puede consultar.
+  const suya = useMemo(() => {
+    const seccion = seccionSegunRuta(ruta);
+    return seccion && seccionesPermitidas.some((visible) => visible.id === seccion.id) ? seccion : null;
+  }, [ruta, seccionesPermitidas]);
 
   const secciones = useMemo(() => {
-    if (!suya) return ARBOL_DE_AYUDA;
-    return [suya, ...ARBOL_DE_AYUDA.filter((s) => s.id !== suya.id)];
-  }, [suya]);
+    if (!suya) return seccionesPermitidas;
+    return [suya, ...seccionesPermitidas.filter((s) => s.id !== suya.id)];
+  }, [seccionesPermitidas, suya]);
 
   useEffect(() => {
     if (abierto) finRef.current?.scrollIntoView({ block: "end" });
@@ -66,14 +80,14 @@ export function BotDeAyuda() {
     const atender = (e: Event) => {
       const { seccion, tema } = (e as CustomEvent<PeticionDeAyuda>).detail ?? {};
       setAbierto(true);
-      const s = ARBOL_DE_AYUDA.find((x) => x.id === seccion);
+      const s = seccionesPermitidas.find((x) => x.id === seccion);
       if (!s) return setCamino([{ tipo: "secciones" }]);
       const x = s.temas.find((y) => y.id === tema);
       setCamino(x ? [{ tipo: "secciones" }, { tipo: "temas", seccion: s }, { tipo: "respuesta", seccion: s, tema: x }] : [{ tipo: "secciones" }, { tipo: "temas", seccion: s }]);
     };
     window.addEventListener(EVENTO_AYUDA, atender);
     return () => window.removeEventListener(EVENTO_AYUDA, atender);
-  }, []);
+  }, [seccionesPermitidas]);
 
   const atras = () => setCamino((c) => (c.length > 1 ? c.slice(0, -1) : c));
   const reiniciar = () => setCamino([{ tipo: "secciones" }]);
