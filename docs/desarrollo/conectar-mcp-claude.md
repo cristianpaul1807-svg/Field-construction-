@@ -14,9 +14,9 @@ La empresa debe tener un trabajador de campo creado en Field y ese trabajador de
    https://logiciel-construction.com/api/mcp
    ```
 
-4. Abra **Configuración avanzada → OAuth**.
-5. Active OAuth.
-6. En **OAuth Client ID**, introduzca exactamente:
+4. En **Cliente OAuth**, seleccione primero **Usar la identidad publicada de Claude**.
+5. Si Claude completa el registro automáticamente, no debe introducir ningún Client ID manual.
+6. Si esa opción no funciona o Claude solicita un Client ID, seleccione **Usa tu propio cliente OAuth** e introduzca exactamente:
 
    ```text
    mcp_client_f59f1cba-94d9-4f63-bb50-424910da142b

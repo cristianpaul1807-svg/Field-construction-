@@ -32,9 +32,44 @@ function redirectError(res: Response, uri: string, error: string, description: s
 function bodyString(req: Request, key: string) { const value = req.body?.[key]; return typeof value === "string" ? value : ""; }
 
 async function findClient(clientId: string): Promise<OAuthClient | null> {
+  // Claude's recommended “published identity” sends a URL as client_id.
+  // Restrict server-side fetching to Anthropic-owned origins to avoid turning
+  // OAuth discovery into an SSRF primitive.
+  if (/^https:\/\/(?:claude\.ai|anthropic\.com)(?:\/|$)/i.test(clientId)) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    try {
+      const response = await fetch(clientId, { headers: { Accept: "application/json" }, signal: controller.signal });
+      if (!response.ok) return null;
+      const metadata = await response.json() as Partial<OAuthClient>;
+      const redirectUris = Array.isArray(metadata.redirect_uris)
+        ? metadata.redirect_uris.filter((uri): uri is string => typeof uri === "string")
+        : [];
+      if (metadata.client_id !== clientId || !metadata.client_name || !redirectUris.length) return null;
+      return {
+        client_id: clientId,
+        client_name: String(metadata.client_name).slice(0, 120),
+        redirect_uris: redirectUris,
+        token_endpoint_auth_method: metadata.token_endpoint_auth_method ?? "none",
+      };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
   const { data, error } = await getSupabaseAdmin().from("mcp_oauth_clients").select("client_id, client_name, redirect_uris, token_endpoint_auth_method").eq("client_id", clientId).maybeSingle();
   if (error) throw error;
   return data as OAuthClient | null;
+}
+
+async function persistCimdClient(client: OAuthClient) {
+  if (!client.client_id.startsWith("https://")) return;
+  const { error } = await getSupabaseAdmin().from("mcp_oauth_clients").upsert({
+    client_id: client.client_id,
+    client_name: client.client_name,
+    redirect_uris: client.redirect_uris,
+    token_endpoint_auth_method: client.token_endpoint_auth_method,
+  }, { onConflict: "client_id" });
+  if (error) throw error;
 }
 
 async function issueConnection(identity: WorkerIdentity, client: OAuthClient, scope: string) {
@@ -70,6 +105,7 @@ async function authorizePost(req: Request, res: Response) {
   if (resource !== resourceUrl(req) || !challenge) { res.status(400).send("Invalid MCP resource or PKCE challenge."); return; }
   const identity = await resolveWorker(bodyString(req, "worker_token"));
   if (!identity || identity.access === "bloqueado") { res.status(401).type("html").send(consentPage(pending, "El código de trabajador no es válido o el acceso del negocio está bloqueado.")); return; }
+  await persistCimdClient(client);
   const connectionId = await issueConnection(identity, client, DEFAULT_SCOPE);
   const rawCode = opaqueToken("mcp_code");
   const { error } = await getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() });
@@ -105,7 +141,7 @@ async function rotateRefresh(res: Response, rawRefresh: string, clientId: string
 
 export function mcpOAuthRoutes(router: Router) {
   router.get("/.well-known/oauth-protected-resource/mcp", (req, res) => res.json({ resource: resourceUrl(req), authorization_servers: [baseUrl(req)] }));
-  router.get("/.well-known/oauth-authorization-server", (req, res) => { const issuer = baseUrl(req); res.json({ issuer, authorization_endpoint: `${issuer}/oauth/authorize`, token_endpoint: `${issuer}/oauth/token`, registration_endpoint: `${issuer}/oauth/register`, revocation_endpoint: `${issuer}/oauth/revoke`, response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"], code_challenge_methods_supported: ["S256"], token_endpoint_auth_methods_supported: ["none"], scopes_supported: [DEFAULT_SCOPE] }); });
+  router.get("/.well-known/oauth-authorization-server", (req, res) => { const issuer = baseUrl(req); res.json({ issuer, authorization_endpoint: `${issuer}/oauth/authorize`, token_endpoint: `${issuer}/oauth/token`, registration_endpoint: `${issuer}/oauth/register`, revocation_endpoint: `${issuer}/oauth/revoke`, response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"], code_challenge_methods_supported: ["S256"], token_endpoint_auth_methods_supported: ["none"], scopes_supported: [DEFAULT_SCOPE], client_id_metadata_document_supported: true }); });
   router.post("/oauth/register", async (req, res, next) => { try { const redirects = Array.isArray(req.body?.redirect_uris) ? req.body.redirect_uris.filter((v: unknown): v is string => typeof v === "string") : []; if (!redirects.length || redirects.some((uri: string) => !/^https:\/\//.test(uri) && !/^http:\/\/localhost(?::\d+)?\//.test(uri))) { res.status(400).json({ error: "invalid_client_metadata" }); return; } const clientId = `mcp_client_${randomUUID()}`; const { error } = await getSupabaseAdmin().from("mcp_oauth_clients").insert({ client_id: clientId, client_name: String(req.body?.client_name ?? "MCP client").slice(0, 120), redirect_uris: redirects, token_endpoint_auth_method: "none" }); if (error) throw error; res.status(201).json({ client_id: clientId, client_name: String(req.body?.client_name ?? "MCP client").slice(0, 120), redirect_uris: redirects, token_endpoint_auth_method: "none", grant_types: ["authorization_code", "refresh_token"], response_types: ["code"] }); } catch (error) { next(error); } });
   router.all("/oauth/authorize", async (req, res, next) => { try { if (req.method === "GET") await authorizeGet(req, res); else if (req.method === "POST") await authorizePost(req, res); else res.status(405).end(); } catch (error) { next(error); } });
   router.post("/oauth/token", async (req, res, next) => { try { await token(req, res); } catch (error) { next(error); } });
