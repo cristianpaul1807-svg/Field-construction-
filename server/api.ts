@@ -118,6 +118,7 @@ import {
   requireWorkerAuth,
   hashToken,
 } from "./supabaseAuth";
+import { mcpHandler } from "./mcp";
 
 export const apiRouter = Router();
 
@@ -12924,6 +12925,10 @@ apiApp.post("/public/stripe/webhook", express.raw({ type: "application/json" }),
   stripeWebhookHandler(req, res).catch(next);
 });
 apiApp.use(express.json());
+// MCP authenticates a worker access token itself and must not inherit the
+// business Supabase-JWT middleware. The first version is read-only and uses
+// stateless HTTP so the worker token remains the source of identity on every request.
+apiApp.all("/mcp", mcpHandler);
 apiApp.use(apiRouter);
 
 // Every API failure has to answer JSON. Without this, an unhandled error
