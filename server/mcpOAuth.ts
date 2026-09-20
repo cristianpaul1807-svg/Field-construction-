@@ -110,7 +110,7 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
 }
 
 async function resolveOwnerCredentials(email: string, password: string): Promise<WorkerIdentity | null> {
-  const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
+  const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/rest\/v1\/?$/, "").replace(/\/+$/, "");
   const anon = (process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "").replace(/\s+/g, "");
   if (!url || !anon) {
     const msg = "[MCP] Falta SUPABASE_URL o KEY en el entorno\n";
@@ -174,7 +174,11 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   ]);
   const row = employee.data ?? subcontractor.data;
   if (employee.error && subcontractor.error) throw employee.error;
-  if (!row) return null;
+  if (!row) {
+    const msg = `[MCP] No se encontró negocio ni perfil de trabajador para el usuario ${data.user.id} (${email})\n`;
+    console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
+    return null;
+  }
   const workerBusiness = (row as any).businesses as { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null } | null;
   const plan = planDe(workerBusiness?.subscription_plan);
   return {
