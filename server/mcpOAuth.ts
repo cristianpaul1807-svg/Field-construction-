@@ -111,10 +111,16 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
 async function resolveOwnerCredentials(email: string, password: string): Promise<WorkerIdentity | null> {
   const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
   const anon = (process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "").replace(/\s+/g, "");
-  if (!url || !anon) return null;
+  if (!url || !anon) {
+    console.error("[MCP] Falta SUPABASE_URL o KEY en el entorno");
+    return null;
+  }
   const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const { data, error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
-  if (error || !data.user) return null;
+  if (error || !data.user) {
+    console.error(`[MCP] signInWithPassword falló para ${email}:`, error?.message);
+    return null;
+  }
   const admin = getSupabaseAdmin();
   const { data: business, error: businessError } = await admin
     .from("businesses")
@@ -181,7 +187,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
 
 function consentPage(pending: PendingAuthorization, error?: string) {
   const hidden = (key: string, value: string | undefined) => value ? `<input type="hidden" name="${key}" value="${esc(value)}">` : "";
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Autorizar Logiciel Construction</title><style>body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#171717;margin:0;padding:32px}.card{max-width:440px;margin:7vh auto;background:white;border-radius:20px;padding:28px;box-shadow:0 10px 40px #0001}h1{font-size:24px;margin:0 0 8px}p{color:#555;line-height:1.5}label{font-weight:600;font-size:14px;display:block;margin:18px 0 7px}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}.scope{background:#f5f5f7;border-radius:12px;padding:12px;margin:18px 0;font-size:14px}.section{border-top:1px solid #eee;margin-top:20px;padding-top:5px}.hint{font-size:13px;color:#666}.error{color:#a40000;background:#fff0f0;padding:10px;border-radius:10px;font-size:14px}button{width:100%;border:0;border-radius:11px;padding:13px;background:#111;color:#fff;font-weight:650;font-size:15px;margin-top:20px}</style></head><body><main class="card"><h1>Conectar Logiciel Construction</h1><p><strong>${esc(pending.client.client_name)}</strong> solicita acceso a tus datos de Logiciel Construction.</p><div class="scope"><strong>Solo lectura.</strong> Agenda, órdenes, proyectos, tareas, horas, documentos y reportes permitidos por tu rol.</div>${error ? `<div class="error">${esc(error)}</div>` : ""}<form method="post">${hidden("client_id", pending.client.client_id)}${hidden("redirect_uri", pending.redirectUri)}${hidden("state", pending.state)}${hidden("scope", pending.scope)}${hidden("resource", pending.resource)}${hidden("code_challenge", pending.codeChallenge)}<div class="section"><label for="worker_token">Código de acceso de trabajador</label><input id="worker_token" name="worker_token" autocomplete="off" autocapitalize="none"><p class="hint">Úsalo para conectar un trabajador o subcontratista.</p></div><div class="section"><label for="owner_email">Email de la cuenta propietaria</label><input id="owner_email" name="owner_email" type="email" autocomplete="username" autocapitalize="none"><label for="owner_password">Contraseña de la cuenta propietaria</label><input id="owner_password" name="owner_password" type="password" autocomplete="current-password"><p class="hint">Solo se valida contra Supabase Auth; no se guarda la contraseña.</p></div><button type="submit">Autorizar acceso de solo lectura</button></form></main></body></html>`;
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Autorizar Logiciel Construction</title><style>body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#171717;margin:0;padding:32px}.card{max-width:440px;margin:7vh auto;background:white;border-radius:20px;padding:28px;box-shadow:0 10px 40px #0001}h1{font-size:24px;margin:0 0 8px}p{color:#555;line-height:1.5}label{font-weight:600;font-size:14px;display:block;margin:18px 0 7px}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}.scope{background:#f5f5f7;border-radius:12px;padding:12px;margin:18px 0;font-size:14px}.section{border-top:1px solid #eee;margin-top:20px;padding-top:5px}.hint{font-size:13px;color:#666}.error{color:#a40000;background:#fff0f0;padding:10px;border-radius:10px;font-size:14px}button{width:100%;border:0;border-radius:11px;padding:13px;background:#111;color:#fff;font-weight:650;font-size:15px;margin-top:20px}</style></head><body><main class="card"><h1>Conectar Logiciel Construction</h1><p><strong>${esc(pending.client.client_name)}</strong> solicita conectarse con tu cuenta de Logiciel Construction.</p><div class="scope">Los permisos y accesos exactos dependerán de tu rol y plan asignado una vez inicies sesión.</div>${error ? `<div class="error">${esc(error)}</div>` : ""}<form method="post">${hidden("client_id", pending.client.client_id)}${hidden("redirect_uri", pending.redirectUri)}${hidden("state", pending.state)}${hidden("scope", pending.scope)}${hidden("resource", pending.resource)}${hidden("code_challenge", pending.codeChallenge)}<div class="section"><label for="worker_token">Código de acceso de trabajador</label><input id="worker_token" name="worker_token" autocomplete="off" autocapitalize="none"><p class="hint">Úsalo para conectar un trabajador o subcontratista.</p></div><div class="section"><label for="owner_email">Email de la cuenta propietaria</label><input id="owner_email" name="owner_email" type="email" autocomplete="username" autocapitalize="none"><label for="owner_password">Contraseña de la cuenta propietaria</label><input id="owner_password" name="owner_password" type="password" autocomplete="current-password"><p class="hint">Solo se valida contra Supabase Auth; no se guarda la contraseña.</p></div><button type="submit">Conectar con Claude</button></form></main></body></html>`;
 }
 
 async function authorizeGet(req: Request, res: Response) {
@@ -204,7 +210,19 @@ async function authorizePost(req: Request, res: Response) {
   const identity = ownerEmail && ownerPassword
     ? await resolveOwnerCredentials(ownerEmail, ownerPassword)
     : await resolveWorker(bodyString(req, "worker_token"));
-  if (!identity || identity.access === "bloqueado") { res.status(401).type("html").send(consentPage(pending, "Las credenciales no son válidas o el acceso del negocio está bloqueado.")); return; }
+  
+  if (!identity) { 
+    console.error(`[MCP OAuth] Identity no encontrada para email: ${ownerEmail}`);
+    res.status(401).type("html").send(consentPage(pending, "Las credenciales no son válidas.")); 
+    return; 
+  }
+  
+  if (identity.access === "bloqueado") { 
+    console.error(`[MCP OAuth] El acceso del negocio está bloqueado para el usuario: ${identity.workerId}`);
+    res.status(401).type("html").send(consentPage(pending, "El acceso del negocio está bloqueado.")); 
+    return; 
+  }
+
   await persistCimdClient(client);
   const connectionId = await issueConnection(identity, client, DEFAULT_SCOPE);
   const rawCode = opaqueToken("mcp_code");
