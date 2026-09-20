@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response, Router } from "express";
 import { randomBytes, randomUUID, timingSafeEqual, createHash } from "node:crypto";
+import * as fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { hashToken } from "./supabaseAuth";
@@ -112,13 +113,15 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
   const anon = (process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "").replace(/\s+/g, "");
   if (!url || !anon) {
-    console.error("[MCP] Falta SUPABASE_URL o KEY en el entorno");
+    const msg = "[MCP] Falta SUPABASE_URL o KEY en el entorno\n";
+    console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     return null;
   }
   const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const { data, error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
   if (error || !data.user) {
-    console.error(`[MCP] signInWithPassword falló para ${email}:`, error?.message);
+    const msg = `[MCP] signInWithPassword falló para ${email}: ${error?.message}\n`;
+    console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     return null;
   }
   const admin = getSupabaseAdmin();
@@ -212,13 +215,15 @@ async function authorizePost(req: Request, res: Response) {
     : await resolveWorker(bodyString(req, "worker_token"));
   
   if (!identity) { 
-    console.error(`[MCP OAuth] Identity no encontrada para email: ${ownerEmail}`);
+    const msg = `[MCP OAuth] Identity no encontrada para email: ${ownerEmail}\n`;
+    console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     res.status(401).type("html").send(consentPage(pending, "Las credenciales no son válidas.")); 
     return; 
   }
   
   if (identity.access === "bloqueado") { 
-    console.error(`[MCP OAuth] El acceso del negocio está bloqueado para el usuario: ${identity.workerId}`);
+    const msg = `[MCP OAuth] El acceso del negocio está bloqueado para el usuario: ${identity.workerId}\n`;
+    console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     res.status(401).type("html").send(consentPage(pending, "El acceso del negocio está bloqueado.")); 
     return; 
   }
