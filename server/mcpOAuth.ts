@@ -36,6 +36,12 @@ function redirectError(res: Response, uri: string, error: string, description: s
   const url = new URL(uri); url.searchParams.set("error", error); url.searchParams.set("error_description", description); if (state) url.searchParams.set("state", state); res.redirect(302, url.toString());
 }
 function bodyString(req: Request, key: string) { const value = req.body?.[key]; return typeof value === "string" ? value : ""; }
+function withTimeout<T>(promise: Promise<T>, milliseconds: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${label} no respondió en ${milliseconds / 1000} segundos`)), milliseconds)),
+  ]);
+}
 
 async function findClient(clientId: string): Promise<OAuthClient | null> {
   // Claude's recommended “published identity” sends a URL as client_id.
@@ -119,10 +125,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   }
   const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const authAttempt = auth.auth.signInWithPassword({ email: email.trim(), password });
-  const { data, error } = await Promise.race([
-    authAttempt,
-    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Supabase Auth no respondió a tiempo")), 15000)),
-  ]);
+  const { data, error } = await withTimeout(authAttempt, 10000, "Supabase Auth");
   if (error || !data.user) {
     const msg = `[MCP] signInWithPassword falló para ${email}: ${error?.message}\n`;
     console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
@@ -225,8 +228,8 @@ async function authorizePost(req: Request, res: Response) {
     const ownerEmail = bodyString(req, "owner_email");
     const ownerPassword = bodyString(req, "owner_password");
     const identity = ownerEmail && ownerPassword
-      ? await resolveOwnerCredentials(ownerEmail, ownerPassword)
-      : await resolveWorker(bodyString(req, "worker_token"));
+      ? await withTimeout(resolveOwnerCredentials(ownerEmail, ownerPassword), 15000, "La validación del propietario")
+      : await withTimeout(resolveWorker(bodyString(req, "worker_token")), 15000, "La validación del trabajador");
 
     if (!identity) {
       console.error("[MCP OAuth] No se pudo resolver la identidad enviada");
@@ -240,10 +243,10 @@ async function authorizePost(req: Request, res: Response) {
       return;
     }
 
-    await persistCimdClient(client);
-    const connectionId = await issueConnection(identity, client, DEFAULT_SCOPE);
+    await withTimeout(persistCimdClient(client), 8000, "El registro del cliente OAuth");
+    const connectionId = await withTimeout(issueConnection(identity, client, DEFAULT_SCOPE), 10000, "La conexión del negocio");
     const rawCode = opaqueToken("mcp_code");
-    const { error } = await getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() });
+    const { error } = await withTimeout((async () => getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() }))(), 8000, "La creación del código OAuth");
     if (error) throw error;
     const target = new URL(redirectUri); target.searchParams.set("code", rawCode); if (state) target.searchParams.set("state", state); res.redirect(302, target.toString());
   } catch (error) {
