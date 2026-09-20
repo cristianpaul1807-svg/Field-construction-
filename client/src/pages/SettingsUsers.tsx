@@ -33,6 +33,8 @@ interface AppUser {
   phone?: string | null;
   /** Las áreas que ve, o `null` si las ve todas. */
   areas: Area[] | null;
+  /** Si tiene una conexión activa por MCP. */
+  mcpActive?: boolean;
 }
 
 interface SettingsUsersData {
@@ -144,11 +146,16 @@ export default function SettingsUsers() {
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <StatusBadge tone="neutral">{queVe(user.areas)}</StatusBadge>
-                    <StatusBadge tone={user.status === "activo" ? "success" : "warning"}>
-                      {user.status === "activo" ? t("settings.userActive") : t("settings.userInvited")}
-                    </StatusBadge>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {user.mcpActive !== undefined && (
+                        <StatusBadge tone={user.mcpActive ? "success" : "critical"}>
+                          MCP
+                        </StatusBadge>
+                      )}
+                      <StatusBadge tone="neutral">{queVe(user.areas)}</StatusBadge>
+                      <StatusBadge tone={user.status === "activo" ? "success" : "warning"}>
+                        {user.status === "activo" ? t("settings.userActive") : t("settings.userInvited")}
+                      </StatusBadge>
                     <button
                       aria-label={t("common.edit")}
                       className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"

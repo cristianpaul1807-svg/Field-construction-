@@ -17,6 +17,26 @@ import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
+import { StatusBadge } from "@/components/StatusBadge";
+import { workerApiFetch } from "@/lib/workerSession";
+
+function WorkerMcpBadge() {
+  const { t } = useTranslation();
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    workerApiFetch("/api/worker/mcp-status")
+      .then(r => r.json())
+      .then(d => setActive(d.active))
+      .catch(() => {});
+  }, []);
+  
+  if (!active) return null;
+  return (
+    <StatusBadge tone="success" className="ml-2 scale-90 origin-left">
+      MCP {t("worker.mcpActive", "Conectado")}
+    </StatusBadge>
+  );
+}
 
 function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) => void }) {
   const { t } = useTranslation();
@@ -115,7 +135,10 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
             </div>
           )}
           <div className="min-w-0">
-            <p className="font-semibold text-foreground text-sm leading-tight truncate">{session.name}</p>
+            <p className="font-semibold text-foreground text-sm leading-tight flex items-center">
+              <span className="truncate">{session.name}</span>
+              <WorkerMcpBadge />
+            </p>
             <p className="text-xs text-muted-foreground leading-tight truncate">
               {session.businessName
                 ? `${session.businessName} · ${session.kind === "employee" ? t("worker.employee") : t("worker.subcontractor")}`

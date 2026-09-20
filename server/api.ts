@@ -1625,6 +1625,23 @@ apiRouter.get(
   })
 );
 
+apiRouter.get(
+  "/worker/mcp-status",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const { data, error } = await getSupabaseAdmin()
+      .from("mcp_connections")
+      .select("id")
+      .eq("business_id", req.workerBusinessId!)
+      .eq(columnaDelDueno(req), req.workerId!)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    res.json({ active: !!data });
+  })
+);
+
 // Sus acuerdos. Sólo los que la oficina ya le mandó: un borrador que el
 // contratista está afinando no tiene por qué verlo, y menos firmarlo.
 apiRouter.get(
@@ -12985,7 +13002,7 @@ apiRouter.get(
   "/settings/users",
   route(async (req, res) => {
     const supabase = req.supabase!;
-    const [users, roles] = await Promise.all([
+    const [users, roles, mcp] = await Promise.all([
       supabase
         .from("users")
         .select("id, name, email, phone, status, role_id, roles(name, permissions)")
@@ -12995,10 +13012,19 @@ apiRouter.get(
         .from("roles")
         .select("id, name, permissions")
         .eq("business_id", req.businessId!),
+      getSupabaseAdmin()
+        .from("mcp_connections")
+        .select("employee_id")
+        .eq("business_id", req.businessId!)
+        .eq("status", "active")
+        .not("employee_id", "is", null),
     ]);
 
     if (users.error) throw users.error;
     if (roles.error) throw roles.error;
+    if (mcp.error) throw mcp.error;
+    
+    const activeMcpEmployees = new Set(mcp.data.map(c => c.employee_id));
 
     res.json({
       // roleId and phone come back alongside the display fields so the
@@ -13014,6 +13040,7 @@ apiRouter.get(
         // Las áreas que ve esta persona, o `null` si las ve todas. Es lo que
         // la pantalla enseña y edita; el rol de debajo es cosa de la base.
         areas: areasDelRol(u.roles),
+        mcpActive: activeMcpEmployees.has(u.id),
       })),
       roles: roles.data.map((r) => ({ id: r.id, name: r.name, permissions: r.permissions })),
     });
