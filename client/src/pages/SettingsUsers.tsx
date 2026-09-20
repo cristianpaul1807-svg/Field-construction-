@@ -148,7 +148,7 @@ export default function SettingsUsers() {
                   </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {user.mcpActive !== undefined && (
-                        <StatusBadge tone={user.mcpActive ? "success" : "critical"}>
+                        <StatusBadge tone={user.mcpActive ? "success" : "error"}>
                           MCP
                         </StatusBadge>
                       )}
