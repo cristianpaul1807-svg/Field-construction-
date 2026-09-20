@@ -118,7 +118,11 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
     return null;
   }
   const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
-  const { data, error } = await auth.auth.signInWithPassword({ email: email.trim(), password });
+  const authAttempt = auth.auth.signInWithPassword({ email: email.trim(), password });
+  const { data, error } = await Promise.race([
+    authAttempt,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Supabase Auth no respondió a tiempo")), 15000)),
+  ]);
   if (error || !data.user) {
     const msg = `[MCP] signInWithPassword falló para ${email}: ${error?.message}\n`;
     console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
@@ -212,32 +216,35 @@ async function authorizePost(req: Request, res: Response) {
   if (!client || !client.redirect_uris.includes(redirectUri)) { res.status(400).send("OAuth client or redirect URI is not registered."); return; }
   const pending: PendingAuthorization = { client, redirectUri, state, scope: DEFAULT_SCOPE, resource, codeChallenge: challenge, authorizationAction: `${req.protocol}://${req.get("host")}${req.originalUrl.split("?", 1)[0]}` };
   if (resource !== resourceUrl(req) || !challenge) { res.status(400).send("Invalid MCP resource or PKCE challenge."); return; }
-  const ownerEmail = bodyString(req, "owner_email");
-  const ownerPassword = bodyString(req, "owner_password");
-  const identity = ownerEmail && ownerPassword
-    ? await resolveOwnerCredentials(ownerEmail, ownerPassword)
-    : await resolveWorker(bodyString(req, "worker_token"));
-  
-  if (!identity) { 
-    const msg = `[MCP OAuth] Identity no encontrada para email: ${ownerEmail}\n`;
-    console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
-    res.status(401).type("html").send(consentPage(pending, "Las credenciales no son válidas.")); 
-    return; 
-  }
-  
-  if (identity.access === "bloqueado") { 
-    const msg = `[MCP OAuth] El acceso del negocio está bloqueado para el usuario: ${identity.workerId}\n`;
-    console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
-    res.status(401).type("html").send(consentPage(pending, "El acceso del negocio está bloqueado.")); 
-    return; 
-  }
+  try {
+    const ownerEmail = bodyString(req, "owner_email");
+    const ownerPassword = bodyString(req, "owner_password");
+    const identity = ownerEmail && ownerPassword
+      ? await resolveOwnerCredentials(ownerEmail, ownerPassword)
+      : await resolveWorker(bodyString(req, "worker_token"));
 
-  await persistCimdClient(client);
-  const connectionId = await issueConnection(identity, client, DEFAULT_SCOPE);
-  const rawCode = opaqueToken("mcp_code");
-  const { error } = await getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() });
-  if (error) throw error;
-  const target = new URL(redirectUri); target.searchParams.set("code", rawCode); if (state) target.searchParams.set("state", state); res.redirect(302, target.toString());
+    if (!identity) {
+      console.error("[MCP OAuth] No se pudo resolver la identidad enviada");
+      res.status(401).type("html").send(consentPage(pending, "El email o la contraseña no son correctos, o la cuenta no está vinculada a un negocio."));
+      return;
+    }
+
+    if (identity.access === "bloqueado") {
+      console.error(`[MCP OAuth] Acceso bloqueado para la identidad ${identity.workerId}`);
+      res.status(403).type("html").send(consentPage(pending, "El acceso del negocio está bloqueado. Abre Suscripción en el panel para reactivarlo."));
+      return;
+    }
+
+    await persistCimdClient(client);
+    const connectionId = await issueConnection(identity, client, DEFAULT_SCOPE);
+    const rawCode = opaqueToken("mcp_code");
+    const { error } = await getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() });
+    if (error) throw error;
+    const target = new URL(redirectUri); target.searchParams.set("code", rawCode); if (state) target.searchParams.set("state", state); res.redirect(302, target.toString());
+  } catch (error) {
+    console.error("[MCP OAuth] Error completando autorización", error);
+    res.status(503).type("html").send(consentPage(pending, "No se pudo completar la conexión ahora. Revisa la configuración de Supabase e inténtalo otra vez."));
+  }
 }
 
 async function token(req: Request, res: Response) {
