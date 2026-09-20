@@ -1643,7 +1643,7 @@
         "conectarMcp": {
           "title": "Connecter Claude au MCP de Logiciel Construction",
           "p1": "Allez dans {{menuAjustes}} → MCP Conexiones AI et ouvrez la carte Claude. Vous y trouverez l’URL MCP et le Client ID OAuth; utilisez les boutons Copier et ne partagez jamais vos mots de passe ou codes dans le chat.",
-          "p2": "Dans Claude, ajoutez un connecteur MCP personnalisé et collez l’URL et le Client ID. Quand Claude ouvre Field, connectez-vous avec l’e-mail et le mot de passe du compte autorisé, ou utilisez le code pour un travailleur de terrain ou un sous-traitant.",
+          "p2": "Dans Claude, ajoutez un connecteur MCP personnalisé et collez l’URL et le Client ID. Quand Claude ouvre Logiciel Construction, connectez-vous avec l’e-mail et le mot de passe du compte autorisé, ou utilisez le code pour un travailleur de terrain ou un sous-traitant.",
           "p3": "Vérifiez l’autorisation mcp:read, qui est en lecture seule, puis cliquez sur Autoriser. Claude ne pourra consulter que les informations permises par votre rôle, votre périmètre et le forfait de l’entreprise.",
           "p4": "Si vous changez de rôle, l’accès change automatiquement. Pour couper une connexion, revenez sur cette carte et cliquez sur Révoquer la connexion.",
           "nota": "La phase actuelle ne permet pas à Claude de créer, modifier ou supprimer des données."
@@ -1658,8 +1658,8 @@
         },
         "estadoMcp": {
           "title": "La signification du statut vert de Claude",
-          "p1": "OAuth prêt signifie que Field possède un Client ID valide pour que Claude commence l’autorisation. Cela ne signifie pas encore qu’une connexion active existe.",
-          "p2": "Connecté signifie qu’une autorisation active existe pour votre entreprise. Vous pouvez la révoquer depuis la carte Claude; Claude ne pourra alors plus consulter Field.",
+          "p1": "OAuth prêt signifie que Logiciel Construction possède un Client ID valide pour que Claude commence l’autorisation. Cela ne signifie pas encore qu’une connexion active existe.",
+          "p2": "Connecté signifie qu’une autorisation active existe pour votre entreprise. Vous pouvez la révoquer depuis la carte Claude; Claude ne pourra alors plus consulter Logiciel Construction.",
           "nota": "La connexion utilise OAuth et PKCE; vous ne devez jamais donner votre mot de passe à Claude."
         },
         "misDatos": {

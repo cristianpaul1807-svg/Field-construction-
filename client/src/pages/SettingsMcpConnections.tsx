@@ -70,7 +70,7 @@ export default function SettingsMcpConnections() {
     try {
       const response = await apiFetch(`/api/settings/mcp-connections/${id}/revoke`, { method: "POST" });
       if (!response.ok) throw new Error(serverMessage(await readJson(response), t, "No se pudo revocar la conexión."));
-      setNotice("Conexión revocada. La herramienta ya no podrá consultar Field.");
+      setNotice("Conexión revocada. La herramienta ya no podrá consultar Logiciel Construction.");
       reload();
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "No se pudo revocar la conexión.");
@@ -86,7 +86,7 @@ export default function SettingsMcpConnections() {
         <div className="rounded-lg bg-primary/10 p-2 text-primary"><ShieldCheck size={20} /></div>
         <div className="space-y-1">
           <h2 className="font-semibold">Solo lectura y siempre revocable</h2>
-          <p className="text-sm text-muted-foreground">Las conexiones usan OAuth y PKCE. No compartas contraseñas ni códigos por el chat: la autorización se completa en la pantalla segura de Field.</p>
+          <p className="text-sm text-muted-foreground">Las conexiones usan OAuth y PKCE. No compartas contraseñas ni códigos por el chat: la autorización se completa en la pantalla segura de Logiciel Construction.</p>
           <p className="text-sm text-muted-foreground">Alcance activo: <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">{data?.scope ?? "mcp:read"}</code></p>
         </div>
       </div>
@@ -109,8 +109,8 @@ export default function SettingsMcpConnections() {
           {isOpen && <div className="border-t border-border p-5 space-y-5">
             <div className="space-y-3 text-sm">
               <p className="font-medium">Cómo conectarlo</p>
-              <p className="text-xs text-muted-foreground"><strong>OAuth listo</strong> significa que Field tiene registrado un Client ID válido. <strong>Conectado</strong> significa que ya existe una autorización activa para esta empresa.</p>
-              <ol className="list-decimal pl-5 space-y-1.5 text-muted-foreground"><li>Abre {platform.name} y añade un conector MCP personalizado.</li><li>Copia la URL MCP y el Client ID que aparecen abajo.</li><li>Cuando {platform.name} abra Field, inicia sesión como propietario o usa el código del trabajador.</li><li>Revisa que diga <strong>solo lectura</strong> y pulsa autorizar.</li></ol>
+              <p className="text-xs text-muted-foreground"><strong>OAuth listo</strong> significa que Logiciel Construction tiene registrado un Client ID válido. <strong>Conectado</strong> significa que ya existe una autorización activa para esta empresa.</p>
+              <ol className="list-decimal pl-5 space-y-1.5 text-muted-foreground"><li>Abre {platform.name} y añade un conector MCP personalizado.</li><li>Copia la URL MCP y el Client ID que aparecen abajo.</li><li>Cuando {platform.name} abra Logiciel Construction, inicia sesión como propietario o usa el código del trabajador.</li><li>Revisa que diga <strong>solo lectura</strong> y pulsa autorizar.</li></ol>
             </div>
             <div className="space-y-2"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5"><Link2 size={13} /> URL MCP</p><div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2"><code className="min-w-0 flex-1 truncate text-xs">{data?.mcpUrl ?? "https://logiciel-construction.com/mcp"}</code><CopyButton value={data?.mcpUrl ?? "https://logiciel-construction.com/mcp"} label="Copiar" /></div></div>
             {validClient ? <div className="space-y-2"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5"><KeyRound size={13} /> OAuth Client ID</p><div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2"><code className="min-w-0 flex-1 truncate text-xs">{validClient.clientId}</code><CopyButton value={validClient.clientId} label="Copiar" /></div><p className="text-xs text-muted-foreground">Callback: {validClient.redirectUris[0] ?? "No indicado"}</p></div> : <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">Todavía no hay un Client ID válido de {platform.name}. Cuando se registre, aparecerá aquí con su callback oficial.</div>}

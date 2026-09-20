@@ -1643,7 +1643,7 @@
         "conectarMcp": {
           "title": "Collegare Claude al MCP di Logiciel Construction",
           "p1": "Vai a {{menuAjustes}} → MCP Conexiones AI e apri la scheda Claude. Qui trovi l’URL MCP e l’OAuth Client ID; usa i pulsanti Copia e non condividere mai password o codici nella chat.",
-          "p2": "In Claude aggiungi un connettore MCP personalizzato e incolla URL e Client ID. Quando Claude apre Field, accedi con l’e-mail e la password dell’account autorizzato, oppure usa il codice per un lavoratore sul campo o un subappaltatore.",
+          "p2": "In Claude aggiungi un connettore MCP personalizzato e incolla URL e Client ID. Quando Claude apre Logiciel Construction, accedi con l’e-mail e la password dell’account autorizzato, oppure usa il codice per un lavoratore sul campo o un subappaltatore.",
           "p3": "Controlla l’autorizzazione mcp:read, che è di sola lettura, e premi Autorizza. Claude potrà consultare solo le informazioni consentite dal tuo ruolo, perimetro e piano aziendale.",
           "p4": "Se cambi ruolo, l’accesso cambia automaticamente. Per interrompere una connessione, torna in questa scheda e premi Revoca connessione.",
           "nota": "La fase attuale non consente a Claude di creare, modificare o eliminare dati."
@@ -1658,8 +1658,8 @@
         },
         "estadoMcp": {
           "title": "Cosa significa lo stato verde di Claude",
-          "p1": "OAuth pronto significa che Field ha registrato un Client ID valido per permettere a Claude di avviare l’autorizzazione. Non significa ancora che esista una connessione attiva.",
-          "p2": "Connesso significa che esiste un’autorizzazione attiva per la tua azienda. Puoi revocarla dalla scheda Claude; da quel momento Claude non potrà più consultare Field.",
+          "p1": "OAuth pronto significa che Logiciel Construction ha registrato un Client ID valido per permettere a Claude di avviare l’autorizzazione. Non significa ancora che esista una connessione attiva.",
+          "p2": "Connesso significa che esiste un’autorizzazione attiva per la tua azienda. Puoi revocarla dalla scheda Claude; da quel momento Claude non potrà più consultare Logiciel Construction.",
           "nota": "La connessione usa OAuth e PKCE; non devi mai dare la tua password a Claude."
         },
         "misDatos": {
