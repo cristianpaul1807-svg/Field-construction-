@@ -60,6 +60,8 @@ export default function SettingsUsers() {
   // La contraseña recién creada. Se enseña una vez y no vuelve: no se guarda
   // en ninguna tabla nuestra ni se manda por correo.
   const [credenciales, setCredenciales] = useState<{ email: string; password: string } | null>(null);
+  // Estado para la confirmación de administrador
+  const [confirmAdmin, setConfirmAdmin] = useState(false);
 
   /** Qué ve esta persona, dicho como lo entendería quien la invitó. */
   const queVe = (areas: Area[] | null) =>
@@ -272,7 +274,11 @@ export default function SettingsUsers() {
                     type="radio"
                     className="mt-0.5"
                     checked={draft?.areas === null}
-                    onChange={() => setDraft((d) => (d ? { ...d, areas: null } : d))}
+                    onChange={() => {
+                      if (draft?.areas !== null) {
+                        setConfirmAdmin(true);
+                      }
+                    }}
                   />
                   <span className="min-w-0">
                     <span className="block text-sm text-foreground">{t("settings.seesAll")}</span>
@@ -331,6 +337,30 @@ export default function SettingsUsers() {
               disabled={saving || !draft?.name.trim() || (draft?.areas !== null && draft?.areas.length === 0)}
             >
               {saving ? t("common.loading") : t("common.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmAdmin} onOpenChange={setConfirmAdmin}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar Acceso Total</DialogTitle>
+            <DialogDescription>
+              Este rol tendrá acceso a <b>TODO</b> y es el único rol que comparte la misma amplitud de gestión que el jefe. Además, los roles personalizados o reducidos no tendrán acceso a las herramientas del Asistente Inteligente (MCP), siendo exclusivo de los roles predefinidos del sistema con permisos suficientes.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmAdmin(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                setDraft((d) => (d ? { ...d, areas: null } : d));
+                setConfirmAdmin(false);
+              }}
+            >
+              Continuar
             </Button>
           </DialogFooter>
         </DialogContent>
