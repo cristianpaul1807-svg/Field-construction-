@@ -15,6 +15,9 @@ create index if not exists mcp_audit_log_owner_auth_idx
   where owner_auth_user_id is not null;
 
 alter table public.mcp_connections
+  drop constraint if exists mcp_connections_one_worker;
+  
+alter table public.mcp_connections
   drop constraint if exists mcp_connections_one_identity_check;
 
 alter table public.mcp_connections
