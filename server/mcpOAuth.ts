@@ -228,8 +228,8 @@ async function authorizePost(req: Request, res: Response) {
     const ownerEmail = bodyString(req, "owner_email");
     const ownerPassword = bodyString(req, "owner_password");
     const identity = ownerEmail && ownerPassword
-      ? await withTimeout(resolveOwnerCredentials(ownerEmail, ownerPassword), 15000, "La validación del propietario")
-      : await withTimeout(resolveWorker(bodyString(req, "worker_token")), 15000, "La validación del trabajador");
+      ? await withTimeout(resolveOwnerCredentials(ownerEmail, ownerPassword), 8000, "La validación del propietario")
+      : await withTimeout(resolveWorker(bodyString(req, "worker_token")), 8000, "La validación del trabajador");
 
     if (!identity) {
       console.error("[MCP OAuth] No se pudo resolver la identidad enviada");
@@ -243,15 +243,18 @@ async function authorizePost(req: Request, res: Response) {
       return;
     }
 
-    await withTimeout(persistCimdClient(client), 8000, "El registro del cliente OAuth");
-    const connectionId = await withTimeout(issueConnection(identity, client, DEFAULT_SCOPE), 10000, "La conexión del negocio");
+    await withTimeout(persistCimdClient(client), 5000, "El registro del cliente OAuth");
+    const connectionId = await withTimeout(issueConnection(identity, client, DEFAULT_SCOPE), 6000, "La conexión del negocio");
     const rawCode = opaqueToken("mcp_code");
-    const { error } = await withTimeout((async () => getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() }))(), 8000, "La creación del código OAuth");
+    const { error } = await withTimeout((async () => getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() }))(), 5000, "La creación del código OAuth");
     if (error) throw error;
     const target = new URL(redirectUri); target.searchParams.set("code", rawCode); if (state) target.searchParams.set("state", state); res.redirect(302, target.toString());
   } catch (error) {
     console.error("[MCP OAuth] Error completando autorización", error);
-    res.status(503).type("html").send(consentPage(pending, "No se pudo completar la conexión ahora. Revisa la configuración de Supabase e inténtalo otra vez."));
+    const detail = error instanceof Error && error.message.includes("no respondió")
+      ? error.message
+      : "No se pudo completar la conexión ahora. Revisa la configuración de Supabase e inténtalo otra vez.";
+    res.status(503).type("html").send(consentPage(pending, detail));
   }
 }
 
