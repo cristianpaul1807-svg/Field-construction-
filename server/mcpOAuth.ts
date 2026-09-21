@@ -221,7 +221,8 @@ async function authorizeGet(req: Request, res: Response) {
   if (!client || !client.redirect_uris.includes(redirectUri)) { res.status(400).send("OAuth client or redirect URI is not registered."); return; }
   if (responseType !== "code" || method !== "S256" || !challenge || resource !== resourceUrl(req)) { redirectError(res, redirectUri, "invalid_request", "OAuth requires response_type=code, PKCE S256 and the MCP resource parameter.", String(req.query.state ?? "")); return; }
   const pending: PendingAuthorization = { client, redirectUri, state: typeof req.query.state === "string" ? req.query.state : undefined, scope: scope === DEFAULT_SCOPE ? DEFAULT_SCOPE : DEFAULT_SCOPE, resource, codeChallenge: challenge, authorizationAction: `${req.protocol}://${req.get("host")}${req.originalUrl.split("?", 1)[0]}` };
-  res.setHeader("Content-Security-Policy", `default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; form-action 'self'; base-uri 'none`);
+  // form-action must allow '*' so the browser doesn't block the 303 redirect to Claude's custom URI/localhost after the POST.
+  res.setHeader("Content-Security-Policy", `default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; form-action 'self' *; base-uri 'none'`);
   res.type("html").send(consentPage(pending));
 }
 
