@@ -248,7 +248,9 @@ async function authorizePost(req: Request, res: Response) {
     const rawCode = opaqueToken("mcp_code");
     const { error } = await withTimeout((async () => getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() }))(), 5000, "La creación del código OAuth");
     if (error) throw error;
-    const target = new URL(redirectUri); target.searchParams.set("code", rawCode); if (state) target.searchParams.set("state", state); res.redirect(302, target.toString());
+    // RFC 9207 / MCP authorization response: the issuer lets clients such as
+    // Claude bind the callback to the authorization server they discovered.
+    const target = new URL(redirectUri); target.searchParams.set("code", rawCode); target.searchParams.set("iss", baseUrl(req)); if (state) target.searchParams.set("state", state); res.redirect(302, target.toString());
   } catch (error) {
     console.error("[MCP OAuth] Error completando autorización", error);
     const detail = error instanceof Error && error.message.includes("no respondió")
@@ -263,7 +265,8 @@ async function token(req: Request, res: Response) {
   if (resource !== resourceUrl(req)) { res.status(400).json({ error: "invalid_target", error_description: "The resource must be the Logiciel Construction MCP server." }); return; }
   if (grant === "authorization_code") {
     const { data: row, error } = await getSupabaseAdmin().from("mcp_oauth_codes").select("id, client_id, redirect_uri, code_challenge, scope, connection_id, expires_at, consumed_at").eq("code_hash", hashToken(code)).maybeSingle(); if (error) throw error;
-    if (!row || row.consumed_at || new Date(row.expires_at).getTime() <= Date.now() || row.client_id !== clientId || !safeEqual(sha256(verifier), row.code_challenge)) { res.status(400).json({ error: "invalid_grant" }); return; }
+    const redirectUri = bodyString(req, "redirect_uri");
+    if (!row || row.consumed_at || new Date(row.expires_at).getTime() <= Date.now() || row.client_id !== clientId || (redirectUri && redirectUri !== row.redirect_uri) || !verifier || !safeEqual(sha256(verifier), row.code_challenge)) { res.status(400).json({ error: "invalid_grant" }); return; }
     const { error: consumedError } = await getSupabaseAdmin().from("mcp_oauth_codes").update({ consumed_at: new Date().toISOString() }).eq("id", row.id).is("consumed_at", null); if (consumedError) throw consumedError;
     await issueTokens(res, row.connection_id, clientId, row.scope, resource); return;
   }
