@@ -48,6 +48,99 @@ function errorResult(message: string, code: string) {
   };
 }
 
+/**
+ * Quién es este usuario de cuenta dentro de su negocio.
+ *
+ * **Una sola función, y la usan los dos lados**: el formulario de
+ * consentimiento cuando alguien teclea su correo y su contraseña, y la
+ * resolución del token en cada llamada de Claude. Antes eran dos reglas
+ * distintas, y no coincidían:
+ *
+ * - al autorizar se aceptaba al propietario principal **o** a cualquier
+ *   usuario activo del negocio;
+ * - al usar el token se exigía `businesses.primary_auth_user_id`.
+ *
+ * El resultado era que un segundo administrador pasaba el consentimiento,
+ * recibía su código, canjeaba su token… y entonces **cada** llamada resolvía
+ * `null` y devolvía 401. Claude lo interpreta como token caducado, refresca, y
+ * vuelve a empezar: 27 tokens emitidos y 25 revocados en 45 minutos, todos de
+ * la misma persona. Desde fuera se ve como «Logiciel no responde», que es
+ * exactamente el síntoma que no lleva a la causa.
+ *
+ * Lo que valida un acceso tiene que ser lo mismo que lo concedió. Si hay dos
+ * sitios, un día divergen — y el día que divergen nadie mira aquí.
+ *
+ * ## Qué rol recibe
+ *
+ * El propietario principal, `admin`. Cualquier otro usuario del negocio, **el
+ * suyo** — y sin rol asignado también `admin`, porque es lo que significa en
+ * el panel: `shared/permisos.ts` trata `areas === null` como «sin límite», y
+ * quien lleva el negocio no tiene rol. Traducir «sin rol» por `tecnico`, como
+ * se hacía, le daba en Claude *menos* de lo que ya ve en su pantalla.
+ *
+ * Y eso es la regla permanente del plan maestro leída en su otra dirección:
+ * una conexión MCP no puede ampliar lo que la persona ya puede ver, pero
+ * tampoco tiene por qué recortarlo. Igual, no más.
+ */
+export async function resolveOwnerIdentity(
+  authUserId: string,
+  businessId?: string,
+): Promise<WorkerIdentity | null> {
+  const admin = getSupabaseAdmin();
+  const columnas = "id, name, subscription_plan, subscription_status, trial_ends_at";
+
+  const construir = (
+    negocio: { id: string; name?: string | null; subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null },
+    rol: string,
+  ): WorkerIdentity => {
+    const plan = planDe(negocio.subscription_plan);
+    return {
+      workerId: authUserId,
+      workerKind: "owner",
+      businessId: negocio.id,
+      name: negocio.name ?? null,
+      workerRole: rol,
+      plan,
+      access: accesoDe({
+        plan,
+        estadoSuscripcion: negocio.subscription_status ?? null,
+        pruebaHasta: negocio.trial_ends_at ?? null,
+      }),
+    };
+  };
+
+  // El propietario principal: quien creó la cuenta.
+  let propietario = admin.from("businesses").select(columnas).eq("primary_auth_user_id", authUserId);
+  if (businessId) propietario = propietario.eq("id", businessId);
+  const { data: suyo, error: errorPropietario } = await propietario.maybeSingle();
+  if (errorPropietario) throw errorPropietario;
+  if (suyo) return construir(suyo, "admin");
+
+  // Y si no, un usuario del negocio. Las cuentas antiguas no tienen
+  // `primary_auth_user_id` puesto, así que este camino no es sólo para los
+  // administradores segundos: es también el único que tienen los negocios que
+  // existían antes de esa columna.
+  let usuario = admin
+    .from("users")
+    .select("business_id, roles(name)")
+    .eq("auth_user_id", authUserId)
+    .eq("status", "activo");
+  if (businessId) usuario = usuario.eq("business_id", businessId);
+  const { data: fila, error: errorUsuario } = await usuario.limit(1).maybeSingle();
+  if (errorUsuario) throw errorUsuario;
+  if (!fila?.business_id) return null;
+
+  const { data: negocio, error: errorNegocio } = await admin
+    .from("businesses")
+    .select(columnas)
+    .eq("id", fila.business_id)
+    .maybeSingle();
+  if (errorNegocio) throw errorNegocio;
+  if (!negocio) return null;
+
+  return construir(negocio, (fila as { roles?: { name?: string } | null }).roles?.name ?? "admin");
+}
+
 async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentity | null> {
   const admin = getSupabaseAdmin();
   const { data: oauth, error: oauthError } = await admin
@@ -68,11 +161,10 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
   const id = connection.employee_id ?? connection.subcontractor_id ?? connection.owner_auth_user_id;
   if (!id) return null;
   if (connection.owner_auth_user_id) {
-    const { data: business, error } = await admin.from("businesses").select("id, name, subscription_plan, subscription_status, trial_ends_at, primary_auth_user_id").eq("id", connection.business_id).eq("primary_auth_user_id", connection.owner_auth_user_id).maybeSingle();
-    if (error) throw error;
-    if (!business) return null;
-    const plan = planDe(business.subscription_plan);
-    return { workerId: connection.owner_auth_user_id, workerKind: "owner", businessId: business.id, name: business.name ?? null, workerRole: "admin", plan, access: accesoDe({ plan, estadoSuscripcion: business.subscription_status ?? null, pruebaHasta: business.trial_ends_at ?? null }) };
+    // La **misma** función que usó el formulario de consentimiento para dejarle
+    // entrar. Ver `resolveOwnerIdentity`: que aquí se comprobara otra cosa es
+    // lo que tenía a Claude dando vueltas.
+    return resolveOwnerIdentity(connection.owner_auth_user_id, connection.business_id);
   }
   const table = connection.employee_id ? "employees" : "subcontractors";
   const select = connection.employee_id

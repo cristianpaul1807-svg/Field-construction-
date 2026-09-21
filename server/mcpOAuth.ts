@@ -4,7 +4,7 @@ import * as fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { hashToken } from "./supabaseAuth";
-import { resolveWorker, type WorkerIdentity } from "./mcp";
+import { resolveOwnerIdentity, resolveWorker, type WorkerIdentity } from "./mcp";
 import { accesoDe, planDe } from "../shared/planes";
 
 const DEFAULT_SCOPE = "mcp:read";
@@ -41,23 +41,6 @@ function withTimeout<T>(promise: Promise<T>, milliseconds: number, label: string
     promise,
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${label} no respondió en ${milliseconds / 1000} segundos`)), milliseconds)),
   ]);
-}
-
-function identityFromBusinessRow(
-  userId: string,
-  business: { id: string; name?: string | null; subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null },
-  workerRole = "admin",
-): WorkerIdentity {
-  const plan = planDe(business.subscription_plan);
-  return {
-    workerId: userId,
-    workerKind: "owner",
-    businessId: business.id,
-    name: business.name ?? null,
-    workerRole,
-    plan,
-    access: accesoDe({ plan, estadoSuscripcion: business.subscription_status ?? null, pruebaHasta: business.trial_ends_at ?? null }),
-  };
 }
 
 async function findClient(clientId: string): Promise<OAuthClient | null> {
@@ -142,49 +125,26 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   }
   const auth = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const authAttempt = auth.auth.signInWithPassword({ email: email.trim(), password });
-  const { data, error } = await withTimeout(authAttempt, 10000, "Supabase Auth");
+  // Ocho segundos, por debajo de los quince de quien llama a esta función, que
+  // a su vez están por debajo de los veinte del socket. La escalera importa:
+  // estaban al revés —ocho fuera envolviendo diez dentro— y el de dentro no
+  // podía ganar nunca, así que el aviso que salía decía «la validación del
+  // propietario» cuando lo que no respondía era Supabase. Un mensaje que
+  // señala al sitio equivocado cuesta más que no tener mensaje.
+  const { data, error } = await withTimeout(authAttempt, 8000, "Supabase Auth");
   if (error || !data.user) {
     const msg = `[MCP] signInWithPassword falló para ${email}: ${error?.message}\n`;
     console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     return null;
   }
   const admin = getSupabaseAdmin();
-  const { data: business, error: businessError } = await admin
-    .from("businesses")
-    .select("id, name, subscription_plan, subscription_status, trial_ends_at, primary_auth_user_id")
-    .eq("primary_auth_user_id", data.user.id)
-    .maybeSingle();
-  if (businessError) throw businessError;
-  let resolvedBusiness = business;
-  let permissionRole = "admin";
-  // Older/provisioned accounts may have the auth link on public.users but not
-  // yet on businesses.primary_auth_user_id. Accept that canonical link too.
-  if (!resolvedBusiness) {
-    const { data: userRow, error: userError } = await admin
-      .from("users")
-      .select("business_id, roles(name)")
-      .eq("auth_user_id", data.user.id)
-      .eq("status", "activo")
-      .limit(1)
-      .maybeSingle();
-    if (userError) throw userError;
-    if (userRow?.business_id) {
-      const { data: linkedBusiness, error: linkedBusinessError } = await admin
-        .from("businesses")
-        .select("id, name, subscription_plan, subscription_status, trial_ends_at, primary_auth_user_id")
-        .eq("id", userRow.business_id)
-        .maybeSingle();
-      if (linkedBusinessError) throw linkedBusinessError;
-      resolvedBusiness = linkedBusiness;
-      permissionRole = (userRow as any).roles?.name ?? "tecnico";
-    }
-  }
-  if (resolvedBusiness) {
-    // From this point on, the owner uses the same WorkerIdentity consumed by
-    // roleOf(), requireRole(), plan capabilities and audit logging. The only
-    // difference from a worker is how the identity was authenticated above.
-    return identityFromBusinessRow(data.user.id, resolvedBusiness, permissionRole);
-  }
+
+  // La misma función que resolverá el token en cada llamada de Claude. Que
+  // aquí se decidiera una cosa y allí otra es lo que dejaba a un segundo
+  // administrador pasando el consentimiento para chocarse después contra un
+  // 401 en bucle. Ver `resolveOwnerIdentity` en `server/mcp.ts`.
+  const propietario = await resolveOwnerIdentity(data.user.id);
+  if (propietario) return propietario;
 
   const [employee, subcontractor] = await Promise.all([
     admin.from("employees").select("id, business_id, name, role, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
@@ -240,7 +200,7 @@ async function authorizePost(req: Request, res: Response) {
     const ownerEmail = bodyString(req, "owner_email");
     const ownerPassword = bodyString(req, "owner_password");
     const identity = ownerEmail && ownerPassword
-      ? await withTimeout(resolveOwnerCredentials(ownerEmail, ownerPassword), 8000, "La validación del propietario")
+      ? await withTimeout(resolveOwnerCredentials(ownerEmail, ownerPassword), 15000, "La validación del propietario")
       : await withTimeout(resolveWorker(bodyString(req, "worker_token")), 8000, "La validación del trabajador");
 
     if (!identity) {

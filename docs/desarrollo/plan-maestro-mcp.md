@@ -113,6 +113,33 @@ El plan `pilot` conserva acceso activo según las reglas actuales del producto. 
 4. **Verificar el aislamiento de clientes.** El rol cliente todavía no está completo como identidad MCP equivalente a trabajador y propietario. Debe definirse su tabla, sujeto OAuth, perímetro y catálogo de herramientas antes de anunciarlo.
 5. **Actualizar la documentación antigua.** Algunos párrafos todavía mencionan `/api/mcp` como recurso canónico, aunque Claude debe utilizar `/mcp`. La documentación transferida debe tomar `/mcp` como URL principal y dejar `/api/mcp` como compatibilidad.
 
+### Resuelto: la identidad del propietario tenía dos reglas
+
+El formulario de consentimiento aceptaba a un dueño por **dos** caminos —ser
+`businesses.primary_auth_user_id`, o ser un usuario activo del negocio—, pero
+la resolución del token en cada llamada exigía **sólo el primero**.
+
+Un segundo administrador pasaba el consentimiento, recibía su código, canjeaba
+su token, y entonces cada llamada MCP resolvía `null` y devolvía 401. Claude lo
+lee como token caducado: refresca, reintenta, vuelve a fallar. En la base
+quedaron **27 tokens emitidos y 25 revocados en 45 minutos**, todos de la misma
+persona. Desde fuera se veía como «Logiciel no responde», que es el síntoma que
+no lleva a la causa. El trabajador nunca lo notó porque no pasa por esa rama.
+
+Ahora hay **una sola función**, `resolveOwnerIdentity()` en `server/mcp.ts`, y
+la usan los dos lados. Lo que valida un acceso es lo mismo que lo concedió.
+
+Y de paso se corrigió el rol: «sin rol asignado» se traducía por `tecnico`, que
+en MCP es un trabajador de campo. En el panel significa lo contrario —
+`shared/permisos.ts` trata `areas === null` como «sin límite»—, así que esa
+persona veía en Claude *menos* de lo que ya tiene en su pantalla. La regla
+permanente de este documento leída en su otra dirección: una conexión MCP no
+puede ampliar lo que alguien ya ve, pero tampoco tiene por qué recortarlo.
+
+Queda pendiente lo de abajo, que es lo mismo un escalón más arriba: derivar el
+rol MCP de las **áreas** de `shared/permisos.ts` en vez de comparar el nombre
+del rol con expresiones regulares en `roleOf()`.
+
 ### Prioridad 1: consolidar el modelo de permisos
 
 6. Unificar `server/mcp/roles.ts`, la resolución de identidad de `server/mcp.ts` y `shared/planes.ts`. Actualmente existe una matriz genérica de niveles de acción (`admin`, `financial`, `site_manager`, `worker`) y, además, una matriz concreta MCP con `admin`, `office`, `manager` y trabajador. Debe existir una sola fuente de verdad para evitar que un rol tenga un permiso en una capa y otro permiso diferente en otra.
