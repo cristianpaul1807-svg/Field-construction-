@@ -250,7 +250,12 @@ async function authorizePost(req: Request, res: Response) {
     if (error) throw error;
     // RFC 9207 / MCP authorization response: the issuer lets clients such as
     // Claude bind the callback to the authorization server they discovered.
-    const target = new URL(redirectUri); target.searchParams.set("code", rawCode); target.searchParams.set("iss", baseUrl(req)); if (state) target.searchParams.set("state", state); res.redirect(302, target.toString());
+    const target = new URL(redirectUri); target.searchParams.set("code", rawCode); target.searchParams.set("iss", baseUrl(req)); if (state) target.searchParams.set("state", state);
+    // The authorization form is submitted with POST. 303 explicitly tells
+    // browsers and hosted MCP clients to follow the callback with GET instead
+    // of retrying the POST or leaving the consent page pending.
+    res.setHeader("Cache-Control", "no-store");
+    res.redirect(303, target.toString());
   } catch (error) {
     console.error("[MCP OAuth] Error completando autorización", error);
     const detail = error instanceof Error && error.message.includes("no respondió")
