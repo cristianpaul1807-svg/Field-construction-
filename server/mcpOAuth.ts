@@ -43,6 +43,23 @@ function withTimeout<T>(promise: Promise<T>, milliseconds: number, label: string
   ]);
 }
 
+function identityFromBusinessRow(
+  userId: string,
+  business: { id: string; name?: string | null; subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null },
+  workerRole = "admin",
+): WorkerIdentity {
+  const plan = planDe(business.subscription_plan);
+  return {
+    workerId: userId,
+    workerKind: "owner",
+    businessId: business.id,
+    name: business.name ?? null,
+    workerRole,
+    plan,
+    access: accesoDe({ plan, estadoSuscripcion: business.subscription_status ?? null, pruebaHasta: business.trial_ends_at ?? null }),
+  };
+}
+
 async function findClient(clientId: string): Promise<OAuthClient | null> {
   // Claude's recommended “published identity” sends a URL as client_id.
   // Restrict server-side fetching to Anthropic-owned origins to avoid turning
@@ -163,16 +180,10 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
     }
   }
   if (resolvedBusiness) {
-    const plan = planDe(resolvedBusiness.subscription_plan);
-    return {
-      workerId: data.user.id,
-      workerKind: "owner",
-      businessId: resolvedBusiness.id,
-      name: resolvedBusiness.name ?? null,
-      workerRole: permissionRole,
-      plan,
-      access: accesoDe({ plan, estadoSuscripcion: resolvedBusiness.subscription_status, pruebaHasta: resolvedBusiness.trial_ends_at }),
-    };
+    // From this point on, the owner uses the same WorkerIdentity consumed by
+    // roleOf(), requireRole(), plan capabilities and audit logging. The only
+    // difference from a worker is how the identity was authenticated above.
+    return identityFromBusinessRow(data.user.id, resolvedBusiness, permissionRole);
   }
 
   const [employee, subcontractor] = await Promise.all([
