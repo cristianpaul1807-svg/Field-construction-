@@ -9502,7 +9502,7 @@ async function crearAcceso(email: string): Promise<{ authUserId: string; passwor
 apiRouter.post(
   "/settings/users",
   route(async (req, res) => {
-    if (req.plan === "chantier" || req.plan === "prueba") {
+    if (req.plan === "chantier") {
       res.status(402).json({ error: "Los usuarios y roles están disponibles en el plan Entreprise", code: "plan_no_incluye", capacidad: "equipo", plan: req.plan });
       return;
     }
