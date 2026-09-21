@@ -14,6 +14,8 @@
  * Escribir en la base es de la ruta, y eso se prueba con Stripe delante.
  */
 
+import { renovacionUnix } from "../../shared/renovacion.ts";
+
 let bien = 0;
 let mal = 0;
 function ok(que, real, esperado) {
@@ -28,7 +30,9 @@ function loQueGuardariamos(sub) {
   const precio = articulo?.price;
   const plan = precio?.metadata?.plan;
   if (!plan) return null;
-  const renueva = articulo?.current_period_end ?? sub.current_period_end ?? null;
+  // La de verdad, no una copia: si la ruta viva vuelve a leer sólo de arriba,
+  // esta prueba es lo que lo dice.
+  const renueva = renovacionUnix(sub);
   return {
     subscription_plan: sub.status === "active" || sub.status === "trialing" ? plan : "prueba",
     subscription_status: sub.status,
@@ -105,6 +109,23 @@ const apiVieja = {
   items: { data: [{ price: { metadata: { plan: "chantier" }, recurring: { interval: "year" } } }] },
 };
 ok("La API antigua también se entiende", loQueGuardariamos(apiVieja).subscription_period_end, new Date(1792235357 * 1000).toISOString());
+
+/* ---------- La fecha de renovación, en los dos sitios ---------- */
+
+/**
+ * El mismo fallo ha vuelto dos veces, así que se comprueba la función de verdad
+ * —`shared/renovacion.ts`— con las dos formas que manda Stripe.
+ */
+ok("Del artículo, que es donde lo pone la API de hoy",
+   renovacionUnix({ items: { data: [{ current_period_end: 1792235357 }] } }), 1792235357);
+ok("De arriba, que es donde lo ponía antes",
+   renovacionUnix({ current_period_end: 1792235357, items: { data: [{}] } }), 1792235357);
+ok("El artículo manda si están los dos: es el periodo de lo contratado",
+   renovacionUnix({ current_period_end: 1, items: { data: [{ current_period_end: 2 }] } }), 2);
+ok("Sin ninguno, null y no una fecha de 1970",
+   renovacionUnix({ items: { data: [{}] } }), null);
+ok("Una suscripción sin artículos no rompe",
+   renovacionUnix({}), null);
 
 /* ---------- Quién puede entrar ----------
  *

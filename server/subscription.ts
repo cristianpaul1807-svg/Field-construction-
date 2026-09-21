@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { getStripe } from "./stripe";
 import { getSupabaseAdmin } from "./supabaseAdmin";
+import { renovacionIso } from "../shared/renovacion";
 
 export const STRIPE_PRICE_IDS = {
   chantier_month: "price_1UGhMxCoxo1rqCJcc3GAVUcV",
@@ -28,12 +29,6 @@ export function intervalFromPriceId(priceId: string | null | undefined): "month"
   if (priceId === STRIPE_PRICE_IDS.chantier_month || priceId === STRIPE_PRICE_IDS.entreprise_month) return "month";
   if (priceId === STRIPE_PRICE_IDS.chantier_year || priceId === STRIPE_PRICE_IDS.entreprise_year) return "year";
   return null;
-}
-
-export function subscriptionIsOperational(status: string | null | undefined, trialEndsAt: string | null | undefined): boolean {
-  if (!status) return true; // legacy pilot/fondateur businesses remain operational
-  if (status === "active" || status === "trialing") return true;
-  return false;
 }
 
 export async function retrieveSubscription(id: string): Promise<Stripe.Subscription> {
@@ -68,15 +63,11 @@ export async function findBusinessByStripeSubscription(subscriptionId: string) {
   return data;
 }
 
-export function unixToIso(value: number | null | undefined): string | null {
-  return typeof value === "number" ? new Date(value * 1000).toISOString() : null;
-}
-
 export function subscriptionPriceId(subscription: Stripe.Subscription): string | null {
   return subscription.items.data[0]?.price?.id ?? null;
 }
 
+/** Ver `shared/renovacion.ts`: el campo está en dos sitios y esto es el porqué. */
 export function subscriptionPeriodEnd(subscription: Stripe.Subscription): string | null {
-  const end = (subscription as Stripe.Subscription & { current_period_end?: number }).current_period_end;
-  return unixToIso(end);
+  return renovacionIso(subscription);
 }
