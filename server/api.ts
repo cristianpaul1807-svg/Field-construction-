@@ -65,7 +65,8 @@ import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
-import { capacidadDeLaRuta, planDe, tiene } from "../shared/planes";
+import { planDelPrecio, periodoDelPrecio } from "../shared/suscripcionStripe";
+import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODOS, PRECIO, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -74,9 +75,7 @@ import { aplicaLaCcq, esPaisConocido, esRegionDe, PAIS_POR_DEFECTO } from "../sh
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
 import {
-  STRIPE_PRICE_IDS,
-  intervalFromPriceId,
-  planFromPriceId,
+  PRECIOS_HEREDADOS,
   subscriptionPeriodEnd,
   subscriptionPriceId,
   updateBusinessSubscription,
@@ -863,15 +862,24 @@ async function stripeWebhookHandler(req: Request, res: Response) {
     if (session.mode === "subscription" && session.metadata?.businessId && session.subscription) {
       const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription.id;
       const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
-      const priceId = subscriptionPriceId(subscription) ?? session.metadata.priceId ?? null;
-      const plan = planFromPriceId(priceId);
-      if (plan) {
+      const precio = subscription.items?.data?.[0]?.price ?? null;
+      const priceId = precio?.id ?? session.metadata.priceId ?? null;
+      const plan = planDelPrecio(precio, PRECIOS_HEREDADOS);
+      if (!plan) {
+        // Gritar, no callarse. Esto significa que alguien nos ha pagado y no
+        // sabemos por qué plan: lo que hacía antes era saltarse el `update` sin
+        // decir nada, y el negocio se quedaba pagando y bloqueado a la vez.
+        console.error(
+          `[suscripcion] cobro sin plan reconocible — negocio ${session.metadata.businessId}, precio ${priceId}, clave ${precio?.lookup_key ?? "ninguna"}. ` +
+            `Córrele scripts/stripe-precios.mjs a esta cuenta: sus precios necesitan lookup_key y metadata.plan.`
+        );
+      } else {
         await updateBusinessSubscription(session.metadata.businessId, {
           stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
           stripe_subscription_id: subscription.id,
           subscription_plan: plan,
           subscription_status: subscription.status === "active" ? "active" : subscription.status,
-          subscription_interval: intervalFromPriceId(priceId),
+          subscription_interval: periodoDelPrecio(precio),
           subscription_price_id: priceId,
           subscription_started_at: new Date().toISOString(),
           subscription_period_end: subscriptionPeriodEnd(subscription),
@@ -3872,46 +3880,259 @@ apiRouter.post(
   })
 );
 
-// Checkout de suscripción. El cliente solo puede elegir uno de los precios
-// Live declarados en el servidor; Stripe confirma después el estado real.
+/* ---------- Nuestra suscripción ----------
+ *
+ * Lo que el negocio nos paga a nosotros por usar el software. **No pasa por
+ * Connect.** Connect es lo otro: que el negocio cobre a sus clientes, con el
+ * dinero yendo a la cuenta del negocio. Si nuestro cobro llevara
+ * `{ stripeAccount }` como el de las facturas, le estaríamos pagando al
+ * contratista su propia suscripción. Por eso aquí no hay ningún
+ * `stripeAccount`, y por eso esto está escrito donde se toca.
+ */
+
+/**
+ * El precio de Stripe, buscado por su nombre y no por su identificador.
+ *
+ * Aquí había cuatro `price_1UGhMx…` escritos a mano. Un identificador de
+ * precio es distinto en cada cuenta de Stripe, así que el día que la clave del
+ * servidor pasa de la cuenta de pruebas a la real esos cuatro apuntan a
+ * precios que en la cuenta nueva **no existen**, y la pasarela contesta «No
+ * such price» a quien intentaba pagarnos. Y no hay forma de verlo leyendo el
+ * código: son cuatro cadenas con la pinta correcta.
+ *
+ * Con la clave de búsqueda no hay nada que trasladar entre cuentas ni nada que
+ * actualizar aquí cuando un precio cambia — los precios de Stripe no se editan,
+ * cambiar 99 por 109 es crear otro, y `scripts/stripe-precios.mjs` le traslada
+ * la clave al nuevo.
+ */
+async function precioDeStripe(plan: PlanDePago, periodo: Periodo) {
+  const stripe = getStripe();
+  const clave = claveDelPrecio(plan, periodo);
+  const encontrados = await stripe.prices.list({ lookup_keys: [clave], active: true, limit: 1 });
+  const precio = encontrados.data[0];
+  if (!precio) {
+    throw new CodedError(
+      "precio_no_existe",
+      `En Stripe no hay ningún precio activo con la clave ${clave}. Córrele scripts/stripe-precios.mjs a esta cuenta antes de poder cobrar.`
+    );
+  }
+  return precio;
+}
+
+/**
+ * El cliente de Stripe del negocio, creándolo la primera vez.
+ *
+ * Se guarda porque sin él un negocio que vuelve a pagar nace como cliente
+ * nuevo: dos clientes, dos suscripciones, y el contratista pagando dos veces
+ * sin que nada falle por ninguna parte.
+ */
+async function clienteDeStripe(businessId: string, correo: string | null, nombre: string | null) {
+  const admin = getSupabaseAdmin();
+  const { data: negocio } = await admin
+    .from("businesses")
+    .select("stripe_customer_id")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  const guardado = (negocio as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
+  if (guardado) return guardado;
+
+  const stripe = getStripe();
+  const cliente = await stripe.customers.create({
+    email: correo ?? undefined,
+    name: nombre ?? undefined,
+    // Para poder ir de un cobro de Stripe al negocio sin buscar a mano.
+    metadata: { businessId },
+  });
+  await admin.from("businesses").update({ stripe_customer_id: cliente.id }).eq("id", businessId);
+  return cliente.id;
+}
+
+/** En qué anda la suscripción del negocio, para la pantalla. */
+apiRouter.get(
+  "/subscription",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data } = await admin
+      .from("businesses")
+      .select(
+        "subscription_plan, subscription_status, subscription_interval, subscription_period_end, subscription_cancel_at_period_end, trial_ends_at, stripe_customer_id"
+      )
+      .eq("id", req.businessId!)
+      .maybeSingle();
+
+    const fila = (data ?? {}) as Record<string, unknown>;
+    res.json({
+      plan: planDe(fila.subscription_plan as string | null),
+      estado: (fila.subscription_status as string | null) ?? null,
+      periodo: (fila.subscription_interval as string | null) ?? null,
+      renuevaEl: (fila.subscription_period_end as string | null) ?? null,
+      seCancelaAlFinal: Boolean(fila.subscription_cancel_at_period_end),
+      pruebaHasta: (fila.trial_ends_at as string | null) ?? null,
+      // Sin cliente de Stripe no hay portal que abrir, y la pantalla tiene que
+      // saberlo para no ofrecer un botón que devolvería un error.
+      tienePortal: Boolean(fila.stripe_customer_id),
+      precios: PRECIO,
+    });
+  })
+);
+
+/**
+ * Empezar a pagar: la pasarela de Stripe.
+ *
+ * Sin `trial_period_days`. Los 30 días ya se los dimos al darse de alta, en
+ * `trial_ends_at`; pedírselos otra vez a Stripe aquí le regalaría al que paga
+ * el día 10 otros 30 encima — cuarenta días gratis y el cobro corrido un mes,
+ * sin que nada falle por ninguna parte.
+ */
 apiRouter.post(
   "/subscription/checkout",
   route(async (req, res) => {
-    const priceId = String(req.body?.priceId ?? "");
-    if (!Object.values(STRIPE_PRICE_IDS).includes(priceId as (typeof STRIPE_PRICE_IDS)[keyof typeof STRIPE_PRICE_IDS])) {
-      res.status(400).json({ error: "Precio de suscripción no válido", code: "invalid_subscription_price" });
+    const plan = String(req.body?.plan ?? "");
+    const periodo = String(req.body?.periodo ?? "mes");
+    if (!esPlanDePago(plan) || !PERIODOS.includes(periodo as Periodo)) {
+      res.status(400).json({ error: "Ese plan no se vende", code: "plan_no_valido" });
       return;
     }
+
     const admin = getSupabaseAdmin();
-    const { data: business, error } = await admin
+    const { data: negocio } = await admin
       .from("businesses")
-      .select("id, name, email, stripe_customer_id")
+      .select("name, email")
       .eq("id", req.businessId!)
-      .single();
-    if (error || !business) throw error ?? new Error("business not found");
-    const stripe = getStripe();
-    const customer = business.stripe_customer_id
-      ? await stripe.customers.retrieve(business.stripe_customer_id)
-      : await stripe.customers.create({ name: business.name, email: business.email ?? undefined, metadata: { businessId: business.id } });
-    const customerId = typeof customer === "string" ? customer : customer.id;
-    if (!business.stripe_customer_id) await updateBusinessSubscription(business.id, { stripe_customer_id: customerId });
+      .maybeSingle();
+    const datos = (negocio ?? {}) as { name?: string | null; email?: string | null };
+
+    const precio = await precioDeStripe(plan, periodo as Periodo);
+    const cliente = await clienteDeStripe(req.businessId!, datos.email ?? null, datos.name ?? null);
     const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const session = await stripe.checkout.sessions.create({
+    const lang = normalizeDocLang(req.body?.lang);
+
+    const stripe = getStripe();
+    const sesion = await stripe.checkout.sessions.create({
       mode: "subscription",
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${baseUrl}/settings/subscription?checkout=success`,
-      cancel_url: `${baseUrl}/settings/subscription?checkout=cancelled`,
-      metadata: { businessId: business.id, priceId },
-      subscription_data: { metadata: { businessId: business.id, priceId } },
+      customer: cliente,
+      line_items: [{ price: precio.id, quantity: 1 }],
+      // La pasarela entera en su idioma. Sin esto Stripe elige por el
+      // navegador, que no tiene por qué ser el idioma en el que trabaja.
+      locale: lang,
+      subscription_data: { metadata: { businessId: req.businessId!, plan, periodo } },
+      // Para que el negocio pueda meter su número de TPS/TVQ en la factura.
+      tax_id_collection: { enabled: true },
+      billing_address_collection: "required",
+      allow_promotion_codes: true,
+      success_url: `${baseUrl}/suscripcion?pago=exitoso`,
+      cancel_url: `${baseUrl}/suscripcion?pago=cancelado`,
+      metadata: { tipo: "suscripcion", businessId: req.businessId!, plan, periodo },
       // Este SaaS usa el Checkout estándar de Stripe y gestiona sus impuestos
       // fuera de Managed Payments. La cuenta Live lo tiene activado por defecto;
       // desactivarlo aquí evita exigir un tax_code de producto para la suscripción.
       managed_payments: { enabled: false },
     } as any);
-    if (!session.url) throw new Error("Stripe no devolvió una URL de suscripción");
-    res.json({ url: session.url });
+
+    if (!sesion.url) throw new CodedError("stripe_no_checkout_url", "Stripe no devolvió una URL de suscripción");
+    res.json({ url: sesion.url });
+  })
+);
+
+/**
+ * El portal de Stripe: cancelar, cambiar de plan, la tarjeta y las facturas.
+ *
+ * No se reimplementa nada de eso. Stripe ya lo tiene traducido, con sus
+ * confirmaciones, sus recibos descargables y sus reglas de prorrateo — y cada
+ * una de esas pantallas escrita aquí sería una pantalla más que mantener y una
+ * forma más de equivocarse con el dinero de alguien.
+ *
+ * Sin esta ruta **no se podía cancelar desde dentro del producto**, que es lo
+ * primero que mira quien se plantea pagar.
+ */
+apiRouter.post(
+  "/subscription/portal",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data } = await admin
+      .from("businesses")
+      .select("stripe_customer_id")
+      .eq("id", req.businessId!)
+      .maybeSingle();
+    const cliente = (data as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
+    if (!cliente) {
+      res.status(400).json({ error: "Este negocio todavía no tiene nada contratado", code: "sin_suscripcion" });
+      return;
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const stripe = getStripe();
+    const sesion = await stripe.billingPortal.sessions.create({
+      customer: cliente,
+      locale: normalizeDocLang(req.body?.lang),
+      return_url: `${baseUrl}/suscripcion`,
+    });
+    res.json({ url: sesion.url });
+  })
+);
+
+/**
+ * Llevarse sus datos, incluso con el sistema parado.
+ *
+ * Sus facturas, sus horas y su informe de la CCQ son **suyos**, no nuestros, y
+ * la Ley 25 dice lo mismo. Y en lo práctico: un contratista al que le
+ * encerramos sus facturas un día 30 no vuelve nunca; uno que puede sacarlas y
+ * marcharse a veces se lo piensa y se queda.
+ *
+ * Lo que **no** va son las credenciales —los enganches de QuickBooks y de
+ * Stripe— porque no son datos suyos, son llaves nuestras.
+ */
+const TABLAS_QUE_SE_LLEVA = [
+  "clients",
+  "projects",
+  "estimates",
+  "estimate_lines",
+  "invoices",
+  "credit_notes",
+  "payments",
+  "expenses",
+  "employees",
+  "subcontractors",
+  "time_entries",
+  "time_off",
+  "work_orders",
+  "schedule_events",
+  "payroll_runs",
+  "payroll_deductions",
+  "materials_catalog",
+  "labor_rates",
+  "change_orders",
+  "worker_agreements",
+  "documents",
+  "photos",
+  "business_settings",
+] as const;
+
+apiRouter.get(
+  "/subscription/mis-datos",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const salida: Record<string, unknown[]> = {};
+
+    for (const tabla of TABLAS_QUE_SE_LLEVA) {
+      const { data, error } = await admin.from(tabla).select("*").eq("business_id", req.businessId!);
+      // Una tabla que falla no puede dejar sin el resto a quien se está
+      // marchando: se apunta vacía y sigue. Peor que un hueco es un botón que
+      // no descarga nada.
+      if (error) console.error("[mis-datos] no se pudo leer", tabla, error.message);
+      salida[tabla] = data ?? [];
+    }
+
+    const { data: negocio } = await admin
+      .from("businesses")
+      .select("name, slug, created_at")
+      .eq("id", req.businessId!)
+      .maybeSingle();
+
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="mis-datos-${new Date().toISOString().slice(0, 10)}.json"`);
+    res.send(JSON.stringify({ negocio, exportado: new Date().toISOString(), datos: salida }, null, 2));
   })
 );
 

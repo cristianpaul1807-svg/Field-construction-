@@ -72,6 +72,7 @@ npx tsc --noEmit                      # must be silent
 npm run build                         # client AND server — not just `vite build`
 python3 scripts/check-route-gate.py   # every route on its correct side
 python3 scripts/check-help-menu.py    # help answers name screens via {{menu…}}
+python3 scripts/check-webhook-events.py  # every handled Stripe event is one Stripe sends
 node scripts/comprobar-ancho.mjs      # no page scrolls sideways on a phone
 node --experimental-strip-types scripts/prueba-suscripcion/mapeo.mjs    # Stripe payload -> what we store
 node --experimental-strip-types scripts/prueba-suscripcion/bloqueo.mjs  # when the trial ends, and what stays open

@@ -58,6 +58,12 @@ const EVENTS = [
   "customer.subscription.updated",
   "customer.subscription.deleted",
   "invoice.payment_failed",
+  // El cobro que **sí** sale bien. Faltaba, y `server/api.ts` lleva desde
+  // siempre un manejador para él que no se ejecutaba nunca: la renovación
+  // mensual se cobraba en Stripe y aquí no se movía nada, así que la pantalla
+  // seguía enseñando la fecha de renovación del mes pasado para siempre.
+  // `scripts/check-webhook-events.py` existe para que no vuelva a faltar uno.
+  "invoice.payment_succeeded",
 ];
 
 /** Accounts v2 refuses a request with no explicit version. Pinned so a change

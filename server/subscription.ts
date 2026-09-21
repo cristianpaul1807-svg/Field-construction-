@@ -1,14 +1,25 @@
 import type Stripe from "stripe";
 import { getStripe } from "./stripe";
 import { getSupabaseAdmin } from "./supabaseAdmin";
-import { renovacionIso } from "../shared/renovacion";
+import { renovacionIso } from "../shared/suscripcionStripe";
 
-export const STRIPE_PRICE_IDS = {
-  chantier_month: "price_1UGhMxCoxo1rqCJcc3GAVUcV",
-  chantier_year: "price_1UGhMxCoxo1rqCJcN60TxdoV",
-  entreprise_month: "price_1UGhMoCoxo1rqCJcwQwwJPvw",
-  entreprise_year: "price_1UGhMoCoxo1rqCJcmVnHAMMn",
-} as const;
+/**
+ * Los cuatro precios con los que se vendió antes de que esto mirara la clave
+ * de búsqueda.
+ *
+ * Ya no se usan para cobrar: la pasarela busca el precio por `lookup_key`, que
+ * es igual en todas las cuentas. Siguen aquí sólo para **entender** una
+ * suscripción vendida con ellos, porque el día que cambiamos de cuenta de
+ * Stripe no se puede dejar de reconocer a quien lleva un año pagando.
+ *
+ * No se les añade nada. Un precio nuevo nace del script con su clave.
+ */
+export const PRECIOS_HEREDADOS: Record<string, "chantier" | "entreprise"> = {
+  price_1UGhMxCoxo1rqCJcc3GAVUcV: "chantier",
+  price_1UGhMxCoxo1rqCJcN60TxdoV: "chantier",
+  price_1UGhMoCoxo1rqCJcwQwwJPvw: "entreprise",
+  price_1UGhMoCoxo1rqCJcmVnHAMMn: "entreprise",
+};
 
 export type SubscriptionState =
   | "trialing"
@@ -18,18 +29,6 @@ export type SubscriptionState =
   | "suspended"
   | "pending_deletion"
   | "deleted";
-
-export function planFromPriceId(priceId: string | null | undefined): "chantier" | "entreprise" | null {
-  if (priceId === STRIPE_PRICE_IDS.chantier_month || priceId === STRIPE_PRICE_IDS.chantier_year) return "chantier";
-  if (priceId === STRIPE_PRICE_IDS.entreprise_month || priceId === STRIPE_PRICE_IDS.entreprise_year) return "entreprise";
-  return null;
-}
-
-export function intervalFromPriceId(priceId: string | null | undefined): "month" | "year" | null {
-  if (priceId === STRIPE_PRICE_IDS.chantier_month || priceId === STRIPE_PRICE_IDS.entreprise_month) return "month";
-  if (priceId === STRIPE_PRICE_IDS.chantier_year || priceId === STRIPE_PRICE_IDS.entreprise_year) return "year";
-  return null;
-}
 
 export async function retrieveSubscription(id: string): Promise<Stripe.Subscription> {
   return getStripe().subscriptions.retrieve(id);

@@ -53,7 +53,7 @@ export default function Suscripcion() {
 
   useEffect(() => {
     let vivo = true;
-    apiFetch("/api/suscripcion")
+    apiFetch("/api/subscription")
       .then(readJson<Estado>)
       .then((d) => vivo && setEstado(d))
       .catch(() => vivo && setEstado(null));
@@ -128,7 +128,7 @@ export default function Suscripcion() {
             </div>
           </div>
           <Button asChild variant="outline" size="sm" className="gap-2">
-            <a href="/api/suscripcion/mis-datos" download>
+            <a href="/api/subscription/mis-datos" download>
               <Download size={14} strokeWidth={1.75} />
               {t("susc.descargarTodo")}
             </a>
@@ -191,7 +191,7 @@ export default function Suscripcion() {
               variant="outline"
               className="gap-2"
               disabled={yendo === "portal"}
-              onClick={() => void ir("/api/suscripcion/portal", {}, "portal")}
+              onClick={() => void ir("/api/subscription/portal", {}, "portal")}
             >
               <ExternalLink size={15} strokeWidth={1.75} />
               {yendo === "portal" ? t("susc.abriendo") : t("susc.gestionar")}
@@ -238,7 +238,7 @@ export default function Suscripcion() {
                   <Button
                     className="w-full gap-2"
                     disabled={yendo === plan}
-                    onClick={() => void ir("/api/suscripcion/checkout", { plan, periodo }, plan)}
+                    onClick={() => void ir("/api/subscription/checkout", { plan, periodo }, plan)}
                   >
                     {yendo === plan ? (
                       t("susc.abriendo")

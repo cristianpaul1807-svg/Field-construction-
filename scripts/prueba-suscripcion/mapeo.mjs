@@ -14,7 +14,15 @@
  * Escribir en la base es de la ruta, y eso se prueba con Stripe delante.
  */
 
-import { renovacionUnix } from "../../shared/renovacion.ts";
+import { renovacionUnix, planDelPrecio, periodoDelPrecio } from "../../shared/suscripcionStripe.ts";
+
+/** Los cuatro con los que se vendió antes, copiados de server/subscription.ts. */
+const HEREDADOS = {
+  price_1UGhMxCoxo1rqCJcc3GAVUcV: "chantier",
+  price_1UGhMxCoxo1rqCJcN60TxdoV: "chantier",
+  price_1UGhMoCoxo1rqCJcwQwwJPvw: "entreprise",
+  price_1UGhMoCoxo1rqCJcmVnHAMMn: "entreprise",
+};
 
 let bien = 0;
 let mal = 0;
@@ -28,7 +36,9 @@ function ok(que, real, esperado) {
 function loQueGuardariamos(sub) {
   const articulo = sub.items?.data?.[0];
   const precio = articulo?.price;
-  const plan = precio?.metadata?.plan;
+  // Las de verdad, no una copia: si el webhook vuelve a decidir el plan de
+  // otra manera, esta prueba es lo que lo dice.
+  const plan = planDelPrecio(precio);
   if (!plan) return null;
   // La de verdad, no una copia: si la ruta viva vuelve a leer sólo de arriba,
   // esta prueba es lo que lo dice.
@@ -36,7 +46,7 @@ function loQueGuardariamos(sub) {
   return {
     subscription_plan: sub.status === "active" || sub.status === "trialing" ? plan : "prueba",
     subscription_status: sub.status,
-    subscription_interval: precio?.recurring?.interval === "year" ? "ano" : "mes",
+    subscription_interval: periodoDelPrecio(precio),
     subscription_period_end: renueva ? new Date(renueva * 1000).toISOString() : null,
     subscription_cancel_at_period_end: Boolean(sub.cancel_at_period_end),
     trial_ends_at: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
@@ -109,6 +119,32 @@ const apiVieja = {
   items: { data: [{ price: { metadata: { plan: "chantier" }, recurring: { interval: "year" } } }] },
 };
 ok("La API antigua también se entiende", loQueGuardariamos(apiVieja).subscription_period_end, new Date(1792235357 * 1000).toISOString());
+
+/* ---------- Qué plan se ha contratado ---------- */
+
+/**
+ * Lo que decidía esto antes era comparar el identificador contra cuatro
+ * `price_1…` escritos a mano, y cuando no casaba ninguno **no hacía nada**: el
+ * negocio pagaba, Stripe confirmaba, y su plan no cambiaba nunca. Y no casaba,
+ * porque un identificador de precio es distinto en cada cuenta de Stripe.
+ */
+ok("De la etiqueta que le pone nuestro script",
+   planDelPrecio({ id: "price_loquesea", metadata: { plan: "entreprise" } }), "entreprise");
+ok("De la clave de búsqueda si no hay etiqueta",
+   planDelPrecio({ id: "price_loquesea", lookup_key: "chantier_ano" }), "chantier");
+ok("De un identificador viejo, para quien ya lo estaba pagando",
+   planDelPrecio({ id: "price_1UGhMoCoxo1rqCJcwQwwJPvw" }, HEREDADOS), "entreprise");
+ok("Un precio de otra cuenta, sin nada encima, no se inventa un plan",
+   planDelPrecio({ id: "price_deOtraCuenta" }), null);
+ok("Y un plan que no vendemos tampoco cuela",
+   planDelPrecio({ id: "price_x", metadata: { plan: "fondateur" } }), null);
+
+ok("Mensual, de lo que Stripe cobra de verdad",
+   periodoDelPrecio({ recurring: { interval: "month" }, lookup_key: "chantier_mes" }), "mes");
+ok("Anual, igual",
+   periodoDelPrecio({ recurring: { interval: "year" }, lookup_key: "chantier_ano" }), "ano");
+ok("Manda el cobro, no la clave, si no coincidieran",
+   periodoDelPrecio({ recurring: { interval: "month" }, lookup_key: "chantier_ano" }), "mes");
 
 /* ---------- La fecha de renovación, en los dos sitios ---------- */
 
