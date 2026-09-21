@@ -4,6 +4,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import { accesoDe, planDe, tiene, type Plan } from "../shared/planes";
+import { type Area } from "../shared/permisos";
+import { puedeUsarHerramienta, TOOL_ACCESS } from "../shared/mcpRoles";
+import { areasDelRol } from "./supabaseAuth";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import { hashToken } from "./supabaseAuth";
 import { profitabilityByProject } from "./profitability";
@@ -20,6 +23,14 @@ export type WorkerIdentity = {
   businessId: string;
   name: string | null;
   workerRole: string | null;
+  /**
+   * Las áreas del panel de esta persona, o `null` si las ve todas.
+   *
+   * Es **el mismo dato** que decide qué pantallas se le abren en el panel, y
+   * viaja hasta aquí para que MCP no tenga que adivinarlo del nombre del rol.
+   * Ver `roleOf()`, que explica por qué adivinarlo era un agujero.
+   */
+  areas: Area[] | null;
   plan: Plan;
   access: "activo" | "prueba" | "bloqueado";
 };
@@ -92,6 +103,7 @@ export async function resolveOwnerIdentity(
   const construir = (
     negocio: { id: string; name?: string | null; subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null },
     rol: string,
+    areas: Area[] | null,
   ): WorkerIdentity => {
     const plan = planDe(negocio.subscription_plan);
     return {
@@ -100,6 +112,7 @@ export async function resolveOwnerIdentity(
       businessId: negocio.id,
       name: negocio.name ?? null,
       workerRole: rol,
+      areas,
       plan,
       access: accesoDe({
         plan,
@@ -114,7 +127,20 @@ export async function resolveOwnerIdentity(
   if (businessId) propietario = propietario.eq("id", businessId);
   const { data: suyo, error: errorPropietario } = await propietario.maybeSingle();
   if (errorPropietario) throw errorPropietario;
-  if (suyo) return construir(suyo, "admin");
+  if (suyo) {
+    // Incluso el propietario principal pasa por su fila de `users`: si alguien
+    // le puso un rol con áreas, en el panel se le aplica, y aquí también. Sin
+    // fila —cuentas de antes de que existiera— se queda en `null`, que es lo
+    // que el panel entiende por «sin límite».
+    const { data: fila } = await admin
+      .from("users")
+      .select("roles(permissions)")
+      .eq("auth_user_id", authUserId)
+      .eq("business_id", suyo.id)
+      .limit(1)
+      .maybeSingle();
+    return construir(suyo, "admin", areasDelRol((fila as { roles?: { permissions?: unknown } | null } | null)?.roles));
+  }
 
   // Y si no, un usuario del negocio. Las cuentas antiguas no tienen
   // `primary_auth_user_id` puesto, así que este camino no es sólo para los
@@ -122,7 +148,7 @@ export async function resolveOwnerIdentity(
   // existían antes de esa columna.
   let usuario = admin
     .from("users")
-    .select("business_id, roles(name)")
+    .select("business_id, roles(name, permissions)")
     .eq("auth_user_id", authUserId)
     .eq("status", "activo");
   if (businessId) usuario = usuario.eq("business_id", businessId);
@@ -138,7 +164,8 @@ export async function resolveOwnerIdentity(
   if (errorNegocio) throw errorNegocio;
   if (!negocio) return null;
 
-  return construir(negocio, (fila as { roles?: { name?: string } | null }).roles?.name ?? "admin");
+  const rolDelUsuario = (fila as { roles?: { name?: string; permissions?: unknown } | null }).roles;
+  return construir(negocio, rolDelUsuario?.name ?? "admin", areasDelRol(rolDelUsuario));
 }
 
 async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentity | null> {
@@ -168,8 +195,8 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
   }
   const table = connection.employee_id ? "employees" : "subcontractors";
   const select = connection.employee_id
-    ? "id, business_id, name, role, businesses(subscription_plan, subscription_status, trial_ends_at)"
-    : "id, business_id, name, trade, businesses(subscription_plan, subscription_status, trial_ends_at)";
+    ? "id, business_id, name, role, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)"
+    : "id, business_id, name, trade, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)";
   const { data: row, error } = await admin.from(table).select(select).eq("id", id).eq("business_id", connection.business_id).maybeSingle();
   if (error) throw error;
   if (!row) return null;
@@ -180,7 +207,8 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
     workerKind: connection.employee_id ? "employee" : "subcontractor",
     businessId: row.business_id,
     name: row.name ?? null,
-    workerRole: connection.employee_id ? (row as any).role ?? null : (row as any).trade ?? null,
+    workerRole: (row as any).roles?.name ?? (connection.employee_id ? (row as any).role ?? null : (row as any).trade ?? null),
+    areas: areasDelRol((row as any).roles),
     plan,
     access: accesoDe({ plan, estadoSuscripcion: business?.subscription_status ?? null, pruebaHasta: business?.trial_ends_at ?? null }),
   };
@@ -192,12 +220,12 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
   const [employee, subcontractor] = await Promise.all([
     admin
       .from("employees")
-      .select("id, business_id, name, role, role_id, status, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)")
+      .select("id, business_id, name, role, role_id, status, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)")
       .eq("access_token_hash", hash)
       .maybeSingle(),
     admin
       .from("subcontractors")
-      .select("id, business_id, name, trade, role_id, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)")
+      .select("id, business_id, name, trade, role_id, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)")
       .eq("access_token_hash", hash)
       .maybeSingle(),
   ]);
@@ -229,6 +257,7 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
     businessId: row.business_id,
     name: row.name ?? null,
     workerRole: (row as any).roles?.name ?? (workerKind === "employee" ? (row as any).role ?? null : (row as any).trade ?? null),
+    areas: areasDelRol((row as any).roles),
     plan,
     access,
   };
@@ -258,54 +287,39 @@ function requireReadable(context: ReadToolContext, toolName: string) {
   return null;
 }
 
-type McpRole = "worker" | "manager" | "office" | "admin";
-
-function roleOf(identity: WorkerIdentity): McpRole {
-  if (identity.workerKind === "owner") {
-    const configuredRole = (identity.workerRole ?? "admin").trim().toLocaleLowerCase();
-    if (configuredRole !== "admin") return roleOf({ ...identity, workerKind: "employee", workerRole: configuredRole });
-    return "admin";
-  }
-  if (identity.workerKind !== "employee") return "worker";
-  const role = (identity.workerRole ?? "").trim().toLocaleLowerCase();
-  if (/(admin|administrador|propietario|owner|dueno|dueño)/.test(role)) return "admin";
-  if (/(contab|account|oficina|office)/.test(role)) return "office";
-  if (/(jefe|encargado|supervisor|foreman|manager)/.test(role)) return "manager";
-  return "worker";
-}
-
-function requireRole(context: ReadToolContext, toolName: string, roles: McpRole[], capability: "campo" | "facturacion" | "reportes" | "contabilidad" | "margen" = "campo") {
+/**
+ * El guardia de cada herramienta, con la misma tabla que el listado.
+ *
+ * Esconder una herramienta de `tools/list` no es protegerla: nada impide
+ * llamarla por su nombre. Esto es lo que la protege de verdad, y lee
+ * exactamente lo mismo que decidió esconderla.
+ */
+function requireRole(context: ReadToolContext, toolName: string) {
   const readable = requireReadable(context, toolName);
   if (readable) return readable;
-  if (!roles.includes(roleOf(context.identity))) {
+  const access = TOOL_ACCESS[toolName];
+  if (!access) {
+    // Una herramienta que nadie clasificó se niega. El error seguro, no el
+    // silencioso: `scripts/check-mcp-readonly.py` existe para que no llegue.
     return errorResult("Esta herramienta no está disponible para el rol MCP autenticado.", "mcp_role_required");
   }
-  if (!tiene(context.identity.plan, capability)) {
+  if (!puedeUsarHerramienta(context.identity, toolName)) {
+    return errorResult("Esta herramienta no está disponible para el rol MCP autenticado.", "mcp_role_required");
+  }
+  if (!tiene(context.identity.plan, access.capability)) {
     return errorResult("Esta herramienta no está incluida en el plan del negocio.", "plan_capability_required");
   }
   return null;
 }
 
-const TOOL_ACCESS: Record<string, { roles: McpRole[]; capability: "campo" | "facturacion" | "reportes" | "contabilidad" | "margen" }> = {
-  get_projects: { roles: ["manager", "office", "admin"], capability: "campo" },
-  get_project: { roles: ["manager", "office", "admin"], capability: "campo" },
-  get_project_schedule: { roles: ["manager", "office", "admin"], capability: "campo" },
-  get_work_orders: { roles: ["manager", "office", "admin"], capability: "campo" },
-  get_workers: { roles: ["manager", "office", "admin"], capability: "campo" },
-  get_business_summary: { roles: ["admin"], capability: "reportes" },
-  get_invoices: { roles: ["office", "admin"], capability: "facturacion" },
-  get_receivables: { roles: ["office", "admin"], capability: "reportes" },
-  get_expenses: { roles: ["office", "admin"], capability: "reportes" },
-  get_payments: { roles: ["office", "admin"], capability: "facturacion" },
-  get_profitability: { roles: ["admin"], capability: "margen" },
-  audit_quickbooks_sync: { roles: ["office", "admin"], capability: "contabilidad" },
-};
-
 function toolIsVisible(context: ReadToolContext, toolName: string) {
   if (!tiene(context.identity.plan, "campo")) return false;
+  // Lo suyo: su agenda, sus horas, sus papeles. No hay área que comprobar
+  // porque no está viendo el negocio, se está viendo a sí mismo.
   if (toolName.startsWith("get_my_")) return true;
   const access = TOOL_ACCESS[toolName];
-  return Boolean(access && access.roles.includes(roleOf(context.identity)) && tiene(context.identity.plan, access.capability));
+  if (!access) return false;
+  return puedeUsarHerramienta(context.identity, toolName) && tiene(context.identity.plan, access.capability);
 }
 
 async function managedProjectIds(admin: ReturnType<typeof getSupabaseAdmin>, context: ReadToolContext) {
@@ -553,7 +567,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_projects", ["manager", "office", "admin"]);
+      const denied = requireRole(context, "get_projects");
       if (denied) {
         await audit(context, "get_projects", false, { code: "access_denied" });
         return denied;
@@ -584,7 +598,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
     },
     async ({ projectId }) => {
-      const denied = requireRole(context, "get_project", ["manager", "office", "admin"]);
+      const denied = requireRole(context, "get_project");
       if (denied) {
         await audit(context, "get_project", false, { code: "access_denied" });
         return denied;
@@ -615,7 +629,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
     },
     async ({ projectId }) => {
-      const denied = requireRole(context, "get_project_schedule", ["manager", "office", "admin"]);
+      const denied = requireRole(context, "get_project_schedule");
       if (denied) {
         await audit(context, "get_project_schedule", false, { code: "access_denied" });
         return denied;
@@ -641,7 +655,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { status: z.string().optional().describe("Filtrar por estado Field") },
     },
     async ({ status }) => {
-      const denied = requireRole(context, "get_work_orders", ["manager", "office", "admin"]);
+      const denied = requireRole(context, "get_work_orders");
       if (denied) {
         await audit(context, "get_work_orders", false, { code: "access_denied" });
         return denied;
@@ -665,7 +679,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_workers", ["manager", "office", "admin"]);
+      const denied = requireRole(context, "get_workers");
       if (denied) {
         await audit(context, "get_workers", false, { code: "access_denied" });
         return denied;
@@ -709,7 +723,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_business_summary", ["admin", "office"], "reportes");
+      const denied = requireRole(context, "get_business_summary");
       if (denied) {
         await audit(context, "get_business_summary", false, { code: "access_denied" });
         return denied;
@@ -745,7 +759,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { status: z.string().optional().describe("Filtrar por estado de factura") },
     },
     async ({ status }) => {
-      const denied = requireRole(context, "get_invoices", ["admin", "office"], "facturacion");
+      const denied = requireRole(context, "get_invoices");
       if (denied) {
         await audit(context, "get_invoices", false, { code: "access_denied" });
         return denied;
@@ -767,7 +781,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_receivables", ["admin", "office"], "reportes");
+      const denied = requireRole(context, "get_receivables");
       if (denied) {
         await audit(context, "get_receivables", false, { code: "access_denied" });
         return denied;
@@ -786,7 +800,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: { projectId: z.string().uuid().optional().describe("Filtrar por proyecto") },
     },
     async ({ projectId }) => {
-      const denied = requireRole(context, "get_expenses", ["admin", "office"], "reportes");
+      const denied = requireRole(context, "get_expenses");
       if (denied) {
         await audit(context, "get_expenses", false, { code: "access_denied" });
         return denied;
@@ -808,7 +822,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_payments", ["admin", "office"], "facturacion");
+      const denied = requireRole(context, "get_payments");
       if (denied) {
         await audit(context, "get_payments", false, { code: "access_denied" });
         return denied;
@@ -828,7 +842,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "get_profitability", ["admin"], "margen");
+      const denied = requireRole(context, "get_profitability");
       if (denied) {
         await audit(context, "get_profitability", false, { code: "access_denied" });
         return denied;
@@ -847,7 +861,7 @@ function createMcpServer(context: ReadToolContext) {
       inputSchema: {},
     },
     async () => {
-      const denied = requireRole(context, "audit_quickbooks_sync", ["admin", "office"], "contabilidad");
+      const denied = requireRole(context, "audit_quickbooks_sync");
       if (denied) {
         await audit(context, "audit_quickbooks_sync", false, { code: "access_denied" });
         return denied;

@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { apiFetch, readJson } from "@/lib/api";
 import { anuncioDeFallo } from "@/lib/fallos";
 import type { Area } from "@shared/permisos";
-import { planDe, type Plan } from "@shared/planes";
+import { accesoDe, planDe, type Plan } from "@shared/planes";
 
 // "none" means the server positively answered that this account isn't linked
 // to a business or a client yet — that's the signal to send someone into
@@ -121,12 +121,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const acceso: AuthState["acceso"] =
-    subscriptionStatus && !["active", "trialing"].includes(subscriptionStatus)
-      ? "bloqueado"
-      : subscriptionStatus === "trialing"
-        ? "prueba"
-        : "activo";
+  // La misma función que usa el servidor para bloquear. Esto era un ternario
+  // aparte que no miraba `trial_ends_at` ni el plan `pilot`: enseñaba «activo»
+  // a una prueba vencida y «bloqueado» a un impago que Stripe todavía estaba
+  // reintentando. Dos reglas para lo mismo siempre acaban discrepando, y la
+  // forma de discrepar aquí es la peor: el panel abre lo que la API niega.
+  const acceso: AuthState["acceso"] = accesoDe({
+    plan,
+    estadoSuscripcion: subscriptionStatus,
+    pruebaHasta: trialEndsAt,
+  });
 
   return (
     <AuthContext.Provider

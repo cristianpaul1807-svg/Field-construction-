@@ -5,7 +5,7 @@ import { createHash } from "crypto";
 import WebSocket from "ws";
 // Relativo y no `@shared`: el alias sólo existe en el cliente.
 import { AREAS, type Area } from "../shared/permisos";
-import { planDe, type Plan } from "../shared/planes";
+import { abiertoSinSuscripcion, accesoDe, planDe, type Plan } from "../shared/planes";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 
 // Same hand-pasted-into-a-panel hazard as in supabaseAdmin: strip stray
@@ -172,6 +172,30 @@ export const requireBusinessAuth = guarded(async (req: Request, res: Response, n
     req.subscriptionTrialEndsAt = subscription?.trial_ends_at ?? null;
     req.subscriptionPeriodEnd = subscription?.subscription_period_end ?? null;
     req.subscriptionPrimaryAuthUserId = subscription?.primary_auth_user_id ?? null;
+
+  // El bloqueo, aquí y no sólo en la pantalla.
+  //
+  // Hasta ahora quien se quedaba sin suscripción veía el panel redirigirle a
+  // la pantalla de pago y **la API le seguía contestando a todo**. Un bloqueo
+  // que sólo vive en el navegador no es un bloqueo: es un cartel. Basta con
+  // llamar a la API a mano —o con dejar una pestaña abierta— para seguir
+  // usando el producto entero sin pagarlo.
+  //
+  // Lo que queda abierto está en `ABIERTO_SIN_SUSCRIPCION` y no es caridad:
+  // sin la puerta de suscripción el bloqueo no tendría salida, y sin la
+  // exportación le estaríamos secuestrando a un contratista sus propias
+  // facturas — que además de ser suyas, lo dice la Ley 25.
+  if (
+    accesoDe({
+      plan: req.plan,
+      estadoSuscripcion: req.subscriptionStatus,
+      pruebaHasta: req.subscriptionTrialEndsAt,
+    }) === "bloqueado" &&
+    !abiertoSinSuscripcion(req.path)
+  ) {
+    res.status(402).json({ error: "La suscripción de este negocio no está activa", code: "suscripcion_requerida" });
+    return;
+  }
   next();
 });
 

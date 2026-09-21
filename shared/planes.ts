@@ -227,6 +227,18 @@ export type Acceso = "activo" | "prueba" | "bloqueado";
  *
  * **Lo que queda es la fecha.** Mientras la prueba no haya vencido, se entra
  * entero. Vencida y sin nada contratado, se bloquea.
+ *
+ * ## Por qué `trialing` no vale por sí solo
+ *
+ * Los 30 días los damos **nosotros**, no Stripe: al darse de alta se escribe
+ * `trialing` con una fecha a 30 días y nadie vuelve a tocar esa fila nunca.
+ * No hay suscripción en Stripe, así que no hay webhook que venga a cerrarla.
+ * Mientras `trialing` bastó para devolver «activo», la prueba **no vencía
+ * jamás** y el producto entero era gratis para siempre — con la pantalla de
+ * suscripción puesta y sin nadie obligado a pasar por ella.
+ *
+ * Así que manda la fecha. Un `trialing` **sin** fecha sí es de Stripe: esa la
+ * lleva él y la cerrará él pasándola a `canceled`, y ahí no nos metemos.
  */
 export function accesoDe(
   negocio: { plan: string | null; estadoSuscripcion: string | null; pruebaHasta: string | null },
@@ -235,14 +247,17 @@ export function accesoDe(
   if (planDe(negocio.plan) === "pilot") return "activo";
 
   const suscripcion = negocio.estadoSuscripcion;
-  if (suscripcion === "active" || suscripcion === "trialing" || suscripcion === "past_due") return "activo";
+  if (suscripcion === "active" || suscripcion === "past_due") return "activo";
 
   if (negocio.pruebaHasta) {
     const vence = new Date(negocio.pruebaHasta);
     // Una fecha ilegible no puede bloquear a nadie: el fallo sería nuestro y
     // lo pagaría un contratista que no puede facturar el día 30.
-    if (!Number.isNaN(vence.getTime()) && vence.getTime() > ahora.getTime()) return "prueba";
+    if (Number.isNaN(vence.getTime())) return "prueba";
+    return vence.getTime() > ahora.getTime() ? "prueba" : "bloqueado";
   }
+
+  if (suscripcion === "trialing") return "activo";
 
   return "bloqueado";
 }
@@ -263,7 +278,7 @@ export function accesoDe(
  * un contratista al que encerramos sus facturas un día 30 no vuelve nunca; uno
  * que puede sacarlas y marcharse a veces se lo piensa y se queda.
  */
-export const ABIERTO_SIN_SUSCRIPCION: readonly string[] = ["suscripcion", "auth", "export", "soporte"];
+export const ABIERTO_SIN_SUSCRIPCION: readonly string[] = ["subscription", "auth", "export", "soporte"];
 
 export function abiertoSinSuscripcion(ruta: string): boolean {
   const familia = ruta.replace(/^\/+/, "").split(/[/?]/)[0];

@@ -3,7 +3,7 @@ import { randomBytes, randomUUID, timingSafeEqual, createHash } from "node:crypt
 import * as fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "./supabaseAdmin";
-import { hashToken } from "./supabaseAuth";
+import { areasDelRol, hashToken } from "./supabaseAuth";
 import { resolveOwnerIdentity, resolveWorker, type WorkerIdentity } from "./mcp";
 import { accesoDe, planDe } from "../shared/planes";
 
@@ -147,8 +147,8 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   if (propietario) return propietario;
 
   const [employee, subcontractor] = await Promise.all([
-    admin.from("employees").select("id, business_id, name, role, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
-    admin.from("subcontractors").select("id, business_id, name, trade, roles(name), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
+    admin.from("employees").select("id, business_id, name, role, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
+    admin.from("subcontractors").select("id, business_id, name, trade, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
   ]);
   const row = employee.data ?? subcontractor.data;
   if (employee.error && subcontractor.error) throw employee.error;
@@ -165,6 +165,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
     businessId: row.business_id,
     name: row.name ?? null,
     workerRole: (row as any).roles?.name ?? ((row as any).role ?? (row as any).trade ?? null),
+    areas: areasDelRol((row as any).roles),
     plan,
     access: accesoDe({ plan, estadoSuscripcion: workerBusiness?.subscription_status ?? null, pruebaHasta: workerBusiness?.trial_ends_at ?? null }),
   };

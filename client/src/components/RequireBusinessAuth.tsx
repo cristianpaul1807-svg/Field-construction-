@@ -10,9 +10,19 @@ import { capacidadDeLaPantalla, tiene } from "@shared/planes";
 import { SinPlan } from "@/components/SinPlan";
 import { useLocation } from "wouter";
 
+/**
+ * Las dos direcciones de la pantalla de suscripción.
+ *
+ * Son dos porque el menú lleva a `/settings/subscription` y el bloqueo manda a
+ * `/suscripcion`. Si el bloqueo no reconociera las dos, quien llega por el
+ * menú rebotaría a la otra en bucle — que es la forma de que la única puerta
+ * que le queda a alguien sea la que no se abre.
+ */
+const PUERTAS_DE_SUSCRIPCION = ["/suscripcion", "/settings/subscription"];
+
 export function RequireBusinessAuth({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const { session, loading, persona, personaError, areas, plan, subscriptionStatus } = useAuth();
+  const { session, loading, persona, personaError, areas, plan, acceso } = useAuth();
   const [ruta] = useLocation();
 
   if (loading) {
@@ -37,7 +47,13 @@ export function RequireBusinessAuth({ children }: { children: ReactNode }) {
 
   // Una cuenta suspendida conserva únicamente la puerta de suscripción. Los
   // clientes y trabajadores tienen sus propios accesos y no pasan por aquí.
-  if (subscriptionStatus && !["trialing", "active"].includes(subscriptionStatus) && ruta !== "/suscripcion" && ruta !== "/settings/subscription") {
+  //
+  // Quién está suspendido lo dice `accesoDe` y no una lista de estados escrita
+  // aquí: la que había no miraba la fecha de la prueba, así que los 30 días no
+  // vencían nunca —`trialing` se queda escrito para siempre porque esa prueba
+  // no es de Stripe y nadie viene a cerrarla—, y de paso echaba a un `pilot`
+  // y a un impago que Stripe aún estaba reintentando.
+  if (acceso === "bloqueado" && !PUERTAS_DE_SUSCRIPCION.includes(ruta)) {
     return <Redirect to="/suscripcion" />;
   }
 

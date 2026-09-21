@@ -46,6 +46,12 @@ export const AREA_DE: Record<string, Area> = {
   // La gente sí, pero sin lo que cobra: eso se recorta más abajo.
   employees: "campo",
   subcontractors: "campo",
+  // La lista de papeles que se le puede asignar a alguien. La leen las
+  // pantallas de Técnicos y Subcontratistas para rellenar su desplegable, así
+  // que vive donde viven ellas: sin esto, quien da de alta a un trabajador no
+  // puede elegirle el papel y la pantalla se queda con un desplegable vacío
+  // que no explica por qué.
+  "worker-roles": "campo",
 
   clients: "clientes",
   "client-portal": "clientes",
@@ -84,7 +90,7 @@ export const AREA_DE: Record<string, Area> = {
   // Lo que le pagamos a Stripe por usar esto. Va en ajustes porque es
   // dinero de la empresa y no del trabajo: un jefe de obra no cancela la
   // suscripción de la que cuelga toda la cuadrilla.
-  suscripcion: "ajustes",
+  subscription: "ajustes",
   notifications: "ajustes",
   "admin-assistant": "ajustes",
 };
