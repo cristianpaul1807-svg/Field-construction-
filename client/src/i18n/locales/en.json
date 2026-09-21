@@ -2535,6 +2535,12 @@
     "bloqueadoDatos": "And if you decide not to continue, you can still download everything of yours. It's yours, not ours.",
     "descargarTodo": "Download my data",
     "pruebaQuedan": "You have {{dias}} days of trial left. When it ends, the system pauses until you choose a plan.",
-    "pruebaUltimoDia": "Today is the last day of the trial."
+    "pruebaUltimoDia": "Today is the last day of the trial.",
+    "noSePuedeCobrarTitulo": "Subscribing isn't possible yet",
+    "noSePuedeCobrar": {
+      "stripe_sin_configurar": "The system has no Stripe key configured, so there's nowhere to charge. That's on us: write to us from Help and we'll sort it out.",
+      "precios_sin_crear": "The prices haven't been created in this system's Stripe account. That's on us, not you: write to us from Help and we'll sort it out today.",
+      "stripe_no_contesta": "Stripe isn't answering right now. Nothing you did; try again in a few minutes."
+    }
   }
 }

@@ -2535,6 +2535,12 @@
     "bloqueadoDatos": "E se decidi di non continuare, puoi comunque scaricare tutto il tuo. È tuo, non nostro.",
     "descargarTodo": "Scarica i miei dati",
     "pruebaQuedan": "Ti restano {{dias}} giorni di prova. Quando finisce, il sistema va in pausa finché non scegli un piano.",
-    "pruebaUltimoDia": "Oggi è l'ultimo giorno di prova."
+    "pruebaUltimoDia": "Oggi è l'ultimo giorno di prova.",
+    "noSePuedeCobrarTitulo": "Non si può ancora sottoscrivere",
+    "noSePuedeCobrar": {
+      "stripe_sin_configurar": "Il sistema non ha la chiave di Stripe configurata, quindi non c'è dove incassare. Tocca a noi: scrivici dalla Guida e lo sistemiamo.",
+      "precios_sin_crear": "I prezzi non sono stati creati nell'account Stripe di questo sistema. È cosa nostra, non tua: scrivici dalla Guida e lo sistemiamo oggi.",
+      "stripe_no_contesta": "Stripe non risponde in questo momento. Non hai fatto nulla di sbagliato; riprova tra qualche minuto."
+    }
   }
 }

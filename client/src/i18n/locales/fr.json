@@ -2535,6 +2535,12 @@
     "bloqueadoDatos": "Et si vous décidez de ne pas continuer, vous pouvez quand même tout télécharger. C'est à vous, pas à nous.",
     "descargarTodo": "Télécharger mes données",
     "pruebaQuedan": "Il vous reste {{dias}} jours d'essai. À la fin, le système se met en pause jusqu'à ce que vous choisissiez un forfait.",
-    "pruebaUltimoDia": "Aujourd'hui est le dernier jour d'essai."
+    "pruebaUltimoDia": "Aujourd'hui est le dernier jour d'essai.",
+    "noSePuedeCobrarTitulo": "L'abonnement n'est pas encore possible",
+    "noSePuedeCobrar": {
+      "stripe_sin_configurar": "Le système n'a pas de clé Stripe configurée, il n'y a donc aucun endroit pour encaisser. C'est à nous de le régler : écrivez-nous depuis l'Aide et nous nous en occupons.",
+      "precios_sin_crear": "Les prix n'ont pas été créés dans le compte Stripe de ce système. Cela vient de nous, pas de vous : écrivez-nous depuis l'Aide et nous le réglons aujourd'hui.",
+      "stripe_no_contesta": "Stripe ne répond pas en ce moment. Vous n'y êtes pour rien ; réessayez dans quelques minutes."
+    }
   }
 }

@@ -2535,6 +2535,12 @@
     "bloqueadoDatos": "Y si decides no seguir, puedes descargarte todo lo tuyo igual. Es tuyo, no nuestro.",
     "descargarTodo": "Descargar mis datos",
     "pruebaQuedan": "Te quedan {{dias}} días de prueba. El día que se acabe, el sistema se queda en pausa hasta que elijas un plan.",
-    "pruebaUltimoDia": "Hoy es el último día de prueba."
+    "pruebaUltimoDia": "Hoy es el último día de prueba.",
+    "noSePuedeCobrarTitulo": "Todavía no se puede contratar",
+    "noSePuedeCobrar": {
+      "stripe_sin_configurar": "El sistema no tiene la clave de Stripe puesta, así que no hay dónde cobrar. Lo resolvemos nosotros: escríbenos desde Ayuda y lo dejamos listo.",
+      "precios_sin_crear": "Los precios no están creados en la cuenta de Stripe de este sistema. Es cosa nuestra, no tuya: escríbenos desde Ayuda y lo dejamos listo hoy.",
+      "stripe_no_contesta": "Stripe no está contestando ahora mismo. No es nada que hayas hecho tú; vuelve a intentarlo en unos minutos."
+    }
   }
 }

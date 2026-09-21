@@ -66,7 +66,7 @@ import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
 import { planDelPrecio, periodoDelPrecio } from "../shared/suscripcionStripe";
-import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODOS, PRECIO, type Periodo, type PlanDePago } from "../shared/planes";
+import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIO, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -3948,6 +3948,43 @@ async function clienteDeStripe(businessId: string, correo: string | null, nombre
   return cliente.id;
 }
 
+/**
+ * Si hoy se puede cobrar de verdad, y si no, por qué.
+ *
+ * La pantalla necesita esto para no ofrecer un botón que va a fallar. Aquí el
+ * cobro depende de dos cosas que no están en el código —la clave de Stripe del
+ * hosting, y que en **esa** cuenta existan los cuatro precios— y cuando falta
+ * una, lo que veía el contratista era «no se pudo»: la frase que no dice qué
+ * hacer ni a quién avisar. Un botón que no puede funcionar tiene que decir por
+ * qué, que es la regla de toda la casa.
+ *
+ * Una llamada sola y sólo en esta pantalla: los cuatro precios se piden juntos.
+ */
+async function sePuedeCobrar(): Promise<{ sePuedeCobrar: boolean; porQueNo: string | null; clavesQueFaltan: string[] }> {
+  const claves = PLANES_DE_PAGO.flatMap((plan) => PERIODOS.map((periodo) => claveDelPrecio(plan, periodo)));
+  let stripe;
+  try {
+    stripe = getStripe();
+  } catch {
+    return { sePuedeCobrar: false, porQueNo: "stripe_sin_configurar", clavesQueFaltan: claves };
+  }
+
+  try {
+    const encontrados = await stripe.prices.list({ lookup_keys: claves, active: true, limit: 100 });
+    const hay = new Set(encontrados.data.map((precio) => precio.lookup_key).filter(Boolean) as string[]);
+    const faltan = claves.filter((clave) => !hay.has(clave));
+    if (faltan.length > 0) {
+      return { sePuedeCobrar: false, porQueNo: "precios_sin_crear", clavesQueFaltan: faltan };
+    }
+    return { sePuedeCobrar: true, porQueNo: null, clavesQueFaltan: [] };
+  } catch (err) {
+    // Que Stripe no conteste no es lo mismo que no estar configurado, y
+    // tampoco puede tumbar la pantalla: ya está bloqueado quien llega aquí.
+    console.error("[suscripcion] no se pudo comprobar los precios en Stripe:", err instanceof Error ? err.message : err);
+    return { sePuedeCobrar: false, porQueNo: "stripe_no_contesta", clavesQueFaltan: [] };
+  }
+}
+
 /** En qué anda la suscripción del negocio, para la pantalla. */
 apiRouter.get(
   "/subscription",
@@ -3973,6 +4010,7 @@ apiRouter.get(
       // saberlo para no ofrecer un botón que devolvería un error.
       tienePortal: Boolean(fila.stripe_customer_id),
       precios: PRECIO,
+      ...(await sePuedeCobrar()),
     });
   })
 );

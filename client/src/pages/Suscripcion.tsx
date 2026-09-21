@@ -33,6 +33,9 @@ type Estado = {
   seCancelaAlFinal: boolean;
   pruebaHasta: string | null;
   tienePortal: boolean;
+  sePuedeCobrar: boolean;
+  porQueNo: string | null;
+  clavesQueFaltan: string[];
   precios: Partial<Record<string, { mes: number; ano: number; moneda: string }>>;
 };
 
@@ -203,7 +206,26 @@ export default function Suscripcion() {
 
       {/* Elegir plan. Sólo si todavía no hay nada contratado: quien ya paga
           cambia de plan en el portal, donde Stripe hace el prorrateo bien. */}
-      {!contratado && (
+      {/* Un botón que no puede funcionar dice por qué. Lo que dependía de esto
+          era la clave de Stripe del hosting y que en esa cuenta existan los
+          precios: dos cosas que no están en el código y que antes se
+          manifestaban como «no se pudo» al darle a Elegir. */}
+      {!contratado && !estado.sePuedeCobrar && (
+        <Card className="p-5 border-status-warning-fg/30 bg-status-warning-bg flex gap-3">
+          <TriangleAlert size={18} className="text-status-warning-fg shrink-0 mt-0.5" />
+          <div className="space-y-1.5">
+            <h2 className="font-semibold text-status-warning-fg">{t("susc.noSePuedeCobrarTitulo")}</h2>
+            <p className="text-sm text-status-warning-fg/90">
+              {t(`susc.noSePuedeCobrar.${estado.porQueNo ?? "stripe_no_contesta"}`)}
+            </p>
+            {estado.clavesQueFaltan.length > 0 && (
+              <p className="text-xs font-mono text-status-warning-fg/80">{estado.clavesQueFaltan.join("  ·  ")}</p>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {!contratado && estado.sePuedeCobrar && (
         <>
           <div className="inline-flex rounded-lg border border-border p-1 gap-1">
             {(["mes", "ano"] as Periodo[]).map((p) => (
