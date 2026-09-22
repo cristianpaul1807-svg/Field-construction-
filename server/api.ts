@@ -4050,6 +4050,13 @@ apiRouter.post(
     const sesion = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: cliente,
+      // Explícito, y no por gusto: con `managed_payments` apagado, Stripe elige
+      // los métodos de pago de los que estén activados en la cuenta, y esta
+      // cuenta no tiene ninguno activado para CAD. Sin esta línea la pasarela
+      // contesta «No valid payment method types for this Checkout Session» y no
+      // se puede pagar. Comprobado contra la cuenta real: con ella, la sesión
+      // se crea; sin ella, no.
+      payment_method_types: ["card"],
       line_items: [{ price: precio.id, quantity: 1 }],
       // La pasarela entera en su idioma. Sin esto Stripe elige por el
       // navegador, que no tiene por qué ser el idioma en el que trabaja.

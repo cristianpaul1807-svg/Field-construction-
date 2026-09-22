@@ -1,5 +1,6 @@
 /**
- * Crea (o pone al día) nuestros dos productos y sus cuatro precios en Stripe.
+ * Crea (o pone al día) nuestros dos productos, sus cuatro precios y el portal
+ * del cliente en Stripe.
  *
  *   STRIPE_SECRET_KEY=sk_live_… node --experimental-strip-types scripts/stripe-precios.mjs
  *   STRIPE_SECRET_KEY=sk_test_… node --experimental-strip-types scripts/stripe-precios.mjs --dry
@@ -52,6 +53,9 @@ const DESCRIPCION = {
 
 const stripe = new Stripe(CLAVE);
 
+/** Donde vive el producto. Lo leen el portal y sus enlaces legales. */
+const SITIO = "https://logiciel-construction.com";
+
 function decir(estado, texto) {
   const marca = { nuevo: "+", igual: "=", cambia: "~" }[estado] ?? " ";
   console.log(`  ${marca} ${texto}`);
@@ -98,12 +102,12 @@ async function precio(plan, periodo, productoId) {
     actual.recurring?.interval === intervalo
   ) {
     decir("igual", `${clave} — ${importe / 100} ${moneda.toUpperCase()} — ${actual.id}`);
-    return;
+    return actual.id;
   }
 
   if (ENSAYO) {
     decir(actual ? "cambia" : "nuevo", `${clave} — ${importe / 100} ${moneda.toUpperCase()} (ensayo, no se crea)`);
-    return;
+    return null;
   }
 
   const creado = await stripe.prices.create({
@@ -123,17 +127,83 @@ async function precio(plan, periodo, productoId) {
   });
   decir(actual ? "cambia" : "nuevo", `${clave} — ${importe / 100} ${moneda.toUpperCase()} — ${creado.id}`);
   if (actual) decir(" ", `   el anterior (${actual.id}) sigue vivo para quien ya lo paga`);
+  return creado.id;
+}
+
+/**
+ * El portal del cliente: cancelar, cambiar de plan, la tarjeta y las facturas.
+ *
+ * Sin una configuración guardada, `billingPortal.sessions.create` falla — y
+ * falla justo en el botón de cancelar, que es lo primero que mira quien se
+ * plantea pagar. En la cuenta real no había ninguna y no la crea ningún
+ * código: se hace una vez, a mano, en un panel que nadie vuelve a abrir. Por
+ * eso está aquí, con los precios, y no en una nota.
+ *
+ * La cancelación es **al final del periodo**. Ya pagó ese mes: cortarle a
+ * mitad sería quedarnos con dinero por un servicio que no da.
+ */
+async function portal(productos) {
+  const existentes = await stripe.billingPortal.configurations.list({ active: true, limit: 10 });
+  const suya = existentes.data.find((c) => c.is_default);
+  if (suya) {
+    decir("igual", `portal del cliente — ${suya.id}`);
+    return;
+  }
+  if (ENSAYO) {
+    decir("nuevo", "portal del cliente (ensayo, no se crea)");
+    return;
+  }
+
+  const creada = await stripe.billingPortal.configurations.create({
+    name: "Logiciel Construction — suscripción del negocio",
+    default_return_url: `${SITIO}/suscripcion`,
+    business_profile: {
+      headline: "Logiciel Construction — votre abonnement",
+      privacy_policy_url: `${SITIO}/confidentialite`,
+      terms_of_service_url: `${SITIO}/conditions`,
+    },
+    features: {
+      invoice_history: { enabled: true },
+      payment_method_update: { enabled: true },
+      // `tax_id` porque un contratista de Quebec necesita su TPS/TVQ en la
+      // factura que nos paga. `shipping` no: aquí no se envía nada.
+      customer_update: { enabled: true, allowed_updates: ["address", "email", "name", "phone", "tax_id"] },
+      subscription_cancel: {
+        enabled: true,
+        mode: "at_period_end",
+        proration_behavior: "none",
+        cancellation_reason: {
+          enabled: true,
+          options: ["too_expensive", "missing_features", "switched_service", "unused", "customer_service", "too_complex", "other"],
+        },
+      },
+      subscription_update: {
+        enabled: true,
+        default_allowed_updates: ["price", "promotion_code"],
+        // Cambiar de Chantier a Entreprise a mitad de mes se cobra la
+        // diferencia, no el mes entero otra vez.
+        proration_behavior: "create_prorations",
+        products: productos,
+      },
+    },
+  });
+  decir("nuevo", `portal del cliente — ${creada.id}`);
 }
 
 async function main() {
   console.log(`\nCuenta: ${EN_VIVO ? "REAL — esto cobra dinero de verdad" : "de pruebas"}${ENSAYO ? "  ·  ENSAYO, no se escribe nada" : ""}\n`);
 
+  const productos = [];
   for (const plan of PLANES_DE_PAGO) {
     const p = await producto(plan);
-    for (const periodo of PERIODOS) await precio(plan, periodo, p.id);
+    const precios = [];
+    for (const periodo of PERIODOS) precios.push(await precio(plan, periodo, p.id));
+    if (!ENSAYO) productos.push({ product: p.id, prices: precios.filter(Boolean) });
   }
 
-  console.log(`\nlisto — 2 productos, ${PLANES_DE_PAGO.length * PERIODOS.length} precios\n`);
+  await portal(productos);
+
+  console.log(`\nlisto — 2 productos, ${PLANES_DE_PAGO.length * PERIODOS.length} precios, portal del cliente\n`);
 
   if (EN_VIVO && !ENSAYO) {
     console.log("Queda por hacer, y no lo hace esto:");
@@ -141,7 +211,9 @@ async function main() {
     console.log("  2. Volver a provisionar el webhook (POST /api/stripe/webhook/provision),");
     console.log("     o Stripe seguirá mandando sólo los dos eventos de Connect y el plan");
     console.log("     del negocio no cambiará nunca al pagar.");
-    console.log("  3. Un cobro de verdad, con una tarjeta de verdad, y mirar que el plan");
+    console.log("  3. Que la cuenta tenga métodos de pago activados para CAD, o que el");
+    console.log("     checkout siga pidiendo `payment_method_types: [\"card\"]` a mano.");
+    console.log("  4. Un cobro de verdad, con una tarjeta de verdad, y mirar que el plan");
     console.log("     cambie en Ajustes → Suscripción.\n");
   }
 }
