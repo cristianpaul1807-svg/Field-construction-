@@ -1,4 +1,5 @@
 import i18n from "@/i18n";
+import { nombresDelMenu } from "@/lib/nombresDelMenu";
 
 /**
  * Qué se le dice a alguien cuando algo falla.
@@ -84,7 +85,11 @@ export function anuncioDeFallo(
   // llega pero nadie le escribió texto todavía, seguimos bajando en vez de
   // enseñar `serverErrors.loQueSea` en pantalla.
   if (codigo) {
-    const suyo = t(`serverErrors.${codigo}`, { defaultValue: "" });
+    // Con los nombres del menú dentro: varios de estos textos mandan a una
+    // pantalla —«conéctalo en Ajustes → Pagos»— y el nombre tiene que salir
+    // del menú, no copiado. Ver `lib/nombresDelMenu.ts`, que cuenta las tres
+    // veces que copiarlo mandó a gente a una opción que no existía.
+    const suyo = t(`serverErrors.${codigo}`, { defaultValue: "", ...nombresDelMenu((clave) => t(clave)) });
     if (suyo) return { mensaje: suyo, detalle, codigo };
   }
 

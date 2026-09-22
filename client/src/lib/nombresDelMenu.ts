@@ -25,10 +25,17 @@ import { useTranslation } from "react-i18next";
  * Lo vigila `scripts/check-help-menu.py`, que falla si alguien vuelve a
  * copiar el nombre de una pantalla dentro de un texto.
  */
-export function useNombresDelMenu() {
-  const { t } = useTranslation();
-  return useMemo(
-    () => ({
+/**
+ * El mapa, sin React.
+ *
+ * Aparte del hook porque los avisos de fallo (`lib/fallos.ts`) también nombran
+ * pantallas —«conéctalo en Ajustes → Pagos»— y no son un componente. Cuando
+ * esto era sólo un hook, esos textos no tenían forma de interpolar y acababan
+ * con el nombre copiado a mano, que es justo lo que este archivo existe para
+ * evitar.
+ */
+export function nombresDelMenu(t: (clave: string) => string) {
+  return {
       menuAjustes: t("nav.settings"),
       menuEmpresa: t("nav.companyData"),
       menuCampo: t("nav.field"),
@@ -49,7 +56,10 @@ export function useNombresDelMenu() {
       menuPresupuestos: t("nav.budgets"),
       menuVacaciones: t("nav.timeOff"),
       menuQuickBooks: t("nav.quickbooks"),
-    }),
-    [t]
-  );
+  };
+}
+
+export function useNombresDelMenu() {
+  const { t } = useTranslation();
+  return useMemo(() => nombresDelMenu(t), [t]);
 }
