@@ -8,9 +8,17 @@
 
 export type LangCorreo = "es" | "en" | "fr" | "it";
 
+/**
+ * Francés cuando no se sabe, como en el resto del servidor.
+ *
+ * Caía en castellano porque es el idioma en el que están escritas las claves,
+ * pero eso es cómo se hizo el producto y no algo que le importe a quien recibe
+ * el correo. `normalizeDocLang`, `langDelMcp` y el chat público ya deciden
+ * así; el que faltaba era éste.
+ */
 export function normalizarLangCorreo(bruto: unknown): LangCorreo {
   const v = String(bruto ?? "").slice(0, 2).toLowerCase();
-  return v === "en" || v === "fr" || v === "it" || v === "es" ? v : "es";
+  return v === "en" || v === "fr" || v === "it" || v === "es" ? v : "fr";
 }
 
 interface TextosCorreo {

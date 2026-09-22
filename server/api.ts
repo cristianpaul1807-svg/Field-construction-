@@ -1337,9 +1337,14 @@ apiRouter.post(
     // por el de verdad desde Ajustes cuando el negocio tiene nombre.
     const slug = await generateUniqueSlug(admin, `obra-${randomBytes(3).toString("hex")}`);
 
+    // Y el idioma tampoco se fija. Esto decía `"es"` justo debajo del
+    // comentario que explica por qué el nombre y el enlace no pueden nacer en
+    // castellano: se arregló lo que se veía y se quedó lo que no, que es de
+    // dónde salen los correos de suscripción que le mandamos después.
+
     const { data: business, error: businessError } = await admin
       .from("businesses")
-      .insert({ name: businessName, slug, primary_auth_user_id: req.authUserId!, subscription_plan: "prueba", subscription_status: "trialing", trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), subscription_language: "es" })
+      .insert({ name: businessName, slug, primary_auth_user_id: req.authUserId!, subscription_plan: "prueba", subscription_status: "trialing", trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), subscription_language: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")) })
       .select("id")
       .single();
     if (businessError) throw businessError;

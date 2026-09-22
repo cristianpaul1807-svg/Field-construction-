@@ -148,7 +148,13 @@ export default function AuthBusiness() {
       }
 
       // 2. Create business DB record connected to user's verified UUID
-      const res = await apiFetch("/api/auth/register-business", { method: "POST" });
+      // El idioma en el que se está dando de alta: es el que se queda como
+      // idioma del negocio, y con el que le llegarán los correos.
+      const res = await apiFetch("/api/auth/register-business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang: i18n.language.slice(0, 2) }),
+      });
       if (!res.ok) {
         const body = await readJson(res);
         throw new Error(serverMessage(body, t, t("auth.couldNotCreateBusiness")));

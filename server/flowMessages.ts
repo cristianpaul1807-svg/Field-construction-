@@ -6,7 +6,20 @@
 
 export type FlowLang = "es" | "en" | "fr" | "it";
 
-const FALLBACK_LANG: FlowLang = "es";
+/**
+ * Francés, que es el idioma del mercado.
+ *
+ * Esto caía en castellano, que es el idioma en el que están escritas las
+ * claves — pero eso es un detalle de cómo se hizo el producto, no algo que le
+ * importe a quien abre el enlace de un contratista de Quebec. El resto del
+ * servidor ya decide así (`normalizeDocLang`, `langDelMcp`) y tener dos
+ * criterios para lo mismo es como empiezan los fallos que cuestan días.
+ *
+ * Casi nunca se llega hasta aquí: la página pública manda el idioma del
+ * navegador en cada llamada. Es el respaldo de cuando no llega nada, y ahí
+ * vale más acertar con el mercado que con el repositorio.
+ */
+const FALLBACK_LANG: FlowLang = "fr";
 
 export function normalizeFlowLang(raw: unknown): FlowLang {
   const value = String(raw ?? "").slice(0, 2).toLowerCase();
