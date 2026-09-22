@@ -2622,7 +2622,14 @@
     "pendientes": "Ci sono {{cuantos}} registrazioni da correggere: il loro ritorno non corrisponde a {{plataforma}}.",
     "abrir": "Apri {{plataforma}}",
     "guia": "Guida di {{plataforma}}",
-    "revocar": "Revoca connessione"
+    "revocar": "Revoca connessione",
+    "conexiones": "Connessioni attive",
+    "sinConexiones": "Non c’è ancora nessuna connessione in questa azienda.",
+    "quienDuenno": "Account dell’azienda",
+    "quienEmpleado": "Lavoratore",
+    "quienSubcontratista": "Subappaltatore",
+    "quienDesconocido": "Non identificato",
+    "desde": "Dal {{fecha}}"
   },
   "afiliado": {
     "titulo": "Il tuo link di raccomandazione",

@@ -2622,7 +2622,14 @@
     "pendientes": "{{cuantos}} enregistrement(s) à corriger : leur retour ne correspond pas à {{plataforma}}.",
     "abrir": "Ouvrir {{plataforma}}",
     "guia": "Guide de {{plataforma}}",
-    "revocar": "Révoquer la connexion"
+    "revocar": "Révoquer la connexion",
+    "conexiones": "Connexions actives",
+    "sinConexiones": "Il n’y a encore aucune connexion dans cette entreprise.",
+    "quienDuenno": "Compte de l’entreprise",
+    "quienEmpleado": "Travailleur",
+    "quienSubcontratista": "Sous-traitant",
+    "quienDesconocido": "Non identifié",
+    "desde": "Depuis le {{fecha}}"
   },
   "afiliado": {
     "titulo": "Votre lien de recommandation",

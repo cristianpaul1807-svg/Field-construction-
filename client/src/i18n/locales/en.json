@@ -2622,7 +2622,14 @@
     "pendientes": "{{cuantos}} registration(s) need fixing: their callback doesn't belong to {{plataforma}}.",
     "abrir": "Open {{plataforma}}",
     "guia": "{{plataforma}} guide",
-    "revocar": "Revoke connection"
+    "revocar": "Revoke connection",
+    "conexiones": "Active connections",
+    "sinConexiones": "There are no connections in this business yet.",
+    "quienDuenno": "Business account",
+    "quienEmpleado": "Worker",
+    "quienSubcontratista": "Subcontractor",
+    "quienDesconocido": "Unidentified",
+    "desde": "Since {{fecha}}"
   },
   "afiliado": {
     "titulo": "Your referral link",

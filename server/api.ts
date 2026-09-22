@@ -3880,6 +3880,62 @@ apiRouter.use((req, res, next) => {
   });
 });
 
+/**
+ * A quién pertenece cada conexión MCP del negocio.
+ *
+ * Una conexión guarda el id de un empleado, de un subcontratista o del usuario
+ * que entró como dueño, y nunca los tres. Sin traducir eso a un nombre, la
+ * pantalla enseña una fila con un botón de revocar y ningún dato para decidir
+ * si hay que pulsarlo.
+ *
+ * Tres consultas y no una por fila: con veinte conexiones eso serían veinte
+ * viajes a la base para pintar una lista.
+ */
+async function nombresDeLasConexiones(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  conexiones: { employee_id?: string | null; subcontractor_id?: string | null; owner_auth_user_id?: string | null }[]
+) {
+  const ids = (clave: "employee_id" | "subcontractor_id" | "owner_auth_user_id") =>
+    Array.from(new Set(conexiones.map((c) => c[clave]).filter(Boolean) as string[]));
+
+  const [empleados, subcontratistas, usuarios] = await Promise.all([
+    ids("employee_id").length
+      ? admin.from("employees").select("id, name").eq("business_id", businessId).in("id", ids("employee_id"))
+      : { data: [] as { id: string; name: string | null }[] },
+    ids("subcontractor_id").length
+      ? admin.from("subcontractors").select("id, name").eq("business_id", businessId).in("id", ids("subcontractor_id"))
+      : { data: [] as { id: string; name: string | null }[] },
+    ids("owner_auth_user_id").length
+      ? admin.from("users").select("auth_user_id, email").eq("business_id", businessId).in("auth_user_id", ids("owner_auth_user_id"))
+      : { data: [] as { auth_user_id: string; email: string | null }[] },
+  ]);
+
+  return {
+    empleados: new Map((empleados.data ?? []).map((e) => [e.id, e.name])),
+    subcontratistas: new Map((subcontratistas.data ?? []).map((s) => [s.id, s.name])),
+    usuarios: new Map((usuarios.data ?? []).map((u) => [u.auth_user_id, u.email])),
+  };
+}
+
+type NombresDeConexion = Awaited<ReturnType<typeof nombresDeLasConexiones>>;
+
+/**
+ * Quién es, para la pantalla.
+ *
+ * El tipo va aparte del nombre porque la pantalla lo traduce: «empleado» y
+ * «subcontratista» se dicen distinto en cada idioma, y el nombre de la persona
+ * no se traduce nunca.
+ */
+function nombreDeLaConexion(
+  conexion: { employee_id?: string | null; subcontractor_id?: string | null; owner_auth_user_id?: string | null },
+  nombres: NombresDeConexion
+): { tipo: "empleado" | "subcontratista" | "duenno"; nombre: string | null } {
+  if (conexion.employee_id) return { tipo: "empleado", nombre: nombres.empleados.get(conexion.employee_id) ?? null };
+  if (conexion.subcontractor_id) return { tipo: "subcontratista", nombre: nombres.subcontratistas.get(conexion.subcontractor_id) ?? null };
+  return { tipo: "duenno", nombre: conexion.owner_auth_user_id ? nombres.usuarios.get(conexion.owner_auth_user_id) ?? null : null };
+}
+
 // ---------- MCP Conexiones AI ----------
 // The panel may show public OAuth client metadata, but connections are always
 // scoped to the currently authenticated business owner. Client secrets and
@@ -3893,9 +3949,19 @@ apiRouter.get(
     // la app del trabajador no tenía de dónde sacar el Client ID.
     const [clients, connections] = await Promise.all([
       clientesOAuth(admin),
-      admin.from("mcp_connections").select("id, provider, status, scopes, created_at, last_used_at, revoked_at, owner_auth_user_id").eq("business_id", req.businessId!).eq("owner_auth_user_id", req.authUserId!).order("created_at", { ascending: false }).limit(50),
+      // **Todas** las del negocio, no sólo las de quien mira. Esto filtraba por
+      // `owner_auth_user_id = req.authUserId`, así que un contratista veía su
+      // propia conexión y **ninguna de las de su gente**: un empleado con la
+      // IA leyendo el negocio era invisible para el dueño, y además no se la
+      // podía cortar. Quien responde de los datos tiene que poder verlo y
+      // apagarlo.
+      admin.from("mcp_connections").select("id, provider, status, scopes, created_at, last_used_at, revoked_at, owner_auth_user_id, employee_id, subcontractor_id").eq("business_id", req.businessId!).order("created_at", { ascending: false }).limit(50),
     ]);
     if (connections.error) throw connections.error;
+
+    // Sin nombre, una conexión es un identificador y nadie sabe a quién
+    // apagarle la IA. Con nombre es una decisión que se puede tomar.
+    const nombres = await nombresDeLasConexiones(admin, req.businessId!, connections.data ?? []);
 
     const configuredProviders = new Map<string, any[]>();
     for (const client of clients) {
@@ -3917,6 +3983,7 @@ apiRouter.get(
       configured: (configuredProviders.get(platform.id) ?? []).some((client) => client.valid),
       connections: (connections.data ?? []).filter((connection) => connection.provider === platform.id).map((connection) => ({
         id: connection.id, status: connection.status, scopes: connection.scopes, createdAt: connection.created_at, lastUsedAt: connection.last_used_at, revokedAt: connection.revoked_at,
+        quien: nombreDeLaConexion(connection, nombres),
       })),
     }));
     res.json({ mcpUrl: `${req.protocol}://${req.get("host")}/mcp`, scope: "mcp:read", platforms });
@@ -3926,7 +3993,10 @@ apiRouter.get(
 apiRouter.post(
   "/settings/mcp-connections/:id/revoke",
   route(async (req, res) => {
-    const { data, error } = await getSupabaseAdmin().from("mcp_connections").update({ status: "revoked", revoked_at: new Date().toISOString() }).eq("id", req.params.id).eq("business_id", req.businessId!).eq("owner_auth_user_id", req.authUserId!).select("id").maybeSingle();
+    // Por negocio y no por persona: si el dueño puede verla, puede cortarla.
+    // Antes sólo podía revocar las suyas, así que la de un empleado que se iba
+    // de la empresa se quedaba viva y nadie en el panel podía hacer nada.
+    const { data, error } = await getSupabaseAdmin().from("mcp_connections").update({ status: "revoked", revoked_at: new Date().toISOString() }).eq("id", req.params.id).eq("business_id", req.businessId!).select("id").maybeSingle();
     if (error) throw error;
     if (!data) {
       res.status(404).json({ error: "connection not found", code: "mcp_connection_not_found" });

@@ -2622,7 +2622,14 @@
     "pendientes": "Hay {{cuantos}} registro(s) por corregir: su retorno no corresponde a {{plataforma}}.",
     "abrir": "Abrir {{plataforma}}",
     "guia": "Guía de {{plataforma}}",
-    "revocar": "Revocar conexión"
+    "revocar": "Revocar conexión",
+    "conexiones": "Conexiones activas",
+    "sinConexiones": "Todavía no hay ninguna conexión en este negocio.",
+    "quienDuenno": "Cuenta del negocio",
+    "quienEmpleado": "Trabajador",
+    "quienSubcontratista": "Subcontratista",
+    "quienDesconocido": "Sin identificar",
+    "desde": "Desde el {{fecha}}"
   },
   "afiliado": {
     "titulo": "Tu enlace de recomendación",

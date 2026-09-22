@@ -32,7 +32,10 @@ interface Platform {
   docsUrl: string;
   configured: boolean;
   clients: OAuthClient[];
-  connections: { id: string; status: string; scopes: string[]; createdAt: string; lastUsedAt: string | null; revokedAt: string | null }[];
+  connections: {
+    id: string; status: string; scopes: string[]; createdAt: string; lastUsedAt: string | null; revokedAt: string | null;
+    quien: { tipo: "empleado" | "subcontratista" | "duenno"; nombre: string | null };
+  }[];
 }
 interface MpcConnectionsData {
   mcpUrl: string;
@@ -62,7 +65,7 @@ function Logo() {
 }
 
 export default function SettingsMcpConnections() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data, loading, error, detalle, reload } = useApi<MpcConnectionsData>("/api/settings/mcp-connections");
   const [open, setOpen] = useState<string | null>("claude");
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -119,7 +122,35 @@ export default function SettingsMcpConnections() {
             <div className="space-y-2"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5"><Link2 size={13} /> {t("mcpConex.urlMcp")}</p><div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2"><code className="min-w-0 flex-1 truncate text-xs">{data?.mcpUrl ?? "https://logiciel-construction.com/mcp"}</code><CopyButton value={data?.mcpUrl ?? "https://logiciel-construction.com/mcp"} label={t("mcpConex.copiar")} /></div></div>
             {validClient ? <div className="space-y-2"><p className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5"><KeyRound size={13} /> {t("mcpConex.clientId")}</p><div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2"><code className="min-w-0 flex-1 truncate text-xs">{validClient.clientId}</code><CopyButton value={validClient.clientId} label={t("mcpConex.copiar")} /></div><p className="text-xs text-muted-foreground">{t("mcpConex.callback", { url: validClient.redirectUris[0] ?? t("mcpConex.sinCallback") })}</p></div> : <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">{t("mcpConex.sinClientId", { plataforma: platform.name })}</div>}
             {invalidClients.length > 0 && <p className="text-xs text-status-warning-fg">{t("mcpConex.pendientes", { cuantos: invalidClients.length, plataforma: platform.name })}</p>}
-            <div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" className="gap-1.5" onClick={() => window.open(platform.docsUrl, "_blank", "noopener,noreferrer")}><ExternalLink size={14} /> {t("mcpConex.abrir", { plataforma: platform.name })}</Button><Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(platform.docsUrl, "_blank", "noopener,noreferrer")}><ExternalLink size={14} /> {t("mcpConex.guia", { plataforma: platform.name })}</Button>{platform.connections.filter((connection) => connection.status !== "revoked").map((connection) => <Button key={connection.id} type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive" onClick={() => revoke(connection.id)} disabled={revoking === connection.id}>{revoking === connection.id ? <Spinner className="size-3.5" /> : <Users size={14} />} {t("mcpConex.revocar")}</Button>)}</div>
+            <div className="flex flex-wrap items-center gap-2"><Button type="button" size="sm" className="gap-1.5" onClick={() => window.open(platform.docsUrl, "_blank", "noopener,noreferrer")}><ExternalLink size={14} /> {t("mcpConex.abrir", { plataforma: platform.name })}</Button><Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(platform.docsUrl, "_blank", "noopener,noreferrer")}><ExternalLink size={14} /> {t("mcpConex.guia", { plataforma: platform.name })}</Button></div>
+            {/* Todas las del negocio, con nombre. Esto enseñaba sólo las de
+                quien miraba, así que un contratista no veía que un empleado
+                suyo tenía la IA leyendo el negocio — ni podía cortarla. */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("mcpConex.conexiones")}</p>
+              {platform.connections.filter((connection) => connection.status !== "revoked").length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("mcpConex.sinConexiones")}</p>
+              ) : (
+                platform.connections.filter((connection) => connection.status !== "revoked").map((connection) => (
+                  <div key={connection.id} className="flex items-center gap-3 rounded-lg border border-border p-2.5">
+                    <Users size={15} className="text-muted-foreground shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-foreground truncate">
+                        {connection.quien.nombre ?? t("mcpConex.quienDesconocido")}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {t(`mcpConex.quien${connection.quien.tipo === "duenno" ? "Duenno" : connection.quien.tipo === "empleado" ? "Empleado" : "Subcontratista"}`)}
+                        {" · "}
+                        {t("mcpConex.desde", { fecha: new Date(connection.createdAt).toLocaleDateString(i18n.language) })}
+                      </span>
+                    </span>
+                    <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive shrink-0" onClick={() => revoke(connection.id)} disabled={revoking === connection.id}>
+                      {revoking === connection.id ? <Spinner className="size-3.5" /> : null} {t("mcpConex.revocar")}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>}
         </Card>;
       })}
