@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
 import { useApi, apiFetch, serverMessage, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -60,6 +60,24 @@ export default function SettingsUsers() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [quitando, setQuitando] = useState<string | null>(null);
+  const [cambiandoClave, setCambiandoClave] = useState<string | null>(null);
+
+  const nuevaClave = async (user: { id: string; name: string }) => {
+    if (!window.confirm(t("settings.nuevaClaveConfirmar", { nombre: user.name }))) return;
+    setCambiandoClave(user.id);
+    setSaveError(null);
+    try {
+      const respuesta = await apiFetch(`/api/settings/users/${user.id}/password`, { method: "POST" });
+      const cuerpo = await readJson<{ email?: string; password?: string; error?: string; code?: string }>(respuesta);
+      if (!respuesta.ok) throw new Error(serverMessage(cuerpo, t, t("errores.generico")));
+      // El mismo cartel que al crear el acceso: sale una vez y no vuelve.
+      setCredenciales({ email: cuerpo.email ?? "", password: cuerpo.password ?? "" });
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : t("errores.generico"));
+    } finally {
+      setCambiandoClave(null);
+    }
+  };
 
   const quitar = async (user: { id: string; name: string }) => {
     if (!window.confirm(t("settings.quitarUsuarioConfirmar", { nombre: user.name }))) return;
@@ -192,6 +210,14 @@ export default function SettingsUsers() {
                         su rol y no había forma de sacarlo nunca. El del
                         negocio y uno mismo los rechaza el servidor, y el
                         aviso lo explica en vez de dar un error seco. */}
+                    <button
+                      aria-label={t("settings.nuevaClave")}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+                      disabled={cambiandoClave === user.id}
+                      onClick={() => void nuevaClave(user)}
+                    >
+                      {cambiandoClave === user.id ? <Spinner className="size-3.5" /> : <KeyRound size={14} strokeWidth={1.75} />}
+                    </button>
                     <button
                       aria-label={t("settings.quitarUsuario")}
                       className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors disabled:opacity-50"

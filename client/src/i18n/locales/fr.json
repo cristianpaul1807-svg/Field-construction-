@@ -794,7 +794,9 @@
     "credentialsOnce": "Ce mot de passe s'affiche une seule fois et n'est stocké nulle part. S'il est perdu, il faudra en donner un autre.",
     "quitarUsuario": "Retirer du panneau",
     "quitarUsuarioConfirmar": "Retirer {{nombre}} ? Cette personne perd l’accès au panneau et sa connexion à l’IA est coupée. Ses factures et son travail restent.",
-    "quitando": "Retrait…"
+    "quitando": "Retrait…",
+    "nuevaClave": "Définir un nouveau mot de passe",
+    "nuevaClaveConfirmar": "Définir un nouveau mot de passe pour {{nombre}} ? L’actuel cessera de fonctionner et vous devrez lui transmettre le nouveau. L’ancien ne peut pas être vu : les mots de passe sont chiffrés."
   },
   "reports": {
     "title": "Rapports",
@@ -1553,7 +1555,9 @@
     "usuario_eres_tu": "Vous ne pouvez pas vous retirer vous-même : vous seriez exclu de votre propre panneau.",
     "usuario_no_existe": "Cet utilisateur n’est plus là. Actualisez la liste.",
     "usuario_de_otro_negocio": "Ce compte appartient déjà à une autre entreprise. Un compte ne peut être que dans une seule ; cette personne a besoin d’un autre courriel pour vous rejoindre.",
-    "usuario_ya_esta": "Cette personne fait déjà partie de votre équipe. Ouvrez-la avec le crayon pour changer son nom, son courriel ou ce qu’elle voit."
+    "usuario_ya_esta": "Cette personne fait déjà partie de votre équipe. Ouvrez-la avec le crayon pour changer son nom, son courriel ou ce qu’elle voit.",
+    "clave_del_principal": "Impossible de changer le mot de passe de la personne qui a créé l’entreprise. Ce compte lui appartient.",
+    "clave_es_la_tuya": "Pour changer le vôtre, utilisez l’écran de votre compte."
   },
   "workLog": {
     "title": "Suivi des travaux",

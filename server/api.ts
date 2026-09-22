@@ -10004,6 +10004,71 @@ apiRouter.patch(
 );
 
 /**
+ * Ponerle una contraseña nueva a un usuario del panel.
+ *
+ * La que tiene **no se puede ver**: está guardada como un hash bcrypt, que
+ * sirve para comprobar y no para recuperar. Eso no es una carencia — es lo que
+ * hace que una fuga de la base de datos no sea una fuga de las contraseñas de
+ * nadie.
+ *
+ * Pero el jefe del negocio sí necesita poder resolverlo sin depender de que
+ * cada uno mire su correo. Es el mismo problema que ya resolvió el código de
+ * acceso del trabajador (`components/AccessCode.tsx`), y con la misma
+ * respuesta: no enseñar la que hay, sino poner una nueva y enseñarla una vez.
+ * Cuando esto no existe, el jefe acaba apuntando las contraseñas en un papel,
+ * que es peor sitio que cualquier pantalla.
+ *
+ * ## Dos cerrojos, los mismos que para quitar a alguien
+ *
+ * **Al propietario principal no se le cambia.** Quien pudiera hacerlo se
+ * quedaría con el negocio entero, y un segundo administrador no debe poder
+ * echar al primero.
+ *
+ * **Y a uno mismo tampoco.** No es peligroso, es inútil: para la propia hay
+ * una pantalla que no necesita a nadie más.
+ *
+ * ## Lo que esto no hace
+ *
+ * No cierra las sesiones que esa persona ya tenga abiertas. Cambiar la
+ * contraseña impide entrar de nuevo, no expulsa a quien ya está dentro. Si lo
+ * que se quiere es cortar el acceso —alguien que se va de la empresa— lo que
+ * toca es quitarlo, que además le revoca la IA.
+ */
+apiRouter.post(
+  "/settings/users/:id/password",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: fila } = await admin
+      .from("users")
+      .select("id, email, auth_user_id, businesses(primary_auth_user_id)")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+
+    if (!fila?.auth_user_id) {
+      res.status(404).json({ error: "Ese usuario no tiene cuenta que cambiar", code: "usuario_no_existe" });
+      return;
+    }
+    const principal = (fila as { businesses?: { primary_auth_user_id?: string | null } | null }).businesses?.primary_auth_user_id;
+    if (fila.auth_user_id === principal) {
+      res.status(409).json({ error: "No se puede cambiar la contraseña de quien creó el negocio", code: "clave_del_principal" });
+      return;
+    }
+    if (fila.auth_user_id === req.authUserId) {
+      res.status(409).json({ error: "Para la tuya, usa la pantalla de tu cuenta", code: "clave_es_la_tuya" });
+      return;
+    }
+
+    const password = randomBytes(9).toString("base64url");
+    const { error } = await admin.auth.admin.updateUserById(fila.auth_user_id, { password });
+    if (error) throw error;
+
+    // Sale aquí y no vuelve a salir nunca, igual que al crear el acceso.
+    res.json({ email: fila.email, password });
+  })
+);
+
+/**
  * Quitar a alguien del panel.
  *
  * No existía. Se podía dar de alta a un usuario con su rol y **no había forma

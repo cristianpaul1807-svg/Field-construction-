@@ -794,7 +794,9 @@
     "credentialsOnce": "Esta contraseña se enseña una sola vez y no se guarda en ninguna parte. Si se pierde, habrá que darle otra.",
     "quitarUsuario": "Quitar del panel",
     "quitarUsuarioConfirmar": "¿Quitar a {{nombre}}? Perderá el acceso al panel y se le cortará la conexión con la IA. Sus facturas y su trabajo se quedan.",
-    "quitando": "Quitando…"
+    "quitando": "Quitando…",
+    "nuevaClave": "Poner contraseña nueva",
+    "nuevaClaveConfirmar": "¿Poner una contraseña nueva a {{nombre}}? La que tenga dejará de valer y tendrás que pasarle la nueva. No se puede ver la anterior: están guardadas cifradas."
   },
   "reports": {
     "title": "Informes",
@@ -1553,7 +1555,9 @@
     "usuario_eres_tu": "No puedes quitarte a ti mismo: te quedarías fuera de tu propio panel.",
     "usuario_no_existe": "Ese usuario ya no está. Actualiza la lista.",
     "usuario_ya_esta": "Esa persona ya está en tu equipo. Ábrela con el lápiz para cambiarle el nombre, el correo o lo que ve.",
-    "usuario_de_otro_negocio": "Esa cuenta ya pertenece a otro negocio. Una cuenta sólo puede estar en uno; esa persona necesita un correo distinto para entrar aquí."
+    "usuario_de_otro_negocio": "Esa cuenta ya pertenece a otro negocio. Una cuenta sólo puede estar en uno; esa persona necesita un correo distinto para entrar aquí.",
+    "clave_del_principal": "No se puede cambiar la contraseña de quien creó el negocio. Esa cuenta la lleva esa persona.",
+    "clave_es_la_tuya": "Para cambiar la tuya, usa la pantalla de tu cuenta."
   },
   "workLog": {
     "title": "Control de trabajo",

@@ -794,7 +794,9 @@
     "credentialsOnce": "This password is shown once and is not stored anywhere. If it's lost, you'll have to issue another.",
     "quitarUsuario": "Remove from panel",
     "quitarUsuarioConfirmar": "Remove {{nombre}}? They lose access to the panel and their AI connection is cut. Their invoices and work stay.",
-    "quitando": "Removing…"
+    "quitando": "Removing…",
+    "nuevaClave": "Set a new password",
+    "nuevaClaveConfirmar": "Set a new password for {{nombre}}? Their current one stops working and you’ll have to pass them the new one. The old one can’t be seen — passwords are stored encrypted."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1553,7 +1555,9 @@
     "usuario_eres_tu": "You can’t remove yourself — you’d be locked out of your own panel.",
     "usuario_no_existe": "That user is already gone. Refresh the list.",
     "usuario_ya_esta": "That person is already on your team. Open them with the pencil to change their name, email or what they can see.",
-    "usuario_de_otro_negocio": "That account already belongs to another business. An account can only be in one, so that person needs a different email to join here."
+    "usuario_de_otro_negocio": "That account already belongs to another business. An account can only be in one, so that person needs a different email to join here.",
+    "clave_del_principal": "You can’t change the password of whoever created the business. That account is theirs to manage.",
+    "clave_es_la_tuya": "To change your own, use your account screen."
   },
   "workLog": {
     "title": "Work log",
