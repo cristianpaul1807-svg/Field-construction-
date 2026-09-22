@@ -77,6 +77,7 @@ node scripts/comprobar-ancho.mjs      # no page scrolls sideways on a phone
 node --experimental-strip-types scripts/prueba-suscripcion/mapeo.mjs    # Stripe payload -> what we store
 node --experimental-strip-types scripts/prueba-suscripcion/bloqueo.mjs  # when the trial ends, and what stays open
 node --experimental-strip-types scripts/prueba-mcp/roles.mjs            # MCP never opens what the panel closes
+node --experimental-strip-types scripts/prueba-mcp/idiomas.mjs          # the MCP consent page speaks all four
 ```
 
 `npm run build` is the marketing site generator, then `vite build`, then
