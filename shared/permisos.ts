@@ -231,7 +231,28 @@ export const AREA_DE_PANTALLA: Record<string, Area> = {
   "/settings/margins": "ajustes",
   "/settings/users": "ajustes",
   "/settings/whatsapp": "ajustes",
+  // Quién puede leer el negocio desde Claude, y cortarle el acceso. Eso es
+  // configuración de la empresa, no del terreno: sin esta línea la pantalla no
+  // tenía área, salía en el menú de un jefe de obra y al abrirla le contestaba
+  // 403 la API —que sí estaba bien cerrada—. Un botón que no puede funcionar.
+  "/settings/mcp-connections": "ajustes",
+  "/settings/automations": "ajustes",
+  // El enlace con el que el negocio nos recomienda. Va en ajustes porque es
+  // dinero de la empresa: un jefe de obra no reparte el enlace del que cuelga
+  // una comisión. La pantalla existe y no está en el menú todavía.
+  "/settings/afiliados": "ajustes",
 };
+
+/**
+ * Las pantallas que no se cierran por área **nunca**.
+ *
+ * La de suscripción es la salida del bloqueo. Si se le pusiera área, un jefe de
+ * obra con el negocio bloqueado entraría en bucle: el bloqueo le manda a
+ * suscripción, el área le saca de suscripción, y el bloqueo le vuelve a mandar.
+ * Acabaría rebotando entre dos pantallas sin poder hacer nada ni entender por
+ * qué — y la única persona capaz de arreglarlo es la que no puede llegar.
+ */
+export const SIN_AREA: readonly string[] = ["/suscripcion", "/settings/subscription"];
 
 /** El área de una pantalla, mirando el prefijo más largo que encaje. */
 export function areaDeLaPantalla(ruta: string): Area | null {

@@ -66,6 +66,7 @@ import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
 import { planDelPrecio, periodoDelPrecio } from "../shared/suscripcionStripe";
+import { atribuirNegocio, anotarComision, panelDelAfiliado } from "./afiliados";
 import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIO, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
@@ -901,6 +902,21 @@ async function stripeWebhookHandler(req: Request, res: Response) {
           subscription_last_payment_at: event.type === "invoice.payment_succeeded" ? new Date().toISOString() : undefined,
           subscription_period_end: subscriptionPeriodEnd(subscription),
         });
+
+        // La comisión del afiliado que lo trajo, si lo trajo alguien. Sobre lo
+        // cobrado y sin impuestos: el afiliado se lleva un porcentaje de lo
+        // nuestro, no de lo que le pasamos a Revenu Québec.
+        if (event.type === "invoice.payment_succeeded") {
+          const factura = invoice as { subtotal?: number | null; amount_paid?: number | null; id?: string };
+          const centavos = factura.subtotal ?? factura.amount_paid ?? 0;
+          if (factura.id && centavos > 0) {
+            await anotarComision(getSupabaseAdmin(), business.id, {
+              stripeInvoice: factura.id,
+              baseCad: Math.round(centavos) / 100,
+              periodo: new Date(),
+            });
+          }
+        }
       }
     }
   }
@@ -1348,6 +1364,11 @@ apiRouter.post(
       .select("id")
       .single();
     if (businessError) throw businessError;
+
+    // Quién lo trajo, si venía por el enlace de alguien. No puede romper el
+    // alta: quedarse fuera del producto porque un código estuviera mal escrito
+    // sería cobrárselo al que menos culpa tiene.
+    await atribuirNegocio(admin, business.id, req.body?.ref);
 
     const [, roleResult] = await Promise.all([
       admin.from("business_settings").insert({ business_id: business.id }),
@@ -4119,6 +4140,24 @@ apiRouter.post(
       return_url: `${baseUrl}/suscripcion`,
     });
     res.json({ url: sesion.url });
+  })
+);
+
+/**
+ * Lo que un negocio ve de su propio enlace de afiliado.
+ *
+ * Sólo lo suyo: su código, sus referidos y lo que lleva devengado. Nunca la
+ * lista de afiliados ni lo que gana otro — esas tablas son nuestras y no se
+ * asoman por ninguna ruta de un negocio.
+ *
+ * Contesta `tieneEnlace: false` cuando no se le ha dado uno, que hoy es
+ * siempre: los enlaces se dan a mano, uno a uno, y la pantalla está escondida
+ * del menú hasta que el programa se encienda.
+ */
+apiRouter.get(
+  "/settings/afiliados",
+  route(async (req, res) => {
+    res.json(await panelDelAfiliado(getSupabaseAdmin(), req.businessId!));
   })
 );
 

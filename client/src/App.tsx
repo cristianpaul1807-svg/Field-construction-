@@ -49,6 +49,7 @@ import SettingsMargins from "@/pages/SettingsMargins";
 import SettingsUsers from "@/pages/SettingsUsers";
 import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
 import SettingsMcpConnections from "@/pages/SettingsMcpConnections";
+import SettingsAfiliados from "@/pages/SettingsAfiliados";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -91,6 +92,9 @@ function BusinessPanel() {
         <Route path={"/settings/margins"} component={SettingsMargins} />
         <Route path={"/settings/users"} component={SettingsUsers} />
         <Route path={"/settings/mcp-connections"} component={SettingsMcpConnections} />
+        {/* Enrutada y fuera del menú: el programa de afiliados no se ha
+            encendido y los enlaces se dan uno a uno. Ver SettingsAfiliados. */}
+        <Route path={"/settings/afiliados"} component={SettingsAfiliados} />
       <Route path={"/settings/whatsapp"} component={SettingsWhatsapp} />
       <Route path={"/suscripcion"} component={Suscripcion} />
       <Route path={"/settings/subscription"} component={Suscripcion} />

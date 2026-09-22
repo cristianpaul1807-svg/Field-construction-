@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { recordarAfiliado } from "@/lib/afiliado";
 import "./index.css";
 // Side-effect import: configures the shared i18next instance before any
 // component that calls useTranslation() renders.
@@ -71,6 +72,9 @@ escucharLaInstalacion();
 loadSupabaseConfig()
   .then(async () => {
     const { default: App } = await import("./App");
+    // Antes de pintar nada: el código de afiliado viene en la dirección y hay
+    // que cogerlo aunque la persona no llegue a darse de alta hoy.
+    recordarAfiliado();
     createRoot(document.getElementById("root")!).render(<App />);
   })
   .catch((err: unknown) => {

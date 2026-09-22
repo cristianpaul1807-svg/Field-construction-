@@ -52,7 +52,7 @@ import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
-import { areaDeLaPantalla, puede } from "@shared/permisos";
+import { areaDeLaPantalla, puede, SIN_AREA } from "@shared/permisos";
 import { capacidadDeLaPantalla, tiene } from "@shared/planes";
 
 // Monochrome line icons only — no emoji, no fills, no per-item colour. The
@@ -207,7 +207,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       items: seccion.items.filter((item) => {
         // Dos filtros seguidos que responden cosas distintas: el área es «esta
         // persona no», la capacidad es «esta empresa no lo ha contratado».
-        const area = areaDeLaPantalla(item.path);
+        const area = SIN_AREA.includes(item.path) ? null : areaDeLaPantalla(item.path);
         if (area && !puede(areas, area)) return false;
         const capacidad = capacidadDeLaPantalla(item.path);
         if (item.id === "subscription" && (plan === "pilot" || plan === "fondateur")) return false;

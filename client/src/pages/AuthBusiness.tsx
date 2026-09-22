@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { tomarDestino } from "@/lib/destino";
 import { faltanLosSeisDigitos, comprobarLosSeisDigitos } from "@/lib/dobleFactor";
 import { useTranslation } from "react-i18next";
+import { codigoDeAfiliado, olvidarAfiliado } from "@/lib/afiliado";
 
 function formatError(err: unknown, fallback: string): string {
   if (!err) return fallback;
@@ -153,8 +154,11 @@ export default function AuthBusiness() {
       const res = await apiFetch("/api/auth/register-business", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang: i18n.language.slice(0, 2) }),
+        body: JSON.stringify({ lang: i18n.language.slice(0, 2), ref: codigoDeAfiliado() }),
       });
+      // Usado y olvidado: quien monta dos cuentas desde el mismo navegador no
+      // debe atribuírselas las dos al mismo enlace.
+      olvidarAfiliado();
       if (!res.ok) {
         const body = await readJson(res);
         throw new Error(serverMessage(body, t, t("auth.couldNotCreateBusiness")));
