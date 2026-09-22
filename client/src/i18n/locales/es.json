@@ -791,7 +791,10 @@
     },
     "credentialsTitle": "Sus datos para entrar",
     "credentialsHint": "Pásaselos por donde ya habléis. Con esto entra en la página de inicio de sesión.",
-    "credentialsOnce": "Esta contraseña se enseña una sola vez y no se guarda en ninguna parte. Si se pierde, habrá que darle otra."
+    "credentialsOnce": "Esta contraseña se enseña una sola vez y no se guarda en ninguna parte. Si se pierde, habrá que darle otra.",
+    "quitarUsuario": "Quitar del panel",
+    "quitarUsuarioConfirmar": "¿Quitar a {{nombre}}? Perderá el acceso al panel y se le cortará la conexión con la IA. Sus facturas y su trabajo se quedan.",
+    "quitando": "Quitando…"
   },
   "reports": {
     "title": "Informes",
@@ -1545,7 +1548,10 @@
     "unknown_country": "Ese país no lo reconocemos.",
     "unknown_region": "Esa provincia no la reconocemos.",
     "worker_double_booked": "Ese trabajador ya está asignado a otra obra a esa hora.",
-    "year_out_of_range": "Ese año queda fuera de lo que se puede consultar."
+    "year_out_of_range": "Ese año queda fuera de lo que se puede consultar.",
+    "usuario_es_el_principal": "No se puede quitar a quien creó el negocio. Es de quien cuelga todo lo demás.",
+    "usuario_eres_tu": "No puedes quitarte a ti mismo: te quedarías fuera de tu propio panel.",
+    "usuario_no_existe": "Ese usuario ya no está. Actualiza la lista."
   },
   "workLog": {
     "title": "Control de trabajo",

@@ -150,6 +150,11 @@ export const requireBusinessAuth = guarded(async (req: Request, res: Response, n
     .from("users")
     .select("business_id, roles(permissions), businesses(subscription_plan, subscription_status, trial_ends_at, subscription_period_end, primary_auth_user_id)")
     .eq("auth_user_id", userData.user.id)
+    // Que el estado cuente. `resolveOwnerIdentity` ya filtraba por «activo»
+    // para el MCP y esto no, así que a alguien dado de baja se le cerraba
+    // Claude y se le dejaba el panel abierto: dos sitios decidiendo lo mismo
+    // con reglas distintas, y ganando el que menos protege.
+    .neq("status", "inactivo")
     .single();
 
   if (rowError || !userRow) {

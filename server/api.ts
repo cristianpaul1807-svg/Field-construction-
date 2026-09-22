@@ -9979,6 +9979,75 @@ apiRouter.patch(
   })
 );
 
+/**
+ * Quitar a alguien del panel.
+ *
+ * No existía. Se podía dar de alta a un usuario con su rol y **no había forma
+ * de quitarlo**: ni ruta en el servidor ni botón en la pantalla. El día que
+ * alguien deja la empresa, su acceso se queda vivo para siempre — que es el
+ * mismo agujero que tenían las conexiones MCP, con la misma cara.
+ *
+ * Se borra la fila de `users`, que es lo que `requireBusinessAuth` consulta
+ * para dejar entrar. Su cuenta de Supabase Auth sigue existiendo y no se toca:
+ * es suya, puede estar en otro negocio, y borrarla desde aquí sería decidir
+ * sobre algo que no es nuestro.
+ *
+ * ## Los dos cerrojos
+ *
+ * **El propietario principal no se quita.** `businesses.primary_auth_user_id`
+ * apunta a él, y de ahí cuelga la resolución de identidad del negocio.
+ * Quitarlo lo deja sin dueño y sin nadie que pueda arreglarlo.
+ *
+ * **Y uno no se quita a sí mismo.** Parece obvio y por eso pasa: se pulsa en
+ * la fila equivocada y te quedas fuera de tu propio panel a media sesión, sin
+ * nadie dentro que pueda volver a darte de alta.
+ */
+apiRouter.delete(
+  "/settings/users/:id",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: fila } = await admin
+      .from("users")
+      .select("id, auth_user_id, businesses(primary_auth_user_id)")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+
+    if (!fila) {
+      res.status(404).json({ error: "Ese usuario ya no está", code: "usuario_no_existe" });
+      return;
+    }
+
+    const principal = (fila as { businesses?: { primary_auth_user_id?: string | null } | null }).businesses?.primary_auth_user_id;
+    if (fila.auth_user_id && fila.auth_user_id === principal) {
+      res.status(409).json({ error: "No se puede quitar a quien creó el negocio", code: "usuario_es_el_principal" });
+      return;
+    }
+    if (fila.auth_user_id && fila.auth_user_id === req.authUserId) {
+      res.status(409).json({ error: "No puedes quitarte a ti mismo", code: "usuario_eres_tu" });
+      return;
+    }
+
+    // Su conexión con la IA, primero. Si se quedara viva, la persona seguiría
+    // leyendo el negocio desde Claude después de que le quitaran el panel — y
+    // el dueño la vería en la lista sin poder saber de quién es, porque su
+    // nombre ya no estaría en ningún sitio.
+    if (fila.auth_user_id) {
+      const { error: errorMcp } = await admin
+        .from("mcp_connections")
+        .update({ status: "revoked", revoked_at: new Date().toISOString() })
+        .eq("business_id", req.businessId!)
+        .eq("owner_auth_user_id", fila.auth_user_id)
+        .eq("status", "active");
+      if (errorMcp) throw errorMcp;
+    }
+
+    const { error } = await admin.from("users").delete().eq("business_id", req.businessId!).eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 // ---------- Printable documents (estimate / invoice PDFs) ----------
 // The estimate and the invoice are the two artefacts a construction business
 // actually hands to a customer, so both are generated as real PDF bytes.

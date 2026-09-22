@@ -791,7 +791,10 @@
     },
     "credentialsTitle": "I suoi dati d'accesso",
     "credentialsHint": "Passaglieli come già vi parlate. Con questi entra dalla pagina di accesso.",
-    "credentialsOnce": "Questa password si mostra una volta sola e non viene salvata da nessuna parte. Se si perde, bisognerà darne un'altra."
+    "credentialsOnce": "Questa password si mostra una volta sola e non viene salvata da nessuna parte. Se si perde, bisognerà darne un'altra.",
+    "quitarUsuario": "Rimuovi dal pannello",
+    "quitarUsuarioConfirmar": "Rimuovere {{nombre}}? Perderà l’accesso al pannello e la connessione con l’IA verrà tagliata. Le sue fatture e il suo lavoro restano.",
+    "quitando": "Rimozione…"
   },
   "reports": {
     "title": "Report",
@@ -1545,7 +1548,10 @@
     "unknown_country": "Non riconosciamo quel paese.",
     "unknown_region": "Non riconosciamo quella provincia.",
     "worker_double_booked": "Quel lavoratore è già assegnato a un altro cantiere a quell'ora.",
-    "year_out_of_range": "Quell'anno è fuori dall'intervallo consultabile."
+    "year_out_of_range": "Quell'anno è fuori dall'intervallo consultabile.",
+    "usuario_es_el_principal": "Non si può rimuovere chi ha creato l’azienda. Tutto il resto dipende da lì.",
+    "usuario_eres_tu": "Non puoi rimuovere te stesso: resteresti fuori dal tuo pannello.",
+    "usuario_no_existe": "Quell’utente non c’è più. Aggiorna l’elenco."
   },
   "workLog": {
     "title": "Controllo lavori",

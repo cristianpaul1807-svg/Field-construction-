@@ -791,7 +791,10 @@
     },
     "credentialsTitle": "Ses accès",
     "credentialsHint": "Transmettez-les par où vous vous parlez déjà. Avec ça, elle se connecte sur la page de connexion.",
-    "credentialsOnce": "Ce mot de passe s'affiche une seule fois et n'est stocké nulle part. S'il est perdu, il faudra en donner un autre."
+    "credentialsOnce": "Ce mot de passe s'affiche une seule fois et n'est stocké nulle part. S'il est perdu, il faudra en donner un autre.",
+    "quitarUsuario": "Retirer du panneau",
+    "quitarUsuarioConfirmar": "Retirer {{nombre}} ? Cette personne perd l’accès au panneau et sa connexion à l’IA est coupée. Ses factures et son travail restent.",
+    "quitando": "Retrait…"
   },
   "reports": {
     "title": "Rapports",
@@ -1545,7 +1548,10 @@
     "unknown_country": "Nous ne reconnaissons pas ce pays.",
     "unknown_region": "Nous ne reconnaissons pas cette province.",
     "worker_double_booked": "Ce travailleur est déjà affecté à un autre chantier à cette heure-là.",
-    "year_out_of_range": "Cette année est en dehors de la plage consultable."
+    "year_out_of_range": "Cette année est en dehors de la plage consultable.",
+    "usuario_es_el_principal": "La personne qui a créé l’entreprise ne peut pas être retirée. Tout le reste en dépend.",
+    "usuario_eres_tu": "Vous ne pouvez pas vous retirer vous-même : vous seriez exclu de votre propre panneau.",
+    "usuario_no_existe": "Cet utilisateur n’est plus là. Actualisez la liste."
   },
   "workLog": {
     "title": "Suivi des travaux",

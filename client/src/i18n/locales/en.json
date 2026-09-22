@@ -791,7 +791,10 @@
     },
     "credentialsTitle": "Their sign-in details",
     "credentialsHint": "Pass them on however you already talk. With these they sign in on the login page.",
-    "credentialsOnce": "This password is shown once and is not stored anywhere. If it's lost, you'll have to issue another."
+    "credentialsOnce": "This password is shown once and is not stored anywhere. If it's lost, you'll have to issue another.",
+    "quitarUsuario": "Remove from panel",
+    "quitarUsuarioConfirmar": "Remove {{nombre}}? They lose access to the panel and their AI connection is cut. Their invoices and work stay.",
+    "quitando": "Removing…"
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1545,7 +1548,10 @@
     "unknown_country": "We don't recognise that country.",
     "unknown_region": "We don't recognise that province.",
     "worker_double_booked": "That worker is already assigned to another job at that time.",
-    "year_out_of_range": "That year is outside the range you can look up."
+    "year_out_of_range": "That year is outside the range you can look up.",
+    "usuario_es_el_principal": "The person who created the business can’t be removed. Everything else hangs off them.",
+    "usuario_eres_tu": "You can’t remove yourself — you’d be locked out of your own panel.",
+    "usuario_no_existe": "That user is already gone. Refresh the list."
   },
   "workLog": {
     "title": "Work log",

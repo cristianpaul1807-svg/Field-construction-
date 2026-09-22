@@ -15,8 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil } from "lucide-react";
-import { useApi, apiFetch, serverMessage } from "@/lib/api";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useApi, apiFetch, serverMessage, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 import { DobleFactor } from "@/components/DobleFactor";
@@ -59,6 +59,22 @@ export default function SettingsUsers() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [quitando, setQuitando] = useState<string | null>(null);
+
+  const quitar = async (user: { id: string; name: string }) => {
+    if (!window.confirm(t("settings.quitarUsuarioConfirmar", { nombre: user.name }))) return;
+    setQuitando(user.id);
+    setSaveError(null);
+    try {
+      const respuesta = await apiFetch(`/api/settings/users/${user.id}`, { method: "DELETE" });
+      if (!respuesta.ok) throw new Error(serverMessage(await readJson(respuesta), t, t("errores.generico")));
+      reload();
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : t("errores.generico"));
+    } finally {
+      setQuitando(null);
+    }
+  };
   // La contraseña recién creada. Se enseña una vez y no vuelve: no se guarda
   // en ninguna tabla nuestra ni se manda por correo.
   const [credenciales, setCredenciales] = useState<{ email: string; password: string } | null>(null);
@@ -171,6 +187,18 @@ export default function SettingsUsers() {
                       }}
                     >
                       <Pencil size={14} strokeWidth={1.75} />
+                    </button>
+                    {/* Quitar no existía: se podía dar de alta a alguien con
+                        su rol y no había forma de sacarlo nunca. El del
+                        negocio y uno mismo los rechaza el servidor, y el
+                        aviso lo explica en vez de dar un error seco. */}
+                    <button
+                      aria-label={t("settings.quitarUsuario")}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors disabled:opacity-50"
+                      disabled={quitando === user.id}
+                      onClick={() => void quitar(user)}
+                    >
+                      {quitando === user.id ? <Spinner className="size-3.5" /> : <Trash2 size={14} strokeWidth={1.75} />}
                     </button>
                   </div>
                 </div>
