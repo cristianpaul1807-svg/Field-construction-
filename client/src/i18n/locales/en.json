@@ -796,7 +796,13 @@
     "quitarUsuarioConfirmar": "Remove {{nombre}}? They lose access to the panel and their AI connection is cut. Their invoices and work stay.",
     "quitando": "Removing…",
     "nuevaClave": "Set a new password",
-    "nuevaClaveConfirmar": "Set a new password for {{nombre}}? Their current one stops working and you’ll have to pass them the new one. The old one can’t be seen — passwords are stored encrypted."
+    "nuevaClaveConfirmar": "Set a new password for {{nombre}}? Their current one stops working and you’ll have to pass them the new one. The old one can’t be seen — passwords are stored encrypted.",
+    "verFicha": "Open details",
+    "queVeEtiqueta": "What they see",
+    "mcpEtiqueta": "AI connection",
+    "mcpSi": "Connected",
+    "mcpNo": "Not connected",
+    "editarUsuario": "Edit"
   },
   "reports": {
     "title": "Reports & Analytics",

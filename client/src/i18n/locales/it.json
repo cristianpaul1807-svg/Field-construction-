@@ -796,7 +796,13 @@
     "quitarUsuarioConfirmar": "Rimuovere {{nombre}}? Perderà l’accesso al pannello e la connessione con l’IA verrà tagliata. Le sue fatture e il suo lavoro restano.",
     "quitando": "Rimozione…",
     "nuevaClave": "Imposta una nuova password",
-    "nuevaClaveConfirmar": "Impostare una nuova password per {{nombre}}? Quella attuale smetterà di funzionare e dovrai passargli la nuova. La precedente non si può vedere: sono salvate cifrate."
+    "nuevaClaveConfirmar": "Impostare una nuova password per {{nombre}}? Quella attuale smetterà di funzionare e dovrai passargli la nuova. La precedente non si può vedere: sono salvate cifrate.",
+    "verFicha": "Apri la scheda",
+    "queVeEtiqueta": "Cosa vede",
+    "mcpEtiqueta": "Connessione con l’IA",
+    "mcpSi": "Connessa",
+    "mcpNo": "Non connessa",
+    "editarUsuario": "Modifica"
   },
   "reports": {
     "title": "Report",

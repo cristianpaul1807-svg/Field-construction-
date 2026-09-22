@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
 import { useApi, apiFetch, serverMessage, readJson } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -61,6 +61,8 @@ export default function SettingsUsers() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [quitando, setQuitando] = useState<string | null>(null);
   const [cambiandoClave, setCambiandoClave] = useState<string | null>(null);
+  /** Qué ficha está abierta. Una a la vez: dos abiertas es una lista que ya no se lee. */
+  const [abierta, setAbierta] = useState<string | null>(null);
 
   const nuevaClave = async (user: { id: string; name: string }) => {
     if (!window.confirm(t("settings.nuevaClaveConfirmar", { nombre: user.name }))) return;
@@ -170,72 +172,99 @@ export default function SettingsUsers() {
           <Card className="p-6">
             <div className="space-y-3">
               {data.users.map((user) => (
-                /* Apilada en el móvil y en una línea a partir de `sm`.
-                   Estaba siempre en una línea con el grupo de la derecha en
-                   `flex-shrink-0`: tres distintivos y tres botones que a 390 px
-                   ya son más anchos que la pantalla, así que aplastaban el
-                   nombre y el correo hasta hacerlos desaparecer y el botón de
-                   borrar se salía por el borde. */
-                <div key={user.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between py-2 border-b border-border last:border-0">
-                  <div className="flex items-center gap-3 min-w-0">
+                /* Una ficha que se abre, no una fila que lo enseña todo.
+                   Tenía el nombre, el correo, tres distintivos y tres botones
+                   en la misma línea: a 390 px eso no cabe, y lo que se perdía
+                   era justo el nombre —lo único que sirve para saber de quién
+                   es la fila—.
+                   Fuera se queda lo que identifica a la persona y lo que hay
+                   que resolver hoy; lo demás vive dentro. */
+                <div key={user.id} className="border-b border-border last:border-0">
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-3 py-3 text-left min-h-12"
+                    aria-expanded={abierta === user.id}
+                    aria-label={t("settings.verFicha")}
+                    onClick={() => setAbierta(abierta === user.id ? null : user.id)}
+                  >
                     <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {user.name.charAt(0)}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-foreground truncate">{user.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm text-foreground truncate">{user.name}</span>
+                      <span className="block text-xs text-muted-foreground truncate">{user.email}</span>
+                    </span>
+                    {/* Sólo el estado que pide algo. «Activo» es lo normal y
+                        no hace falta repetirlo en cada línea; «invitado» es
+                        alguien que todavía no ha entrado, y eso sí. */}
+                    {user.status !== "activo" && (
+                      <StatusBadge tone="warning" className="flex-shrink-0">{t("settings.userInvited")}</StatusBadge>
+                    )}
+                    {abierta === user.id
+                      ? <ChevronUp size={18} className="text-muted-foreground flex-shrink-0" />
+                      : <ChevronDown size={18} className="text-muted-foreground flex-shrink-0" />}
+                  </button>
+
+                  {abierta === user.id && (
+                    <div className="pb-3 pl-11 space-y-3">
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                        <span>
+                          <span className="block text-xs text-muted-foreground">{t("settings.queVeEtiqueta")}</span>
+                          <span className="text-foreground">{queVe(user.areas)}</span>
+                        </span>
+                        {user.mcpActive !== undefined && (
+                          <span>
+                            <span className="block text-xs text-muted-foreground">{t("settings.mcpEtiqueta")}</span>
+                            <span className={user.mcpActive ? "text-status-success-fg" : "text-muted-foreground"}>
+                              {user.mcpActive ? t("settings.mcpSi") : t("settings.mcpNo")}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Con su nombre al lado, no tres iconos que hay que
+                          adivinar. Dentro de la ficha hay sitio para decirlo. */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 min-h-11"
+                          onClick={() => {
+                            setSaveError(null);
+                            setDraft({
+                              id: user.id,
+                              name: user.name,
+                              email: user.email ?? "",
+                              phone: user.phone ?? "",
+                              areas: user.areas,
+                            });
+                          }}
+                        >
+                          <Pencil size={14} strokeWidth={1.75} /> {t("settings.editarUsuario")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 min-h-11"
+                          disabled={cambiandoClave === user.id}
+                          onClick={() => void nuevaClave(user)}
+                        >
+                          {cambiandoClave === user.id ? <Spinner className="size-3.5" /> : <KeyRound size={14} strokeWidth={1.75} />}
+                          {t("settings.nuevaClave")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 min-h-11 text-destructive"
+                          disabled={quitando === user.id}
+                          onClick={() => void quitar(user)}
+                        >
+                          {quitando === user.id ? <Spinner className="size-3.5" /> : <Trash2 size={14} strokeWidth={1.75} />}
+                          {t("settings.quitarUsuario")}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                    {/* Que envuelva en vez de empujar: en un móvil los
-                        distintivos se van a la línea de abajo y los botones se
-                        quedan donde el pulgar los busca. */}
-                    <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0 sm:justify-end pl-11 sm:pl-0">
-                      {user.mcpActive !== undefined && (
-                        <StatusBadge tone={user.mcpActive ? "success" : "error"}>
-                          MCP
-                        </StatusBadge>
-                      )}
-                      <StatusBadge tone="neutral">{queVe(user.areas)}</StatusBadge>
-                      <StatusBadge tone={user.status === "activo" ? "success" : "warning"}>
-                        {user.status === "activo" ? t("settings.userActive") : t("settings.userInvited")}
-                      </StatusBadge>
-                    <button
-                      aria-label={t("common.edit")}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                      onClick={() => {
-                        setSaveError(null);
-                        setDraft({
-                          id: user.id,
-                          name: user.name,
-                          email: user.email ?? "",
-                          phone: user.phone ?? "",
-                          areas: user.areas,
-                        });
-                      }}
-                    >
-                      <Pencil size={14} strokeWidth={1.75} />
-                    </button>
-                    {/* Quitar no existía: se podía dar de alta a alguien con
-                        su rol y no había forma de sacarlo nunca. El del
-                        negocio y uno mismo los rechaza el servidor, y el
-                        aviso lo explica en vez de dar un error seco. */}
-                    <button
-                      aria-label={t("settings.nuevaClave")}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
-                      disabled={cambiandoClave === user.id}
-                      onClick={() => void nuevaClave(user)}
-                    >
-                      {cambiandoClave === user.id ? <Spinner className="size-3.5" /> : <KeyRound size={14} strokeWidth={1.75} />}
-                    </button>
-                    <button
-                      aria-label={t("settings.quitarUsuario")}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors disabled:opacity-50"
-                      disabled={quitando === user.id}
-                      onClick={() => void quitar(user)}
-                    >
-                      {quitando === user.id ? <Spinner className="size-3.5" /> : <Trash2 size={14} strokeWidth={1.75} />}
-                    </button>
-                  </div>
+                  )}
                 </div>
               ))}
               {data.users.length === 0 && (

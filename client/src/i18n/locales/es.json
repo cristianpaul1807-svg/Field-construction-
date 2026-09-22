@@ -796,7 +796,13 @@
     "quitarUsuarioConfirmar": "¿Quitar a {{nombre}}? Perderá el acceso al panel y se le cortará la conexión con la IA. Sus facturas y su trabajo se quedan.",
     "quitando": "Quitando…",
     "nuevaClave": "Poner contraseña nueva",
-    "nuevaClaveConfirmar": "¿Poner una contraseña nueva a {{nombre}}? La que tenga dejará de valer y tendrás que pasarle la nueva. No se puede ver la anterior: están guardadas cifradas."
+    "nuevaClaveConfirmar": "¿Poner una contraseña nueva a {{nombre}}? La que tenga dejará de valer y tendrás que pasarle la nueva. No se puede ver la anterior: están guardadas cifradas.",
+    "verFicha": "Abrir la ficha",
+    "queVeEtiqueta": "Qué ve",
+    "mcpEtiqueta": "Conexión con la IA",
+    "mcpSi": "Conectada",
+    "mcpNo": "Sin conectar",
+    "editarUsuario": "Editar"
   },
   "reports": {
     "title": "Informes",

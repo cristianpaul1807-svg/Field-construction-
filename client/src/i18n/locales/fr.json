@@ -796,7 +796,13 @@
     "quitarUsuarioConfirmar": "Retirer {{nombre}} ? Cette personne perd l’accès au panneau et sa connexion à l’IA est coupée. Ses factures et son travail restent.",
     "quitando": "Retrait…",
     "nuevaClave": "Définir un nouveau mot de passe",
-    "nuevaClaveConfirmar": "Définir un nouveau mot de passe pour {{nombre}} ? L’actuel cessera de fonctionner et vous devrez lui transmettre le nouveau. L’ancien ne peut pas être vu : les mots de passe sont chiffrés."
+    "nuevaClaveConfirmar": "Définir un nouveau mot de passe pour {{nombre}} ? L’actuel cessera de fonctionner et vous devrez lui transmettre le nouveau. L’ancien ne peut pas être vu : les mots de passe sont chiffrés.",
+    "verFicha": "Ouvrir la fiche",
+    "queVeEtiqueta": "Ce qu’elle voit",
+    "mcpEtiqueta": "Connexion à l’IA",
+    "mcpSi": "Connectée",
+    "mcpNo": "Non connectée",
+    "editarUsuario": "Modifier"
   },
   "reports": {
     "title": "Rapports",
