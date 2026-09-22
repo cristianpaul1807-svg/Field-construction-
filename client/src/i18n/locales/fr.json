@@ -1551,7 +1551,9 @@
     "year_out_of_range": "Cette année est en dehors de la plage consultable.",
     "usuario_es_el_principal": "La personne qui a créé l’entreprise ne peut pas être retirée. Tout le reste en dépend.",
     "usuario_eres_tu": "Vous ne pouvez pas vous retirer vous-même : vous seriez exclu de votre propre panneau.",
-    "usuario_no_existe": "Cet utilisateur n’est plus là. Actualisez la liste."
+    "usuario_no_existe": "Cet utilisateur n’est plus là. Actualisez la liste.",
+    "usuario_de_otro_negocio": "Ce compte appartient déjà à une autre entreprise. Un compte ne peut être que dans une seule ; cette personne a besoin d’un autre courriel pour vous rejoindre.",
+    "usuario_ya_esta": "Cette personne fait déjà partie de votre équipe. Ouvrez-la avec le crayon pour changer son nom, son courriel ou ce qu’elle voit."
   },
   "workLog": {
     "title": "Suivi des travaux",

@@ -33,16 +33,33 @@ IDIOMAS = ["es", "en", "fr", "it"]
 # de decirlo. `code:` suelto no vale: la nómina también usa esa palabra para
 # las claves de las deducciones (rrq, cnesst, fss) y no son errores.
 PATRONES = [
-    re.compile(r'json\(\{[^}]*\bcode:\s*"([a-z0-9_]+)"'),
-    re.compile(r'new CodedError\(\s*"([a-z0-9_]+)"'),
+    # El valor entero de `code:` dentro de la respuesta, no su primera cadena.
+    # Con sólo la primera, un código elegido con un ternario
+    #
+    #     code: mismoNegocio ? "usuario_ya_esta" : "usuario_de_otro_negocio"
+    #
+    # se contaba a medias: el segundo no lo veía nadie y podía llegar a
+    # producción sin frase. Un guardia con un punto ciego es peor que ninguno,
+    # porque se confía en él.
+    #
+    # Se corta en la coma o la llave, no en el fin de línea: si no, se traga el
+    # `capacidad: "equipo"` que va al lado y lo cuenta como error.
+    re.compile(r'json\(\{[^}]*?\bcode:\s*([^,}\n]*)'),
+    re.compile(r'new CodedError\(\s*("[a-z0-9_]+")'),
 ]
+CADENA = re.compile(r'"([a-z][a-z0-9_]{2,})"')
 
 codigos: dict[str, set[str]] = {}
 for fuente in sorted((RAIZ / "server").glob("*.ts")):
     texto = fuente.read_text(encoding="utf-8")
     for patron in PATRONES:
-        for codigo in patron.findall(texto):
-            codigos.setdefault(codigo, set()).add(fuente.name)
+        for trozo in patron.findall(texto):
+            # De un ternario sólo cuentan sus ramas. Lo que hay antes del `?`
+            # es la condición, y ahí suele compararse contra un estado —
+            # `acuerdo.status === "firmado" ? …` — que no es ningún código.
+            rama = trozo.split("?", 1)[1] if "?" in trozo else trozo
+            for codigo in CADENA.findall(rama):
+                codigos.setdefault(codigo, set()).add(fuente.name)
 
 # Los que sólo salen por MCP no los lee una persona.
 de_pantalla = {c: d for c, d in codigos.items() if d != {"mcp.ts"}}

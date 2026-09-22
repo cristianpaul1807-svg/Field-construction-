@@ -1551,7 +1551,9 @@
     "year_out_of_range": "That year is outside the range you can look up.",
     "usuario_es_el_principal": "The person who created the business can’t be removed. Everything else hangs off them.",
     "usuario_eres_tu": "You can’t remove yourself — you’d be locked out of your own panel.",
-    "usuario_no_existe": "That user is already gone. Refresh the list."
+    "usuario_no_existe": "That user is already gone. Refresh the list.",
+    "usuario_ya_esta": "That person is already on your team. Open them with the pencil to change their name, email or what they can see.",
+    "usuario_de_otro_negocio": "That account already belongs to another business. An account can only be in one, so that person needs a different email to join here."
   },
   "workLog": {
     "title": "Work log",

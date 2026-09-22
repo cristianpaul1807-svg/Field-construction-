@@ -9939,6 +9939,30 @@ apiRouter.post(
     }
 
     const acceso = await crearAcceso(correo);
+
+    // ¿Esa cuenta ya está enganchada a una fila de `users`?
+    //
+    // `users.auth_user_id` es **único a nivel global**, así que una cuenta de
+    // Supabase Auth pertenece a un solo negocio. Sin esta comprobación el
+    // choque llegaba como un error de Postgres, se convertía en un 500, y en
+    // pantalla salía «Ocurrió un error inesperado» — que no dice ni qué pasó
+    // ni qué hacer, cuando lo que pasa es que esa persona ya está dentro.
+    const admin2 = getSupabaseAdmin();
+    const { data: yaEsta } = await admin2
+      .from("users")
+      .select("business_id")
+      .eq("auth_user_id", acceso.authUserId)
+      .maybeSingle();
+
+    if (yaEsta) {
+      const mismoNegocio = yaEsta.business_id === req.businessId;
+      res.status(409).json({
+        error: mismoNegocio ? "Esa persona ya está en tu equipo" : "Esa cuenta ya pertenece a otro negocio",
+        code: mismoNegocio ? "usuario_ya_esta" : "usuario_de_otro_negocio",
+      });
+      return;
+    }
+
     const { data, error } = await supabase
       .from("users")
       .insert({

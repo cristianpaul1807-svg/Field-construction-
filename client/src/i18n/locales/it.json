@@ -1551,7 +1551,9 @@
     "year_out_of_range": "Quell'anno è fuori dall'intervallo consultabile.",
     "usuario_es_el_principal": "Non si può rimuovere chi ha creato l’azienda. Tutto il resto dipende da lì.",
     "usuario_eres_tu": "Non puoi rimuovere te stesso: resteresti fuori dal tuo pannello.",
-    "usuario_no_existe": "Quell’utente non c’è più. Aggiorna l’elenco."
+    "usuario_no_existe": "Quell’utente non c’è più. Aggiorna l’elenco.",
+    "usuario_ya_esta": "Quella persona è già nel tuo team. Aprila con la matita per cambiarle nome, email o cosa vede.",
+    "usuario_de_otro_negocio": "Quell’account appartiene già a un’altra azienda. Un account può stare solo in una; quella persona ha bisogno di un’email diversa per entrare qui."
   },
   "workLog": {
     "title": "Controllo lavori",

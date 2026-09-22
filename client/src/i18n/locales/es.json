@@ -1551,7 +1551,9 @@
     "year_out_of_range": "Ese año queda fuera de lo que se puede consultar.",
     "usuario_es_el_principal": "No se puede quitar a quien creó el negocio. Es de quien cuelga todo lo demás.",
     "usuario_eres_tu": "No puedes quitarte a ti mismo: te quedarías fuera de tu propio panel.",
-    "usuario_no_existe": "Ese usuario ya no está. Actualiza la lista."
+    "usuario_no_existe": "Ese usuario ya no está. Actualiza la lista.",
+    "usuario_ya_esta": "Esa persona ya está en tu equipo. Ábrela con el lápiz para cambiarle el nombre, el correo o lo que ve.",
+    "usuario_de_otro_negocio": "Esa cuenta ya pertenece a otro negocio. Una cuenta sólo puede estar en uno; esa persona necesita un correo distinto para entrar aquí."
   },
   "workLog": {
     "title": "Control de trabajo",
