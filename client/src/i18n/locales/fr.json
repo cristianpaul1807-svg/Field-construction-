@@ -571,16 +571,19 @@
     "mcpResumen": "Connectez Claude ou ChatGPT et posez vos questions sur votre horaire, vos heures ou vos chantiers sans ouvrir cette application.",
     "mcpEjemplo": "Par exemple : « qu'est-ce que j'ai demain ? » ou « combien d'heures ai-je faites cette semaine ? ».",
     "mcpPaso1": "Ouvrez Claude ou ChatGPT sur ce téléphone et cherchez à ajouter un connecteur.",
-    "mcpPaso2": "Collez cette adresse :",
+    "mcpPaso2": "Collez cette adresse et cet identifiant :",
     "mcpPaso3": "Quand on vous demande de vous connecter, saisissez votre même code d'accès. Aucun compte ni mot de passe nécessaire.",
     "mcpSoloLectura": "Il peut seulement lire ce qui vous appartient. Il ne peut rien modifier, ni pointer à votre place, ni voir la paie des autres.",
-    "mcpCopiar": "Copier l'adresse",
+    "mcpCopiar": "Copier",
     "mcpCopiado": "Copiée",
     "mcpYaConectado": "C'est connecté. Vous pouvez poser vos questions depuis Claude ou ChatGPT quand vous voulez.",
     "mcpDesconectar": "Déconnecter",
     "mcpDesconectando": "Déconnexion…",
     "mcpDesconectado": "Déconnecté. L'IA ne peut plus consulter votre travail.",
-    "mcpNoDesconecta": "Impossible de déconnecter. Réessayez."
+    "mcpNoDesconecta": "Impossible de déconnecter. Réessayez.",
+    "mcpDireccion": "Adresse",
+    "mcpIdentificador": "Identifiant (Client ID)",
+    "mcpSinClientId": "Impossible de connecter d’ici pour l’instant : l’identifiant de Claude n’est pas enregistré. Dites-le au bureau et nous le préparerons."
   },
   "publicChat": {
     "chatWithBusiness": "Clavarder avec l'entreprise",

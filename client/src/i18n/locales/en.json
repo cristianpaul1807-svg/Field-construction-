@@ -571,16 +571,19 @@
     "mcpResumen": "Connect Claude or ChatGPT and ask about your schedule, your hours or your jobs without opening this app.",
     "mcpEjemplo": "For example: “what do I have tomorrow?” or “how many hours have I done this week?”.",
     "mcpPaso1": "Open Claude or ChatGPT on this phone and look for adding a connector.",
-    "mcpPaso2": "Paste this address:",
+    "mcpPaso2": "Paste this address and this ID:",
     "mcpPaso3": "When it asks you to sign in, type your same access code. No account or password needed.",
     "mcpSoloLectura": "It can only read what's yours. It can't change anything, clock in for you, or see what others are paid.",
-    "mcpCopiar": "Copy address",
+    "mcpCopiar": "Copy",
     "mcpCopiado": "Copied",
     "mcpYaConectado": "It's connected. You can ask from Claude or ChatGPT whenever you like.",
     "mcpDesconectar": "Disconnect",
     "mcpDesconectando": "Disconnecting…",
     "mcpDesconectado": "Disconnected. AI can no longer look at your work.",
-    "mcpNoDesconecta": "Could not disconnect. Try again."
+    "mcpNoDesconecta": "Could not disconnect. Try again.",
+    "mcpDireccion": "Address",
+    "mcpIdentificador": "Identifier (Client ID)",
+    "mcpSinClientId": "You can’t connect from here yet: Claude’s identifier hasn’t been registered. Tell the office and we’ll set it up."
   },
   "publicChat": {
     "chatWithBusiness": "Chat with the business",

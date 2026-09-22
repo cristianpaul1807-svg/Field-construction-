@@ -67,6 +67,7 @@ import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
 import { planDelPrecio, periodoDelPrecio } from "../shared/suscripcionStripe";
 import { atribuirNegocio, anotarComision, panelDelAfiliado } from "./afiliados";
+import { clientesOAuth, clientIdDeClaude } from "./mcpClientes";
 import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIO, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
@@ -1675,7 +1676,13 @@ apiRouter.get(
     // La dirección va con el estado y no la compone la pantalla: es el dato
     // que el trabajador tiene que copiar, y el servidor es quien sabe bajo qué
     // dominio está corriendo.
-    res.json({ active: !!data, mcpUrl: `${req.protocol}://${req.get("host")}/mcp` });
+    res.json({
+      active: !!data,
+      mcpUrl: `${req.protocol}://${req.get("host")}/mcp`,
+      // Sin esto Claude no abre la autorización, así que los pasos de la app
+      // del trabajador estaban incompletos y no se podían terminar.
+      clientId: await clientIdDeClaude(getSupabaseAdmin()),
+    });
   })
 );
 
@@ -3881,28 +3888,23 @@ apiRouter.get(
   "/settings/mcp-connections",
   route(async (req, res) => {
     const admin = getSupabaseAdmin();
+    // La misma regla que le damos al trabajador en `/worker/mcp-status`. Ver
+    // `server/mcpClientes.ts`: estaba escrita aquí dentro y sólo aquí, así que
+    // la app del trabajador no tenía de dónde sacar el Client ID.
     const [clients, connections] = await Promise.all([
-      admin.from("mcp_oauth_clients").select("client_id, client_name, redirect_uris, token_endpoint_auth_method, created_at").order("created_at", { ascending: true }).limit(50),
+      clientesOAuth(admin),
       admin.from("mcp_connections").select("id, provider, status, scopes, created_at, last_used_at, revoked_at, owner_auth_user_id").eq("business_id", req.businessId!).eq("owner_auth_user_id", req.authUserId!).order("created_at", { ascending: false }).limit(50),
     ]);
-    if (clients.error) throw clients.error;
     if (connections.error) throw connections.error;
 
     const configuredProviders = new Map<string, any[]>();
-    for (const client of clients.data ?? []) {
-      const name = `${client.client_name} ${client.client_id}`.toLowerCase();
-      const provider = name.includes("claude") || name.includes("anthropic")
-        ? "claude"
-        : name.includes("chatgpt") || name.includes("openai")
-          ? "chatgpt"
-          : name.includes("manus")
-            ? "manus"
-            : "other";
-      const list = configuredProviders.get(provider) ?? [];
-      const redirectUris = (client.redirect_uris ?? []) as string[];
-      const valid = provider === "other" || !redirectUris.some((uri) => uri.includes("claude.ai")) || provider === "claude";
-      list.push({ clientId: client.client_id, clientName: client.client_name, redirectUris, tokenEndpointAuthMethod: client.token_endpoint_auth_method, createdAt: client.created_at, valid });
-      configuredProviders.set(provider, list);
+    for (const client of clients) {
+      const list = configuredProviders.get(client.proveedor) ?? [];
+      list.push({
+        clientId: client.clientId, clientName: client.clientName, redirectUris: client.redirectUris,
+        tokenEndpointAuthMethod: client.tokenEndpointAuthMethod, createdAt: client.createdAt, valid: client.valido,
+      });
+      configuredProviders.set(client.proveedor, list);
     }
 
     // Field officially supports Claude first. Other platform registrations are

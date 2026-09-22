@@ -28,15 +28,32 @@ import { workerApiFetch } from "@/lib/workerSession";
  * un panel que dice que no está conectado.
  */
 function useEstadoMcp() {
-  const [estado, setEstado] = useState<{ activo: boolean; url: string } | null>(null);
+  const [estado, setEstado] = useState<{ activo: boolean; url: string; clientId: string | null } | null>(null);
   const cargar = useCallback(() => {
     workerApiFetch("/api/worker/mcp-status")
       .then((r) => r.json())
-      .then((d) => setEstado({ activo: Boolean(d.active), url: String(d.mcpUrl ?? "") }))
+      .then((d) => setEstado({ activo: Boolean(d.active), url: String(d.mcpUrl ?? ""), clientId: d.clientId ?? null }))
       .catch(() => setEstado(null));
   }, []);
   useEffect(cargar, [cargar]);
   return { estado, recargar: cargar };
+}
+
+/** Un dato para copiar: su nombre, su valor y el botón. */
+function Dato({ que, valor, copiado, onCopiar }: { que: string; valor: string; copiado: boolean; onCopiar: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <span className="mt-1.5 block">
+      <span className="block text-xs font-medium uppercase tracking-wide text-muted-foreground">{que}</span>
+      <span className="mt-1 flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2">
+        <code className="min-w-0 flex-1 truncate text-xs">{valor}</code>
+        <Button type="button" size="sm" variant="outline" className="gap-1.5 shrink-0 min-h-11" onClick={onCopiar}>
+          {copiado ? <Check size={14} /> : <Copy size={14} />}
+          <span className="sr-only">{copiado ? t("worker.mcpCopiado") : t("worker.mcpCopiar")}</span>
+        </Button>
+      </span>
+    </span>
+  );
 }
 
 function WorkerMcpBadge({ activo }: { activo: boolean }) {
@@ -65,10 +82,10 @@ function WorkerMcpBadge({ activo }: { activo: boolean }) {
  * le importa poder preguntar qué tiene mañana; cómo se llama el protocolo por
  * dentro es asunto nuestro.
  */
-function WorkerMcp({ estado, recargar }: { estado: { activo: boolean; url: string } | null; recargar: () => void }) {
+function WorkerMcp({ estado, recargar }: { estado: { activo: boolean; url: string; clientId: string | null } | null; recargar: () => void }) {
   const { t } = useTranslation();
   const [abierto, setAbierto] = useState(false);
-  const [copiado, setCopiado] = useState(false);
+  const [copiado, setCopiado] = useState<string | null>(null);
   const [soltando, setSoltando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -76,10 +93,10 @@ function WorkerMcp({ estado, recargar }: { estado: { activo: boolean; url: strin
   // no hace falta. Vuelve solo cuando el estado llega.
   if (!estado) return null;
 
-  const copiar = async () => {
-    await navigator.clipboard.writeText(estado.url);
-    setCopiado(true);
-    window.setTimeout(() => setCopiado(false), 1600);
+  const copiar = async (que: string, valor: string) => {
+    await navigator.clipboard.writeText(valor);
+    setCopiado(que);
+    window.setTimeout(() => setCopiado(null), 1600);
   };
 
   const soltar = async () => {
@@ -125,18 +142,18 @@ function WorkerMcp({ estado, recargar }: { estado: { activo: boolean; url: strin
                 <Unlink size={15} /> {soltando ? t("worker.mcpDesconectando") : t("worker.mcpDesconectar")}
               </Button>
             </>
+          ) : !estado.clientId ? (
+            <p className="text-status-warning-fg">{t("worker.mcpSinClientId")}</p>
           ) : (
             <ol className="list-decimal pl-5 space-y-2 text-muted-foreground">
               <li>{t("worker.mcpPaso1")}</li>
               <li>
                 {t("worker.mcpPaso2")}
-                <span className="mt-1.5 flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2">
-                  <code className="min-w-0 flex-1 truncate text-xs">{estado.url}</code>
-                  <Button type="button" size="sm" variant="outline" className="gap-1.5 shrink-0 min-h-11" onClick={copiar}>
-                    {copiado ? <Check size={14} /> : <Copy size={14} />}
-                    <span className="sr-only sm:not-sr-only">{copiado ? t("worker.mcpCopiado") : t("worker.mcpCopiar")}</span>
-                  </Button>
-                </span>
+                <Dato que={t("worker.mcpDireccion")} valor={estado.url} copiado={copiado === "url"} onCopiar={() => copiar("url", estado.url)} />
+                {/* El identificador va con la dirección y no es opcional:
+                    Claude no abre la autorización sin él, y sin este dato los
+                    tres pasos no se pueden terminar. */}
+                <Dato que={t("worker.mcpIdentificador")} valor={estado.clientId!} copiado={copiado === "id"} onCopiar={() => copiar("id", estado.clientId!)} />
               </li>
               <li>{t("worker.mcpPaso3")}</li>
             </ol>
