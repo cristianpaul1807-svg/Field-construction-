@@ -2629,7 +2629,11 @@
     "quienEmpleado": "Lavoratore",
     "quienSubcontratista": "Subappaltatore",
     "quienDesconocido": "Non identificato",
-    "desde": "Dal {{fecha}}"
+    "desde": "Dal {{fecha}}",
+    "caducada": "Non usata: potrebbe essere già stata rimossa da Claude",
+    "usadaEl": "Usata il {{fecha}}",
+    "nuncaUsada": "Mai usata",
+    "noAvisan": "Se qualcuno rimuove il connettore da Claude, a noi non arriva nessun avviso. Per questo conviene guardare l’ultimo uso e tagliare a mano ciò che non serve più."
   },
   "afiliado": {
     "titulo": "Il tuo link di raccomandazione",

@@ -2629,7 +2629,11 @@
     "quienEmpleado": "Worker",
     "quienSubcontratista": "Subcontractor",
     "quienDesconocido": "Unidentified",
-    "desde": "Since {{fecha}}"
+    "desde": "Since {{fecha}}",
+    "caducada": "Unused: it may already have been removed from Claude",
+    "usadaEl": "Used on {{fecha}}",
+    "nuncaUsada": "Never used",
+    "noAvisan": "If someone removes the connector from Claude, we get no notice. That’s why it’s worth checking when each was last used and cutting by hand what no longer belongs."
   },
   "afiliado": {
     "titulo": "Your referral link",

@@ -2629,7 +2629,11 @@
     "quienEmpleado": "Travailleur",
     "quienSubcontratista": "Sous-traitant",
     "quienDesconocido": "Non identifié",
-    "desde": "Depuis le {{fecha}}"
+    "desde": "Depuis le {{fecha}}",
+    "caducada": "Inutilisée : elle a peut-être déjà été retirée depuis Claude",
+    "usadaEl": "Utilisée le {{fecha}}",
+    "nuncaUsada": "Jamais utilisée",
+    "noAvisan": "Si quelqu’un retire le connecteur depuis Claude, nous n’en sommes pas avisés. D’où l’intérêt de regarder la dernière utilisation et de couper à la main ce qui n’a plus lieu d’être."
   },
   "afiliado": {
     "titulo": "Votre lien de recommandation",

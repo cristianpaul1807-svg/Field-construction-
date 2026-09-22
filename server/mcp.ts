@@ -187,6 +187,24 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
   if (!connection || connection.status !== "active" || oauth.scope !== "mcp:read") return null;
   const id = connection.employee_id ?? connection.subcontractor_id ?? connection.owner_auth_user_id;
   if (!id) return null;
+
+  // Cuándo se usó por última vez.
+  //
+  // La columna existía y **no la escribía nadie**, así que el panel enseñaba
+  // «conectado» sin poder decir desde cuándo ni si seguía viva. Importa porque
+  // cuando alguien borra el conector en Claude no nos avisa nadie: no hay
+  // devolución de llamada en OAuth para «me han desinstalado». Lo único que se
+  // nota es que dejan de venir peticiones, y para notarlo hay que apuntarlas.
+  //
+  // Sin esperar la respuesta: esto va delante de cada consulta del usuario y
+  // un sello no puede hacerla más lenta ni tumbarla si falla.
+  void admin
+    .from("mcp_connections")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("id", oauth.connection_id)
+    .then(({ error }) => {
+      if (error) console.error("[MCP] no se pudo anotar el uso", error.message);
+    });
   if (connection.owner_auth_user_id) {
     // La **misma** función que usó el formulario de consentimiento para dejarle
     // entrar. Ver `resolveOwnerIdentity`: que aquí se comprobara otra cosa es

@@ -35,6 +35,8 @@ interface Platform {
   connections: {
     id: string; status: string; scopes: string[]; createdAt: string; lastUsedAt: string | null; revokedAt: string | null;
     quien: { tipo: "empleado" | "subcontratista" | "duenno"; nombre: string | null };
+    /** Si le queda un token de refresco vivo. Ver `conexionesVivas`. */
+    viva: boolean;
   }[];
 }
 interface MpcConnectionsData {
@@ -141,8 +143,16 @@ export default function SettingsMcpConnections() {
                       <span className="block text-xs text-muted-foreground">
                         {t(`mcpConex.quien${connection.quien.tipo === "duenno" ? "Duenno" : connection.quien.tipo === "empleado" ? "Empleado" : "Subcontratista"}`)}
                         {" · "}
-                        {t("mcpConex.desde", { fecha: new Date(connection.createdAt).toLocaleDateString(i18n.language) })}
+                        {connection.lastUsedAt
+                          ? t("mcpConex.usadaEl", { fecha: new Date(connection.lastUsedAt).toLocaleDateString(i18n.language) })
+                          : t("mcpConex.nuncaUsada")}
                       </span>
+                      {/* Sin refresco vivo es que Claude dejó de venir. No se
+                          borra sola: se dice, y que decida quien sabe si esa
+                          persona sigue en la empresa. */}
+                      {!connection.viva && (
+                        <span className="block text-xs text-status-warning-fg">{t("mcpConex.caducada")}</span>
+                      )}
                     </span>
                     <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive shrink-0" onClick={() => revoke(connection.id)} disabled={revoking === connection.id}>
                       {revoking === connection.id ? <Spinner className="size-3.5" /> : null} {t("mcpConex.revocar")}
@@ -150,6 +160,7 @@ export default function SettingsMcpConnections() {
                   </div>
                 ))
               )}
+              <p className="text-xs text-muted-foreground pt-1">{t("mcpConex.noAvisan")}</p>
             </div>
           </div>}
         </Card>;

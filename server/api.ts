@@ -67,7 +67,7 @@ import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
 import { planDelPrecio, periodoDelPrecio } from "../shared/suscripcionStripe";
 import { atribuirNegocio, anotarComision, panelDelAfiliado } from "./afiliados";
-import { clientesOAuth, clientIdDeClaude } from "./mcpClientes";
+import { clientesOAuth, clientIdDeClaude, conexionesVivas } from "./mcpClientes";
 import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIO, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
@@ -1664,7 +1664,8 @@ apiRouter.get(
   "/worker/mcp-status",
   requireWorkerAuth,
   route(async (req, res) => {
-    const { data, error } = await getSupabaseAdmin()
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
       .from("mcp_connections")
       .select("id")
       .eq("business_id", req.workerBusinessId!)
@@ -1673,11 +1674,14 @@ apiRouter.get(
       .limit(1)
       .maybeSingle();
     if (error) throw error;
+    // Una fila viva no basta: si borró el conector en Claude, la fila sigue
+    // ahí y nadie nos avisó. Ver `conexionesVivas`.
+    const vivas = await conexionesVivas(admin, data ? [data.id] : []);
     // La dirección va con el estado y no la compone la pantalla: es el dato
     // que el trabajador tiene que copiar, y el servidor es quien sabe bajo qué
     // dominio está corriendo.
     res.json({
-      active: !!data,
+      active: Boolean(data && vivas.has(data.id)),
       mcpUrl: `${req.protocol}://${req.get("host")}/mcp`,
       // Sin esto Claude no abre la autorización, así que los pasos de la app
       // del trabajador estaban incompletos y no se podían terminar.
@@ -3962,6 +3966,7 @@ apiRouter.get(
     // Sin nombre, una conexión es un identificador y nadie sabe a quién
     // apagarle la IA. Con nombre es una decisión que se puede tomar.
     const nombres = await nombresDeLasConexiones(admin, req.businessId!, connections.data ?? []);
+    const vivas = await conexionesVivas(admin, (connections.data ?? []).map((c) => c.id));
 
     const configuredProviders = new Map<string, any[]>();
     for (const client of clients) {
@@ -3984,6 +3989,7 @@ apiRouter.get(
       connections: (connections.data ?? []).filter((connection) => connection.provider === platform.id).map((connection) => ({
         id: connection.id, status: connection.status, scopes: connection.scopes, createdAt: connection.created_at, lastUsedAt: connection.last_used_at, revokedAt: connection.revoked_at,
         quien: nombreDeLaConexion(connection, nombres),
+        viva: vivas.has(connection.id),
       })),
     }));
     res.json({ mcpUrl: `${req.protocol}://${req.get("host")}/mcp`, scope: "mcp:read", platforms });

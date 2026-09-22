@@ -91,3 +91,36 @@ export async function clientIdDeClaude(admin: Admin): Promise<string | null> {
   const clientes = await clientesOAuth(admin);
   return clientes.find((cliente) => cliente.proveedor === "claude" && cliente.valido)?.clientId ?? null;
 }
+
+/**
+ * Cuáles de estas conexiones siguen vivas de verdad.
+ *
+ * Cuando alguien borra el conector en Claude, **a nosotros no nos avisa
+ * nadie**: OAuth no tiene devolución de llamada para «me han desinstalado».
+ * La fila se queda en `active` para siempre y el panel enseña «conectado» de
+ * algo que ya no existe.
+ *
+ * Lo que sí se puede comprobar es si queda un token de refresco vivo. Claude
+ * refresca mientras el conector está puesto; si lo quitan, deja de refrescar y
+ * el último refresco caduca solo. Eso convierte «conectado» en una pregunta
+ * con respuesta en vez de en una fila que nadie borra.
+ *
+ * No es inmediato —hasta que caduque el refresco puede pasar un mes— y por eso
+ * el panel enseña además la última vez que se usó y deja cortarla a mano. Lo
+ * que no se puede saber no se finge: se pone delante para que lo juzgue quien
+ * sí lo sabe.
+ *
+ * Y de paso descarta la que nunca llegó a completarse: autorizada, sin canjear
+ * el token, sin un solo uso. Esa jamás debió contar como conectada.
+ */
+export async function conexionesVivas(admin: Admin, ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const { data, error } = await admin
+    .from("mcp_oauth_tokens")
+    .select("connection_id")
+    .in("connection_id", ids)
+    .is("revoked_at", null)
+    .gt("refresh_expires_at", new Date().toISOString());
+  if (error) throw error;
+  return new Set((data ?? []).map((fila) => fila.connection_id as string));
+}
