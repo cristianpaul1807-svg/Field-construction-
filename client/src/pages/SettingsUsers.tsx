@@ -170,7 +170,13 @@ export default function SettingsUsers() {
           <Card className="p-6">
             <div className="space-y-3">
               {data.users.map((user) => (
-                <div key={user.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                /* Apilada en el móvil y en una línea a partir de `sm`.
+                   Estaba siempre en una línea con el grupo de la derecha en
+                   `flex-shrink-0`: tres distintivos y tres botones que a 390 px
+                   ya son más anchos que la pantalla, así que aplastaban el
+                   nombre y el correo hasta hacerlos desaparecer y el botón de
+                   borrar se salía por el borde. */
+                <div key={user.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between py-2 border-b border-border last:border-0">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {user.name.charAt(0)}
@@ -180,7 +186,10 @@ export default function SettingsUsers() {
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                   </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Que envuelva en vez de empujar: en un móvil los
+                        distintivos se van a la línea de abajo y los botones se
+                        quedan donde el pulgar los busca. */}
+                    <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0 sm:justify-end pl-11 sm:pl-0">
                       {user.mcpActive !== undefined && (
                         <StatusBadge tone={user.mcpActive ? "success" : "error"}>
                           MCP
