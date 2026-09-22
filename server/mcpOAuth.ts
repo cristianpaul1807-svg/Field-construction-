@@ -117,11 +117,10 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
   const admin = getSupabaseAdmin();
   const column = identity.workerKind === "employee" ? "employee_id" : identity.workerKind === "subcontractor" ? "subcontractor_id" : "owner_auth_user_id";
   const clientLabel = `${client.client_id} ${client.client_name}`.toLowerCase();
-  const provider = clientLabel.includes("claude") || clientLabel.includes("anthropic")
-    ? "claude"
-    : clientLabel.includes("chatgpt") || clientLabel.includes("openai")
-      ? "chatgpt"
-      : "other";
+  // Claude o lo demás. Etiquetar con el nombre de cada plataforma sonaba más
+  // fino y no lo era: lo único que se hace con esto es distinguir la conexión
+  // de Claude, que es la única que hoy se puede completar.
+  const provider = clientLabel.includes("claude") || clientLabel.includes("anthropic") ? "claude" : "other";
   const existing = await admin.from("mcp_connections")
     .select("id")
     .eq("business_id", identity.businessId)

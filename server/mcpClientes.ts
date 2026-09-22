@@ -26,18 +26,23 @@ export interface ClienteOAuth {
   redirectUris: string[];
   tokenEndpointAuthMethod: string;
   createdAt: string;
-  proveedor: "claude" | "chatgpt" | "manus" | "other";
+  /**
+   * Claude, o cualquier otra cosa.
+   *
+   * Aquí había una lista con los nombres de las demás. No servía para nada:
+   * lo único que se decide con esto es si un registro vale, y eso sólo
+   * depende de si es de Claude. Nombrar plataformas que no se pueden conectar
+   * es escribir una promesa en un sitio donde nadie la va a cumplir.
+   */
+  proveedor: "claude" | "otro";
   /** Si se puede repartir. Ver `esValido`. */
   valido: boolean;
 }
 
-/** De quién es este registro, por lo que dice de sí mismo. */
+/** Si este registro es de Claude, por lo que dice de sí mismo. */
 function proveedorDe(nombre: string, clientId: string): ClienteOAuth["proveedor"] {
   const texto = `${nombre} ${clientId}`.toLowerCase();
-  if (texto.includes("claude") || texto.includes("anthropic")) return "claude";
-  if (texto.includes("chatgpt") || texto.includes("openai")) return "chatgpt";
-  if (texto.includes("manus")) return "manus";
-  return "other";
+  return texto.includes("claude") || texto.includes("anthropic") ? "claude" : "otro";
 }
 
 /**

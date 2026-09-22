@@ -82,7 +82,9 @@ Las tablas MCP principales son:
 
 La aplicación incluye la pantalla `SettingsMcpConnections.tsx`, que muestra URL MCP, alcance `mcp:read`, estado OAuth, conexiones activas y la acción de revocar. La revocación está limitada al negocio y al propietario autenticado que administra esa conexión.
 
-La interfaz contempla Claude, ChatGPT, Manus y Gemini como plataformas visibles. El backend normaliza internamente los proveedores permitidos como `claude`, `chatgpt` y `other`. La presencia visual de una plataforma en la pantalla no significa todavía que su flujo OAuth específico haya sido probado en producción.
+La interfaz enseña **sólo Claude**. Contempló también ChatGPT, Manus y Gemini, cada una con su color y su inicial, pero el servidor nunca devolvió ninguna: era una promesa pintada en una pantalla de algo que no se podía conectar. El backend normaliza ahora el proveedor como `claude` u `other`, que es lo único con lo que se decide algo.
+
+Las tres secciones de abajo siguen siendo el plan. Cuando una se pruebe de verdad —Client ID registrado, retorno propio y una conexión completada— se añade a la pantalla; no antes.
 
 ## 4. Modelo de roles y planes
 
@@ -211,15 +213,15 @@ Ya probado hasta autorización OAuth con el endpoint público `/mcp`. Debe conse
 
 ### ChatGPT
 
-La arquitectura OAuth y el registro de clientes están preparados, pero falta una prueba completa específica del conector ChatGPT con sus URI de retorno actuales. No se debe reutilizar automáticamente el Client ID de Claude si el cliente utiliza otro callback.
+No aparece en la pantalla. La arquitectura OAuth y el registro de clientes están preparados, pero falta una prueba completa específica del conector ChatGPT con sus URI de retorno actuales. No se debe reutilizar automáticamente el Client ID de Claude si el cliente utiliza otro callback.
 
 ### Manus
 
-La interfaz contempla Manus como plataforma, pero debe definirse si la conexión será OAuth externa, conexión interna o una herramienta administrada por el proyecto. No debe aparecer como “conectado” solo por estar en el catálogo visual.
+No aparece en la pantalla. Debe definirse si la conexión será OAuth externa, conexión interna o una herramienta administrada por el proyecto. No debe aparecer como “conectado” solo por estar en el catálogo visual.
 
 ### Gemini
 
-La interfaz contempla Gemini, pero el flujo OAuth y el soporte MCP remoto deben verificarse antes de prometerlo a clientes.
+No aparece en la pantalla. El flujo OAuth y el soporte MCP remoto deben verificarse antes de prometerlo a clientes.
 
 ### QuickBooks
 

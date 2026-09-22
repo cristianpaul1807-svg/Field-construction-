@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bot, Check, ChevronDown, ChevronUp, Copy, ExternalLink, KeyRound, Link2, MessageCircle, ShieldCheck, Sparkles, Users, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Copy, ExternalLink, KeyRound, Link2, ShieldCheck, Users, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,15 @@ interface OAuthClient {
   valid: boolean;
 }
 interface Platform {
-  id: "claude" | "chatgpt" | "manus" | "gemini";
+  /**
+   * Claude y nada más, a propósito.
+   *
+   * Aquí había también chatgpt, manus y gemini, con su color y su inicial. El
+   * servidor nunca devolvió ninguna: era una promesa pintada en una pantalla
+   * de algo que no se puede conectar. Cuando haya otra de verdad, se añade —
+   * con su Client ID registrado y probado, no con un icono.
+   */
+  id: "claude";
   name: string;
   description: string;
   docsUrl: string;
@@ -31,12 +39,7 @@ interface MpcConnectionsData {
   platforms: Platform[];
 }
 
-const brand: Record<Platform["id"], { bg: string; fg: string; Icon: typeof Bot; mark: string }> = {
-  claude: { bg: "bg-[#f3e5d5]", fg: "text-[#9a5b24]", Icon: MessageCircle, mark: "C" },
-  chatgpt: { bg: "bg-[#dff4ec]", fg: "text-[#14795c]", Icon: Bot, mark: "✳" },
-  manus: { bg: "bg-[#e5e7ff]", fg: "text-[#4b4fc4]", Icon: Sparkles, mark: "M" },
-  gemini: { bg: "bg-[#e1efff]", fg: "text-[#2870c7]", Icon: Sparkles, mark: "✦" },
-};
+
 
 function CopyButton({ value, label }: { value: string; label: string }) {
   const { t } = useTranslation();
@@ -49,12 +52,12 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   return <Button type="button" size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={copy}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? t("mcpConex.copiado") : label}</Button>;
 }
 
-function Logo({ id }: { id: Platform["id"] }) {
-  const item = brand[id];
-  if (id === "claude") {
-    return <div className={`size-11 rounded-xl ${item.bg} flex items-center justify-center overflow-hidden`}><img src="/brand/claude-logo.png" alt="Claude" className="size-8 object-contain" /></div>;
-  }
-  return <div className={`size-11 rounded-xl ${item.bg} ${item.fg} flex items-center justify-center font-bold text-xl`} aria-hidden="true">{item.mark}</div>;
+function Logo() {
+  return (
+    <div className="size-11 rounded-xl bg-[#f3e5d5] flex items-center justify-center overflow-hidden">
+      <img src="/brand/claude-logo.png" alt="Claude" className="size-8 object-contain" />
+    </div>
+  );
 }
 
 export default function SettingsMcpConnections() {
@@ -98,12 +101,11 @@ export default function SettingsMcpConnections() {
     {!loading && !error && <div className="grid gap-4 md:grid-cols-2">
       {platforms.map((platform) => {
         const isOpen = open === platform.id;
-        const style = brand[platform.id];
         const validClient = platform.clients.find((client) => client.valid);
         const invalidClients = platform.clients.filter((client) => !client.valid);
         return <Card key={platform.id} className="overflow-hidden">
           <button type="button" className="w-full text-left p-5 flex items-start gap-3 hover:bg-secondary/40 transition-colors" onClick={() => setOpen(isOpen ? null : platform.id)} aria-expanded={isOpen}>
-            <Logo id={platform.id} />
+            <Logo />
             <span className="min-w-0 flex-1"><span className="flex items-center gap-2 font-semibold">{platform.name}{platform.configured && <span title={t("mcpConex.oauthListoQue")} className="text-[11px] rounded-full bg-status-success-bg text-status-success-fg px-2 py-0.5">{t("mcpConex.oauthListo")}</span>}{platform.connections.some((connection) => connection.status === "active") && <span title={t("mcpConex.conectadoQue")} className="text-[11px] rounded-full bg-status-success-bg text-status-success-fg px-2 py-0.5">{t("mcpConex.conectado")}</span>}</span><span className="block text-sm text-muted-foreground mt-1">{platform.description}</span></span>
             {isOpen ? <ChevronUp size={18} className="text-muted-foreground" /> : <ChevronDown size={18} className="text-muted-foreground" />}
           </button>
@@ -123,5 +125,3 @@ export default function SettingsMcpConnections() {
     </div>}
   </div>;
 }
-
-export { Logo };
