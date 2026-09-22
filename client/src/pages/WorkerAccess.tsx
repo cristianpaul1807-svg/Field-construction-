@@ -1,12 +1,12 @@
 import { readJson } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, HardHat, LogOut, CalendarDays, Clock, MessageCircle } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, ChevronDown, ChevronUp, Clock, Copy, HardHat, LogOut, MessageCircle, Sparkles, Unlink } from "lucide-react";
 import { getWorkerSession, setWorkerSession, clearWorkerSession, type WorkerSession } from "@/lib/workerSession";
 import { WorkerScheduleView } from "@/components/WorkerScheduleView";
 import { WorkerClock } from "@/components/WorkerClock";
@@ -20,21 +20,137 @@ import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 import { StatusBadge } from "@/components/StatusBadge";
 import { workerApiFetch } from "@/lib/workerSession";
 
-function WorkerMcpBadge() {
-  const { t } = useTranslation();
-  const [active, setActive] = useState(false);
-  useEffect(() => {
+/**
+ * Si este trabajador tiene la IA conectada, en un solo sitio.
+ *
+ * Lo leen el distintivo de la cabecera y el panel de abajo. Tenerlo dos veces
+ * sería dos peticiones y, el día que una falle, un distintivo verde encima de
+ * un panel que dice que no está conectado.
+ */
+function useEstadoMcp() {
+  const [estado, setEstado] = useState<{ activo: boolean; url: string } | null>(null);
+  const cargar = useCallback(() => {
     workerApiFetch("/api/worker/mcp-status")
-      .then(r => r.json())
-      .then(d => setActive(d.active))
-      .catch(() => {});
+      .then((r) => r.json())
+      .then((d) => setEstado({ activo: Boolean(d.active), url: String(d.mcpUrl ?? "") }))
+      .catch(() => setEstado(null));
   }, []);
-  
-  if (!active) return null;
+  useEffect(cargar, [cargar]);
+  return { estado, recargar: cargar };
+}
+
+function WorkerMcpBadge({ activo }: { activo: boolean }) {
+  const { t } = useTranslation();
+  if (!activo) return null;
   return (
     <StatusBadge tone="success" className="ml-2 scale-90 origin-left">
-      MCP {t("worker.mcpActive", "Conectado")}
+      MCP {t("worker.mcpConectado")}
     </StatusBadge>
+  );
+}
+
+/**
+ * Cómo conectar la IA, y cómo soltarla.
+ *
+ * Antes sólo había un distintivo verde en la cabecera, y **sólo cuando ya
+ * estaba conectado**: quien no lo estaba no veía nada, así que no había forma
+ * de enterarse de que esto existe. Y quien sí lo estaba tenía un cartel que no
+ * llevaba a ningún sitio.
+ *
+ * Va plegado y encima de las pestañas. Plegado porque no es trabajo diario:
+ * se hace una vez. Encima de las pestañas porque no es una cuarta sección —
+ * las tres que hay son toda la navegación de alguien que las toca con guantes.
+ *
+ * El texto no dice «MCP» ni «OAuth» en ningún sitio. A quien está en la obra
+ * le importa poder preguntar qué tiene mañana; cómo se llama el protocolo por
+ * dentro es asunto nuestro.
+ */
+function WorkerMcp({ estado, recargar }: { estado: { activo: boolean; url: string } | null; recargar: () => void }) {
+  const { t } = useTranslation();
+  const [abierto, setAbierto] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+  const [soltando, setSoltando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  // Sin respuesta todavía, o sin conexión: no se pinta un panel que a lo mejor
+  // no hace falta. Vuelve solo cuando el estado llega.
+  if (!estado) return null;
+
+  const copiar = async () => {
+    await navigator.clipboard.writeText(estado.url);
+    setCopiado(true);
+    window.setTimeout(() => setCopiado(false), 1600);
+  };
+
+  const soltar = async () => {
+    setSoltando(true);
+    setAviso(null);
+    try {
+      const respuesta = await workerApiFetch("/api/worker/mcp-revoke", { method: "POST" });
+      if (!respuesta.ok) throw new Error();
+      setAviso(t("worker.mcpDesconectado"));
+      recargar();
+    } catch {
+      setAviso(t("worker.mcpNoDesconecta"));
+    } finally {
+      setSoltando(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <button
+        type="button"
+        className="w-full min-h-12 px-4 py-3 flex items-center gap-3 text-left"
+        onClick={() => setAbierto(!abierto)}
+        aria-expanded={abierto}
+      >
+        <Sparkles size={18} className="text-primary shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-foreground">{t("worker.mcpTitulo")}</span>
+          {estado.activo && <span className="block text-xs text-status-success-fg">{t("worker.mcpConectado")}</span>}
+        </span>
+        {abierto ? <ChevronUp size={18} className="text-muted-foreground shrink-0" /> : <ChevronDown size={18} className="text-muted-foreground shrink-0" />}
+      </button>
+
+      {abierto && (
+        <div className="border-t border-border px-4 py-4 space-y-3 text-sm">
+          <p className="text-muted-foreground">{t("worker.mcpResumen")}</p>
+          <p className="text-muted-foreground italic">{t("worker.mcpEjemplo")}</p>
+
+          {estado.activo ? (
+            <>
+              <p className="text-foreground">{t("worker.mcpYaConectado")}</p>
+              <Button variant="outline" size="sm" className="min-h-11 gap-2" onClick={soltar} disabled={soltando}>
+                <Unlink size={15} /> {soltando ? t("worker.mcpDesconectando") : t("worker.mcpDesconectar")}
+              </Button>
+            </>
+          ) : (
+            <ol className="list-decimal pl-5 space-y-2 text-muted-foreground">
+              <li>{t("worker.mcpPaso1")}</li>
+              <li>
+                {t("worker.mcpPaso2")}
+                <span className="mt-1.5 flex items-center gap-2 rounded-lg border border-border bg-secondary/40 p-2">
+                  <code className="min-w-0 flex-1 truncate text-xs">{estado.url}</code>
+                  <Button type="button" size="sm" variant="outline" className="gap-1.5 shrink-0 min-h-11" onClick={copiar}>
+                    {copiado ? <Check size={14} /> : <Copy size={14} />}
+                    <span className="sr-only sm:not-sr-only">{copiado ? t("worker.mcpCopiado") : t("worker.mcpCopiar")}</span>
+                  </Button>
+                </span>
+              </li>
+              <li>{t("worker.mcpPaso3")}</li>
+            </ol>
+          )}
+
+          {/* Lo que la IA **no** puede hacer, y va siempre: alguien a quien le
+              piden conectar su cuenta a algo tiene derecho a saber el límite
+              antes de decir que sí, no después. */}
+          <p className="text-xs text-muted-foreground border-t border-border pt-3">{t("worker.mcpSoloLectura")}</p>
+
+          {aviso && <p className="text-sm text-foreground">{aviso}</p>}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -115,6 +231,8 @@ function WorkerLoginForm({ onLoggedIn }: { onLoggedIn: (session: WorkerSession) 
 
 function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: () => void }) {
   const { t } = useTranslation();
+  // Una sola consulta para el distintivo de arriba y el panel de abajo.
+  const { estado: estadoMcp, recargar: recargarMcp } = useEstadoMcp();
   return (
     <div className="min-h-screen bg-background pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <div className="border-b border-border bg-card px-4 sm:px-6 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
@@ -137,7 +255,7 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
           <div className="min-w-0">
             <p className="font-semibold text-foreground text-sm leading-tight flex items-center">
               <span className="truncate">{session.name}</span>
-              <WorkerMcpBadge />
+              <WorkerMcpBadge activo={Boolean(estadoMcp?.activo)} />
             </p>
             <p className="text-xs text-muted-foreground leading-tight truncate">
               {session.businessName
@@ -162,6 +280,7 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
             Cuando no hay nada pendiente no pinta nada. */}
         <WorkerAgreementBanner workerName={session.name} />
         <WorkerPapeles />
+        <WorkerMcp estado={estadoMcp} recargar={recargarMcp} />
 
         <Tabs defaultValue="agenda">
           {/* Estas tres pestañas son toda la navegación del trabajador y se

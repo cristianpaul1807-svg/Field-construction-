@@ -565,7 +565,22 @@
     "todaysJobs": "Oggi tocca a te",
     "otherProjects": "Altri cantieri",
     "optional": "(facoltativo)",
-    "locationRecorded": "La tua posizione è stata registrata alla timbratura."
+    "locationRecorded": "La tua posizione è stata registrata alla timbratura.",
+    "mcpConectado": "Connesso",
+    "mcpTitulo": "Chiedi all'IA del tuo lavoro",
+    "mcpResumen": "Collega Claude o ChatGPT e chiedi del tuo orario, delle tue ore o dei tuoi cantieri senza aprire questa app.",
+    "mcpEjemplo": "Per esempio: «cosa ho domani?» o «quante ore ho fatto questa settimana?».",
+    "mcpPaso1": "Apri Claude o ChatGPT su questo telefono e cerca come aggiungere un connettore.",
+    "mcpPaso2": "Incolla questo indirizzo:",
+    "mcpPaso3": "Quando ti chiede di accedere, scrivi il tuo stesso codice di accesso. Non serve account né password.",
+    "mcpSoloLectura": "Può solo leggere le tue cose. Non può cambiare nulla, né timbrare per te, né vedere quanto prendono gli altri.",
+    "mcpCopiar": "Copia indirizzo",
+    "mcpCopiado": "Copiato",
+    "mcpYaConectado": "È collegato. Puoi chiedere da Claude o ChatGPT quando vuoi.",
+    "mcpDesconectar": "Scollega",
+    "mcpDesconectando": "Scollegamento…",
+    "mcpDesconectado": "Scollegato. L'IA non può più consultare il tuo lavoro.",
+    "mcpNoDesconecta": "Non è stato possibile scollegare. Riprova."
   },
   "publicChat": {
     "chatWithBusiness": "Chatta con l'impresa",

@@ -1672,7 +1672,35 @@ apiRouter.get(
       .limit(1)
       .maybeSingle();
     if (error) throw error;
-    res.json({ active: !!data });
+    // La dirección va con el estado y no la compone la pantalla: es el dato
+    // que el trabajador tiene que copiar, y el servidor es quien sabe bajo qué
+    // dominio está corriendo.
+    res.json({ active: !!data, mcpUrl: `${req.protocol}://${req.get("host")}/mcp` });
+  })
+);
+
+/**
+ * Que el trabajador se desconecte él mismo.
+ *
+ * El contratista ya puede cortarle el acceso desde Ajustes, pero quien
+ * autorizó fue el trabajador con **su** código, y quien autoriza tiene que
+ * poder deshacerlo sin pedirle permiso a nadie. Un permiso que sólo puede
+ * retirar un tercero no es un permiso que se haya dado libremente.
+ *
+ * Revoca sólo lo suyo: el filtro es su propia columna, no el negocio.
+ */
+apiRouter.post(
+  "/worker/mcp-revoke",
+  requireWorkerAuth,
+  route(async (req, res) => {
+    const { error } = await getSupabaseAdmin()
+      .from("mcp_connections")
+      .update({ status: "revoked", revoked_at: new Date().toISOString() })
+      .eq("business_id", req.workerBusinessId!)
+      .eq(columnaDelDueno(req), req.workerId!)
+      .eq("status", "active");
+    if (error) throw error;
+    res.json({ ok: true });
   })
 );
 
