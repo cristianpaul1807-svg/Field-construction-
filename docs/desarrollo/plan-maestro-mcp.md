@@ -8,7 +8,7 @@
 
 Este archivo resume el trabajo realizado, el modelo de seguridad acordado y todo lo que falta para completar el MCP de Logiciel Construction para trabajadores, subcontratistas, jefes de obra, oficina, contabilidad, propietarios principales, administradores secundarios y clientes. Su objetivo es servir como documento de transferencia cuando el trabajo continúe desde un proyecto MCP independiente con las herramientas de conexión habilitadas.
 
-La regla principal sigue siendo que **la IA del cliente pertenece al usuario**. Claude, ChatGPT u otra plataforma aporta su propia capacidad de inteligencia artificial; Logiciel Construction solo entrega una conexión segura a los datos permitidos por la identidad, el rol, el plan, el negocio y las asignaciones de esa persona.
+La regla principal sigue siendo que **la IA del cliente pertenece al usuario**. Claude aporta su propia capacidad de inteligencia artificial; Logiciel Construction solo entrega una conexión segura a los datos permitidos por la identidad, el rol, el plan, el negocio y las asignaciones de esa persona.
 
 ## 2. Estado ejecutivo
 
@@ -82,9 +82,9 @@ Las tablas MCP principales son:
 
 La aplicación incluye la pantalla `SettingsMcpConnections.tsx`, que muestra URL MCP, alcance `mcp:read`, estado OAuth, conexiones activas y la acción de revocar. La revocación está limitada al negocio y al propietario autenticado que administra esa conexión.
 
-La interfaz enseña **sólo Claude**. Contempló también ChatGPT, Manus y Gemini, cada una con su color y su inicial, pero el servidor nunca devolvió ninguna: era una promesa pintada en una pantalla de algo que no se podía conectar. El backend normaliza ahora el proveedor como `claude` u `other`, que es lo único con lo que se decide algo.
+La interfaz enseña **sólo Claude**, que es la única que hoy se puede conectar de punta a punta. El backend normaliza el proveedor como `claude` u `other`, que es lo único con lo que se decide algo.
 
-Las tres secciones de abajo siguen siendo el plan. Cuando una se pruebe de verdad —Client ID registrado, retorno propio y una conexión completada— se añade a la pantalla; no antes.
+El día que haya otra se añade entonces, con su Client ID registrado, su retorno propio y una conexión completada de verdad. Nombrar una plataforma en una pantalla es prometerla.
 
 ## 4. Modelo de roles y planes
 
@@ -211,18 +211,6 @@ Las primeras acciones que **no** deben activarse todavía son:
 
 Ya probado hasta autorización OAuth con el endpoint público `/mcp`. Debe conservarse el flujo de Client ID manual y la identidad publicada de Claude como alternativas. Falta repetir una prueba completa de llamada MCP posterior al callback y verificar renovación y revocación desde la cuenta real.
 
-### ChatGPT
-
-No aparece en la pantalla. La arquitectura OAuth y el registro de clientes están preparados, pero falta una prueba completa específica del conector ChatGPT con sus URI de retorno actuales. No se debe reutilizar automáticamente el Client ID de Claude si el cliente utiliza otro callback.
-
-### Manus
-
-No aparece en la pantalla. Debe definirse si la conexión será OAuth externa, conexión interna o una herramienta administrada por el proyecto. No debe aparecer como “conectado” solo por estar en el catálogo visual.
-
-### Gemini
-
-No aparece en la pantalla. El flujo OAuth y el soporte MCP remoto deben verificarse antes de prometerlo a clientes.
-
 ### QuickBooks
 
 La integración existente de QuickBooks debe permanecer separada. MCP solo consulta el estado, errores y divergencias en esta fase. No debe sincronizar ni corregir registros automáticamente.
@@ -237,7 +225,7 @@ Los correos de suscripción, prueba, suspensión y cancelación pertenecen al pr
 
 ### Supabase
 
-Supabase es la capa de persistencia interna, no un conector que deba entregarse al cliente. La service role key nunca debe salir del backend ni llegar a Claude, ChatGPT, Manus o Gemini.
+Supabase es la capa de persistencia interna, no un conector que deba entregarse al cliente. La service role key nunca debe salir del backend ni llegar a la IA del cliente.
 
 ## 8. Criterio de aceptación antes de la siguiente fase
 
@@ -271,7 +259,7 @@ La fase de lectura se considera cerrada cuando se cumpla todo lo siguiente:
 6. Ejecutar la matriz de seguridad de Fase 1 y guardar resultados reproducibles.
 7. Unificar roles y capacidades en una política única.
 8. Completar clientes y administradores secundarios como identidades independientes.
-9. Probar ChatGPT, Claude y las demás plataformas individualmente.
+9. Probar el conector de Claude de punta a punta contra la cuenta real.
 10. Persistir la máquina de estados en Supabase.
 11. Implementar primero acciones de preparación o exportación, no acciones destructivas.
 12. Añadir confirmaciones explícitas, auditoría y revocación para cada acción.

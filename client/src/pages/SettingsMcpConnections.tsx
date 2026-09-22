@@ -20,10 +20,11 @@ interface Platform {
   /**
    * Claude y nada más, a propósito.
    *
-   * Aquí había también chatgpt, manus y gemini, con su color y su inicial. El
-   * servidor nunca devolvió ninguna: era una promesa pintada en una pantalla
-   * de algo que no se puede conectar. Cuando haya otra de verdad, se añade —
-   * con su Client ID registrado y probado, no con un icono.
+   * Aquí hubo otras tres plataformas, con su color y su inicial, y el servidor
+   * nunca devolvió ninguna: era una promesa pintada en una pantalla de algo
+   * que no se puede conectar. Nombrar una plataforma aquí es prometerla, así
+   * que la siguiente entra cuando tenga su Client ID registrado y una conexión
+   * completada de verdad — no cuando tenga icono.
    */
   id: "claude";
   name: string;

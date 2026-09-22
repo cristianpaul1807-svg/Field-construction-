@@ -71,4 +71,4 @@ El Client ID anterior es **exclusivo de Claude** porque está asociado a la URI 
 https://claude.ai/api/mcp/auth_callback
 ```
 
-ChatGPT, Manus u otra plataforma deben utilizar un Client ID diferente y su propia URI de retorno. No se debe reutilizar el Client ID de Claude en otra plataforma.
+Cualquier otra plataforma que se añada en el futuro necesita su propio Client ID y su propia URI de retorno. El Client ID de Claude no se reutiliza: hacerlo manda a la persona a una autorización que no vuelve.
