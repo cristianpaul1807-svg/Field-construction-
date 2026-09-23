@@ -13576,29 +13576,48 @@ apiRouter.get(
   "/settings/users",
   route(async (req, res) => {
     const supabase = req.supabase!;
+    const admin = getSupabaseAdmin();
     const [users, roles, mcp] = await Promise.all([
       supabase
+        // `auth_user_id` no sale en la respuesta: es la identidad de Supabase
+        // Auth y aquí sólo se usa para cruzarla con quién conectó la IA.
         .from("users")
-        .select("id, name, email, phone, status, role_id, roles(name, permissions)")
+        .select("id, auth_user_id, name, email, phone, status, role_id, roles(name, permissions)")
         .eq("business_id", req.businessId!)
         .order("name"),
       supabase
         .from("roles")
         .select("id, name, permissions")
         .eq("business_id", req.businessId!),
-      getSupabaseAdmin()
+      // Por `owner_auth_user_id`, que es como se guarda la conexión de alguien
+      // que entró por el panel. Esto miraba `employee_id`, que apunta a
+      // `employees` —otra tabla, otros identificadores, ni uno compartido con
+      // `users`— y lo comparaba contra `users.id`. No casaba nunca: la ficha
+      // decía «Sin conectar» para todo el mundo, incluso para quien acababa de
+      // usar Claude esa misma tarde. Un dato que siempre dice lo mismo no es un
+      // dato, y encima era el que había que mirar para decidir si revocar.
+      admin
         .from("mcp_connections")
-        .select("employee_id")
+        .select("id, owner_auth_user_id")
         .eq("business_id", req.businessId!)
         .eq("status", "active")
-        .not("employee_id", "is", null),
+        .not("owner_auth_user_id", "is", null),
     ]);
 
     if (users.error) throw users.error;
     if (roles.error) throw roles.error;
     if (mcp.error) throw mcp.error;
-    
-    const activeMcpEmployees = new Set(mcp.data.map(c => c.employee_id));
+
+    // Y vivas de verdad, no sólo `active`. La fila se queda en `active` para
+    // siempre cuando alguien quita el conector desde Claude, que es justo lo
+    // que hacía que el panel enseñara «conectado» de algo ya retirado. La
+    // pantalla de conexiones ya lo resolvía así; esta lista se había quedado
+    // con la regla vieja, y dos sitios decidiendo lo mismo con reglas
+    // distintas acaban siempre con uno de los dos mintiendo.
+    const vivas = await conexionesVivas(admin, (mcp.data ?? []).map((c) => c.id));
+    const conLaIa = new Set(
+      (mcp.data ?? []).filter((c) => vivas.has(c.id)).map((c) => c.owner_auth_user_id as string)
+    );
 
     res.json({
       // roleId and phone come back alongside the display fields so the
@@ -13614,7 +13633,7 @@ apiRouter.get(
         // Las áreas que ve esta persona, o `null` si las ve todas. Es lo que
         // la pantalla enseña y edita; el rol de debajo es cosa de la base.
         areas: areasDelRol(u.roles),
-        mcpActive: activeMcpEmployees.has(u.id),
+        mcpActive: !!u.auth_user_id && conLaIa.has(u.auth_user_id),
       })),
       roles: roles.data.map((r) => ({ id: r.id, name: r.name, permissions: r.permissions })),
     });
