@@ -76,7 +76,8 @@ python3 scripts/check-webhook-events.py  # every handled Stripe event is one Str
 python3 scripts/check-errores-traducidos.py  # every server error code has a sentence in all four
 python3 scripts/check-idioma-respaldo.py  # every language picker falls back to the same one
 python3 scripts/check-pantallas-area.py  # no panel screen ships without an area
-node scripts/comprobar-ancho.mjs      # no page scrolls sideways on a phone
+node scripts/comprobar-ancho.mjs      # no public page scrolls sideways on a phone
+node scripts/comprobar-ancho-panel.mjs  # nor does any panel screen, open cards included
 node --experimental-strip-types scripts/prueba-suscripcion/mapeo.mjs    # Stripe payload -> what we store
 node --experimental-strip-types scripts/prueba-suscripcion/bloqueo.mjs  # when the trial ends, and what stays open
 node --experimental-strip-types scripts/prueba-mcp/roles.mjs            # MCP never opens what the panel closes
@@ -87,10 +88,31 @@ node --experimental-strip-types scripts/prueba-mcp/idiomas.mjs          # the MC
 `esbuild server/…`. Running only `vite build` checks the client and silently
 skips the server bundle — which is the half that has to boot in production.
 
-`comprobar-ancho.mjs` reads what the generator wrote, so it goes **after** the
-build. It opens the 28 public pages at 320 and 390 px with the real fonts and
-fails if anything is wider than the screen — the failure that makes a page
-draggable sideways on a phone, which is where this gets read.
+Both width checks read what the build wrote, so they go **after** it. They open
+every page at 320 and 390 px and fail if anything is wider than the screen —
+the failure that makes a page draggable sideways on a phone, which is where
+this gets read.
+
+`comprobar-ancho.mjs` covers the 28 public pages, with the real fonts.
+`comprobar-ancho-panel.mjs` covers the 31 panel screens, which need a session:
+it serves `dist/public`, answers any read of the Supabase session key with a
+fake one, and replies to every `/api/…` from a fixture table. Three things
+about it are load-bearing, and each is there because its absence produced a
+green run that had measured nothing:
+
+- It asserts it landed on the screen it asked for. The first version seeded a
+  session under a guessed storage key, never logged in, and passed 62 times on
+  the login page.
+- It fails if a screen renders the error boundary. A crash notice fits on any
+  phone, so three screens whose fixtures had the wrong shape were passing.
+- It opens each card in `main` one at a time and measures each open state. The
+  bug that prompted all this was inside a card you have to expand.
+
+**The fixtures carry long names, long emails and five-figure amounts on
+purpose.** An empty list always fits; what breaks a row is real data. If you
+add a screen whose API returns an object, give it a fixture — the default is
+`[]`, and a screen that expected an object will crash instead of being
+measured. The guard will tell you which one.
 
 Then check locale parity (`docs/desarrollo/idiomas.md`) and, for anything
 user-visible, look at it in a browser. Screenshots caught real layout bugs

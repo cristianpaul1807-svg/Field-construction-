@@ -25,11 +25,16 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
     <!-- iOS never reads the manifest for its home-screen icon. -->
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
-    <!-- THIS IS THE START OF A COMMENT BLOCK, BLOCK TO BE DELETED: Google Fonts here, example:
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    THIS IS THE END OF A COMMENT BLOCK, BLOCK TO BE DELETED -->
+    <!--
+      El panel no carga ninguna fuente web: va con la del sistema, que es la que
+      ya está en el teléfono y no cuesta una ida a Google antes de pintar. Aquí
+      había un ejemplo de Google Fonts comentado que venía de la plantilla, y
+      leerlo hacía creer que el panel iba en Inter cuando nunca lo hizo.
+
+      Si algún día se pone una, `comprobar-ancho-panel.mjs` empieza a exigir que
+      cargue antes de medir: un ancho medido con la letra de reserva no es el
+      que se ve.
+    -->
   </head>
 
   <body>

@@ -160,33 +160,40 @@ export default function Scheduling() {
 
       <>
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentDate((d) => mover(d, -1))}
-               aria-label={vista === "dia" ? t("scheduling.previousDay") : t("scheduling.previousMonth")}>
-                <ChevronLeft size={16} />
-              </Button>
-              <div className="text-sm font-medium text-foreground min-w-[9rem] text-center">
-                {vista === "dia"
-                  ? currentDate.toLocaleDateString(i18n.language, { day: "numeric", month: "long", year: "numeric" })
-                  : currentDate.toLocaleDateString(i18n.language, { month: "long", year: "numeric" })}
+            {/* Envuelve: las flechas, la fecha, «hoy» y el par día/mes suman más
+                de 400 px y en un iPhone SE no caben en una línea. Sin esto la
+                página se arrastraba de lado. Las flechas y la fecha van en su
+                propio grupo porque separarlas deja una flecha huérfana debajo,
+                apuntando a un día que ya no se lee. */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentDate((d) => mover(d, -1))}
+                 aria-label={vista === "dia" ? t("scheduling.previousDay") : t("scheduling.previousMonth")}>
+                  <ChevronLeft size={16} />
+                </Button>
+                <div className="text-sm font-medium text-foreground min-w-[9rem] text-center">
+                  {vista === "dia"
+                    ? currentDate.toLocaleDateString(i18n.language, { day: "numeric", month: "long", year: "numeric" })
+                    : currentDate.toLocaleDateString(i18n.language, { month: "long", year: "numeric" })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentDate((d) => mover(d, 1))}
+                 aria-label={vista === "dia" ? t("scheduling.nextDay") : t("scheduling.nextMonth")}>
+                  <ChevronRight size={16} />
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentDate((d) => mover(d, 1))}
-               aria-label={vista === "dia" ? t("scheduling.nextDay") : t("scheduling.nextMonth")}>
-                <ChevronRight size={16} />
-              </Button>
               <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>
                 {t("worker.today")}
               </Button>
 
               {/* Un mes de un vistazo: para saber si hay algo el jueves que
                   viene no debería hacer falta pulsar la flecha ocho veces. */}
-              <div className="flex rounded-lg border border-border overflow-hidden text-sm ml-1">
+              <div className="flex rounded-lg border border-border overflow-hidden text-sm">
                 {(["dia", "mes"] as const).map((v) => (
                   <button
                     key={v}
