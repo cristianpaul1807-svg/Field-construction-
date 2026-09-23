@@ -2260,6 +2260,7 @@
     "demasiadoGrande": "El archivo pesa demasiado. Prueba con uno más pequeño.",
     "demasiadasVeces": "Lo has pedido muchas veces seguidas. Espera un momento y vuelve a intentarlo.",
     "nuestro": "El fallo es nuestro, no tuyo. Vuelve a intentarlo en un momento; si sigue igual, dínoslo.",
+    "pantallaRota": "Esta pantalla se ha roto. Lo que ya estaba guardado sigue ahí; lo que estuvieras escribiendo sin guardar, no. Vuelve a cargarla y, si se repite, el detalle técnico de aquí abajo dice qué falló.",
     "reintentar": "Volver a intentarlo",
     "preguntar": "Preguntar a la ayuda",
     "escribirnos": "Escríbenos",

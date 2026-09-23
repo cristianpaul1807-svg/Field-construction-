@@ -2260,6 +2260,7 @@
     "demasiadoGrande": "The file is too big. Try a smaller one.",
     "demasiadasVeces": "You've asked for this many times in a row. Wait a moment and try again.",
     "nuestro": "This one is on us, not you. Try again in a moment; if it keeps happening, tell us.",
+    "pantallaRota": "This screen broke. Anything already saved is still there; anything you were typing and hadn't saved is not. Reload it, and if it keeps happening, the technical detail below says what failed.",
     "reintentar": "Try again",
     "preguntar": "Ask the help bot",
     "escribirnos": "Write to us",
