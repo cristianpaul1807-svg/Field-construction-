@@ -10133,7 +10133,43 @@ apiRouter.delete(
 
     const { error } = await admin.from("users").delete().eq("business_id", req.businessId!).eq("id", req.params.id);
     if (error) throw error;
-    res.json({ ok: true });
+
+    // Y se libera el correo, si ya no lo usa nadie.
+    //
+    // La cuenta de Supabase Auth se dejaba siempre en pie, con un motivo que
+    // es bueno a medias: es de esa persona y puede estar en otro negocio. Pero
+    // cuando no está en ninguno, lo único que hace esa cuenta es retener el
+    // correo, y no hay forma de soltarlo desde dentro del producto —ni el
+    // dueño que acaba de quitarla, ni la propia persona—. Pasó de verdad: se
+    // quitó a un socio del panel para que se diera de alta él mismo con su
+    // empresa, y el alta le contestó «ese correo ya está registrado». Cierto,
+    // y sin salida.
+    //
+    // Así que se mira si queda algo colgando de esa identidad. Si queda, la
+    // cuenta se respeta; si no queda nada, se borra y el correo vuelve a estar
+    // libre.
+    let correoLiberado = false;
+    if (fila.auth_user_id) {
+      const identidad = fila.auth_user_id;
+      const contar = (tabla: string, columna: string) =>
+        admin.from(tabla).select("id", { count: "exact", head: true }).eq(columna, identidad);
+      const [enPaneles, enNegocios, enPlantilla] = await Promise.all([
+        contar("users", "auth_user_id"),
+        contar("businesses", "primary_auth_user_id"),
+        contar("employees", "auth_user_id"),
+      ]);
+      const sigueEnUso = ((enPaneles.count ?? 0) + (enNegocios.count ?? 0) + (enPlantilla.count ?? 0)) > 0;
+
+      if (!sigueEnUso) {
+        // Un fallo aquí no tumba la petición: quitar del panel ya ocurrió y
+        // deshacerlo sería peor. Lo que se pierde es soltar el correo, y eso
+        // se dice en la respuesta en vez de callarlo.
+        const { error: errorAuth } = await admin.auth.admin.deleteUser(identidad);
+        correoLiberado = !errorAuth;
+      }
+    }
+
+    res.json({ ok: true, correoLiberado });
   })
 );
 

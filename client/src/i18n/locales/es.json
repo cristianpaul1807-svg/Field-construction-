@@ -802,7 +802,7 @@
     "credentialsHint": "Pásaselos por donde ya habléis. Con esto entra en la página de inicio de sesión.",
     "credentialsOnce": "Esta contraseña se enseña una sola vez y no se guarda en ninguna parte. Si se pierde, habrá que darle otra.",
     "quitarUsuario": "Quitar del panel",
-    "quitarUsuarioConfirmar": "¿Quitar a {{nombre}}? Perderá el acceso al panel y se le cortará la conexión con la IA. Sus facturas y su trabajo se quedan.",
+    "quitarUsuarioConfirmar": "¿Quitar a {{nombre}}? Perderá el acceso al panel y se le cortará la conexión con la IA. Si no está en ningún otro negocio, su cuenta se borra y su correo queda libre para volver a usarse. Sus facturas y su trabajo se quedan.",
     "quitando": "Quitando…",
     "nuevaClave": "Poner contraseña nueva",
     "nuevaClaveConfirmar": "¿Poner una contraseña nueva a {{nombre}}? La que tenga dejará de valer y tendrás que pasarle la nueva. No se puede ver la anterior: están guardadas cifradas.",

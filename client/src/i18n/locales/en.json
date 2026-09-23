@@ -802,7 +802,7 @@
     "credentialsHint": "Pass them on however you already talk. With these they sign in on the login page.",
     "credentialsOnce": "This password is shown once and is not stored anywhere. If it's lost, you'll have to issue another.",
     "quitarUsuario": "Remove from panel",
-    "quitarUsuarioConfirmar": "Remove {{nombre}}? They lose access to the panel and their AI connection is cut. Their invoices and work stay.",
+    "quitarUsuarioConfirmar": "Remove {{nombre}}? They lose access to the panel and their AI connection is cut. If they aren't in any other business, their account is deleted and their email is free to use again. Their invoices and their work stay.",
     "quitando": "Removing…",
     "nuevaClave": "Set a new password",
     "nuevaClaveConfirmar": "Set a new password for {{nombre}}? Their current one stops working and you’ll have to pass them the new one. The old one can’t be seen — passwords are stored encrypted.",

@@ -802,7 +802,7 @@
     "credentialsHint": "Passaglieli come già vi parlate. Con questi entra dalla pagina di accesso.",
     "credentialsOnce": "Questa password si mostra una volta sola e non viene salvata da nessuna parte. Se si perde, bisognerà darne un'altra.",
     "quitarUsuario": "Rimuovi dal pannello",
-    "quitarUsuarioConfirmar": "Rimuovere {{nombre}}? Perderà l’accesso al pannello e la connessione con l’IA verrà tagliata. Le sue fatture e il suo lavoro restano.",
+    "quitarUsuarioConfirmar": "Togliere {{nombre}}? Perderà l'accesso al pannello e la connessione con l'IA verrà interrotta. Se non è in nessun'altra impresa, il suo account viene eliminato e la sua email torna disponibile. Le sue fatture e il suo lavoro restano.",
     "quitando": "Rimozione…",
     "nuevaClave": "Imposta una nuova password",
     "nuevaClaveConfirmar": "Impostare una nuova password per {{nombre}}? Quella attuale smetterà di funzionare e dovrai passargli la nuova. La precedente non si può vedere: sono salvate cifrate.",

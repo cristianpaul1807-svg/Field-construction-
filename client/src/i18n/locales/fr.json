@@ -802,7 +802,7 @@
     "credentialsHint": "Transmettez-les par où vous vous parlez déjà. Avec ça, elle se connecte sur la page de connexion.",
     "credentialsOnce": "Ce mot de passe s'affiche une seule fois et n'est stocké nulle part. S'il est perdu, il faudra en donner un autre.",
     "quitarUsuario": "Retirer du panneau",
-    "quitarUsuarioConfirmar": "Retirer {{nombre}} ? Cette personne perd l’accès au panneau et sa connexion à l’IA est coupée. Ses factures et son travail restent.",
+    "quitarUsuarioConfirmar": "Retirer {{nombre}} ? Cette personne perd l'accès au panneau et sa connexion à l'IA est coupée. Si elle n'est dans aucune autre entreprise, son compte est supprimé et son courriel redevient disponible. Ses factures et son travail restent.",
     "quitando": "Retrait…",
     "nuevaClave": "Définir un nouveau mot de passe",
     "nuevaClaveConfirmar": "Définir un nouveau mot de passe pour {{nombre}} ? L’actuel cessera de fonctionner et vous devrez lui transmettre le nouveau. L’ancien ne peut pas être vu : les mots de passe sont chiffrés.",
