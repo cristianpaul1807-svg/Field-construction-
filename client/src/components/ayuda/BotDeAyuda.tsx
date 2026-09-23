@@ -198,8 +198,19 @@ export function BotDeAyuda() {
                       {Array.from({ length: tema.parrafos }, (_, n) => (
                         <p key={n}>{t(`${base}.p${n + 1}`, menu)}</p>
                       ))}
+                      {/* La nota se lee igual de grande que el resto.
+
+                          Iba en `text-xs` y en gris apagado, dos escalones por
+                          debajo del cuerpo, como si fuera una aclaración
+                          menor. No lo es: es donde vive lo que te muerde. «Una
+                          tarjeta de verdad no pasa por mucho que completes el
+                          alta», «lo que cobres desde la app de Stripe no llega
+                          aquí solo» — lo más caro de cada respuesta estaba en
+                          la letra más pequeña de la pantalla, leída a pleno
+                          sol en una obra. La raya de la izquierda ya dice que
+                          es un aparte; no hacía falta además esconderla. */}
                       {tema.nota && (
-                        <p className="text-xs text-muted-foreground border-l-2 border-border pl-2">
+                        <p className="text-sm text-foreground border-l-2 border-border pl-2.5">
                           {t(`${base}.nota`, menu)}
                         </p>
                       )}
