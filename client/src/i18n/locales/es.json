@@ -368,7 +368,16 @@
     "feesPayerWrongTitle": "Esta cuenta se creó antes del ajuste de comisiones",
     "feesPayerWrongBody": "Las comisiones de Stripe se están cargando a la plataforma. Quién las paga se fija al crear la cuenta y no se puede cambiar después, así que hay que crear una cuenta nueva. Escríbenos antes de hacerlo para no perder los pagos ya recibidos.",
     "modeManualTitle": "Estás trabajando sin Stripe",
-    "modeManualBody": "Emites las facturas igual y las marcas pagadas a mano. Conecta Stripe cuando quieras y tus clientes podrán pagar desde su portal."
+    "modeManualBody": "Emites las facturas igual y las marcas pagadas a mano. Conecta Stripe cuando quieras y tus clientes podrán pagar desde su portal.",
+    "phoneTitle": "Cobrar con tu teléfono",
+    "phoneNote": "Tu móvil hace de datáfono. Sin aparato y sin cuota mensual.",
+    "phoneNeedsConnect": "Primero termina de conectar tu cuenta aquí arriba. Lo que se crea es una cuenta de Stripe completa y tuya, y es la que vas a usar en el móvil.",
+    "phoneStep1": "Baja la app «Stripe Dashboard» en tu teléfono y entra con la misma cuenta que acabas de conectar.",
+    "phoneStep2": "Pulsa el +, elige cobrar una tarjeta y escribe el importe.",
+    "phoneStep3": "Elige «Tap to Pay». El cliente acerca su tarjeta o su móvil al tuyo.",
+    "phoneStep4": "Cobrado. Acepta Visa, Mastercard, Amex e Interac. Necesitas un iPhone XS o posterior, o un Android con NFC.",
+    "phoneMarkPaid": "Un cobro hecho desde la app de Stripe no llega aquí solo. Entra en la factura y márcala como cobrada, o seguirá diciendo que está pendiente.",
+    "phoneOfflinePin": "En Canadá hay tarjetas que piden el PIN insertadas en un lector, y esas no se pueden cobrar acercándolas. Si una no pasa, mándale el enlace de pago de la factura."
   },
   "communication": {
     "title": "Mensajería",
@@ -1955,6 +1964,14 @@
           "p3": "Un cero no rompe la nómina: se paga igual y el resto de las líneas calculan. Lo que pasa es que esa línea no descuenta nada, así que el neto sale más alto de lo que va a ser de verdad y la diferencia te la reclaman después. Por eso es de las primeras cosas que hay que poner.",
           "p4": "Se ponen en {{menuNominas}}, en la pestaña de reglas: cada línea tiene su campo de porcentaje y, debajo, una nota que dice de dónde sale ese número. El impuesto retenido lo saca tu contable o la tabla de Revenu Québec; la tasa de la CNESST viene en tu aviso de cotización anual; la del FSS te la dice Revenu Québec según tu masa salarial.",
           "nota": "Las demás tampoco son eternas: las tasas de Quebec se actualizan cada enero. Cada línea trae escrito de qué año es su cifra, para que se pueda comprobar en vez de creérsela."
+        },
+        "cobrarConElMovil": {
+          "title": "Cobrar con tu teléfono, sin datáfono",
+          "p1": "{{menuAjustes}} → {{menuPagos}} → conectar, si todavía no lo has hecho. La cuenta de Stripe que se crea es tuya y tiene su propio acceso: con eso ya tienes datáfono.",
+          "p2": "Baja la app «Stripe Dashboard» en tu móvil y entra con esa cuenta. Pulsa el +, elige cobrar una tarjeta, escribe el importe y elige «Tap to Pay».",
+          "p3": "El cliente acerca su tarjeta o su móvil al tuyo y ya está cobrado. Acepta Visa, Mastercard, Amex e Interac. Hace falta un iPhone XS o posterior, o un Android con NFC.",
+          "p4": "En Canadá hay tarjetas que piden el PIN metiéndolas en un lector, y esas no pasan acercándolas. Cuando ocurra, mándale el enlace de pago de la factura y se acabó el problema.",
+          "nota": "Lo que cobres desde la app de Stripe no llega aquí solo: entra en la factura y márcala como cobrada, o tus cuentas no cuadrarán."
         }
       },
       "problemas": {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard, ExternalLink, Receipt, ShieldCheck } from "lucide-react";
+import { CreditCard, ExternalLink, Receipt, ShieldCheck, Smartphone } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
@@ -182,6 +182,51 @@ export default function SettingsPayments() {
           </div>
         )}
         {error && <p className="text-sm text-status-error-fg">{error}</p>}
+      </Card>
+
+      {/* El móvil como datáfono.
+
+          Va aquí y no escondido en la ayuda porque la pregunta llega en la
+          obra, con el cliente delante y la tarjeta en la mano, y la respuesta
+          que encuentra el contratista suele ser un comercial vendiéndole un
+          terminal con cuota mensual. Ya tiene uno: la cuenta que crea desde
+          esta pantalla es una cuenta Stripe completa —`dashboard: "full"`—,
+          así que entra en la app de Stripe con ella y su teléfono cobra.
+
+          Los dos avisos de abajo no son letra pequeña. Sin el primero cobra y
+          deja la factura diciendo que está pendiente; sin el segundo se queda
+          plantado delante del cliente cuando una tarjeta no pasa, que en
+          Canadá ocurre a menudo porque muchas piden el PIN insertadas. */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Smartphone size={20} strokeWidth={1.75} className="text-foreground" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-foreground">{t("payments.phoneTitle")}</h2>
+            <p className="text-xs text-muted-foreground">{t("payments.phoneNote")}</p>
+          </div>
+        </div>
+
+        {!loading && !connectStatus?.chargesEnabled && (
+          <p className="text-sm text-muted-foreground">{t("payments.phoneNeedsConnect")}</p>
+        )}
+
+        <ol className="space-y-3">
+          {["phoneStep1", "phoneStep2", "phoneStep3", "phoneStep4"].map((paso, i) => (
+            <li key={paso} className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary text-xs font-medium text-foreground flex items-center justify-center tabular-nums">
+                {i + 1}
+              </span>
+              <span className="text-sm text-muted-foreground min-w-0">{t(`payments.${paso}`)}</span>
+            </li>
+          ))}
+        </ol>
+
+        <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-2">
+          <p className="text-sm text-muted-foreground">{t("payments.phoneMarkPaid")}</p>
+          <p className="text-sm text-muted-foreground">{t("payments.phoneOfflinePin")}</p>
+        </div>
       </Card>
 
       <Card className="p-6 space-y-4">

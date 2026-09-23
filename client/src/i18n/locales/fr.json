@@ -368,7 +368,16 @@
     "feesPayerWrongTitle": "Ce compte a été créé avant le réglage des frais",
     "feesPayerWrongBody": "Les frais de Stripe sont facturés à la plateforme. Le payeur est fixé à la création du compte et ne peut plus être modifié : il faut créer un nouveau compte. Contactez-nous avant, pour ne perdre aucun paiement déjà reçu.",
     "modeManualTitle": "Vous travaillez sans Stripe",
-    "modeManualBody": "Vous émettez les factures pareil et les marquez payées à la main. Connectez Stripe quand vous voulez et vos clients pourront payer depuis leur portail."
+    "modeManualBody": "Vous émettez les factures pareil et les marquez payées à la main. Connectez Stripe quand vous voulez et vos clients pourront payer depuis leur portail.",
+    "phoneTitle": "Encaisser avec ton téléphone",
+    "phoneNote": "Ton téléphone sert de terminal. Aucun appareil, aucuns frais mensuels.",
+    "phoneNeedsConnect": "Termine d'abord la connexion de ton compte ci-dessus. Ce qui est créé est un vrai compte Stripe qui t'appartient, et c'est celui-là que tu utiliseras sur ton téléphone.",
+    "phoneStep1": "Installe l'application Stripe Dashboard sur ton téléphone et connecte-toi avec le compte que tu viens de relier.",
+    "phoneStep2": "Appuie sur +, choisis d'encaisser une carte et saisis le montant.",
+    "phoneStep3": "Choisis « Tap to Pay ». Ton client approche sa carte ou son téléphone du tien.",
+    "phoneStep4": "Encaissé. Visa, Mastercard, Amex et Interac sont acceptées. Il te faut un iPhone XS ou plus récent, ou un Android avec NFC.",
+    "phoneMarkPaid": "Un encaissement fait dans l'application Stripe n'arrive pas ici tout seul. Ouvre la facture et marque-la payée, sinon elle restera affichée comme impayée.",
+    "phoneOfflinePin": "Au Canada, certaines cartes exigent le NIP avec la carte insérée dans un lecteur : celles-là ne passent pas sans contact. Quand une carte refuse, envoie plutôt le lien de paiement de la facture."
   },
   "communication": {
     "title": "Messagerie",
@@ -1955,6 +1964,14 @@
           "p3": "Un zéro ne brise pas la paie : elle se fait quand même et les autres lignes calculent. Ce qui arrive, c'est que cette ligne ne retient rien, donc le net sort plus élevé qu'il ne le sera vraiment, et la différence vous est réclamée plus tard. C'est pour ça que c'est une des premières choses à mettre.",
           "p4": "Ils se mettent dans {{menuNominas}}, dans l'onglet des règles : chaque ligne a son champ de pourcentage et, en dessous, une note qui dit d'où vient ce chiffre. L'impôt retenu vient de votre comptable ou de la table de Revenu Québec ; votre taux de CNESST est sur votre avis de cotisation annuel ; celui du FSS vient de Revenu Québec selon votre masse salariale.",
           "nota": "Les autres ne sont pas éternels non plus : les taux du Québec sont mis à jour chaque janvier. Chaque ligne porte l'année de son chiffre, pour qu'on puisse le vérifier au lieu de le croire."
+        },
+        "cobrarConElMovil": {
+          "title": "Encaisser par carte avec ton téléphone, sans terminal",
+          "p1": "{{menuAjustes}} → {{menuPagos}} → connecter, si ce n'est pas déjà fait. Le compte Stripe ainsi créé t'appartient et a son propre accès : ça seul te donne un terminal.",
+          "p2": "Installe l'application Stripe Dashboard sur ton téléphone et connecte-toi avec ce compte. Appuie sur +, choisis d'encaisser une carte, saisis le montant et choisis « Tap to Pay ».",
+          "p3": "Ton client approche sa carte ou son téléphone du tien et c'est encaissé. Visa, Mastercard, Amex et Interac sont acceptées. Il te faut un iPhone XS ou plus récent, ou un Android avec NFC.",
+          "p4": "Au Canada, certaines cartes exigent le NIP avec la carte insérée dans un lecteur : celles-là ne passent pas sans contact. Quand ça arrive, envoie le lien de paiement de la facture et le problème est réglé.",
+          "nota": "Ce que tu encaisses dans l'application Stripe n'arrive pas ici tout seul : ouvre la facture et marque-la payée, sinon tes comptes ne balanceront pas."
         }
       },
       "problemas": {

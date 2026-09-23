@@ -368,7 +368,16 @@
     "feesPayerWrongTitle": "Questo account è precedente all'impostazione delle commissioni",
     "feesPayerWrongBody": "Le commissioni di Stripe vengono addebitate alla piattaforma. Chi le paga si fissa alla creazione dell'account e non è più modificabile, quindi va creato un account nuovo. Scrivici prima di farlo per non perdere i pagamenti già ricevuti.",
     "modeManualTitle": "Stai lavorando senza Stripe",
-    "modeManualBody": "Emetti le fatture allo stesso modo e le segni pagate a mano. Collega Stripe quando vuoi e i tuoi clienti potranno pagare dal loro portale."
+    "modeManualBody": "Emetti le fatture allo stesso modo e le segni pagate a mano. Collega Stripe quando vuoi e i tuoi clienti potranno pagare dal loro portale.",
+    "phoneTitle": "Incassare con il telefono",
+    "phoneNote": "Il tuo telefono fa da POS. Nessun apparecchio, nessun canone mensile.",
+    "phoneNeedsConnect": "Prima completa il collegamento del tuo account qui sopra. Quello che si crea è un account Stripe completo e tuo, ed è quello che userai sul telefono.",
+    "phoneStep1": "Scarica l'app Stripe Dashboard sul telefono ed entra con lo stesso account che hai appena collegato.",
+    "phoneStep2": "Tocca il +, scegli di incassare una carta e scrivi l'importo.",
+    "phoneStep3": "Scegli «Tap to Pay». Il cliente avvicina la sua carta o il suo telefono al tuo.",
+    "phoneStep4": "Incassato. Accetta Visa, Mastercard, Amex e Interac. Ti serve un iPhone XS o successivo, oppure un Android con NFC.",
+    "phoneMarkPaid": "Un incasso fatto dall'app di Stripe non arriva qui da solo. Apri la fattura e segnala come pagata, altrimenti continuerà a risultare da incassare.",
+    "phoneOfflinePin": "In Canada ci sono carte che richiedono il PIN con la carta inserita in un lettore, e quelle non si possono incassare avvicinandole. Se una non passa, mandagli il link di pagamento della fattura."
   },
   "communication": {
     "title": "Messaggistica",
@@ -1955,6 +1964,14 @@
           "p3": "Uno zero non rompe la busta paga: si fa lo stesso e le altre righe calcolano. Quello che succede è che quella riga non trattiene niente, quindi il netto esce più alto di quello che sarà davvero, e la differenza te la chiedono dopo. Per questo è una delle prime cose da mettere.",
           "p4": "Si mettono in {{menuNominas}}, nella scheda delle regole: ogni riga ha il suo campo di percentuale e, sotto, una nota che dice da dove viene quel numero. L'imposta trattenuta viene dal tuo commercialista o dalla tabella di Revenu Québec; la tua aliquota CNESST è sul tuo avviso di contributo annuale; quella del FSS te la dice Revenu Québec in base alla massa salariale.",
           "nota": "Nemmeno le altre sono eterne: le aliquote del Québec si aggiornano ogni gennaio. Ogni riga porta scritto di che anno è la sua cifra, così si può verificare invece di crederci."
+        },
+        "cobrarConElMovil": {
+          "title": "Incassare con carta dal telefono, senza POS",
+          "p1": "{{menuAjustes}} → {{menuPagos}} → collega, se non l'hai ancora fatto. L'account Stripe che si crea è tuo e ha il suo accesso: già solo questo ti dà un POS.",
+          "p2": "Scarica l'app Stripe Dashboard sul telefono ed entra con quell'account. Tocca il +, scegli di incassare una carta, scrivi l'importo e scegli «Tap to Pay».",
+          "p3": "Il cliente avvicina la sua carta o il suo telefono al tuo ed è incassato. Accetta Visa, Mastercard, Amex e Interac. Ti serve un iPhone XS o successivo, oppure un Android con NFC.",
+          "p4": "In Canada ci sono carte che richiedono il PIN con la carta inserita in un lettore, e quelle non passano avvicinandole. Quando succede, manda il link di pagamento della fattura e il problema è risolto.",
+          "nota": "Quello che incassi dall'app di Stripe non arriva qui da solo: apri la fattura e segnala come pagata, altrimenti i conti non torneranno."
         }
       },
       "problemas": {

@@ -140,6 +140,11 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // Lo que Stripe se lleva de cada cobro. Es la primera pregunta que hace
       // alguien que mira su banco después de cobrar una factura grande.
       { id: "comisionStripe", parrafos: 3, nota: true, ruta: "/invoicing" },
+      // A un contratista le venden un datáfono con cuota mensual en cuanto un
+      // cliente le pide pagar con tarjeta en la obra. Ya tiene uno: su cuenta
+      // de Stripe es completa y su móvil lee tarjetas. Esto se explica aquí
+      // porque la pregunta llega antes de firmar, no después.
+      { id: "cobrarConElMovil", parrafos: 4, nota: true, ruta: "/settings/payments" },
     ],
   },
   {

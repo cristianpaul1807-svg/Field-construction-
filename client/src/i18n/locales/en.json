@@ -368,7 +368,16 @@
     "feesPayerWrongTitle": "This account predates the fee setup",
     "feesPayerWrongBody": "Stripe's fees are being billed to the platform. Who pays them is fixed when the account is created and cannot be changed afterwards, so a new account has to be created. Get in touch before doing it so no received payments are lost.",
     "modeManualTitle": "You are working without Stripe",
-    "modeManualBody": "You issue invoices the same way and mark them paid by hand. Connect Stripe whenever you like and your clients can pay from their portal."
+    "modeManualBody": "You issue invoices the same way and mark them paid by hand. Connect Stripe whenever you like and your clients can pay from their portal.",
+    "phoneTitle": "Take payment with your phone",
+    "phoneNote": "Your phone is the card reader. No hardware, no monthly fee.",
+    "phoneNeedsConnect": "Finish connecting your account above first. What gets created is a full Stripe account of your own, and that's the one you'll use on your phone.",
+    "phoneStep1": "Install the Stripe Dashboard app on your phone and sign in with the account you just connected.",
+    "phoneStep2": "Tap +, choose to charge a card, and enter the amount.",
+    "phoneStep3": "Choose Tap to Pay. Your client holds their card or phone against yours.",
+    "phoneStep4": "Paid. It takes Visa, Mastercard, Amex and Interac. You need an iPhone XS or later, or an Android with NFC.",
+    "phoneMarkPaid": "A payment taken in the Stripe app doesn't reach this system on its own. Open the invoice and mark it paid, or it will keep saying it's outstanding.",
+    "phoneOfflinePin": "Some Canadian cards need their PIN entered with the card inserted in a reader, and those can't be tapped. When one won't go through, send the invoice's payment link instead."
   },
   "communication": {
     "title": "Messaging",
@@ -1955,6 +1964,14 @@
           "p3": "A zero does not break payroll: it still runs and every other line calculates. What happens is that line deducts nothing, so the net comes out higher than it really will be, and the difference gets claimed from you later. That is why it is one of the first things to set.",
           "p4": "You set them in {{menuNominas}}, on the rules tab: each line has its percentage field and, underneath, a note saying where that number comes from. The withheld tax comes from your accountant or the Revenu Québec table; your CNESST rate is on your annual assessment notice; the FSS one comes from Revenu Québec based on your payroll.",
           "nota": "The others are not forever either: Quebec rates are updated every January. Each line carries which year its figure is from, so it can be checked instead of trusted."
+        },
+        "cobrarConElMovil": {
+          "title": "Taking card payments with your phone, no terminal",
+          "p1": "{{menuAjustes}} → {{menuPagos}} → connect, if you haven't already. The Stripe account this creates is yours and has its own login — that alone gives you a card reader.",
+          "p2": "Install the Stripe Dashboard app on your phone and sign in with that account. Tap +, choose to charge a card, enter the amount and choose Tap to Pay.",
+          "p3": "Your client holds their card or phone against yours and it's paid. It takes Visa, Mastercard, Amex and Interac. You need an iPhone XS or later, or an Android with NFC.",
+          "p4": "Some Canadian cards need their PIN entered with the card inserted in a reader, and those won't work by tapping. When that happens, send the invoice's payment link and the problem is over.",
+          "nota": "What you charge in the Stripe app doesn't reach this system on its own: open the invoice and mark it paid, or your books won't match."
         }
       },
       "problemas": {
