@@ -377,7 +377,10 @@
     "phoneStep3": "Choisis « Tap to Pay ». Ton client approche sa carte ou son téléphone du tien.",
     "phoneStep4": "Encaissé. Visa, Mastercard, Amex et Interac sont acceptées. Il te faut un iPhone XS ou plus récent, ou un Android avec NFC.",
     "phoneMarkPaid": "Un encaissement fait dans l'application Stripe n'arrive pas ici tout seul. Ouvre la facture et marque-la payée, sinon elle restera affichée comme impayée.",
-    "phoneOfflinePin": "Au Canada, certaines cartes exigent le NIP avec la carte insérée dans un lecteur : celles-là ne passent pas sans contact. Quand une carte refuse, envoie plutôt le lien de paiement de la facture."
+    "phoneOfflinePin": "Au Canada, certaines cartes exigent le NIP avec la carte insérée dans un lecteur : celles-là ne passent pas sans contact. Quand une carte refuse, envoie plutôt le lien de paiement de la facture.",
+    "platformNotActivatedTitle": "Nous ne pouvons pas encore créer ton compte d'encaissement",
+    "platformNotActivatedBody": "Stripe ne crée pas de comptes d'encaissement tant que le compte de la plateforme n'a pas terminé son activation. Ce n'est pas de ton fait et tu ne peux rien y faire d'ici : nous nous en occupons. Réessaie « Connecter Stripe » dans quelques jours.",
+    "platformNotActivatedMeanwhile": "En attendant, tu peux continuer à émettre des factures et les marquer payées quand l'argent rentre par virement, en argent comptant ou par chèque. Il ne manque que le paiement par carte."
   },
   "communication": {
     "title": "Messagerie",
@@ -1572,7 +1575,8 @@
     "usuario_de_otro_negocio": "Ce compte appartient déjà à une autre entreprise. Un compte ne peut être que dans une seule ; cette personne a besoin d’un autre courriel pour vous rejoindre.",
     "usuario_ya_esta": "Cette personne fait déjà partie de votre équipe. Ouvrez-la avec le crayon pour changer son nom, son courriel ou ce qu’elle voit.",
     "clave_del_principal": "Impossible de changer le mot de passe de la personne qui a créé l’entreprise. Ce compte lui appartient.",
-    "clave_es_la_tuya": "Pour changer le vôtre, utilisez l’écran de votre compte."
+    "clave_es_la_tuya": "Pour changer le vôtre, utilisez l’écran de votre compte.",
+    "stripe_platform_not_activated": "Le compte Stripe de la plateforme n'est pas encore activé, les comptes d'encaissement ne peuvent donc pas être créés. Nous nous en occupons."
   },
   "workLog": {
     "title": "Suivi des travaux",

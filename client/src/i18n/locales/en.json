@@ -377,7 +377,10 @@
     "phoneStep3": "Choose Tap to Pay. Your client holds their card or phone against yours.",
     "phoneStep4": "Paid. It takes Visa, Mastercard, Amex and Interac. You need an iPhone XS or later, or an Android with NFC.",
     "phoneMarkPaid": "A payment taken in the Stripe app doesn't reach this system on its own. Open the invoice and mark it paid, or it will keep saying it's outstanding.",
-    "phoneOfflinePin": "Some Canadian cards need their PIN entered with the card inserted in a reader, and those can't be tapped. When one won't go through, send the invoice's payment link instead."
+    "phoneOfflinePin": "Some Canadian cards need their PIN entered with the card inserted in a reader, and those can't be tapped. When one won't go through, send the invoice's payment link instead.",
+    "platformNotActivatedTitle": "We can't create your payouts account yet",
+    "platformNotActivatedBody": "Stripe won't create payment accounts until the platform's own account finishes activation. This isn't on you and there's nothing you can do from here — we're sorting it out. Press Connect Stripe again in a few days.",
+    "platformNotActivatedMeanwhile": "In the meantime you can keep issuing invoices and mark them paid when the money comes in by transfer, cash or cheque. The only thing missing is card payment."
   },
   "communication": {
     "title": "Messaging",
@@ -1572,7 +1575,8 @@
     "usuario_ya_esta": "That person is already on your team. Open them with the pencil to change their name, email or what they can see.",
     "usuario_de_otro_negocio": "That account already belongs to another business. An account can only be in one, so that person needs a different email to join here.",
     "clave_del_principal": "You can’t change the password of whoever created the business. That account is theirs to manage.",
-    "clave_es_la_tuya": "To change your own, use your account screen."
+    "clave_es_la_tuya": "To change your own, use your account screen.",
+    "stripe_platform_not_activated": "The platform's Stripe account isn't activated yet, so payment accounts can't be created. We're sorting it out."
   },
   "workLog": {
     "title": "Work log",

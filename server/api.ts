@@ -494,6 +494,24 @@ function isConnectNotEnabled(message: string): boolean {
   );
 }
 
+/**
+ * Whether an error means "this platform's own Stripe account is not activated".
+ *
+ * `account_create_activation_required`: Stripe refuses to create connected
+ * accounts until the platform account itself has finished its activation —
+ * business details, identity check, bank account.
+ *
+ * It needs its own branch because it is neither of the two failures already
+ * handled, and it arrived as an unrecognised error: the contractor read "could
+ * not start the connection with Stripe" and reasonably concluded the product
+ * was broken. It isn't, and it isn't his to fix either — he cannot activate an
+ * account he doesn't own. Telling him that plainly is the difference between
+ * waiting and giving up.
+ */
+function isPlatformNotActivated(message: string): boolean {
+  return /account_create_activation_required|account must be activated/i.test(message);
+}
+
 
 async function computeInvoiceTax(admin: ReturnType<typeof getSupabaseAdmin>, businessId: string, subtotal: number) {
   const { data: business, error: businessError } = await admin
@@ -7995,6 +8013,10 @@ apiRouter.post(
           res.status(409).json({ error: message, code: "stripe_connect_not_enabled" });
           return;
         }
+        if (isPlatformNotActivated(message)) {
+          res.status(409).json({ error: message, code: "stripe_platform_not_activated" });
+          return;
+        }
         throw err;
       }
       // Starting onboarding answers the question; no need to ask again.
@@ -8040,6 +8062,10 @@ apiRouter.post(
         res.status(409).json({ error: message, code: "stripe_connect_not_enabled" });
         return;
       }
+      if (isPlatformNotActivated(message)) {
+        res.status(409).json({ error: message, code: "stripe_platform_not_activated" });
+        return;
+      }
       // La cuenta guardada no existe en Stripe. Lo normal no es que la hayan
       // borrado allí: es que la plataforma ha pasado de clave de prueba a
       // clave real, y una cuenta creada en pruebas no existe en real.
@@ -8059,6 +8085,10 @@ apiRouter.post(
         const message2 = err2 instanceof Error ? err2.message : String(err2);
         if (isConnectNotEnabled(message2)) {
           res.status(409).json({ error: message2, code: "stripe_connect_not_enabled" });
+          return;
+        }
+        if (isPlatformNotActivated(message2)) {
+          res.status(409).json({ error: message2, code: "stripe_platform_not_activated" });
           return;
         }
         // Si tampoco se puede rehacer, la fila muerta ya está fuera: el

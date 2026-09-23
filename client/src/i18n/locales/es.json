@@ -377,7 +377,10 @@
     "phoneStep3": "Elige «Tap to Pay». El cliente acerca su tarjeta o su móvil al tuyo.",
     "phoneStep4": "Cobrado. Acepta Visa, Mastercard, Amex e Interac. Necesitas un iPhone XS o posterior, o un Android con NFC.",
     "phoneMarkPaid": "Un cobro hecho desde la app de Stripe no llega aquí solo. Entra en la factura y márcala como cobrada, o seguirá diciendo que está pendiente.",
-    "phoneOfflinePin": "En Canadá hay tarjetas que piden el PIN insertadas en un lector, y esas no se pueden cobrar acercándolas. Si una no pasa, mándale el enlace de pago de la factura."
+    "phoneOfflinePin": "En Canadá hay tarjetas que piden el PIN insertadas en un lector, y esas no se pueden cobrar acercándolas. Si una no pasa, mándale el enlace de pago de la factura.",
+    "platformNotActivatedTitle": "Todavía no podemos crearte la cuenta de cobros",
+    "platformNotActivatedBody": "Stripe no deja crear cuentas de cobro hasta que la cuenta de la plataforma termine su activación. No es cosa tuya ni hay nada que puedas hacer desde aquí: lo estamos resolviendo. Vuelve a pulsar Conectar Stripe dentro de unos días.",
+    "platformNotActivatedMeanwhile": "Mientras tanto puedes seguir emitiendo facturas y marcarlas cobradas cuando te paguen por transferencia, en efectivo o con cheque. Lo único que falta es el pago con tarjeta."
   },
   "communication": {
     "title": "Mensajería",
@@ -1572,7 +1575,8 @@
     "usuario_ya_esta": "Esa persona ya está en tu equipo. Ábrela con el lápiz para cambiarle el nombre, el correo o lo que ve.",
     "usuario_de_otro_negocio": "Esa cuenta ya pertenece a otro negocio. Una cuenta sólo puede estar en uno; esa persona necesita un correo distinto para entrar aquí.",
     "clave_del_principal": "No se puede cambiar la contraseña de quien creó el negocio. Esa cuenta la lleva esa persona.",
-    "clave_es_la_tuya": "Para cambiar la tuya, usa la pantalla de tu cuenta."
+    "clave_es_la_tuya": "Para cambiar la tuya, usa la pantalla de tu cuenta.",
+    "stripe_platform_not_activated": "La cuenta de la plataforma todavía no está activada en Stripe, así que no se pueden crear cuentas de cobro. Lo estamos resolviendo."
   },
   "workLog": {
     "title": "Control de trabajo",

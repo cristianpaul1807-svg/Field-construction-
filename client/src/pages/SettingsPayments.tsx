@@ -49,6 +49,7 @@ export default function SettingsPayments() {
   const [savingProvince, setSavingProvince] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsConnectSignup, setNeedsConnectSignup] = useState(false);
+  const [platformNotActivated, setPlatformNotActivated] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -61,6 +62,7 @@ export default function SettingsPayments() {
     setConnecting(true);
     setError(null);
     setNeedsConnectSignup(false);
+    setPlatformNotActivated(false);
     try {
       const res = await apiFetch("/api/stripe/connect/onboarding-link", { method: "POST" });
       const body = await readJson(res);
@@ -70,6 +72,17 @@ export default function SettingsPayments() {
         // its own explanation and a link, not a red sentence in English.
         if (body?.code === "stripe_connect_not_enabled") {
           setNeedsConnectSignup(true);
+          setConnecting(false);
+          return;
+        }
+        // La cuenta de la plataforma —la nuestra, no la suya— está sin
+        // activar, y Stripe no deja crear cuentas conectadas hasta entonces.
+        // No es culpa del contratista y no lo puede arreglar él, así que se
+        // le dice eso y se le recuerda por dónde sí puede cobrar mientras
+        // tanto. Antes caía en el mensaje genérico y parecía que el producto
+        // estaba roto.
+        if (body?.code === "stripe_platform_not_activated") {
+          setPlatformNotActivated(true);
           setConnecting(false);
           return;
         }
@@ -164,6 +177,18 @@ export default function SettingsPayments() {
           <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-1.5">
             <p className="text-sm font-medium text-foreground">{t("payments.modeManualTitle")}</p>
             <p className="text-sm text-muted-foreground">{t("payments.modeManualBody")}</p>
+          </div>
+        )}
+
+        {/* No es suya y no la puede arreglar él: la cuenta sin activar es la
+            de la plataforma. Así que no lleva enlace a Stripe —le mandaría a
+            una página de una cuenta que no es la suya— y sí dice por dónde
+            puede cobrar hoy, que es lo único accionable que tiene. */}
+        {platformNotActivated && (
+          <div className="rounded-lg border border-status-warning-fg/30 bg-status-warning-bg/40 p-4 space-y-1.5">
+            <p className="text-sm font-medium text-foreground">{t("payments.platformNotActivatedTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("payments.platformNotActivatedBody")}</p>
+            <p className="text-sm text-muted-foreground">{t("payments.platformNotActivatedMeanwhile")}</p>
           </div>
         )}
 
