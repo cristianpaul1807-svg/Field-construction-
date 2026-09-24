@@ -104,6 +104,7 @@ export default function Budgets() {
   const [borrandoPresupuesto, setBorrandoPresupuesto] = useState(false);
   const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null);
   const [newBudgetOpen, setNewBudgetOpen] = useState(false);
+  const [pestana, setPestana] = useState("builder");
   const { data: summaries, loading: summariesLoading, error: summariesError, detalle: summariesDetalle } =
     useApi<EstimateSummary[]>(`/api/estimates?_r=${reloadToken}`);
   const draftId = activeEstimateId ?? (summaries && summaries.length > 0 ? summaries[0].id : null);
@@ -412,7 +413,7 @@ export default function Budgets() {
         </div>
       )}
 
-      <Tabs defaultValue="builder">
+      <Tabs value={pestana} onValueChange={setPestana}>
         <TabsList>
           <TabsTrigger value="builder">{t("budgets.tabBuilder")}</TabsTrigger>
           <TabsTrigger value="templates">{t("budgets.templates")}</TabsTrigger>
@@ -471,6 +472,26 @@ export default function Budgets() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {/* En un negocio nuevo este desplegable se abre vacío y
+                          no dice nada. Las categorías se crean en la pestaña
+                          de al lado, pero eso no se ve desde aquí: hay que
+                          adivinar que existe. Así que cuando no hay ninguna,
+                          el sitio donde se hacen está a un clic en vez de a
+                          una suposición.
+
+                          Es un salto de pestaña, no una navegación: el
+                          presupuesto sigue abierto detrás y no se pierde
+                          nada. */}
+                      {(categories ?? []).length === 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 text-xs"
+                          onClick={() => setPestana("categorias")}
+                        >
+                          <Plus size={13} /> {t("budgets.crearPrimeraCategoria")}
+                        </Button>
+                      )}
                       <StatusBadge tone="info">{t(`budgets.estimateStatus.${draft.status}`, { defaultValue: draft.status })}</StatusBadge>
                       {/* Borrar el presupuesto entero. El servidor se niega si
                           de él salió una factura, y lo dice. */}

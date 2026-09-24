@@ -279,7 +279,8 @@
     "falta": {
       "zone": "Scrivi la zona del cantiere: la cucina, il bagno, il piano terra…",
       "item": "Scegli un articolo dal catalogo o scrivi il suo nome."
-    }
+    },
+    "crearPrimeraCategoria": "Crea la prima"
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",

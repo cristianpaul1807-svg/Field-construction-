@@ -279,7 +279,8 @@
     "falta": {
       "zone": "Escribe la zona de la obra: la cocina, el baño, la planta baja…",
       "item": "Elige un ítem del catálogo o escribe su nombre."
-    }
+    },
+    "crearPrimeraCategoria": "Crear la primera"
   },
   "invoicing": {
     "title": "Facturación y pagos",

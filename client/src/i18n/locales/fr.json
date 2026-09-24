@@ -279,7 +279,8 @@
     "falta": {
       "zone": "Nomme la zone du chantier : la cuisine, la salle de bain, le rez-de-chaussée…",
       "item": "Choisis un article du catalogue ou écris son nom."
-    }
+    },
+    "crearPrimeraCategoria": "Créer la première"
   },
   "invoicing": {
     "title": "Facturation et paiements",

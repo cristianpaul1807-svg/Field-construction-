@@ -279,7 +279,8 @@
     "falta": {
       "zone": "Name the area of the job: the kitchen, the bathroom, the ground floor…",
       "item": "Pick an item from the catalogue or type its name."
-    }
+    },
+    "crearPrimeraCategoria": "Create the first one"
   },
   "invoicing": {
     "title": "Invoicing & Payments",
