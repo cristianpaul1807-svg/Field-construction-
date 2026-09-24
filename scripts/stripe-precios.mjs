@@ -56,6 +56,24 @@ const stripe = new Stripe(CLAVE);
 /** Donde vive el producto. Lo leen el portal y sus enlaces legales. */
 const SITIO = "https://logiciel-construction.com";
 
+/**
+ * Las páginas legales llevan el idioma en la ruta.
+ *
+ * El portal apuntaba a `/confidentialite` y `/conditions` a secas, y esas no
+ * existen: caen en el armazón de la aplicación y sirven el index. O sea que
+ * quien entraba a cancelar y pulsaba «política de privacidad» veía una
+ * pantalla en blanco de la app en vez de la política — en el sitio donde
+ * menos conviene hacer dudar a alguien, y donde además mira Stripe cuando
+ * revisa la cuenta.
+ *
+ * En francés porque el portal saluda en francés y el mercado es Quebec. Las
+ * otras tres existen igual: `/en/privacy`, `/es/privacidad`, `/it/privacy`.
+ */
+const LEGAL = {
+  privacidad: `${SITIO}/fr/confidentialite`,
+  condiciones: `${SITIO}/fr/conditions`,
+};
+
 function decir(estado, texto) {
   const marca = { nuevo: "+", igual: "=", cambia: "~" }[estado] ?? " ";
   console.log(`  ${marca} ${texto}`);
@@ -159,8 +177,8 @@ async function portal(productos) {
     default_return_url: `${SITIO}/suscripcion`,
     business_profile: {
       headline: "Logiciel Construction — votre abonnement",
-      privacy_policy_url: `${SITIO}/confidentialite`,
-      terms_of_service_url: `${SITIO}/conditions`,
+      privacy_policy_url: LEGAL.privacidad,
+      terms_of_service_url: LEGAL.condiciones,
     },
     features: {
       invoice_history: { enabled: true },
