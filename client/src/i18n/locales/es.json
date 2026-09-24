@@ -380,7 +380,10 @@
     "phoneOfflinePin": "En Canadá hay tarjetas que piden el PIN insertadas en un lector, y esas no se pueden cobrar acercándolas. Si una no pasa, mándale el enlace de pago de la factura.",
     "platformNotActivatedTitle": "Todavía no podemos crearte la cuenta de cobros",
     "platformNotActivatedBody": "Stripe no deja crear cuentas de cobro hasta que la cuenta de la plataforma termine su activación. No es cosa tuya ni hay nada que puedas hacer desde aquí: lo estamos resolviendo. Vuelve a pulsar Conectar Stripe dentro de unos días.",
-    "platformNotActivatedMeanwhile": "Mientras tanto puedes seguir emitiendo facturas y marcarlas cobradas cuando te paguen por transferencia, en efectivo o con cheque. Lo único que falta es el pago con tarjeta."
+    "platformNotActivatedMeanwhile": "Mientras tanto puedes seguir emitiendo facturas y marcarlas cobradas cuando te paguen por transferencia, en efectivo o con cheque. Lo único que falta es el pago con tarjeta.",
+    "connectPausedTitle": "Conectar Stripe está pausado ahora mismo",
+    "connectPausedBody": "Estamos cambiando la cuenta con la que se crean los cobros. Si conectaras ahora, dentro de unos días habría que desconectarte y repetir el alta entera con tus datos bancarios — y eso no se le pide dos veces a nadie. Te avisamos en cuanto esté.",
+    "connectPausedMeanwhile": "Mientras tanto facturas igual y marcas las facturas como cobradas cuando te paguen por transferencia, en efectivo o con cheque."
   },
   "communication": {
     "title": "Mensajería",
@@ -1576,7 +1579,8 @@
     "usuario_de_otro_negocio": "Esa cuenta ya pertenece a otro negocio. Una cuenta sólo puede estar en uno; esa persona necesita un correo distinto para entrar aquí.",
     "clave_del_principal": "No se puede cambiar la contraseña de quien creó el negocio. Esa cuenta la lleva esa persona.",
     "clave_es_la_tuya": "Para cambiar la tuya, usa la pantalla de tu cuenta.",
-    "stripe_platform_not_activated": "La cuenta de la plataforma todavía no está activada en Stripe, así que no se pueden crear cuentas de cobro. Lo estamos resolviendo."
+    "stripe_platform_not_activated": "La cuenta de la plataforma todavía no está activada en Stripe, así que no se pueden crear cuentas de cobro. Lo estamos resolviendo.",
+    "stripe_connect_pausado": "Conectar Stripe está pausado mientras cambiamos la cuenta de cobros. Te avisamos en cuanto esté."
   },
   "workLog": {
     "title": "Control de trabajo",

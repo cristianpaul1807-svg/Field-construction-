@@ -380,7 +380,10 @@
     "phoneOfflinePin": "In Canada ci sono carte che richiedono il PIN con la carta inserita in un lettore, e quelle non si possono incassare avvicinandole. Se una non passa, mandagli il link di pagamento della fattura.",
     "platformNotActivatedTitle": "Non possiamo ancora crearti l'account per incassare",
     "platformNotActivatedBody": "Stripe non crea account di incasso finché l'account della piattaforma non completa l'attivazione. Non dipende da te e da qui non puoi fare nulla: ce ne stiamo occupando. Riprova con «Collega Stripe» fra qualche giorno.",
-    "platformNotActivatedMeanwhile": "Nel frattempo puoi continuare a emettere fatture e segnarle come pagate quando ti pagano con bonifico, in contanti o con assegno. Manca solo il pagamento con carta."
+    "platformNotActivatedMeanwhile": "Nel frattempo puoi continuare a emettere fatture e segnarle come pagate quando ti pagano con bonifico, in contanti o con assegno. Manca solo il pagamento con carta.",
+    "connectPausedTitle": "Il collegamento con Stripe è in pausa",
+    "connectPausedBody": "Stiamo cambiando l'account da cui si creano gli account di incasso. Se ti collegassi adesso, fra qualche giorno dovremmo scollegarti e farti rifare tutta l'iscrizione con i tuoi dati bancari — e questo non si chiede due volte. Ti avvisiamo appena è pronto.",
+    "connectPausedMeanwhile": "Nel frattempo fatturi normalmente e segni le fatture come pagate quando ti pagano con bonifico, in contanti o con assegno."
   },
   "communication": {
     "title": "Messaggistica",
@@ -1576,7 +1579,8 @@
     "usuario_de_otro_negocio": "Quell’account appartiene già a un’altra azienda. Un account può stare solo in una; quella persona ha bisogno di un’email diversa per entrare qui.",
     "clave_del_principal": "Non si può cambiare la password di chi ha creato l’azienda. Quell’account lo gestisce quella persona.",
     "clave_es_la_tuya": "Per cambiare la tua, usa la schermata del tuo account.",
-    "stripe_platform_not_activated": "L'account Stripe della piattaforma non è ancora attivato, quindi non si possono creare account di incasso. Ce ne stiamo occupando."
+    "stripe_platform_not_activated": "L'account Stripe della piattaforma non è ancora attivato, quindi non si possono creare account di incasso. Ce ne stiamo occupando.",
+    "stripe_connect_pausado": "Il collegamento con Stripe è in pausa mentre cambiamo l'account di incasso. Ti avvisiamo appena è pronto."
   },
   "workLog": {
     "title": "Controllo lavori",

@@ -18,6 +18,7 @@ interface ConnectStatus {
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
   feesPayer: "account" | "application" | null;
+  conexionPausada?: boolean;
 }
 
 interface TaxRate {
@@ -81,6 +82,11 @@ export default function SettingsPayments() {
         // le dice eso y se le recuerda por dónde sí puede cobrar mientras
         // tanto. Antes caía en el mensaje genérico y parecía que el producto
         // estaba roto.
+        if (body?.code === "stripe_connect_pausado") {
+          setError(t("payments.connectPausedTitle"));
+          setConnecting(false);
+          return;
+        }
         if (body?.code === "stripe_platform_not_activated") {
           setPlatformNotActivated(true);
           setConnecting(false);
@@ -153,7 +159,7 @@ export default function SettingsPayments() {
                 </p>
               )}
             </div>
-            <Button className="gap-2" onClick={connect} disabled={connecting}>
+            <Button className="gap-2" onClick={connect} disabled={connecting || !!connectStatus.conexionPausada}>
               {connecting ? <Spinner className="size-4" /> : <ExternalLink size={16} />}
               {connectStatus.connected ? t("payments.continueSetup") : t("payments.connectStripe")}
             </Button>
@@ -177,6 +183,18 @@ export default function SettingsPayments() {
           <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-1.5">
             <p className="text-sm font-medium text-foreground">{t("payments.modeManualTitle")}</p>
             <p className="text-sm text-muted-foreground">{t("payments.modeManualBody")}</p>
+          </div>
+        )}
+
+        {/* Un botón apagado sin decir por qué es peor que un botón que falla:
+            el contratista se queda mirando algo que no responde y no sabe si
+            es él, su plan o una avería. Así que el motivo va al lado, y con
+            él lo que sí puede hacer hoy. */}
+        {!loading && connectStatus?.conexionPausada && (
+          <div className="rounded-lg border border-border bg-secondary/40 p-4 space-y-1.5">
+            <p className="text-sm font-medium text-foreground">{t("payments.connectPausedTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("payments.connectPausedBody")}</p>
+            <p className="text-sm text-muted-foreground">{t("payments.connectPausedMeanwhile")}</p>
           </div>
         )}
 

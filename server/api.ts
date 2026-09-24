@@ -495,6 +495,22 @@ function isConnectNotEnabled(message: string): boolean {
 }
 
 /**
+ * Whether connecting new accounts is paused on purpose.
+ *
+ * `STRIPE_CONNECT_PAUSED` en el entorno. Existe para un caso concreto y real:
+ * la cuenta de la plataforma va a cambiar de país, y cualquier contratista que
+ * conecte mientras tanto quedaría colgado de una cuenta que se va a abandonar
+ * —habría que desconectarlo y hacerle repetir el alta con sus datos bancarios,
+ * que es lo último que se le pide dos veces a alguien—.
+ *
+ * Se apaga desde el entorno y no desde el código a propósito: el día que la
+ * cuenta nueva esté lista se quita la variable y vuelve, sin desplegar nada.
+ */
+function conectarEstaPausado(): boolean {
+  return /^(1|true|si|sí|yes)$/i.test((process.env.STRIPE_CONNECT_PAUSED ?? "").trim());
+}
+
+/**
  * Whether an error means "this platform's own Stripe account is not activated".
  *
  * `account_create_activation_required`: Stripe refuses to create connected
@@ -7925,6 +7941,11 @@ apiRouter.get(
       // than corrected. The page says so instead of leaving it to be found on
       // a Stripe invoice at the end of the month.
       feesPayer: data?.fees_payer ?? null,
+      // Para que el botón lo diga antes de pulsarlo, en vez de aceptar la
+      // pulsación y contestar que no. La negativa del servidor sigue estando
+      // igualmente: una pantalla vieja en el móvil de alguien no debe poder
+      // saltársela.
+      conexionPausada: conectarEstaPausado(),
     });
   })
 );
@@ -7993,6 +8014,13 @@ async function altaDeCuentaConectada(
 apiRouter.post(
   "/stripe/connect/onboarding-link",
   route(async (req, res) => {
+    // Antes de nada: si está pausado no se crea ninguna cuenta. Hacerlo y
+    // deshacerlo después es peor que no hacerlo.
+    if (conectarEstaPausado()) {
+      res.status(409).json({ error: "Conectar Stripe está pausado", code: "stripe_connect_pausado" });
+      return;
+    }
+
     const admin = getSupabaseAdmin();
     const stripe = getStripe();
     const baseUrl = `${req.protocol}://${req.get("host")}`;

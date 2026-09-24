@@ -380,7 +380,10 @@
     "phoneOfflinePin": "Some Canadian cards need their PIN entered with the card inserted in a reader, and those can't be tapped. When one won't go through, send the invoice's payment link instead.",
     "platformNotActivatedTitle": "We can't create your payouts account yet",
     "platformNotActivatedBody": "Stripe won't create payment accounts until the platform's own account finishes activation. This isn't on you and there's nothing you can do from here — we're sorting it out. Press Connect Stripe again in a few days.",
-    "platformNotActivatedMeanwhile": "In the meantime you can keep issuing invoices and mark them paid when the money comes in by transfer, cash or cheque. The only thing missing is card payment."
+    "platformNotActivatedMeanwhile": "In the meantime you can keep issuing invoices and mark them paid when the money comes in by transfer, cash or cheque. The only thing missing is card payment.",
+    "connectPausedTitle": "Connecting Stripe is paused right now",
+    "connectPausedBody": "We're moving the account that payment accounts are created from. If you connected now, in a few days we'd have to disconnect you and have you do the whole signup again with your bank details — and nobody should be asked for that twice. We'll tell you the moment it's ready.",
+    "connectPausedMeanwhile": "In the meantime you invoice as usual and mark invoices paid when the money comes in by transfer, cash or cheque."
   },
   "communication": {
     "title": "Messaging",
@@ -1576,7 +1579,8 @@
     "usuario_de_otro_negocio": "That account already belongs to another business. An account can only be in one, so that person needs a different email to join here.",
     "clave_del_principal": "You can’t change the password of whoever created the business. That account is theirs to manage.",
     "clave_es_la_tuya": "To change your own, use your account screen.",
-    "stripe_platform_not_activated": "The platform's Stripe account isn't activated yet, so payment accounts can't be created. We're sorting it out."
+    "stripe_platform_not_activated": "The platform's Stripe account isn't activated yet, so payment accounts can't be created. We're sorting it out.",
+    "stripe_connect_pausado": "Connecting Stripe is paused while we move the payments account. We'll let you know when it's ready."
   },
   "workLog": {
     "title": "Work log",
