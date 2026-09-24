@@ -2706,5 +2706,10 @@
     "regla2": "La commission est calculée sur ce que l'entreprise paie réellement, hors taxes.",
     "regla3": "Si cette entreprise annule, la commission s'arrête ; si elle revient, elle reprend.",
     "regla4": "Vous ne pouvez pas utiliser votre propre lien pour votre propre entreprise."
+  },
+  "buscador": {
+    "elegir": "Choisir",
+    "escribeParaFiltrar": "Écris pour filtrer…",
+    "nadaCoincide": "Rien ne correspond."
   }
 }

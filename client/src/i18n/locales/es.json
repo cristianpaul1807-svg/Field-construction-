@@ -2706,5 +2706,10 @@
     "regla2": "La comisión se calcula sobre lo que el negocio paga de verdad, sin impuestos.",
     "regla3": "Si ese negocio cancela, la comisión se para; si vuelve, vuelve a correr.",
     "regla4": "No puedes usar tu propio enlace para tu propio negocio."
+  },
+  "buscador": {
+    "elegir": "Elegir",
+    "escribeParaFiltrar": "Escribe para filtrar…",
+    "nadaCoincide": "Nada coincide con eso."
   }
 }

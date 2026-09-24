@@ -2706,5 +2706,10 @@
     "regla2": "Commission is calculated on what the business actually pays, before tax.",
     "regla3": "If that business cancels, the commission stops; if they come back, it resumes.",
     "regla4": "You can't use your own link for your own business."
+  },
+  "buscador": {
+    "elegir": "Choose",
+    "escribeParaFiltrar": "Type to filter…",
+    "nadaCoincide": "Nothing matches that."
   }
 }

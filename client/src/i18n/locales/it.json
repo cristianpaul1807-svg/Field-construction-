@@ -2706,5 +2706,10 @@
     "regla2": "La commissione si calcola su quanto l'azienda paga davvero, senza imposte.",
     "regla3": "Se quell'azienda disdice, la commissione si ferma; se torna, riparte.",
     "regla4": "Non puoi usare il tuo link per la tua stessa azienda."
+  },
+  "buscador": {
+    "elegir": "Scegli",
+    "escribeParaFiltrar": "Scrivi per filtrare…",
+    "nadaCoincide": "Nessuna corrispondenza."
   }
 }

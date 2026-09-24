@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { SelectorBuscable } from "@/components/SelectorBuscable";
 import { useState } from "react";
 import {
   Dialog,
@@ -92,16 +93,14 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
           <div className="space-y-1.5">
             <Label>{t("common.client")} ({t("common.optional")})</Label>
             {hasClients ? (
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("budgets.noClientYet")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(clients ?? []).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SelectorBuscable
+                className="w-full"
+                valor={clientId}
+                onCambio={setClientId}
+                placeholder={t("budgets.noClientYet")}
+                aria-label={t("common.client")}
+                opciones={(clients ?? []).map((c) => ({ valor: c.id, etiqueta: c.name }))}
+              />
             ) : (
               !clientsLoading && (
                 <p className="text-xs text-muted-foreground">{t("budgets.noClientsYetHint")}</p>
@@ -111,16 +110,14 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
 
           <div className="space-y-1.5">
             <Label>{t("common.project")} ({t("common.optional")})</Label>
-            <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t("budgets.noProject")} />
-              </SelectTrigger>
-              <SelectContent>
-                {(projects ?? []).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SelectorBuscable
+              className="w-full"
+              valor={projectId}
+              onCambio={setProjectId}
+              placeholder={t("budgets.noProject")}
+              aria-label={t("common.project")}
+              opciones={(projects ?? []).map((p) => ({ valor: p.id, etiqueta: p.name }))}
+            />
           </div>
 
           <div className="space-y-1.5">

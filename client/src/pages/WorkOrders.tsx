@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SelectorBuscable } from "@/components/SelectorBuscable";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,12 +93,14 @@ function NewWorkOrderDialog({ onCreated }: { onCreated: () => void }) {
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label>{t("common.project")}</Label>
-            <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger><SelectValue placeholder={t("workOrders.selectProject")} /></SelectTrigger>
-              <SelectContent>
-                {(projects ?? []).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SelectorBuscable
+              className="w-full"
+              valor={projectId}
+              onCambio={setProjectId}
+              placeholder={t("workOrders.selectProject")}
+              aria-label={t("common.project")}
+              opciones={(projects ?? []).map((p) => ({ valor: p.id, etiqueta: p.name }))}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>{t("workOrders.title")}</Label>
