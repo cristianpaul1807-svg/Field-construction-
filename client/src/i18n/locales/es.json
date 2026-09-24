@@ -275,7 +275,11 @@
     "sendItYourselfHint": "¿Se lo mandas tú por WhatsApp o por correo? Descarga el PDF aquí arriba y elige «{{boton}}»: queda marcado como enviado sin que le llegue nada por el chat.",
     "projectionTitlePlaceholder": "Ej. Instalar piso de cocina",
     "deleteEstimate": "Borrar presupuesto",
-    "deleteEstimateConfirm": "¿Borrar el presupuesto {{number}}? No se puede deshacer."
+    "deleteEstimateConfirm": "¿Borrar el presupuesto {{number}}? No se puede deshacer.",
+    "falta": {
+      "zone": "Escribe la zona de la obra: la cocina, el baño, la planta baja…",
+      "item": "Elige un ítem del catálogo o escribe su nombre."
+    }
   },
   "invoicing": {
     "title": "Facturación y pagos",

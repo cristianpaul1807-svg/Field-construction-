@@ -275,7 +275,11 @@
     "sendItYourselfHint": "Sending it yourself by WhatsApp or email? Download the PDF above and choose “{{boton}}”: it gets marked as sent without anything landing in their chat.",
     "projectionTitlePlaceholder": "E.g. Install kitchen flooring",
     "deleteEstimate": "Delete estimate",
-    "deleteEstimateConfirm": "Delete estimate {{number}}? This can't be undone."
+    "deleteEstimateConfirm": "Delete estimate {{number}}? This can't be undone.",
+    "falta": {
+      "zone": "Name the area of the job: the kitchen, the bathroom, the ground floor…",
+      "item": "Pick an item from the catalogue or type its name."
+    }
   },
   "invoicing": {
     "title": "Invoicing & Payments",

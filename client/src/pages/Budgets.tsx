@@ -21,7 +21,7 @@ import { FileText, Plus, Trash2, Check, Download } from "lucide-react";
 import { AssemblyTemplateDialog } from "@/components/AssemblyTemplateDialog";
 import { AssignClientControl } from "@/components/AssignClientControl";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, downloadFile } from "@/lib/api";
+import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { previewTax, type TaxRate } from "@/lib/taxes";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
@@ -184,6 +184,7 @@ export default function Budgets() {
     return (catalog?.materials ?? []).map((m) => ({ id: m.id, name: m.name, price: m.price }));
   };
   const [addingLine, setAddingLine] = useState(false);
+  const [falloDeLinea, setFalloDeLinea] = useState<string | null>(null);
   const [savingDraft, setSavingDraft] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [templateZonePrompt, setTemplateZonePrompt] = useState<{ id: string; name: string } | null>(null);
@@ -245,11 +246,25 @@ export default function Budgets() {
     refresh();
   };
 
+  /**
+   * Qué falta para poder añadir la línea.
+   *
+   * El servidor exige zona, categoría e ítem, así que una línea sin zona no
+   * entra. Eso estaba sólo aquí dentro, como un `return` mudo: el botón se
+   * pulsaba, no ocurría nada, y no había forma de saber por qué. El dueño se
+   * quedó dándole a un botón encendido que no hacía nada.
+   *
+   * Ahora el mismo cálculo apaga el botón y escribe qué falta, que es la
+   * diferencia entre un control muerto y uno que enseña a usarse.
+   */
+  const faltaEnLaLinea = !lineForm.zone.trim() ? "zone" : !lineForm.item.trim() ? "item" : null;
+
   const addLine = async () => {
-    if (!draftId || !lineForm.zone.trim() || !lineForm.item.trim()) return;
+    if (!draftId || faltaEnLaLinea) return;
     setAddingLine(true);
+    setFalloDeLinea(null);
     try {
-      await apiFetch(`/api/estimates/${draftId}/lines`, {
+      const res = await apiFetch(`/api/estimates/${draftId}/lines`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,9 +275,23 @@ export default function Budgets() {
           unitCost: lineForm.unitCost,
         }),
       });
+
+      // Se mira la respuesta. `apiFetch` no lanza en un 400: devuelve la
+      // respuesta y sigue. Aquí no se miraba, así que se vaciaba el formulario
+      // y se recargaba la lista igual — y un rechazo del servidor se veía
+      // exactamente igual que un éxito, sólo que la línea no aparecía. Lo que
+      // el contratista ve entonces es un botón que a veces funciona y a veces
+      // no, sin ningún motivo.
+      if (!res.ok) {
+        setFalloDeLinea(serverMessage(await readJson(res), t, t("errores.generico")));
+        return;
+      }
+
       setLineForm(emptyLineForm);
       setCatalogPick("");
       refresh();
+    } catch (err) {
+      setFalloDeLinea(err instanceof Error ? err.message : t("errores.generico"));
     } finally {
       setAddingLine(false);
     }
@@ -544,7 +573,9 @@ export default function Budgets() {
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">{t("budgets.addLine")}</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
                       <div className="space-y-1 col-span-2 sm:col-span-1">
-                        <Label className="text-xs">{t("budgets.zone")}</Label>
+                        <Label className="text-xs">
+                          {t("budgets.zone")} <span className="text-status-error-fg">*</span>
+                        </Label>
                         <Input
                           value={lineForm.zone}
                           onChange={(e) => setLineForm((f) => ({ ...f, zone: e.target.value }))}
@@ -636,9 +667,15 @@ export default function Budgets() {
                         />
                       </div>
                     </div>
-                    <Button size="sm" className="gap-2 mt-3" onClick={addLine} disabled={addingLine}>
-                      <Plus size={14} /> {t("budgets.addLine")}
-                    </Button>
+                    <div className="mt-3 flex items-center gap-3 flex-wrap">
+                      <Button size="sm" className="gap-2" onClick={addLine} disabled={addingLine || !!faltaEnLaLinea}>
+                        <Plus size={14} /> {t("budgets.addLine")}
+                      </Button>
+                      {faltaEnLaLinea && (
+                        <span className="text-xs text-muted-foreground">{t(`budgets.falta.${faltaEnLaLinea}`)}</span>
+                      )}
+                    </div>
+                    {falloDeLinea && <p className="mt-2 text-sm text-status-error-fg">{falloDeLinea}</p>}
                   </div>
                 </Card>
               </div>

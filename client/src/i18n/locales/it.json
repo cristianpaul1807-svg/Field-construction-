@@ -275,7 +275,11 @@
     "sendItYourselfHint": "Glielo mandi tu su WhatsApp o via email? Scarica il PDF qui sopra e scegli «{{boton}}»: risulta inviato senza che gli arrivi nulla in chat.",
     "projectionTitlePlaceholder": "Es. Posare il pavimento della cucina",
     "deleteEstimate": "Elimina preventivo",
-    "deleteEstimateConfirm": "Eliminare il preventivo {{number}}? Non si può annullare."
+    "deleteEstimateConfirm": "Eliminare il preventivo {{number}}? Non si può annullare.",
+    "falta": {
+      "zone": "Scrivi la zona del cantiere: la cucina, il bagno, il piano terra…",
+      "item": "Scegli un articolo dal catalogo o scrivi il suo nome."
+    }
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",

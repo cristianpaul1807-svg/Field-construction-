@@ -275,7 +275,11 @@
     "sendItYourselfHint": "Vous l'envoyez vous-même par WhatsApp ou par courriel ? Téléchargez le PDF ci-dessus et choisissez « {{boton}} » : elle est marquée comme envoyée sans que rien n'arrive dans sa messagerie.",
     "projectionTitlePlaceholder": "Ex. Installer le plancher de la cuisine",
     "deleteEstimate": "Supprimer la soumission",
-    "deleteEstimateConfirm": "Supprimer la soumission {{number}} ? C'est irréversible."
+    "deleteEstimateConfirm": "Supprimer la soumission {{number}} ? C'est irréversible.",
+    "falta": {
+      "zone": "Nomme la zone du chantier : la cuisine, la salle de bain, le rez-de-chaussée…",
+      "item": "Choisis un article du catalogue ou écris son nom."
+    }
   },
   "invoicing": {
     "title": "Facturation et paiements",
