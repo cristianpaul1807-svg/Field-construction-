@@ -25,7 +25,6 @@ import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/a
 import { previewTax, type TaxRate } from "@/lib/taxes";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
-import { SelectorBuscable } from "@/components/SelectorBuscable";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -630,25 +629,9 @@ export default function Budgets() {
                           there for the one-off that isn't in the catalog. */}
                       <div className="space-y-1 col-span-2 sm:col-span-1">
                         <Label className="text-xs">{t("budgets.item")}</Label>
-                        {/* Buscable: el catálogo de un contratista con dos
-                            años de obras no se recorre a dedo en un móvil, y
-                            un catálogo que cuesta recorrer acaba en alguien
-                            escribiendo el precio a mano — justo lo que el
-                            catálogo existe para evitar. */}
-                        <SelectorBuscable
-                          className="h-8 w-full text-sm"
-                          valor={catalogPick}
-                          placeholder={t("budgets.pickFromCatalog")}
-                          aria-label={t("budgets.item")}
-                          opciones={[
-                            ...catalogFor(lineForm.category).map((entry) => ({
-                              valor: entry.id,
-                              etiqueta: entry.name,
-                              detalle: entry.price !== null ? formatCurrency(entry.price) : null,
-                            })),
-                            { valor: "otro", etiqueta: t("budgets.otherItem") },
-                          ]}
-                          onCambio={(v) => {
+                        <Select
+                          value={catalogPick}
+                          onValueChange={(v) => {
                             setCatalogPick(v);
                             if (v === "otro") {
                               setLineForm((f) => ({ ...f, item: "" }));
@@ -663,7 +646,20 @@ export default function Budgets() {
                               }));
                             }
                           }}
-                        />
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder={t("budgets.pickFromCatalog")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {catalogFor(lineForm.category).map((entry) => (
+                              <SelectItem key={entry.id} value={entry.id}>
+                                {entry.name}
+                                {entry.price !== null ? ` · ${formatCurrency(entry.price)}` : ""}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="otro">{t("budgets.otherItem")}</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {catalogPick === "otro" && (
                           <Input
                             value={lineForm.item}

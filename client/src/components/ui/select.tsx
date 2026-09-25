@@ -1,8 +1,35 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
+import { useTranslation } from "react-i18next";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+
+/**
+ * Desde cuántas opciones aparece el buscador.
+ *
+ * Por debajo no se pinta: en un móvil un campo de texto abre el teclado y tapa
+ * media pantalla, y hacer eso para elegir entre cinco cosas estorba más de lo
+ * que ayuda. Ocho es donde deja de caber la lista de un vistazo.
+ */
+const DESDE_CUANTAS = 8;
+
+/** El texto de una opción, sea cual sea su dibujo por dentro. */
+function textoDe(nodo: React.ReactNode): string {
+  if (nodo === null || nodo === undefined || typeof nodo === "boolean") return "";
+  if (typeof nodo === "string" || typeof nodo === "number") return String(nodo);
+  if (Array.isArray(nodo)) return nodo.map(textoDe).join(" ");
+  if (React.isValidElement(nodo)) return textoDe((nodo.props as { children?: React.ReactNode }).children);
+  return "";
+}
+
+/**
+ * Sin tildes y en minúsculas, para que «griferia» encuentre «Grifería».
+ *
+ * Quien escribe deprisa en una obra no pone los acentos, y un buscador que
+ * exige escribirlos bien no es un buscador.
+ */
+const normal = (x: string) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 function Select({
   ...props
@@ -53,6 +80,18 @@ function SelectTrigger({
   );
 }
 
+/**
+ * El contenido de un desplegable, con buscador cuando la lista es larga.
+ *
+ * Va aquí y no en cada pantalla a propósito. Hay 44 desplegables con listas de
+ * datos en el producto: convertirlos uno a uno serían 44 ocasiones de romper
+ * algo y, en los que pintan precio o icono dentro de cada opción, se perdería
+ * ese dibujo. Puesto en la pieza base, lo heredan todos y ninguno cambia.
+ *
+ * El filtro mira el **texto** de cada opción, así que da igual cómo esté
+ * dibujada por dentro: si la opción enseña «Grifería · 12,00 $», se encuentra
+ * escribiendo cualquiera de los dos.
+ */
 function SelectContent({
   className,
   children,
@@ -60,9 +99,52 @@ function SelectContent({
   align = "center",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const { t } = useTranslation();
+  const [filtro, setFiltro] = React.useState("");
+  const caja = React.useRef<React.ComponentRef<typeof SelectPrimitive.Content> | null>(null);
+
+  /** Las opciones que se ven ahora mismo, en el orden en que se leen. */
+  const visiblesEnPantalla = () =>
+    Array.from(caja.current?.querySelectorAll<HTMLElement>('[role="option"]') ?? []);
+
+  const sueltos = React.Children.toArray(children);
+  const cuantas = sueltos.reduce<number>((n, hijo) => {
+    if (!React.isValidElement(hijo)) return n;
+    if (hijo.type === SelectItem) return n + 1;
+    if (hijo.type === SelectGroup) {
+      return n + React.Children.toArray((hijo.props as { children?: React.ReactNode }).children).filter(
+        (x) => React.isValidElement(x) && x.type === SelectItem
+      ).length;
+    }
+    return n;
+  }, 0);
+  const conBuscador = cuantas >= DESDE_CUANTAS;
+
+  const pasa = (hijo: React.ReactNode) => !filtro || normal(textoDe(hijo)).includes(normal(filtro));
+
+  const filtrar = (nodos: React.ReactNode[]): React.ReactNode[] =>
+    nodos.flatMap((hijo) => {
+      if (!React.isValidElement(hijo)) return [hijo];
+      if (hijo.type === SelectItem) return pasa(hijo) ? [hijo] : [];
+      if (hijo.type === SelectGroup) {
+        const dentro = filtrar(React.Children.toArray((hijo.props as { children?: React.ReactNode }).children));
+        // Un grupo que se queda sin opciones se va con ellas: dejar su título
+        // solo haría pensar que hay algo debajo.
+        const quedan = dentro.some((x) => React.isValidElement(x) && x.type === SelectItem);
+        return quedan ? [React.cloneElement(hijo as React.ReactElement<{ children?: React.ReactNode }>, {}, dentro)] : [];
+      }
+      return [hijo];
+    });
+
+  const visibles = conBuscador ? filtrar(sueltos) : sueltos;
+  const hayAlguna = visibles.some(
+    (x) => React.isValidElement(x) && (x.type === SelectItem || x.type === SelectGroup)
+  );
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
+        ref={caja}
         data-slot="select-content"
         className={cn(
           "bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-(--radix-select-content-available-height) min-w-[8rem] origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md",
@@ -74,6 +156,41 @@ function SelectContent({
         align={align}
         {...props}
       >
+        {conBuscador && (
+          <div className="sticky top-0 z-10 bg-popover p-1 pb-0">
+            <input
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              // Radix se queda con las teclas sueltas para su propio salto por
+              // letra inicial, así que escribir aquí movía la selección en vez
+              // de filtrar. Se le cortan sólo los caracteres; las flechas, el
+              // Enter y el Escape siguen subiendo para que el teclado navegue
+              // y cierre como siempre.
+              onKeyDown={(e) => {
+                // Con el foco dentro de la caja, Radix deja de mover la
+                // selección: su teclado vive en las opciones, no aquí. Sin
+                // estas dos teclas se podía filtrar pero no elegir sin tocar
+                // la pantalla, que es dejar fuera a quien va por teclado.
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  visiblesEnPantalla()[0]?.focus();
+                  return;
+                }
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  visiblesEnPantalla()[0]?.click();
+                  return;
+                }
+                // El resto de caracteres son para escribir aquí, no para el
+                // salto por letra inicial de Radix.
+                if (e.key.length === 1 || e.key === "Backspace") e.stopPropagation();
+              }}
+              placeholder={t("buscador.escribeParaFiltrar")}
+              aria-label={t("buscador.escribeParaFiltrar")}
+              className="w-full rounded-sm border border-input bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </div>
+        )}
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
           className={cn(
@@ -82,7 +199,10 @@ function SelectContent({
               "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
           )}
         >
-          {children}
+          {visibles}
+          {conBuscador && !hayAlguna && (
+            <p className="px-2 py-3 text-center text-sm text-muted-foreground">{t("buscador.nadaCoincide")}</p>
+          )}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>
