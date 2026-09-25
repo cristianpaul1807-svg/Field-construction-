@@ -282,7 +282,7 @@ export default function ProjectDetailPage() {
       </div>
 
       <Tabs defaultValue="summary">
-        <TabsList className="flex-wrap h-auto">
+        <TabsList>
           <TabsTrigger value="summary">{t("projects.summary")}</TabsTrigger>
           <TabsTrigger value="budget">{t("projects.estimate")}</TabsTrigger>
           <TabsTrigger value="expenses">{t("projects.expenses")}</TabsTrigger>

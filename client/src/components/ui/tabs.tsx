@@ -24,11 +24,12 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        // max-w-full + overflow-x-auto: a tab strip that outgrows the screen
-        // scrolls inside itself instead of pushing the whole page sideways.
-        // Six tabs already do that on a phone, and a page that scrolls
-        // horizontally makes every other screen feel broken too.
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit max-w-full items-center justify-start overflow-x-auto rounded-lg p-[3px]",
+        // Una tira que no cabe baja a otro renglón. Antes se desplazaba por
+        // dentro, y eso no empujaba la página, pero escondía las pestañas del
+        // final sin nada que avisara de que existían: a 320 px, «Categorías y
+        // referencias» en presupuestos y tres de las seis de nómina no se
+        // veían. Una pestaña que no se ve es una función que no existe.
+        "bg-muted text-muted-foreground inline-flex min-h-9 h-auto w-fit max-w-full flex-wrap items-center justify-start rounded-lg p-[3px]",
         className
       )}
       {...props}
@@ -44,7 +45,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex min-h-[calc(2.25rem-7px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

@@ -171,7 +171,7 @@ export default function Crm() {
       <Tabs value={pestana} onValueChange={setPestana}>
         {/* En móvil no caben cinco, así que la fila se desplaza en vez de
             apretarlas hasta que no se lean. */}
-        <TabsList className="w-full sm:w-auto overflow-x-auto justify-start">
+        <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="contactos">{t("crm.tabs.contactos")}</TabsTrigger>
           <TabsTrigger value="obras">{t("crm.tabs.obras")}</TabsTrigger>
           <TabsTrigger value="commessas">{t("crm.tabs.commessas")}</TabsTrigger>
