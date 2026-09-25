@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { getClientSession } from "@/lib/clientSession";
 import { anuncioDeFallo, detalleDe, fallo, FalloDelServidor } from "@/lib/fallos";
@@ -35,6 +36,44 @@ async function authHeaders(): Promise<HeadersInit> {
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = { ...(await authHeaders()), ...(init.headers ?? {}) };
   return fetch(path, { ...init, headers });
+}
+
+/**
+ * Mandar algo al servidor y que, si no entra, se sepa.
+ *
+ * `apiFetch` no lanza en un 400: devuelve la respuesta y sigue. Eso está bien
+ * para quien la mira, pero había 32 sitios que la tiraban — `await
+ * apiFetch(…)` sin guardar nada — y en todos un rechazo se veía exactamente
+ * igual que un éxito. Se limpiaba el formulario, se recargaba la lista, y lo
+ * que iba a guardarse no estaba. Entre ellos, mandar un mensaje a un cliente
+ * y guardar la nómina: el mensaje que uno cree enviado y el sueldo que uno
+ * cree apuntado.
+ *
+ * Aquí un fallo **se cuenta y se para**. Se enseña en el idioma de quien mira,
+ * con la frase que ya sabe escribir `fallo()`, y se lanza — para que lo que
+ * venía detrás («limpiar el formulario», «recargar») no ocurra como si todo
+ * hubiera ido bien. Quien quiera hacer algo más con el fallo lo recoge; quien
+ * no, no tiene que hacer nada, porque la persona ya está avisada.
+ *
+ * Sin red `fetch` lanza antes de que haya respuesta, y eso también se cuenta:
+ * «no llegamos al servidor» es justo lo que hay que saber en una obra sin
+ * cobertura.
+ */
+export async function apiEnviar(path: string, init: RequestInit = {}): Promise<Response> {
+  let res: Response;
+  try {
+    res = await apiFetch(path, init);
+  } catch {
+    const sinRed = new FalloDelServidor(anuncioDeFallo(0, null), 0);
+    sinRed.avisado = true;
+    toast.error(sinRed.message);
+    throw sinRed;
+  }
+  if (res.ok) return res;
+  const err = await fallo(res);
+  err.avisado = true;
+  toast.error(err.message);
+  throw err;
 }
 
 /**

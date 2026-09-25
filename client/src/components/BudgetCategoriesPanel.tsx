@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, Upload, FileText } from "lucide-react";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 
 interface Category {
   id: string;
@@ -52,7 +52,7 @@ export function BudgetCategoriesPanel() {
     if (!name) return;
     setBusy(true);
     try {
-      await apiFetch("/api/budget-categories", {
+      await apiEnviar("/api/budget-categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
@@ -65,12 +65,12 @@ export function BudgetCategoriesPanel() {
   };
 
   const removeCategory = async (id: string) => {
-    await apiFetch(`/api/budget-categories/${id}`, { method: "DELETE" });
+    await apiEnviar(`/api/budget-categories/${id}`, { method: "DELETE" });
     refresh();
   };
 
   const removeDocument = async (id: string) => {
-    await apiFetch(`/api/estimate-reference-documents/${id}`, { method: "DELETE" });
+    await apiEnviar(`/api/estimate-reference-documents/${id}`, { method: "DELETE" });
     refresh();
   };
 

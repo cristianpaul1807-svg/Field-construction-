@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Download, HardHat } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { toast } from "sonner";
+import { useApi, downloadFile } from "@/lib/api";
 
 interface Linea {
   trabajador: string;
@@ -52,17 +53,25 @@ export function HojaCcq() {
   const { data, loading } = useApi<Hoja>(`/api/ccq/monthly?month=${mes}`);
   const [bajando, setBajando] = useState(false);
 
+  /**
+   * Bajar el informe de la CCQ.
+   *
+   * Esto se hacía a mano, sin mirar la respuesta: si el servidor fallaba,
+   * `res.blob()` recogía el JSON del error y se descargaba igual, con nombre
+   * `ccq-2026-09.csv`. El contratista entregaba a la Comisión un «CSV» que
+   * dentro decía `{"error": …}` — un documento obligatorio estropeado sin que
+   * nada lo avisara. Además revocaba el enlace en el mismo instante del clic,
+   * que en algunos navegadores cancela la descarga.
+   *
+   * `downloadFile` ya resolvía las dos cosas. Tener un segundo camino para lo
+   * mismo es como uno de los dos se queda sin el arreglo.
+   */
   const descargar = async () => {
     setBajando(true);
     try {
-      const res = await apiFetch(`/api/ccq/monthly?month=${mes}&format=csv`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `ccq-${mes}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadFile(`/api/ccq/monthly?month=${mes}&format=csv`, `ccq-${mes}.csv`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("errores.generico"));
     } finally {
       setBajando(false);
     }

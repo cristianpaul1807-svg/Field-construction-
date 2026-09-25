@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Unplug, CheckCircle2, AlertTriangle, Stethoscope, Copy, Check, RefreshCw, ChevronDown } from "lucide-react";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 
 /**
  * La conexión con QuickBooks.
@@ -55,7 +55,7 @@ function QuienLlevaLaNomina() {
   const cambiar = async (valor: boolean) => {
     setSuya(valor);
     setGuardando(true);
-    await apiFetch("/api/settings/company", {
+    await apiEnviar("/api/settings/company", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ payrollInQuickbooks: valor }),
@@ -94,7 +94,7 @@ function LoQueFalta({ onChanged }: { onChanged: () => void }) {
 
   const reintentar = async (kind: string, id: string) => {
     setOcupado(id);
-    await apiFetch(`/api/quickbooks/retry/${kind}/${id}`, { method: "POST" }).catch(() => null);
+    await apiEnviar(`/api/quickbooks/retry/${kind}/${id}`, { method: "POST" }).catch(() => null);
     setOcupado(null);
     setRecarga((n) => n + 1);
     onChanged();
@@ -105,7 +105,7 @@ function LoQueFalta({ onChanged }: { onChanged: () => void }) {
     // De uno en uno: veinte llamadas a la vez a Intuit es como se consigue que
     // te limite, y entonces fallan las veinte.
     for (const p of pendientes ?? []) {
-      await apiFetch(`/api/quickbooks/retry/${p.kind}/${p.id}`, { method: "POST" }).catch(() => null);
+      await apiEnviar(`/api/quickbooks/retry/${p.kind}/${p.id}`, { method: "POST" }).catch(() => null);
     }
     setOcupado(null);
     setRecarga((n) => n + 1);

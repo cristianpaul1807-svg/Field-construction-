@@ -12,7 +12,7 @@ import { Plus, Star, KeyRound, Trash2 , FolderOpen } from "lucide-react";
 import { AcuerdosDeTrabajo, BotonDeAcuerdos } from "@/components/AcuerdosDeTrabajo";
 import { PapelesDeLaPersona } from "@/components/PapelesDeLaPersona";
 import { AccessCode } from "@/components/AccessCode";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 import { BorrarConHistorial } from "@/components/BorrarConHistorial";
@@ -131,7 +131,7 @@ function Valoracion({ subId, valor, onSaved }: { subId: string; valor: number | 
   const poner = async (estrellas: number | null) => {
     setGuardando(true);
     try {
-      await apiFetch(`/api/subcontractors/${subId}`, {
+      await apiEnviar(`/api/subcontractors/${subId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: estrellas ?? 0 }),

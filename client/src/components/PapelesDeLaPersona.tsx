@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Upload, Download, Trash2, EyeOff } from "lucide-react";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 const TIPOS = ["contrato", "t4", "rl1", "talon", "otro"] as const;
@@ -116,7 +116,7 @@ export function PapelesDeLaPersona({
 
   const cambiarVisibilidad = async (papel: Papel) => {
     setOcupado(papel.id);
-    await apiFetch(`/api/worker-documents/${papel.id}`, {
+    await apiEnviar(`/api/worker-documents/${papel.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visibleToWorker: !papel.visibleToWorker }),
@@ -127,7 +127,7 @@ export function PapelesDeLaPersona({
 
   const borrar = async (papel: Papel) => {
     setOcupado(papel.id);
-    await apiFetch(`/api/worker-documents/${papel.id}`, { method: "DELETE" }).catch(() => null);
+    await apiEnviar(`/api/worker-documents/${papel.id}`, { method: "DELETE" }).catch(() => null);
     setOcupado(null);
     refrescar();
   };

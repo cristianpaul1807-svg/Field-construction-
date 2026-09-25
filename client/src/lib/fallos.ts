@@ -108,6 +108,12 @@ export class FalloDelServidor extends Error {
   readonly detalle: string | null;
   readonly codigo: string | null;
   readonly estado: number;
+  /**
+   * Ya se le enseñó a la persona. Sirve para no contarlo dos veces y para que
+   * el rechazo que sigue subiendo no ensucie la consola: quien tenía que
+   * enterarse ya se enteró.
+   */
+  avisado = false;
 
   constructor(anuncio: Anuncio, estado: number) {
     super(anuncio.mensaje);

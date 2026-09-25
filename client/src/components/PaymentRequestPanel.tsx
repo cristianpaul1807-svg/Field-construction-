@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -115,7 +115,7 @@ export function PaymentRequestPanel({ stripeReady }: { stripeReady: boolean }) {
   const sendNow = async (id: string) => {
     setBusyId(id);
     try {
-      await apiFetch(`/api/payment-requests/${id}/send`, { method: "POST" });
+      await apiEnviar(`/api/payment-requests/${id}/send`, { method: "POST" });
       refresh();
     } finally {
       setBusyId(null);
@@ -125,7 +125,7 @@ export function PaymentRequestPanel({ stripeReady }: { stripeReady: boolean }) {
   const cancel = async (id: string) => {
     setBusyId(id);
     try {
-      await apiFetch(`/api/payment-requests/${id}`, { method: "DELETE" });
+      await apiEnviar(`/api/payment-requests/${id}`, { method: "DELETE" });
       refresh();
     } finally {
       setBusyId(null);

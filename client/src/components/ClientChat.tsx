@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
 import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
@@ -24,7 +24,7 @@ export function ClientChat() {
 
   const sendMessage = async (content: string) => {
     if (!activeId) return;
-    await apiFetch(`/api/client/chat/channels/${activeId}/messages`, {
+    await apiEnviar(`/api/client/chat/channels/${activeId}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),

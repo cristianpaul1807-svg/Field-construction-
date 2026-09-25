@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarClock, Check, X } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiEnviar } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 
 interface AppointmentRequest {
@@ -66,7 +66,7 @@ export function AppointmentRequestsPanel() {
     try {
       const [kind, id] = workerId ? workerId.split(":") : [null, null];
       const startTime = new Date(`${date}T${time}:00`).toISOString();
-      await apiFetch(`/api/appointment-requests/${confirmingId}/confirm`, {
+      await apiEnviar(`/api/appointment-requests/${confirmingId}/confirm`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -84,7 +84,7 @@ export function AppointmentRequestsPanel() {
   };
 
   const reject = async (id: string) => {
-    await apiFetch(`/api/appointment-requests/${id}/reject`, { method: "PATCH" });
+    await apiEnviar(`/api/appointment-requests/${id}/reject`, { method: "PATCH" });
     refresh();
   };
 

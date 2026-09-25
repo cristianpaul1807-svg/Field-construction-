@@ -6,7 +6,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, ExternalLink, Receipt, ShieldCheck, Smartphone } from "lucide-react";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
 
@@ -112,7 +112,7 @@ export default function SettingsPayments() {
   const setProvince = async (province: string) => {
     setSavingProvince(true);
     try {
-      await apiFetch("/api/settings/company", {
+      await apiEnviar("/api/settings/company", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ province }),

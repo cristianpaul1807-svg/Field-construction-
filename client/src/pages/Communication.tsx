@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Search, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useApi, apiFetch, readJson } from "@/lib/api";
+import { useApi, apiFetch, readJson, apiEnviar } from "@/lib/api";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatThread } from "@/components/chat/ChatThread";
 import { openChatAttachment, sendChatAttachment } from "@/lib/chatAttachments";
@@ -113,7 +113,7 @@ export default function Communication() {
 
   const sendMessage = async (content: string) => {
     if (!activeId) return;
-    await apiFetch(`/api/chat/channels/${activeId}/messages`, {
+    await apiEnviar(`/api/chat/channels/${activeId}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content }),
@@ -124,7 +124,7 @@ export default function Communication() {
   const toggleControlMode = async () => {
     if (!activeChannel) return;
     const next = activeChannel.controlMode === "bot" ? "human" : "bot";
-    await apiFetch(`/api/chat/channels/${activeChannel.id}`, {
+    await apiEnviar(`/api/chat/channels/${activeChannel.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ controlMode: next }),
@@ -134,7 +134,7 @@ export default function Communication() {
 
   const updateSettings = async (patch: { disappearingDuration: "24h" | "72h" | "nunca" }) => {
     if (!activeId) return;
-    await apiFetch(`/api/chat/channels/${activeId}`, {
+    await apiEnviar(`/api/chat/channels/${activeId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
@@ -143,7 +143,7 @@ export default function Communication() {
   };
 
   const togglePin = async (id: string, pinned: boolean) => {
-    await apiFetch(`/api/chat/channels/${id}`, {
+    await apiEnviar(`/api/chat/channels/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pinned }),
@@ -152,7 +152,7 @@ export default function Communication() {
   };
 
   const bulkDelete = async (ids: string[]) => {
-    await apiFetch("/api/chat/channels/bulk-delete", {
+    await apiEnviar("/api/chat/channels/bulk-delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids }),

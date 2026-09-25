@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CreditCard, ExternalLink } from "lucide-react";
-import { useApi, apiFetch } from "@/lib/api";
+import { useApi, apiEnviar } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
@@ -49,7 +49,7 @@ export function StripeConnectAlert() {
   const declineStripe = async () => {
     setSaving(true);
     try {
-      await apiFetch("/api/settings/payments-mode", {
+      await apiEnviar("/api/settings/payments-mode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "manual" }),

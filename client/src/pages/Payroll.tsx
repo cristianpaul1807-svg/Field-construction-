@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, FileText, Plus, Trash2, X } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, readJson, downloadFile, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, downloadFile, serverMessage, apiEnviar } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
@@ -614,7 +614,7 @@ function OpeningBalances() {
     setSaving(true);
     setSaved(false);
     try {
-      await apiFetch("/api/payroll/opening-balances", {
+      await apiEnviar("/api/payroll/opening-balances", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -750,7 +750,7 @@ function DeductionEditor() {
   const save = async () => {
     setSaving(true);
     try {
-      await apiFetch("/api/payroll/deductions", {
+      await apiEnviar("/api/payroll/deductions", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deductions: rows }),

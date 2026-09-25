@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useApi, apiFetch, readJson, downloadFile, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, downloadFile, serverMessage, apiEnviar } from "@/lib/api";
 
 interface ProjectionItem {
   id: string;
@@ -104,7 +104,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
   };
 
   const removeItem = async (itemId: string) => {
-    await apiFetch(`/api/estimates/${estimateId}/projection/${itemId}`, { method: "DELETE" });
+    await apiEnviar(`/api/estimates/${estimateId}/projection/${itemId}`, { method: "DELETE" });
     refresh();
   };
 
@@ -116,7 +116,7 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
   const approveOnly = async () => {
     setBusy(true);
     try {
-      await apiFetch(`/api/estimates/${estimateId}/status`, {
+      await apiEnviar(`/api/estimates/${estimateId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "enviado" }),

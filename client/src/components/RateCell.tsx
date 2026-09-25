@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { apiFetch } from "@/lib/api";
+import { apiEnviar } from "@/lib/api";
 
 /**
  * The pay rate, edited in place on the crew table.
@@ -40,7 +40,7 @@ export function RateCell({
     if (next === value) return;
     setSaving(true);
     try {
-      await apiFetch(path, {
+      await apiEnviar(path, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hourlyRate: next }),

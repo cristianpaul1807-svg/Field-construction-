@@ -76,6 +76,7 @@ python3 scripts/check-webhook-events.py  # every handled Stripe event is one Str
 python3 scripts/check-errores-traducidos.py  # every server error code has a sentence in all four
 python3 scripts/check-idioma-respaldo.py  # every language picker falls back to the same one
 python3 scripts/check-pantallas-area.py  # no panel screen ships without an area
+python3 scripts/check-respuestas-tiradas.py  # no call to the server throws its answer away
 node scripts/comprobar-ancho.mjs      # no public page scrolls sideways on a phone
 node scripts/comprobar-ancho-panel.mjs  # nor does any panel screen, open cards included
 node --experimental-strip-types scripts/prueba-suscripcion/mapeo.mjs    # Stripe payload -> what we store

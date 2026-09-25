@@ -6,6 +6,14 @@ import "./index.css";
 import "./i18n";
 import { loadSupabaseConfig } from "@/lib/supabaseConfig";
 import { escucharLaInstalacion } from "@/lib/instalar";
+import { FalloDelServidor } from "@/lib/fallos";
+
+// Un fallo que `apiEnviar` ya le enseñó a la persona sigue subiendo a
+// propósito —para cortar lo que venía detrás—, y si nadie lo recoge el
+// navegador lo apunta como un error sin atender. No lo es: ya se atendió.
+window.addEventListener("unhandledrejection", (e) => {
+  if (e.reason instanceof FalloDelServidor && e.reason.avisado) e.preventDefault();
+});
 
 // This screen has to work when the app never mounted, so it can't reach
 // react-i18next — it picks its own wording from the browser's language
