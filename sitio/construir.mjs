@@ -330,6 +330,12 @@ ${alternos}
 <meta property="og:title" content="${esc(meta.title)}">
 <meta property="og:description" content="${esc(meta.desc)}">
 <meta property="og:url" content="${DOMINIO}${url(idioma, pagina)}">
+<meta property="og:site_name" content="Logiciel Construction">
+<meta property="og:image" content="${DOMINIO}/sitio/compartir-${idioma.codigo}.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${esc(idioma.inicio.h1)}">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#1546A0">
 <link rel="icon" href="/icons/favicon.ico" sizes="any">
 <link rel="icon" href="/sitio/logo.png" type="image/png">
@@ -917,7 +923,9 @@ function escribir() {
     `User-agent: *\nAllow: /\n\n# El panel, el portal y la app del trabajador no se indexan: son pantallas\n# detrás de credenciales y en los resultados de búsqueda no le sirven a nadie.\nDisallow: /api/\nDisallow: /campo\nDisallow: /portal\n\nSitemap: ${DOMINIO}/sitemap.xml\n`
   );
 
-  for (const f of ["estilo.css", "sitio.js", "logo.png"]) fs.copyFileSync(path.join(AQUI, f), path.join(SALIDA, f));
+  // La imagen de compartir la genera `imagen-compartir.mjs` y no esto, que
+  // no tiene navegador en el servidor de despliegue. Aquí sólo se copia.
+  for (const f of ["estilo.css", "sitio.js", "logo.png", ...IDIOMAS.map((i) => `compartir-${i.codigo}.png`)]) fs.copyFileSync(path.join(AQUI, f), path.join(SALIDA, f));
 
   // Las letras se copian enteras y sin lista escrita a mano: añadir un peso
   // nuevo en `estilo.css` no puede depender de que alguien se acuerde de

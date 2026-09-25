@@ -3,7 +3,7 @@
 
     python3 scripts/check-idioma-respaldo.py
 
-Hay cuatro sitios en el servidor que deciden en qué idioma hablarle a alguien
+Hay cuatro sitios en el servidor, y la aplicación, que deciden en qué idioma hablarle a alguien
 —los documentos, los correos, el chat público y la pantalla del MCP— y cada
 uno tiene su propia función porque cada uno mira cosas distintas. Lo que no
 pueden tener distinto es **dónde caen cuando no saben**.
@@ -30,6 +30,9 @@ SITIOS = [
     ("server/correoTextos.ts", "normalizarLangCorreo"),
     ("server/flowMessages.ts", "FALLBACK_LANG"),
     ("server/mcpTextos.ts", "langDelMcp"),
+    # La aplicación: el panel, el portal y la app del trabajador. Caía en
+    # castellano mientras el servidor ya caía en francés.
+    ("client/src/i18n/index.ts", "IDIOMA_DE_RESPALDO ="),
 ]
 
 def cuerpoDesde(texto: str, inicio: int) -> str:

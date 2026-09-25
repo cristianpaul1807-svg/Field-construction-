@@ -133,7 +133,42 @@ async function startServer() {
       app.get(ruta, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
     }
 
-    for (const fichero of ["estilo.css", "sitio.js", "logo.png"]) {
+    /**
+     * `/tarifs` sin el idioma delante.
+     *
+     * Es lo que alguien escribe de memoria o lo que queda en un folleto, y
+     * caía en el armazón de la aplicación: una pantalla de acceso donde
+     * esperaba precios. Stripe mismo tenía la política apuntada así.
+     *
+     * Cuando la misma palabra existe en dos idiomas —`/support` es francés e
+     * inglés— decide el navegador, igual que en la portada.
+     *
+     * `/privacy` y `/terms` se quedan fuera: son pantallas de la aplicación, a
+     * las que enlazan las tiendas y el consentimiento del MCP, y taparlas
+     * cambiaría lo que ven quienes ya las tienen.
+     */
+    const deLaAplicacion = new Set(["privacy", "terms"]);
+    const sinIdioma = new Map<string, Map<string, string>>();
+    for (const { ruta } of mapa) {
+      const partes = /^\/(fr|en|es|it)\/([a-z0-9-]+)$/.exec(ruta);
+      if (!partes || deLaAplicacion.has(partes[2])) continue;
+      const porIdioma = sinIdioma.get(partes[2]) ?? new Map<string, string>();
+      porIdioma.set(partes[1], ruta);
+      sinIdioma.set(partes[2], porIdioma);
+    }
+    for (const [palabra, porIdioma] of Array.from(sinIdioma)) {
+      app.get(`/${palabra}`, (req, res) => {
+        const preferido = idiomaDesdeNavegador(req.get("accept-language"));
+        const destino = porIdioma.get(preferido) ?? porIdioma.get("fr") ?? Array.from(porIdioma.values())[0];
+        if (porIdioma.size === 1) return res.redirect(301, destino);
+        // Depende de quién pregunte: una 301 la guarda el navegador o una
+        // caché intermedia y se la sirve a todos igual.
+        res.vary("Accept-Language");
+        res.redirect(302, destino);
+      });
+    }
+
+    for (const fichero of ["estilo.css", "sitio.js", "logo.png",...["fr", "en", "es", "it"].map((i) => `compartir-${i}.png`)]) {
       app.get(`/sitio/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
     }
 

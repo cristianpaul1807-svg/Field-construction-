@@ -5,62 +5,78 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { RequireBusinessAuth } from "@/components/RequireBusinessAuth";
 import { RequireClientAuth } from "@/components/RequireClientAuth";
 import { ServerUnreachable } from "@/components/ServerUnreachable";
-import Landing from "@/pages/Landing";
 import { getWorkerSession } from "@/lib/workerSession";
 import { getClientSession } from "@/lib/clientSession";
-import AuthBusiness from "@/pages/AuthBusiness";
-import AuthClient from "@/pages/AuthClient";
-import AuthLogin from "@/pages/AuthLogin";
-import AuthForgotPassword from "@/pages/AuthForgotPassword";
-import WorkerAccess from "@/pages/WorkerAccess";
-import PublicBusinessChat from "@/pages/PublicBusinessChat";
-import ClientPortalMe from "@/pages/ClientPortalMe";
-import PaginaLegal from "@/pages/PaginaLegal";
 import NotFound from "@/pages/NotFound";
-import Suscripcion from "@/pages/Suscripcion";
-import Dashboard from "@/pages/Dashboard";
-import Crm from "@/pages/Crm";
-import ClientDetail from "@/pages/ClientDetail";
-import ClientPortal from "@/pages/ClientPortal";
-import Communication from "@/pages/Communication";
-import Projects from "@/pages/Projects";
-import ProjectDetail from "@/pages/ProjectDetail";
-import Budgets from "@/pages/Budgets";
-import Materials from "@/pages/Materials";
-import CostTracking from "@/pages/CostTracking";
-import Contracts from "@/pages/Contracts";
-import PhotoGallery from "@/pages/PhotoGallery";
-import Technicians from "@/pages/Technicians";
-import Subcontractors from "@/pages/Subcontractors";
-import GpsRouting from "@/pages/GpsRouting";
-import CheckIn from "@/pages/CheckIn";
-import WorkOrders from "@/pages/WorkOrders";
-import WorkLog from "@/pages/WorkLog";
-import TimeOff from "@/pages/TimeOff";
-import Scheduling from "@/pages/Scheduling";
-import Invoicing from "@/pages/Invoicing";
-import Payroll from "@/pages/Payroll";
-import Reports from "@/pages/Reports";
-import SettingsCompany from "@/pages/SettingsCompany";
-import SettingsServiceTypes from "@/pages/SettingsServiceTypes";
-import SettingsPayments from "@/pages/SettingsPayments";
-import SettingsQuickBooks from "@/pages/SettingsQuickBooks";
-import SettingsMargins from "@/pages/SettingsMargins";
-import SettingsUsers from "@/pages/SettingsUsers";
-import SettingsWhatsapp from "@/pages/SettingsWhatsapp";
-import SettingsMcpConnections from "@/pages/SettingsMcpConnections";
-import SettingsAfiliados from "@/pages/SettingsAfiliados";
 import { Redirect, Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SelectedProjectProvider } from "./contexts/SelectedProjectContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Spinner } from "@/components/ui/spinner";
+import { Suspense } from "react";
+import { perezosa } from "@/lib/perezosa";
+
+const Landing = perezosa(() => import("@/pages/Landing"));
+const AuthBusiness = perezosa(() => import("@/pages/AuthBusiness"));
+const AuthClient = perezosa(() => import("@/pages/AuthClient"));
+const AuthLogin = perezosa(() => import("@/pages/AuthLogin"));
+const AuthForgotPassword = perezosa(() => import("@/pages/AuthForgotPassword"));
+const WorkerAccess = perezosa(() => import("@/pages/WorkerAccess"));
+const PublicBusinessChat = perezosa(() => import("@/pages/PublicBusinessChat"));
+const ClientPortalMe = perezosa(() => import("@/pages/ClientPortalMe"));
+const PaginaLegal = perezosa(() => import("@/pages/PaginaLegal"));
+const Suscripcion = perezosa(() => import("@/pages/Suscripcion"));
+const Dashboard = perezosa(() => import("@/pages/Dashboard"));
+const Crm = perezosa(() => import("@/pages/Crm"));
+const ClientDetail = perezosa(() => import("@/pages/ClientDetail"));
+const ClientPortal = perezosa(() => import("@/pages/ClientPortal"));
+const Communication = perezosa(() => import("@/pages/Communication"));
+const Projects = perezosa(() => import("@/pages/Projects"));
+const ProjectDetail = perezosa(() => import("@/pages/ProjectDetail"));
+const Budgets = perezosa(() => import("@/pages/Budgets"));
+const Materials = perezosa(() => import("@/pages/Materials"));
+const CostTracking = perezosa(() => import("@/pages/CostTracking"));
+const Contracts = perezosa(() => import("@/pages/Contracts"));
+const PhotoGallery = perezosa(() => import("@/pages/PhotoGallery"));
+const Technicians = perezosa(() => import("@/pages/Technicians"));
+const Subcontractors = perezosa(() => import("@/pages/Subcontractors"));
+const GpsRouting = perezosa(() => import("@/pages/GpsRouting"));
+const CheckIn = perezosa(() => import("@/pages/CheckIn"));
+const WorkOrders = perezosa(() => import("@/pages/WorkOrders"));
+const WorkLog = perezosa(() => import("@/pages/WorkLog"));
+const TimeOff = perezosa(() => import("@/pages/TimeOff"));
+const Scheduling = perezosa(() => import("@/pages/Scheduling"));
+const Invoicing = perezosa(() => import("@/pages/Invoicing"));
+const Payroll = perezosa(() => import("@/pages/Payroll"));
+const Reports = perezosa(() => import("@/pages/Reports"));
+const SettingsCompany = perezosa(() => import("@/pages/SettingsCompany"));
+const SettingsServiceTypes = perezosa(() => import("@/pages/SettingsServiceTypes"));
+const SettingsPayments = perezosa(() => import("@/pages/SettingsPayments"));
+const SettingsQuickBooks = perezosa(() => import("@/pages/SettingsQuickBooks"));
+const SettingsMargins = perezosa(() => import("@/pages/SettingsMargins"));
+const SettingsUsers = perezosa(() => import("@/pages/SettingsUsers"));
+const SettingsWhatsapp = perezosa(() => import("@/pages/SettingsWhatsapp"));
+const SettingsMcpConnections = perezosa(() => import("@/pages/SettingsMcpConnections"));
+const SettingsAfiliados = perezosa(() => import("@/pages/SettingsAfiliados"));
+
+/** Lo que se ve el instante en que baja el trozo de la pantalla. */
+function Cargando() {
+  const { t } = useTranslation();
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center gap-2 text-sm text-muted-foreground">
+      <Spinner className="size-4" /> {t("common.loading")}
+    </div>
+  );
+}
 
 function BusinessPanel() {
   return (
     <RequireBusinessAuth>
       <DashboardLayout>
+        {/* Dentro del marco y no fuera: al cambiar de pantalla el menú se
+            queda quieto y sólo parpadea el contenido. */}
+        <Suspense fallback={<Cargando />}>
         <Switch>
         <Route path={"/"} component={Dashboard} />
         <Route path={"/crm"} component={Crm} />
@@ -106,6 +122,7 @@ function BusinessPanel() {
         {/* Final fallback route */}
         <Route component={NotFound} />
         </Switch>
+        </Suspense>
       </DashboardLayout>
     </RequireBusinessAuth>
   );
@@ -160,6 +177,7 @@ function RootRoute() {
 
 function Router() {
   return (
+    <Suspense fallback={<Cargando />}>
     <Switch>
       <Route path={"/"} component={RootRoute} />
       <Route path={"/negocio/acceso"} component={AuthBusiness} />
@@ -177,6 +195,7 @@ function Router() {
       {/* Everything else is the authenticated business panel */}
       <Route component={BusinessPanel} />
     </Switch>
+    </Suspense>
   );
 }
 

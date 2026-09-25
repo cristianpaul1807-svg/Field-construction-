@@ -3,7 +3,7 @@ import { recordarAfiliado } from "@/lib/afiliado";
 import "./index.css";
 // Side-effect import: configures the shared i18next instance before any
 // component that calls useTranslation() renders.
-import "./i18n";
+import { idiomaListo, IDIOMA_DE_RESPALDO, LANGUAGE_STORAGE_KEY } from "./i18n";
 import { loadSupabaseConfig } from "@/lib/supabaseConfig";
 import { escucharLaInstalacion } from "@/lib/instalar";
 import { FalloDelServidor } from "@/lib/fallos";
@@ -26,8 +26,14 @@ const FATAL_COPY: Record<string, { heading: string; fallback: string }> = {
 };
 
 function fatalCopy() {
-  const lang = (navigator.language || "es").slice(0, 2).toLowerCase();
-  return FATAL_COPY[lang] ?? FATAL_COPY.es;
+  let elegido: string | null = null;
+  try {
+    elegido = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  } catch {
+    // Sin almacenamiento queda el idioma del navegador.
+  }
+  const lang = (elegido || navigator.language || IDIOMA_DE_RESPALDO).slice(0, 2).toLowerCase();
+  return FATAL_COPY[lang] ?? FATAL_COPY[IDIOMA_DE_RESPALDO];
 }
 
 // The message can carry a server error string, so it is inserted as text
@@ -77,7 +83,9 @@ if ("serviceWorker" in navigator) {
 // llegar tarde al único aviso que da el navegador.
 escucharLaInstalacion();
 
-loadSupabaseConfig()
+// En paralelo: el idioma y la configuración no dependen uno del otro, y
+// esperarlos en fila sería sumar dos idas al servidor antes del primer pintado.
+Promise.all([loadSupabaseConfig(), idiomaListo])
   .then(async () => {
     const { default: App } = await import("./App");
     // Antes de pintar nada: el código de afiliado viene en la dirección y hay
