@@ -149,6 +149,24 @@ Por último, **un pago de verdad**. No se da por buena una cuenta de cobros
 hasta que un cargo real ha entrado, el webhook ha llegado, el estado se ha
 escrito y el dinero ha salido al banco. Las cuatro cosas, en ese orden.
 
+## La cuenta nueva, tal como quedó el 26
+
+`acct_1UJxtKQ1ch2EiV8e`, España, moneda de liquidación EUR. Montado por el
+conector de Stripe y no por el script, porque la clave no pasa por aquí:
+
+| Qué | Id |
+|---|---|
+| Chantier | `prod_VKddb6ckFwLbyU` — `chantier_mes` `price_1UJyMmQ1ch2EiV8emhnIFK7K`, `chantier_ano` `price_1UJyMqQ1ch2EiV8ebVxZ41eF` |
+| Entreprise | `prod_VKddzIap85EXrY` — `entreprise_mes` `price_1UJyMxQ1ch2EiV8eAxtiS2XR`, `entreprise_ano` `price_1UJyN4Q1ch2EiV8elmxGa9We` |
+| Portal | `bpc_1UJyNIQ1ch2EiV8eor01Uh9S`, con las direcciones legales en `/fr/` |
+| Webhook de la suscripción | `we_1UJyNTQ1ch2EiV8ebBey9beH` |
+| Webhook de Connect | `we_1UJyNdQ1ch2EiV8eSSLrZcHR` |
+
+Los dos secretos están en `platform_config` y sustituyen a los tres de la
+cuenta vieja. El `stripe_customer_id` del negocio de Néstor
+(`cus_VHG2iFjKFMpFEz`, de la cuenta vieja) se vació a mano el mismo día,
+porque la clave se cambió antes de desplegar `clienteSigueEnStripe`.
+
 ## La cuenta vieja
 
 Cuando la nueva cobre: apagar sus dos webhooks vivos, para que no quede nada
