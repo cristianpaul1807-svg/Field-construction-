@@ -105,9 +105,14 @@ Nada de esto tiene API que sirva, o depende de una revisión de Stripe:
 
 1. **Activar la cuenta.** Datos del negocio, identidad del representante y
    banco del país de la cuenta.
-2. **Darse de alta en Connect**, y marcar **Canadá** entre los países de las
-   cuentas conectadas. Sin esto no se pueden crear, y el error que sale
-   —`account_create_activation_required`— no dice que falte esto.
+2. **Darse de alta en Connect** y terminar su paso de la guía de
+   configuración, **«Scegli il modello di business»**: Piattaforma, no
+   Marketplace. Sin ese paso Stripe contesta
+   `account_create_activation_required` —«Your account must be activated»—
+   aunque la cuenta ya cobre, y el enlace que da dice que todo está activado.
+   En la cuenta española costó una tarde: desde el móvil el enlace de la guía
+   lleva a la página de productos, y sólo se pudo completar desde el
+   ordenador.
 3. **La voz del extracto**: `LOGICIEL CONSTRUCTION` (21 caracteres, cabe en
    los 22 que permiten las redes) y la abreviada `LOGICIEL`.
 4. **Los datos de asistencia**: correo de soporte —el mismo que
