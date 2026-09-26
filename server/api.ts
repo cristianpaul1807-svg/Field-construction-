@@ -4253,6 +4253,12 @@ apiRouter.post(
       subscription_data: { metadata: { businessId: req.businessId!, plan, periodo } },
       // Para que el negocio pueda meter su número de TPS/TVQ en la factura.
       tax_id_collection: { enabled: true },
+      // Lo que exige lo de arriba con un cliente que ya existe, que aquí es
+      // siempre: sin permiso para escribirle el nombre y la dirección que
+      // teclea en la pasarela, Stripe rechaza la sesión entera y «Suscribirse»
+      // no hace nada. Pasó el primer día de la cuenta española — en la
+      // canadiense nunca se llegó a crear una sesión.
+      customer_update: { name: "auto", address: "auto" },
       billing_address_collection: "required",
       allow_promotion_codes: true,
       success_url: `${baseUrl}/suscripcion?pago=exitoso`,
