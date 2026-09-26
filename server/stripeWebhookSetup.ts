@@ -28,14 +28,22 @@ type Db = SupabaseClient;
 const CONFIG_KEY = "stripe_webhook_secrets";
 
 /**
- * Which events this app actually handles, and where they come from.
+ * De dónde vienen los eventos, que son dos sitios y no uno.
  *
- * `@accounts` is not a detail: charges are direct charges on the contractor's
- * own account, so `checkout.session.completed` is born there, not here. An
- * endpoint scoped to the platform receives none of them, which is a payment
- * system that silently never confirms anything.
+ * `@accounts`: los cobros de facturas son cargos directos en la cuenta del
+ * contratista, así que su `checkout.session.completed` nace allí. Un endpoint
+ * de la plataforma no recibe ninguno.
+ *
+ * `@self`: nuestra suscripción. El negocio nos paga a nosotros, y la
+ * suscripción, sus facturas y su checkout nacen en esta cuenta. Esto sólo
+ * escuchaba `@accounts`, y la cuenta de antes funcionaba porque alguien había
+ * creado a mano un segundo endpoint. En una cuenta nueva no existiría: el
+ * negocio pagaría Entreprise y el plan no se movería.
+ *
+ * Un destino por origen, porque el panel de Stripe obliga a elegir uno. Cada
+ * uno tiene su secreto; se guardan los dos.
  */
-const SCOPE = "@accounts";
+const SCOPES = ["@self", "@accounts"] as const;
 /**
  * Lo que le pedimos a Stripe que nos cuente.
  *
@@ -93,19 +101,20 @@ async function storeWebhookSecret(db: Db, secret: string): Promise<void> {
 }
 
 export interface ProvisionResult {
-  /** What happened, in a word the caller can show. */
+  /** What happened, in a word the caller can show. The worst of the two scopes. */
   outcome: "created" | "already_configured" | "exists_without_secret";
-  destinationId: string | null;
+  destinations: { scope: string; outcome: ProvisionResult["outcome"]; destinationId: string }[];
   url: string;
 }
 
 /**
- * Makes sure a connected-accounts webhook exists for this deployment's URL.
+ * Makes sure this deployment's URL gets the platform's events and the
+ * connected accounts' events.
  *
- * Returns `exists_without_secret` when Stripe already has an endpoint on this
- * address but the secret was never stored here — Stripe will not repeat it, so
- * the only way forward is to replace that endpoint, which is a decision for a
- * person rather than a surprise this function springs on them.
+ * `exists_without_secret` means Stripe already has an endpoint on this address
+ * whose secret was never stored here — Stripe will not repeat it, so the only
+ * way forward is to replace that endpoint, which is a decision for a person
+ * rather than a surprise this function springs on them.
  */
 export async function provisionWebhook(db: Db, baseUrl: string): Promise<ProvisionResult> {
   const stripe = getStripe();
@@ -124,45 +133,58 @@ export async function provisionWebhook(db: Db, baseUrl: string): Promise<Provisi
     { limit: 100, include: ["webhook_endpoint.url"] } as never,
     { apiVersion: API_VERSION } as never
   )) as unknown as { data: { id: string; events_from?: string[]; webhook_endpoint?: { url?: string } }[] };
+  const stored = await readStoredWebhookSecrets(db);
 
-  const match = (existing.data ?? []).find(
-    (destination) =>
-      destination.webhook_endpoint?.url === url && (destination.events_from ?? []).includes(SCOPE)
-  );
+  const destinations: ProvisionResult["destinations"] = [];
+  for (const scope of SCOPES) {
+    const match = (existing.data ?? []).find(
+      (destination) =>
+        destination.webhook_endpoint?.url === url && (destination.events_from ?? []).includes(scope)
+    );
+    if (match) {
+      destinations.push({
+        scope,
+        outcome: stored.length > 0 ? "already_configured" : "exists_without_secret",
+        destinationId: match.id,
+      });
+      continue;
+    }
 
-  if (match) {
-    const stored = await readStoredWebhookSecrets(db);
-    return {
-      outcome: stored.length > 0 ? "already_configured" : "exists_without_secret",
-      destinationId: match.id,
-      url,
-    };
+    const created = (await stripe.v2.core.eventDestinations.create(
+      {
+        name: scope === "@self" ? "Logiciel - Suscripciones" : "Logiciel - Construction",
+        description:
+          scope === "@self"
+            ? "Suscripción de cada negocio a la plataforma"
+            : "Pagos de facturas y estado de las cuentas conectadas",
+        type: "webhook_endpoint",
+        event_payload: "snapshot",
+        events_from: [scope],
+        enabled_events: EVENTS,
+        webhook_endpoint: { url },
+        include: ["webhook_endpoint.signing_secret"],
+      } as never,
+      { apiVersion: API_VERSION } as never
+    )) as unknown as { id: string; webhook_endpoint?: { signing_secret?: string } };
+
+    const secret = created.webhook_endpoint?.signing_secret;
+    if (!secret) {
+      // Stripe made the endpoint but withheld the secret. Leaving it behind
+      // would be an endpoint nothing can verify, quietly failing forever.
+      await stripe.v2.core.eventDestinations
+        .del(created.id, {} as never, { apiVersion: API_VERSION } as never)
+        .catch(() => undefined);
+      throw new Error(`Stripe created the ${scope} endpoint but returned no signing secret`);
+    }
+
+    await storeWebhookSecret(db, secret);
+    destinations.push({ scope, outcome: "created", destinationId: created.id });
   }
 
-  const created = (await stripe.v2.core.eventDestinations.create(
-    {
-      name: "Logiciel - Construction",
-      description: "Pagos de facturas y estado de las cuentas conectadas",
-      type: "webhook_endpoint",
-      event_payload: "snapshot",
-      events_from: [SCOPE],
-      enabled_events: EVENTS,
-      webhook_endpoint: { url },
-      include: ["webhook_endpoint.signing_secret"],
-    } as never,
-    { apiVersion: API_VERSION } as never
-  )) as unknown as { id: string; webhook_endpoint?: { signing_secret?: string } };
-
-  const secret = created.webhook_endpoint?.signing_secret;
-  if (!secret) {
-    // Stripe made the endpoint but withheld the secret. Leaving it behind
-    // would be an endpoint nothing can verify, quietly failing forever.
-    await stripe.v2.core.eventDestinations
-      .del(created.id, {} as never, { apiVersion: API_VERSION } as never)
-      .catch(() => undefined);
-    throw new Error("Stripe created the endpoint but returned no signing secret");
-  }
-
-  await storeWebhookSecret(db, secret);
-  return { outcome: "created", destinationId: created.id, url };
+  const outcome = destinations.some((d) => d.outcome === "exists_without_secret")
+    ? "exists_without_secret"
+    : destinations.some((d) => d.outcome === "created")
+      ? "created"
+      : "already_configured";
+  return { outcome, destinations, url };
 }

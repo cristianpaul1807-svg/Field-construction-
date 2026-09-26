@@ -4086,6 +4086,29 @@ async function precioDeStripe(plan: PlanDePago, periodo: Periodo) {
 }
 
 /**
+ * Si el cliente guardado existe en la cuenta de Stripe de ahora.
+ *
+ * Cambiar de cuenta de Stripe —se hizo una vez, de Canadá a España— deja en la
+ * base de datos clientes que la cuenta nueva no conoce. Sin esto, el negocio
+ * pulsaba «Suscribirse», Stripe contestaba «No such customer» y no había forma
+ * de pagar. Lo mismo hace ya `stripe_connected_accounts` con las cuentas de
+ * los contratistas.
+ *
+ * Cualquier otro fallo sube: una caída de Stripe no es motivo para crearle al
+ * negocio un segundo cliente y acabar cobrándole dos veces.
+ */
+async function clienteSigueEnStripe(stripe: ReturnType<typeof getStripe>, id: string): Promise<boolean> {
+  try {
+    const cliente = await stripe.customers.retrieve(id);
+    return !(cliente as { deleted?: boolean }).deleted;
+  } catch (err) {
+    const mensaje = err instanceof Error ? err.message : String(err);
+    if (/No such customer|resource_missing/i.test(mensaje)) return false;
+    throw err;
+  }
+}
+
+/**
  * El cliente de Stripe del negocio, creándolo la primera vez.
  *
  * Se guarda porque sin él un negocio que vuelve a pagar nace como cliente
@@ -4101,9 +4124,9 @@ async function clienteDeStripe(businessId: string, correo: string | null, nombre
     .maybeSingle();
 
   const guardado = (negocio as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
-  if (guardado) return guardado;
-
   const stripe = getStripe();
+  if (guardado && (await clienteSigueEnStripe(stripe, guardado))) return guardado;
+
   const cliente = await stripe.customers.create({
     email: correo ?? undefined,
     name: nombre ?? undefined,
@@ -4267,13 +4290,15 @@ apiRouter.post(
       .eq("id", req.businessId!)
       .maybeSingle();
     const cliente = (data as { stripe_customer_id?: string | null } | null)?.stripe_customer_id;
-    if (!cliente) {
+    const stripe = getStripe();
+    // Un cliente de una cuenta de Stripe anterior no tiene nada que gestionar
+    // en esta: para él es lo mismo que no haber contratado todavía.
+    if (!cliente || !(await clienteSigueEnStripe(stripe, cliente))) {
       res.status(400).json({ error: "Este negocio todavía no tiene nada contratado", code: "sin_suscripcion" });
       return;
     }
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const stripe = getStripe();
     const sesion = await stripe.billingPortal.sessions.create({
       customer: cliente,
       locale: normalizeDocLang(req.body?.lang),
