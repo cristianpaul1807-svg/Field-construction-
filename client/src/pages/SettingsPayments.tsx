@@ -51,6 +51,10 @@ export default function SettingsPayments() {
   const [error, setError] = useState<string | null>(null);
   const [needsConnectSignup, setNeedsConnectSignup] = useState(false);
   const [platformNotActivated, setPlatformNotActivated] = useState(false);
+  // Lo que dijo Stripe, tal cual. «Sin activar» agrupa varias causas —la
+  // cuenta sin datos, el perfil de plataforma sin terminar— y el aviso no
+  // puede distinguirlas; con esto, una captura basta para saber cuál es.
+  const [detalleStripe, setDetalleStripe] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -64,6 +68,7 @@ export default function SettingsPayments() {
     setError(null);
     setNeedsConnectSignup(false);
     setPlatformNotActivated(false);
+    setDetalleStripe(null);
     try {
       const res = await apiFetch("/api/stripe/connect/onboarding-link", { method: "POST" });
       const body = await readJson(res);
@@ -89,6 +94,7 @@ export default function SettingsPayments() {
         }
         if (body?.code === "stripe_platform_not_activated") {
           setPlatformNotActivated(true);
+          setDetalleStripe(typeof body?.error === "string" ? body.error : null);
           setConnecting(false);
           return;
         }
@@ -207,6 +213,11 @@ export default function SettingsPayments() {
             <p className="text-sm font-medium text-foreground">{t("payments.platformNotActivatedTitle")}</p>
             <p className="text-sm text-muted-foreground">{t("payments.platformNotActivatedBody")}</p>
             <p className="text-sm text-muted-foreground">{t("payments.platformNotActivatedMeanwhile")}</p>
+            {detalleStripe && (
+              <p className="text-xs text-muted-foreground break-words pt-1">
+                {t("payments.detalleParaSoporte")}: {detalleStripe}
+              </p>
+            )}
           </div>
         )}
 

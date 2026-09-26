@@ -388,7 +388,8 @@
     "platformNotActivatedMeanwhile": "In the meantime you can keep issuing invoices and mark them paid when the money comes in by transfer, cash or cheque. The only thing missing is card payment.",
     "connectPausedTitle": "Connecting Stripe is paused right now",
     "connectPausedBody": "We're moving the account that payment accounts are created from. If you connected now, in a few days we'd have to disconnect you and have you do the whole signup again with your bank details — and nobody should be asked for that twice. We'll tell you the moment it's ready.",
-    "connectPausedMeanwhile": "In the meantime you invoice as usual and mark invoices paid when the money comes in by transfer, cash or cheque."
+    "connectPausedMeanwhile": "In the meantime you invoice as usual and mark invoices paid when the money comes in by transfer, cash or cheque.",
+    "detalleParaSoporte": "Detail for support"
   },
   "communication": {
     "title": "Messaging",

@@ -388,7 +388,8 @@
     "platformNotActivatedMeanwhile": "Nel frattempo puoi continuare a emettere fatture e segnarle come pagate quando ti pagano con bonifico, in contanti o con assegno. Manca solo il pagamento con carta.",
     "connectPausedTitle": "Il collegamento con Stripe è in pausa",
     "connectPausedBody": "Stiamo cambiando l'account da cui si creano gli account di incasso. Se ti collegassi adesso, fra qualche giorno dovremmo scollegarti e farti rifare tutta l'iscrizione con i tuoi dati bancari — e questo non si chiede due volte. Ti avvisiamo appena è pronto.",
-    "connectPausedMeanwhile": "Nel frattempo fatturi normalmente e segni le fatture come pagate quando ti pagano con bonifico, in contanti o con assegno."
+    "connectPausedMeanwhile": "Nel frattempo fatturi normalmente e segni le fatture come pagate quando ti pagano con bonifico, in contanti o con assegno.",
+    "detalleParaSoporte": "Dettaglio per l'assistenza"
   },
   "communication": {
     "title": "Messaggistica",

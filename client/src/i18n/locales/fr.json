@@ -388,7 +388,8 @@
     "platformNotActivatedMeanwhile": "En attendant, tu peux continuer à émettre des factures et les marquer payées quand l'argent rentre par virement, en argent comptant ou par chèque. Il ne manque que le paiement par carte.",
     "connectPausedTitle": "La connexion à Stripe est en pause",
     "connectPausedBody": "Nous changeons le compte à partir duquel les comptes d'encaissement sont créés. Si tu te connectais maintenant, dans quelques jours il faudrait te déconnecter et te faire refaire toute l'inscription avec tes coordonnées bancaires — et ça, on ne le demande pas deux fois. On te prévient dès que c'est prêt.",
-    "connectPausedMeanwhile": "En attendant, tu factures normalement et tu marques les factures payées quand l'argent rentre par virement, en argent comptant ou par chèque."
+    "connectPausedMeanwhile": "En attendant, tu factures normalement et tu marques les factures payées quand l'argent rentre par virement, en argent comptant ou par chèque.",
+    "detalleParaSoporte": "Détail pour le soutien"
   },
   "communication": {
     "title": "Messagerie",

@@ -388,7 +388,8 @@
     "platformNotActivatedMeanwhile": "Mientras tanto puedes seguir emitiendo facturas y marcarlas cobradas cuando te paguen por transferencia, en efectivo o con cheque. Lo único que falta es el pago con tarjeta.",
     "connectPausedTitle": "Conectar Stripe está pausado ahora mismo",
     "connectPausedBody": "Estamos cambiando la cuenta con la que se crean los cobros. Si conectaras ahora, dentro de unos días habría que desconectarte y repetir el alta entera con tus datos bancarios — y eso no se le pide dos veces a nadie. Te avisamos en cuanto esté.",
-    "connectPausedMeanwhile": "Mientras tanto facturas igual y marcas las facturas como cobradas cuando te paguen por transferencia, en efectivo o con cheque."
+    "connectPausedMeanwhile": "Mientras tanto facturas igual y marcas las facturas como cobradas cuando te paguen por transferencia, en efectivo o con cheque.",
+    "detalleParaSoporte": "Detalle para soporte"
   },
   "communication": {
     "title": "Mensajería",
