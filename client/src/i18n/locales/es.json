@@ -280,7 +280,10 @@
       "zone": "Escribe la zona de la obra: la cocina, el baño, la planta baja…",
       "item": "Elige un ítem del catálogo o escribe su nombre."
     },
-    "crearPrimeraCategoria": "Crear la primera"
+    "crearPrimeraCategoria": "Crear la primera categoría",
+    "paraQueSirveLaCategoria": "Agrupa tus presupuestos por tipo de trabajo (cocina, baño, techos…). En cada categoría puedes guardar presupuestos antiguos aprobados para tenerlos a mano como referencia de precios y márgenes.",
+    "sinCategoriasAun": "Todavía no tienes categorías. Créalas en la pestaña «Categorías y referencias» y podrás asignarla desde el presupuesto.",
+    "planificarUnTrabajo": "Planificar un trabajo"
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -2710,6 +2713,7 @@
   },
   "buscador": {
     "escribeParaFiltrar": "Escribe para filtrar…",
-    "nadaCoincide": "Nada coincide con eso."
+    "nadaCoincide": "Nada coincide con eso.",
+    "sinOpciones": "Todavía no hay opciones"
   }
 }

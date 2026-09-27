@@ -280,7 +280,10 @@
       "zone": "Name the area of the job: the kitchen, the bathroom, the ground floor…",
       "item": "Pick an item from the catalogue or type its name."
     },
-    "crearPrimeraCategoria": "Create the first one"
+    "crearPrimeraCategoria": "Create the first category",
+    "paraQueSirveLaCategoria": "Groups your estimates by type of job (kitchen, bathroom, roofing…). In each category you can keep past approved estimates on hand as a reference for prices and margins.",
+    "sinCategoriasAun": "You don't have any categories yet. Create them in the \"Categories & references\" tab and you can assign one from the estimate.",
+    "planificarUnTrabajo": "Plan a job"
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -2710,6 +2713,7 @@
   },
   "buscador": {
     "escribeParaFiltrar": "Type to filter…",
-    "nadaCoincide": "Nothing matches that."
+    "nadaCoincide": "Nothing matches that.",
+    "sinOpciones": "No options yet"
   }
 }

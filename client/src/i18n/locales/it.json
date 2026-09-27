@@ -280,7 +280,10 @@
       "zone": "Scrivi la zona del cantiere: la cucina, il bagno, il piano terra…",
       "item": "Scegli un articolo dal catalogo o scrivi il suo nome."
     },
-    "crearPrimeraCategoria": "Crea la prima"
+    "crearPrimeraCategoria": "Crea la prima categoria",
+    "paraQueSirveLaCategoria": "Raggruppa i tuoi preventivi per tipo di lavoro (cucina, bagno, tetti…). In ogni categoria puoi tenere a portata di mano preventivi passati approvati come riferimento per prezzi e margini.",
+    "sinCategoriasAun": "Non hai ancora categorie. Creale nella scheda «Categorie e riferimenti» e potrai assegnarne una dal preventivo.",
+    "planificarUnTrabajo": "Pianifica un lavoro"
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -2710,6 +2713,7 @@
   },
   "buscador": {
     "escribeParaFiltrar": "Scrivi per filtrare…",
-    "nadaCoincide": "Nessuna corrispondenza."
+    "nadaCoincide": "Nessuna corrispondenza.",
+    "sinOpciones": "Ancora nessuna opzione"
   }
 }

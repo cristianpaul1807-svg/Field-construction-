@@ -437,73 +437,83 @@ export default function Budgets() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-4">
                 <Card className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h2 className="text-base font-semibold text-foreground">
-                        {t("budgets.budgetNumber", { id: draft.number ?? draft.id.slice(0, 8).toUpperCase() })}
-                      </h2>
-                      <p className="text-xs text-muted-foreground">
-                        {draft.clientName ?? t("budgets.noClient")}
-                        {draft.clientPhone && ` · ${draft.clientPhone}`}
-                        {draft.clientEmail && ` · ${draft.clientEmail}`}
-                      </p>
-                      {!draft.clientName && (
-                        <div className="mt-2 max-w-md">
-                          <AssignClientControl
-                            estimateId={draft.id}
-                            onAssigned={() => setReloadToken((t) => t + 1)}
-                          />
-                        </div>
-                      )}
-                      {draft.createdBy === "bot" && draft.description && (
-                        <p className="text-xs text-foreground bg-secondary/60 rounded-md px-2 py-1 mt-1.5 max-w-md">
-                          "{draft.description}"
+                  {/* Dos filas y no una. En una sola, el número, el
+                      desplegable de categoría, el estado y la papelera no
+                      cabían en un móvil: el estado se cortaba y la papelera
+                      quedaba fuera de la pantalla. Arriba lo que se mira de un
+                      vistazo —qué presupuesto es y en qué estado está— y lo que
+                      se toca poco, borrarlo; debajo la categoría, con su nombre
+                      y para qué sirve, que un desplegable sin etiqueta no lo
+                      decía. */}
+                  <div className="mb-4 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="text-base font-semibold text-foreground break-words">
+                          {t("budgets.budgetNumber", { id: draft.number ?? draft.id.slice(0, 8).toUpperCase() })}
+                        </h2>
+                        <p className="text-xs text-muted-foreground">
+                          {draft.clientName ?? t("budgets.noClient")}
+                          {draft.clientPhone && ` · ${draft.clientPhone}`}
+                          {draft.clientEmail && ` · ${draft.clientEmail}`}
                         </p>
-                      )}
+                        {!draft.clientName && (
+                          <div className="mt-2 max-w-md">
+                            <AssignClientControl
+                              estimateId={draft.id}
+                              onAssigned={() => setReloadToken((t) => t + 1)}
+                            />
+                          </div>
+                        )}
+                        {draft.createdBy === "bot" && draft.description && (
+                          <p className="text-xs text-foreground bg-secondary/60 rounded-md px-2 py-1 mt-1.5 max-w-md">
+                            "{draft.description}"
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <StatusBadge tone="info">{t(`budgets.estimateStatus.${draft.status}`, { defaultValue: draft.status })}</StatusBadge>
+                        {/* Borrar el presupuesto entero. El servidor se niega si
+                            de él salió una factura, y lo dice. */}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-status-error-fg"
+                          aria-label={t("budgets.deleteEstimate")}
+                          onClick={() => setBorrandoPresupuesto(true)}
+                        >
+                          <Trash2 size={14} />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Select value={draft.categoryId ?? undefined} onValueChange={setCategory}>
-                        <SelectTrigger className="w-40 h-8 text-xs">
-                          <SelectValue placeholder={t("budgets.noCategory")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(categories ?? []).map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {/* En un negocio nuevo este desplegable se abre vacío y
-                          no dice nada. Las categorías se crean en la pestaña
-                          de al lado, pero eso no se ve desde aquí: hay que
-                          adivinar que existe. Así que cuando no hay ninguna,
-                          el sitio donde se hacen está a un clic en vez de a
-                          una suposición.
 
-                          Es un salto de pestaña, no una navegación: el
-                          presupuesto sigue abierto detrás y no se pierde
-                          nada. */}
-                      {(categories ?? []).length === 0 && (
+                    <div className="space-y-1.5 max-w-md">
+                      <Label className="text-xs">{t("budgets.category")}</Label>
+                      {/* En un negocio nuevo no hay ninguna categoría, y un
+                          desplegable vacío no dice nada. Se enseña el botón
+                          que lleva a crearlas —un salto de pestaña, no una
+                          navegación: el presupuesto sigue abierto detrás—. */}
+                      {(categories ?? []).length > 0 ? (
+                        <Select value={draft.categoryId ?? undefined} onValueChange={setCategory}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={t("budgets.noCategory")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(categories ?? []).map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 gap-1.5 text-xs"
+                          className="gap-1.5"
                           onClick={() => setPestana("categorias")}
                         >
-                          <Plus size={13} /> {t("budgets.crearPrimeraCategoria")}
+                          <Plus size={14} /> {t("budgets.crearPrimeraCategoria")}
                         </Button>
                       )}
-                      <StatusBadge tone="info">{t(`budgets.estimateStatus.${draft.status}`, { defaultValue: draft.status })}</StatusBadge>
-                      {/* Borrar el presupuesto entero. El servidor se niega si
-                          de él salió una factura, y lo dice. */}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-status-error-fg"
-                        aria-label={t("budgets.deleteEstimate")}
-                        onClick={() => setBorrandoPresupuesto(true)}
-                      >
-                        <Trash2 size={14} />
-                      </Button>
+                      <p className="text-xs text-muted-foreground">{t("budgets.paraQueSirveLaCategoria")}</p>
                     </div>
                   </div>
 

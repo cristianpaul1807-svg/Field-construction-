@@ -280,7 +280,10 @@
       "zone": "Nomme la zone du chantier : la cuisine, la salle de bain, le rez-de-chaussée…",
       "item": "Choisis un article du catalogue ou écris son nom."
     },
-    "crearPrimeraCategoria": "Créer la première"
+    "crearPrimeraCategoria": "Créer la première catégorie",
+    "paraQueSirveLaCategoria": "Regroupe vos soumissions par type de travaux (cuisine, salle de bain, toiture…). Dans chaque catégorie, vous pouvez garder d'anciennes soumissions approuvées sous la main comme référence de prix et de marges.",
+    "sinCategoriasAun": "Vous n'avez pas encore de catégories. Créez-les dans l'onglet « Catégories et références » et vous pourrez en attribuer une depuis la soumission.",
+    "planificarUnTrabajo": "Planifier un travail"
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -2710,6 +2713,7 @@
   },
   "buscador": {
     "escribeParaFiltrar": "Écris pour filtrer…",
-    "nadaCoincide": "Rien ne correspond."
+    "nadaCoincide": "Rien ne correspond.",
+    "sinOpciones": "Aucune option pour l'instant"
   }
 }

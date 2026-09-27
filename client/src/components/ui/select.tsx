@@ -203,6 +203,13 @@ function SelectContent({
           {conBuscador && !hayAlguna && (
             <p className="px-2 py-3 text-center text-sm text-muted-foreground">{t("buscador.nadaCoincide")}</p>
           )}
+          {/* Sin ninguna opción el menú se abría como una franja blanca vacía
+              —en un negocio nuevo, el de categorías de presupuesto—, que se
+              lee como un fallo. Se cuenta sólo lo que llega vacío de verdad:
+              una lista hecha con un componente propio no se toma por vacía. */}
+          {sueltos.length === 0 && (
+            <p className="px-2 py-3 text-center text-sm text-muted-foreground">{t("buscador.sinOpciones")}</p>
+          )}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>

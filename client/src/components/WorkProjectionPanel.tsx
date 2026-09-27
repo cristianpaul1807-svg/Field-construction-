@@ -64,6 +64,10 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
   const [sendMessage, setSendMessage] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
   const [sentOk, setSentOk] = useState(false);
+  // El formulario de planificar va recogido. Abierto de entrada ocupaba media
+  // pantalla del móvil y dejaba debajo, fuera de la vista, «Aprobar y enviar»,
+  // que es lo que de verdad se viene a hacer aquí. Planificar es opcional.
+  const [planificando, setPlanificando] = useState(false);
 
   const refresh = () => {
     setReloadToken((t) => t + 1);
@@ -231,44 +235,52 @@ export function WorkProjectionPanel({ estimateId, status, createdBy, clientName,
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="proj-title">{t("common.title")}</Label>
-              <Input id="proj-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("budgets.projectionTitlePlaceholder")} />
+          {!planificando ? (
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setPlanificando(true)}>
+              <Plus size={14} /> {t("budgets.planificarUnTrabajo")}
+            </Button>
+          ) : (
+            <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="proj-title">{t("common.title")}</Label>
+                <Input id="proj-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("budgets.projectionTitlePlaceholder")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-zone">{t("budgets.zone")} ({t("common.optional")})</Label>
+                <Input id="proj-zone" value={zone} onChange={(e) => setZone(e.target.value)} placeholder={t("budgets.zonePlaceholder")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t("budgets.worker")} ({t("common.optional")})</Label>
+                <Select value={workerId} onValueChange={setWorkerId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t("common.unassigned")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {workers.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-date">{t("common.date")}</Label>
+                <Input id="proj-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="proj-time">{t("scheduling.time")}</Label>
+                <Input id="proj-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="proj-duration">{t("common.duration")}</Label>
+                <Input id="proj-duration" type="number" min={15} step={15} value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="proj-zone">{t("budgets.zone")} ({t("common.optional")})</Label>
-              <Input id="proj-zone" value={zone} onChange={(e) => setZone(e.target.value)} placeholder={t("budgets.zonePlaceholder")} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t("budgets.worker")} ({t("common.optional")})</Label>
-              <Select value={workerId} onValueChange={setWorkerId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("common.unassigned")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {workers.map((w) => (
-                    <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="proj-date">{t("common.date")}</Label>
-              <Input id="proj-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="proj-time">{t("scheduling.time")}</Label>
-              <Input id="proj-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="proj-duration">{t("common.duration")}</Label>
-              <Input id="proj-duration" type="number" min={15} step={15} value={duration} onChange={(e) => setDuration(Number(e.target.value))} />
-            </div>
-          </div>
-          <Button variant="outline" size="sm" className="gap-2" onClick={addItem} disabled={busy}>
-            <Plus size={14} /> {t("budgets.addToProjection")}
-          </Button>
+            <Button variant="outline" size="sm" className="gap-2" onClick={addItem} disabled={busy}>
+              <Plus size={14} /> {t("budgets.addToProjection")}
+            </Button>
+            </>
+          )}
 
           <div className="space-y-3 pt-2 border-t border-border">
             {/* Un borrador escrito a mano está igual de listo para salir que uno

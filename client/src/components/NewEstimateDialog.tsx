@@ -135,6 +135,11 @@ export function NewEstimateDialog({ open, onOpenChange, onCreated }: NewEstimate
                 ))}
               </SelectContent>
             </Select>
+            {/* Un negocio nuevo no tiene ninguna, y sin esto no hay forma de
+                saber que se crean en la pestaña de al lado. */}
+            {categories && categories.length === 0 && (
+              <p className="text-xs text-muted-foreground">{t("budgets.sinCategoriasAun")}</p>
+            )}
           </div>
         </div>
 
