@@ -676,7 +676,14 @@ async function createInvoiceCheckoutSession(
   businessId: string,
   invoiceId: string,
   baseUrl: string,
-  lang: DocLang = "es"
+  lang: DocLang = "es",
+  /**
+   * Adónde vuelve quien paga. El enlace que se manda al cliente vuelve a su
+   * portal; el QR que se enseña en la oficina lo escanea alguien que quizá no
+   * tiene portal, y mandarle ahí era dejarlo en una pantalla de acceso justo
+   * después de pagar, preguntándose si el pago había entrado.
+   */
+  destino: "portal" | "oficina" = "portal"
 ): Promise<string> {
   const { data: invoice, error: invoiceError } = await admin
     .from("invoices")
@@ -727,8 +734,8 @@ async function createInvoiceCheckoutSession(
       // idioma. Sin esto Stripe elige por el navegador, que no tiene por qué
       // coincidir con el idioma en el que esa persona está trabajando.
       locale: lang,
-      success_url: `${baseUrl}/portal?pago=exitoso`,
-      cancel_url: `${baseUrl}/portal?pago=cancelado`,
+      success_url: destino === "oficina" ? `${baseUrl}/pago-recibido` : `${baseUrl}/portal?pago=exitoso`,
+      cancel_url: destino === "oficina" ? `${baseUrl}/pago-recibido?cancelado=1` : `${baseUrl}/portal?pago=cancelado`,
       metadata: { invoiceId: invoice.id, businessId },
     },
     { stripeAccount: account.stripe_account_id }
@@ -9344,7 +9351,12 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const url = await createInvoiceCheckoutSession(
-      admin, req.businessId!, req.params.id, baseUrl, normalizeDocLang(req.query.lang ?? req.get("accept-language"))
+      admin,
+      req.businessId!,
+      req.params.id,
+      baseUrl,
+      normalizeDocLang(req.query.lang ?? req.get("accept-language")),
+      req.query.destino === "oficina" ? "oficina" : "portal"
     );
     res.json({ url });
   })

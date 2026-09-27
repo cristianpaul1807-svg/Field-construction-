@@ -97,7 +97,8 @@
     "serviceTypes": "Types de travaux",
     "timeOff": "Congés et absences",
     "quickbooks": "QuickBooks",
-    "subscription": "Abonnement"
+    "subscription": "Abonnement",
+    "cobrar": "Encaisser"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -2715,5 +2716,37 @@
     "escribeParaFiltrar": "Écris pour filtrer…",
     "nadaCoincide": "Rien ne correspond.",
     "sinOpciones": "Aucune option pour l'instant"
+  },
+  "cobrar": {
+    "titulo": "Encaisser",
+    "descripcion": "Montrez un code QR au client devant vous, ou envoyez-lui le lien, et il paie par carte depuis son téléphone.",
+    "sinStripeTitulo": "Il faut votre compte Stripe pour encaisser par carte",
+    "sinStripeTexto": "Connectez-le et terminez l'inscription : l'argent va directement à votre banque. En attendant, vous pouvez marquer les factures comme payées en argent comptant, virement ou chèque depuis Facturation.",
+    "irAConfigurar": "Configurer les paiements",
+    "sinPendientes": "Vous n'avez aucune facture en attente de paiement. Pour encaisser quelque chose, émettez d'abord sa facture.",
+    "irAFacturas": "Aller à Facturation",
+    "queFactura": "Quelle facture vous encaissez",
+    "eligeFactura": "Choisissez une facture en attente",
+    "sinCliente": "Sans client",
+    "generar": "Générer le code QR de paiement",
+    "falloAlGenerar": "Le lien de paiement n'a pas pu être créé. Réessayez.",
+    "sinFacturaTodavia": "Un acompte ou un extra sans facture ? Créez d'abord la facture : c'est elle qui porte la TPS et la TVQ.",
+    "crearFactura": "Créer la facture",
+    "qrAlt": "Code QR pour payer cette facture",
+    "escaneaConElMovil": "Le client le scanne avec l'appareil photo de son téléphone et paie par carte.",
+    "esperandoPago": "En attente du paiement… cet écran se met à jour tout seul à la réception.",
+    "copiarEnlace": "Copier le lien",
+    "copiado": "Copié",
+    "compartir": "Partager",
+    "compartirTitulo": "Lien de paiement",
+    "caduca": "Le lien expire dans 24 heures. S'il expire, générez-en un autre.",
+    "pagada": "Payée",
+    "otroCobro": "Encaisser une autre facture",
+    "recibido": {
+      "titulo": "Paiement reçu",
+      "texto": "Votre carte a été acceptée. Vous pouvez fermer cette page.",
+      "canceladoTitulo": "Paiement annulé",
+      "canceladoTexto": "Rien n'a été débité. Si vous voulez payer, scannez le code de nouveau."
+    }
   }
 }

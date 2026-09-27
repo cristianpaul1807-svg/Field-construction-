@@ -59,6 +59,8 @@ const SettingsUsers = perezosa(() => import("@/pages/SettingsUsers"));
 const SettingsWhatsapp = perezosa(() => import("@/pages/SettingsWhatsapp"));
 const SettingsMcpConnections = perezosa(() => import("@/pages/SettingsMcpConnections"));
 const SettingsAfiliados = perezosa(() => import("@/pages/SettingsAfiliados"));
+const Cobrar = perezosa(() => import("@/pages/Cobrar"));
+const PagoRecibido = perezosa(() => import("@/pages/PagoRecibido"));
 
 /** Lo que se ve el instante en que baja el trozo de la pantalla. */
 function Cargando() {
@@ -99,6 +101,7 @@ function BusinessPanel() {
         <Route path={"/time-off"} component={TimeOff} />
         <Route path={"/scheduling"} component={Scheduling} />
         <Route path={"/invoicing"} component={Invoicing} />
+        <Route path={"/cobrar"} component={Cobrar} />
         <Route path={"/payroll"} component={Payroll} />
         <Route path={"/reports"} component={Reports} />
         <Route path={"/settings/company"} component={SettingsCompany} />
@@ -192,6 +195,9 @@ function Router() {
           con sus datos sin tener que entrar en ninguna parte. */}
       <Route path={"/privacy"}>{() => <PaginaLegal cual="privacy" />}</Route>
       <Route path={"/terms"}>{() => <PaginaLegal cual="terms" />}</Route>
+      {/* Adónde vuelve quien paga con el QR de la oficina. Sin sesión: es el
+          móvil del cliente, no el del negocio. */}
+      <Route path={"/pago-recibido"} component={PagoRecibido} />
       {/* Everything else is the authenticated business panel */}
       <Route component={BusinessPanel} />
     </Switch>

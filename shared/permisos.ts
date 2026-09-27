@@ -221,6 +221,7 @@ export const AREA_DE_PANTALLA: Record<string, Area> = {
   "/materials": "dinero",
   "/cost-tracking": "dinero",
   "/invoicing": "dinero",
+  "/cobrar": "dinero",
   "/payroll": "dinero",
   "/reports": "dinero",
 

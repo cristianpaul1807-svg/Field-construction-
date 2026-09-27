@@ -28,7 +28,7 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 
 # Las que no son del panel: públicas, de acceso, o utilidades sin dueño.
 FUERA = ("/campo", "/portal", "/c/", "/negocio", "/cliente", "/404", "/iniciar-sesion",
-         "/recuperar-password", "/privacy", "/terms")
+         "/recuperar-password", "/privacy", "/terms", "/pago-recibido")
 
 app = (RAIZ / "client" / "src" / "App.tsx").read_text(encoding="utf-8")
 rutas = [r for r in re.findall(r'<Route path=\{"([^"]+)"\}', app) if ":" not in r]

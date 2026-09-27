@@ -97,7 +97,8 @@
     "serviceTypes": "Tipos de trabajo",
     "timeOff": "Vacaciones y ausencias",
     "quickbooks": "QuickBooks",
-    "subscription": "Suscripción"
+    "subscription": "Suscripción",
+    "cobrar": "Cobrar"
   },
   "dashboard": {
     "title": "Panel",
@@ -2715,5 +2716,37 @@
     "escribeParaFiltrar": "Escribe para filtrar…",
     "nadaCoincide": "Nada coincide con eso.",
     "sinOpciones": "Todavía no hay opciones"
+  },
+  "cobrar": {
+    "titulo": "Cobrar",
+    "descripcion": "Enseña un QR al cliente que tienes delante, o mándale el enlace, y paga con tarjeta desde su móvil.",
+    "sinStripeTitulo": "Para cobrar con tarjeta hace falta tu cuenta de Stripe",
+    "sinStripeTexto": "Conéctala y termina el alta: el dinero va directo a tu banco. Mientras tanto puedes marcar las facturas como cobradas en efectivo, transferencia o cheque desde Facturación.",
+    "irAConfigurar": "Configurar pagos",
+    "sinPendientes": "No tienes facturas pendientes de cobro. Para cobrar algo, primero emite su factura.",
+    "irAFacturas": "Ir a Facturación",
+    "queFactura": "Qué factura cobras",
+    "eligeFactura": "Elige una factura pendiente",
+    "sinCliente": "Sin cliente",
+    "generar": "Generar QR de pago",
+    "falloAlGenerar": "No se pudo crear el enlace de pago. Vuelve a intentarlo.",
+    "sinFacturaTodavia": "¿Un depósito o un extra sin factura? Primero crea la factura, que es la que lleva la TPS y la TVQ.",
+    "crearFactura": "Crear factura",
+    "qrAlt": "Código QR para pagar esta factura",
+    "escaneaConElMovil": "Que el cliente lo escanee con la cámara de su móvil y pague con tarjeta.",
+    "esperandoPago": "Esperando el pago… esta pantalla cambia sola cuando entre.",
+    "copiarEnlace": "Copiar enlace",
+    "copiado": "Copiado",
+    "compartir": "Compartir",
+    "compartirTitulo": "Enlace de pago",
+    "caduca": "El enlace caduca en 24 horas. Si caduca, genera otro.",
+    "pagada": "Pagada",
+    "otroCobro": "Cobrar otra factura",
+    "recibido": {
+      "titulo": "Pago recibido",
+      "texto": "Tu tarjeta ha sido aceptada. Ya puedes cerrar esta página.",
+      "canceladoTitulo": "Pago cancelado",
+      "canceladoTexto": "No se ha cobrado nada. Si quieres pagar, vuelve a escanear el código."
+    }
   }
 }

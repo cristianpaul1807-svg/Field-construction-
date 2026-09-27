@@ -97,7 +97,8 @@
     "serviceTypes": "Job types",
     "timeOff": "Time off",
     "quickbooks": "QuickBooks",
-    "subscription": "Subscription"
+    "subscription": "Subscription",
+    "cobrar": "Charge"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2715,5 +2716,37 @@
     "escribeParaFiltrar": "Type to filter…",
     "nadaCoincide": "Nothing matches that.",
     "sinOpciones": "No options yet"
+  },
+  "cobrar": {
+    "titulo": "Charge a customer",
+    "descripcion": "Show a QR code to the customer in front of you, or send them the link, and they pay by card from their phone.",
+    "sinStripeTitulo": "You need your Stripe account to take card payments",
+    "sinStripeTexto": "Connect it and finish signing up: the money goes straight to your bank. Meanwhile you can mark invoices as paid by cash, transfer or cheque from Invoicing.",
+    "irAConfigurar": "Set up payments",
+    "sinPendientes": "You have no invoices waiting to be paid. To charge for something, issue its invoice first.",
+    "irAFacturas": "Go to Invoicing",
+    "queFactura": "Which invoice you're charging",
+    "eligeFactura": "Pick a pending invoice",
+    "sinCliente": "No customer",
+    "generar": "Create payment QR",
+    "falloAlGenerar": "The payment link couldn't be created. Try again.",
+    "sinFacturaTodavia": "A deposit or an extra with no invoice? Create the invoice first — it's what carries the GST and QST.",
+    "crearFactura": "Create invoice",
+    "qrAlt": "QR code to pay this invoice",
+    "escaneaConElMovil": "Have the customer scan it with their phone camera and pay by card.",
+    "esperandoPago": "Waiting for payment… this screen updates on its own when it comes in.",
+    "copiarEnlace": "Copy link",
+    "copiado": "Copied",
+    "compartir": "Share",
+    "compartirTitulo": "Payment link",
+    "caduca": "The link expires in 24 hours. If it does, create a new one.",
+    "pagada": "Paid",
+    "otroCobro": "Charge another invoice",
+    "recibido": {
+      "titulo": "Payment received",
+      "texto": "Your card was accepted. You can close this page now.",
+      "canceladoTitulo": "Payment cancelled",
+      "canceladoTexto": "Nothing was charged. If you want to pay, scan the code again."
+    }
   }
 }

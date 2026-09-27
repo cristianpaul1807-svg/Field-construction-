@@ -97,7 +97,8 @@
     "serviceTypes": "Tipi di lavoro",
     "timeOff": "Ferie e assenze",
     "quickbooks": "QuickBooks",
-    "subscription": "Abbonamento"
+    "subscription": "Abbonamento",
+    "cobrar": "Incassa"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2715,5 +2716,37 @@
     "escribeParaFiltrar": "Scrivi per filtrare…",
     "nadaCoincide": "Nessuna corrispondenza.",
     "sinOpciones": "Ancora nessuna opzione"
+  },
+  "cobrar": {
+    "titulo": "Incassa",
+    "descripcion": "Mostra un QR al cliente che hai davanti, o mandagli il link, e paga con carta dal suo telefono.",
+    "sinStripeTitulo": "Per incassare con carta serve il tuo account Stripe",
+    "sinStripeTexto": "Collegalo e completa la registrazione: il denaro va direttamente alla tua banca. Nel frattempo puoi segnare le fatture come pagate in contanti, bonifico o assegno da Fatturazione.",
+    "irAConfigurar": "Configura i pagamenti",
+    "sinPendientes": "Non hai fatture in attesa di pagamento. Per incassare qualcosa, emetti prima la sua fattura.",
+    "irAFacturas": "Vai a Fatturazione",
+    "queFactura": "Quale fattura incassi",
+    "eligeFactura": "Scegli una fattura in sospeso",
+    "sinCliente": "Senza cliente",
+    "generar": "Genera QR di pagamento",
+    "falloAlGenerar": "Non è stato possibile creare il link di pagamento. Riprova.",
+    "sinFacturaTodavia": "Un acconto o un extra senza fattura? Crea prima la fattura: è quella che porta la GST e la QST.",
+    "crearFactura": "Crea fattura",
+    "qrAlt": "Codice QR per pagare questa fattura",
+    "escaneaConElMovil": "Il cliente lo scansiona con la fotocamera del telefono e paga con carta.",
+    "esperandoPago": "In attesa del pagamento… questa schermata si aggiorna da sola quando arriva.",
+    "copiarEnlace": "Copia link",
+    "copiado": "Copiato",
+    "compartir": "Condividi",
+    "compartirTitulo": "Link di pagamento",
+    "caduca": "Il link scade tra 24 ore. Se scade, generane un altro.",
+    "pagada": "Pagata",
+    "otroCobro": "Incassa un'altra fattura",
+    "recibido": {
+      "titulo": "Pagamento ricevuto",
+      "texto": "La tua carta è stata accettata. Ora puoi chiudere questa pagina.",
+      "canceladoTitulo": "Pagamento annullato",
+      "canceladoTexto": "Non è stato addebitato nulla. Se vuoi pagare, scansiona di nuovo il codice."
+    }
   }
 }

@@ -37,6 +37,7 @@ import {
   Palmtree,
   BadgeCheck,
   Settings,
+  QrCode,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -146,6 +147,9 @@ const navSections: NavSection[] = [
     Icon: Wallet,
     items: [
       { id: "invoicing", labelKey: "nav.invoicing", Icon: CreditCard, path: "/invoicing" },
+      // Junto a facturar y no dentro: cobrar a quien está delante es lo que se
+      // hace con prisa, y no puede quedar a tres toques en una lista.
+      { id: "cobrar", labelKey: "nav.cobrar", Icon: QrCode, path: "/cobrar" },
       { id: "payroll", labelKey: "nav.payroll", Icon: Wallet, path: "/payroll" },
       { id: "reports", labelKey: "nav.reports", Icon: BarChart3, path: "/reports" },
     ],
