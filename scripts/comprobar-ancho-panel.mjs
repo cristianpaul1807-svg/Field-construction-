@@ -217,6 +217,13 @@ const FIXTURAS = {
     paymentsMode: "stripe",
     conexionPausada: false,
   },
+  "/api/stripe/terminal/lectores": {
+    disponible: true,
+    lectores: [
+      { id: "tmr_1", nombre: LARGO, modelo: "bbpos_wisepos_e", enLinea: true, accion: null },
+      { id: "tmr_2", nombre: "Obra", modelo: "stripe_s700", enLinea: false, accion: null },
+    ],
+  },
   "/api/invoices": [
     {
       id: "f-1",

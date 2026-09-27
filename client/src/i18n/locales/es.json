@@ -1590,7 +1590,13 @@
     "clave_del_principal": "No se puede cambiar la contraseña de quien creó el negocio. Esa cuenta la lleva esa persona.",
     "clave_es_la_tuya": "Para cambiar la tuya, usa la pantalla de tu cuenta.",
     "stripe_platform_not_activated": "La cuenta de la plataforma todavía no está activada en Stripe, así que no se pueden crear cuentas de cobro. Lo estamos resolviendo.",
-    "stripe_connect_pausado": "Conectar Stripe está pausado mientras cambiamos la cuenta de cobros. Te avisamos en cuanto esté."
+    "stripe_connect_pausado": "Conectar Stripe está pausado mientras cambiamos la cuenta de cobros. Te avisamos en cuanto esté.",
+    "lector_sin_direccion": "Tu cuenta de Stripe no tiene una dirección completa, y Stripe la necesita para el lector. Complétala en los datos de la empresa de tu panel de Stripe y vuelve a intentarlo.",
+    "lector_sin_codigo": "Escribe el código que enseña la pantalla del lector.",
+    "lector_codigo_no_valido": "Ese código no vale. Revisa que esté bien escrito, o genera uno nuevo en el lector: caducan a los pocos minutos.",
+    "lector_no_existe": "Ese lector ya no está emparejado.",
+    "lector_no_elegido": "Elige el lector con el que vas a cobrar.",
+    "lector_no_disponible": "El lector no responde. Comprueba que está encendido y conectado a internet, y vuelve a intentarlo."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2747,6 +2753,29 @@
       "texto": "Tu tarjeta ha sido aceptada. Ya puedes cerrar esta página.",
       "canceladoTitulo": "Pago cancelado",
       "canceladoTexto": "No se ha cobrado nada. Si quieres pagar, vuelve a escanear el código."
+    },
+    "lector": {
+      "titulo": "Lector de tarjetas",
+      "descripcion": "Un lector de Stripe con conexión propia. Lo emparejas una vez y desde aquí le mandas lo que tiene que cobrar: el cliente acerca la tarjeta, el móvil o la de débito Interac.",
+      "enLinea": "En línea",
+      "fueraDeLinea": "Apagado o sin conexión",
+      "quitar": "Quitar lector",
+      "quitarConfirmar": "¿Quitar este lector? Para volver a usarlo tendrás que emparejarlo otra vez.",
+      "emparejar": "Emparejar un lector",
+      "dondeComprar": "¿No tienes lector? Stripe vende el WisePOS E y el S700 desde tu propio panel.",
+      "tiendaDeStripe": "Ver lectores en Stripe",
+      "comoSacarElCodigo": "En el lector, desliza desde el borde izquierdo, entra en Configuración con el PIN de administrador 07139 y pulsa «Generar código de emparejamiento». Escribe aquí las tres palabras que salen.",
+      "codigo": "Código de emparejamiento",
+      "nombre": "Nombre (opcional)",
+      "nombreEjemplo": "Ej. Mostrador oficina",
+      "emparejarBoton": "Emparejar",
+      "falloAlEmparejar": "No se pudo emparejar el lector. Vuelve a intentarlo.",
+      "cobrarEnLector": "Cobrar en el lector",
+      "falloAlMandar": "No se pudo mandar el cobro al lector. Vuelve a intentarlo.",
+      "acercaLaTarjeta": "El importe está en «{{lector}}». Que el cliente acerque o inserte la tarjeta.",
+      "cancelarEnLector": "Cancelar el cobro en el lector",
+      "rechazado": "El lector no pudo cobrar. Prueba con otra tarjeta.",
+      "probarOtraVez": "Probar otra vez"
     }
   }
 }

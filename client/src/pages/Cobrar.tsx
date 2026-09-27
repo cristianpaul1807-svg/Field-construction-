@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import QRCode from "qrcode";
-import { Check, CheckCircle2, Copy, QrCode, Share2, ArrowRight } from "lucide-react";
+import { Check, CheckCircle2, Copy, QrCode, Share2, ArrowRight, CreditCard, XCircle } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/mockData";
-import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
+import { LectoresDeTarjeta, type Lector } from "@/components/LectoresDeTarjeta";
 
 interface Factura {
   id: string;
@@ -30,6 +31,9 @@ interface EstadoStripe {
  *  delante, vea el «pagado» sin quedarse esperando; lo bastante largo para no
  *  estar pidiendo la lista entera sin parar. */
 const MIRAR_CADA_MS = 4000;
+/** El lector se mira más a menudo: el cliente está con la tarjeta en la mano
+ *  y un «rechazada» tiene que verse enseguida para probar con otra. */
+const MIRAR_LECTOR_CADA_MS = 2000;
 
 /**
  * Cobrar a quien está delante.
@@ -49,6 +53,12 @@ export default function Cobrar() {
   const { t, i18n } = useTranslation();
   const { data: stripe, loading: cargandoStripe } = useApi<EstadoStripe>("/api/stripe/connect/status");
   const { data: facturas, loading: cargandoFacturas } = useApi<Factura[]>("/api/invoices");
+  const [vueltaLectores, setVueltaLectores] = useState(0);
+  const { data: datosLectores } = useApi<{ disponible: boolean; lectores: Lector[] }>(
+    `/api/stripe/terminal/lectores?_r=${vueltaLectores}`
+  );
+  const lectores = datosLectores?.lectores ?? [];
+  const enLinea = lectores.filter((l) => l.enLinea);
 
   const [elegida, setElegida] = useState("");
   const [enlace, setEnlace] = useState<string | null>(null);
@@ -57,6 +67,12 @@ export default function Cobrar() {
   const [fallo, setFallo] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
   const [pagada, setPagada] = useState(false);
+  // El cobro que está esperando en el lector: con qué aparato, y si el
+  // aparato ya dijo que no.
+  const [enLector, setEnLector] = useState<{ lectorId: string; nombre: string } | null>(null);
+  const [falloLector, setFalloLector] = useState<string | null>(null);
+  const [mandando, setMandando] = useState(false);
+  const [lectorElegido, setLectorElegido] = useState("");
 
   const pendientes = (facturas ?? []).filter(
     (f) => (f.status === "pendiente" || f.status === "vencido") && Number(f.amount) > 0
@@ -72,6 +88,8 @@ export default function Cobrar() {
     setQr(null);
     setPagada(false);
     setFallo(null);
+    setEnLector(null);
+    setFalloLector(null);
   };
 
   const generar = async () => {
@@ -97,10 +115,63 @@ export default function Cobrar() {
     }
   };
 
-  // Mientras el QR está en pantalla, mirar si ya entró el pago. Se para al
-  // verlo, o al salir, para no seguir preguntando por una factura cerrada.
+  const mandarAlLector = async () => {
+    const lector = enLinea.find((l) => l.id === (lectorElegido || enLinea[0]?.id));
+    if (!elegida || !lector) return;
+    setMandando(true);
+    setFallo(null);
+    setFalloLector(null);
+    try {
+      const res = await apiFetch(`/api/invoices/${elegida}/cobrar-en-lector`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lectorId: lector.id }),
+      });
+      const body = await readJson(res);
+      if (!res.ok) throw new Error(serverMessage(body, t, t("cobrar.lector.falloAlMandar")));
+      setEnLector({ lectorId: lector.id, nombre: lector.nombre });
+    } catch (err) {
+      setFallo(err instanceof Error ? err.message : t("cobrar.lector.falloAlMandar"));
+    } finally {
+      setMandando(false);
+    }
+  };
+
+  const cancelarEnLector = async () => {
+    if (!enLector) return;
+    // Si no se pudo cancelar, el aparato puede seguir esperando la tarjeta,
+    // y eso hay que saberlo: `apiEnviar` lo dice. La pantalla deja de
+    // esperar igual, porque desde aquí ya no hay nada más que hacer.
+    try {
+      await apiEnviar(`/api/stripe/terminal/lectores/${enLector.lectorId}/cancelar`, { method: "POST" });
+    } finally {
+      setEnLector(null);
+      setFalloLector(null);
+    }
+  };
+
+  // Lo que dice el aparato mientras espera la tarjeta: si la rechazó, o si el
+  // cliente canceló, se enseña enseguida para probar con otra.
   useEffect(() => {
-    if (!enlace || !elegida || pagada) return;
+    if (!enLector || pagada || falloLector) return;
+    const reloj = window.setInterval(async () => {
+      try {
+        const res = await apiFetch(`/api/stripe/terminal/lectores/${enLector.lectorId}`);
+        if (!res.ok) return;
+        const lector = (await readJson(res)) as Lector | null;
+        if (lector?.accion?.estado === "failed") setFalloLector(lector.accion.fallo ?? t("cobrar.lector.rechazado"));
+      } catch {
+        // Igual que abajo: un fallo al mirar no es un fallo del cobro.
+      }
+    }, MIRAR_LECTOR_CADA_MS);
+    return () => window.clearInterval(reloj);
+  }, [enLector, pagada, falloLector, t]);
+
+  // Mientras se espera el pago —QR en pantalla o tarjeta en el lector—, mirar
+  // si ya entró. Se para al verlo, o al salir, para no seguir preguntando por
+  // una factura cerrada.
+  useEffect(() => {
+    if ((!enlace && !enLector) || !elegida || pagada) return;
     const reloj = window.setInterval(async () => {
       try {
         const res = await apiFetch("/api/invoices");
@@ -113,7 +184,7 @@ export default function Cobrar() {
       }
     }, MIRAR_CADA_MS);
     return () => window.clearInterval(reloj);
-  }, [enlace, elegida, pagada]);
+  }, [enlace, enLector, elegida, pagada]);
 
   const copiar = async () => {
     if (!enlace) return;
@@ -160,7 +231,7 @@ export default function Cobrar() {
         </Card>
       )}
 
-      {!cargando && stripe?.chargesEnabled && !enlace && (
+      {!cargando && stripe?.chargesEnabled && !enlace && !enLector && (
         <Card className="p-6 space-y-4">
           {pendientes.length === 0 ? (
             <div className="space-y-3">
@@ -189,10 +260,31 @@ export default function Cobrar() {
                 </Select>
               </div>
               {fallo && <p className="text-sm text-status-error-fg">{fallo}</p>}
-              <Button className="w-full gap-2" onClick={generar} disabled={!elegida || generando}>
+              <Button className="w-full gap-2" onClick={generar} disabled={!elegida || generando || mandando}>
                 {generando ? <Spinner className="size-4" /> : <QrCode size={16} />}
                 {t("cobrar.generar")}
               </Button>
+              {/* Con varios lectores se elige cuál; con uno, no hay nada que
+                  preguntar. Sólo los que están en línea: mandar a uno apagado
+                  es esperar una tarjeta que no puede llegar. */}
+              {enLinea.length > 1 && (
+                <Select value={lectorElegido || enLinea[0].id} onValueChange={setLectorElegido}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enLinea.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.nombre}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {enLinea.length > 0 && (
+                <Button variant="outline" className="w-full gap-2" onClick={mandarAlLector} disabled={!elegida || mandando || generando}>
+                  {mandando ? <Spinner className="size-4" /> : <CreditCard size={16} />}
+                  {t("cobrar.lector.cobrarEnLector")}
+                </Button>
+              )}
               {/* Un depósito o un extra que aún no tiene factura: la factura va
                   primero, porque es la que lleva la TPS y la TVQ y la que queda
                   en los libros. Cobrar un importe suelto lo saltaría. */}
@@ -207,13 +299,44 @@ export default function Cobrar() {
         </Card>
       )}
 
-      {enlace && factura && (
+      {(enlace || enLector) && factura && (
         <Card className="p-6 space-y-5 text-center">
           {pagada ? (
             <div className="space-y-3 py-6">
               <CheckCircle2 className="mx-auto size-16 text-status-success-fg" strokeWidth={1.5} />
               <p className="text-lg font-semibold text-foreground">{t("cobrar.pagada")}</p>
               <p className="text-sm text-muted-foreground">{nombreDe(factura)}</p>
+            </div>
+          ) : enLector ? (
+            <div className="space-y-4 py-2">
+              <p className="text-3xl font-semibold text-foreground">{formatCurrency(Number(factura.amount))}</p>
+              {falloLector ? (
+                <div className="space-y-3">
+                  <XCircle className="mx-auto size-12 text-status-error-fg" strokeWidth={1.5} />
+                  <p className="text-sm text-foreground">{falloLector}</p>
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => {
+                      setEnLector(null);
+                      setFalloLector(null);
+                      void mandarAlLector();
+                    }}
+                  >
+                    <CreditCard size={16} /> {t("cobrar.lector.probarOtraVez")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <CreditCard className="mx-auto size-12 text-primary" strokeWidth={1.5} />
+                  <p className="text-sm text-foreground">{t("cobrar.lector.acercaLaTarjeta", { lector: enLector.nombre })}</p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Spinner className="size-3" /> {t("cobrar.esperandoPago")}
+                  </div>
+                  <Button variant="outline" className="w-full" onClick={cancelarEnLector}>
+                    {t("cobrar.lector.cancelarEnLector")}
+                  </Button>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -252,6 +375,10 @@ export default function Cobrar() {
             {t("cobrar.otroCobro")}
           </Button>
         </Card>
+      )}
+
+      {!cargando && stripe?.chargesEnabled && datosLectores?.disponible && !enlace && !enLector && (
+        <LectoresDeTarjeta lectores={lectores} onCambio={() => setVueltaLectores((n) => n + 1)} />
       )}
     </div>
   );

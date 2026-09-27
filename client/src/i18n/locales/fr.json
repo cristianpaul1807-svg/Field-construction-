@@ -1590,7 +1590,13 @@
     "clave_del_principal": "Impossible de changer le mot de passe de la personne qui a créé l’entreprise. Ce compte lui appartient.",
     "clave_es_la_tuya": "Pour changer le vôtre, utilisez l’écran de votre compte.",
     "stripe_platform_not_activated": "Le compte Stripe de la plateforme n'est pas encore activé, les comptes d'encaissement ne peuvent donc pas être créés. Nous nous en occupons.",
-    "stripe_connect_pausado": "La connexion à Stripe est en pause pendant que nous changeons le compte d'encaissement. On te prévient dès que c'est prêt."
+    "stripe_connect_pausado": "La connexion à Stripe est en pause pendant que nous changeons le compte d'encaissement. On te prévient dès que c'est prêt.",
+    "lector_sin_direccion": "Votre compte Stripe n'a pas d'adresse complète, et Stripe en a besoin pour le lecteur. Complétez-la dans les coordonnées de l'entreprise de votre tableau de bord Stripe et réessayez.",
+    "lector_sin_codigo": "Saisissez le code affiché à l'écran du lecteur.",
+    "lector_codigo_no_valido": "Ce code n'est pas valide. Vérifiez qu'il est bien saisi, ou générez-en un nouveau sur le lecteur : ils expirent après quelques minutes.",
+    "lector_no_existe": "Ce lecteur n'est plus jumelé.",
+    "lector_no_elegido": "Choisissez le lecteur avec lequel encaisser.",
+    "lector_no_disponible": "Le lecteur ne répond pas. Vérifiez qu'il est allumé et connecté à Internet, puis réessayez."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2747,6 +2753,29 @@
       "texto": "Votre carte a été acceptée. Vous pouvez fermer cette page.",
       "canceladoTitulo": "Paiement annulé",
       "canceladoTexto": "Rien n'a été débité. Si vous voulez payer, scannez le code de nouveau."
+    },
+    "lector": {
+      "titulo": "Lecteur de cartes",
+      "descripcion": "Un lecteur Stripe avec sa propre connexion. Jumelez-le une fois, puis envoyez-lui d'ici ce qu'il doit encaisser : le client présente sa carte, son téléphone ou sa carte de débit Interac.",
+      "enLinea": "En ligne",
+      "fueraDeLinea": "Éteint ou non connecté",
+      "quitar": "Retirer le lecteur",
+      "quitarConfirmar": "Retirer ce lecteur ? Pour le réutiliser, il faudra le jumeler de nouveau.",
+      "emparejar": "Jumeler un lecteur",
+      "dondeComprar": "Pas de lecteur ? Stripe vend le WisePOS E et le S700 depuis votre propre tableau de bord.",
+      "tiendaDeStripe": "Voir les lecteurs sur Stripe",
+      "comoSacarElCodigo": "Sur le lecteur, glissez depuis le bord gauche, ouvrez les Paramètres avec le NIP administrateur 07139 et touchez « Générer un code de jumelage ». Saisissez ici les trois mots affichés.",
+      "codigo": "Code de jumelage",
+      "nombre": "Nom (facultatif)",
+      "nombreEjemplo": "Ex. Comptoir du bureau",
+      "emparejarBoton": "Jumeler",
+      "falloAlEmparejar": "Le lecteur n'a pas pu être jumelé. Réessayez.",
+      "cobrarEnLector": "Encaisser sur le lecteur",
+      "falloAlMandar": "L'encaissement n'a pas pu être envoyé au lecteur. Réessayez.",
+      "acercaLaTarjeta": "Le montant est sur « {{lector}} ». Le client présente ou insère sa carte.",
+      "cancelarEnLector": "Annuler l'encaissement sur le lecteur",
+      "rechazado": "Le lecteur n'a pas pu encaisser. Essayez une autre carte.",
+      "probarOtraVez": "Réessayer"
     }
   }
 }

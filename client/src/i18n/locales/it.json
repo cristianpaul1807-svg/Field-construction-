@@ -1590,7 +1590,13 @@
     "clave_del_principal": "Non si può cambiare la password di chi ha creato l’azienda. Quell’account lo gestisce quella persona.",
     "clave_es_la_tuya": "Per cambiare la tua, usa la schermata del tuo account.",
     "stripe_platform_not_activated": "L'account Stripe della piattaforma non è ancora attivato, quindi non si possono creare account di incasso. Ce ne stiamo occupando.",
-    "stripe_connect_pausado": "Il collegamento con Stripe è in pausa mentre cambiamo l'account di incasso. Ti avvisiamo appena è pronto."
+    "stripe_connect_pausado": "Il collegamento con Stripe è in pausa mentre cambiamo l'account di incasso. Ti avvisiamo appena è pronto.",
+    "lector_sin_direccion": "Il tuo account Stripe non ha un indirizzo completo, e Stripe ne ha bisogno per il lettore. Completalo nei dati aziendali della tua dashboard Stripe e riprova.",
+    "lector_sin_codigo": "Inserisci il codice mostrato sullo schermo del lettore.",
+    "lector_codigo_no_valido": "Questo codice non è valido. Controlla di averlo scritto bene, o generane uno nuovo sul lettore: scadono dopo pochi minuti.",
+    "lector_no_existe": "Questo lettore non è più associato.",
+    "lector_no_elegido": "Scegli il lettore con cui incassare.",
+    "lector_no_disponible": "Il lettore non risponde. Controlla che sia acceso e connesso a internet, e riprova."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2747,6 +2753,29 @@
       "texto": "La tua carta è stata accettata. Ora puoi chiudere questa pagina.",
       "canceladoTitulo": "Pagamento annullato",
       "canceladoTexto": "Non è stato addebitato nulla. Se vuoi pagare, scansiona di nuovo il codice."
+    },
+    "lector": {
+      "titulo": "Lettore di carte",
+      "descripcion": "Un lettore Stripe con connessione propria. Lo associ una volta e da qui gli mandi cosa incassare: il cliente avvicina la carta, il telefono o la carta di debito Interac.",
+      "enLinea": "Online",
+      "fueraDeLinea": "Spento o non connesso",
+      "quitar": "Rimuovi lettore",
+      "quitarConfirmar": "Rimuovere questo lettore? Per usarlo di nuovo dovrai associarlo di nuovo.",
+      "emparejar": "Associa un lettore",
+      "dondeComprar": "Non hai un lettore? Stripe vende il WisePOS E e l'S700 dalla tua dashboard.",
+      "tiendaDeStripe": "Vedi i lettori su Stripe",
+      "comoSacarElCodigo": "Sul lettore, scorri dal bordo sinistro, apri le Impostazioni con il PIN amministratore 07139 e tocca «Genera codice di associazione». Scrivi qui le tre parole che compaiono.",
+      "codigo": "Codice di associazione",
+      "nombre": "Nome (facoltativo)",
+      "nombreEjemplo": "Es. Bancone ufficio",
+      "emparejarBoton": "Associa",
+      "falloAlEmparejar": "Non è stato possibile associare il lettore. Riprova.",
+      "cobrarEnLector": "Incassa sul lettore",
+      "falloAlMandar": "Non è stato possibile inviare l'incasso al lettore. Riprova.",
+      "acercaLaTarjeta": "L'importo è su «{{lector}}». Il cliente avvicini o inserisca la carta.",
+      "cancelarEnLector": "Annulla l'incasso sul lettore",
+      "rechazado": "Il lettore non è riuscito a incassare. Prova con un'altra carta.",
+      "probarOtraVez": "Riprova"
     }
   }
 }

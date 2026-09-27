@@ -1590,7 +1590,13 @@
     "clave_del_principal": "You can’t change the password of whoever created the business. That account is theirs to manage.",
     "clave_es_la_tuya": "To change your own, use your account screen.",
     "stripe_platform_not_activated": "The platform's Stripe account isn't activated yet, so payment accounts can't be created. We're sorting it out.",
-    "stripe_connect_pausado": "Connecting Stripe is paused while we move the payments account. We'll let you know when it's ready."
+    "stripe_connect_pausado": "Connecting Stripe is paused while we move the payments account. We'll let you know when it's ready.",
+    "lector_sin_direccion": "Your Stripe account doesn't have a complete address, and Stripe needs one for the reader. Complete it in the business details of your Stripe dashboard and try again.",
+    "lector_sin_codigo": "Enter the code shown on the reader's screen.",
+    "lector_codigo_no_valido": "That code isn't valid. Check it's typed correctly, or generate a new one on the reader — they expire after a few minutes.",
+    "lector_no_existe": "That reader is no longer paired.",
+    "lector_no_elegido": "Choose the reader you'll charge with.",
+    "lector_no_disponible": "The reader isn't responding. Check it's on and connected to the internet, and try again."
   },
   "workLog": {
     "title": "Work log",
@@ -2747,6 +2753,29 @@
       "texto": "Your card was accepted. You can close this page now.",
       "canceladoTitulo": "Payment cancelled",
       "canceladoTexto": "Nothing was charged. If you want to pay, scan the code again."
+    },
+    "lector": {
+      "titulo": "Card reader",
+      "descripcion": "A Stripe reader with its own connection. Pair it once, then send it what to charge from here: the customer taps their card, phone or Interac debit card.",
+      "enLinea": "Online",
+      "fueraDeLinea": "Off or not connected",
+      "quitar": "Remove reader",
+      "quitarConfirmar": "Remove this reader? To use it again you'll have to pair it again.",
+      "emparejar": "Pair a reader",
+      "dondeComprar": "Don't have a reader? Stripe sells the WisePOS E and the S700 from your own dashboard.",
+      "tiendaDeStripe": "See readers on Stripe",
+      "comoSacarElCodigo": "On the reader, swipe from the left edge, open Settings with the admin PIN 07139 and tap \"Generate pairing code\". Type the three words it shows here.",
+      "codigo": "Pairing code",
+      "nombre": "Name (optional)",
+      "nombreEjemplo": "E.g. Office counter",
+      "emparejarBoton": "Pair",
+      "falloAlEmparejar": "The reader couldn't be paired. Try again.",
+      "cobrarEnLector": "Charge on the reader",
+      "falloAlMandar": "The charge couldn't be sent to the reader. Try again.",
+      "acercaLaTarjeta": "The amount is on \"{{lector}}\". Have the customer tap or insert their card.",
+      "cancelarEnLector": "Cancel the charge on the reader",
+      "rechazado": "The reader couldn't take the payment. Try another card.",
+      "probarOtraVez": "Try again"
     }
   }
 }

@@ -1003,6 +1003,25 @@ async function stripeWebhookHandler(req: Request, res: Response) {
     }
   }
 
+  // Un cobro hecho en el lector de tarjetas. Sólo los que salieron del lector
+  // —`origen: "lector"`—: los pagos en línea también disparan este evento y
+  // ya se apuntan por su `checkout.session.completed`.
+  if (event.type === "payment_intent.succeeded") {
+    const pago = event.data.object as { id: string; metadata?: { invoiceId?: string; businessId?: string; origen?: string } };
+    const invoiceId = pago.metadata?.invoiceId;
+    const businessId = pago.metadata?.businessId;
+    if (pago.metadata?.origen === "lector" && invoiceId && businessId) {
+      await registrarCobro(getSupabaseAdmin(), {
+        businessId,
+        invoiceId,
+        medio: "stripe",
+        stripePaymentId: pago.id,
+        stripeEventId: event.id,
+        actor: "admin",
+      });
+    }
+  }
+
   // Stripe telling us what it now knows about a contractor's account.
   //
   // Without this the panel only learns the truth when somebody happens to
@@ -9362,6 +9381,234 @@ apiRouter.post(
   })
 );
 
+
+// ---------- El lector de tarjetas (Stripe Terminal) ----------
+//
+// Un lector con conexión propia —el WisePOS E o el S700— que se empareja una
+// vez desde el panel y después cobra lo que le mande el panel: el contratista
+// elige la factura, el importe aparece en el aparato y el cliente acerca la
+// tarjeta o el móvil. Todo por el servidor, sin SDK en el navegador, porque
+// esos lectores hablan con Stripe por su propia red.
+//
+// Viven en la cuenta de Stripe del contratista, no en la nuestra: el cobro es
+// un cargo directo como los demás, el dinero va a su banco y la comisión la
+// paga él. Nosotros no guardamos nada del lector; se le pregunta a Stripe.
+
+/** La cuenta conectada del negocio, sólo si ya puede cobrar. */
+async function cuentaQueCobra(admin: ReturnType<typeof getSupabaseAdmin>, businessId: string): Promise<string> {
+  const { data, error } = await admin
+    .from("stripe_connected_accounts")
+    .select("stripe_account_id, charges_enabled")
+    .eq("business_id", businessId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.stripe_account_id || !data.charges_enabled) {
+    throw new CodedError("business_stripe_not_ready", "El negocio todavía no tiene Stripe conectado y activo");
+  }
+  return data.stripe_account_id;
+}
+
+/**
+ * La ubicación a la que se ata el lector. Stripe no deja emparejar uno sin
+ * ella, y la quiere con la dirección desglosada.
+ *
+ * La dirección sale de la propia cuenta de Stripe del contratista y no de la
+ * ficha de la empresa: aquí se guarda como una línea de texto libre, y Stripe
+ * ya la tiene partida en calle, ciudad y código postal porque se la pidió en
+ * el alta. Una por cuenta: si ya hay alguna, se usa esa.
+ */
+async function ubicacionDelLector(stripe: ReturnType<typeof getStripe>, cuenta: string): Promise<string> {
+  const en = { stripeAccount: cuenta };
+  const hay = await stripe.terminal.locations.list({ limit: 1 }, en);
+  if (hay.data[0]) return hay.data[0].id;
+
+  const acct = await stripe.accounts.retrieve(cuenta);
+  const dir = acct.company?.address ?? acct.individual?.address ?? acct.business_profile?.support_address ?? null;
+  if (!dir?.line1 || !dir.city || !dir.postal_code) {
+    throw new CodedError("lector_sin_direccion", "La cuenta de Stripe no tiene una dirección completa para el lector");
+  }
+  const ubicacion = await stripe.terminal.locations.create(
+    {
+      display_name: acct.business_profile?.name || acct.settings?.dashboard?.display_name || "Oficina",
+      address: {
+        line1: dir.line1,
+        line2: dir.line2 ?? undefined,
+        city: dir.city,
+        state: dir.state ?? undefined,
+        postal_code: dir.postal_code,
+        country: dir.country ?? "CA",
+      },
+    },
+    en
+  );
+  return ubicacion.id;
+}
+
+/** Lo que la pantalla necesita de un lector, y nada de lo demás. */
+function lectorParaLaPantalla(lector: Stripe.Terminal.Reader) {
+  const accion = lector.action;
+  return {
+    id: lector.id,
+    nombre: lector.label,
+    modelo: lector.device_type,
+    enLinea: lector.status === "online",
+    accion: accion
+      ? {
+          estado: accion.status,
+          // Lo que dijo el aparato cuando falló: «tarjeta rechazada», «el
+          // cliente canceló»… Es lo que el contratista tiene que leer.
+          fallo: accion.failure_message ?? null,
+          pago: typeof accion.process_payment_intent?.payment_intent === "string"
+            ? accion.process_payment_intent.payment_intent
+            : accion.process_payment_intent?.payment_intent?.id ?? null,
+        }
+      : null,
+  };
+}
+
+apiRouter.get(
+  "/stripe/terminal/lectores",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data } = await admin
+      .from("stripe_connected_accounts")
+      .select("stripe_account_id, charges_enabled")
+      .eq("business_id", req.businessId!)
+      .maybeSingle();
+    // Sin cuenta que cobre no hay lectores que enseñar, y no es un error:
+    // es el estado de casi todos los negocios el primer día.
+    if (!data?.stripe_account_id || !data.charges_enabled) {
+      res.json({ disponible: false, lectores: [] });
+      return;
+    }
+    const lista = await getStripe().terminal.readers.list({ limit: 20 }, { stripeAccount: data.stripe_account_id });
+    res.json({ disponible: true, lectores: lista.data.map(lectorParaLaPantalla) });
+  })
+);
+
+apiRouter.post(
+  "/stripe/terminal/lectores",
+  route(async (req, res) => {
+    const codigo = String(req.body?.codigo ?? "").trim();
+    const nombre = String(req.body?.nombre ?? "").trim();
+    if (!codigo) throw new CodedError("lector_sin_codigo", "Falta el código de emparejamiento del lector");
+
+    const admin = getSupabaseAdmin();
+    const cuenta = await cuentaQueCobra(admin, req.businessId!);
+    const stripe = getStripe();
+    const location = await ubicacionDelLector(stripe, cuenta);
+    try {
+      const lector = await stripe.terminal.readers.create(
+        { registration_code: codigo, label: nombre || undefined, location },
+        { stripeAccount: cuenta }
+      );
+      res.status(201).json(lectorParaLaPantalla(lector));
+    } catch (err) {
+      // El código se escribe a mano, leyéndolo de la pantalla del aparato:
+      // equivocarse en una letra es lo normal y hay que decirlo así, no con
+      // el mensaje de Stripe en inglés.
+      const mensaje = err instanceof Error ? err.message : String(err);
+      if (/registration code|invalid.*code|code.*invalid|expired/i.test(mensaje)) {
+        throw new CodedError("lector_codigo_no_valido", mensaje);
+      }
+      throw err;
+    }
+  })
+);
+
+apiRouter.get(
+  "/stripe/terminal/lectores/:id",
+  route(async (req, res) => {
+    const cuenta = await cuentaQueCobra(getSupabaseAdmin(), req.businessId!);
+    const lector = await getStripe().terminal.readers.retrieve(req.params.id, {}, { stripeAccount: cuenta });
+    if ((lector as { deleted?: boolean }).deleted) {
+      res.status(404).json({ error: "Lector borrado", code: "lector_no_existe" });
+      return;
+    }
+    res.json(lectorParaLaPantalla(lector as Stripe.Terminal.Reader));
+  })
+);
+
+apiRouter.delete(
+  "/stripe/terminal/lectores/:id",
+  route(async (req, res) => {
+    const cuenta = await cuentaQueCobra(getSupabaseAdmin(), req.businessId!);
+    await getStripe().terminal.readers.del(req.params.id, {}, { stripeAccount: cuenta });
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.post(
+  "/stripe/terminal/lectores/:id/cancelar",
+  route(async (req, res) => {
+    const cuenta = await cuentaQueCobra(getSupabaseAdmin(), req.businessId!);
+    const lector = await getStripe().terminal.readers.cancelAction(req.params.id, {}, { stripeAccount: cuenta });
+    res.json(lectorParaLaPantalla(lector as Stripe.Terminal.Reader));
+  })
+);
+
+/**
+ * Mandar una factura al lector.
+ *
+ * Crea el cobro en la cuenta del contratista y se lo pasa al aparato, que
+ * enseña el importe y espera la tarjeta. Esto no da nada por pagado: lo hace
+ * el aviso de Stripe `payment_intent.succeeded`, por el mismo `registrarCobro`
+ * que la tarjeta en línea, el efectivo y la transferencia.
+ *
+ * Tarjeta e Interac: en Canadá la mayoría paga con la de débito, y un lector
+ * que sólo aceptara crédito dejaría a medio mostrador sin poder pagar.
+ */
+apiRouter.post(
+  "/invoices/:id/cobrar-en-lector",
+  route(async (req, res) => {
+    const lectorId = String(req.body?.lectorId ?? "");
+    if (!lectorId) throw new CodedError("lector_no_elegido", "Falta el lector");
+
+    const admin = getSupabaseAdmin();
+    const { data: invoice, error } = await admin
+      .from("invoices")
+      .select("id, amount, status, description, clients(name)")
+      .eq("business_id", req.businessId!)
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!invoice) throw new CodedError("invoice_not_found", "Factura no encontrada");
+    if (invoice.status === "pagado") throw new CodedError("invoice_already_paid", "Esta factura ya está pagada");
+
+    const cuenta = await cuentaQueCobra(admin, req.businessId!);
+    const stripe = getStripe();
+    const en = { stripeAccount: cuenta };
+    const cliente = invoice.clients as unknown as { name: string } | null;
+    const cobro = await stripe.paymentIntents.create(
+      {
+        amount: Math.round(Number(invoice.amount) * 100),
+        currency: "cad",
+        payment_method_types: ["card_present", "interac_present"],
+        capture_method: "automatic",
+        description: [invoice.description, cliente?.name].filter(Boolean).join(" — ") || undefined,
+        // `origen` es lo que distingue este cobro en el webhook: los pagos
+        // en línea también disparan `payment_intent.succeeded`, pero esos se
+        // apuntan por su `checkout.session.completed` y no deben contarse dos
+        // veces.
+        metadata: { invoiceId: invoice.id, businessId: req.businessId!, origen: "lector" },
+      },
+      en
+    );
+    try {
+      const lector = await stripe.terminal.readers.processPaymentIntent(lectorId, { payment_intent: cobro.id }, en);
+      res.json({ pago: cobro.id, lector: lectorParaLaPantalla(lector) });
+    } catch (err) {
+      // El aparato apagado o sin red. El cobro creado no vale para nada sin
+      // él: se anula para que no quede uno abierto por cada intento.
+      await stripe.paymentIntents.cancel(cobro.id, {}, en).catch(() => undefined);
+      const mensaje = err instanceof Error ? err.message : String(err);
+      if (/offline|not.*online|unreachable|busy/i.test(mensaje)) {
+        throw new CodedError("lector_no_disponible", mensaje);
+      }
+      throw err;
+    }
+  })
+);
 
 // ---------- Catalog write operations (materials, labor rates) ----------
 // The catalog is the spine of every estimate, so it has to be editable from

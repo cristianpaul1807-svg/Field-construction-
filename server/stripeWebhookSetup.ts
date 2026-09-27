@@ -72,6 +72,9 @@ const EVENTS = [
   // seguía enseñando la fecha de renovación del mes pasado para siempre.
   // `scripts/check-webhook-events.py` existe para que no vuelva a faltar uno.
   "invoice.payment_succeeded",
+  // El cobro del lector de tarjetas. No pasa por una sesión de Checkout, así
+  // que no hay `checkout.session.completed` que lo avise.
+  "payment_intent.succeeded",
 ];
 
 /** Accounts v2 refuses a request with no explicit version. Pinned so a change
