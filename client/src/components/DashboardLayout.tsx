@@ -219,6 +219,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // del lavoro— la pantalla no existe: calcular allí una nómina con
         // reglas de Quebec sería peor que no tenerla.
         if (item.path === "/payroll" && !paisDe(country).nomina) return false;
+        // Lo mismo con lo que depende de Stripe o de QuickBooks: fuera de los
+        // países donde funcionan, la pantalla sólo diría que no se puede.
+        if (item.path === "/cobrar" && !paisDe(country).cobrosConTarjeta) return false;
+        if (item.path === "/settings/quickbooks" && !paisDe(country).quickbooks) return false;
         const capacidad = capacidadDeLaPantalla(item.path);
         if (item.id === "subscription" && (plan === "pilot" || plan === "fondateur")) return false;
         return !capacidad || tiene(plan, capacidad);

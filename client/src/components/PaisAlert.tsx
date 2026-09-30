@@ -57,3 +57,36 @@ export function PaisAlert() {
     </div>
   );
 }
+
+/**
+ * Lo mismo, dentro de la pantalla donde se nota: la factura, el impuesto.
+ *
+ * La tira de arriba se lee una vez y se deja de ver. Quien abre «Nueva
+ * factura» semanas después necesita la razón ahí mismo, no un formulario
+ * entero que al final no se puede guardar.
+ */
+export function PaisSinConfigurar({ mensaje = "paisAviso.facturasTexto" }: { mensaje?: string }) {
+  const { t, i18n } = useTranslation();
+  const { country } = useAuth();
+  const [soporte, setSoporte] = useState<string | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    correoDeSoporte().then((c) => vivo && setSoporte(c));
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  const pais = nombreDelPais(country, i18n.language.slice(0, 2), t);
+  return (
+    <div className="rounded-lg border border-status-warning-fg/30 bg-status-warning-bg/40 p-3 space-y-1.5">
+      <p className="text-sm text-foreground">{t(mensaje, { pais })}</p>
+      {soporte && (
+        <a href={`mailto:${soporte}`} className="text-xs text-primary hover:underline inline-flex items-center gap-1 break-all">
+          <Mail size={12} className="shrink-0" /> {soporte}
+        </a>
+      )}
+    </div>
+  );
+}

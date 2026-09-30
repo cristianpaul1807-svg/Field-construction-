@@ -106,7 +106,7 @@ export default function Dashboard() {
                   <TrendingDown size={14} className="text-status-error-fg" />
                 )}
                 <p className={`text-xs ${revenueDelta >= 0 ? "text-status-success-fg" : "text-status-error-fg"}`}>
-                  {revenueDelta >= 0 ? "+" : ""}{revenueDelta}% vs. mes anterior
+                  {t("dashboard.vsLastMonth", { delta: `${revenueDelta >= 0 ? "+" : ""}${revenueDelta}` })}
                 </p>
               </div>
             </Card>
@@ -115,7 +115,7 @@ export default function Dashboard() {
               <p className="text-2xl font-semibold text-foreground mt-2" title={formatCurrencyRounded(pendingInvoicesTotal)}>
                 {formatCompactCurrency(pendingInvoicesTotal)}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">{pendingInvoices.length} facturas</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("dashboard.invoiceCount", { count: pendingInvoices.length })}</p>
             </Card>
             <Card className="p-6">
               <p className="text-sm text-muted-foreground">{t("dashboard.estimatesToApprove")}</p>

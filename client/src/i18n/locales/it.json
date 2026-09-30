@@ -124,7 +124,10 @@
     "noNotifications": "Nessuna nuova notifica.",
     "noPaymentsOrExpenses": "Nessun pagamento o spesa registrato finora.",
     "income": "Ricavi",
-    "expenses": "Spese"
+    "expenses": "Spese",
+    "vsLastMonth": "{{delta}} % rispetto al mese scorso",
+    "invoiceCount_one": "{{count}} fattura",
+    "invoiceCount_other": "{{count}} fatture"
   },
   "crm": {
     "title": "CRM",
@@ -284,7 +287,8 @@
     "crearPrimeraCategoria": "Crea la prima categoria",
     "paraQueSirveLaCategoria": "Raggruppa i tuoi preventivi per tipo di lavoro (cucina, bagno, tetti…). In ogni categoria puoi tenere a portata di mano preventivi passati approvati come riferimento per prezzi e margini.",
     "sinCategoriasAun": "Non hai ancora categorie. Creale nella scheda «Categorie e riferimenti» e potrai assegnarne una dal preventivo.",
-    "planificarUnTrabajo": "Pianifica un lavoro"
+    "planificarUnTrabajo": "Pianifica un lavoro",
+    "sinImpuestoPais": "Senza imposte: quelle del tuo paese non sono ancora configurate."
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -406,7 +410,9 @@
     "connectPausedMeanwhile": "Nel frattempo fatturi normalmente e segni le fatture come pagate quando ti pagano con bonifico, in contanti o con assegno.",
     "detalleParaSoporte": "Dettaglio per l'assistenza",
     "ivaHabitual": "IVA abituale delle tue fatture",
-    "ivaHabitualAyuda": "Ogni fattura nasce con questa IVA, e puoi cambiarla quando la crei se quel lavoro è diverso."
+    "ivaHabitualAyuda": "Ogni fattura nasce con questa IVA, e puoi cambiarla quando la crei se quel lavoro è diverso.",
+    "paisSinTarjeta": "I pagamenti con carta non sono ancora disponibili nel tuo paese ({{pais}}). Nel frattempo incassa come fai adesso e segnalo con «Segna incassata» su ogni fattura.",
+    "paisSinTarjetaCorto": "I pagamenti con carta non sono ancora disponibili nel tuo paese ({{pais}})."
   },
   "communication": {
     "title": "Messaggistica",
@@ -528,7 +534,6 @@
     "summary": "Riepilogo",
     "messages": "Messaggi",
     "payError": "Impossibile avviare il pagamento",
-    "signatureNote": "La firma elettronica verrà collegata più avanti (SignWell). I pagamenti passano già da Stripe.",
     "previewNote": "Vengono mostrate solo le foto e i preventivi contrassegnati come visibili. Questa è un'anteprima in sola lettura — il cliente paga dal proprio portale, non da qui.",
     "previewDisabled": "Anteprima — non interattivo qui",
     "generateAccessCode": "Genera codice di accesso",
@@ -544,7 +549,8 @@
     "searchPlaceholder": "Cerca cliente…",
     "noMatches": "Nessun cliente corrisponde a «{{query}}».",
     "previewOf": "Anteprima di ciò che vede {{name}}",
-    "invoiceNumber": "Fattura {{number}}"
+    "invoiceNumber": "Fattura {{number}}",
+    "payDirectly": "Importo da pagare: {{amount}}. {{business}} ti dirà come pagarlo; il pagamento con carta qui non è ancora disponibile."
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",
@@ -848,7 +854,8 @@
     "cap": "CAP",
     "comune": "Comune",
     "billingIdentityHintItalia": "Questo viene stampato nell'intestazione di ogni documento. In Italia la fattura deve riportare Partita IVA e codice fiscale, e la fattura elettronica richiede anche l'indirizzo completo.",
-    "holdbackPercentHintItalia": "La ritenuta a garanzia, se il tuo contratto la prevede: trattenuta da ogni pagamento parziale fino alla fine dei lavori. Lascia 0 se non la applichi."
+    "holdbackPercentHintItalia": "La ritenuta a garanzia, se il tuo contratto la prevede: trattenuta da ogni pagamento parziale fino alla fine dei lavori. Lascia 0 se non la applichi.",
+    "holdbackTooHighGeneral": "Attenzione: con il {{percent}} % trattieni quella parte su ogni pagamento parziale, quindi le tue fatture chiederanno molto meno di quanto vale il lavoro."
   },
   "reports": {
     "title": "Report",
@@ -1415,7 +1422,8 @@
       "cancelado": "Annullato"
     },
     "needsStripeTitle": "Serve Stripe collegato",
-    "needsStripeBody": "Un addebito in chat è un pulsante di pagamento, e senza Stripe quel pulsante non porta da nessuna parte. Intanto puoi emettere la fattura normalmente e inviarne il PDF in chat; il cliente paga come fa oggi e tu la segni pagata."
+    "needsStripeBody": "Un addebito in chat è un pulsante di pagamento, e senza Stripe quel pulsante non porta da nessuna parte. Intanto puoi emettere la fattura normalmente e inviarne il PDF in chat; il cliente paga come fa oggi e tu la segni pagata.",
+    "paisSinTarjeta": "Una richiesta di pagamento in chat è un pulsante per pagare con carta, e nel tuo paese non è ancora disponibile. Nel frattempo emetti la fattura normale, mandagli il PDF in chat e segnala incassata quando paga."
   },
   "sign": {
     "title": "Firma il preventivo",
@@ -1622,7 +1630,8 @@
     "codice_fiscale_no_valido": "Questo codice fiscale non è valido. Controllalo: l'ultimo carattere è di controllo.",
     "pais_no_ofrecido": "Questo paese non è ancora disponibile.",
     "pais_sin_configurar": "Le imposte del tuo paese non sono ancora configurate, quindi non si possono ancora emettere fatture. Scrivi all'assistenza e la prepariamo insieme.",
-    "pagos_pais_no_listos": "I pagamenti con carta non sono ancora disponibili nel tuo paese. Nel frattempo puoi segnare le fatture come pagate in contanti, bonifico o assegno."
+    "pagos_pais_no_listos": "I pagamenti con carta non sono ancora disponibili nel tuo paese. Nel frattempo puoi segnare le fatture come pagate in contanti, bonifico o assegno.",
+    "quickbooks_pais_no_listo": "Il collegamento con QuickBooks non è ancora disponibile nel tuo paese."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -1795,6 +1804,26 @@
           "p2": "Li vedono quattro servizi e nient'altro, ognuno solo la sua parte: chi conserva il database, Stripe quando incassi con carta, QuickBooks se colleghi la contabilità, e il servizio che invia le email. Non si vendono, non si usano per pubblicità e non si usano per addestrare nessun modello.",
           "p3": "La posizione GPS si registra solo al momento della timbratura, per sapere da dove è stata fatta. Non c'è tracciamento continuo: fra una timbratura e l'altra il sistema non sa dove si trovi nessuno.",
           "nota": "È tutto scritto, con nomi e indirizzi, nell'informativa sulla privacy. Il pulsante qui sotto la apre."
+        },
+        "datosEmpresaItalia": {
+          "title": "Completare i dati della mia impresa",
+          "p1": "Vai in {{menuAjustes}} → {{menuEmpresa}}. In alto il tuo nome e il tuo link pubblico; sotto, quello che si stampa su ogni preventivo e ogni fattura.",
+          "p2": "Compila Partita IVA, codice fiscale e PEC, e l'indirizzo per parti: via e numero civico, CAP, comune e provincia. È così che lo chiede la fattura elettronica, ed è così che esce nell'intestazione.",
+          "p3": "La ritenuta a garanzia parte da 0: mettila solo se il contratto la prevede. L'IVA con cui nasce ogni fattura si sceglie in {{menuAjustes}} → {{menuPagos}}.",
+          "nota": "La Partita IVA viene controllata al salvataggio: se una cifra è sbagliata lo scopri lì, non dal commercialista del tuo cliente che ti rimanda indietro la fattura."
+        },
+        "datosEmpresaOtros": {
+          "title": "Completare i dati della mia impresa",
+          "p1": "Vai in {{menuAjustes}} → {{menuEmpresa}}. Inserisci nome, indirizzo, telefono, email e il tuo logo: è quello che esce nell'intestazione di ogni preventivo.",
+          "p2": "I numeri fiscali del tuo paese non vengono ancora chiesti, perché le sue imposte non sono ancora pronte da noi. Quando lo saranno, compariranno in questa stessa schermata.",
+          "nota": "Se devi fatturare subito, scrivi all'assistenza indicando il tuo paese: ci dice cosa preparare per primo."
+        },
+        "paisDelNegocio": {
+          "title": "Il mio paese e cosa cambia",
+          "p1": "Il paese si sceglie all'iscrizione. Decide la valuta, le imposte, i numeri fiscali richiesti e cosa compare nel menu: le buste paga, per esempio, ci sono solo dove sappiamo farle bene.",
+          "p2": "Lo vedi in {{menuAjustes}} → {{menuEmpresa}}. Da lì non si cambia, apposta: cambiare paese a metà strada darebbe alle prossime fatture una valuta e un'imposta diverse da quelle di prima.",
+          "p3": "Se hai sbagliato all'iscrizione, scrivi all'assistenza e lo cambiamo noi, rivedendo con te quello che hai già dentro.",
+          "nota": "Una fattura già emessa non cambia mai: si stampa sempre con la valuta e l'imposta con cui è uscita."
         }
       },
       "clientes": {
@@ -1850,7 +1879,7 @@
         },
         "enviarYaceptar": {
           "title": "Inviarlo e farlo accettare",
-          "p1": "Dal preventivo lo mandi al suo portale. Arriva con il tuo logo, la licenza RBQ e i numeri fiscali in intestazione.",
+          "p1": "Dal preventivo lo mandi al suo portale. Arriva con il tuo logo e i dati della tua impresa in intestazione: i numeri fiscali e, se ce l'hai, la licenza.",
           "p2": "Lui lo scarica in PDF e può firmarlo dal telefono.",
           "p3": "Quando lo accetta, diventa un cantiere con il suo cliente, le date e il piano di lavoro già dentro.",
           "nota": "Può accettare solo quello che hai marcato come inviato. Una bozza che stai ancora sistemando non può essere accettata alle tue spalle."
@@ -1858,7 +1887,7 @@
         "porFuera": {
           "title": "Mandarlo su WhatsApp invece che dal sistema",
           "p1": "Si può, ed è la cosa normale con i clienti di sempre: loro stanno su WhatsApp e lì restano. Prima inseriscilo in {{menuCrm}}. Basta il nome; email e telefono puoi lasciarli vuoti.",
-          "p2": "Fai il preventivo in {{menuPresupuestos}} come tutti gli altri e premi Genera PDF. Si scarica con il tuo logo, il tuo indirizzo, la tua licenza RBQ e un numero suo, tipo EST-2026-0001. Quel file è quello che gli mandi su WhatsApp.",
+          "p2": "Fai il preventivo in {{menuPresupuestos}} come tutti gli altri e premi Genera PDF. Si scarica con il tuo logo, i dati della tua impresa e un numero suo, tipo EST-2026-0001. Quel file è quello che gli mandi su WhatsApp.",
           "p3": "Perché il sistema sappia che è già partito, premi «Approva e segna come inviato» e scegli «Approva senza inviare». Risulta inviato senza che al cliente arrivi nulla da qui, perché gliel'hai già mandato tu.",
           "p4": "Quando ti dice di sì, torna al preventivo e accettalo tu. È questo che apre il cantiere, mette il lavoro in calendario ed emette la prima fattura. Se non lo fai non succede niente: il preventivo resta fermo e il cantiere non nasce.",
           "nota": "Le fatture si scaricano allo stesso modo, da {{menuFinanzas}} → {{menuFacturacion}}. E se ti pagano in contanti, con assegno o con bonifico, lì c'è «Segna incassata» per registrarlo."
@@ -1907,7 +1936,7 @@
           "p1": "In {{menuCampo}} → {{menuTecnicos}}, accanto a ogni persona c'è un pulsante con una firma. Lì vive il suo accordo: da quando lavora, fino a quando, quanto prende e ogni quanto viene pagato.",
           "p2": "Lo stesso per i subappaltatori, nella loro schermata. La differenza è che un subappaltatore ti fattura, quindi a lui non si mettono le ferie e il campo proprio non compare.",
           "p3": "Se lo lasci senza data di fine, è a tempo indeterminato. Le condizioni che scrivi vengono stampate così come sono nel documento, quindi lì va quello che avete davvero concordato: chi mette gli attrezzi, da quando contano gli straordinari, quanto preavviso c'è.",
-          "p4": "Dall'accordo esce un PDF con il tuo logo, il tuo indirizzo e la tua licenza RBQ. Puoi scaricarlo e mandarglielo come vuoi, o passarglielo dalla messaggistica perché lo firmi dal telefono.",
+          "p4": "Dall'accordo esce un PDF con il tuo logo e i dati della tua impresa. Puoi scaricarlo e mandarglielo come vuoi, o passarglielo dalla messaggistica perché lo firmi dal telefono.",
           "nota": "Un accordo già firmato non si può modificare né cancellare, di proposito: se potessi ritoccarlo dopo, la firma non varrebbe niente. Se cambiano le condizioni, ne fai uno nuovo."
         },
         "vacaciones": {
@@ -1930,6 +1959,13 @@
           "p2": "Quasi tutti quei fogli li genera la tua contabilità paghe — QuickBooks Payroll, per esempio — e non si possono prendere da soli: non c'è modo di chiederli a QuickBooks dall'esterno. Si carica il file, e basta.",
           "p3": "Di default la persona li vede sul suo telefono, ripiegati sotto il lavoro del giorno. Questa è metà dell'idea: il T4 parte ogni febbraio, si perde, e ad aprile te lo richiedono. Se preferisci tenerne uno per te, togli la spunta quando lo carichi.",
           "nota": "Un T4 ha stampato il numero di previdenza sociale. Si conservano in un posto privato e li vedono solo l'ufficio e quella persona, mai un collega. Quello che non facciamo è leggere i numeri dentro il PDF: azzeccare «quasi sempre» una cifra che va in una dichiarazione è peggio che non averla."
+        },
+        "papelesGeneral": {
+          "title": "I documenti di ogni persona (contratti, buste paga)",
+          "p1": "Nella scheda di ogni lavoratore e di ogni subappaltatore c'è un pulsante **Documenti**. Lì carichi il contratto firmato, le sue buste paga, gli attestati di formazione o sicurezza, e restano accanto alle sue ore e al suo accordo.",
+          "p2": "Le buste paga le fa chi le fa adesso —il tuo consulente del lavoro— e non si possono importare da sole dal suo programma. Si caricano come file, e basta.",
+          "p3": "Di default la persona le vede sul telefono, sotto il lavoro del giorno. Così non deve chiedertele ogni volta che una banca o un ufficio le vuole. Se preferisci tenerne una per te, togli la spunta quando la carichi.",
+          "nota": "Sono conservati in uno spazio privato e li vedono solo l'ufficio e quella persona, mai un collega."
         }
       },
       "dinero": {
@@ -2022,6 +2058,48 @@
           "p3": "Il cliente avvicina la sua carta o il suo telefono al tuo ed è incassato. Accetta Visa, Mastercard, Amex e Interac. Ti serve un iPhone XS o successivo, oppure un Android con NFC.",
           "p4": "In Canada ci sono carte che richiedono il PIN con la carta inserita in un lettore, e quelle non passano avvicinandole. Quando succede, manda il link di pagamento della fattura e il problema è risolto.",
           "nota": "Quello che incassi dall'app di Stripe non arriva qui da solo: apri la fattura e segnala come pagata, altrimenti i conti non torneranno."
+        },
+        "impuestosItalia": {
+          "title": "Come si calcola l'IVA",
+          "p1": "In Italia l'IVA non la decide la provincia ma il lavoro. In {{menuAjustes}} → {{menuPagos}} scegli la tua IVA abituale, quella che si mette da sola su ogni nuova fattura.",
+          "p2": "Creando una fattura puoi cambiarla solo per quella: 22 % l'ordinaria, 10 % per ristrutturazioni e manutenzioni di abitazioni, 4 % per costruire una prima casa, oppure inversione contabile in un subappalto.",
+          "p3": "L'IVA si calcola sul valore intero del lavoro e si arrotonda al centesimo una sola volta. La ritenuta a garanzia, se c'è, si toglie dal pagamento, mai dalla base imponibile.",
+          "nota": "In una manutenzione con «beni significativi» (una caldaia, gli infissi) il 10 % ha un limite e il resto va al 22 %. Quella ripartizione la calcola il tuo commercialista; nel dubbio, chiedigli prima di emettere."
+        },
+        "inversioneContabile": {
+          "title": "Fatturare un subappalto senza IVA (inversione contabile)",
+          "p1": "Quando lavori in subappalto per un'altra impresa edile, la fattura va senza IVA: la versa chi la riceve. È l'art. 17, c. 6, lett. a) del DPR 633/72.",
+          "p2": "Creando la fattura, come IVA scegli «inversione contabile». Esce con IVA a 0 €, con la dicitura e il codice N6.3 stampati, che è quello che cerca il contabile del tuo cliente.",
+          "p3": "Se quell'impresa è il tuo cliente abituale, puoi impostare l'inversione contabile come IVA abituale in {{menuAjustes}} → {{menuPagos}}.",
+          "nota": "A un privato non si fattura mai così. Una ristrutturazione per una famiglia va con la sua IVA, al 10 % o al 22 %, anche se subappalti parte del lavoro."
+        },
+        "fatturaElettronica": {
+          "title": "La fattura elettronica (SDI)",
+          "p1": "In Italia la fattura valida è un XML che passa dal Sistema di Interscambio. Il PDF che esce da qui è una copia di cortesia: serve al tuo cliente per leggerla, non alla tua contabilità.",
+          "p2": "Stiamo preparando l'XML. Nel frattempo emetti la fattura elettronica con il tuo programma di sempre o con il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate, copiando gli importi da qui.",
+          "p3": "Qui continui a gestire tutto il resto: il preventivo, il cantiere, l'incassato e il da incassare. Quando l'XML sarà pronto lo vedrai su ogni fattura, senza rifare niente.",
+          "nota": "Se il tuo commercialista ha bisogno di qualcosa di preciso per il passaggio allo SDI, scrivi all'assistenza: ci aiuta a decidere cosa preparare per primo."
+        },
+        "impuestosOtros": {
+          "title": "Le imposte del mio paese",
+          "p1": "Le imposte del tuo paese non sono ancora pronte da noi. Per questo i tuoi preventivi escono senza imposta e le fatture non si possono ancora emettere.",
+          "p2": "Non è un guasto: preferiamo non farti emettere una fattura con l'imposta di un altro paese, che è quello che succederebbe se ce la inventassimo.",
+          "p3": "Nel frattempo gestisci normalmente cantieri, squadra, agenda e preventivi. Scrivi all'assistenza con il tuo paese e l'imposta che applichi, e la prepariamo insieme.",
+          "nota": "Gli importi escono già nella valuta del tuo paese. Quello che manca è l'imposta, non la valuta."
+        },
+        "cobrarSinTarjeta": {
+          "title": "Incassare una fattura",
+          "p1": "I pagamenti con carta non sono ancora disponibili in Italia: arrivano con gli account Stripe in euro. Nel frattempo incassi come fai adesso, quasi sempre con bonifico.",
+          "p2": "Quando arrivano i soldi, apri la fattura in {{menuFinanzas}} → {{menuFacturacion}} e premi «Segna incassata». Scegli il mezzo, il giorno e, se vuoi, il riferimento del bonifico.",
+          "p3": "La fattura risulta pagata, entra nell'incassato ed esce nel report del tuo contabile con il mezzo indicato. Se era la finale, il cantiere si chiude.",
+          "nota": "Quando la carta arriverà nel tuo paese lo vedrai in {{menuAjustes}} → {{menuPagos}}, senza dover configurare altro."
+        },
+        "cobrarEnPersona": {
+          "title": "Incassare dal cliente che ho davanti",
+          "p1": "Apri {{menuFinanzas}} → {{menuCobrar}} e scegli la fattura da incassare. Compare un QR: il cliente lo inquadra con la fotocamera del telefono e paga con carta.",
+          "p2": "Se non è lì, copia il link o condividilo su WhatsApp. E se hai un lettore Stripe abbinato, gli mandi l'importo e il cliente avvicina la carta.",
+          "p3": "La schermata cambia da sola quando entra il pagamento e la fattura risulta incassata. Niente da segnare a mano.",
+          "nota": "Serve il tuo account Stripe collegato, in {{menuAjustes}} → {{menuPagos}}. Se è un extra senza fattura, crea prima la fattura: è quella che porta le imposte."
         }
       },
       "problemas": {
@@ -2818,6 +2896,7 @@
     "sinConfigurarTitulo": "La configurazione fiscale per {{pais}} non è ancora pronta",
     "sinConfigurarTexto": "Puoi usare cantieri, squadra, agenda e preventivi. Per emettere fatture con le imposte del tuo paese, scrivi all'assistenza e la prepariamo insieme.",
     "enPruebasTitulo": "{{pais}} è in preparazione",
-    "enPruebasTexto": "Fatturi già con IVA e in euro. La fattura elettronica (SDI) arriverà presto; se ti serve prima, scrivi all'assistenza."
+    "enPruebasTexto": "Fatturi già con IVA e in euro. La fattura elettronica (SDI) arriverà presto; se ti serve prima, scrivi all'assistenza.",
+    "facturasTexto": "Le imposte del tuo paese ({{pais}}) non sono ancora configurate, quindi le fatture non si possono ancora emettere. Scrivi all'assistenza e le prepariamo insieme."
   }
 }

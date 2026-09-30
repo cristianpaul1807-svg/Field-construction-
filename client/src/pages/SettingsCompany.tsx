@@ -360,7 +360,9 @@ export default function SettingsCompany() {
               <div className="space-y-1.5 sm:col-span-2">
                 <p className="text-sm font-medium text-foreground">{t("settings.province")}</p>
                 <p className="text-sm text-muted-foreground">
-                  {esItalia
+                  {pais.impuestos === "sin_configurar"
+                    ? t("paisAviso.sinConfigurarTexto")
+                    : esItalia
                     ? province
                       ? `${pais.regiones.find((r) => r.codigo === province)?.nombre ?? province} — ${t(`invoicing.iva.opcion.${esOpcionIva(data.taxConfig?.ivaPredefinita) ? data.taxConfig.ivaPredefinita : IVA_POR_DEFECTO}`)}`
                       : t("settings.provinceHint")
@@ -475,7 +477,7 @@ export default function SettingsCompany() {
                     paga. Por encima del 10 % se avisa en pantalla. */}
                 {Number(holdbackPercent) > 10 && (
                   <p className="text-xs text-status-warning-fg">
-                    {t("settings.holdbackTooHigh", { percent: Number(holdbackPercent) })}
+                    {t(pais.impuestos === "canada" ? "settings.holdbackTooHigh" : "settings.holdbackTooHighGeneral", { percent: Number(holdbackPercent) })}
                   </p>
                 )}
               </div>

@@ -124,7 +124,10 @@
     "noNotifications": "No new notifications.",
     "noPaymentsOrExpenses": "No payments or expenses recorded yet.",
     "income": "Income",
-    "expenses": "Expenses"
+    "expenses": "Expenses",
+    "vsLastMonth": "{{delta}}% vs. last month",
+    "invoiceCount_one": "{{count}} invoice",
+    "invoiceCount_other": "{{count}} invoices"
   },
   "crm": {
     "title": "CRM",
@@ -284,7 +287,8 @@
     "crearPrimeraCategoria": "Create the first category",
     "paraQueSirveLaCategoria": "Groups your estimates by type of job (kitchen, bathroom, roofing…). In each category you can keep past approved estimates on hand as a reference for prices and margins.",
     "sinCategoriasAun": "You don't have any categories yet. Create them in the \"Categories & references\" tab and you can assign one from the estimate.",
-    "planificarUnTrabajo": "Plan a job"
+    "planificarUnTrabajo": "Plan a job",
+    "sinImpuestoPais": "No tax: your country's taxes aren't set up yet."
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -406,7 +410,9 @@
     "connectPausedMeanwhile": "In the meantime you invoice as usual and mark invoices paid when the money comes in by transfer, cash or cheque.",
     "detalleParaSoporte": "Detail for support",
     "ivaHabitual": "Usual VAT on your invoices",
-    "ivaHabitualAyuda": "Each invoice starts with this VAT, and you can change it when creating one if that job is different."
+    "ivaHabitualAyuda": "Each invoice starts with this VAT, and you can change it when creating one if that job is different.",
+    "paisSinTarjeta": "Card payments aren't available in your country ({{pais}}) yet. Meanwhile, get paid the way you do now and record it with «Mark as paid» on each invoice.",
+    "paisSinTarjetaCorto": "Card payments aren't available in your country ({{pais}}) yet."
   },
   "communication": {
     "title": "Messaging",
@@ -528,7 +534,6 @@
     "summary": "Summary",
     "messages": "Messages",
     "payError": "Could not start the payment",
-    "signatureNote": "E-signature will be connected later (SignWell). Payments already run through Stripe.",
     "previewNote": "Only photos and estimates marked as visible are shown. This is a read-only preview — the client pays from their own portal, not from here.",
     "previewDisabled": "Preview — not interactive here",
     "generateAccessCode": "Generate access code",
@@ -544,7 +549,8 @@
     "searchPlaceholder": "Search client…",
     "noMatches": "No client matches “{{query}}”.",
     "previewOf": "Preview of what {{name}} sees",
-    "invoiceNumber": "Invoice {{number}}"
+    "invoiceNumber": "Invoice {{number}}",
+    "payDirectly": "Amount due: {{amount}}. {{business}} will tell you how to pay it; card payment isn't available here yet."
   },
   "worker": {
     "accessTitle": "Worker access",
@@ -848,7 +854,8 @@
     "cap": "Postal code (CAP)",
     "comune": "Municipality",
     "billingIdentityHintItalia": "This goes in the header of every document. In Italy an invoice must show the VAT number (Partita IVA) and tax code, and the electronic invoice also needs the full address.",
-    "holdbackPercentHintItalia": "The retention (ritenuta a garanzia), if your contract provides for it: held back from each progress payment until the work is finished. Leave 0 if you don't apply it."
+    "holdbackPercentHintItalia": "The retention (ritenuta a garanzia), if your contract provides for it: held back from each progress payment until the work is finished. Leave 0 if you don't apply it.",
+    "holdbackTooHighGeneral": "Careful: at {{percent}} % you withhold that share of every progress payment, so your invoices will charge far less than the work is worth."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1415,7 +1422,8 @@
       "cancelado": "Cancelled"
     },
     "needsStripeTitle": "This needs Stripe connected",
-    "needsStripeBody": "A chat charge is a pay button, and without Stripe that button leads nowhere. In the meantime you can issue the invoice normally and send its PDF through the chat; the client pays however they do today and you mark it paid."
+    "needsStripeBody": "A chat charge is a pay button, and without Stripe that button leads nowhere. In the meantime you can issue the invoice normally and send its PDF through the chat; the client pays however they do today and you mark it paid.",
+    "paisSinTarjeta": "A payment request in the chat is a pay-by-card button, and that isn't available in your country yet. Meanwhile, issue the invoice as usual, send the PDF in the chat and mark it paid when they pay."
   },
   "sign": {
     "title": "Sign the estimate",
@@ -1622,7 +1630,8 @@
     "codice_fiscale_no_valido": "That tax code (codice fiscale) isn't valid. Check it: the last character is a check character.",
     "pais_no_ofrecido": "That country isn't available yet.",
     "pais_sin_configurar": "Your country's taxes aren't set up yet, so invoices can't be issued yet. Write to support and we'll set it up with you.",
-    "pagos_pais_no_listos": "Card payments aren't available in your country yet. Meanwhile you can mark invoices as paid by cash, transfer or cheque."
+    "pagos_pais_no_listos": "Card payments aren't available in your country yet. Meanwhile you can mark invoices as paid by cash, transfer or cheque.",
+    "quickbooks_pais_no_listo": "The QuickBooks connection isn't available in your country yet."
   },
   "workLog": {
     "title": "Work log",
@@ -1795,6 +1804,26 @@
           "p2": "Four services see it and nothing else, each only its own part: the one that stores the database, Stripe when you take card payments, QuickBooks if you connect your accounting, and the service that sends the emails. It is not sold, not used for advertising and not used to train any model.",
           "p3": "GPS position is stored only at the moment of clocking in or out, to know where the punch happened. There is no continuous tracking: between punches the system does not know where anyone is.",
           "nota": "It is all written down, with names and addresses, in the privacy policy. The button below opens it."
+        },
+        "datosEmpresaItalia": {
+          "title": "Fill in my company details",
+          "p1": "Go to {{menuAjustes}} → {{menuEmpresa}}. At the top goes your name and public link; below, what gets printed on every estimate and invoice.",
+          "p2": "Fill in the Partita IVA, the codice fiscale and the PEC, and the address in parts: street and number, CAP, municipality and province. That is how the e-invoice asks for it, and how it shows in the header.",
+          "p3": "The ritenuta a garanzia starts at 0: set it only if your contract provides for it. The VAT each new invoice starts with is chosen in {{menuAjustes}} → {{menuPagos}}.",
+          "nota": "The Partita IVA is checked when you save: if a digit is wrong you hear it there, not from your client's accountant sending the invoice back."
+        },
+        "datosEmpresaOtros": {
+          "title": "Fill in my company details",
+          "p1": "Go to {{menuAjustes}} → {{menuEmpresa}}. Enter the name, address, phone, email and your logo: that is what shows at the top of every estimate.",
+          "p2": "Your country's tax numbers aren't asked for yet, because its taxes aren't set up on our side. When they are, they will appear on this same screen.",
+          "nota": "If you need to invoice now, write to support with your country: it tells us what to prepare first."
+        },
+        "paisDelNegocio": {
+          "title": "My country and what it changes",
+          "p1": "The country is chosen when you sign up. It decides the currency, the taxes, the tax numbers asked for and what appears in the menu: payroll, for instance, is only there where we know how to do it properly.",
+          "p2": "You can see it in {{menuAjustes}} → {{menuEmpresa}}. It can't be changed there on purpose: switching country halfway would give your next invoices a different currency and tax from the earlier ones.",
+          "p3": "If you picked the wrong one when signing up, write to support and we'll change it, going over what you already have with you.",
+          "nota": "An invoice already issued never changes: it always prints with the currency and tax it went out with."
         }
       },
       "clientes": {
@@ -1850,7 +1879,7 @@
         },
         "enviarYaceptar": {
           "title": "Send it and get it accepted",
-          "p1": "From the estimate you send it to their portal. It arrives with your logo, your RBQ licence and your tax numbers in the header.",
+          "p1": "From the estimate you send it to their portal. It arrives with your logo and your company details in the header: your tax numbers and, if you have one, your licence.",
           "p2": "They download it as a PDF and can sign it from their phone.",
           "p3": "Once accepted, it turns into a project with its client, its dates and its work plan already inside.",
           "nota": "They can only accept one you've marked as sent. A draft you're still tuning can't be accepted behind your back."
@@ -1858,7 +1887,7 @@
         "porFuera": {
           "title": "Sending it by WhatsApp instead of through the system",
           "p1": "You can, and with long-standing clients it's the normal thing: they're on WhatsApp and that's where they'll stay. First add them in {{menuCrm}}. A name is enough; you can leave email and phone empty.",
-          "p2": "Build the estimate in {{menuPresupuestos}} like any other and press Generate PDF. It downloads with your logo, your address, your RBQ licence and a number of its own, like EST-2026-0001. That file is what you send over WhatsApp.",
+          "p2": "Build the estimate in {{menuPresupuestos}} like any other and press Generate PDF. It downloads with your logo, your company details and a number of its own, like EST-2026-0001. That file is what you send over WhatsApp.",
           "p3": "So the system knows it's out the door, press “Approve and mark as sent” and choose “Approve without sending”. It's marked as sent without anything reaching the client here, because you already sent it yourself.",
           "p4": "When they say yes, come back to the estimate and accept it yourself. That's what opens the project, puts the work on the calendar and issues the first invoice. Skip it and nothing at all happens: the estimate sits still and the project never comes into being.",
           "nota": "Invoices download the same way, from {{menuFinanzas}} → {{menuFacturacion}}. And if they pay you in cash, by cheque or by transfer, “Mark as paid” is right there to record it."
@@ -1907,7 +1936,7 @@
           "p1": "In {{menuCampo}} → {{menuTecnicos}}, next to each person there's a button with a signature on it. Their agreement lives there: from when they work, until when, how much they earn and how often they're paid.",
           "p2": "Same for subcontractors, on their own screen. The difference is a subcontractor invoices you, so there's no vacation pay for them and the field simply isn't there.",
           "p3": "Leave the end date empty and it's open-ended. Whatever terms you type get printed word for word in the document, so put what you actually agreed there: who provides the tools, when overtime starts counting, how much notice there is.",
-          "p4": "The agreement produces a PDF with your logo, your address and your RBQ licence. You can download it and send it however you like, or hand it over through the messaging so they sign it from their phone.",
+          "p4": "The agreement produces a PDF with your logo and your company details. You can download it and send it however you like, or hand it over through the messaging so they sign it from their phone.",
           "nota": "A signed agreement can't be changed or deleted, on purpose: if you could touch it up afterwards, the signature would be worth nothing. If the terms change, you make a new one."
         },
         "vacaciones": {
@@ -1930,6 +1959,13 @@
           "p2": "Most of those come out of your payroll — QuickBooks Payroll, say — and can't be fetched automatically: there's no way to ask QuickBooks for them from outside. You upload the file, and that's it.",
           "p3": "By default the person sees them on their phone, folded under their day's work. That's half the point: the T4 goes out every February, gets lost, and in April they ask you again. If you'd rather keep one to yourself, untick the box when you upload it.",
           "nota": "A T4 has the social insurance number printed on it. These are stored privately and only the office and that person can see them, never a colleague. What we don't do is read the numbers inside the PDF: being right \"almost always\" about a figure that goes on a tax return is worse than not having it."
+        },
+        "papelesGeneral": {
+          "title": "Each person's papers (contracts, payslips)",
+          "p1": "On every worker's and subcontractor's card there is a **Documents** button. That's where you upload the contract you signed, their payslips and their training or safety certificates, and they stay next to their hours and their agreement.",
+          "p2": "Payroll is done by whoever does it now —your accountant or labour adviser— and can't be pulled in automatically from their software. You upload it as a file, and that's it.",
+          "p3": "By default the person sees them on their phone, below their day's work. That way they don't have to ask you every time a bank or an office wants them. If you'd rather keep one to yourself, untick it when uploading.",
+          "nota": "They're stored privately and only the office and that person see them, never a co-worker."
         }
       },
       "dinero": {
@@ -2022,6 +2058,48 @@
           "p3": "Your client holds their card or phone against yours and it's paid. It takes Visa, Mastercard, Amex and Interac. You need an iPhone XS or later, or an Android with NFC.",
           "p4": "Some Canadian cards need their PIN entered with the card inserted in a reader, and those won't work by tapping. When that happens, send the invoice's payment link and the problem is over.",
           "nota": "What you charge in the Stripe app doesn't reach this system on its own: open the invoice and mark it paid, or your books won't match."
+        },
+        "impuestosItalia": {
+          "title": "How VAT is calculated",
+          "p1": "In Italy VAT isn't decided by the province but by the job. In {{menuAjustes}} → {{menuPagos}} you choose your usual VAT, the one every new invoice starts with.",
+          "p2": "When creating an invoice you can change it for that one only: 22 % as standard, 10 % for renovation and maintenance of homes, 4 % for building a first home, or inversione contabile on a subcontract.",
+          "p3": "VAT is calculated on the full value of the work and rounded to the cent once. The ritenuta a garanzia, if you have one, comes off the payment, never off the VAT base.",
+          "nota": "On maintenance with «beni significativi» (a boiler, windows) the 10 % has a cap and the rest goes at 22 %. That split is worked out by your commercialista; when in doubt, ask before issuing."
+        },
+        "inversioneContabile": {
+          "title": "Invoicing a subcontract without VAT (inversione contabile)",
+          "p1": "When you work as a subcontractor for another construction company, the invoice goes without VAT: whoever receives it pays it. That's art. 17, para. 6, letter a) of DPR 633/72.",
+          "p2": "When creating the invoice, choose «inversione contabile» as the VAT. It comes out at €0 VAT, with the wording and the N6.3 code printed, which is what your client's accountant looks for.",
+          "p3": "If that company is your regular client, you can set inversione contabile as your usual VAT in {{menuAjustes}} → {{menuPagos}}.",
+          "nota": "A private individual is never invoiced this way. A renovation for a family carries its VAT, at 10 % or 22 %, even if you subcontract part of the work."
+        },
+        "fatturaElettronica": {
+          "title": "E-invoicing (SDI)",
+          "p1": "In Italy the valid invoice is an XML file that travels through the Sistema di Interscambio. The PDF produced here is a courtesy copy: it's for your client to read, not for your books.",
+          "p2": "We're preparing the XML. Meanwhile, issue the e-invoice with your usual software or with the free «Fatture e Corrispettivi» service of the Agenzia delle Entrate, copying the amounts from here.",
+          "p3": "Here you keep running everything else: the estimate, the job, what's paid and what's pending. When the XML is ready you'll see it on each invoice, without redoing anything.",
+          "nota": "If your commercialista needs something specific for the SDI step, write to support: it helps us decide what to prepare first."
+        },
+        "impuestosOtros": {
+          "title": "My country's taxes",
+          "p1": "Your country's taxes aren't set up on our side yet. That's why your estimates come out without tax and invoices can't be issued yet.",
+          "p2": "It isn't a bug: we'd rather not let you issue an invoice with another country's tax, which is what would happen if we made one up.",
+          "p3": "Meanwhile you can run your jobs, your team, your schedule and your estimates as normal. Write to support with your country and the tax you charge, and we'll set it up with you.",
+          "nota": "Amounts already show in your country's currency. What's missing is the tax, not the currency."
+        },
+        "cobrarSinTarjeta": {
+          "title": "Getting an invoice paid",
+          "p1": "Card payments aren't available in Italy yet: they arrive with euro Stripe accounts. Meanwhile you get paid the way you do now, usually by bank transfer.",
+          "p2": "When the money comes in, open the invoice in {{menuFinanzas}} → {{menuFacturacion}} and press «Mark as paid». You choose the method, the day and, if you like, the transfer reference.",
+          "p3": "The invoice becomes paid, counts towards what's collected and shows in your accountant's report with the method noted. If it was the final one, the job is closed.",
+          "nota": "When cards reach your country you'll see it in {{menuAjustes}} → {{menuPagos}}, with nothing else to set up."
+        },
+        "cobrarEnPersona": {
+          "title": "Getting paid by the client in front of me",
+          "p1": "Open {{menuFinanzas}} → {{menuCobrar}} and choose the pending invoice. A QR code appears: the client scans it with their phone camera and pays by card.",
+          "p2": "If they aren't there, copy the link or share it over WhatsApp. And if you have a Stripe reader paired, you send it the amount and the client taps their card.",
+          "p3": "The screen changes by itself when the payment comes in and the invoice is marked paid. Nothing to mark by hand.",
+          "nota": "You need your Stripe account connected, in {{menuAjustes}} → {{menuPagos}}. If it's an extra with no invoice, create the invoice first: it's what carries the tax."
         }
       },
       "problemas": {
@@ -2818,6 +2896,7 @@
     "sinConfigurarTitulo": "The tax setup for {{pais}} isn't ready yet",
     "sinConfigurarTexto": "You can use jobs, team, schedule and estimates. To issue invoices with your country's taxes, write to support and we'll set it up with you.",
     "enPruebasTitulo": "{{pais}} is being prepared",
-    "enPruebasTexto": "You already invoice with VAT and in euros. Electronic invoicing (SDI) is coming soon; if you need it sooner, write to support."
+    "enPruebasTexto": "You already invoice with VAT and in euros. Electronic invoicing (SDI) is coming soon; if you need it sooner, write to support.",
+    "facturasTexto": "Your country's taxes ({{pais}}) aren't set up yet, so invoices can't be issued yet. Write to support and we'll set it up with you."
   }
 }

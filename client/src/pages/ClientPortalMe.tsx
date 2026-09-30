@@ -5,7 +5,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileSignature, CreditCard, CheckCircle2, Download, FilePlus2, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
-import { formatCurrency } from "@/lib/mockData";
+import { formatCurrency, fijarMonedaDelNegocio } from "@/lib/mockData";
+import { lineasDelDesglose } from "@/lib/taxes";
+import { paisDe } from "@shared/paises";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { ClientChat } from "@/components/ClientChat";
@@ -36,13 +38,13 @@ interface ClientPortalData {
     total: number;
     taxAmount?: number;
     totalWithTax?: number;
-    /** Cada impuesto por su cuenta. En Quebec son dos y se declaran aparte. */
-    taxBreakdown?: { province?: string; hst?: number; gst?: number; pst?: number };
+    /** Cada impuesto por su cuenta: en Quebec TPS y TVQ, en Italia el IVA. */
+    taxBreakdown?: unknown;
     signature: { name: string; signedAt: string; total: number } | null;
   } | null;
   pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string } | null;
   /** De quién es el portal. Nulo sólo si al cliente le falta el negocio. */
-  business: { name: string; logoUrl: string | null } | null;
+  business: { name: string; logoUrl: string | null; country: string } | null;
   visiblePhotos: { id: string }[];
 }
 
@@ -109,25 +111,6 @@ function colorForId(id: string) {
   return `oklch(0.74 0.07 ${hash % 360})`;
 }
 
-/**
- * Las líneas de impuesto del desglose que manda el servidor.
- *
- * Los nombres son los que el cliente ve en cualquier otra factura de su
- * provincia: en Quebec, TPS y TVQ. El importe llega ya calculado y redondeado
- * — aquí no se recalcula nada, que es como se acaba enseñando una cifra
- * distinta de la del papel.
- */
-function lineasDeImpuesto(tb: { province?: string; hst?: number; gst?: number; pst?: number } | undefined) {
-  const lineas: { label: string; amount: number }[] = [];
-  if (!tb) return lineas;
-  if (tb.hst !== undefined) lineas.push({ label: "TVH/HST", amount: tb.hst });
-  if (tb.gst !== undefined) lineas.push({ label: "TPS/GST", amount: tb.gst });
-  if (tb.pst !== undefined) {
-    lineas.push({ label: tb.province === "QC" ? "TVQ/QST" : "PST", amount: tb.pst });
-  }
-  return lineas;
-}
-
 export default function ClientPortalMe() {
   const { t, i18n } = useTranslation();
   const { signOut } = useAuth();
@@ -140,6 +123,11 @@ export default function ClientPortalMe() {
     window.location.href = "/cliente/acceso";
   };
   const { data, loading, error, reload, detalle, } = useApi<ClientPortalData>("/api/client-portal/me");
+  // El portal no pasa por la sesión del negocio, que es la que fija la moneda
+  // en el panel. Se fija aquí, antes de pintar el primer importe, con el país
+  // del negocio de este cliente.
+  const pais = paisDe(data?.business?.country);
+  fijarMonedaDelNegocio(pais.moneda);
   const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
   const [payError, setPayError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -354,14 +342,16 @@ export default function ClientPortalMe() {
                           TPS y TVQ separadas en cualquier factura que reciba, y
                           una sola línea de "impuestos" le hace dudar de la
                           cifra justo antes de firmarla. Es lo mismo que ya sale
-                          en el PDF. */}
-                      {data.estimate.taxAmount ? (
+                          en el PDF. Se mira si hay líneas y no si hay impuesto:
+                          una inversione contabile va a 0 € y aun así tiene que
+                          decir por qué no lleva IVA. */}
+                      {lineasDelDesglose(data.estimate.taxBreakdown).length > 0 ? (
                         <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                           <div className="flex justify-between gap-4">
                             <span>{t("budgets.beforeTax")}</span>
                             <span>{formatCurrency(data.estimate.total)}</span>
                           </div>
-                          {lineasDeImpuesto(data.estimate.taxBreakdown).map((linea) => (
+                          {lineasDelDesglose(data.estimate.taxBreakdown).map((linea) => (
                             <div key={linea.label} className="flex justify-between gap-4">
                               <span>{linea.label}</span>
                               <span>{formatCurrency(linea.amount)}</span>
@@ -396,7 +386,9 @@ export default function ClientPortalMe() {
                       {downloading ? <Spinner className="size-4" /> : <Download size={16} />}
                       {t("clientPortal.downloadEstimate")}
                     </Button>
-                    {data.pendingInvoice && (
+                    {/* Sin pago con tarjeta en su país el botón no puede
+                        llevar a ninguna parte; se dice cómo pagar en su lugar. */}
+                    {data.pendingInvoice && pais.cobrosConTarjeta && (
                       <Button
                         variant="outline"
                         className="gap-2 flex-1 min-h-11"
@@ -415,6 +407,14 @@ export default function ClientPortalMe() {
                   {/* Cuál es la factura que va a pagar. Es el número que lleva
                       el PDF y el que pondrá en la transferencia; sin él, quien
                       tiene dos facturas abiertas no sabe cuál está pagando. */}
+                  {data.pendingInvoice && !pais.cobrosConTarjeta && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {t("clientPortal.payDirectly", {
+                        amount: formatCurrency(data.pendingInvoice.amount),
+                        business: data.business?.name ?? "",
+                      })}
+                    </p>
+                  )}
                   {data.pendingInvoice?.number && (
                     <p className="text-xs text-muted-foreground mt-2">
                       {t("clientPortal.invoiceNumber", { number: data.pendingInvoice.number })}
@@ -509,9 +509,6 @@ export default function ClientPortalMe() {
               </Card>
             )}
 
-            <p className="text-xs text-muted-foreground text-center">
-              {t("clientPortal.signatureNote")}
-            </p>
           </TabsContent>
 
           <TabsContent value="mensajes" className="mt-4">

@@ -25,8 +25,13 @@ error; daría documentos mal hechos con aspecto de correctos.
 | `licencia` | La licencia de contratista, si allí existe |
 | `retencion` | Si se retiene parte de cada pago parcial hasta terminar |
 | `organismoDeConstruccion` | `"ccq"` o `null` |
+| `moneda` | ISO 4217. La fija la sesión para todo el panel; el portal, con el país que le manda `/client-portal/me`; los correos, con `importeEnTexto` |
+| `impuestos` | `"canada"`, `"italia"` o `"sin_configurar"` |
+| `nomina` | Si la pantalla de nómina existe |
+| `cobrosConTarjeta` | Si hay Stripe: sin él no hay Cobrar, ni enlace de pago, ni botón de pagar en el portal o en el correo |
+| `quickbooks` | Si se puede conectar QuickBooks. La sincronización elige el código de impuesto por provincia canadiense |
 
-La pantalla de Datos de la empresa **se dibuja desde aquí**: pinta los
+El menú, el bot de ayuda y la pantalla de Datos de la empresa **se dibujan desde aquí**: pinta los
 identificadores que el país declare, enseña la licencia sólo si la hay, y la
 retención y la CCQ sólo donde aplican.
 

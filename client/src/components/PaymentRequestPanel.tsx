@@ -10,6 +10,8 @@ import { Send, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+import { paisDe } from "@shared/paises";
 
 /**
  * Asking a customer for money in the chat they already use.
@@ -57,6 +59,8 @@ const statusTone: Record<PaymentRequest["status"], "neutral" | "info" | "success
 
 export function PaymentRequestPanel({ stripeReady }: { stripeReady: boolean }) {
   const { t } = useTranslation();
+  const { country } = useAuth();
+  const cobraConTarjeta = paisDe(country).cobrosConTarjeta;
   const [reloadToken, setReloadToken] = useState(0);
   const { data: requests, loading } = useApi<PaymentRequest[]>(`/api/payment-requests?_r=${reloadToken}`);
   const { data: clients } = useApi<Option[]>("/api/clients");
@@ -136,7 +140,11 @@ export function PaymentRequestPanel({ stripeReady }: { stripeReady: boolean }) {
     return (
       <Card className="p-6 space-y-2">
         <p className="text-sm font-medium text-foreground">{t("paymentRequests.needsStripeTitle")}</p>
-        <p className="text-sm text-muted-foreground">{t("paymentRequests.needsStripeBody")}</p>
+        {/* «Conecta Stripe» no se le puede decir a quien no tiene dónde
+            conectarlo: en su país se dice que todavía no hay tarjeta. */}
+        <p className="text-sm text-muted-foreground">
+          {cobraConTarjeta ? t("paymentRequests.needsStripeBody") : t("paymentRequests.paisSinTarjeta")}
+        </p>
       </Card>
     );
   }

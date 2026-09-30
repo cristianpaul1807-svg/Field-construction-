@@ -24,6 +24,9 @@ import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { previewSegunPais, type TaxRate } from "@/lib/taxes";
 import { OPCIONES_IVA, type OpcionIva } from "@shared/iva";
+import { paisDe } from "@shared/paises";
+import { useAuth } from "@/contexts/AuthContext";
+import { PaisSinConfigurar } from "@/components/PaisAlert";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -294,6 +297,7 @@ function AccionesDeFactura({
   onCopyLink: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  const { country } = useAuth();
   const viva = invoice.status !== "pagado" && invoice.status !== "cancelado";
 
   return (
@@ -309,7 +313,9 @@ function AccionesDeFactura({
         {t("invoicing.downloadPdf")}
       </Button>
 
-      {viva && (
+      {/* Un enlace de pago donde no se puede pagar con tarjeta llevaría a un
+          error; ahí se cobra por fuera y se apunta con «Marcar cobrada». */}
+      {viva && paisDe(country).cobrosConTarjeta && (
         <Button
           size="sm"
           variant="outline"
@@ -460,6 +466,11 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
     open ? "/api/settings/company" : null
   );
   const esItalia = company?.country === "IT";
+  // Un país cuyo impuesto no sabemos: el servidor no emite la factura, así
+  // que el formulario tampoco se ofrece. Se dice por qué y a quién escribir,
+  // en vez de dejar rellenarlo entero para chocar al final.
+  const { country } = useAuth();
+  const sinConfigurar = paisDe(country).impuestos === "sin_configurar";
   // El IVA de esta obra. Vacío es «el del negocio»: se elige sólo cuando esta
   // factura es distinta de lo habitual (una reforma al 10 %, un subcontrato).
   const [iva, setIva] = useState<OpcionIva | "">("");
@@ -515,7 +526,9 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
         <DialogHeader>
           <DialogTitle>{t("invoicing.newInvoice")}</DialogTitle>
         </DialogHeader>
-        {(clients ?? []).length === 0 ? (
+        {sinConfigurar ? (
+          <PaisSinConfigurar />
+        ) : (clients ?? []).length === 0 ? (
           // Una factura se le cobra a alguien.
           <NeedsFirst
             message={t("common.needsClientFirst")}

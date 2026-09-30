@@ -82,14 +82,23 @@ italiana un impuesto de otro continente.
 ### La moneda sale del país
 
 `AuthContext` lee el país en `/api/auth/me` y fija la moneda de
-`formatCurrency` para todo el panel. En los PDF, la moneda sale del propio
-desglose del documento, no del negocio.
+`formatCurrency` para todo el panel. El portal del cliente la fija con el país
+que le llega en `/client-portal/me`, y los correos con `importeEnTexto`. En
+los PDF, la moneda sale del propio desglose del documento, no del negocio; el
+acuerdo de trabajo, que no tiene desglose, la saca del país del negocio.
 
 ### Lo que se esconde
 
 - **Nómina:** fuera del menú (`Pais.nomina`).
 - **CCQ:** `aplicaLaCcq` ya exigía Quebec.
-- **Textos de ayuda** que hablaban de Quebec tienen su versión italiana.
+- **Cobrar, enlace de pago y QuickBooks:** fuera del menú y cerrados en el
+  servidor (`cobrosConTarjeta`, `quickbooks`). El portal y el correo de la
+  factura no ofrecen «pagar ahora»: dicen el importe y que el negocio dirá
+  cómo pagarlo.
+- **El bot de ayuda** enseña a Italia sus temas —el IVA, la inversione
+  contabile, la factura electrónica, cobrar sin tarjeta— y ninguno de los de
+  Canadá (TPS/TVQ, CCQ, T4, Stripe, QuickBooks). Los demás países ven los
+  suyos: que todavía no se factura allí y a quién escribir.
 
 ---
 

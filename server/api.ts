@@ -2661,10 +2661,13 @@ apiRouter.post(
 async function negocioDelCliente(
   admin: ReturnType<typeof getSupabaseAdmin>,
   businessId: string | null | undefined
-): Promise<{ name: string; logoUrl: string | null } | null> {
+): Promise<{ name: string; logoUrl: string | null; country: string } | null> {
   if (!businessId) return null;
-  const { data } = await admin.from("businesses").select("name, logo_url").eq("id", businessId).maybeSingle();
-  return data ? { name: data.name, logoUrl: data.logo_url ?? null } : null;
+  const { data } = await admin.from("businesses").select("name, logo_url, country").eq("id", businessId).maybeSingle();
+  // El país va con el nombre porque el portal no tiene la sesión del negocio
+  // de la que el panel saca su moneda: sin él, el cliente de una obra italiana
+  // leería su presupuesto en dólares canadienses.
+  return data ? { name: data.name, logoUrl: data.logo_url ?? null, country: data.country ?? "CA" } : null;
 }
 
 apiRouter.get(
@@ -5873,10 +5876,20 @@ apiRouter.post(
   })
 );
 
-/** El dinero, escrito como lo escribe el país donde se cobra. */
-function importeEnTexto(valor: number, lang: LangCorreo): string {
-  const locales: Record<LangCorreo, string> = { es: "es-ES", en: "en-CA", fr: "fr-CA", it: "it-IT" };
-  return new Intl.NumberFormat(locales[lang], { style: "currency", currency: "CAD" }).format(valor);
+/**
+ * El dinero, escrito como lo escribe el país donde se cobra.
+ *
+ * La moneda es la del negocio y no una fija: un cliente de una obra en Milán
+ * que recibe «12 500,00 $ CA» en el correo de su factura cree que se han
+ * equivocado de destinatario. Fuera de los dólares canadienses, la forma
+ * europea de escribirlo, igual que en el panel.
+ */
+function importeEnTexto(valor: number, lang: LangCorreo, moneda = "CAD"): string {
+  const locales: Record<LangCorreo, string> =
+    moneda === "CAD"
+      ? { es: "es-ES", en: "en-CA", fr: "fr-CA", it: "it-IT" }
+      : { es: "es-ES", en: "en-IE", fr: "fr-FR", it: "it-IT" };
+  return new Intl.NumberFormat(locales[lang], { style: "currency", currency: moneda }).format(valor);
 }
 
 /**
@@ -5900,7 +5913,7 @@ async function avisarDelPresupuesto(
       .eq("business_id", businessId)
       .eq("id", estimateId)
       .maybeSingle(),
-    admin.from("businesses").select("name, email, logo_url").eq("id", businessId).maybeSingle(),
+    admin.from("businesses").select("name, email, logo_url, country").eq("id", businessId).maybeSingle(),
   ]);
 
   const cliente = estimate?.clients as unknown as { name: string; email: string | null } | null;
@@ -5909,7 +5922,7 @@ async function avisarDelPresupuesto(
   const t = TEXTOS_CORREO[lang];
   const nombre = negocio?.name ?? "";
   const portal = `${baseUrl.replace(/^http:\/\//i, "https://").replace(/\/+$/, "")}/portal`;
-  const total = importeEnTexto(Number(estimate?.total ?? 0), lang);
+  const total = importeEnTexto(Number(estimate?.total ?? 0), lang, paisDe(negocio?.country).moneda);
 
   // Si el PDF no sale, el correo se manda igual con el enlace: enterarse tarde
   // de que tienes un presupuesto es peor que recibirlo sin adjunto.
@@ -5960,15 +5973,16 @@ async function avisarDeLaFactura(
 
   const { data: negocio } = await admin
     .from("businesses")
-    .select("name, email, logo_url")
+    .select("name, email, logo_url, country")
     .eq("id", factura.business_id)
     .maybeSingle();
 
   const t = TEXTOS_CORREO[lang];
+  const pais = paisDe(negocio?.country);
   const nombre = negocio?.name ?? "";
   const numero = factura.number ?? documentNumber("invoice", factura.id);
   const portal = `${baseUrl.replace(/^http:\/\//i, "https://").replace(/\/+$/, "")}/portal`;
-  const importe = importeEnTexto(Number(factura.amount ?? 0), lang);
+  const importe = importeEnTexto(Number(factura.amount ?? 0), lang, pais.moneda);
   const vence = factura.due_date
     ? new Intl.DateTimeFormat({ es: "es-ES", en: "en-CA", fr: "fr-CA", it: "it-IT" }[lang], {
         day: "numeric",
@@ -5983,7 +5997,7 @@ async function avisarDeLaFactura(
     <p style="margin:0 0 6px;font-size:26px;font-weight:700">${esc(importe)}</p>
     ${vence ? `<p style="margin:0 0 18px;color:#555">${esc(t.facturaVence(vence))}</p>` : '<p style="margin:0 0 18px"></p>'}
     <p style="margin:0 0 18px">
-      <a href="${esc(portal)}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600">${esc(t.facturaBoton)}</a>
+      <a href="${esc(portal)}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600">${esc(pais.cobrosConTarjeta ? t.facturaBoton : t.facturaBotonVer)}</a>
     </p>
     ${Number(factura.holdback_amount ?? 0) > 0 ? `<p style="margin:0;font-size:13px;color:#777">${esc(t.facturaRetencion)}</p>` : ""}`;
 
@@ -8140,7 +8154,7 @@ apiRouter.post(
     // de Canadá habría que decirle después que repita el alta entera. Se para
     // aquí hasta que su país tenga su cuenta.
     const { data: delNegocio } = await admin.from("businesses").select("country").eq("id", req.businessId!).maybeSingle();
-    if ((delNegocio?.country ?? PAIS_POR_DEFECTO) !== "CA") {
+    if (!paisDe(delNegocio?.country ?? PAIS_POR_DEFECTO).cobrosConTarjeta) {
       res.status(409).json({ error: "Los cobros con tarjeta todavía no están listos en este país", code: "pagos_pais_no_listos" });
       return;
     }
@@ -10621,7 +10635,7 @@ async function loadBusinessIdentity(
 }> {
   const { data, error } = await admin
     .from("businesses")
-    .select("name, address, phone, email, license_number, gst_number, qst_number, province, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, partita_iva, codice_fiscale")
+    .select("name, address, phone, email, license_number, gst_number, qst_number, province, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, partita_iva, codice_fiscale, country")
     .eq("id", businessId)
     .single();
   if (error) throw error;
@@ -10637,6 +10651,7 @@ async function loadBusinessIdentity(
       province: data.province ?? null,
       partitaIva: data.partita_iva ?? null,
       codiceFiscale: data.codice_fiscale ?? null,
+      country: data.country ?? null,
       logo: await fetchLogo(data.logo_url),
     },
     holdbackPercent: Number(data.holdback_percent ?? 0),
@@ -12271,10 +12286,18 @@ apiRouter.get(
 apiRouter.post(
   "/quickbooks/connect",
   route(async (req, res) => {
+    // Fuera de Canadá la sincronización no sabe qué impuesto ponerle a nada.
+    // El menú ya no lo enseña; esto es para quien llegue por la dirección.
+    const admin = getSupabaseAdmin();
+    const { data: delNegocio } = await admin.from("businesses").select("country").eq("id", req.businessId!).maybeSingle();
+    if (!paisDe(delNegocio?.country ?? PAIS_POR_DEFECTO).quickbooks) {
+      res.status(409).json({ error: "QuickBooks todavía no está disponible en este país", code: "quickbooks_pais_no_listo" });
+      return;
+    }
     // La dirección se devuelve en vez de redirigir aquí mismo: esta llamada
     // sale de una pantalla del panel con su cabecera de sesión, y una
     // redirección desde ahí la seguiría el fetch, no el navegador.
-    const url = await urlDeAutorizacionQuickBooks(getSupabaseAdmin(), req.businessId!);
+    const url = await urlDeAutorizacionQuickBooks(admin, req.businessId!);
     res.json({ url });
   })
 );

@@ -56,6 +56,12 @@ interface TextosCorreo {
   facturaImporte: string;
   facturaVence: (fecha: string) => string;
   facturaBoton: string;
+  /**
+   * El mismo botón donde el cliente no puede pagar con tarjeta: lleva al
+   * portal igual, pero prometerle «pagar ahora» y dejarle en una pantalla sin
+   * forma de pagar es la clase de botón que enseña a no pulsar ninguno.
+   */
+  facturaBotonVer: string;
   facturaRetencion: string;
 
   pie: (negocio: string) => string;
@@ -95,6 +101,7 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     facturaImporte: "A pagar",
     facturaVence: (f) => `Vence el ${f}.`,
     facturaBoton: "Pagar ahora",
+    facturaBotonVer: "Ver la factura",
     facturaRetencion: "El importe ya lleva descontada la retención que se libera al terminar la obra.",
     pie: (n) => `Este correo te lo envía ${n} a través de su software de gestión.`,
     piePlataforma: "Este correo es automático. No hace falta que respondas.",
@@ -129,6 +136,7 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     facturaImporte: "Amount due",
     facturaVence: (f) => `Due ${f}.`,
     facturaBoton: "Pay now",
+    facturaBotonVer: "View the invoice",
     facturaRetencion: "The amount already has the holdback deducted; it is released when the work is finished.",
     pie: (n) => `This email was sent to you by ${n} through their management software.`,
     piePlataforma: "This is an automatic email. No need to reply.",
@@ -163,6 +171,7 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     facturaImporte: "Montant à payer",
     facturaVence: (f) => `Échéance le ${f}.`,
     facturaBoton: "Payer maintenant",
+    facturaBotonVer: "Voir la facture",
     facturaRetencion: "Le montant tient déjà compte de la retenue, libérée à la fin des travaux.",
     pie: (n) => `Ce courriel vous est envoyé par ${n} via son logiciel de gestion.`,
     piePlataforma: "Ce courriel est automatique. Inutile d'y répondre.",
@@ -197,6 +206,7 @@ export const TEXTOS_CORREO: Record<LangCorreo, TextosCorreo> = {
     facturaImporte: "Da pagare",
     facturaVence: (f) => `Scade il ${f}.`,
     facturaBoton: "Paga ora",
+    facturaBotonVer: "Vedi la fattura",
     facturaRetencion: "L'importo tiene già conto della ritenuta, liberata a fine lavori.",
     pie: (n) => `Questa email ti è inviata da ${n} tramite il suo software di gestione.`,
     piePlataforma: "Questa email è automatica. Non serve rispondere.",

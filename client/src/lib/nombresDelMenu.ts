@@ -56,6 +56,7 @@ export function nombresDelMenu(t: (clave: string) => string) {
       menuPresupuestos: t("nav.budgets"),
       menuVacaciones: t("nav.timeOff"),
       menuQuickBooks: t("nav.quickbooks"),
+      menuCobrar: t("nav.cobrar"),
   };
 }
 

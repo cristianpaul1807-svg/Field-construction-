@@ -134,6 +134,14 @@ Así se añade un tema sin tocar traducciones y se traduce sin tocar lógica.
 
    `parrafos` dice cuántos párrafos tiene la respuesta; `nota` si cierra con un
    aviso corto; `ruta` es opcional y es lo que pone el botón *Llévame allí*.
+   `paises` es opcional: `["CA"]`, `["IT"]`, `["otros"]` o una mezcla. Sin él,
+   el tema vale para todos. Un tema que habla de la TVQ, de la CCQ, de Stripe
+   o de QuickBooks **lleva `paises`**: contado a una impresa de Bolonia no es
+   media respuesta, es una respuesta falsa. `arbolDelPais` filtra con el país
+   de la sesión (`grupoDePais` en `shared/paises.ts`) y quita las secciones
+   que se quedan vacías. Si la pregunta existe en los dos sitios pero la
+   respuesta cambia, son dos temas —`impuestos` y `impuestosItalia`— con su
+   `paises` cada uno.
 
 2. Las claves, con el script que mantiene la paridad:
 
@@ -176,7 +184,7 @@ es peor que no tener ayuda.
 |---|---|
 | `{{menuAjustes}}` `{{menuEmpresa}}` `{{menuTipos}}` `{{menuPagos}}` `{{menuMargenes}}` | Configuración |
 | `{{menuCampo}}` `{{menuTecnicos}}` `{{menuOrdenes}}` `{{menuRegistro}}` `{{menuFichaje}}` | Campo |
-| `{{menuFinanzas}}` `{{menuFacturacion}}` `{{menuInformes}}` | Finanzas |
+| `{{menuFinanzas}}` `{{menuFacturacion}}` `{{menuCobrar}}` `{{menuInformes}}` | Finanzas |
 | `{{menuCrm}}` `{{menuPortal}}` `{{menuProyectos}}` `{{menuPresupuestos}}` `{{menuVacaciones}}` `{{menuQuickBooks}}` | El resto |
 
 Lo vigila un script, que falla si alguien vuelve a copiarlo a mano:
@@ -193,7 +201,7 @@ python3 scripts/check-help-menu.py
 | Clientes y mensajes | `/crm`, `/client-portal`, `/communication` |
 | Presupuestos | `/budgets`, `/materials` — incluye *Mandarlo por WhatsApp en vez de por el sistema*, el camino entero para los clientes que no van a entrar al portal |
 | Obras y trabajo | `/projects`, `/work-orders`, `/scheduling`, `/check-in`, `/work-log`, `/technicians`, `/gps-routing`, `/time-off` |
-| Dinero | `/invoicing`, `/payroll`, `/reports`, `/cost-tracking`, `/settings/payments`, `/settings/quickbooks` |
+| Dinero | `/invoicing`, `/cobrar`, `/payroll`, `/reports`, `/cost-tracking`, `/settings/payments`, `/settings/quickbooks` |
 | Qué pasa cuando… | *(ninguna: no es una pantalla)* |
 | Algo no funciona | *(ninguna)* |
 

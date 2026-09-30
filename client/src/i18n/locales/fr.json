@@ -124,7 +124,10 @@
     "noNotifications": "Aucune nouvelle notification.",
     "noPaymentsOrExpenses": "Aucun paiement ni dépense enregistré pour l'instant.",
     "income": "Revenus",
-    "expenses": "Dépenses"
+    "expenses": "Dépenses",
+    "vsLastMonth": "{{delta}} % vs le mois dernier",
+    "invoiceCount_one": "{{count}} facture",
+    "invoiceCount_other": "{{count}} factures"
   },
   "crm": {
     "title": "CRM",
@@ -284,7 +287,8 @@
     "crearPrimeraCategoria": "Créer la première catégorie",
     "paraQueSirveLaCategoria": "Regroupe vos soumissions par type de travaux (cuisine, salle de bain, toiture…). Dans chaque catégorie, vous pouvez garder d'anciennes soumissions approuvées sous la main comme référence de prix et de marges.",
     "sinCategoriasAun": "Vous n'avez pas encore de catégories. Créez-les dans l'onglet « Catégories et références » et vous pourrez en attribuer une depuis la soumission.",
-    "planificarUnTrabajo": "Planifier un travail"
+    "planificarUnTrabajo": "Planifier un travail",
+    "sinImpuestoPais": "Sans taxes : celles de votre pays ne sont pas encore configurées."
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -406,7 +410,9 @@
     "connectPausedMeanwhile": "En attendant, tu factures normalement et tu marques les factures payées quand l'argent rentre par virement, en argent comptant ou par chèque.",
     "detalleParaSoporte": "Détail pour le soutien",
     "ivaHabitual": "TVA habituelle de vos factures",
-    "ivaHabitualAyuda": "Chaque facture part avec cette TVA, et vous pouvez la changer en la créant si ce chantier est différent."
+    "ivaHabitualAyuda": "Chaque facture part avec cette TVA, et vous pouvez la changer en la créant si ce chantier est différent.",
+    "paisSinTarjeta": "Les paiements par carte ne sont pas encore disponibles dans votre pays ({{pais}}). En attendant, encaissez comme aujourd'hui et notez-le avec « Marquer payée » sur chaque facture.",
+    "paisSinTarjetaCorto": "Les paiements par carte ne sont pas encore disponibles dans votre pays ({{pais}})."
   },
   "communication": {
     "title": "Messagerie",
@@ -528,7 +534,6 @@
     "summary": "Résumé",
     "messages": "Messages",
     "payError": "Impossible de démarrer le paiement",
-    "signatureNote": "La signature électronique sera connectée plus tard (SignWell). Les paiements passent déjà par Stripe.",
     "previewNote": "Seules les photos et soumissions marquées comme visibles sont affichées. Ceci est un aperçu en lecture seule — le client paie depuis son propre portail, pas d'ici.",
     "previewDisabled": "Aperçu — non interactif ici",
     "generateAccessCode": "Générer un code d'accès",
@@ -544,7 +549,8 @@
     "searchPlaceholder": "Chercher un client…",
     "noMatches": "Aucun client ne correspond à « {{query}} ».",
     "previewOf": "Aperçu de ce que voit {{name}}",
-    "invoiceNumber": "Facture {{number}}"
+    "invoiceNumber": "Facture {{number}}",
+    "payDirectly": "Montant dû : {{amount}}. {{business}} vous dira comment le payer; le paiement par carte n'est pas encore disponible ici."
   },
   "worker": {
     "accessTitle": "Accès travailleur",
@@ -848,7 +854,8 @@
     "cap": "Code postal (CAP)",
     "comune": "Commune",
     "billingIdentityHintItalia": "Ceci figure dans l'en-tête de chaque document. En Italie, la facture doit indiquer la Partita IVA et le codice fiscale, et la facture électronique demande aussi l'adresse complète.",
-    "holdbackPercentHintItalia": "La retenue de garantie (ritenuta a garanzia), si votre contrat la prévoit : retenue sur chaque paiement partiel jusqu'à la fin des travaux. Laissez 0 si vous ne l'appliquez pas."
+    "holdbackPercentHintItalia": "La retenue de garantie (ritenuta a garanzia), si votre contrat la prévoit : retenue sur chaque paiement partiel jusqu'à la fin des travaux. Laissez 0 si vous ne l'appliquez pas.",
+    "holdbackTooHighGeneral": "Attention : à {{percent}} %, vous retenez cette part sur chaque paiement partiel, donc vos factures réclameront bien moins que la valeur des travaux."
   },
   "reports": {
     "title": "Rapports",
@@ -1415,7 +1422,8 @@
       "cancelado": "Annulé"
     },
     "needsStripeTitle": "Ceci nécessite Stripe connecté",
-    "needsStripeBody": "Une demande par chat est un bouton de paiement, et sans Stripe ce bouton ne mène nulle part. En attendant, émettez la facture normalement et envoyez son PDF par le chat ; le client paie comme aujourd'hui et vous la marquez payée."
+    "needsStripeBody": "Une demande par chat est un bouton de paiement, et sans Stripe ce bouton ne mène nulle part. En attendant, émettez la facture normalement et envoyez son PDF par le chat ; le client paie comme aujourd'hui et vous la marquez payée.",
+    "paisSinTarjeta": "Une demande de paiement dans le clavardage est un bouton pour payer par carte, et ce n'est pas encore disponible dans votre pays. En attendant, émettez la facture normalement, envoyez le PDF dans le clavardage et marquez-la payée quand il paie."
   },
   "sign": {
     "title": "Signer la soumission",
@@ -1622,7 +1630,8 @@
     "codice_fiscale_no_valido": "Ce codice fiscale n'est pas valide. Vérifiez-le : le dernier caractère est un caractère de contrôle.",
     "pais_no_ofrecido": "Ce pays n'est pas encore disponible.",
     "pais_sin_configurar": "Les taxes de votre pays ne sont pas encore configurées ; les factures ne peuvent donc pas encore être émises. Écrivez au soutien et nous la préparerons avec vous.",
-    "pagos_pais_no_listos": "Les paiements par carte ne sont pas encore disponibles dans votre pays. En attendant, vous pouvez marquer les factures comme payées en argent comptant, virement ou chèque."
+    "pagos_pais_no_listos": "Les paiements par carte ne sont pas encore disponibles dans votre pays. En attendant, vous pouvez marquer les factures comme payées en argent comptant, virement ou chèque.",
+    "quickbooks_pais_no_listo": "La connexion avec QuickBooks n'est pas encore disponible dans votre pays."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1795,6 +1804,26 @@
           "p2": "Quatre services les voient et rien d'autre, chacun seulement sa part : celui qui conserve la base de données, Stripe quand vous encaissez par carte, QuickBooks si vous branchez votre comptabilité, et le service qui envoie les courriels. Elles ne sont ni vendues, ni utilisées pour de la publicité, ni utilisées pour entraîner un modèle.",
           "p3": "La position GPS n'est enregistrée qu'au moment du pointage, pour savoir d'où il a été fait. Il n'y a aucun suivi continu : entre deux pointages, le système ne sait pas où se trouve qui que ce soit.",
           "nota": "Tout est écrit, avec les noms et les adresses, dans la politique de confidentialité. Le bouton ci-dessous l'ouvre."
+        },
+        "datosEmpresaItalia": {
+          "title": "Remplir les données de mon entreprise",
+          "p1": "Allez dans {{menuAjustes}} → {{menuEmpresa}}. En haut, votre nom et votre lien public; en dessous, ce qui s'imprime sur chaque soumission et chaque facture.",
+          "p2": "Remplissez la Partita IVA, le codice fiscale et la PEC, et l'adresse en parties : rue et numéro, CAP, commune et province. C'est ainsi que la demande la facture électronique, et ainsi qu'elle sort en en-tête.",
+          "p3": "La ritenuta a garanzia commence à 0 : mettez-la seulement si votre contrat la prévoit. La TVA avec laquelle naît chaque facture se choisit dans {{menuAjustes}} → {{menuPagos}}.",
+          "nota": "La Partita IVA est vérifiée à l'enregistrement : si un chiffre est faux, vous l'apprenez là, et non par le comptable de votre client qui vous renvoie la facture."
+        },
+        "datosEmpresaOtros": {
+          "title": "Remplir les données de mon entreprise",
+          "p1": "Allez dans {{menuAjustes}} → {{menuEmpresa}}. Indiquez le nom, l'adresse, le téléphone, le courriel et votre logo : c'est ce qui sort en en-tête de chaque soumission.",
+          "p2": "Les numéros fiscaux de votre pays ne sont pas encore demandés, parce que ses taxes ne sont pas encore prêtes de notre côté. Quand elles le seront, ils apparaîtront sur ce même écran.",
+          "nota": "Si vous devez facturer tout de suite, écrivez au soutien en indiquant votre pays : cela nous dit quoi préparer en premier."
+        },
+        "paisDelNegocio": {
+          "title": "Mon pays et ce qu'il change",
+          "p1": "Le pays se choisit à l'inscription. Il décide de la devise, des taxes, des numéros fiscaux demandés et de ce qui apparaît dans le menu : la paie, par exemple, n'existe que là où nous savons bien la faire.",
+          "p2": "Vous le voyez dans {{menuAjustes}} → {{menuEmpresa}}. Il ne se change pas là, exprès : changer de pays en cours de route donnerait à vos prochaines factures une autre devise et une autre taxe que les précédentes.",
+          "p3": "Si vous vous êtes trompé à l'inscription, écrivez au soutien et nous le changeons, en revoyant avec vous ce que vous avez déjà.",
+          "nota": "Une facture déjà émise ne change jamais : elle s'imprime toujours avec la devise et la taxe avec lesquelles elle est partie."
         }
       },
       "clientes": {
@@ -1850,7 +1879,7 @@
         },
         "enviarYaceptar": {
           "title": "L'envoyer et le faire accepter",
-          "p1": "Depuis la soumission, vous l'envoyez dans son portail. Elle arrive avec votre logo, votre licence RBQ et vos numéros fiscaux en en-tête.",
+          "p1": "Depuis la soumission, vous l'envoyez dans son portail. Elle arrive avec votre logo et les données de votre entreprise en en-tête : vos numéros fiscaux et, si vous en avez une, votre licence.",
           "p2": "Il la télécharge en PDF et peut la signer depuis son téléphone.",
           "p3": "Une fois acceptée, elle devient un chantier avec son client, ses dates et son plan de travail déjà dedans.",
           "nota": "Il ne peut accepter qu'une soumission que vous avez marquée comme envoyée. Un brouillon en cours ne peut pas être accepté dans votre dos."
@@ -1858,7 +1887,7 @@
         "porFuera": {
           "title": "L'envoyer par WhatsApp au lieu de passer par le système",
           "p1": "C'est possible, et avec vos clients de longue date c'est même normal : ils sont sur WhatsApp et ils y restent. Ajoutez-le d'abord dans {{menuCrm}}. Le nom suffit ; vous pouvez laisser le courriel et le téléphone vides.",
-          "p2": "Faites la soumission dans {{menuPresupuestos}} comme n'importe quelle autre et appuyez sur Générer le PDF. Il se télécharge avec votre logo, votre adresse, votre licence RBQ et son propre numéro, du genre EST-2026-0001. C'est ce fichier que vous envoyez par WhatsApp.",
+          "p2": "Faites la soumission dans {{menuPresupuestos}} comme n'importe quelle autre et appuyez sur Générer le PDF. Il se télécharge avec votre logo, les données de votre entreprise et son propre numéro, du genre EST-2026-0001. C'est ce fichier que vous envoyez par WhatsApp.",
           "p3": "Pour que le système sache qu'elle est partie, appuyez sur « Approuver et marquer comme envoyée » et choisissez « Approuver sans envoyer ». Elle passe à envoyée sans que rien n'arrive au client ici, puisque vous la lui avez déjà envoyée.",
           "p4": "Quand il vous dit oui, revenez à la soumission et acceptez-la vous-même. C'est ça qui ouvre le chantier, met les travaux au calendrier et émet la première facture. Sans ce geste, rien ne se passe : la soumission reste figée et le chantier n'existe jamais.",
           "nota": "Les factures se téléchargent de la même façon, depuis {{menuFinanzas}} → {{menuFacturacion}}. Et s'il vous paie comptant, par chèque ou par virement, « Marquer payée » est juste là pour l'enregistrer."
@@ -1907,7 +1936,7 @@
           "p1": "Dans {{menuCampo}} → {{menuTecnicos}}, à côté de chaque personne il y a un bouton avec une signature. C'est là que vit son entente : depuis quand elle travaille, jusqu'à quand, combien elle gagne et à quelle fréquence elle est payée.",
           "p2": "Pareil pour les sous-traitants, sur leur écran. La différence, c'est qu'un sous-traitant vous facture : il n'a pas d'indemnité de vacances et le champ n'apparaît tout simplement pas.",
           "p3": "Sans date de fin, c'est à durée indéterminée. Les conditions que vous écrivez s'impriment telles quelles dans le document : mettez-y ce que vous avez vraiment convenu — qui fournit les outils, à partir de quand comptent les heures supplémentaires, quel préavis s'applique.",
-          "p4": "L'entente produit un PDF avec votre logo, votre adresse et votre licence RBQ. Vous pouvez le télécharger et l'envoyer comme bon vous semble, ou le remettre par la messagerie pour qu'il le signe depuis son téléphone.",
+          "p4": "L'entente produit un PDF avec votre logo et les données de votre entreprise. Vous pouvez le télécharger et l'envoyer comme bon vous semble, ou le remettre par la messagerie pour qu'il le signe depuis son téléphone.",
           "nota": "Une entente signée ne peut être ni modifiée ni supprimée, volontairement : si vous pouviez la retoucher après coup, la signature ne vaudrait rien. Si les conditions changent, vous en faites une nouvelle."
         },
         "vacaciones": {
@@ -1930,6 +1959,13 @@
           "p2": "La plupart de ces papiers sortent de votre paie — QuickBooks Payroll, par exemple — et ne peuvent pas être récupérés tout seuls : il n'y a aucun moyen de les demander à QuickBooks de l'extérieur. On téléverse le fichier, c'est tout.",
           "p3": "Par défaut la personne les voit sur son téléphone, repliés sous son travail du jour. C'est la moitié de l'idée : le T4 part chaque février, se perd, et en avril on vous le redemande. Si vous préférez en garder un pour vous, décochez la case au téléversement.",
           "nota": "Un T4 porte le numéro d'assurance sociale imprimé. Ils sont rangés dans un endroit privé et seuls le bureau et cette personne les voient, jamais un collègue. Ce qu'on ne fait pas, c'est lire les chiffres à l'intérieur du PDF : avoir raison « presque toujours » sur un montant qui va dans une déclaration, c'est pire que de ne pas l'avoir."
+        },
+        "papelesGeneral": {
+          "title": "Les papiers de chaque personne (contrats, bulletins)",
+          "p1": "Sur la fiche de chaque travailleur et de chaque sous-traitant, il y a un bouton **Documents**. Vous y déposez le contrat signé, ses bulletins de paie, ses certificats de formation ou de sécurité, et ils restent à côté de ses heures et de son entente.",
+          "p2": "La paie est faite par qui la fait aujourd'hui —votre comptable ou votre conseiller en paie— et ne peut pas être importée seule depuis son logiciel. On la dépose comme fichier, et c'est tout.",
+          "p3": "Par défaut, la personne les voit sur son téléphone, sous son travail du jour. Ainsi elle n'a pas à vous les redemander chaque fois qu'une banque ou une administration les exige. Si vous préférez en garder un pour vous, décochez-le au dépôt.",
+          "nota": "Ils sont conservés dans un espace privé et seuls le bureau et cette personne les voient, jamais un collègue."
         }
       },
       "dinero": {
@@ -2022,6 +2058,48 @@
           "p3": "Ton client approche sa carte ou son téléphone du tien et c'est encaissé. Visa, Mastercard, Amex et Interac sont acceptées. Il te faut un iPhone XS ou plus récent, ou un Android avec NFC.",
           "p4": "Au Canada, certaines cartes exigent le NIP avec la carte insérée dans un lecteur : celles-là ne passent pas sans contact. Quand ça arrive, envoie le lien de paiement de la facture et le problème est réglé.",
           "nota": "Ce que tu encaisses dans l'application Stripe n'arrive pas ici tout seul : ouvre la facture et marque-la payée, sinon tes comptes ne balanceront pas."
+        },
+        "impuestosItalia": {
+          "title": "Comment la TVA est calculée",
+          "p1": "En Italie, la TVA ne dépend pas de la province mais du chantier. Dans {{menuAjustes}} → {{menuPagos}}, vous choisissez votre TVA habituelle, celle qui se met toute seule sur chaque nouvelle facture.",
+          "p2": "En créant une facture, vous pouvez la changer pour celle-là seulement : 22 % en général, 10 % pour la rénovation et l'entretien de logements, 4 % pour construire une résidence principale, ou inversione contabile pour une sous-traitance.",
+          "p3": "La TVA se calcule sur la valeur entière des travaux et s'arrondit au centime une seule fois. La ritenuta a garanzia, si vous en avez une, se déduit du paiement, jamais de la base de TVA.",
+          "nota": "Pour un entretien avec des « beni significativi » (une chaudière, des fenêtres), le 10 % a une limite et le reste passe à 22 %. Cette répartition, c'est votre commercialista qui la calcule; en cas de doute, demandez-lui avant d'émettre."
+        },
+        "inversioneContabile": {
+          "title": "Facturer une sous-traitance sans TVA (inversione contabile)",
+          "p1": "Quand vous travaillez en sous-traitance pour une autre entreprise de construction, la facture part sans TVA : c'est celui qui la reçoit qui la verse. C'est l'art. 17, al. 6, lettre a) du DPR 633/72.",
+          "p2": "En créant la facture, choisissez « inversione contabile » comme TVA. Elle sort à 0 € de TVA, avec la mention et le code N6.3 imprimés, ce que cherche le comptable de votre client.",
+          "p3": "Si cette entreprise est votre client habituel, vous pouvez mettre l'inversione contabile comme TVA habituelle dans {{menuAjustes}} → {{menuPagos}}.",
+          "nota": "Un particulier n'est jamais facturé ainsi. Une rénovation pour une famille porte sa TVA, à 10 % ou 22 %, même si vous sous-traitez une partie des travaux."
+        },
+        "fatturaElettronica": {
+          "title": "La facture électronique (SDI)",
+          "p1": "En Italie, la facture valide est un fichier XML qui passe par le Sistema di Interscambio. Le PDF produit ici est une copie de courtoisie : il sert à votre client pour la lire, pas à votre comptabilité.",
+          "p2": "Nous préparons le XML. En attendant, émettez la facture électronique avec votre logiciel habituel ou avec le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate, en recopiant les montants d'ici.",
+          "p3": "Ici, vous continuez à gérer le reste : la soumission, le chantier, l'encaissé et le dû. Quand le XML sera prêt, vous le verrez sur chaque facture, sans rien refaire.",
+          "nota": "Si votre commercialista a besoin de quelque chose de précis pour le passage au SDI, écrivez au soutien : cela nous aide à choisir quoi préparer en premier."
+        },
+        "impuestosOtros": {
+          "title": "Les taxes de mon pays",
+          "p1": "Les taxes de votre pays ne sont pas encore prêtes de notre côté. C'est pourquoi vos soumissions sortent sans taxe et que les factures ne peuvent pas encore être émises.",
+          "p2": "Ce n'est pas une panne : nous préférons ne pas vous laisser émettre une facture avec la taxe d'un autre pays, ce qui arriverait si nous l'inventions.",
+          "p3": "En attendant, vous gérez normalement vos chantiers, votre équipe, votre horaire et vos soumissions. Écrivez au soutien avec votre pays et la taxe que vous appliquez, et nous la préparons avec vous.",
+          "nota": "Les montants sont déjà dans la devise de votre pays. Ce qui manque, c'est la taxe, pas la devise."
+        },
+        "cobrarSinTarjeta": {
+          "title": "Encaisser une facture",
+          "p1": "Les paiements par carte ne sont pas encore disponibles en Italie : ils arrivent avec les comptes Stripe en euros. En attendant, vous encaissez comme aujourd'hui, le plus souvent par virement.",
+          "p2": "Quand l'argent arrive, ouvrez la facture dans {{menuFinanzas}} → {{menuFacturacion}} et appuyez sur « Marquer payée ». Vous choisissez le moyen, le jour et, si vous voulez, la référence du virement.",
+          "p3": "La facture passe à payée, entre dans l'encaissé et sort dans le rapport de votre comptable avec le moyen noté. Si c'était la finale, le chantier est terminé.",
+          "nota": "Quand la carte arrivera dans votre pays, vous le verrez dans {{menuAjustes}} → {{menuPagos}}, sans rien d'autre à configurer."
+        },
+        "cobrarEnPersona": {
+          "title": "Encaisser le client qui est devant moi",
+          "p1": "Ouvrez {{menuFinanzas}} → {{menuCobrar}} et choisissez la facture en attente. Un code QR s'affiche : le client le lit avec l'appareil photo de son téléphone et paie par carte.",
+          "p2": "S'il n'est pas là, copiez le lien ou partagez-le par WhatsApp. Et si vous avez un lecteur Stripe jumelé, vous lui envoyez le montant et le client approche sa carte.",
+          "p3": "L'écran change tout seul quand le paiement entre, et la facture est marquée payée. Rien à cocher à la main.",
+          "nota": "Il faut votre compte Stripe connecté, dans {{menuAjustes}} → {{menuPagos}}. Si c'est un extra sans facture, créez d'abord la facture : c'est elle qui porte les taxes."
         }
       },
       "problemas": {
@@ -2818,6 +2896,7 @@
     "sinConfigurarTitulo": "La configuration fiscale pour {{pais}} n'est pas encore prête",
     "sinConfigurarTexto": "Vous pouvez utiliser chantiers, équipe, agenda et soumissions. Pour émettre des factures avec les taxes de votre pays, écrivez au soutien et nous la préparerons avec vous.",
     "enPruebasTitulo": "{{pais}} est en préparation",
-    "enPruebasTexto": "Vous facturez déjà avec TVA et en euros. La facture électronique (SDI) arrive bientôt ; si vous en avez besoin avant, écrivez au soutien."
+    "enPruebasTexto": "Vous facturez déjà avec TVA et en euros. La facture électronique (SDI) arrive bientôt ; si vous en avez besoin avant, écrivez au soutien.",
+    "facturasTexto": "Les taxes de votre pays ({{pais}}) ne sont pas encore configurées, donc les factures ne peuvent pas encore être émises. Écrivez au soutien et nous les préparons avec vous."
   }
 }

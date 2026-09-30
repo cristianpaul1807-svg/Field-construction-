@@ -13,6 +13,7 @@
  */
 
 import type { Area } from "@shared/permisos";
+import { grupoDePais, type GrupoDePais } from "@shared/paises";
 
 export interface TemaDeAyuda {
   id: string;
@@ -22,6 +23,14 @@ export interface TemaDeAyuda {
   nota?: boolean;
   /** Dónde se hace de verdad. Pone un botón que lleva allí. */
   ruta?: string;
+  /**
+   * Para qué países vale la respuesta. Sin valor, para todos.
+   *
+   * Una respuesta que habla de la TVQ a un contratista de Bolonia no es media
+   * respuesta: es una respuesta falsa, dicha con la seguridad de todas las
+   * demás. Cada país ve la suya y no ve las de los otros.
+   */
+  paises?: GrupoDePais[];
 }
 
 export interface SeccionDeAyuda {
@@ -41,7 +50,13 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
   {
     id: "empezar",
     temas: [
-      { id: "datosEmpresa", parrafos: 3, nota: true, ruta: "/settings/company" },
+      { id: "datosEmpresa", parrafos: 3, nota: true, ruta: "/settings/company", paises: ["CA"] },
+      { id: "datosEmpresaItalia", parrafos: 3, nota: true, ruta: "/settings/company", paises: ["IT"] },
+      { id: "datosEmpresaOtros", parrafos: 2, nota: true, ruta: "/settings/company", paises: ["otros"] },
+      // Qué decide el país y por qué no se cambia desde Configuración. Lo
+      // pregunta quien se equivocó al darse de alta, y sin respuesta busca un
+      // desplegable que no existe.
+      { id: "paisDelNegocio", parrafos: 3, nota: true, ruta: "/settings/company" },
       { id: "accesoTrabajador", parrafos: 3, nota: true, ruta: "/technicians" },
       { id: "accesoCliente", parrafos: 3, nota: true, ruta: "/crm" },
       { id: "idioma", parrafos: 2 },
@@ -101,28 +116,44 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // Lo de la CCQ está repartido entre dos pantallas —el número en los
       // datos de la empresa, el oficio en cada acuerdo— y sin esto nadie
       // encuentra la segunda.
-      { id: "ccq", parrafos: 3, nota: true, ruta: "/technicians" },
+      { id: "ccq", parrafos: 3, nota: true, ruta: "/technicians", paises: ["CA"] },
       // Los papeles que genera la nómina de fuera. Sin esto, el botón de
       // Papeles en la ficha no lo abre nadie porque nadie sabe para qué es.
-      { id: "papeles", parrafos: 3, nota: true, ruta: "/technicians" },
+      { id: "papeles", parrafos: 3, nota: true, ruta: "/technicians", paises: ["CA"] },
+      { id: "papelesGeneral", parrafos: 3, nota: true, ruta: "/technicians", paises: ["IT", "otros"] },
     ],
   },
   {
     id: "dinero",
     areas: ["dinero"],
-    rutas: ["/invoicing", "/payroll", "/reports", "/cost-tracking", "/settings/payments", "/settings/quickbooks"],
+    rutas: ["/invoicing", "/cobrar", "/payroll", "/reports", "/cost-tracking", "/settings/payments", "/settings/quickbooks"],
     temas: [
-      { id: "crearFactura", parrafos: 3, nota: true, ruta: "/invoicing" },
-      { id: "impuestos", parrafos: 3 },
+      // Lo de las facturas no se le enseña a quien todavía no puede emitirlas:
+      // su respuesta es `impuestosOtros`, que dice por qué y a quién escribir.
+      { id: "crearFactura", parrafos: 3, nota: true, ruta: "/invoicing", paises: ["CA", "IT"] },
+      { id: "impuestos", parrafos: 3, paises: ["CA"] },
+      { id: "impuestosItalia", parrafos: 3, nota: true, ruta: "/settings/payments", paises: ["IT"] },
+      // La pregunta que hace cualquier impresa que subcontrata, y la que más
+      // cuesta si se contesta mal: una factura con IVA que debía ir sin él.
+      { id: "inversioneContabile", parrafos: 3, nota: true, ruta: "/invoicing", paises: ["IT"] },
+      // En Italia un PDF no es una factura. Decirlo aquí es lo que evita que
+      // alguien le mande a su cliente un papel que su commercialista rechaza.
+      { id: "fatturaElettronica", parrafos: 3, nota: true, paises: ["IT"] },
+      { id: "impuestosOtros", parrafos: 3, nota: true, paises: ["otros"] },
       // Tres líneas de la nómina nacen a 0 % porque nadie de fuera las puede
       // saber: dependen del TD1 de cada persona, de la clasificación CNESST
       // de la empresa y de su masa salarial. La pantalla lo dice en la nota
       // de cada línea, pero a un 0 % se le pregunta al bot antes que leer una
       // nota — y hasta hoy el bot no tenía nada que contestar.
-      { id: "tasasEnCero", parrafos: 4, nota: true, ruta: "/payroll" },
-      { id: "numeroFactura", parrafos: 2 },
-      { id: "cobrar", parrafos: 3, nota: true, ruta: "/settings/payments" },
-      { id: "cobrarPorFuera", parrafos: 3, nota: true, ruta: "/invoicing" },
+      { id: "tasasEnCero", parrafos: 4, nota: true, ruta: "/payroll", paises: ["CA"] },
+      { id: "numeroFactura", parrafos: 2, paises: ["CA", "IT"] },
+      { id: "cobrar", parrafos: 3, nota: true, ruta: "/settings/payments", paises: ["CA"] },
+      // Donde todavía no hay tarjeta, la respuesta a «cómo cobro» no puede ser
+      // «conecta Stripe»: es cómo apuntar lo que cobra por su cuenta.
+      { id: "cobrarSinTarjeta", parrafos: 3, nota: true, ruta: "/invoicing", paises: ["IT"] },
+      // El cliente delante y la factura en la pantalla: QR, enlace o lector.
+      { id: "cobrarEnPersona", parrafos: 3, nota: true, ruta: "/cobrar", paises: ["CA"] },
+      { id: "cobrarPorFuera", parrafos: 3, nota: true, ruta: "/invoicing", paises: ["CA", "IT"] },
       { id: "contable", parrafos: 2, ruta: "/reports" },
       // Lo previsto y lo gastado son cosas distintas y la pantalla lo enseña
       // en cinco columnas. Sin explicarlo, «previsto» se lee como un error.
@@ -130,21 +161,21 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // Lo que se manda solo a QuickBooks y qué hacer cuando algo no llega.
       // Sin esto, la primera vez que una factura falla el contratista no sabe
       // ni que existe una pantalla donde mirarlo.
-      { id: "quickbooks", parrafos: 4, nota: true, ruta: "/settings/quickbooks" },
-      { id: "quickbooksFalla", parrafos: 3, nota: true, ruta: "/settings/quickbooks" },
+      { id: "quickbooks", parrafos: 4, nota: true, ruta: "/settings/quickbooks", paises: ["CA"] },
+      { id: "quickbooksFalla", parrafos: 3, nota: true, ruta: "/settings/quickbooks", paises: ["CA"] },
       // El motivo más frecuente de que una factura no llegue, y el único que
       // se arregla en el QuickBooks de la persona y no aquí. Va aparte de
       // `quickbooksFalla` porque la respuesta no es «reintenta», son cuatro
       // pasos en una pantalla que no es nuestra.
-      { id: "impuestoQuickBooks", parrafos: 4, nota: true, ruta: "/settings/quickbooks" },
+      { id: "impuestoQuickBooks", parrafos: 4, nota: true, ruta: "/settings/quickbooks", paises: ["CA"] },
       // Lo que Stripe se lleva de cada cobro. Es la primera pregunta que hace
       // alguien que mira su banco después de cobrar una factura grande.
-      { id: "comisionStripe", parrafos: 3, nota: true, ruta: "/invoicing" },
+      { id: "comisionStripe", parrafos: 3, nota: true, ruta: "/invoicing", paises: ["CA"] },
       // A un contratista le venden un datáfono con cuota mensual en cuanto un
       // cliente le pide pagar con tarjeta en la obra. Ya tiene uno: su cuenta
       // de Stripe es completa y su móvil lee tarjetas. Esto se explica aquí
       // porque la pregunta llega antes de firmar, no después.
-      { id: "cobrarConElMovil", parrafos: 4, nota: true, ruta: "/settings/payments" },
+      { id: "cobrarConElMovil", parrafos: 4, nota: true, ruta: "/settings/payments", paises: ["CA"] },
     ],
   },
   {
@@ -155,13 +186,13 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
     temas: [
       { id: "mandoPresupuesto", parrafos: 3, nota: true },
       { id: "aceptaPresupuesto", parrafos: 3 },
-      { id: "emitoFactura", parrafos: 3, nota: true },
-      { id: "pagaCliente", parrafos: 2 },
+      { id: "emitoFactura", parrafos: 3, nota: true, paises: ["CA", "IT"] },
+      { id: "pagaCliente", parrafos: 2, paises: ["CA"] },
       { id: "doyCodigoCliente", parrafos: 3, nota: true },
       { id: "fichaTrabajador", parrafos: 3 },
       { id: "cierroOrden", parrafos: 2 },
       { id: "mandoAcuerdo", parrafos: 3, nota: true },
-      { id: "emitoConQuickBooks", parrafos: 3, nota: true },
+      { id: "emitoConQuickBooks", parrafos: 3, nota: true, paises: ["CA"] },
     ],
   },
   {
@@ -169,7 +200,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
     temas: [
       { id: "noVeObras", parrafos: 2, nota: true },
       { id: "horasEnCero", parrafos: 2 },
-      { id: "noSeCobra", parrafos: 2 },
+      { id: "noSeCobra", parrafos: 2, paises: ["CA"] },
       { id: "noLlegaCorreo", parrafos: 2 },
       // Es el tema al que lleva el botón de los avisos de fallo, así que va
       // aquí aunque nadie lo busque por su nombre: quien llega ya está
@@ -201,4 +232,16 @@ export function seccionSegunRuta(ruta: string): SeccionDeAyuda | null {
     }
   }
   return mejor;
+}
+
+/**
+ * El árbol que ve un negocio de ese país: cada sección con sus temas, y sin
+ * las secciones que se queden vacías.
+ */
+export function arbolDelPais(pais: string | null | undefined): SeccionDeAyuda[] {
+  const grupo = grupoDePais(pais);
+  return ARBOL_DE_AYUDA.map((seccion) => ({
+    ...seccion,
+    temas: seccion.temas.filter((tema) => !tema.paises || tema.paises.includes(grupo)),
+  })).filter((seccion) => seccion.temas.length > 0);
 }

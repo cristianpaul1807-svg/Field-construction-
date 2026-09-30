@@ -29,6 +29,11 @@ export interface BusinessIdentity {
   /** Italia. Opcionales: un negocio de Quebec no los tiene. */
   partitaIva?: string | null;
   codiceFiscale?: string | null;
+  /**
+   * El país del negocio, para lo que no lleva desglose de impuestos del que
+   * sacarlo: un acuerdo de trabajo tiene un importe y no un IVA.
+   */
+  country?: string | null;
 }
 
 export interface PartyIdentity {
@@ -334,6 +339,8 @@ interface Copy {
   agreementCcqStatuses: Record<string, string>;
   agreementCcqSectors: Record<string, string>;
   agreementVacationNote: (p: number) => string;
+  /** Fuera de Quebec: la ley que cita la otra no es la suya. */
+  agreementVacationNoteGeneral: (p: number) => string;
   agreementTerms: string;
   agreementNotes: string;
   agreementAcceptance: string;
@@ -451,6 +458,7 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementVacationNote: (p) =>
       `Se añade un ${p} % del salario bruto en concepto de vacaciones, conforme a la Ley de normas del trabajo de Quebec.`,
+    agreementVacationNoteGeneral: (p) => `Se añade un ${p} % del salario bruto en concepto de vacaciones.`,
     agreementTerms: "Condiciones acordadas",
     agreementNotes: "Notas",
     agreementAcceptance:
@@ -569,6 +577,7 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementVacationNote: (p) =>
       `${p} % of gross wages is added as vacation pay, in accordance with Quebec's Act respecting labour standards.`,
+    agreementVacationNoteGeneral: (p) => `${p} % of gross wages is added as vacation pay.`,
     agreementTerms: "Agreed terms",
     agreementNotes: "Notes",
     agreementAcceptance: "By signing, both parties accept the terms set out in this document.",
@@ -686,6 +695,7 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementVacationNote: (p) =>
       `Une indemnité de vacances de ${p} % du salaire brut s'ajoute, conformément à la Loi sur les normes du travail du Québec.`,
+    agreementVacationNoteGeneral: (p) => `Une indemnité de vacances de ${p} % du salaire brut s'ajoute.`,
     agreementTerms: "Conditions convenues",
     agreementNotes: "Notes",
     agreementAcceptance: "En signant, les deux parties acceptent les conditions énoncées dans ce document.",
@@ -803,6 +813,7 @@ const COPY: Record<DocLang, Copy> = {
     },
     agreementVacationNote: (p) =>
       `Si aggiunge un ${p} % della retribuzione lorda a titolo di ferie, secondo la Legge sulle norme del lavoro del Québec.`,
+    agreementVacationNoteGeneral: (p) => `Si aggiunge un ${p} % della retribuzione lorda a titolo di ferie.`,
     agreementTerms: "Condizioni concordate",
     agreementNotes: "Note",
     agreementAcceptance: "Firmando, entrambe le parti accettano le condizioni indicate in questo documento.",
@@ -1846,14 +1857,16 @@ export function renderAgreementPdf(data: AgreementDoc, lang: DocLang): Promise<B
 
   section(copy.agreementPayTitle);
   field(copy.agreementPayKind, copy.agreementPayKinds[data.payKind]);
-  field(copy.agreementPayAmount, money(data.payAmount, lang));
+  field(copy.agreementPayAmount, money(data.payAmount, lang, paisDe(data.business.country).moneda));
   field(copy.agreementPayFrequency, copy.agreementPayFrequencies[data.payFrequency]);
   // Sólo en el empleo: un subcontratista factura, no cobra vacaciones.
   if (data.agreementKind === "empleo" && data.vacationPercent > 0) {
     field(copy.agreementVacation, `${data.vacationPercent} %`);
     ensureRoom(doc, 24, copy);
     doc.font("Helvetica").fontSize(8).fillColor("#666666").text(
-      copy.agreementVacationNote(data.vacationPercent),
+      paisDe(data.business.country).impuestos === "canada"
+        ? copy.agreementVacationNote(data.vacationPercent)
+        : copy.agreementVacationNoteGeneral(data.vacationPercent),
       MARGIN,
       doc.y,
       { width: CONTENT_WIDTH }

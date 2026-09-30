@@ -12,6 +12,8 @@ import { OPCIONES_IVA, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "@sha
 import { paisDe } from "@shared/paises";
 import { useTranslation } from "react-i18next";
 import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
+import { PaisSinConfigurar } from "@/components/PaisAlert";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ConnectStatus {
   paymentsMode: "sin_definir" | "stripe" | "manual";
@@ -139,6 +141,12 @@ export default function SettingsPayments() {
   // elige la provincia —va en la dirección de cada factura— y el IVA con el
   // que nace cada factura, que después se puede cambiar en cada una.
   const esItalia = company?.country === "IT";
+  // Lo que depende del país, dicho por el país y no deducido de si hay cuenta:
+  // fuera de Canadá no hay cuenta de Stripe que conectar todavía, ni tabla de
+  // provincias de la que sacar un impuesto.
+  const { country } = useAuth();
+  const pais = paisDe(country);
+  const sinImpuesto = pais.impuestos === "sin_configurar";
   const ivaDelNegocio = esOpcionIva(company?.taxConfig?.ivaPredefinita) ? (company?.taxConfig?.ivaPredefinita as OpcionIva) : IVA_POR_DEFECTO;
   const setIvaDelNegocio = async (opcion: string) => {
     setSavingProvince(true);
@@ -175,7 +183,13 @@ export default function SettingsPayments() {
           </div>
         )}
 
-        {!loading && connectStatus && (
+        {/* Sin impuesto configurado tampoco hay facturas que marcar cobradas,
+            así que a ese país no se le manda a hacerlo. */}
+        {!pais.cobrosConTarjeta && (
+          <PaisSinConfigurar mensaje={sinImpuesto ? "payments.paisSinTarjetaCorto" : "payments.paisSinTarjeta"} />
+        )}
+
+        {!loading && connectStatus && pais.cobrosConTarjeta && (
           <div className="flex items-center justify-between flex-wrap gap-3 rounded-lg border border-border p-4">
             <div>
               <StatusBadge tone={connectStatus.connected ? statusTone[connectStatus.status] : "warning"}>
@@ -274,6 +288,7 @@ export default function SettingsPayments() {
           deja la factura diciendo que está pendiente; sin el segundo se queda
           plantado delante del cliente cuando una tarjeta no pasa, que en
           Canadá ocurre a menudo porque muchas piden el PIN insertadas. */}
+      {pais.cobrosConTarjeta && (
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -305,6 +320,7 @@ export default function SettingsPayments() {
           <p className="text-sm text-muted-foreground">{t("payments.phoneOfflinePin")}</p>
         </div>
       </Card>
+      )}
 
       <Card className="p-6 space-y-4">
         <div className="flex items-center gap-3">
@@ -330,7 +346,9 @@ export default function SettingsPayments() {
           </div>
         </div>
 
-        {esItalia ? (
+        {sinImpuesto ? (
+          <PaisSinConfigurar />
+        ) : esItalia ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>{t("countries.region.provinciaItalia")}</Label>

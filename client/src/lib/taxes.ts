@@ -1,4 +1,4 @@
-import { calcularIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "@shared/iva";
+import { calcularIva, esDesgloseIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "@shared/iva";
 import { esPaisConocido, paisDe } from "@shared/paises";
 /**
  * El impuesto que verá el cliente, calculado donde se está editando.
@@ -73,6 +73,27 @@ export function previewIva(subtotal: number, opcion: OpcionIva): TaxPreview {
 }
 
 /**
+ * Las líneas de un desglose que ya calculó el servidor, para enseñarlas.
+ *
+ * Aquí no se recalcula nada: el importe llega redondeado, y recalcularlo es
+ * como se acaba enseñando una cifra distinta de la del papel. Sólo se le pone
+ * a cada una el nombre que el cliente ve en cualquier otra factura de su país.
+ */
+export function lineasDelDesglose(desglose: unknown): { label: string; amount: number }[] {
+  if (!desglose || typeof desglose !== "object") return [];
+  if (esDesgloseIva(desglose)) {
+    const label = desglose.natura ? "IVA — inversione contabile (N6.3)" : `IVA ${desglose.ivaAliquota} %`;
+    return [{ label, amount: desglose.iva }];
+  }
+  const tb = desglose as { province?: string; hst?: number; gst?: number; pst?: number };
+  const lineas: { label: string; amount: number }[] = [];
+  if (tb.hst !== undefined) lineas.push({ label: "TVH/HST", amount: tb.hst });
+  if (tb.gst !== undefined) lineas.push({ label: "TPS/GST", amount: tb.gst });
+  if (tb.pst !== undefined) lineas.push({ label: tb.province === "QC" ? "TVQ/QST" : "PST", amount: tb.pst });
+  return lineas;
+}
+
+/**
  * El impuesto que toca según el país del negocio. Las siglas de provincia se
  * repiten entre países, así que nunca se busca una tasa canadiense sin mirar
  * antes que el negocio esté en Canadá.
@@ -87,6 +108,9 @@ export function previewSegunPais(
     const delNegocio = empresa?.taxConfig?.ivaPredefinita;
     return previewIva(subtotal, ivaDeEstaFactura ?? (esOpcionIva(delNegocio) ? delNegocio : IVA_POR_DEFECTO));
   }
+  // Un país que no sabemos hacer va sin impuesto, como en el servidor, aunque
+  // le haya quedado guardada una provincia de Canadá de antes.
+  if (paisDe(empresa?.country).impuestos === "sin_configurar") return previewTax(subtotal, null);
   return previewTax(subtotal, tasaCanada);
 }
 

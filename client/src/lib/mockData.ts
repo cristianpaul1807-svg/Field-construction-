@@ -608,16 +608,17 @@ export const formatCompactNumber = (value: number): string => {
 
 export const formatCompactCurrency = (value: number): string => {
   if (!Number.isFinite(value)) return formatCurrencyRounded(0);
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000) {
-    const formatted = (value / 1_000_000).toFixed(1).replace(/\.0$/, "");
-    return monedaDelNegocio === "EUR" ? `${formatted} M€` : `$${formatted}M`;
-  }
-  if (abs >= 10_000) {
-    const formatted = (value / 1_000).toFixed(1).replace(/\.0$/, "");
-    return monedaDelNegocio === "EUR" ? `${formatted}k €` : `$${formatted}k`;
-  }
-  return formatCurrency(value);
+  // Por debajo de diez mil se lee entero; por encima, abreviado. Lo abrevia
+  // Intl y no una plantilla con «$» o «€»: el negocio puede cobrar en libras
+  // o en francos suizos, y cada idioma escribe «k» y «M» a su manera.
+  if (Math.abs(value) < 10_000) return formatCurrency(value);
+  return new Intl.NumberFormat(localeDelDinero(), {
+    style: "currency",
+    currency: monedaDelNegocio,
+    currencyDisplay: "narrowSymbol",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
 };
 
 export const leadStatusLabel: Record<LeadStatus, string> = {

@@ -10,6 +10,8 @@
  *   electrónica no dice por qué no lleva IVA y el SDI la rechaza—.
  * - La Partita IVA y el codice fiscale llevan un dígito de control. Aceptar
  *   uno mal tecleado es una factura rechazada días después.
+ * - Lo que depende del país —pagar con tarjeta, QuickBooks, qué ayuda se
+ *   lee— sale de su ficha y no de suponer Canadá.
  * - Italia no se le ofrece a nadie mientras esté en pruebas, pero quien ya la
  *   tiene puesta la sigue viendo: si no, su propia ficha le cambiaría de país
  *   al guardar.
@@ -17,7 +19,7 @@
 
 import { calcularIva, esOpcionIva } from "../../shared/iva.ts";
 import { esPartitaIvaValida, esCodiceFiscaleValido, esCodiceDestinatarioValido } from "../../shared/fiscaleItalia.ts";
-import { paisDe, paisesQueSeOfrecen, esRegionDe, aplicaLaCcq, detectarPais, esPaisDelRegistro, avisoDelPais } from "../../shared/paises.ts";
+import { paisDe, paisesQueSeOfrecen, esRegionDe, aplicaLaCcq, detectarPais, esPaisDelRegistro, avisoDelPais, grupoDePais } from "../../shared/paises.ts";
 
 let bien = 0;
 let mal = 0;
@@ -67,6 +69,12 @@ ok("sin país guardado sigue siendo Canadá", paisDe(null).codigo, "CA");
 ok("un código inventado no se registra", esPaisDelRegistro("ZZ"), false);
 ok("el aviso del panel por país", [avisoDelPais("CA"), avisoDelPais("IT"), avisoDelPais("ES")], [null, "en_pruebas", "sin_configurar"]);
 ok("quien es de España ve su país en la ficha", paisesQueSeOfrecen("ES").map((p) => p.codigo), ["CA", "ES"]);
+
+// Lo que cada país puede usar. Un botón de pagar o una conexión a QuickBooks
+// donde no funcionan es un botón que lleva a un error.
+ok("tarjeta: sólo Canadá", ["CA", "IT", "ES"].map((c) => paisDe(c).cobrosConTarjeta), [true, false, false]);
+ok("QuickBooks: sólo Canadá", ["CA", "IT", "ES"].map((c) => paisDe(c).quickbooks), [true, false, false]);
+ok("la ayuda de cada uno", [grupoDePais("CA"), grupoDePais("IT"), grupoDePais("ES"), grupoDePais(null)], ["CA", "IT", "otros", "CA"]);
 
 console.log(`\n${bien} bien, ${mal} mal`);
 if (mal > 0) process.exit(1);

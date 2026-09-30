@@ -23,6 +23,7 @@ import { AssignClientControl } from "@/components/AssignClientControl";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { previewSegunPais, type TaxRate } from "@/lib/taxes";
+import { paisDe } from "@shared/paises";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
@@ -806,6 +807,10 @@ export default function Budgets() {
                   </div>
                   {impuestos.parts.length > 0 && (
                     <p className="text-xs text-muted-foreground">{t("budgets.taxNote")}</p>
+                  )}
+                  {/* Sin esto, un total sin impuestos se lee como un olvido. */}
+                  {paisDe(empresa?.country).impuestos === "sin_configurar" && (
+                    <p className="text-xs text-muted-foreground">{t("budgets.sinImpuestoPais")}</p>
                   )}
                 </Card>
 

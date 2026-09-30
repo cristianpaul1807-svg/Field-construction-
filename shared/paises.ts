@@ -51,6 +51,20 @@ export interface Pais {
    */
   nomina: boolean;
   /**
+   * Si el cliente puede pagar con tarjeta. Depende de que el negocio tenga
+   * cuenta de Stripe, y las que se crean hoy son canadienses: el país de una
+   * cuenta de Stripe no se cambia nunca, así que abrirle una a un negocio de
+   * otro sitio sería obligarle a repetir el alta el día que llegue la suya.
+   */
+  cobrosConTarjeta: boolean;
+  /**
+   * Si se puede conectar QuickBooks. La conexión elige el código de impuesto
+   * por provincia canadiense (TPS, TVQ, TVH) y fuera de Canadá no tiene cuál
+   * elegir: mandaría cada factura con un impuesto que no es el suyo, o no la
+   * mandaría nunca.
+   */
+  quickbooks: boolean;
+  /**
    * Todavía no se ofrece. El país está entero en el código, pero falta algo
    * para que sus facturas sean válidas —en Italia, la factura electrónica—, y
    * ofrecerlo sería darle a alguien documentos con aspecto de buenos que no lo
@@ -125,6 +139,8 @@ export const PAISES: Pais[] = [
     moneda: "CAD",
     impuestos: "canada",
     nomina: true,
+    cobrosConTarjeta: true,
+    quickbooks: true,
   },
   {
     codigo: "IT",
@@ -146,6 +162,9 @@ export const PAISES: Pais[] = [
     moneda: "EUR",
     impuestos: "italia",
     nomina: false,
+    // Llega con las cuentas de Stripe italianas, en euros (fase 3).
+    cobrosConTarjeta: false,
+    quickbooks: false,
     enPruebas: true,
   },
 ];
@@ -198,6 +217,8 @@ function paisSinConfigurar(codigo: string): Pais {
     moneda: OTROS_PAISES[codigo],
     impuestos: "sin_configurar",
     nomina: false,
+    cobrosConTarjeta: false,
+    quickbooks: false,
   };
 }
 
@@ -261,6 +282,21 @@ export function detectarPais(zonaHoraria: string | undefined, idiomas: readonly 
     if (region && (region === "CA" || region === "IT" || region in OTROS_PAISES)) return region;
   }
   return null;
+}
+
+/**
+ * A qué grupo pertenece un negocio para lo que se le explica.
+ *
+ * La ayuda no tiene una versión por país del mundo: tiene la de Canadá, la de
+ * Italia y una para los demás, que dice lo que todavía no hacemos allí y a
+ * quién escribir. Un país sin guardar es Canadá, como en `paisDe`.
+ */
+export type GrupoDePais = "CA" | "IT" | "otros";
+export function grupoDePais(codigo: string | null | undefined): GrupoDePais {
+  const pais = paisDe(codigo);
+  if (pais.impuestos === "canada") return "CA";
+  if (pais.impuestos === "italia") return "IT";
+  return "otros";
 }
 
 export function esPaisConocido(codigo: unknown): codigo is string {

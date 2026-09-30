@@ -6,7 +6,7 @@ import { correoDeSoporte } from "@/lib/soporte";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
-import { ARBOL_DE_AYUDA, seccionSegunRuta, type SeccionDeAyuda, type TemaDeAyuda } from "./arbolDeAyuda";
+import { arbolDelPais, seccionSegunRuta, type SeccionDeAyuda, type TemaDeAyuda } from "./arbolDeAyuda";
 import { EVENTO_AYUDA, registrarAyuda, type PeticionDeAyuda } from "@/lib/abrirAyuda";
 import { useAuth } from "@/contexts/AuthContext";
 import { puede } from "@shared/permisos";
@@ -35,7 +35,7 @@ type Paso =
  */
 export function BotDeAyuda() {
   const { t } = useTranslation();
-  const { areas } = useAuth();
+  const { areas, country } = useAuth();
   const [ruta, navegar] = useLocation();
   const [abierto, setAbierto] = useState(false);
   const [camino, setCamino] = useState<Paso[]>([{ tipo: "secciones" }]);
@@ -49,17 +49,21 @@ export function BotDeAyuda() {
 
   // El mismo mapa de áreas que protege las pantallas decide qué ayuda existe
   // para esta persona. `null` significa administrador sin rol restringido.
+  // Y el país decide qué respuestas son verdad para este negocio: la TVQ, la
+  // CCQ o Stripe no existen para una impresa de Bolonia.
   const seccionesPermitidas = useMemo(
-    () => ARBOL_DE_AYUDA.filter((seccion) => !seccion.areas || seccion.areas.some((area) => puede(areas, area))),
-    [areas],
+    () => arbolDelPais(country).filter((seccion) => !seccion.areas || seccion.areas.some((area) => puede(areas, area))),
+    [areas, country],
   );
 
   // La sección de la pantalla en la que está, para ofrecerla primero. Quien
   // pide ayuda desde Facturación pregunta por facturas, pero nunca se prioriza
   // una sección que el rol no puede consultar.
   const suya = useMemo(() => {
+    // La de la ruta sale del árbol entero; la que se ofrece es la del país,
+    // con sus temas ya filtrados.
     const seccion = seccionSegunRuta(ruta);
-    return seccion && seccionesPermitidas.some((visible) => visible.id === seccion.id) ? seccion : null;
+    return (seccion && seccionesPermitidas.find((visible) => visible.id === seccion.id)) ?? null;
   }, [ruta, seccionesPermitidas]);
 
   const secciones = useMemo(() => {
