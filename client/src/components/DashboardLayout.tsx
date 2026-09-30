@@ -55,6 +55,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 import { areaDeLaPantalla, puede, SIN_AREA } from "@shared/permisos";
 import { capacidadDeLaPantalla, tiene } from "@shared/planes";
+import { paisDe } from "@shared/paises";
 
 // Monochrome line icons only — no emoji, no fills, no per-item colour. The
 // icon inherits the surrounding text colour so the whole chrome reads as one
@@ -204,7 +205,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // El menú no enseña lo que va a rebotar. Es comodidad y no seguridad: quien
   // escriba la dirección a mano se choca igual contra el servidor, que es
   // donde está el bloqueo de verdad.
-  const { areas, plan, signOut } = useAuth();
+  const { areas, plan, signOut, country } = useAuth();
   const secciones = navSections
     .map((seccion) => ({
       ...seccion,
@@ -213,6 +214,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // persona no», la capacidad es «esta empresa no lo ha contratado».
         const area = SIN_AREA.includes(item.path) ? null : areaDeLaPantalla(item.path);
         if (area && !puede(areas, area)) return false;
+        // En un país donde la nómina la lleva otro —en Italia, el consulente
+        // del lavoro— la pantalla no existe: calcular allí una nómina con
+        // reglas de Quebec sería peor que no tenerla.
+        if (item.path === "/payroll" && !paisDe(country).nomina) return false;
         const capacidad = capacidadDeLaPantalla(item.path);
         if (item.id === "subscription" && (plan === "pilot" || plan === "fondateur")) return false;
         return !capacidad || tiene(plan, capacidad);

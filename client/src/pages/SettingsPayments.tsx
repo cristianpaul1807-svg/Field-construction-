@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, ExternalLink, Receipt, ShieldCheck, Smartphone } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
+import { OPCIONES_IVA, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "@shared/iva";
+import { paisDe } from "@shared/paises";
 import { useTranslation } from "react-i18next";
 import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
 
@@ -32,6 +35,8 @@ interface TaxRate {
 
 interface CompanyData {
   province: string;
+  country: string;
+  taxConfig: Record<string, unknown> | null;
 }
 
 const statusTone: Record<ConnectStatus["status"], "success" | "warning" | "error"> = {
@@ -130,6 +135,24 @@ export default function SettingsPayments() {
   };
 
   const currentRate = rates?.find((r) => r.province === company?.province);
+  // En Italia el impuesto no lo decide la provincia sino la obra. Aquí se
+  // elige la provincia —va en la dirección de cada factura— y el IVA con el
+  // que nace cada factura, que después se puede cambiar en cada una.
+  const esItalia = company?.country === "IT";
+  const ivaDelNegocio = esOpcionIva(company?.taxConfig?.ivaPredefinita) ? (company?.taxConfig?.ivaPredefinita as OpcionIva) : IVA_POR_DEFECTO;
+  const setIvaDelNegocio = async (opcion: string) => {
+    setSavingProvince(true);
+    try {
+      await apiEnviar("/api/settings/company", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taxConfig: { ...(company?.taxConfig ?? {}), ivaPredefinita: opcion } }),
+      });
+      setReloadToken((t) => t + 1);
+    } finally {
+      setSavingProvince(false);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
@@ -307,6 +330,37 @@ export default function SettingsPayments() {
           </div>
         </div>
 
+        {esItalia ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>{t("countries.region.provinciaItalia")}</Label>
+              <Select value={company?.province} onValueChange={setProvince} disabled={savingProvince}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("payments.selectProvince")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {paisDe("IT").regiones.map((r) => (
+                    <SelectItem key={r.codigo} value={r.codigo}>{`${r.nombre} (${r.codigo})`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("payments.ivaHabitual")}</Label>
+              <Select value={ivaDelNegocio} onValueChange={setIvaDelNegocio} disabled={savingProvince}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {OPCIONES_IVA.map((o) => (
+                    <SelectItem key={o} value={o}>{t(`invoicing.iva.opcion.${o}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{t("payments.ivaHabitualAyuda")}</p>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-1.5 max-w-xs">
           <Select value={company?.province} onValueChange={setProvince} disabled={savingProvince}>
             <SelectTrigger>
@@ -319,8 +373,9 @@ export default function SettingsPayments() {
             </SelectContent>
           </Select>
         </div>
+        )}
 
-        {currentRate && (
+        {!esItalia && currentRate && (
           <p className="text-xs text-muted-foreground">
             {currentRate.isHst
               ? `HST: ${(currentRate.hstRate * 100).toFixed(3)}%`

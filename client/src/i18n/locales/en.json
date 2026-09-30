@@ -346,7 +346,18 @@
     },
     "stripeFee": "Stripe fee {{fee}} · {{net}} reached you",
     "stripeFeeTax": "Of that fee, {{tax}} is tax you claim back on your return.",
-    "stripeFeePending": "Stripe hasn't confirmed its fee for this payment yet."
+    "stripeFeePending": "Stripe hasn't confirmed its fee for this payment yet.",
+    "iva": {
+      "titulo": "VAT on this invoice",
+      "delNegocio": "The business's usual rate",
+      "ayuda": "Home renovation: 10%. New first home: 4%. Subcontract for another construction company: reverse charge (inversione contabile), no VAT.",
+      "opcion": {
+        "22": "VAT 22% (standard)",
+        "10": "VAT 10% (home renovations)",
+        "4": "VAT 4% (first home)",
+        "rc": "No VAT — reverse charge (subcontract)"
+      }
+    }
   },
   "payments": {
     "title": "Payments (Stripe)",
@@ -393,7 +404,9 @@
     "connectPausedTitle": "Connecting Stripe is paused right now",
     "connectPausedBody": "We're moving the account that payment accounts are created from. If you connected now, in a few days we'd have to disconnect you and have you do the whole signup again with your bank details — and nobody should be asked for that twice. We'll tell you the moment it's ready.",
     "connectPausedMeanwhile": "In the meantime you invoice as usual and mark invoices paid when the money comes in by transfer, cash or cheque.",
-    "detalleParaSoporte": "Detail for support"
+    "detalleParaSoporte": "Detail for support",
+    "ivaHabitual": "Usual VAT on your invoices",
+    "ivaHabitualAyuda": "Each invoice starts with this VAT, and you can change it when creating one if that job is different."
   },
   "communication": {
     "title": "Messaging",
@@ -827,7 +840,15 @@
     "mcpEtiqueta": "AI connection",
     "mcpSi": "Connected",
     "mcpNo": "Not connected",
-    "editarUsuario": "Edit"
+    "editarUsuario": "Edit",
+    "partitaIva": "VAT number (Partita IVA)",
+    "codiceFiscale": "Tax code (codice fiscale)",
+    "pec": "PEC (certified email)",
+    "indirizzo": "Street address",
+    "cap": "Postal code (CAP)",
+    "comune": "Municipality",
+    "billingIdentityHintItalia": "This goes in the header of every document. In Italy an invoice must show the VAT number (Partita IVA) and tax code, and the electronic invoice also needs the full address.",
+    "holdbackPercentHintItalia": "The retention (ritenuta a garanzia), if your contract provides for it: held back from each progress payment until the work is finished. Leave 0 if you don't apply it."
   },
   "reports": {
     "title": "Reports & Analytics",
@@ -1596,7 +1617,10 @@
     "lector_codigo_no_valido": "That code isn't valid. Check it's typed correctly, or generate a new one on the reader — they expire after a few minutes.",
     "lector_no_existe": "That reader is no longer paired.",
     "lector_no_elegido": "Choose the reader you'll charge with.",
-    "lector_no_disponible": "The reader isn't responding. Check it's on and connected to the internet, and try again."
+    "lector_no_disponible": "The reader isn't responding. Check it's on and connected to the internet, and try again.",
+    "partita_iva_no_valida": "That VAT number (Partita IVA) isn't valid: check the 11 digits, the last one is a check digit.",
+    "codice_fiscale_no_valido": "That tax code (codice fiscale) isn't valid. Check it: the last character is a check character.",
+    "pais_no_ofrecido": "That country isn't available yet."
   },
   "workLog": {
     "title": "Work log",
@@ -2312,10 +2336,12 @@
   },
   "countries": {
     "name": {
-      "CA": "Canada"
+      "CA": "Canada",
+      "IT": "Italy"
     },
     "region": {
-      "province": "Province"
+      "province": "Province",
+      "provinciaItalia": "Province"
     }
   },
   "workerDocs": {

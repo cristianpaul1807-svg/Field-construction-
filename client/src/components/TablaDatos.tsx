@@ -1,3 +1,4 @@
+import { monedaActual } from "@/lib/mockData";
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ function formatoNumero(v: number, idioma: string) {
 }
 
 function formatoDinero(v: number, idioma: string) {
-  return v.toLocaleString(idioma, { style: "currency", currency: "CAD", maximumFractionDigits: 2 });
+  return v.toLocaleString(idioma, { style: "currency", currency: monedaActual(), maximumFractionDigits: 2 });
 }
 
 /** Horas decimales dichas como las diría una persona: 7,5 → "7 h 30". */

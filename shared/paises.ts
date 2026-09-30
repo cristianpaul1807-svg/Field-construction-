@@ -29,14 +29,38 @@ export interface Pais {
    * Los identificadores fiscales que se imprimen en cada documento. Vacío es
    * una respuesta válida: hay sitios donde la factura no lleva ninguno.
    */
-  identificadoresFiscales: { campo: "gst" | "qst"; etiqueta: string; ejemplo: string }[];
+  identificadoresFiscales: { campo: CampoFiscal; etiqueta: string; ejemplo: string }[];
   /** Si allí hay una licencia de contratista que va impresa. */
   licencia: { etiqueta: string; ejemplo: string } | null;
   /** Si se retiene una parte de cada pago parcial hasta terminar la obra. */
   retencion: boolean;
   /** Si hay un organismo del sector al que declarar las horas. */
   organismoDeConstruccion: "ccq" | null;
+  /** La moneda en la que factura y cobra un negocio de ese país. */
+  moneda: "CAD" | "EUR";
+  /**
+   * Cómo se calcula el impuesto. En Canadá depende de la provincia; en
+   * Italia, del tipo de obra (IVA al 22, 10 o 4 %) y de a quién se factura
+   * (la inversione contabile entre empresas del sector va sin IVA).
+   */
+  impuestos: "canada" | "italia";
+  /**
+   * Si la nómina se hace aquí. En Italia la lleva el consulente del lavoro
+   * —CCNL edilizia, INPS, INAIL, Cassa Edile—, y una nómina italiana hecha a
+   * medias es un riesgo legal para el negocio, no una ayuda.
+   */
+  nomina: boolean;
+  /**
+   * Todavía no se ofrece. El país está entero en el código, pero falta algo
+   * para que sus facturas sean válidas —en Italia, la factura electrónica—, y
+   * ofrecerlo sería darle a alguien documentos con aspecto de buenos que no lo
+   * son. Sólo lo ve quien ya lo tiene puesto (el negocio de pruebas).
+   */
+  enPruebas?: boolean;
 }
+
+/** Dónde se guarda cada identificador en la ficha del negocio. */
+export type CampoFiscal = "gst" | "qst" | "partita_iva" | "codice_fiscale" | "pec";
 
 /** Las diez provincias y los tres territorios, con el nombre con el que se conocen. */
 const PROVINCIAS_DE_CANADA = [
@@ -55,6 +79,35 @@ const PROVINCIAS_DE_CANADA = [
   { codigo: "YT", nombre: "Yukon" },
 ];
 
+/**
+ * Las 107 provincias italianas con la sigla con la que van en una dirección y
+ * en la factura electrónica.
+ */
+const PROVINCIAS_DE_ITALIA = [
+  ["AG", "Agrigento"], ["AL", "Alessandria"], ["AN", "Ancona"], ["AO", "Aosta"], ["AP", "Ascoli Piceno"],
+  ["AQ", "L'Aquila"], ["AR", "Arezzo"], ["AT", "Asti"], ["AV", "Avellino"], ["BA", "Bari"],
+  ["BG", "Bergamo"], ["BI", "Biella"], ["BL", "Belluno"], ["BN", "Benevento"], ["BO", "Bologna"],
+  ["BR", "Brindisi"], ["BS", "Brescia"], ["BT", "Barletta-Andria-Trani"], ["BZ", "Bolzano"], ["CA", "Cagliari"],
+  ["CB", "Campobasso"], ["CE", "Caserta"], ["CH", "Chieti"], ["CL", "Caltanissetta"], ["CN", "Cuneo"],
+  ["CO", "Como"], ["CR", "Cremona"], ["CS", "Cosenza"], ["CT", "Catania"], ["CZ", "Catanzaro"],
+  ["EN", "Enna"], ["FC", "Forlì-Cesena"], ["FE", "Ferrara"], ["FG", "Foggia"], ["FI", "Firenze"],
+  ["FM", "Fermo"], ["FR", "Frosinone"], ["GE", "Genova"], ["GO", "Gorizia"], ["GR", "Grosseto"],
+  ["IM", "Imperia"], ["IS", "Isernia"], ["KR", "Crotone"], ["LC", "Lecco"], ["LE", "Lecce"],
+  ["LI", "Livorno"], ["LO", "Lodi"], ["LT", "Latina"], ["LU", "Lucca"], ["MB", "Monza e Brianza"],
+  ["MC", "Macerata"], ["ME", "Messina"], ["MI", "Milano"], ["MN", "Mantova"], ["MO", "Modena"],
+  ["MS", "Massa-Carrara"], ["MT", "Matera"], ["NA", "Napoli"], ["NO", "Novara"], ["NU", "Nuoro"],
+  ["OR", "Oristano"], ["PA", "Palermo"], ["PC", "Piacenza"], ["PD", "Padova"], ["PE", "Pescara"],
+  ["PG", "Perugia"], ["PI", "Pisa"], ["PN", "Pordenone"], ["PO", "Prato"], ["PR", "Parma"],
+  ["PT", "Pistoia"], ["PU", "Pesaro e Urbino"], ["PV", "Pavia"], ["PZ", "Potenza"], ["RA", "Ravenna"],
+  ["RC", "Reggio Calabria"], ["RE", "Reggio Emilia"], ["RG", "Ragusa"], ["RI", "Rieti"], ["RM", "Roma"],
+  ["RN", "Rimini"], ["RO", "Rovigo"], ["SA", "Salerno"], ["SI", "Siena"], ["SO", "Sondrio"],
+  ["SP", "La Spezia"], ["SR", "Siracusa"], ["SS", "Sassari"], ["SU", "Sud Sardegna"], ["SV", "Savona"],
+  ["TA", "Taranto"], ["TE", "Teramo"], ["TN", "Trento"], ["TO", "Torino"], ["TP", "Trapani"],
+  ["TR", "Terni"], ["TS", "Trieste"], ["TV", "Treviso"], ["UD", "Udine"], ["VA", "Varese"],
+  ["VB", "Verbano-Cusio-Ossola"], ["VC", "Vercelli"], ["VE", "Venezia"], ["VI", "Vicenza"], ["VR", "Verona"],
+  ["VT", "Viterbo"], ["VV", "Vibo Valentia"],
+].map(([codigo, nombre]) => ({ codigo, nombre }));
+
 export const PAISES: Pais[] = [
   {
     codigo: "CA",
@@ -69,8 +122,38 @@ export const PAISES: Pais[] = [
     // la obra está entregada.
     retencion: true,
     organismoDeConstruccion: "ccq",
+    moneda: "CAD",
+    impuestos: "canada",
+    nomina: true,
+  },
+  {
+    codigo: "IT",
+    // La provincia y no la región: es lo que va en la dirección y lo que pide
+    // la factura electrónica, con su sigla de dos letras.
+    etiquetaDeRegion: "countries.region.provinciaItalia",
+    regiones: PROVINCIAS_DE_ITALIA,
+    identificadoresFiscales: [
+      { campo: "partita_iva", etiqueta: "settings.partitaIva", ejemplo: "01234567890" },
+      { campo: "codice_fiscale", etiqueta: "settings.codiceFiscale", ejemplo: "RSSMRA80A01H501U" },
+      { campo: "pec", etiqueta: "settings.pec", ejemplo: "impresa@pec.it" },
+    ],
+    // No hay una licencia de contratista que vaya impresa en la factura.
+    licencia: null,
+    // Por contrato sí se retiene a veces (la ritenuta a garanzia), así que
+    // se deja poner, pero no nace puesta como en Quebec.
+    retencion: true,
+    organismoDeConstruccion: null,
+    moneda: "EUR",
+    impuestos: "italia",
+    nomina: false,
+    enPruebas: true,
   },
 ];
+
+/** Los que se pueden elegir: los terminados, y el que ya tenga puesto quien mira. */
+export function paisesQueSeOfrecen(actual: string | null | undefined): Pais[] {
+  return PAISES.filter((p) => !p.enPruebas || p.codigo === actual);
+}
 
 export const PAIS_POR_DEFECTO = "CA";
 

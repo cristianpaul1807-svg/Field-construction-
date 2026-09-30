@@ -22,7 +22,7 @@ import { AssemblyTemplateDialog } from "@/components/AssemblyTemplateDialog";
 import { AssignClientControl } from "@/components/AssignClientControl";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage, apiEnviar } from "@/lib/api";
-import { previewTax, type TaxRate } from "@/lib/taxes";
+import { previewSegunPais, type TaxRate } from "@/lib/taxes";
 import { WorkProjectionPanel } from "@/components/WorkProjectionPanel";
 import { BudgetCategoriesPanel } from "@/components/BudgetCategoriesPanel";
 import { NewEstimateDialog } from "@/components/NewEstimateDialog";
@@ -115,7 +115,7 @@ export default function Budgets() {
   const { data: categories } = useApi<BudgetCategory[]>(`/api/budget-categories?_r=${reloadToken}`);
   // La provincia del negocio y la tabla de tasas de Canadá: las mismas dos
   // cosas que mira el servidor cuando emite la factura de este presupuesto.
-  const { data: empresa } = useApi<{ province: string }>("/api/settings/company");
+  const { data: empresa } = useApi<{ province: string; country: string; taxConfig: { ivaPredefinita?: unknown } | null }>("/api/settings/company");
   const { data: tasas } = useApi<TaxRate[]>("/api/canada-tax-rates");
   const tasaDelNegocio = (tasas ?? []).find((r) => r.province === empresa?.province) ?? null;
 
@@ -218,7 +218,7 @@ export default function Budgets() {
   // El impuesto que llevará el PDF, calculado sobre el total que se está
   // editando ahora mismo. La provincia sale de los ajustes del negocio, que es
   // de donde la saca el servidor cuando emite la factura.
-  const impuestos = previewTax(total, tasaDelNegocio);
+  const impuestos = previewSegunPais(total, empresa, tasaDelNegocio);
   const zones = Array.from(new Set(lines.map((l) => l.zone)));
 
   const saveLineEdit = async (lineId: string) => {

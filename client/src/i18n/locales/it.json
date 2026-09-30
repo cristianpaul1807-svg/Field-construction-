@@ -346,7 +346,18 @@
     },
     "stripeFee": "Commissione Stripe {{fee}} · ti sono arrivati {{net}}",
     "stripeFeeTax": "Di quella commissione, {{tax}} sono imposte che recuperi nella dichiarazione.",
-    "stripeFeePending": "Stripe non ha ancora confermato la sua commissione per questo incasso."
+    "stripeFeePending": "Stripe non ha ancora confermato la sua commissione per questo incasso.",
+    "iva": {
+      "titulo": "IVA di questa fattura",
+      "delNegocio": "Quella abituale dell'impresa",
+      "ayuda": "Ristrutturazione di abitazione: 10%. Prima casa nuova: 4%. Subappalto per un'altra impresa edile: inversione contabile, senza IVA.",
+      "opcion": {
+        "22": "IVA 22% (ordinaria)",
+        "10": "IVA 10% (ristrutturazioni abitative)",
+        "4": "IVA 4% (prima casa)",
+        "rc": "Senza IVA — inversione contabile (subappalto)"
+      }
+    }
   },
   "payments": {
     "title": "Pagamenti (Stripe)",
@@ -393,7 +404,9 @@
     "connectPausedTitle": "Il collegamento con Stripe è in pausa",
     "connectPausedBody": "Stiamo cambiando l'account da cui si creano gli account di incasso. Se ti collegassi adesso, fra qualche giorno dovremmo scollegarti e farti rifare tutta l'iscrizione con i tuoi dati bancari — e questo non si chiede due volte. Ti avvisiamo appena è pronto.",
     "connectPausedMeanwhile": "Nel frattempo fatturi normalmente e segni le fatture come pagate quando ti pagano con bonifico, in contanti o con assegno.",
-    "detalleParaSoporte": "Dettaglio per l'assistenza"
+    "detalleParaSoporte": "Dettaglio per l'assistenza",
+    "ivaHabitual": "IVA abituale delle tue fatture",
+    "ivaHabitualAyuda": "Ogni fattura nasce con questa IVA, e puoi cambiarla quando la crei se quel lavoro è diverso."
   },
   "communication": {
     "title": "Messaggistica",
@@ -827,7 +840,15 @@
     "mcpEtiqueta": "Connessione con l’IA",
     "mcpSi": "Connessa",
     "mcpNo": "Non connessa",
-    "editarUsuario": "Modifica"
+    "editarUsuario": "Modifica",
+    "partitaIva": "Partita IVA",
+    "codiceFiscale": "Codice fiscale",
+    "pec": "PEC",
+    "indirizzo": "Indirizzo (via e numero civico)",
+    "cap": "CAP",
+    "comune": "Comune",
+    "billingIdentityHintItalia": "Questo viene stampato nell'intestazione di ogni documento. In Italia la fattura deve riportare Partita IVA e codice fiscale, e la fattura elettronica richiede anche l'indirizzo completo.",
+    "holdbackPercentHintItalia": "La ritenuta a garanzia, se il tuo contratto la prevede: trattenuta da ogni pagamento parziale fino alla fine dei lavori. Lascia 0 se non la applichi."
   },
   "reports": {
     "title": "Report",
@@ -1596,7 +1617,10 @@
     "lector_codigo_no_valido": "Questo codice non è valido. Controlla di averlo scritto bene, o generane uno nuovo sul lettore: scadono dopo pochi minuti.",
     "lector_no_existe": "Questo lettore non è più associato.",
     "lector_no_elegido": "Scegli il lettore con cui incassare.",
-    "lector_no_disponible": "Il lettore non risponde. Controlla che sia acceso e connesso a internet, e riprova."
+    "lector_no_disponible": "Il lettore non risponde. Controlla che sia acceso e connesso a internet, e riprova.",
+    "partita_iva_no_valida": "Questa Partita IVA non è valida: controlla le 11 cifre, l'ultima è di controllo.",
+    "codice_fiscale_no_valido": "Questo codice fiscale non è valido. Controllalo: l'ultimo carattere è di controllo.",
+    "pais_no_ofrecido": "Questo paese non è ancora disponibile."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2312,10 +2336,12 @@
   },
   "countries": {
     "name": {
-      "CA": "Canada"
+      "CA": "Canada",
+      "IT": "Italia"
     },
     "region": {
-      "province": "Provincia"
+      "province": "Provincia",
+      "provinciaItalia": "Provincia"
     }
   },
   "workerDocs": {

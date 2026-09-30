@@ -14,14 +14,15 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
-import { PAISES, paisDe, aplicaLaCcq } from "@shared/paises";
+import { paisesQueSeOfrecen, paisDe, aplicaLaCcq, type CampoFiscal } from "@shared/paises";
+import { esOpcionIva, IVA_POR_DEFECTO } from "@shared/iva";
 
 interface CompanyData {
   id: string;
   name: string;
   slug: string;
   licenseNumber: string;
-  taxConfig: { region?: string; rate?: number };
+  taxConfig: { region?: string; rate?: number; ivaPredefinita?: unknown };
   country: string;
   province: string;
   address: string | null;
@@ -36,6 +37,12 @@ interface CompanyData {
   estimateShowSchedule: boolean;
   ccqEmployerNumber: string | null;
   ccqSubject: boolean;
+  partitaIva: string | null;
+  codiceFiscale: string | null;
+  pec: string | null;
+  addressLine: string | null;
+  postalCode: string | null;
+  city: string | null;
 }
 
 interface TaxRate {
@@ -76,6 +83,23 @@ export default function SettingsCompany() {
   const [email, setEmail] = useState("");
   const [gstNumber, setGstNumber] = useState("");
   const [qstNumber, setQstNumber] = useState("");
+  // Italia: los identificadores de la factura electrónica y la dirección
+  // desglosada, que el XML pide campo a campo.
+  const [partitaIva, setPartitaIva] = useState("");
+  const [codiceFiscale, setCodiceFiscale] = useState("");
+  const [pec, setPec] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("");
+  const esItalia = pais.impuestos === "italia";
+  /** El valor y cómo cambiarlo, por identificador. */
+  const fiscal: Record<CampoFiscal, [string, (v: string) => void]> = {
+    gst: [gstNumber, setGstNumber],
+    qst: [qstNumber, setQstNumber],
+    partita_iva: [partitaIva, setPartitaIva],
+    codice_fiscale: [codiceFiscale, setCodiceFiscale],
+    pec: [pec, setPec],
+  };
   const [ccqNumber, setCcqNumber] = useState("");
   const [ccqSubject, setCcqSubject] = useState(false);
   const [holdbackPercent, setHoldbackPercent] = useState("0");
@@ -133,6 +157,12 @@ export default function SettingsCompany() {
     setShowSchedule(data.estimateShowSchedule !== false);
     setCcqNumber(data.ccqEmployerNumber ?? "");
     setCcqSubject(data.ccqSubject === true);
+    setPartitaIva(data.partitaIva ?? "");
+    setCodiceFiscale(data.codiceFiscale ?? "");
+    setPec(data.pec ?? "");
+    setAddressLine(data.addressLine ?? "");
+    setPostalCode(data.postalCode ?? "");
+    setCity(data.city ?? "");
   }, [data]);
 
   // El link entero y no sólo el trozo final: es lo que el negocio va a pegar
@@ -157,7 +187,14 @@ export default function SettingsCompany() {
           name,
           licenseNumber: license,
           country,
-          address,
+          // En Italia la dirección se escribe desglosada y la línea que va en
+          // el PDF se arma con ella, para que las dos digan lo mismo.
+          address: esItalia
+            ? [addressLine.trim(), [postalCode.trim(), city.trim()].filter(Boolean).join(" "), province ? `(${province})` : ""]
+                .filter(Boolean)
+                .join(", ")
+            : address,
+          ...(esItalia ? { partitaIva, codiceFiscale, pec, addressLine, postalCode, city } : {}),
           phone,
           email,
           gstNumber,
@@ -253,7 +290,7 @@ export default function SettingsCompany() {
                 <Select value={country} onValueChange={setCountry}>
                   <SelectTrigger id="country"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {PAISES.map((p) => (
+                    {paisesQueSeOfrecen(data.country).map((p) => (
                       <SelectItem key={p.codigo} value={p.codigo}>{t(`countries.name.${p.codigo}`)}</SelectItem>
                     ))}
                   </SelectContent>
@@ -322,7 +359,13 @@ export default function SettingsCompany() {
               <div className="space-y-1.5 sm:col-span-2">
                 <p className="text-sm font-medium text-foreground">{t("settings.province")}</p>
                 <p className="text-sm text-muted-foreground">
-                  {tasaElegida ? `${tasaElegida.label} — ${describeTax(tasaElegida)}` : t("settings.provinceHint")}
+                  {esItalia
+                    ? province
+                      ? `${pais.regiones.find((r) => r.codigo === province)?.nombre ?? province} — ${t(`invoicing.iva.opcion.${esOpcionIva(data.taxConfig?.ivaPredefinita) ? data.taxConfig.ivaPredefinita : IVA_POR_DEFECTO}`)}`
+                      : t("settings.provinceHint")
+                    : tasaElegida
+                      ? `${tasaElegida.label} — ${describeTax(tasaElegida)}`
+                      : t("settings.provinceHint")}
                 </p>
                 <Link href="/settings/payments" className="text-xs text-primary hover:underline">
                   {t("settings.provinceChangeHere", menuNombres)}
@@ -338,10 +381,26 @@ export default function SettingsCompany() {
           <Card className="p-6 space-y-5">
             <div>
               <h2 className="text-base font-semibold text-foreground">{t("settings.billingIdentity")}</h2>
-              <p className="text-sm text-muted-foreground mt-1">{t("settings.billingIdentityHint")}</p>
+              <p className="text-sm text-muted-foreground mt-1">{t(esItalia ? "settings.billingIdentityHintItalia" : "settings.billingIdentityHint")}</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {esItalia ? (
+                <>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="address-line">{t("settings.indirizzo")}</Label>
+                    <Input id="address-line" value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Via Roma 12" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="postal-code">{t("settings.cap")}</Label>
+                    <Input id="postal-code" inputMode="numeric" maxLength={5} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="00144" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="city">{t("settings.comune")}</Label>
+                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Roma" />
+                  </div>
+                </>
+              ) : (
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="address">{t("common.address")}</Label>
                 <Input
@@ -351,6 +410,7 @@ export default function SettingsCompany() {
                   placeholder={t("settings.addressPlaceholder")}
                 />
               </div>
+              )}
               <div className="space-y-1.5">
                 <Label htmlFor="company-phone">{t("common.phone")}</Label>
                 <Input id="company-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -364,8 +424,8 @@ export default function SettingsCompany() {
                   <Label htmlFor={id.campo}>{t(id.etiqueta)}</Label>
                   <Input
                     id={id.campo}
-                    value={id.campo === "gst" ? gstNumber : qstNumber}
-                    onChange={(e) => (id.campo === "gst" ? setGstNumber : setQstNumber)(e.target.value)}
+                    value={fiscal[id.campo][0]}
+                    onChange={(e) => fiscal[id.campo][1](e.target.value)}
                     placeholder={id.ejemplo}
                   />
                 </div>
@@ -408,7 +468,7 @@ export default function SettingsCompany() {
                   value={holdbackPercent}
                   onChange={(e) => setHoldbackPercent(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">{t("settings.holdbackPercentHint")}</p>
+                <p className="text-xs text-muted-foreground">{t(esItalia ? "settings.holdbackPercentHintItalia" : "settings.holdbackPercentHint")}</p>
                 {/* Un número alto aquí no da error: da facturas por menos
                     dinero del que toca, y eso no se nota hasta que el cliente
                     paga. Por encima del 10 % se avisa en pantalla. */}

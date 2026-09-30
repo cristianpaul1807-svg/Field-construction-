@@ -25,6 +25,9 @@ export interface BusinessIdentity {
   gstNumber: string | null;
   qstNumber: string | null;
   province: string | null;
+  /** Italia. Opcionales: un negocio de Quebec no los tiene. */
+  partitaIva?: string | null;
+  codiceFiscale?: string | null;
 }
 
 export interface PartyIdentity {
@@ -48,6 +51,11 @@ export interface TaxBreakdown {
   gst?: number;
   pst?: number;
   hst?: number;
+  /** Italia: ver `shared/iva.ts`. */
+  country?: "IT";
+  ivaAliquota?: number;
+  iva?: number;
+  natura?: "N6.3";
 }
 
 export interface EstimateMaterial {
@@ -250,6 +258,11 @@ interface Copy {
   qst: string;
   pst: string;
   hst: string;
+  /** Italia: la línea del IVA con su tipo, y la de la inversione contabile. */
+  iva: (aliquota: number) => string;
+  ivaInversione: string;
+  /** La frase que la ley pide en una factura en inversione contabile. */
+  notaInversione: string;
   total: string;
   license: string;
   gstNumber: string;
@@ -356,6 +369,9 @@ const COPY: Record<DocLang, Copy> = {
     qst: "TVQ/QST",
     pst: "PST",
     hst: "HST",
+    iva: (a) => `IVA ${a} %`,
+    ivaInversione: "IVA 0 % (N6.3)",
+    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
     total: "TOTAL",
     license: "Licencia",
     reportRows: (n: number) => (n === 1 ? "1 línea" : `${n} líneas`),
@@ -471,6 +487,9 @@ const COPY: Record<DocLang, Copy> = {
     qst: "QST",
     pst: "PST",
     hst: "HST",
+    iva: (a) => `VAT ${a}%`,
+    ivaInversione: "VAT 0% (N6.3)",
+    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
     total: "TOTAL",
     license: "Licence",
     reportRows: (n: number) => (n === 1 ? "1 row" : `${n} rows`),
@@ -585,6 +604,9 @@ const COPY: Record<DocLang, Copy> = {
     qst: "TVQ",
     pst: "TVP",
     hst: "TVH",
+    iva: (a) => `TVA ${a} %`,
+    ivaInversione: "TVA 0 % (N6.3)",
+    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
     total: "TOTAL",
     license: "Licence RBQ",
     reportRows: (n: number) => (n === 1 ? "1 ligne" : `${n} lignes`),
@@ -699,6 +721,9 @@ const COPY: Record<DocLang, Copy> = {
     qst: "QST",
     pst: "PST",
     hst: "HST",
+    iva: (a) => `IVA ${a}%`,
+    ivaInversione: "IVA 0% (N6.3)",
+    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
     total: "TOTALE",
     license: "Licenza",
     reportRows: (n: number) => (n === 1 ? "1 riga" : `${n} righe`),
@@ -813,12 +838,30 @@ export function normalizeDocLang(raw: unknown): DocLang {
   return value === "en" || value === "fr" || value === "it" || value === "es" ? value : "fr";
 }
 
-function money(amount: number, lang: DocLang) {
-  return new Intl.NumberFormat(LOCALE[lang], {
+/**
+ * En euros, el formato de Europa. `LOCALE` es el de Canadá —el italiano va
+ * como `it-CH` porque en Canadá no hay variante italiana propia—, y con él una
+ * factura italiana salía con «€ 12'500.00», que es como escribe un suizo.
+ */
+const LOCALE_EURO: Record<DocLang, string> = { es: "es-ES", en: "en-IE", fr: "fr-FR", it: "it-IT" };
+
+function money(amount: number, lang: DocLang, moneda: "CAD" | "EUR" = "CAD") {
+  return new Intl.NumberFormat(moneda === "EUR" ? LOCALE_EURO[lang] : LOCALE[lang], {
     style: "currency",
-    currency: "CAD",
+    currency: moneda,
     currencyDisplay: "symbol",
   }).format(amount);
+}
+
+/**
+ * La moneda de un documento, leída de su propio desglose de impuestos.
+ *
+ * Sale del documento y no del negocio a propósito: una factura ya emitida
+ * tiene que imprimirse igual para siempre, y lo que la hace italiana es su
+ * IVA, que lleva guardado.
+ */
+function monedaDe(data: { taxBreakdown?: TaxBreakdown | null }): "CAD" | "EUR" {
+  return data.taxBreakdown?.country === "IT" ? "EUR" : "CAD";
 }
 
 function shortDate(date: Date, lang: DocLang) {
@@ -883,6 +926,10 @@ function letterhead(doc: Doc, b: BusinessIdentity, copy: Copy): number {
     b.licenseNumber ? `${copy.license}: ${b.licenseNumber}` : null,
     b.gstNumber ? `${copy.gstNumber}: ${b.gstNumber}` : null,
     b.qstNumber ? `${copy.qstNumber}: ${b.qstNumber}` : null,
+    // Con su abreviatura italiana en los cuatro idiomas: son nombres propios
+    // de un registro, y es lo que busca quien la recibe.
+    b.partitaIva ? `P. IVA: ${b.partitaIva}` : null,
+    b.codiceFiscale && b.codiceFiscale !== b.partitaIva ? `C.F.: ${b.codiceFiscale}` : null,
   ].filter(Boolean) as string[];
 
   doc.font("Helvetica").fontSize(9).fillColor("#555555");
@@ -1050,8 +1097,8 @@ function lineTable(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: D
     const y = doc.y;
     doc.text(line.item, COL.item, y, { width: COL_WIDTH.item });
     doc.text(String(line.quantity), COL.qty, y, { width: COL_WIDTH.qty, align: "right" });
-    doc.text(money(line.unitCost, lang), COL.unit, y, { width: COL_WIDTH.unit, align: "right" });
-    doc.text(money(line.total, lang), COL.total, y, { width: COL_WIDTH.total, align: "right" });
+    doc.text(money(line.unitCost, lang, monedaDe(data)), COL.unit, y, { width: COL_WIDTH.unit, align: "right" });
+    doc.text(money(line.total, lang, monedaDe(data)), COL.total, y, { width: COL_WIDTH.total, align: "right" });
     doc.y = y + height + 5;
   }
 
@@ -1060,28 +1107,31 @@ function lineTable(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: D
 }
 
 function totals(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocLang) {
-  const rows: [string, string, boolean][] = [[copy.subtotal, money(data.subtotal, lang), false]];
+  const rows: [string, string, boolean][] = [[copy.subtotal, money(data.subtotal, lang, monedaDe(data)), false]];
 
   const tb = data.taxBreakdown ?? {};
-  if (tb.hst !== undefined) rows.push([copy.hst, money(tb.hst, lang), false]);
-  if (tb.gst !== undefined) rows.push([copy.gst, money(tb.gst, lang), false]);
+  if (tb.hst !== undefined) rows.push([copy.hst, money(tb.hst, lang, monedaDe(data)), false]);
+  if (tb.gst !== undefined) rows.push([copy.gst, money(tb.gst, lang, monedaDe(data)), false]);
   if (tb.pst !== undefined) {
     // Quebec's provincial tax is the QST; everywhere else it's a PST, and the
     // province on the breakdown is what tells the two apart.
-    rows.push([tb.province === "QC" ? copy.qst : copy.pst, money(tb.pst, lang), false]);
+    rows.push([tb.province === "QC" ? copy.qst : copy.pst, money(tb.pst, lang, monedaDe(data)), false]);
+  }
+  if (tb.iva !== undefined) {
+    rows.push([tb.natura ? copy.ivaInversione : copy.iva(tb.ivaAliquota ?? 0), money(tb.iva, lang, monedaDe(data)), false]);
   }
   if (data.kind === "invoice" && data.holdbackAmount > 0) {
     // Shown as a negative line so the customer can see the invoiced value and
     // the amount actually payable are different, and by exactly how much.
-    rows.push([copy.holdback, `-${money(data.holdbackAmount, lang)}`, false]);
+    rows.push([copy.holdback, `-${money(data.holdbackAmount, lang, monedaDe(data))}`, false]);
   }
   if (data.kind === "invoice" && data.holdbackReleased > 0) {
     // The mirror of those negative lines, arriving on the closing invoice. A
     // customer who saw money held back on every earlier bill has to see where
     // it comes back, or the final total looks like an overcharge.
-    rows.push([copy.holdbackRelease, `+${money(data.holdbackReleased, lang)}`, false]);
+    rows.push([copy.holdbackRelease, `+${money(data.holdbackReleased, lang, monedaDe(data))}`, false]);
   }
-  rows.push([copy.total, money(data.total, lang), true]);
+  rows.push([copy.total, money(data.total, lang, monedaDe(data)), true]);
 
   const labelX = MARGIN + 290;
   const valueX = MARGIN + 400;
@@ -1101,6 +1151,13 @@ function totals(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocL
     doc.text(label, labelX, y, { width: 100, align: "right" });
     doc.text(value, valueX, y, { width: COL_WIDTH.total, align: "right" });
     doc.y = y + (strong ? 16 : 13);
+  }
+
+  // Una factura en inversione contabile tiene que decirlo con la norma: sin
+  // esa frase, la del cliente no sabe que el IVA lo ingresa él.
+  if (tb.natura === "N6.3") {
+    doc.y += 4;
+    doc.font("Helvetica-Oblique").fontSize(8).fillColor("#555555").text(copy.notaInversione, MARGIN, doc.y, { width: CONTENT_WIDTH });
   }
 
   doc.y += 10;
@@ -1180,7 +1237,7 @@ function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) 
         .font("Helvetica-Bold")
         .fontSize(8.5)
         .fillColor("#111111")
-        .text(money(stage.amount, lang), MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+        .text(money(stage.amount, lang, monedaDe(data)), MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
       doc.y = Math.max(doc.y, y + 12);
     }
     doc.font("Helvetica").fontSize(7.5).fillColor("#888888").text(copy.paymentsNote, MARGIN, doc.y + 2, {
@@ -1248,7 +1305,7 @@ function estimateFooter(doc: Doc, data: EstimateDoc, copy: Copy, lang: DocLang) 
       .font("Helvetica")
       .fontSize(7.5)
       .fillColor("#888888")
-      .text(copy.signedTotalNote(money(sig.total, lang)), MARGIN, doc.y, { width: CONTENT_WIDTH });
+      .text(copy.signedTotalNote(money(sig.total, lang, monedaDe(data))), MARGIN, doc.y, { width: CONTENT_WIDTH });
     return;
   }
 
@@ -1683,7 +1740,7 @@ export function renderCreditNotePdf(data: CreditNoteDoc, lang: DocLang): Promise
       .fontSize(fuerte ? 11 : 9.5)
       .fillColor("#111111")
       .text(label, MARGIN + CONTENT_WIDTH - 300, y, { width: 160, align: "right" });
-    doc.text(`-${money(valor, lang)}`, MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+    doc.text(`-${money(valor, lang, monedaDe(data))}`, MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
     doc.y = Math.max(doc.y, y + (fuerte ? 18 : 14));
   };
 
@@ -1692,13 +1749,14 @@ export function renderCreditNotePdf(data: CreditNoteDoc, lang: DocLang): Promise
   if (b.hst !== undefined) fila(copy.hst, b.hst);
   if (b.gst !== undefined) fila(copy.gst, b.gst);
   if (b.pst !== undefined) fila(b.province === "QC" ? copy.qst : copy.pst, b.pst);
+  if (b.iva !== undefined) fila(b.natura ? copy.ivaInversione : copy.iva(b.ivaAliquota ?? 0), b.iva);
   if (data.holdback > 0) {
     // En positivo, porque resta de un importe que ya va en negativo: restar
     // una resta suma, y aquí el signo se lee, no se calcula.
     const y = doc.y;
     doc.font("Helvetica").fontSize(9.5).fillColor("#111111");
     doc.text(copy.holdback, MARGIN + CONTENT_WIDTH - 300, y, { width: 160, align: "right" });
-    doc.text(`+${money(data.holdback, lang)}`, MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
+    doc.text(`+${money(data.holdback, lang, monedaDe(data))}`, MARGIN + CONTENT_WIDTH - 130, y, { width: 130, align: "right" });
     doc.y = Math.max(doc.y, y + 14);
   }
   fila(copy.total, data.total, true);

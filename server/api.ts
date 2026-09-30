@@ -73,7 +73,9 @@ import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODO
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
 // importa así.
-import { aplicaLaCcq, esPaisConocido, esRegionDe, PAIS_POR_DEFECTO } from "../shared/paises";
+import { aplicaLaCcq, esPaisConocido, esRegionDe, paisDe, PAIS_POR_DEFECTO } from "../shared/paises";
+import { calcularIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "../shared/iva";
+import { esPartitaIvaValida, esCodiceFiscaleValido } from "../shared/fiscaleItalia";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
 import {
@@ -529,13 +531,30 @@ function isPlatformNotActivated(message: string): boolean {
 }
 
 
-async function computeInvoiceTax(admin: ReturnType<typeof getSupabaseAdmin>, businessId: string, subtotal: number) {
+async function computeInvoiceTax(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  subtotal: number,
+  /** Sólo en Italia: el IVA de esta factura. Sin él, el del negocio. */
+  opcionIva?: unknown
+): Promise<{ taxAmount: number; breakdown: Record<string, unknown> }> {
   const { data: business, error: businessError } = await admin
     .from("businesses")
-    .select("province")
+    .select("province, country, tax_config")
     .eq("id", businessId)
     .single();
   if (businessError) throw businessError;
+
+  // El país primero, siempre. Las siglas se repiten entre países —«PE» es
+  // Pescara y también la Isla del Príncipe Eduardo— y buscar la provincia en
+  // la tabla de Canadá sin mirar el país le pondría a una factura italiana el
+  // impuesto de otro continente.
+  if (esPaisConocido(business.country) && paisDe(business.country).impuestos === "italia") {
+    const delNegocio = (business.tax_config as { ivaPredefinita?: unknown } | null)?.ivaPredefinita;
+    const opcion: OpcionIva = esOpcionIva(opcionIva) ? opcionIva : esOpcionIva(delNegocio) ? delNegocio : IVA_POR_DEFECTO;
+    const { taxAmount, breakdown } = calcularIva(subtotal, opcion);
+    return { taxAmount, breakdown: breakdown as unknown as Record<string, unknown> };
+  }
 
   const { data: rate, error: rateError } = await admin
     .from("canada_tax_rates")
@@ -576,9 +595,11 @@ async function createInvoiceRecord(
     chargeKind?: "proyecto" | "extra";
     /** Para avisar al cliente. Sin esto no se manda nada. */
     aviso?: { baseUrl: string; lang: LangCorreo };
+    /** Sólo en Italia: el IVA de esta obra. Se ignora en Canadá. */
+    iva?: unknown;
   }
 ): Promise<string> {
-  const { taxAmount, breakdown } = await computeInvoiceTax(admin, input.businessId, input.subtotal);
+  const { taxAmount, breakdown } = await computeInvoiceTax(admin, input.businessId, input.subtotal, input.iva);
 
   // The holdback is withheld from progress payments, not from the final one —
   // the final invoice is where the withheld money is released, so applying it
@@ -1511,7 +1532,7 @@ apiRouter.get(
     const [userRow, clientRow] = await Promise.all([
       admin
         .from("users")
-        .select("business_id, roles(permissions), businesses(subscription_plan, subscription_status, trial_ends_at, subscription_period_end, subscription_price_id, subscription_cancel_at_period_end)")
+        .select("business_id, roles(permissions), businesses(subscription_plan, subscription_status, trial_ends_at, subscription_period_end, subscription_price_id, subscription_cancel_at_period_end, country)")
         .eq("auth_user_id", req.authUserId!)
         .maybeSingle(),
       admin.from("clients").select("id").eq("auth_user_id", req.authUserId!).maybeSingle(),
@@ -1535,6 +1556,9 @@ apiRouter.get(
         subscriptionPeriodEnd: businessSubscription?.subscription_period_end ?? null,
         subscriptionPriceId: businessSubscription?.subscription_price_id ?? null,
         subscriptionCancelAtPeriodEnd: businessSubscription?.subscription_cancel_at_period_end ?? false,
+        // El país viaja con la sesión porque de él cuelga la moneda de todo el
+        // panel y lo que se enseña en el menú (en Italia no hay nómina).
+        country: (businessSubscription as { country?: string | null } | null)?.country ?? PAIS_POR_DEFECTO,
       });
     } else if (clientRow.data) {
       res.json({ persona: "client", clientId: clientRow.data.id });
@@ -8549,6 +8573,7 @@ apiRouter.post(
       subtotal: Number(subtotal),
       description: description ?? null,
       dueDate: dueDate ?? null,
+      iva: req.body?.iva,
       aviso: {
         baseUrl: `${req.protocol}://${req.get("host")}`,
         lang: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")),
@@ -10554,7 +10579,7 @@ async function loadBusinessIdentity(
 }> {
   const { data, error } = await admin
     .from("businesses")
-    .select("name, address, phone, email, license_number, gst_number, qst_number, province, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule")
+    .select("name, address, phone, email, license_number, gst_number, qst_number, province, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, partita_iva, codice_fiscale")
     .eq("id", businessId)
     .single();
   if (error) throw error;
@@ -10568,6 +10593,8 @@ async function loadBusinessIdentity(
       gstNumber: data.gst_number ?? null,
       qstNumber: data.qst_number ?? null,
       province: data.province ?? null,
+      partitaIva: data.partita_iva ?? null,
+      codiceFiscale: data.codice_fiscale ?? null,
       logo: await fetchLogo(data.logo_url),
     },
     holdbackPercent: Number(data.holdback_percent ?? 0),
@@ -12045,8 +12072,14 @@ apiRouter.post(
     const escalar = (valor: unknown) => Math.round(Number(valor ?? 0) * proporcion * 100) / 100;
     const desglose = original.tax_breakdown as Record<string, unknown>;
     const desgloseNota: Record<string, unknown> = { province: desglose?.province };
-    for (const clave of ["gst", "pst", "hst"]) {
+    for (const clave of ["gst", "pst", "hst", "iva"]) {
       if (desglose?.[clave] !== undefined) desgloseNota[clave] = escalar(desglose[clave]);
+    }
+    // Una nota de crédito italiana lleva el mismo tipo de IVA —o la misma
+    // inversione contabile— que la factura que corrige: es lo que pide la
+    // factura electrónica, y lo que su contable cuadra.
+    for (const clave of ["country", "ivaAliquota", "natura"]) {
+      if (desglose?.[clave] !== undefined) desgloseNota[clave] = desglose[clave];
     }
 
     const { data, error } = await supabase
@@ -13698,7 +13731,7 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("businesses")
       .select(
-        "id, name, slug, license_number, tax_config, country, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, ccq_employer_number, ccq_subject, payroll_in_quickbooks"
+        "id, name, slug, license_number, tax_config, country, province, address, phone, email, gst_number, qst_number, holdback_percent, estimate_terms, logo_url, estimate_show_materials, estimate_show_schedule, ccq_employer_number, ccq_subject, payroll_in_quickbooks, partita_iva, codice_fiscale, pec, address_line, postal_code, city"
       )
       .eq("id", req.businessId!)
       .single();
@@ -13733,6 +13766,14 @@ apiRouter.get(
       ccqEmployerNumber: data.ccq_employer_number ?? null,
       ccqSubject: data.ccq_subject === true,
       payrollInQuickbooks: data.payroll_in_quickbooks === true,
+      // Italia. La dirección desglosada la pide la factura electrónica, que
+      // quiere calle, CAP y municipio en campos separados.
+      partitaIva: data.partita_iva ?? null,
+      codiceFiscale: data.codice_fiscale ?? null,
+      pec: data.pec ?? null,
+      addressLine: data.address_line ?? null,
+      postalCode: data.postal_code ?? null,
+      city: data.city ?? null,
     });
   })
 );
@@ -13838,6 +13879,16 @@ apiRouter.patch(
         res.status(400).json({ error: "unknown country", code: "unknown_country" });
         return;
       }
+      // Un país en pruebas no se elige desde la pantalla: sus facturas todavía
+      // no son válidas allí. Quien ya lo tiene puesto —el negocio de pruebas—
+      // puede seguir guardando su ficha.
+      if (paisDe(paisFinal).enPruebas) {
+        const { data: actual } = await supabase.from("businesses").select("country").eq("id", req.businessId!).maybeSingle();
+        if (actual?.country !== paisFinal) {
+          res.status(400).json({ error: "country not offered yet", code: "pais_no_ofrecido" });
+          return;
+        }
+      }
       update.country = paisFinal;
     }
     if (body.province !== undefined) {
@@ -13857,6 +13908,31 @@ apiRouter.patch(
     if (body.phone !== undefined) update.phone = body.phone || null;
     if (body.email !== undefined) update.email = body.email || null;
     if (body.gstNumber !== undefined) update.gst_number = body.gstNumber || null;
+    // Italia. Los dos números llevan dígito de control: uno mal tecleado se
+    // dice aquí, y no cuando el SDI rechace la factura días después.
+    if (body.partitaIva !== undefined) {
+      const pi = String(body.partitaIva ?? "").replace(/\s+/g, "");
+      if (pi && !esPartitaIvaValida(pi)) {
+        res.status(400).json({ error: "invalid partita IVA", code: "partita_iva_no_valida" });
+        return;
+      }
+      update.partita_iva = pi || null;
+    }
+    if (body.codiceFiscale !== undefined) {
+      const cf = String(body.codiceFiscale ?? "").replace(/\s+/g, "").toUpperCase();
+      if (cf && !esCodiceFiscaleValido(cf)) {
+        res.status(400).json({ error: "invalid codice fiscale", code: "codice_fiscale_no_valido" });
+        return;
+      }
+      update.codice_fiscale = cf || null;
+    }
+    if (body.pec !== undefined) update.pec = String(body.pec ?? "").trim() || null;
+    if (body.addressLine !== undefined) update.address_line = String(body.addressLine ?? "").trim() || null;
+    if (body.city !== undefined) update.city = String(body.city ?? "").trim() || null;
+    if (body.postalCode !== undefined) {
+      const cap = String(body.postalCode ?? "").trim();
+      update.postal_code = cap || null;
+    }
     if (body.qstNumber !== undefined) update.qst_number = body.qstNumber || null;
     if (body.estimateTerms !== undefined) update.estimate_terms = body.estimateTerms || null;
     if (body.estimateShowMaterials !== undefined) update.estimate_show_materials = Boolean(body.estimateShowMaterials);

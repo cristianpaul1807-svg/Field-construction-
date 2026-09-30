@@ -5,6 +5,8 @@ import { apiFetch, readJson } from "@/lib/api";
 import { anuncioDeFallo } from "@/lib/fallos";
 import type { Area } from "@shared/permisos";
 import { accesoDe, planDe, type Plan } from "@shared/planes";
+import { esPaisConocido, paisDe, PAIS_POR_DEFECTO } from "@shared/paises";
+import { fijarMonedaDelNegocio } from "@/lib/mockData";
 
 // "none" means the server positively answered that this account isn't linked
 // to a business or a client yet — that's the signal to send someone into
@@ -30,6 +32,8 @@ interface AuthState {
   acceso: "activo" | "prueba" | "bloqueado";
   pruebaHasta: string | null;
   businessId: string | null;
+  /** El país del negocio: de él cuelgan la moneda y lo que se enseña en el menú. */
+  country: string;
   clientId: string | null;
   refreshPersona: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -50,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [subscriptionPeriodEnd, setSubscriptionPeriodEnd] = useState<string | null>(null);
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
+  const [country, setCountry] = useState<string>(PAIS_POR_DEFECTO);
   const [clientId, setClientId] = useState<string | null>(null);
 
   const loadPersona = async () => {
@@ -79,6 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSubscriptionPeriodEnd(body.subscriptionPeriodEnd ?? null);
       setPersonaError(null);
       setBusinessId(body.businessId ?? null);
+      // Antes de pintar nada con dinero: la moneda sale del país.
+      const pais = esPaisConocido(body.country) ? body.country : PAIS_POR_DEFECTO;
+      fijarMonedaDelNegocio(paisDe(pais).moneda);
+      setCountry(pais);
       setClientId(body.clientId ?? null);
     } catch (err) {
       setPersona(null);
@@ -134,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, loading, persona, personaError, areas, plan, subscriptionStatus, trialEndsAt, subscriptionPeriodEnd, acceso, pruebaHasta: trialEndsAt, businessId, clientId, refreshPersona: loadPersona, signOut }}
+      value={{ session, loading, persona, personaError, areas, plan, subscriptionStatus, trialEndsAt, subscriptionPeriodEnd, acceso, pruebaHasta: trialEndsAt, businessId, country, clientId, refreshPersona: loadPersona, signOut }}
     >
       {children}
     </AuthContext.Provider>

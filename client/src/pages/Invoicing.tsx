@@ -22,7 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send, Plus, Copy, Check, Download, Ban, Banknote, FileMinus, RefreshCw } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
-import { previewTax, type TaxRate } from "@/lib/taxes";
+import { previewSegunPais, type TaxRate } from "@/lib/taxes";
+import { OPCIONES_IVA, type OpcionIva } from "@shared/iva";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -455,7 +456,13 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 
   const { data: clients } = useApi<ClientOption[]>(open ? "/api/clients" : null);
   const { data: rates } = useApi<TaxRate[]>(open ? "/api/canada-tax-rates" : null);
-  const { data: company } = useApi<{ province: string }>(open ? "/api/settings/company" : null);
+  const { data: company } = useApi<{ province: string; country: string; taxConfig: { ivaPredefinita?: unknown } | null }>(
+    open ? "/api/settings/company" : null
+  );
+  const esItalia = company?.country === "IT";
+  // El IVA de esta obra. Vacío es «el del negocio»: se elige sólo cuando esta
+  // factura es distinta de lo habitual (una reforma al 10 %, un subcontrato).
+  const [iva, setIva] = useState<OpcionIva | "">("");
 
   const rate = rates?.find((r) => r.province === company?.province);
   const subtotalNum = Number(subtotal) || 0;
@@ -463,7 +470,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
   // se sumaban las dos tasas y se aplicaba de golpe (5 % + 9,975 % = 14,975 %),
   // y el servidor redondea cada impuesto por su cuenta: el total que se veía
   // al crear la factura podía no ser el de la factura, por un céntimo.
-  const impuestos = previewTax(subtotalNum, rate ?? null);
+  const impuestos = previewSegunPais(subtotalNum, company, rate ?? null, iva || undefined);
   const total = impuestos.total;
 
   const reset = () => {
@@ -471,6 +478,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
     setType("deposito");
     setSubtotal("");
     setDescription("");
+    setIva("");
     setError(null);
   };
 
@@ -482,7 +490,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
       const res = await apiFetch("/api/invoices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientId, type, subtotal: subtotalNum, description: description || undefined }),
+        body: JSON.stringify({ clientId, type, subtotal: subtotalNum, description: description || undefined, iva: iva || undefined }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(serverMessage(body, t, t("invoicing.createError")));
@@ -543,6 +551,23 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
             <Label>{t("invoicing.amountBeforeTax")}</Label>
             <Input type="number" value={subtotal} onChange={(e) => setSubtotal(e.target.value)} placeholder="0.00" />
           </div>
+          {/* En Italia el IVA lo decide la obra, no la región: una reforma de
+              vivienda va al 10 %, y un subcontrato entre empresas del sector,
+              sin IVA. */}
+          {esItalia && (
+            <div className="space-y-1.5">
+              <Label>{t("invoicing.iva.titulo")}</Label>
+              <Select value={iva} onValueChange={(v) => setIva(v as OpcionIva)}>
+                <SelectTrigger><SelectValue placeholder={t("invoicing.iva.delNegocio")} /></SelectTrigger>
+                <SelectContent>
+                  {OPCIONES_IVA.map((o) => (
+                    <SelectItem key={o} value={o}>{t(`invoicing.iva.opcion.${o}`)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{t("invoicing.iva.ayuda")}</p>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>{t("common.description")} ({t("common.optional")})</Label>
             <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("invoicing.descriptionPlaceholder")} />

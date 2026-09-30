@@ -346,7 +346,18 @@
     },
     "stripeFee": "Frais Stripe {{fee}} · vous avez reçu {{net}}",
     "stripeFeeTax": "Sur ces frais, {{tax}} sont des taxes que vous récupérez dans votre déclaration.",
-    "stripeFeePending": "Stripe n'a pas encore confirmé ses frais pour ce paiement."
+    "stripeFeePending": "Stripe n'a pas encore confirmé ses frais pour ce paiement.",
+    "iva": {
+      "titulo": "TVA de cette facture",
+      "delNegocio": "Le taux habituel de l'entreprise",
+      "ayuda": "Rénovation de logement : 10 %. Première résidence neuve : 4 %. Sous-traitance pour une autre entreprise du bâtiment : autoliquidation (inversione contabile), sans TVA.",
+      "opcion": {
+        "22": "TVA 22 % (taux normal)",
+        "10": "TVA 10 % (rénovations de logement)",
+        "4": "TVA 4 % (première résidence)",
+        "rc": "Sans TVA — autoliquidation (sous-traitance)"
+      }
+    }
   },
   "payments": {
     "title": "Paiements (Stripe)",
@@ -393,7 +404,9 @@
     "connectPausedTitle": "La connexion à Stripe est en pause",
     "connectPausedBody": "Nous changeons le compte à partir duquel les comptes d'encaissement sont créés. Si tu te connectais maintenant, dans quelques jours il faudrait te déconnecter et te faire refaire toute l'inscription avec tes coordonnées bancaires — et ça, on ne le demande pas deux fois. On te prévient dès que c'est prêt.",
     "connectPausedMeanwhile": "En attendant, tu factures normalement et tu marques les factures payées quand l'argent rentre par virement, en argent comptant ou par chèque.",
-    "detalleParaSoporte": "Détail pour le soutien"
+    "detalleParaSoporte": "Détail pour le soutien",
+    "ivaHabitual": "TVA habituelle de vos factures",
+    "ivaHabitualAyuda": "Chaque facture part avec cette TVA, et vous pouvez la changer en la créant si ce chantier est différent."
   },
   "communication": {
     "title": "Messagerie",
@@ -827,7 +840,15 @@
     "mcpEtiqueta": "Connexion à l’IA",
     "mcpSi": "Connectée",
     "mcpNo": "Non connectée",
-    "editarUsuario": "Modifier"
+    "editarUsuario": "Modifier",
+    "partitaIva": "Numéro de TVA (Partita IVA)",
+    "codiceFiscale": "Code fiscal (codice fiscale)",
+    "pec": "PEC (courriel certifié)",
+    "indirizzo": "Adresse (rue et numéro)",
+    "cap": "Code postal (CAP)",
+    "comune": "Commune",
+    "billingIdentityHintItalia": "Ceci figure dans l'en-tête de chaque document. En Italie, la facture doit indiquer la Partita IVA et le codice fiscale, et la facture électronique demande aussi l'adresse complète.",
+    "holdbackPercentHintItalia": "La retenue de garantie (ritenuta a garanzia), si votre contrat la prévoit : retenue sur chaque paiement partiel jusqu'à la fin des travaux. Laissez 0 si vous ne l'appliquez pas."
   },
   "reports": {
     "title": "Rapports",
@@ -1596,7 +1617,10 @@
     "lector_codigo_no_valido": "Ce code n'est pas valide. Vérifiez qu'il est bien saisi, ou générez-en un nouveau sur le lecteur : ils expirent après quelques minutes.",
     "lector_no_existe": "Ce lecteur n'est plus jumelé.",
     "lector_no_elegido": "Choisissez le lecteur avec lequel encaisser.",
-    "lector_no_disponible": "Le lecteur ne répond pas. Vérifiez qu'il est allumé et connecté à Internet, puis réessayez."
+    "lector_no_disponible": "Le lecteur ne répond pas. Vérifiez qu'il est allumé et connecté à Internet, puis réessayez.",
+    "partita_iva_no_valida": "Ce numéro de Partita IVA n'est pas valide : vérifiez les 11 chiffres, le dernier est un chiffre de contrôle.",
+    "codice_fiscale_no_valido": "Ce codice fiscale n'est pas valide. Vérifiez-le : le dernier caractère est un caractère de contrôle.",
+    "pais_no_ofrecido": "Ce pays n'est pas encore disponible."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2312,10 +2336,12 @@
   },
   "countries": {
     "name": {
-      "CA": "Canada"
+      "CA": "Canada",
+      "IT": "Italie"
     },
     "region": {
-      "province": "Province"
+      "province": "Province",
+      "provinciaItalia": "Province"
     }
   },
   "workerDocs": {

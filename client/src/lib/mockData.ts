@@ -552,8 +552,29 @@ export const findProject = (id: string) => projects.find((p) => p.id === id);
  * tocar las ciento y pico llamadas que ya hay. Los componentes que enseñan
  * dinero usan `t()`, así que se vuelven a pintar solos al cambiar de idioma.
  */
+/**
+ * La moneda del negocio que se está mirando.
+ *
+ * La pone la sesión al cargar (`AuthContext`), desde el país del negocio: un
+ * negocio de Quebec factura en dólares canadienses y uno italiano en euros.
+ * Vive aquí, y no como parámetro, por lo mismo que el idioma: son más de cien
+ * llamadas, y ninguna debería tener que saber en qué país está.
+ */
+let monedaDelNegocio: "CAD" | "EUR" = "CAD";
+export function fijarMonedaDelNegocio(moneda: "CAD" | "EUR") {
+  monedaDelNegocio = moneda;
+}
+export const monedaActual = () => monedaDelNegocio;
+
 const localeDelDinero = (): string => {
   const idioma = i18n.language?.slice(0, 2);
+  // En euros, el formato de Europa: «1.149,75 €» y no el de Canadá.
+  if (monedaDelNegocio === "EUR") {
+    if (idioma === "fr") return "fr-FR";
+    if (idioma === "es") return "es-ES";
+    if (idioma === "en") return "en-IE";
+    return "it-IT";
+  }
   if (idioma === "fr") return "fr-CA";
   if (idioma === "es") return "es-419";
   if (idioma === "it") return "it-IT";
@@ -561,12 +582,12 @@ const localeDelDinero = (): string => {
 };
 
 export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD", currencyDisplay: "narrowSymbol" }).format(value);
+  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: monedaDelNegocio, currencyDisplay: "narrowSymbol" }).format(value);
 
 // For headline totals, where the cents are noise and the shape of the number
 // is the point. Only for aggregates — never for anything owed.
 export const formatCurrencyRounded = (value: number) =>
-  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: "CAD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 0 }).format(value);
+  new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: monedaDelNegocio, currencyDisplay: "narrowSymbol", maximumFractionDigits: 0 }).format(value);
 
 // For compact UI spaces (small screens, summary tiles) where large numbers
 // (e.g. $45,000 or $1,500,000) could overflow or overlap table bounds.
@@ -585,15 +606,15 @@ export const formatCompactNumber = (value: number): string => {
 };
 
 export const formatCompactCurrency = (value: number): string => {
-  if (!Number.isFinite(value)) return "$0";
+  if (!Number.isFinite(value)) return formatCurrencyRounded(0);
   const abs = Math.abs(value);
   if (abs >= 1_000_000) {
     const formatted = (value / 1_000_000).toFixed(1).replace(/\.0$/, "");
-    return `$${formatted}M`;
+    return monedaDelNegocio === "EUR" ? `${formatted} M€` : `$${formatted}M`;
   }
   if (abs >= 10_000) {
     const formatted = (value / 1_000).toFixed(1).replace(/\.0$/, "");
-    return `$${formatted}k`;
+    return monedaDelNegocio === "EUR" ? `${formatted}k €` : `$${formatted}k`;
   }
   return formatCurrency(value);
 };
