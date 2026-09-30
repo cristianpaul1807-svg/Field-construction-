@@ -1,6 +1,6 @@
 # Italia
 
-**Estado:** en pruebas. No se ofrece a nadie todavía.
+**Estado:** en preparación. Se puede elegir al darse de alta, con aviso.
 **Código:** `shared/paises.ts` (el país), `shared/iva.ts` (el impuesto),
 `shared/fiscaleItalia.ts` (Partita IVA y codice fiscale).
 
@@ -13,10 +13,11 @@ En Italia **un PDF no es una factura**. La factura válida es un XML
 Entrate. Hasta que el producto genere ese XML, ofrecer Italia sería darle a
 alguien documentos con aspecto de buenos que su contable tendría que rehacer.
 
-Por eso `IT` lleva `enPruebas: true`: el selector de país no lo enseña, y el
-servidor no deja elegirlo (`pais_no_ofrecido`). Sólo lo ve un negocio que ya
-lo tenga puesto, que es como se prueba: poniéndoselo a mano en la base de
-datos a un negocio de pruebas.
+Por eso `IT` lleva `enPruebas: true`. Quien se da de alta desde Italia puede
+elegirla y lleva obras, presupuestos y facturas con IVA y en euros, pero el
+alta y el panel le avisan de que la factura electrónica está en preparación
+(`avisoDelPais`). Lo que no se puede es pasarse a Italia desde Configuración
+siendo de otro país (`pais_no_ofrecido`).
 
 ---
 
