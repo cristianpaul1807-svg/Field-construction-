@@ -560,16 +560,17 @@ export const findProject = (id: string) => projects.find((p) => p.id === id);
  * Vive aquí, y no como parámetro, por lo mismo que el idioma: son más de cien
  * llamadas, y ninguna debería tener que saber en qué país está.
  */
-let monedaDelNegocio: "CAD" | "EUR" = "CAD";
-export function fijarMonedaDelNegocio(moneda: "CAD" | "EUR") {
+let monedaDelNegocio = "CAD";
+export function fijarMonedaDelNegocio(moneda: string) {
   monedaDelNegocio = moneda;
 }
 export const monedaActual = () => monedaDelNegocio;
 
 const localeDelDinero = (): string => {
   const idioma = i18n.language?.slice(0, 2);
-  // En euros, el formato de Europa: «1.149,75 €» y no el de Canadá.
-  if (monedaDelNegocio === "EUR") {
+  // Fuera de los dólares canadienses, el formato de Europa: «1.149,75 €» y
+  // no el de Canadá. Para las demás monedas Intl pone su símbolo.
+  if (monedaDelNegocio !== "CAD") {
     if (idioma === "fr") return "fr-FR";
     if (idioma === "es") return "es-ES";
     if (idioma === "en") return "en-IE";

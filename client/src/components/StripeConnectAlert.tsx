@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreditCard, ExternalLink } from "lucide-react";
 import { useApi, apiEnviar } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 
@@ -37,12 +38,17 @@ export function StripeConnectAlert() {
   const { t } = useTranslation();
   const menuNombres = useNombresDelMenu();
   const { data, reload } = useApi<ConnectStatus>("/api/stripe/connect/status");
+  const { country } = useAuth();
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Nothing to say once they can actually charge, or once they have told us
   // they are handling it themselves.
   if (!data) return null;
+  // Fuera de Canadá todavía no hay cuenta de Stripe que abrir: la tira
+  // llevaría a un alta que el servidor rechaza. Lo que le falta a ese negocio
+  // lo cuenta `PaisAlert`.
+  if (country !== "CA") return null;
   if (data.chargesEnabled) return null;
   if (data.paymentsMode === "manual") return null;
 

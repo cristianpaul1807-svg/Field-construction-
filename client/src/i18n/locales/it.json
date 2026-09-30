@@ -682,7 +682,7 @@
     "retry": "Riprova",
     "codeSentTo": "Abbiamo inviato un codice di 8 cifre a {{email}}. Inseriscilo per continuare.",
     "codeSentShort": "Abbiamo inviato un codice di 8 cifre a {{email}}.",
-    "registerHint": "Ti bastano email e password. I dati della tua impresa si compilano dopo, in Impostazioni.",
+    "registerHint": "Ti bastano email, password e il tuo paese. I dati della tua impresa si compilano dopo, in Impostazioni.",
     "verifyCode": "Verifica codice",
     "resendCode": "Reinvia codice",
     "sendCode": "Invia codice",
@@ -1620,7 +1620,9 @@
     "lector_no_disponible": "Il lettore non risponde. Controlla che sia acceso e connesso a internet, e riprova.",
     "partita_iva_no_valida": "Questa Partita IVA non è valida: controlla le 11 cifre, l'ultima è di controllo.",
     "codice_fiscale_no_valido": "Questo codice fiscale non è valido. Controllalo: l'ultimo carattere è di controllo.",
-    "pais_no_ofrecido": "Questo paese non è ancora disponibile."
+    "pais_no_ofrecido": "Questo paese non è ancora disponibile.",
+    "pais_sin_configurar": "Le imposte del tuo paese non sono ancora configurate, quindi non si possono ancora emettere fatture. Scrivi all'assistenza e la prepariamo insieme.",
+    "pagos_pais_no_listos": "I pagamenti con carta non sono ancora disponibili nel tuo paese. Nel frattempo puoi segnare le fatture come pagate in contanti, bonifico o assegno."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2803,5 +2805,19 @@
       "rechazado": "Il lettore non è riuscito a incassare. Prova con un'altra carta.",
       "probarOtraVez": "Riprova"
     }
+  },
+  "registroPais": {
+    "titulo": "Paese dell'impresa",
+    "detectado": "L'abbiamo impostato in base alla tua posizione. Cambialo se non è corretto: decide le tue imposte e la tua valuta.",
+    "listos": "Disponibili",
+    "otros": "Altri paesi",
+    "sinConfigurar": "La configurazione fiscale per {{pais}} non è ancora pronta. Puoi registrarti e gestire cantieri, squadra e agenda da oggi; per fatturare con le imposte del tuo paese, scrivi all'assistenza e la prepariamo insieme.",
+    "enPruebas": "{{pais}} è in preparazione: puoi già gestire cantieri e preventivi con IVA. La fattura elettronica (SDI) arriverà presto; nel frattempo, scrivi all'assistenza se ti serve."
+  },
+  "paisAviso": {
+    "sinConfigurarTitulo": "La configurazione fiscale per {{pais}} non è ancora pronta",
+    "sinConfigurarTexto": "Puoi usare cantieri, squadra, agenda e preventivi. Per emettere fatture con le imposte del tuo paese, scrivi all'assistenza e la prepariamo insieme.",
+    "enPruebasTitulo": "{{pais}} è in preparazione",
+    "enPruebasTexto": "Fatturi già con IVA e in euro. La fattura elettronica (SDI) arriverà presto; se ti serve prima, scrivi all'assistenza."
   }
 }

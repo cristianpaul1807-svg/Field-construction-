@@ -682,7 +682,7 @@
     "retry": "Réessayer",
     "codeSentTo": "Nous avons envoyé un code à 8 chiffres à {{email}}. Saisissez-le pour continuer.",
     "codeSentShort": "Nous avons envoyé un code à 8 chiffres à {{email}}.",
-    "registerHint": "Il vous suffit d'un courriel et d'un mot de passe. Les coordonnées de votre entreprise se remplissent plus tard, dans Paramètres.",
+    "registerHint": "Il vous suffit d'un courriel, d'un mot de passe et de votre pays. Les coordonnées de votre entreprise se remplissent plus tard, dans Paramètres.",
     "verifyCode": "Vérifier le code",
     "resendCode": "Renvoyer le code",
     "sendCode": "Envoyer le code",
@@ -1620,7 +1620,9 @@
     "lector_no_disponible": "Le lecteur ne répond pas. Vérifiez qu'il est allumé et connecté à Internet, puis réessayez.",
     "partita_iva_no_valida": "Ce numéro de Partita IVA n'est pas valide : vérifiez les 11 chiffres, le dernier est un chiffre de contrôle.",
     "codice_fiscale_no_valido": "Ce codice fiscale n'est pas valide. Vérifiez-le : le dernier caractère est un caractère de contrôle.",
-    "pais_no_ofrecido": "Ce pays n'est pas encore disponible."
+    "pais_no_ofrecido": "Ce pays n'est pas encore disponible.",
+    "pais_sin_configurar": "Les taxes de votre pays ne sont pas encore configurées ; les factures ne peuvent donc pas encore être émises. Écrivez au soutien et nous la préparerons avec vous.",
+    "pagos_pais_no_listos": "Les paiements par carte ne sont pas encore disponibles dans votre pays. En attendant, vous pouvez marquer les factures comme payées en argent comptant, virement ou chèque."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2803,5 +2805,19 @@
       "rechazado": "Le lecteur n'a pas pu encaisser. Essayez une autre carte.",
       "probarOtraVez": "Réessayer"
     }
+  },
+  "registroPais": {
+    "titulo": "Pays de l'entreprise",
+    "detectado": "Nous l'avons choisi selon votre emplacement. Changez-le s'il n'est pas correct : il détermine vos taxes et votre monnaie.",
+    "listos": "Disponibles",
+    "otros": "Autres pays",
+    "sinConfigurar": "La configuration fiscale pour {{pais}} n'est pas encore prête. Vous pouvez vous inscrire et gérer vos chantiers, votre équipe et votre agenda dès aujourd'hui ; pour facturer avec les taxes de votre pays, écrivez au soutien et nous la préparerons avec vous.",
+    "enPruebas": "{{pais}} est en préparation : vous pouvez déjà gérer chantiers et soumissions avec TVA. La facture électronique (SDI) arrive bientôt ; d'ici là, écrivez au soutien si vous en avez besoin."
+  },
+  "paisAviso": {
+    "sinConfigurarTitulo": "La configuration fiscale pour {{pais}} n'est pas encore prête",
+    "sinConfigurarTexto": "Vous pouvez utiliser chantiers, équipe, agenda et soumissions. Pour émettre des factures avec les taxes de votre pays, écrivez au soutien et nous la préparerons avec vous.",
+    "enPruebasTitulo": "{{pais}} est en préparation",
+    "enPruebasTexto": "Vous facturez déjà avec TVA et en euros. La facture électronique (SDI) arrive bientôt ; si vous en avez besoin avant, écrivez au soutien."
   }
 }

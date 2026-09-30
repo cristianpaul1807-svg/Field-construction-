@@ -13,6 +13,8 @@ import { tomarDestino } from "@/lib/destino";
 import { faltanLosSeisDigitos, comprobarLosSeisDigitos } from "@/lib/dobleFactor";
 import { useTranslation } from "react-i18next";
 import { codigoDeAfiliado, olvidarAfiliado } from "@/lib/afiliado";
+import { SelectorDePais } from "@/components/SelectorDePais";
+import { detectarPais, PAIS_POR_DEFECTO } from "@shared/paises";
 
 function formatError(err: unknown, fallback: string): string {
   if (!err) return fallback;
@@ -32,6 +34,17 @@ export default function AuthBusiness() {
   const [, setLocation] = useLocation();
   const { session, refreshPersona, signOut } = useAuth();
   const [mode, setMode] = useState<"register" | "login">("register");
+  // El país del negocio, propuesto sin pedir permisos: la zona horaria del
+  // aparato dice dónde está, y es lo que decide sus impuestos y su moneda.
+  // Si no se adivina nada, Canadá, que es el mercado.
+  const [pais, setPais] = useState(() => {
+    try {
+      return detectarPais(Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.languages ?? []) ?? PAIS_POR_DEFECTO;
+    } catch {
+      return PAIS_POR_DEFECTO;
+    }
+  });
+  const [paisDetectado] = useState(pais);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -154,7 +167,7 @@ export default function AuthBusiness() {
       const res = await apiFetch("/api/auth/register-business", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lang: i18n.language.slice(0, 2), ref: codigoDeAfiliado() }),
+        body: JSON.stringify({ lang: i18n.language.slice(0, 2), ref: codigoDeAfiliado(), country: pais }),
       });
       // Usado y olvidado: quien monta dos cuentas desde el mismo navegador no
       // debe atribuírselas las dos al mismo enlace.
@@ -340,6 +353,20 @@ export default function AuthBusiness() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+
+              {/* Se pregunta al darse de alta, y no después en Ajustes, porque
+                  es lo que decide todo lo demás: el impuesto, la moneda, qué
+                  números se le piden. Un negocio italiano que nacía como
+                  canadiense veía la TVQ en su primer presupuesto. */}
+              {mode === "register" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="pais">{t("registroPais.titulo")}</Label>
+                  <SelectorDePais id="pais" valor={pais} onCambio={setPais} />
+                  {pais === paisDetectado && (
+                    <p className="text-xs text-muted-foreground">{t("registroPais.detectado")}</p>
+                  )}
+                </div>
+              )}
 
               {error && <p className="text-sm text-status-error-fg">{error}</p>}
 

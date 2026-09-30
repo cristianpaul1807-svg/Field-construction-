@@ -16,6 +16,7 @@ import { useNombresDelMenu } from "@/lib/nombresDelMenu";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 import { paisesQueSeOfrecen, paisDe, aplicaLaCcq, type CampoFiscal } from "@shared/paises";
 import { esOpcionIva, IVA_POR_DEFECTO } from "@shared/iva";
+import { nombreDelPais } from "@/components/SelectorDePais";
 
 interface CompanyData {
   id: string;
@@ -65,7 +66,7 @@ function describeTax(r: TaxRate) {
 }
 
 export default function SettingsCompany() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const menuNombres = useNombresDelMenu();
   const { data, loading, error, reload, detalle } = useApi<CompanyData>("/api/settings/company");
   const { data: taxRates } = useApi<TaxRate[]>("/api/canada-tax-rates");
@@ -291,7 +292,7 @@ export default function SettingsCompany() {
                   <SelectTrigger id="country"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {paisesQueSeOfrecen(data.country).map((p) => (
-                      <SelectItem key={p.codigo} value={p.codigo}>{t(`countries.name.${p.codigo}`)}</SelectItem>
+                      <SelectItem key={p.codigo} value={p.codigo}>{nombreDelPais(p.codigo, i18n.language.slice(0, 2), t)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

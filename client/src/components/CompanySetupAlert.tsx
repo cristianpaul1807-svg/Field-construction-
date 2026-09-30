@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, ExternalLink } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { paisDe, type CampoFiscal } from "@shared/paises";
 
 /**
  * Lo que tiene que estar puesto antes de entregarle un papel a nadie.
@@ -19,9 +20,12 @@ import { useTranslation } from "react-i18next";
  */
 interface Company {
   name: string;
+  country: string;
   address: string | null;
   gstNumber: string | null;
   qstNumber: string | null;
+  partitaIva: string | null;
+  codiceFiscale: string | null;
 }
 
 export function CompanySetupAlert() {
@@ -30,9 +34,23 @@ export function CompanySetupAlert() {
 
   if (!data) return null;
 
+  // Los números que se piden son los del país. Esto pedía TPS y TVQ a todo el
+  // mundo, y a un negocio italiano la tira no se le habría ido nunca: no
+  // tiene esos números ni los va a tener.
+  const valor: Record<CampoFiscal, string | null> = {
+    gst: data.gstNumber,
+    qst: data.qstNumber,
+    partita_iva: data.partitaIva,
+    codice_fiscale: data.codiceFiscale,
+    pec: null,
+  };
+  const obligatorios = paisDe(data.country).identificadoresFiscales.filter((id) => id.campo !== "pec");
   const falta: string[] = [];
   if (!data.address?.trim()) falta.push(t("common.address").toLowerCase());
-  if (!data.gstNumber?.trim() || !data.qstNumber?.trim()) falta.push(t("setupAlert.taxNumbers"));
+  const faltanNumeros = obligatorios.filter((id) => !valor[id.campo]?.trim());
+  if (faltanNumeros.length > 0) {
+    falta.push(data.country === "CA" ? t("setupAlert.taxNumbers") : faltanNumeros.map((id) => t(id.etiqueta)).join(", "));
+  }
 
   if (falta.length === 0) return null;
 

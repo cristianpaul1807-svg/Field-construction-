@@ -682,7 +682,7 @@
     "retry": "Try again",
     "codeSentTo": "We sent an 8-digit code to {{email}}. Enter it to continue.",
     "codeSentShort": "We sent an 8-digit code to {{email}}.",
-    "registerHint": "All you need is an email and a password. Your company details come later, in Settings.",
+    "registerHint": "All you need is an email, a password and your country. Your company details come later, in Settings.",
     "verifyCode": "Verify code",
     "resendCode": "Resend code",
     "sendCode": "Send code",
@@ -1620,7 +1620,9 @@
     "lector_no_disponible": "The reader isn't responding. Check it's on and connected to the internet, and try again.",
     "partita_iva_no_valida": "That VAT number (Partita IVA) isn't valid: check the 11 digits, the last one is a check digit.",
     "codice_fiscale_no_valido": "That tax code (codice fiscale) isn't valid. Check it: the last character is a check character.",
-    "pais_no_ofrecido": "That country isn't available yet."
+    "pais_no_ofrecido": "That country isn't available yet.",
+    "pais_sin_configurar": "Your country's taxes aren't set up yet, so invoices can't be issued yet. Write to support and we'll set it up with you.",
+    "pagos_pais_no_listos": "Card payments aren't available in your country yet. Meanwhile you can mark invoices as paid by cash, transfer or cheque."
   },
   "workLog": {
     "title": "Work log",
@@ -2803,5 +2805,19 @@
       "rechazado": "The reader couldn't take the payment. Try another card.",
       "probarOtraVez": "Try again"
     }
+  },
+  "registroPais": {
+    "titulo": "Business country",
+    "detectado": "We set it from your location. Change it if it's wrong: it decides your taxes and currency.",
+    "listos": "Available",
+    "otros": "Other countries",
+    "sinConfigurar": "The tax setup for {{pais}} isn't ready yet. You can sign up and run your jobs, team and schedule today; to invoice with your country's taxes, write to support and we'll set it up with you.",
+    "enPruebas": "{{pais}} is being prepared: you can already run jobs and estimates with VAT. Electronic invoicing (SDI) is coming soon; until then, write to support if you need it."
+  },
+  "paisAviso": {
+    "sinConfigurarTitulo": "The tax setup for {{pais}} isn't ready yet",
+    "sinConfigurarTexto": "You can use jobs, team, schedule and estimates. To issue invoices with your country's taxes, write to support and we'll set it up with you.",
+    "enPruebasTitulo": "{{pais}} is being prepared",
+    "enPruebasTexto": "You already invoice with VAT and in euros. Electronic invoicing (SDI) is coming soon; if you need it sooner, write to support."
   }
 }

@@ -17,7 +17,7 @@
 
 import { calcularIva, esOpcionIva } from "../../shared/iva.ts";
 import { esPartitaIvaValida, esCodiceFiscaleValido, esCodiceDestinatarioValido } from "../../shared/fiscaleItalia.ts";
-import { paisDe, paisesQueSeOfrecen, esRegionDe, aplicaLaCcq } from "../../shared/paises.ts";
+import { paisDe, paisesQueSeOfrecen, esRegionDe, aplicaLaCcq, detectarPais, esPaisDelRegistro, avisoDelPais } from "../../shared/paises.ts";
 
 let bien = 0;
 let mal = 0;
@@ -52,6 +52,21 @@ ok("«PE» es de los dos países y cada uno lo reconoce", [esRegionDe("IT", "PE"
 ok("en Italia no hay nómina", paisDe("IT").nomina, false);
 ok("ni CCQ, aunque la provincia se llame como una de Quebec", aplicaLaCcq("IT", "QC"), false);
 ok("Italia factura en euros", paisDe("IT").moneda, "EUR");
+
+// El registro: se adivina el país por la zona horaria, antes que por el idioma.
+ok("zona de Roma con el móvil en español: Italia", detectarPais("Europe/Rome", ["es-ES"]), "IT");
+ok("zona de Toronto con el móvil en italiano: Canadá", detectarPais("America/Toronto", ["it-IT"]), "CA");
+ok("zona de Montreal: Canadá", detectarPais("America/Montreal", []), "CA");
+ok("zona desconocida, idioma es-MX: México", detectarPais("Asia/Tokyo", ["es-MX"]), "MX");
+ok("sin pistas: nada, y el formulario pone Canadá", detectarPais("Asia/Tokyo", ["ja-JP"]), null);
+
+// Un país que no sabemos hacer: entra, con su moneda, sin impuesto prestado.
+ok("España: euros y sin configurar", [paisDe("ES").moneda, paisDe("ES").impuestos], ["EUR", "sin_configurar"]);
+ok("España no hereda la TPS/TVQ de Canadá", paisDe("ES").identificadoresFiscales.length, 0);
+ok("sin país guardado sigue siendo Canadá", paisDe(null).codigo, "CA");
+ok("un código inventado no se registra", esPaisDelRegistro("ZZ"), false);
+ok("el aviso del panel por país", [avisoDelPais("CA"), avisoDelPais("IT"), avisoDelPais("ES")], [null, "en_pruebas", "sin_configurar"]);
+ok("quien es de España ve su país en la ficha", paisesQueSeOfrecen("ES").map((p) => p.codigo), ["CA", "ES"]);
 
 console.log(`\n${bien} bien, ${mal} mal`);
 if (mal > 0) process.exit(1);

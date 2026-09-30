@@ -1,3 +1,4 @@
+import { paisDe } from "../shared/paises";
 import PDFDocument from "pdfkit";
 
 // Estimates and invoices are the two documents a construction business
@@ -51,8 +52,9 @@ export interface TaxBreakdown {
   gst?: number;
   pst?: number;
   hst?: number;
-  /** Italia: ver `shared/iva.ts`. */
-  country?: "IT";
+  /** Italia: ver `shared/iva.ts`. Otro código: país sin configurar, sin impuesto. */
+  country?: string;
+  sinConfigurar?: boolean;
   ivaAliquota?: number;
   iva?: number;
   natura?: "N6.3";
@@ -845,8 +847,8 @@ export function normalizeDocLang(raw: unknown): DocLang {
  */
 const LOCALE_EURO: Record<DocLang, string> = { es: "es-ES", en: "en-IE", fr: "fr-FR", it: "it-IT" };
 
-function money(amount: number, lang: DocLang, moneda: "CAD" | "EUR" = "CAD") {
-  return new Intl.NumberFormat(moneda === "EUR" ? LOCALE_EURO[lang] : LOCALE[lang], {
+function money(amount: number, lang: DocLang, moneda = "CAD") {
+  return new Intl.NumberFormat(moneda === "CAD" ? LOCALE[lang] : LOCALE_EURO[lang], {
     style: "currency",
     currency: moneda,
     currencyDisplay: "symbol",
@@ -860,8 +862,9 @@ function money(amount: number, lang: DocLang, moneda: "CAD" | "EUR" = "CAD") {
  * tiene que imprimirse igual para siempre, y lo que la hace italiana es su
  * IVA, que lleva guardado.
  */
-function monedaDe(data: { taxBreakdown?: TaxBreakdown | null }): "CAD" | "EUR" {
-  return data.taxBreakdown?.country === "IT" ? "EUR" : "CAD";
+function monedaDe(data: { taxBreakdown?: TaxBreakdown | null }): string {
+  const pais = data.taxBreakdown?.country;
+  return pais ? paisDe(pais).moneda : "CAD";
 }
 
 function shortDate(date: Date, lang: DocLang) {

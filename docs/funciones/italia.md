@@ -20,6 +20,29 @@ datos a un negocio de pruebas.
 
 ---
 
+## Cómo se elige el país
+
+**Al darse de alta**, en el mismo formulario del correo y la contraseña
+(`SelectorDePais`). Viene propuesto por `detectarPais`: la **zona horaria**
+del aparato primero —dice dónde está, no en qué idioma lo tiene; un italiano
+en Montreal tiene el móvil en italiano y vive en Quebec— y la región del
+idioma si la zona no dice nada. Sin pedir permisos de ubicación.
+
+| Elige | Qué pasa |
+|---|---|
+| Canadá | Lo de siempre: Quebec, retención del 10 %, TPS/TVQ |
+| Italia | Provincia vacía, sin retención, IVA y euros. Aviso de que la factura electrónica está en preparación |
+| Otro país (`OTROS_PAISES`) | Entra con su moneda y sin impuesto. Aviso en el alta y en el panel con el correo de soporte. **No puede emitir facturas** (`pais_sin_configurar`) ni conectar Stripe (`pagos_pais_no_listos`) |
+
+Lo de Quebec son los valores por defecto de la tabla `businesses`, así que el
+alta se los quita a quien no es de allí. Un negocio de otro país que naciera
+con ellos tendría la TVQ en su primer presupuesto.
+
+Desde Configuración no se puede cambiar a un país en pruebas o sin
+configurar: eso sólo pasa al registrarse, o lo cambiamos nosotros.
+
+---
+
 ## Lo que cambia respecto a Canadá
 
 | | Canadá (Quebec) | Italia |

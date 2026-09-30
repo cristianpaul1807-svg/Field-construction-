@@ -5,7 +5,7 @@ import { apiFetch, readJson } from "@/lib/api";
 import { anuncioDeFallo } from "@/lib/fallos";
 import type { Area } from "@shared/permisos";
 import { accesoDe, planDe, type Plan } from "@shared/planes";
-import { esPaisConocido, paisDe, PAIS_POR_DEFECTO } from "@shared/paises";
+import { esPaisDelRegistro, paisDe, PAIS_POR_DEFECTO } from "@shared/paises";
 import { fijarMonedaDelNegocio } from "@/lib/mockData";
 
 // "none" means the server positively answered that this account isn't linked
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPersonaError(null);
       setBusinessId(body.businessId ?? null);
       // Antes de pintar nada con dinero: la moneda sale del país.
-      const pais = esPaisConocido(body.country) ? body.country : PAIS_POR_DEFECTO;
+      const pais = esPaisDelRegistro(body.country) ? body.country : PAIS_POR_DEFECTO;
       fijarMonedaDelNegocio(paisDe(pais).moneda);
       setCountry(pais);
       setClientId(body.clientId ?? null);

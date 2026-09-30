@@ -36,14 +36,14 @@ export interface Pais {
   retencion: boolean;
   /** Si hay un organismo del sector al que declarar las horas. */
   organismoDeConstruccion: "ccq" | null;
-  /** La moneda en la que factura y cobra un negocio de ese país. */
-  moneda: "CAD" | "EUR";
+  /** La moneda en la que factura y cobra un negocio de ese país (ISO 4217). */
+  moneda: string;
   /**
    * Cómo se calcula el impuesto. En Canadá depende de la provincia; en
    * Italia, del tipo de obra (IVA al 22, 10 o 4 %) y de a quién se factura
    * (la inversione contabile entre empresas del sector va sin IVA).
    */
-  impuestos: "canada" | "italia";
+  impuestos: "canada" | "italia" | "sin_configurar";
   /**
    * Si la nómina se hace aquí. En Italia la lleva el consulente del lavoro
    * —CCNL edilizia, INPS, INAIL, Cassa Edile—, y una nómina italiana hecha a
@@ -152,13 +152,115 @@ export const PAISES: Pais[] = [
 
 /** Los que se pueden elegir: los terminados, y el que ya tenga puesto quien mira. */
 export function paisesQueSeOfrecen(actual: string | null | undefined): Pais[] {
-  return PAISES.filter((p) => !p.enPruebas || p.codigo === actual);
+  const lista = PAISES.filter((p) => !p.enPruebas || p.codigo === actual);
+  // Quien se registró desde un país sin configurar tiene que verlo puesto en
+  // su ficha; si no, el desplegable sale vacío y al guardar parece que se le
+  // ha cambiado el país.
+  if (actual && !PAISES.some((p) => p.codigo === actual) && OTROS_PAISES[actual]) lista.push(paisDe(actual));
+  return lista;
 }
 
 export const PAIS_POR_DEFECTO = "CA";
 
+/**
+ * Los países que todavía no sabemos hacer, con su moneda.
+ *
+ * Quien se registra desde uno de ellos entra igual: puede llevar sus obras,
+ * su gente y su agenda desde el primer día. Lo que no se le da es un impuesto
+ * inventado. Sus facturas esperan a que su país esté configurado, y el panel
+ * se lo dice con el camino a soporte, en vez de dejarle emitir documentos con
+ * el IVA de otro sitio.
+ *
+ * La moneda sí se sabe, y es la que ve en pantalla: un contratista de Madrid
+ * que lee sus presupuestos en dólares canadienses cree que el producto no es
+ * para él.
+ */
+export const OTROS_PAISES: Record<string, string> = {
+  ES: "EUR", FR: "EUR", DE: "EUR", PT: "EUR", BE: "EUR", NL: "EUR", AT: "EUR", IE: "EUR",
+  LU: "EUR", GR: "EUR", FI: "EUR", SK: "EUR", SI: "EUR", EE: "EUR", LV: "EUR", LT: "EUR",
+  MT: "EUR", CY: "EUR", HR: "EUR", BG: "EUR", GB: "GBP", CH: "CHF", RO: "RON", PL: "PLN",
+  CZ: "CZK", HU: "HUF", SE: "SEK", DK: "DKK", NO: "NOK", AL: "ALL", MA: "MAD",
+  US: "USD", MX: "MXN", AR: "ARS", BO: "BOB", BR: "BRL", CL: "CLP", CO: "COP", CR: "CRC",
+  CU: "CUP", DO: "DOP", EC: "USD", SV: "USD", GT: "GTQ", HN: "HNL", NI: "NIO", PA: "USD",
+  PY: "PYG", PE: "PEN", PR: "USD", UY: "UYU", VE: "VES", AU: "AUD", NZ: "NZD",
+};
+
+/** Un país que existe pero cuyas reglas todavía no sabemos hacer. */
+function paisSinConfigurar(codigo: string): Pais {
+  return {
+    codigo,
+    etiquetaDeRegion: "countries.region.province",
+    regiones: [],
+    identificadoresFiscales: [],
+    licencia: null,
+    retencion: false,
+    organismoDeConstruccion: null,
+    moneda: OTROS_PAISES[codigo],
+    impuestos: "sin_configurar",
+    nomina: false,
+  };
+}
+
+/**
+ * Las reglas de un país.
+ *
+ * Sin país guardado —los negocios de antes de que se preguntara— es Canadá,
+ * que es lo que eran. Un país de `OTROS_PAISES` devuelve sus reglas vacías y
+ * su moneda, nunca las de Canadá: eso le pondría TPS y TVQ a alguien de Madrid.
+ */
 export function paisDe(codigo: string | null | undefined): Pais {
-  return PAISES.find((p) => p.codigo === codigo) ?? PAISES[0];
+  const conocido = PAISES.find((p) => p.codigo === codigo);
+  if (conocido) return conocido;
+  if (codigo && OTROS_PAISES[codigo]) return paisSinConfigurar(codigo);
+  return PAISES[0];
+}
+
+/** Si el país es uno de los que se pueden elegir al darse de alta. */
+export function esPaisDelRegistro(codigo: unknown): codigo is string {
+  return typeof codigo === "string" && (PAISES.some((p) => p.codigo === codigo) || codigo in OTROS_PAISES);
+}
+
+/**
+ * Si al negocio le falta algo por ser de donde es: un país sin configurar, o
+ * uno en pruebas (Italia, mientras no hay factura electrónica). Es lo que
+ * decide el aviso del panel.
+ */
+export function avisoDelPais(codigo: string | null | undefined): "sin_configurar" | "en_pruebas" | null {
+  const pais = paisDe(codigo);
+  if (pais.impuestos === "sin_configurar") return "sin_configurar";
+  if (pais.enPruebas) return "en_pruebas";
+  return null;
+}
+
+/**
+ * El país de quien se está registrando, adivinado sin pedirle permiso.
+ *
+ * La zona horaria del navegador primero: dice dónde está el aparato y no en
+ * qué idioma lo tiene puesto —un contratista italiano en Montreal tiene el
+ * móvil en italiano y vive en Quebec—. Después la región del idioma, que es
+ * lo único que queda cuando la zona no es de ningún país conocido. Es una
+ * propuesta: el formulario la enseña y se cambia con un toque.
+ */
+export function detectarPais(zonaHoraria: string | undefined, idiomas: readonly string[]): string | null {
+  const zona = zonaHoraria ?? "";
+  if (/^America\/(Toronto|Montreal|Vancouver|Edmonton|Winnipeg|Halifax|St_Johns|Regina|Moncton|Whitehorse|Yellowknife|Iqaluit|Glace_Bay|Goose_Bay|Swift_Current|Dawson_Creek|Fort_Nelson|Creston|Nipigon|Thunder_Bay|Rainy_River|Rankin_Inlet|Resolute|Cambridge_Bay|Inuvik|Dawson|Atikokan|Blanc-Sablon)$/.test(zona)) return "CA";
+  if (zona === "Europe/Rome") return "IT";
+  const porZona: Record<string, string> = {
+    "Europe/Madrid": "ES", "Atlantic/Canary": "ES", "Europe/Paris": "FR", "Europe/Berlin": "DE",
+    "Europe/Lisbon": "PT", "Europe/Brussels": "BE", "Europe/Amsterdam": "NL", "Europe/Vienna": "AT",
+    "Europe/Dublin": "IE", "Europe/London": "GB", "Europe/Zurich": "CH", "Europe/Bucharest": "RO",
+    "Europe/Warsaw": "PL", "Europe/Athens": "GR", "America/Mexico_City": "MX", "America/Bogota": "CO",
+    "America/Lima": "PE", "America/Santiago": "CL", "America/Argentina/Buenos_Aires": "AR",
+    "America/Caracas": "VE", "America/Guayaquil": "EC", "America/Montevideo": "UY",
+    "America/Santo_Domingo": "DO", "America/Sao_Paulo": "BR", "America/New_York": "US",
+    "America/Chicago": "US", "America/Denver": "US", "America/Los_Angeles": "US",
+  };
+  if (porZona[zona]) return porZona[zona];
+  for (const idioma of idiomas) {
+    const region = idioma.split("-")[1]?.toUpperCase();
+    if (region && (region === "CA" || region === "IT" || region in OTROS_PAISES)) return region;
+  }
+  return null;
 }
 
 export function esPaisConocido(codigo: unknown): codigo is string {

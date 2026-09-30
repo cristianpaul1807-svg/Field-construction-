@@ -682,7 +682,7 @@
     "retry": "Reintentar",
     "codeSentTo": "Enviamos un código de 8 dígitos a {{email}}. Ingrésalo para continuar.",
     "codeSentShort": "Enviamos un código de 8 dígitos a {{email}}.",
-    "registerHint": "Solo necesitas correo y contraseña. Los datos de tu empresa se completan después, en Configuración.",
+    "registerHint": "Solo necesitas correo, contraseña y tu país. Los datos de tu empresa se completan después, en Configuración.",
     "verifyCode": "Verificar código",
     "resendCode": "Reenviar código",
     "sendCode": "Enviar código",
@@ -1620,7 +1620,9 @@
     "lector_no_disponible": "El lector no responde. Comprueba que está encendido y conectado a internet, y vuelve a intentarlo.",
     "partita_iva_no_valida": "Esa Partita IVA no es válida: revisa las 11 cifras, la última es de control.",
     "codice_fiscale_no_valido": "Ese codice fiscale no es válido. Revísalo: el último carácter es de control.",
-    "pais_no_ofrecido": "Ese país todavía no está disponible."
+    "pais_no_ofrecido": "Ese país todavía no está disponible.",
+    "pais_sin_configurar": "Los impuestos de tu país aún no están configurados, así que todavía no se pueden emitir facturas. Escríbenos a soporte y lo preparamos contigo.",
+    "pagos_pais_no_listos": "Los cobros con tarjeta todavía no están disponibles en tu país. Mientras tanto puedes marcar las facturas como cobradas en efectivo, transferencia o cheque."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2803,5 +2805,19 @@
       "rechazado": "El lector no pudo cobrar. Prueba con otra tarjeta.",
       "probarOtraVez": "Probar otra vez"
     }
+  },
+  "registroPais": {
+    "titulo": "País del negocio",
+    "detectado": "Lo hemos puesto según tu ubicación. Cámbialo si no es correcto: decide tus impuestos y tu moneda.",
+    "listos": "Disponibles",
+    "otros": "Otros países",
+    "sinConfigurar": "La configuración fiscal para {{pais}} aún no está lista. Puedes registrarte y llevar tus obras, tu equipo y tu agenda desde hoy; para facturar con los impuestos de tu país, escríbenos a soporte y lo preparamos contigo.",
+    "enPruebas": "{{pais}} está en preparación: ya puedes llevar obras y presupuestos con IVA. La factura electrónica (SDI) llegará pronto; hasta entonces, escríbenos a soporte si la necesitas."
+  },
+  "paisAviso": {
+    "sinConfigurarTitulo": "La configuración fiscal para {{pais}} aún no está lista",
+    "sinConfigurarTexto": "Puedes usar obras, equipo, agenda y presupuestos. Para emitir facturas con los impuestos de tu país, escríbenos a soporte y lo preparamos contigo.",
+    "enPruebasTitulo": "{{pais}} está en preparación",
+    "enPruebasTexto": "Ya facturas con IVA y en euros. La factura electrónica (SDI) llegará pronto; si la necesitas antes, escríbenos a soporte."
   }
 }

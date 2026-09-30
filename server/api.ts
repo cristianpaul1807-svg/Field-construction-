@@ -73,7 +73,7 @@ import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODO
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
 // importa así.
-import { aplicaLaCcq, esPaisConocido, esRegionDe, paisDe, PAIS_POR_DEFECTO } from "../shared/paises";
+import { aplicaLaCcq, esPaisConocido, esPaisDelRegistro, esRegionDe, paisDe, PAIS_POR_DEFECTO } from "../shared/paises";
 import { calcularIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "../shared/iva";
 import { esPartitaIvaValida, esCodiceFiscaleValido } from "../shared/fiscaleItalia";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
@@ -549,6 +549,14 @@ async function computeInvoiceTax(
   // Pescara y también la Isla del Príncipe Eduardo— y buscar la provincia en
   // la tabla de Canadá sin mirar el país le pondría a una factura italiana el
   // impuesto de otro continente.
+  // Un país que todavía no sabemos hacer no tiene impuesto: ni el de Canadá
+  // ni ninguno inventado. Se marca, y las facturas esperan (ver
+  // `createInvoiceRecord`); lo que sigue funcionando son los presupuestos y
+  // su total antes de impuestos.
+  if (business.country && paisDe(business.country).impuestos === "sin_configurar") {
+    return { taxAmount: 0, breakdown: { country: business.country, sinConfigurar: true } };
+  }
+
   if (esPaisConocido(business.country) && paisDe(business.country).impuestos === "italia") {
     const delNegocio = (business.tax_config as { ivaPredefinita?: unknown } | null)?.ivaPredefinita;
     const opcion: OpcionIva = esOpcionIva(opcionIva) ? opcionIva : esOpcionIva(delNegocio) ? delNegocio : IVA_POR_DEFECTO;
@@ -600,6 +608,12 @@ async function createInvoiceRecord(
   }
 ): Promise<string> {
   const { taxAmount, breakdown } = await computeInvoiceTax(admin, input.businessId, input.subtotal, input.iva);
+  // Una factura sin el impuesto de su país tiene aspecto de buena y no lo
+  // es: su contable se la devolvería. Hasta que el país esté configurado no
+  // se emite, y el mensaje le dice a quién escribir.
+  if ((breakdown as { sinConfigurar?: boolean }).sinConfigurar) {
+    throw new CodedError("pais_sin_configurar", "Los impuestos de este país todavía no están configurados");
+  }
 
   // The holdback is withheld from progress payments, not from the final one —
   // the final invoice is where the withheld money is released, so applying it
@@ -1440,9 +1454,27 @@ apiRouter.post(
     // castellano: se arregló lo que se veía y se quedó lo que no, que es de
     // dónde salen los correos de suscripción que le mandamos después.
 
+    // El país que eligió al darse de alta. La base de datos pone por defecto lo
+    // de Quebec —provincia QC y un 10 % de retención—, y un negocio de Roma o
+    // de Madrid naciendo con eso tendría la TVQ en su primera factura. Sin
+    // país reconocible se queda en Canadá, que es lo que era todo el mundo
+    // antes de que se preguntara.
+    const pais = esPaisDelRegistro(req.body?.country) ? (req.body.country as string) : PAIS_POR_DEFECTO;
+    const deQuebec = pais === "CA";
+
     const { data: business, error: businessError } = await admin
       .from("businesses")
-      .insert({ name: businessName, slug, primary_auth_user_id: req.authUserId!, subscription_plan: "prueba", subscription_status: "trialing", trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), subscription_language: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")) })
+      .insert({
+        name: businessName,
+        slug,
+        primary_auth_user_id: req.authUserId!,
+        subscription_plan: "prueba",
+        subscription_status: "trialing",
+        trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        subscription_language: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")),
+        country: pais,
+        ...(deQuebec ? {} : { province: "", holdback_percent: 0 }),
+      })
       .select("id")
       .single();
     if (businessError) throw businessError;
@@ -8103,6 +8135,16 @@ apiRouter.post(
     }
 
     const admin = getSupabaseAdmin();
+    // La cuenta que se crea es canadiense (`createConnectedAccount`), y el
+    // país de una cuenta de Stripe no se cambia nunca: a un negocio de fuera
+    // de Canadá habría que decirle después que repita el alta entera. Se para
+    // aquí hasta que su país tenga su cuenta.
+    const { data: delNegocio } = await admin.from("businesses").select("country").eq("id", req.businessId!).maybeSingle();
+    if ((delNegocio?.country ?? PAIS_POR_DEFECTO) !== "CA") {
+      res.status(409).json({ error: "Los cobros con tarjeta todavía no están listos en este país", code: "pagos_pais_no_listos" });
+      return;
+    }
+
     const stripe = getStripe();
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
@@ -13875,14 +13917,14 @@ apiRouter.patch(
     // reconoce deja al negocio sin tasa de impuesto y sin forma de saberlo.
     const paisFinal = body.country !== undefined ? body.country : null;
     if (paisFinal !== null) {
-      if (!esPaisConocido(paisFinal)) {
+      if (!esPaisDelRegistro(paisFinal)) {
         res.status(400).json({ error: "unknown country", code: "unknown_country" });
         return;
       }
-      // Un país en pruebas no se elige desde la pantalla: sus facturas todavía
-      // no son válidas allí. Quien ya lo tiene puesto —el negocio de pruebas—
-      // puede seguir guardando su ficha.
-      if (paisDe(paisFinal).enPruebas) {
+      // Un país en pruebas o sin configurar no se elige desde la pantalla: sus
+      // facturas todavía no son válidas. Quien ya lo tiene puesto —porque se
+      // registró así— puede seguir guardando su ficha.
+      if (paisDe(paisFinal).enPruebas || !esPaisConocido(paisFinal)) {
         const { data: actual } = await supabase.from("businesses").select("country").eq("id", req.businessId!).maybeSingle();
         if (actual?.country !== paisFinal) {
           res.status(400).json({ error: "country not offered yet", code: "pais_no_ofrecido" });
