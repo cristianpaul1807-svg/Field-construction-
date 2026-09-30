@@ -204,6 +204,24 @@ export const OTROS_PAISES: Record<string, string> = {
   PY: "PYG", PE: "PEN", PR: "USD", UY: "UYU", VE: "VES", AU: "AUD", NZ: "NZD",
 };
 
+/**
+ * Donde Stripe deja abrir una cuenta a un negocio (stripe.com/global, mirado
+ * en septiembre de 2026). Es lo que separa «todavía no cobramos con tarjeta
+ * en tu país» de «Stripe no opera en tu país»: a un contratista de Bogotá
+ * decirle lo primero es prometerle algo que no depende de nosotros.
+ */
+const PAISES_CON_STRIPE = new Set([
+  "AU", "AT", "BE", "BR", "BG", "CA", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GI", "GR", "HK",
+  "HU", "IE", "IT", "JP", "LV", "LI", "LT", "LU", "MY", "MT", "MX", "NL", "NZ", "NO", "PL", "PT", "RO",
+  "SG", "SK", "SI", "ES", "SE", "CH", "TH", "AE", "GB", "US",
+  // Puerto Rico abre la cuenta como Estados Unidos.
+  "PR",
+]);
+
+export function stripeOperaEn(codigo: string | null | undefined): boolean {
+  return !!codigo && PAISES_CON_STRIPE.has(codigo);
+}
+
 /** Un país que existe pero cuyas reglas todavía no sabemos hacer. */
 function paisSinConfigurar(codigo: string): Pais {
   return {

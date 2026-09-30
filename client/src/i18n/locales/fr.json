@@ -412,7 +412,8 @@
     "ivaHabitual": "TVA habituelle de vos factures",
     "ivaHabitualAyuda": "Chaque facture part avec cette TVA, et vous pouvez la changer en la créant si ce chantier est différent.",
     "paisSinTarjeta": "Les paiements par carte ne sont pas encore disponibles dans votre pays ({{pais}}). En attendant, encaissez comme aujourd'hui et notez-le avec « Marquer payée » sur chaque facture.",
-    "paisSinTarjetaCorto": "Les paiements par carte ne sont pas encore disponibles dans votre pays ({{pais}})."
+    "paisSinTarjetaCorto": "Les paiements par carte ne sont pas encore disponibles dans votre pays ({{pais}}).",
+    "stripeNoOpera": "Stripe, la passerelle utilisée pour les paiements par carte, n'opère pas dans votre pays ({{pais}}). Encaissez comme aujourd'hui; si vous en avez besoin, écrivez au soutien."
   },
   "communication": {
     "title": "Messagerie",

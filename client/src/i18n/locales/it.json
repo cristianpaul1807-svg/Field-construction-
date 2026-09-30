@@ -412,7 +412,8 @@
     "ivaHabitual": "IVA abituale delle tue fatture",
     "ivaHabitualAyuda": "Ogni fattura nasce con questa IVA, e puoi cambiarla quando la crei se quel lavoro è diverso.",
     "paisSinTarjeta": "I pagamenti con carta non sono ancora disponibili nel tuo paese ({{pais}}). Nel frattempo incassa come fai adesso e segnalo con «Segna incassata» su ogni fattura.",
-    "paisSinTarjetaCorto": "I pagamenti con carta non sono ancora disponibili nel tuo paese ({{pais}})."
+    "paisSinTarjetaCorto": "I pagamenti con carta non sono ancora disponibili nel tuo paese ({{pais}}).",
+    "stripeNoOpera": "Stripe, il circuito con cui si incassa con carta, non opera nel tuo paese ({{pais}}). Incassa come fai adesso; se ti serve, scrivi all'assistenza."
   },
   "communication": {
     "title": "Messaggistica",

@@ -19,7 +19,7 @@
 
 import { calcularIva, esOpcionIva } from "../../shared/iva.ts";
 import { esPartitaIvaValida, esCodiceFiscaleValido, esCodiceDestinatarioValido } from "../../shared/fiscaleItalia.ts";
-import { paisDe, paisesQueSeOfrecen, esRegionDe, aplicaLaCcq, detectarPais, esPaisDelRegistro, avisoDelPais, grupoDePais } from "../../shared/paises.ts";
+import { paisDe, paisesQueSeOfrecen, esRegionDe, aplicaLaCcq, detectarPais, esPaisDelRegistro, avisoDelPais, grupoDePais, stripeOperaEn } from "../../shared/paises.ts";
 
 let bien = 0;
 let mal = 0;
@@ -74,6 +74,7 @@ ok("quien es de España ve su país en la ficha", paisesQueSeOfrecen("ES").map((
 // donde no funcionan es un botón que lleva a un error.
 ok("tarjeta: sólo Canadá", ["CA", "IT", "ES"].map((c) => paisDe(c).cobrosConTarjeta), [true, false, false]);
 ok("QuickBooks: sólo Canadá", ["CA", "IT", "ES"].map((c) => paisDe(c).quickbooks), [true, false, false]);
+ok("Stripe opera en Italia y España, no en Colombia ni Venezuela", ["IT", "ES", "CO", "VE"].map(stripeOperaEn), [true, true, false, false]);
 ok("la ayuda de cada uno", [grupoDePais("CA"), grupoDePais("IT"), grupoDePais("ES"), grupoDePais(null)], ["CA", "IT", "otros", "CA"]);
 
 console.log(`\n${bien} bien, ${mal} mal`);

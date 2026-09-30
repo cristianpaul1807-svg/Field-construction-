@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CreditCard, ExternalLink, Receipt, ShieldCheck, Smartphone } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { OPCIONES_IVA, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "@shared/iva";
-import { paisDe } from "@shared/paises";
+import { paisDe, stripeOperaEn } from "@shared/paises";
 import { useTranslation } from "react-i18next";
 import { PaymentPlanEditor } from "@/components/PaymentPlanEditor";
 import { PaisSinConfigurar } from "@/components/PaisAlert";
@@ -186,7 +186,15 @@ export default function SettingsPayments() {
         {/* Sin impuesto configurado tampoco hay facturas que marcar cobradas,
             así que a ese país no se le manda a hacerlo. */}
         {!pais.cobrosConTarjeta && (
-          <PaisSinConfigurar mensaje={sinImpuesto ? "payments.paisSinTarjetaCorto" : "payments.paisSinTarjeta"} />
+          <PaisSinConfigurar
+            mensaje={
+              !stripeOperaEn(country)
+                ? "payments.stripeNoOpera"
+                : sinImpuesto
+                  ? "payments.paisSinTarjetaCorto"
+                  : "payments.paisSinTarjeta"
+            }
+          />
         )}
 
         {!loading && connectStatus && pais.cobrosConTarjeta && (

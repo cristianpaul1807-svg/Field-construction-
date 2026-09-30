@@ -31,6 +31,26 @@ error; daría documentos mal hechos con aspecto de correctos.
 | `cobrosConTarjeta` | Si hay Stripe: sin él no hay Cobrar, ni enlace de pago, ni botón de pagar en el portal o en el correo |
 | `quickbooks` | Si se puede conectar QuickBooks. La sincronización elige el código de impuesto por provincia canadiense |
 
+**País e idioma son cosas distintas.** El país decide lo que se trabaja —moneda,
+impuesto, números fiscales, qué pantallas existen—; el idioma, sólo cómo se
+lee. Un negocio italiano puede llevar el panel en español y uno de Quebec en
+italiano, y todo tiene que salir entero en los cuatro. Lo único que no se
+traduce es lo que es dato legal de un país: la mención de la inversione
+contabile va en italiano en el PDF, con su traducción detrás.
+
+**Stripe no opera en todas partes.** `stripeOperaEn` lleva la lista de
+stripe.com/global. Donde Stripe no abre cuentas (casi toda Latinoamérica salvo
+México y Brasil, Albania, Marruecos) el panel no dice «todavía»: dice que
+Stripe no opera allí. Donde sí opera, la tarjeta llega creando la cuenta
+conectada con el país del negocio y su moneda; la plataforma española puede
+crear cuentas en casi todos esos países.
+
+**QuickBooks sólo sirve donde está localizado.** En Italia existe la edición
+Global, pero sin los tipos de IVA italianos ni la factura electrónica del SDI,
+y allí la contabilidad la lleva el commercialista con programas italianos. Por
+eso `quickbooks` es sólo Canadá; en Italia la integración que importa es el
+XML FatturaPA.
+
 El menú, el bot de ayuda y la pantalla de Datos de la empresa **se dibujan desde aquí**: pinta los
 identificadores que el país declare, enseña la licencia sólo si la hay, y la
 retención y la CCQ sólo donde aplican.

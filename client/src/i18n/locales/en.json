@@ -412,7 +412,8 @@
     "ivaHabitual": "Usual VAT on your invoices",
     "ivaHabitualAyuda": "Each invoice starts with this VAT, and you can change it when creating one if that job is different.",
     "paisSinTarjeta": "Card payments aren't available in your country ({{pais}}) yet. Meanwhile, get paid the way you do now and record it with «Mark as paid» on each invoice.",
-    "paisSinTarjetaCorto": "Card payments aren't available in your country ({{pais}}) yet."
+    "paisSinTarjetaCorto": "Card payments aren't available in your country ({{pais}}) yet.",
+    "stripeNoOpera": "Stripe, the gateway used for card payments, doesn't operate in your country ({{pais}}). Get paid the way you do now; if you need card payments, write to support."
   },
   "communication": {
     "title": "Messaging",

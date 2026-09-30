@@ -412,7 +412,8 @@
     "ivaHabitual": "IVA habitual de tus facturas",
     "ivaHabitualAyuda": "Cada factura nace con este IVA, y al crearla puedes cambiarlo si esa obra es distinta.",
     "paisSinTarjeta": "Los cobros con tarjeta todavía no están disponibles en tu país ({{pais}}). Mientras tanto cobra como lo haces ahora y apúntalo con «Marcar cobrada» en cada factura.",
-    "paisSinTarjetaCorto": "Los cobros con tarjeta todavía no están disponibles en tu país ({{pais}})."
+    "paisSinTarjetaCorto": "Los cobros con tarjeta todavía no están disponibles en tu país ({{pais}}).",
+    "stripeNoOpera": "Stripe, la pasarela con la que se cobra con tarjeta, no opera en tu país ({{pais}}). Cobra como lo haces ahora; si ves que te hace falta, escríbenos a soporte."
   },
   "communication": {
     "title": "Mensajería",

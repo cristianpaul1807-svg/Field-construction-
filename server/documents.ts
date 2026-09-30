@@ -268,7 +268,12 @@ interface Copy {
   /** Italia: la línea del IVA con su tipo, y la de la inversione contabile. */
   iva: (aliquota: number) => string;
   ivaInversione: string;
-  /** La frase que la ley pide en una factura en inversione contabile. */
+  /**
+   * La frase que la ley pide en una factura en inversione contabile. Va en
+   * italiano en todos los idiomas, porque es la mención que busca quien la
+   * revisa en Italia; en los otros tres, con su traducción detrás, para que
+   * quien lee el documento en su idioma sepa qué está firmando.
+   */
   notaInversione: string;
   total: string;
   license: string;
@@ -380,7 +385,7 @@ const COPY: Record<DocLang, Copy> = {
     hst: "HST",
     iva: (a) => `IVA ${a} %`,
     ivaInversione: "IVA 0 % (N6.3)",
-    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
+    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72. (Inversión del sujeto pasivo: el IVA lo ingresa el cliente.)",
     total: "TOTAL",
     license: "Licencia",
     reportRows: (n: number) => (n === 1 ? "1 línea" : `${n} líneas`),
@@ -499,7 +504,7 @@ const COPY: Record<DocLang, Copy> = {
     hst: "HST",
     iva: (a) => `VAT ${a}%`,
     ivaInversione: "VAT 0% (N6.3)",
-    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
+    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72. (Reverse charge: the customer accounts for the VAT.)",
     total: "TOTAL",
     license: "Licence",
     reportRows: (n: number) => (n === 1 ? "1 row" : `${n} rows`),
@@ -617,7 +622,7 @@ const COPY: Record<DocLang, Copy> = {
     hst: "TVH",
     iva: (a) => `TVA ${a} %`,
     ivaInversione: "TVA 0 % (N6.3)",
-    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
+    notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72. (Autoliquidation : la TVA est due par le client.)",
     total: "TOTAL",
     license: "Licence RBQ",
     reportRows: (n: number) => (n === 1 ? "1 ligne" : `${n} lignes`),
