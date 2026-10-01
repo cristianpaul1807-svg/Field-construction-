@@ -13,7 +13,11 @@ if not names:
     raise SystemExit("No MCP tools found")
 
 read_only_exceptions = {"audit_quickbooks_sync"}
-non_read_names = [name for name in names if not name.startswith("get_") and name not in read_only_exceptions]
+# Calcular y comprobar contestan con aritmética sobre lo que ya hay o sobre lo
+# que trae la persona; no guardan nada. El guardia de mutaciones de abajo es
+# el que lo garantiza, no el nombre.
+READ_ONLY_PREFIXES = ("get_", "calculate_", "check_")
+non_read_names = [name for name in names if not name.startswith(READ_ONLY_PREFIXES) and name not in read_only_exceptions]
 if non_read_names:
     raise SystemExit(f"Non-read-only MCP tool names found: {', '.join(non_read_names)}")
 

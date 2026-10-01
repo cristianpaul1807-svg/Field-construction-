@@ -175,8 +175,8 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   if (propietario) return propietario;
 
   const [employee, subcontractor] = await Promise.all([
-    admin.from("employees").select("id, business_id, name, role, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
-    admin.from("subcontractors").select("id, business_id, name, trade, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)").eq("auth_user_id", data.user.id).maybeSingle(),
+    admin.from("employees").select("id, business_id, name, role, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at, country)").eq("auth_user_id", data.user.id).maybeSingle(),
+    admin.from("subcontractors").select("id, business_id, name, trade, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at, country)").eq("auth_user_id", data.user.id).maybeSingle(),
   ]);
   const row = employee.data ?? subcontractor.data;
   if (employee.error && subcontractor.error) throw employee.error;
@@ -185,7 +185,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
     console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     return null;
   }
-  const workerBusiness = (row as any).businesses as { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null } | null;
+  const workerBusiness = (row as any).businesses as { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null; country?: string | null } | null;
   const plan = planDe(workerBusiness?.subscription_plan);
   return {
     workerId: row.id,
@@ -196,6 +196,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
     areas: areasDelRol((row as any).roles),
     plan,
     access: accesoDe({ plan, estadoSuscripcion: workerBusiness?.subscription_status ?? null, pruebaHasta: workerBusiness?.trial_ends_at ?? null }),
+    country: workerBusiness?.country ?? null,
   };
 }
 

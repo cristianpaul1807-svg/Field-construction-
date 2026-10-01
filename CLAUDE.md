@@ -83,6 +83,7 @@ node --experimental-strip-types scripts/prueba-suscripcion/mapeo.mjs    # Stripe
 node --experimental-strip-types scripts/prueba-suscripcion/bloqueo.mjs  # when the trial ends, and what stays open
 node --experimental-strip-types scripts/prueba-mcp/roles.mjs            # MCP never opens what the panel closes
 node --experimental-strip-types scripts/prueba-mcp/idiomas.mjs          # the MCP consent page speaks all four
+node scripts/prueba-mcp/servidor.mjs                                     # the real MCP server, per country, against a fake database
 node --experimental-strip-types scripts/prueba-italia/iva.mjs          # Italian VAT, fiscal IDs, and Italy staying hidden
 ```
 

@@ -15,6 +15,7 @@
 // archivo con node a pelo, que no resuelve `./permisos` sin ella. El build
 // pasa por esbuild y le da igual.
 import { puede, type Area } from "./permisos.ts";
+import { grupoDePais, paisDe, type GrupoDePais, type Pais } from "./paises.ts";
 
 export type McpRole = "worker" | "manager" | "office" | "admin";
 
@@ -27,6 +28,8 @@ export type McpRole = "worker" | "manager" | "office" | "admin";
 export type IdentidadParaRol = {
   workerKind: "employee" | "subcontractor" | "owner";
   areas: Area[] | null;
+  /** El país del negocio. Sin él, lo que `paisDe` entiende: Canadá. */
+  country?: string | null;
 };
 
 /**
@@ -95,7 +98,28 @@ export type Capacidad = "campo" | "facturacion" | "reportes" | "contabilidad" | 
  * cada herramienta repetía sus roles a mano al comprobarlos, que es la forma
  * de que un día una esté escondida y sea invocable, o al revés.
  */
-export const TOOL_ACCESS: Record<string, { roles: McpRole[]; area: Area; capability: Capacidad }> = {
+/**
+ * Lo que una herramienta necesita del país del negocio, si necesita algo.
+ *
+ * Es la cuarta condición, y es la misma que esconde una pantalla en el menú:
+ * fuera de Canadá no hay QuickBooks en el panel, así que tampoco en Claude.
+ * Una herramienta que existe y siempre contesta «aquí no funciona» es el
+ * botón muerto de siempre, sólo que hablado.
+ */
+type RequisitoDePais = keyof Pick<Pais, "quickbooks" | "cobrosConTarjeta" | "nomina">;
+
+export const TOOL_ACCESS: Record<
+  string,
+  {
+    roles: McpRole[];
+    area: Area;
+    capability: Capacidad;
+    /** Algo que el país tiene que tener: QuickBooks, tarjeta, nómina. */
+    requierePais?: RequisitoDePais;
+    /** Sólo para estos países. Calcular una factura no tiene respuesta donde no hay impuesto. */
+    soloEn?: GrupoDePais[];
+  }
+> = {
   get_projects: { roles: ["manager", "office", "admin"], area: "campo", capability: "campo" },
   get_project: { roles: ["manager", "office", "admin"], area: "campo", capability: "campo" },
   get_project_schedule: { roles: ["manager", "office", "admin"], area: "campo", capability: "campo" },
@@ -107,7 +131,16 @@ export const TOOL_ACCESS: Record<string, { roles: McpRole[]; area: Area; capabil
   get_expenses: { roles: ["office", "admin"], area: "dinero", capability: "reportes" },
   get_payments: { roles: ["office", "admin"], area: "dinero", capability: "facturacion" },
   get_profitability: { roles: ["admin"], area: "dinero", capability: "margen" },
-  audit_quickbooks_sync: { roles: ["office", "admin"], area: "dinero", capability: "contabilidad" },
+  audit_quickbooks_sync: { roles: ["office", "admin"], area: "dinero", capability: "contabilidad", requierePais: "quickbooks" },
+  // Lo que una persona de oficina ya ve en Presupuestos y en el CRM.
+  get_estimates: { roles: ["office", "admin"], area: "dinero", capability: "facturacion" },
+  get_clients: { roles: ["office", "admin"], area: "clientes", capability: "campo" },
+  // Calcular no guarda nada, pero dice cuánto se le va a cobrar a un cliente,
+  // y eso en el panel está detrás del área de dinero.
+  calculate_invoice: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["CA", "IT"] },
+  // Comprobar una Partita IVA es aritmética sobre un número que trae la
+  // persona; no lee nada del negocio. Sólo tiene sentido en Italia.
+  check_italian_tax_id: { roles: ["office", "admin"], area: "clientes", capability: "campo", soloEn: ["IT"] },
 };
 
 /**
@@ -120,5 +153,7 @@ export const TOOL_ACCESS: Record<string, { roles: McpRole[]; area: Area; capabil
 export function puedeUsarHerramienta(identity: IdentidadParaRol, toolName: string): boolean {
   const access = TOOL_ACCESS[toolName];
   if (!access) return false;
+  if (access.requierePais && !paisDe(identity.country)[access.requierePais]) return false;
+  if (access.soloEn && !access.soloEn.includes(grupoDePais(identity.country))) return false;
   return access.roles.includes(roleOf(identity)) && puede(identity.areas, access.area);
 }

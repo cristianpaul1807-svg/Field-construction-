@@ -1787,10 +1787,10 @@
         },
         "rolesMcp": {
           "title": "Qué puede consultar cada rol con MCP",
-          "p1": "El administrador o propietario puede consultar la visión completa autorizada por el plan: proyectos, operaciones, facturas, cobros, gastos, rentabilidad y auditoría de QuickBooks. Oficina y contabilidad consultan la información operativa o financiera que les corresponde.",
+          "p1": "El administrador o propietario puede consultar la visión completa autorizada por el plan: proyectos, presupuestos, clientes, facturas, cobros, gastos y rentabilidad, y pedir que calcule una factura antes de emitirla, con el impuesto de su país y la retención. En Canadá, además, la auditoría de QuickBooks. Oficina y contabilidad consultan la información operativa o financiera que les corresponde.",
           "p2": "El jefe de obra consulta sus proyectos y perímetro: agenda, órdenes, tareas, equipo, documentos y horas. El técnico consulta únicamente su trabajo asignado y sus propios registros.",
           "p3": "El trabajador de campo y el subcontratista entran con su código y solo consultan sus proyectos, órdenes, tareas, horario, horas y documentos autorizados. No ven información financiera ni datos de otros compañeros.",
-          "p4": "Ejemplo: un jefe de obra puede preguntar «¿Qué órdenes pendientes hay en mi obra?»; el administrador puede preguntar «¿Qué facturas están vencidas?». MCP siempre filtra por empresa, rol, perímetro y plan.",
+          "p4": "Ejemplo: un jefe de obra puede preguntar «¿Qué órdenes pendientes hay en mi obra?»; el administrador, «¿Qué facturas están vencidas?» o «¿Cuánto sería la factura del depósito de 10.000?». Los importes llegan con su moneda, así que Claude no confunde dólares con euros. MCP siempre filtra por empresa, rol, perímetro y plan.",
           "nota": "Todos los roles son de solo lectura en esta primera fase."
         },
         "estadoMcp": {

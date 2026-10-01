@@ -66,7 +66,7 @@ Lo construido desde la Fase 0, para que nadie lo vuelva a planificar:
 ### [ ] Pista MCP: el producto hablado (EN CURSO)
 Detalle en `docs/desarrollo/plan-maestro-mcp.md`, sección 11.
 - [x] Lectura segura por rol, plan y negocio.
-- [ ] **Fase A**: el MCP sabe el país (moneda, impuesto, catálogo filtrado), lee presupuestos y clientes, y calcula impuestos sin escribir nada.
+- [x] **Fase A**: el MCP sabe el país (moneda, impuesto, catálogo filtrado), lee presupuestos y clientes, y calcula impuestos sin escribir nada.
 - [ ] **Fase B**: crear hablando, siempre borrador + confirmación del propietario: presupuesto, factura, cobro, envío.
 - [ ] **Fase C**: lo de cada país — Italia (FatturaPA/SDI, bonifico parlante, congruità, vencimientos, SAL); Canadá (informe CCQ, resumen TPS/TVQ, holdback liberable).
 

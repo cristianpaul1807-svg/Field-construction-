@@ -41,11 +41,33 @@ No se deben implementar todavía herramientas MCP como `clock_in`, `clock_out`, 
 | `get_expenses` | Gastos registrados, opcionalmente por proyecto. |
 | `get_payments` | Pagos recibidos y sus referencias. |
 | `get_profitability` | Rentabilidad por obra para el propietario principal. |
-| `audit_quickbooks_sync` | Estado y errores de QuickBooks, sin sincronizar. |
+| `audit_quickbooks_sync` | Estado y errores de QuickBooks, sin sincronizar. **Sólo en Canadá.** |
+| `get_estimates` | Presupuestos del negocio. `total` es antes de impuestos, que es lo que se guarda. |
+| `get_clients` | Clientes y contactos, con su Partita IVA o codice fiscale si los tienen. Nunca la llave del portal. |
+| `calculate_invoice` | Cuánto sería una factura —impuesto del país, retención, lo que paga el cliente— sin crearla. Usa `calcularFactura`, la misma cuenta que la factura emitida. Canadá e Italia. |
+| `check_italian_tax_id` | Comprueba una Partita IVA o un codice fiscale con su dígito de control. **Sólo en Italia.** |
+
+### El país
+
+Cada conexión lleva el país del negocio (`WorkerIdentity.country`). De ahí
+salen tres cosas:
+
+- **La moneda.** `get_business_summary` devuelve `business.currency` y el
+  sistema de impuestos; las herramientas de dinero añaden `currency` a su
+  respuesta. Sin eso Claude adivinaba, y adivinaba dólares.
+- **El catálogo.** `TOOL_ACCESS` (`shared/mcpRoles.ts`) puede pedir algo del
+  país (`requierePais: "quickbooks"`) o limitar una herramienta a unos países
+  (`soloEn: ["IT"]`). Igual que el menú del panel: fuera de Canadá no hay
+  QuickBooks en el panel, y tampoco en Claude.
+- **El impuesto** de `calculate_invoice`, por `computeInvoiceTax`.
+
+Los títulos y las descripciones de las herramientas van en inglés: los lee el
+modelo para decidir cuál usar. Lo que lee la persona es la respuesta de
+Claude, que contesta en su idioma.
 
 El servidor aplica la función de acceso y la capacidad de campo del plan antes de ejecutar una herramienta. Cuando el negocio está bloqueado o el plan no incluye el área de campo, responde con un error de autorización y registra el intento.
 
-Las herramientas operativas de encargado exigen un rol reconocido y limitan los resultados a proyectos donde la identidad está vinculada por asignación, agenda u orden. Las herramientas financieras exigen el rol correspondiente y la capacidad del plan. Todas son de lectura; las herramientas de creación, modificación, envío y sincronización siguen fuera del servidor MCP.
+Las herramientas operativas de encargado exigen un rol reconocido y limitan los resultados a proyectos donde la identidad está vinculada por asignación, agenda u orden. Las herramientas financieras exigen el rol correspondiente y la capacidad del plan. Todas son de lectura —las que calculan o comprueban tampoco guardan nada—; las herramientas de creación, modificación, envío y sincronización siguen fuera del servidor MCP.
 
 ## Seguridad y borrado
 

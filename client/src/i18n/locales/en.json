@@ -1787,10 +1787,10 @@
         },
         "rolesMcp": {
           "title": "What each role can query with MCP",
-          "p1": "The administrator or owner can query the full view allowed by the plan: projects, operations, invoices, payments, expenses, profitability and QuickBooks audit. Office and accounting can query the operational or financial information assigned to them.",
+          "p1": "The administrator or owner can query the full view allowed by the plan: projects, estimates, clients, invoices, payments, expenses and profitability, and ask for an invoice to be calculated before issuing it, with their country's tax and the holdback. In Canada, the QuickBooks audit as well. Office and accounting can query the operational or financial information assigned to them.",
           "p2": "A project manager can query their projects and perimeter: schedule, work orders, tasks, team, documents and hours. A technician can query only their assigned work and their own records.",
           "p3": "A field worker or subcontractor signs in with a code and can only query their projects, orders, tasks, schedule, hours and authorized documents. They cannot see financial information or other teammates' data.",
-          "p4": "Example: a project manager can ask “What pending orders are in my project?”; an administrator can ask “Which invoices are overdue?”. MCP always filters by company, role, perimeter and plan.",
+          "p4": "Example: a project manager can ask “What pending orders are in my project?”; an administrator, “Which invoices are overdue?” or “What would the deposit invoice for 10,000 come to?”. Amounts come with their currency, so Claude doesn't mix up dollars and euros. MCP always filters by company, role, perimeter and plan.",
           "nota": "Every role is read-only in this first phase."
         },
         "estadoMcp": {

@@ -11,6 +11,10 @@ import { getSupabaseAdmin } from "./supabaseAdmin";
 import { hashToken } from "./supabaseAuth";
 import { profitabilityByProject } from "./profitability";
 import { receivables } from "./receivables";
+import { calcularFactura } from "./calculoDeFactura";
+import { grupoDePais, paisDe } from "../shared/paises";
+import { OPCIONES_IVA } from "../shared/iva";
+import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
 
 const MCP_PROTOCOL_VERSION = "2025-06-18";
 const MAX_ROWS = 100;
@@ -33,6 +37,12 @@ export type WorkerIdentity = {
   areas: Area[] | null;
   plan: Plan;
   access: "activo" | "prueba" | "bloqueado";
+  /**
+   * El país del negocio. Decide la moneda de cada importe que se devuelve,
+   * qué impuesto se calcula y qué herramientas existen —QuickBooks sólo donde
+   * funciona—, igual que decide el menú del panel.
+   */
+  country: string | null;
 };
 
 type ReadToolContext = {
@@ -98,10 +108,10 @@ export async function resolveOwnerIdentity(
   businessId?: string,
 ): Promise<WorkerIdentity | null> {
   const admin = getSupabaseAdmin();
-  const columnas = "id, name, subscription_plan, subscription_status, trial_ends_at";
+  const columnas = "id, name, subscription_plan, subscription_status, trial_ends_at, country";
 
   const construir = (
-    negocio: { id: string; name?: string | null; subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null },
+    negocio: { id: string; name?: string | null; subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null; country?: string | null },
     rol: string,
     areas: Area[] | null,
   ): WorkerIdentity => {
@@ -119,6 +129,7 @@ export async function resolveOwnerIdentity(
         estadoSuscripcion: negocio.subscription_status ?? null,
         pruebaHasta: negocio.trial_ends_at ?? null,
       }),
+      country: negocio.country ?? null,
     };
   };
 
@@ -213,12 +224,12 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
   }
   const table = connection.employee_id ? "employees" : "subcontractors";
   const select = connection.employee_id
-    ? "id, business_id, name, role, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)"
-    : "id, business_id, name, trade, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)";
+    ? "id, business_id, name, role, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at, country)"
+    : "id, business_id, name, trade, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at, country)";
   const { data: row, error } = await admin.from(table).select(select).eq("id", id).eq("business_id", connection.business_id).maybeSingle();
   if (error) throw error;
   if (!row) return null;
-  const business = (row as any).businesses as { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null } | null;
+  const business = (row as any).businesses as { subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null; country?: string | null } | null;
   const plan = planDe(business?.subscription_plan);
   return {
     workerId: row.id,
@@ -229,6 +240,7 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
     areas: areasDelRol((row as any).roles),
     plan,
     access: accesoDe({ plan, estadoSuscripcion: business?.subscription_status ?? null, pruebaHasta: business?.trial_ends_at ?? null }),
+    country: business?.country ?? null,
   };
 }
 
@@ -238,12 +250,12 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
   const [employee, subcontractor] = await Promise.all([
     admin
       .from("employees")
-      .select("id, business_id, name, role, role_id, status, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)")
+      .select("id, business_id, name, role, role_id, status, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at, country)")
       .eq("access_token_hash", hash)
       .maybeSingle(),
     admin
       .from("subcontractors")
-      .select("id, business_id, name, trade, role_id, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at)")
+      .select("id, business_id, name, trade, role_id, roles(name, permissions), businesses(subscription_plan, subscription_status, trial_ends_at, country)")
       .eq("access_token_hash", hash)
       .maybeSingle(),
   ]);
@@ -261,6 +273,7 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
     subscription_plan?: string | null;
     subscription_status?: string | null;
     trial_ends_at?: string | null;
+    country?: string | null;
   } | null;
   const plan = planDe(business?.subscription_plan);
   const access = accesoDe({
@@ -278,6 +291,7 @@ export async function resolveWorker(token: string): Promise<WorkerIdentity | nul
     areas: areasDelRol((row as any).roles),
     plan,
     access,
+    country: business?.country ?? null,
   };
 }
 
@@ -385,15 +399,19 @@ function createMcpServer(context: ReadToolContext) {
   const admin = getSupabaseAdmin();
   const assignedColumn = context.identity.workerKind === "employee" ? "assigned_employee_id" : "assigned_subcontractor_id";
   const workerColumn = context.identity.workerKind === "employee" ? "employee_id" : "subcontractor_id";
+  // La moneda viaja con cada importe. Sin ella Claude tiene que adivinar si
+  // 12.500 son dólares o euros, y adivina lo que más ha leído: dólares.
+  const pais = paisDe(context.identity.country);
+  const currency = pais.moneda;
 
   server.registerTool(
     "get_my_schedule",
     {
-      title: "Mon horaire",
-      description: "Consulte les événements et ordres de travail du travailleur pour une date donnée.",
+      title: "My schedule",
+      description: "The worker's own events and work orders for one day.",
       inputSchema: {
-        date: z.string().optional().describe("Date locale au format YYYY-MM-DD"),
-        timezoneOffsetMinutes: z.number().optional().describe("Décalage local en minutes par rapport à UTC"),
+        date: z.string().optional().describe("Local date, YYYY-MM-DD"),
+        timezoneOffsetMinutes: z.number().optional().describe("Local offset from UTC, in minutes"),
       },
     },
     async ({ date, timezoneOffsetMinutes }) => {
@@ -434,9 +452,9 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_my_work_orders",
     {
-      title: "Mes ordres de travail",
-      description: "Consulte les ordres de travail attribués à ce travailleur.",
-      inputSchema: { status: z.string().optional().describe("Filtrer par statut Field") },
+      title: "My work orders",
+      description: "Work orders assigned to this worker.",
+      inputSchema: { status: z.string().optional().describe("Filter by status") },
     },
     async ({ status }) => {
       const denied = requireReadable(context, "get_my_work_orders");
@@ -462,8 +480,8 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_my_projects",
     {
-      title: "Mes projets",
-      description: "Consulte les projets auxquels ce travailleur est rattaché par affectation, agenda ou ordre de travail.",
+      title: "My projects",
+      description: "Projects this worker is linked to through an assignment, the schedule or a work order.",
       inputSchema: {},
     },
     async () => {
@@ -496,9 +514,9 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_my_tasks",
     {
-      title: "Mes tâches",
-      description: "Consulte les tâches de travail attribuées à ce travailleur.",
-      inputSchema: { includeCompleted: z.boolean().optional().describe("Inclure les ordres terminés") },
+      title: "My tasks",
+      description: "Open tasks assigned to this worker.",
+      inputSchema: { includeCompleted: z.boolean().optional().describe("Include completed ones") },
     },
     async ({ includeCompleted }) => {
       const denied = requireReadable(context, "get_my_tasks");
@@ -524,9 +542,9 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_my_time_entries",
     {
-      title: "Mes heures",
-      description: "Consulte les heures enregistrées par ce travailleur, sans modifier les fichages.",
-      inputSchema: { from: z.string().optional().describe("Date de début ISO"), to: z.string().optional().describe("Date de fin ISO") },
+      title: "My hours",
+      description: "Hours this worker has clocked. Read-only: it never changes a clock-in.",
+      inputSchema: { from: z.string().optional().describe("Start date, ISO"), to: z.string().optional().describe("End date, ISO") },
     },
     async ({ from, to }) => {
       const denied = requireReadable(context, "get_my_time_entries");
@@ -553,8 +571,8 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_my_documents",
     {
-      title: "Mes documents",
-      description: "Consulte les documents explicitement rendus visibles à ce travailleur.",
+      title: "My documents",
+      description: "Documents the office has made visible to this worker.",
       inputSchema: {},
     },
     async () => {
@@ -580,8 +598,8 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_projects",
     {
-      title: "Projets de mon périmètre",
-      description: "Consulte les projets opérationnels auxquels un chef de chantier ou une personne de bureau est rattaché.",
+      title: "Projects",
+      description: "Projects within this person's scope: all of them for the owner, the assigned ones for a site manager.",
       inputSchema: {},
     },
     async () => {
@@ -611,9 +629,9 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_project",
     {
-      title: "Détail du projet",
-      description: "Consulta el detalle de un proyecto dentro del perímetro operativo del encargado.",
-      inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
+      title: "Project detail",
+      description: "One project within this person's scope.",
+      inputSchema: { projectId: z.string().uuid().describe("Project id") },
     },
     async ({ projectId }) => {
       const denied = requireRole(context, "get_project");
@@ -642,9 +660,9 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_project_schedule",
     {
-      title: "Agenda del proyecto",
-      description: "Consulta eventos y órdenes planificadas de un proyecto autorizado.",
-      inputSchema: { projectId: z.string().uuid().describe("Identificador del proyecto") },
+      title: "Project schedule",
+      description: "Planned events and work orders of one project within scope.",
+      inputSchema: { projectId: z.string().uuid().describe("Project id") },
     },
     async ({ projectId }) => {
       const denied = requireRole(context, "get_project_schedule");
@@ -668,9 +686,9 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_work_orders",
     {
-      title: "Órdenes de mi perímetro",
-      description: "Consulta las órdenes de trabajo de los proyectos autorizados, sin modificarlas.",
-      inputSchema: { status: z.string().optional().describe("Filtrar por estado Field") },
+      title: "Work orders",
+      description: "Work orders of the projects within scope. Read-only.",
+      inputSchema: { status: z.string().optional().describe("Filter by status") },
     },
     async ({ status }) => {
       const denied = requireRole(context, "get_work_orders");
@@ -692,8 +710,8 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_workers",
     {
-      title: "Équipe de mon périmètre",
-      description: "Consulta los empleados y subcontratistas vinculados a los proyectos autorizados, sin salarios ni datos sensibles.",
+      title: "Team",
+      description: "Employees and subcontractors linked to the projects within scope, without pay or sensitive data.",
       inputSchema: {},
     },
     async () => {
@@ -736,8 +754,8 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_business_summary",
     {
-      title: "Resumen de la empresa",
-      description: "Devuelve un resumen agregado de la empresa para roles de administración, oficina o contabilidad.",
+      title: "Business summary",
+      description: "Aggregate figures for the business, plus its country, currency and tax system. Call this first to know how to read every other amount.",
       inputSchema: {},
     },
     async () => {
@@ -757,6 +775,16 @@ function createMcpServer(context: ReadToolContext) {
       ]);
       for (const result of [projects, delayedProjects, employees, subcontractors, workOrders]) if (result.error) throw result.error;
       const result = {
+        // Lo que hace falta para leer todo lo demás: en qué moneda están los
+        // importes, qué impuesto se aplica y qué cosas existen en este país.
+        business: {
+          country: context.identity.country ?? "CA",
+          currency,
+          taxSystem: pais.impuestos,
+          cardPayments: pais.cobrosConTarjeta,
+          quickbooks: pais.quickbooks,
+          payroll: pais.nomina,
+        },
         projectsActive: projects.count ?? 0,
         projectsDelayed: delayedProjects.count ?? 0,
         invoicesPending: receivableReport.invoices.length,
@@ -772,9 +800,9 @@ function createMcpServer(context: ReadToolContext) {
   server.registerTool(
     "get_invoices",
     {
-      title: "Factures",
-      description: "Consulta facturas del negocio sin crearlas, modificarlas ni enviarlas.",
-      inputSchema: { status: z.string().optional().describe("Filtrar por estado de factura") },
+      title: "Invoices",
+      description: "Invoices of the business with their tax breakdown. Amounts are in `currency`. Read-only: never creates, changes or sends an invoice.",
+      inputSchema: { status: z.string().optional().describe("Filter by invoice status") },
     },
     async ({ status }) => {
       const denied = requireRole(context, "get_invoices");
@@ -782,20 +810,20 @@ function createMcpServer(context: ReadToolContext) {
         await audit(context, "get_invoices", false, { code: "access_denied" });
         return denied;
       }
-      let query = admin.from("invoices").select("id, number, type, amount, subtotal, tax_amount, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name)").eq("business_id", context.identity.businessId).order("created_at", { ascending: false }).limit(MAX_ROWS);
+      let query = admin.from("invoices").select("id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name)").eq("business_id", context.identity.businessId).order("created_at", { ascending: false }).limit(MAX_ROWS);
       if (status) query = query.eq("status", status);
       const { data, error } = await query;
       if (error) throw error;
       await audit(context, "get_invoices", true, { count: data?.length ?? 0 });
-      return jsonResult({ invoices: data ?? [] });
+      return jsonResult({ currency, invoices: data ?? [] });
     },
   );
 
   server.registerTool(
     "get_receivables",
     {
-      title: "Cuentas por cobrar",
-      description: "Consulta el saldo pendiente y su antigüedad mediante el reporte financiero existente.",
+      title: "Receivables",
+      description: "What clients still owe and how old it is. Amounts are in `currency`.",
       inputSchema: {},
     },
     async () => {
@@ -806,16 +834,16 @@ function createMcpServer(context: ReadToolContext) {
       }
       const result = await receivables(admin, context.identity.businessId);
       await audit(context, "get_receivables", true, { total: result.total, invoices: result.invoices.length });
-      return jsonResult(result);
+      return jsonResult({ currency, ...result });
     },
   );
 
   server.registerTool(
     "get_expenses",
     {
-      title: "Gastos",
-      description: "Consulta gastos registrados del negocio sin modificarlos.",
-      inputSchema: { projectId: z.string().uuid().optional().describe("Filtrar por proyecto") },
+      title: "Expenses",
+      description: "Recorded expenses of the business. Amounts are in `currency`. Read-only.",
+      inputSchema: { projectId: z.string().uuid().optional().describe("Filter by project") },
     },
     async ({ projectId }) => {
       const denied = requireRole(context, "get_expenses");
@@ -828,15 +856,15 @@ function createMcpServer(context: ReadToolContext) {
       const { data, error } = await query;
       if (error) throw error;
       await audit(context, "get_expenses", true, { count: data?.length ?? 0 });
-      return jsonResult({ expenses: data ?? [] });
+      return jsonResult({ currency, expenses: data ?? [] });
     },
   );
 
   server.registerTool(
     "get_payments",
     {
-      title: "Pagos recibidos",
-      description: "Consulta pagos recibidos y su referencia sin enviar ni registrar nuevos pagos.",
+      title: "Payments received",
+      description: "Payments received and their reference. Amounts are in `currency`. Read-only.",
       inputSchema: {},
     },
     async () => {
@@ -848,15 +876,15 @@ function createMcpServer(context: ReadToolContext) {
       const { data, error } = await admin.from("payments").select("id, invoice_id, amount, paid_at, method, reference, stripe_fee, stripe_fee_tax, stripe_net, invoices(number, project_id, clients(name))").eq("business_id", context.identity.businessId).order("paid_at", { ascending: false }).limit(MAX_ROWS);
       if (error) throw error;
       await audit(context, "get_payments", true, { count: data?.length ?? 0 });
-      return jsonResult({ payments: data ?? [] });
+      return jsonResult({ currency, payments: data ?? [] });
     },
   );
 
   server.registerTool(
     "get_profitability",
     {
-      title: "Rentabilidad por obra",
-      description: "Consulta la rentabilidad calculada por los servicios financieros existentes; nunca modifica datos.",
+      title: "Profitability by project",
+      description: "Profitability per project from the existing financial reports. Amounts are in `currency`. Read-only.",
       inputSchema: {},
     },
     async () => {
@@ -867,15 +895,15 @@ function createMcpServer(context: ReadToolContext) {
       }
       const result = await profitabilityByProject(admin, admin, context.identity.businessId);
       await audit(context, "get_profitability", true, { count: result.length });
-      return jsonResult({ projects: result });
+      return jsonResult({ currency, projects: result });
     },
   );
 
   server.registerTool(
     "audit_quickbooks_sync",
     {
-      title: "Auditoría de QuickBooks",
-      description: "Consulta el estado y los errores registrados de la sincronización de QuickBooks, sin sincronizar nada.",
+      title: "QuickBooks sync audit",
+      description: "Status and errors of the QuickBooks sync. Never syncs anything.",
       inputSchema: {},
     },
     async () => {
@@ -890,6 +918,125 @@ function createMcpServer(context: ReadToolContext) {
       const result = { total: links.length, errors: links.filter((row: any) => row.error || row.status === "error").length, diverged: links.filter((row: any) => row.diverged === true).length, links };
       await audit(context, "audit_quickbooks_sync", true, { total: result.total, errors: result.errors, diverged: result.diverged });
       return jsonResult(result);
+    },
+  );
+
+  server.registerTool(
+    "get_estimates",
+    {
+      title: "Estimates",
+      description: "Estimates of the business. `total` is before tax, which is what is stored and invoiced; the tax depends on the country (see get_business_summary). Amounts are in `currency`. Read-only.",
+      inputSchema: { status: z.string().optional().describe("Filter by status: borrador, enviado, aceptado, rechazado") },
+    },
+    async ({ status }) => {
+      const denied = requireRole(context, "get_estimates");
+      if (denied) {
+        await audit(context, "get_estimates", false, { code: "access_denied" });
+        return denied;
+      }
+      let query = admin.from("estimates").select("id, number, status, total, description, created_at, client_id, clients(name), project_id, projects(name)").eq("business_id", context.identity.businessId).order("created_at", { ascending: false }).limit(MAX_ROWS);
+      if (status) query = query.eq("status", status);
+      const { data, error } = await query;
+      if (error) throw error;
+      await audit(context, "get_estimates", true, { count: data?.length ?? 0 });
+      return jsonResult({ currency, estimates: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "get_clients",
+    {
+      title: "Clients",
+      description: "Clients and leads of the business with their contact details and, in Italy, their tax ids. Read-only.",
+      inputSchema: { search: z.string().optional().describe("Part of the client's name") },
+    },
+    async ({ search }) => {
+      const denied = requireRole(context, "get_clients");
+      if (denied) {
+        await audit(context, "get_clients", false, { code: "access_denied" });
+        return denied;
+      }
+      // Sin `access_token` ni su hash: es la llave del portal del cliente, y
+      // no tiene nada que hacer en una conversación.
+      let query = admin.from("clients").select("id, name, email, phone, address, lead_status, created_at, partita_iva, codice_fiscale, pec, codice_destinatario").eq("business_id", context.identity.businessId).order("created_at", { ascending: false }).limit(MAX_ROWS);
+      // Los comodines fuera: buscar «%» no debería traer a todo el mundo.
+      const nombre = search?.trim().replace(/[%_,()]/g, "");
+      if (nombre) query = query.ilike("name", `%${nombre}%`);
+      const { data, error } = await query;
+      if (error) throw error;
+      await audit(context, "get_clients", true, { count: data?.length ?? 0 });
+      return jsonResult({ clients: data ?? [] });
+    },
+  );
+
+  server.registerTool(
+    "calculate_invoice",
+    {
+      title: "Calculate an invoice",
+      description:
+        "What an invoice would come to, without creating it: the tax of this business's country, the holdback withheld or released, and the amount the client pays. Uses exactly the same calculation as a real invoice. Nothing is saved.",
+      inputSchema: {
+        subtotal: z.number().positive().describe("Amount before tax"),
+        type: z.enum(["deposito", "parcial", "final"]).describe("deposito (deposit), parcial (progress payment) or final"),
+        projectId: z.string().uuid().optional().describe("For a final invoice: the project, so the holdback withheld so far is released"),
+        iva: z.enum(OPCIONES_IVA).optional().describe("Italy only: 22, 10, 4, or rc (inversione contabile). Defaults to the business's usual VAT"),
+      },
+    },
+    async ({ subtotal, type, projectId, iva }) => {
+      const denied = requireRole(context, "calculate_invoice");
+      if (denied) {
+        await audit(context, "calculate_invoice", false, { code: "access_denied" });
+        return denied;
+      }
+      const cuenta = await calcularFactura(admin, {
+        businessId: context.identity.businessId,
+        subtotal,
+        type,
+        projectId: projectId ?? null,
+        iva: grupoDePais(context.identity.country) === "IT" ? iva : undefined,
+      });
+      // Por si el país perdió su impuesto entre el listado y la llamada: la
+      // respuesta no puede ser una cifra sin impuesto con aspecto de buena.
+      if ((cuenta.breakdown as { sinConfigurar?: boolean }).sinConfigurar) {
+        await audit(context, "calculate_invoice", false, { code: "pais_sin_configurar" });
+        return errorResult("This country's taxes are not configured yet, so invoices cannot be calculated or issued.", "pais_sin_configurar");
+      }
+      const result = {
+        saved: false,
+        currency,
+        subtotal: Math.round(subtotal * 100) / 100,
+        taxAmount: cuenta.taxAmount,
+        taxBreakdown: cuenta.breakdown,
+        holdbackPercent: cuenta.holdbackPercent,
+        holdbackWithheld: cuenta.holdbackAmount,
+        holdbackReleased: cuenta.holdbackReleased,
+        amountDue: cuenta.amount,
+      };
+      await audit(context, "calculate_invoice", true, { type, subtotal: result.subtotal, amountDue: result.amountDue });
+      return jsonResult(result);
+    },
+  );
+
+  server.registerTool(
+    "check_italian_tax_id",
+    {
+      title: "Check an Italian tax id",
+      description: "Checks a Partita IVA (11 digits) or a codice fiscale (16 characters) with its control character. Reads nothing from the business.",
+      inputSchema: { value: z.string().min(1).max(32).describe("The Partita IVA or codice fiscale to check") },
+    },
+    async ({ value }) => {
+      const denied = requireRole(context, "check_italian_tax_id");
+      if (denied) {
+        await audit(context, "check_italian_tax_id", false, { code: "access_denied" });
+        return denied;
+      }
+      const limpio = value.replace(/\s+/g, "").toUpperCase().replace(/^IT/, "");
+      const kind = /^\d{11}$/.test(limpio) ? "partita_iva" : limpio.length === 16 ? "codice_fiscale" : "unknown";
+      const valid = kind === "partita_iva" ? esPartitaIvaValida(limpio) : kind === "codice_fiscale" ? esCodiceFiscaleValido(limpio) : false;
+      // Sin el número en la auditoría: es un dato personal y no hace falta
+      // para saber que se usó la herramienta.
+      await audit(context, "check_italian_tax_id", true, { kind, valid });
+      return jsonResult({ value: limpio, kind, valid });
     },
   );
 

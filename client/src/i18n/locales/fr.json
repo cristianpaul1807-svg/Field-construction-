@@ -1787,10 +1787,10 @@
         },
         "rolesMcp": {
           "title": "Ce que chaque rôle peut consulter avec MCP",
-          "p1": "L’administrateur ou le propriétaire peut consulter la vue complète autorisée par le forfait: projets, opérations, factures, paiements, dépenses, rentabilité et audit QuickBooks. Le bureau et la comptabilité consultent les informations opérationnelles ou financières qui leur sont attribuées.",
+          "p1": "L’administrateur ou le propriétaire peut consulter la vue complète autorisée par le forfait: projets, soumissions, clients, factures, paiements, dépenses et rentabilité, et demander de calculer une facture avant de l’émettre, avec les taxes de son pays et la retenue. Au Canada, aussi l’audit QuickBooks. Le bureau et la comptabilité consultent les informations opérationnelles ou financières qui leur sont attribuées.",
           "p2": "Le chef de chantier consulte ses projets et son périmètre: agenda, ordres de travail, tâches, équipe, documents et heures. Le technicien consulte uniquement son travail assigné et ses propres enregistrements.",
           "p3": "Le travailleur de terrain et le sous-traitant se connectent avec un code et consultent seulement leurs projets, ordres, tâches, horaire, heures et documents autorisés. Ils ne voient pas les informations financières ni les données des collègues.",
-          "p4": "Exemple: un chef de chantier peut demander «Quelles ordres sont en attente dans mon projet?»; un administrateur peut demander «Quelles factures sont en retard?». MCP filtre toujours par entreprise, rôle, périmètre et forfait.",
+          "p4": "Exemple: un chef de chantier peut demander «Quels ordres sont en attente dans mon projet?»; un administrateur, «Quelles factures sont en retard?» ou «Combien ferait la facture d’acompte de 10 000?». Les montants arrivent avec leur devise, donc Claude ne confond pas dollars et euros. MCP filtre toujours par entreprise, rôle, périmètre et forfait.",
           "nota": "Tous les rôles sont en lecture seule pendant cette première phase."
         },
         "estadoMcp": {

@@ -110,5 +110,20 @@ for (const areas of combinaciones) {
 }
 ok("Ninguna combinación de áreas abre en MCP algo cerrado en el panel", ampliaciones, []);
 
+/* ---------- El país decide qué existe ---------- */
+
+// Lo mismo que el menú del panel: QuickBooks sólo en Canadá, la Partita IVA
+// sólo en Italia, y calcular una factura sólo donde hay impuesto que calcular.
+const catalogo = (country) =>
+  ["audit_quickbooks_sync", "calculate_invoice", "check_italian_tax_id", "get_invoices"].filter((h) =>
+    puedeUsarHerramienta({ workerKind: "owner", areas: null, country }, h),
+  );
+ok("Canadá: QuickBooks y calcular, sin Partita IVA", catalogo("CA"), ["audit_quickbooks_sync", "calculate_invoice", "get_invoices"]);
+ok("Italia: calcular y Partita IVA, sin QuickBooks", catalogo("IT"), ["calculate_invoice", "check_italian_tax_id", "get_invoices"]);
+ok("España (sin configurar): ni QuickBooks ni calcular una factura", catalogo("ES"), ["get_invoices"]);
+ok("Sin país guardado se comporta como Canadá", catalogo(null), catalogo("CA"));
+ok("Un trabajador de campo no calcula facturas en ningún país",
+   ["CA", "IT"].map((country) => puedeUsarHerramienta({ workerKind: "employee", areas: null, country }, "calculate_invoice")), [false, false]);
+
 console.log(`\n${bien} bien, ${mal} mal`);
 process.exit(mal ? 1 : 0);

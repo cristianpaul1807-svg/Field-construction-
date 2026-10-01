@@ -293,7 +293,13 @@ euros.
 
 La regla de la sección 10 no cambia: hablar no da más permisos que tocar.
 
-### 11.2 Fase A — que lo que ya lee hable el país (sin escribir nada)
+### 11.2 Fase A — que lo que ya lee hable el país (sin escribir nada) ✅
+
+Hecha el 1 de octubre de 2026. Las 18 herramientas pasan a 22 (21 en Canadá
+e Italia, 19 en un país sin configurar). La comprueba
+`node scripts/prueba-mcp/servidor.mjs`, que arranca el servidor de verdad
+contra una base de datos de mentira para un negocio de cada tipo. Lo que se
+hizo, punto por punto:
 
 1. `get_business_summary` devuelve `country`, `currency` y el tipo de impuesto
    (`canada` / `italia` / `sin_configurar`). Las herramientas de dinero
@@ -307,14 +313,15 @@ La regla de la sección 10 no cambia: hablar no da más permisos que tocar.
    persona de todos modos.
 5. Lecturas que faltan para conversar de verdad: `get_estimates` y
    `get_clients`.
-6. **Calculadoras puras**, que no guardan nada: `calculate_tax` (TPS/TVQ por
-   provincia, o IVA 22/10/4 y N6.3, con la misma función que usa la factura),
-   `calculate_holdback`, `check_partita_iva`. Son la mitad de las preguntas
-   del día a día y no tocan ningún dato.
+6. **Calculadoras puras**, que no guardan nada: `calculate_invoice` (impuesto
+   del país, retención retenida o liberada y lo que paga el cliente, con
+   `calcularFactura`, la misma cuenta que la factura emitida) y
+   `check_italian_tax_id`. Son la mitad de las preguntas del día a día y no
+   tocan ningún dato.
 
-Criterio: las pruebas de `scripts/prueba-mcp/` cubren un negocio canadiense,
-uno italiano y uno de un país sin configurar, y el catálogo de cada uno es el
-que le toca.
+Criterio, cumplido: las pruebas de `scripts/prueba-mcp/` cubren un negocio
+canadiense, uno italiano y uno de un país sin configurar, y el catálogo de
+cada uno es el que le toca.
 
 ### 11.3 Fase B — escribir, siempre en dos pasos (sólo propietario)
 

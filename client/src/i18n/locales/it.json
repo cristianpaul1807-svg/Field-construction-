@@ -1787,10 +1787,10 @@
         },
         "rolesMcp": {
           "title": "Cosa può consultare ogni ruolo con MCP",
-          "p1": "L’amministratore o proprietario può consultare la vista completa consentita dal piano: progetti, operazioni, fatture, pagamenti, spese, redditività e audit di QuickBooks. Ufficio e contabilità consultano le informazioni operative o finanziarie assegnate loro.",
+          "p1": "L’amministratore o proprietario può consultare la vista completa consentita dal piano: progetti, preventivi, clienti, fatture, pagamenti, spese e redditività, e chiedere di calcolare una fattura prima di emetterla, con l’imposta del suo paese e la ritenuta. In Canada, anche l’audit di QuickBooks. Ufficio e contabilità consultano le informazioni operative o finanziarie assegnate loro.",
           "p2": "Il capo cantiere consulta i propri progetti e perimetro: agenda, ordini di lavoro, attività, squadra, documenti e ore. Il tecnico consulta solo il lavoro assegnato e i propri dati.",
           "p3": "Il lavoratore sul campo e il subappaltatore accedono con un codice e consultano solo progetti, ordini, attività, agenda, ore e documenti autorizzati. Non vedono dati finanziari o dei colleghi.",
-          "p4": "Esempio: un capo cantiere può chiedere «Quali ordini in sospeso ci sono nel mio progetto?»; un amministratore può chiedere «Quali fatture sono scadute?». MCP filtra sempre per azienda, ruolo, perimetro e piano.",
+          "p4": "Esempio: un capo cantiere può chiedere «Quali ordini in sospeso ci sono nel mio progetto?»; un amministratore, «Quali fatture sono scadute?» o «Quanto verrebbe la fattura dell’acconto di 10.000?». Gli importi arrivano con la loro valuta, così Claude non confonde dollari ed euro. MCP filtra sempre per azienda, ruolo, perimetro e piano.",
           "nota": "Tutti i ruoli sono di sola lettura in questa prima fase."
         },
         "estadoMcp": {
