@@ -1,8 +1,8 @@
 # Plan maestro del MCP de Logiciel Construction
 
-**Fecha de actualización:** 20 de septiembre de 2026  
+**Fecha de actualización:** 1 de octubre de 2026 (añadida la sección 11: el MCP hablado y según el país)  
 **Repositorio revisado:** `main`  
-**Commit revisado:** `4872d52` (`UI: Add loading state to MCP OAuth form`)
+**Commit revisado:** `930c3a4`
 
 ## 1. Propósito de este documento
 
@@ -109,7 +109,7 @@ El plan `pilot` conserva acceso activo según las reglas actuales del producto. 
 
 ### Prioridad 0: cerrar la base actual antes de ampliar funciones
 
-1. **Corregir el error de TypeScript actual.** `pnpm check:mcp-readonly` pasa correctamente, pero `pnpm check` falla en `client/src/pages/SettingsUsers.tsx` porque se envía el tono `critical` a `StatusBadge`, cuyo tipo `StatusTone` no lo acepta. Debe corregirse sin alterar la lógica MCP.
+1. ~~**Corregir el error de TypeScript actual.**~~ Resuelto: `npx tsc --noEmit` pasa limpio.
 2. **Ejecutar la matriz de pruebas con datos reales de prueba.** El archivo `docs/desarrollo/mcp-fase1-pruebas.md` define casos para dos negocios, dos trabajadores, negocio bloqueado, plan sin `campo`, conexión revocada, trabajador eliminado y token inválido. La mayoría sigue marcada como pendiente.
 3. **Probar cada rol con una cuenta controlada.** No basta con que la herramienta esté escondida de `tools/list`; también hay que intentar invocarla directamente y verificar el rechazo.
 4. **Verificar el aislamiento de clientes.** El rol cliente todavía no está completo como identidad MCP equivalente a trabajador y propietario. Debe definirse su tabla, sujeto OAuth, perímetro y catálogo de herramientas antes de anunciarlo.
@@ -191,6 +191,10 @@ requested
 
 También debe soportar `failed`, `partially_completed`, `cancelled`, `exported` y `submitted_externally_by_user`. Toda transición debe quedar persistida y auditada. Una acción no debe saltar de `requested` a una modificación real sin validación y confirmación cuando corresponda.
 
+`create_invoice` y la creación de presupuestos pasan a la Fase B de la
+sección 11: siempre como **borrador que el propietario confirma**, nunca en
+un solo paso.
+
 Las primeras acciones que **no** deben activarse todavía son:
 
 - `clock_in` y `clock_out`;
@@ -268,3 +272,98 @@ La fase de lectura se considera cerrada cuando se cumpla todo lo siguiente:
 ## 10. Regla de seguridad permanente
 
 > Ninguna conexión MCP debe ampliar lo que la persona ya puede ver dentro de Logiciel Construction. La IA puede facilitar la consulta y el análisis, pero no puede convertirse en una ruta alternativa para saltarse el plan, el rol, la suscripción, el perímetro del negocio o la confirmación humana.
+
+## 11. El MCP hablado, y según el país
+
+El producto se va a usar sobre todo **hablando**: «hazle la factura del
+acconto a Bianchi», «¿cuánto me falta por cobrar?», «calcula el IVA de esta
+reforma». Eso pide dos cosas que el MCP de hoy no tiene: **saber de qué país
+es el negocio** y **poder hacer**, no sólo leer. El análisis de lo que usan las
+empresas en Italia y de lo que les falta está en
+[competencia-italia.md](competencia-italia.md).
+
+### 11.1 El principio
+
+El MCP sabe lo mismo que el panel sobre el país, y lo saca del mismo sitio:
+`shared/paises.ts`. Igual que el menú esconde Nóminas o QuickBooks donde no
+funcionan, **el catálogo de herramientas se filtra por país** (`nomina`,
+`quickbooks`, `cobrosConTarjeta`, `impuestos`), y toda respuesta con dinero
+dice en qué moneda está. Claude no tiene que adivinar si 12.500 son dólares o
+euros.
+
+La regla de la sección 10 no cambia: hablar no da más permisos que tocar.
+
+### 11.2 Fase A — que lo que ya lee hable el país (sin escribir nada)
+
+1. `get_business_summary` devuelve `country`, `currency` y el tipo de impuesto
+   (`canada` / `italia` / `sin_configurar`). Las herramientas de dinero
+   (`get_invoices`, `get_receivables`, `get_payments`, `get_expenses`,
+   `get_profitability`) añaden `currency`.
+2. `get_invoices` devuelve `tax_breakdown`: sin él no puede decir cuánta TVQ o
+   cuánto IVA lleva una factura, ni si va en inversione contabile.
+3. `audit_quickbooks_sync` sólo se registra donde `paisDe(country).quickbooks`.
+4. Los títulos de las herramientas, en un solo idioma. Hoy hay títulos en
+   francés y en castellano mezclados; Claude contesta en el idioma de la
+   persona de todos modos.
+5. Lecturas que faltan para conversar de verdad: `get_estimates` y
+   `get_clients`.
+6. **Calculadoras puras**, que no guardan nada: `calculate_tax` (TPS/TVQ por
+   provincia, o IVA 22/10/4 y N6.3, con la misma función que usa la factura),
+   `calculate_holdback`, `check_partita_iva`. Son la mitad de las preguntas
+   del día a día y no tocan ningún dato.
+
+Criterio: las pruebas de `scripts/prueba-mcp/` cubren un negocio canadiense,
+uno italiano y uno de un país sin configurar, y el catálogo de cada uno es el
+que le toca.
+
+### 11.3 Fase B — escribir, siempre en dos pasos (sólo propietario)
+
+Todo lo que crea algo sigue el mismo patrón: **la herramienta prepara un
+borrador y devuelve el resumen exacto** (cliente, importes, impuesto, qué va a
+pasar después); **nada se emite hasta `confirm_action`**. Usa la máquina de
+estados de la sección 6, guardada en Supabase, no en memoria.
+
+| Herramienta | Qué hace al confirmar | Reutiliza |
+|---|---|---|
+| `draft_estimate` | Crea el presupuesto en borrador | El constructor de presupuestos |
+| `draft_invoice` | Emite la factura: número, impuesto del país, correo al cliente | `createInvoiceRecord` (que ya rechaza `pais_sin_configurar`) |
+| `record_payment` | La marca cobrada, con medio y fecha | La ruta de cobro manual |
+| `send_estimate` | Se lo manda al cliente para firmar | `avisarDelPresupuesto` |
+
+Lo que el panel prohíbe, el MCP también: emitir sin impuesto configurado,
+borrar una factura, cambiar una factura emitida (se corrige con nota de
+crédito).
+
+### 11.4 Fase C — lo de cada país
+
+**Italia** (en el orden de [italia.md](../funciones/italia.md)):
+
+- `export_fatturapa` y después `send_to_sdi` / `get_sdi_status`;
+- `get_bonifico_parlante` — el texto exacto que el cliente tiene que poner en
+  la transferencia para no perder su deducción;
+- `check_congruita` — obras de 70.000 € o más y su incidencia de mano de obra
+  frente a la mínima, antes del final;
+- `get_expiring_documents` — patente a crediti, DURC de subcontratistas,
+  cursos de seguridad, tessere: lo que vence y cuándo;
+- `draft_sal` cuando exista el computo con prezzario.
+
+**Canadá:**
+
+- `prepare_ccq_report` (el prototipo de `server/mcp/tools/` con datos reales);
+- `get_tax_summary` — TPS y TVQ cobradas en un periodo, para la declaración;
+- `get_releasable_holdback` — la retención que ya se puede liberar.
+
+**Siguientes países:** cada uno entra con su factura electrónica: España con
+Verifactu (sociedades desde el 1-1-2027, autónomos desde el 1-7-2027), Francia
+con Factur-X (emisión de la pyme desde el 1-9-2027). Un país no tiene
+herramientas de escritura de facturas hasta que su impuesto está configurado.
+
+### 11.5 Orden
+
+1. Fase A entera (es pequeña y no escribe nada).
+2. Cerrar la Prioridad 0 de la sección 5, que sigue pendiente: la matriz de
+   pruebas con datos reales.
+3. Máquina de estados en Supabase, y Fase B con `draft_invoice` primero —es la
+   frase que más se va a decir—.
+4. Fase C de Italia al ritmo de la factura electrónica; Fase C de Canadá en
+   paralelo, porque ahí ya hay clientes.

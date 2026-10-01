@@ -104,17 +104,34 @@ acuerdo de trabajo, que no tiene desglose, la saca del país del negocio.
 
 ## Fases
 
-1. **País, EUR e IVA.** ✅ Hecho.
+1. **País, EUR e IVA.** ✅ Hecho. Y el resto del producto según el país: bot de
+   ayuda, portal, correos, menú (sin Cobrar, Nómina ni QuickBooks). ✅
 2. **XML FatturaPA descargable**, para que el negocio lo suba al SDI con su
-   programa o su gestor.
+   programa o su gestor. Con la natura N6.3, el CIG/CUP en obra pública y la
+   mención de la deducción cuando la hay.
 3. **Stripe en euros:** cuentas conectadas italianas, cobros en EUR y precios
    de suscripción italianos (79 €/mes y 790 €/año Chantier, 199 €/mes y
-   1.990 €/año Entreprise).
+   1.990 €/año Entreprise). Stripe opera en Italia y la plataforma española
+   puede crear esas cuentas.
 4. **PDFs, textos y web** para el mercado italiano, y legales para la UE.
-5. **Envío directo al SDI** con un proveedor (A-Cube, Openapi, Invoicetronic…).
+5. **Envío directo al SDI** con un intermediario (A-Cube, Openapi,
+   Invoicetronic…), y el estado de cada factura (entregada, rechazada).
+6. **Bonus edilizi:** el texto del *bonifico parlante* en la factura y en el
+   portal, y el 11 % que retiene la banca conciliado como retención y no como
+   impago.
+7. **Vencimientos:** fecha de caducidad en los Papeles de cada persona y de
+   cada subcontratista (DURC, patente a crediti, cursos de seguridad,
+   tessera), con aviso.
+8. **Congruità:** obras de 70.000 € o más, horas fichadas frente a la
+   incidencia mínima de mano de obra, avisando antes del final.
+9. **Computo metrico con prezzario regional y SAL.** La pieza más grande; la
+   que abre la obra mediana y la pública.
 
 Italia deja de estar en pruebas al terminar la fase 2: es la que hace que sus
-facturas sean válidas.
+facturas sean válidas. Cada fase llega también **hablada** por el MCP (ver la
+sección 11 de [plan-maestro-mcp.md](../desarrollo/plan-maestro-mcp.md)); el
+porqué de este orden está en
+[competencia-italia.md](../desarrollo/competencia-italia.md).
 
 ---
 

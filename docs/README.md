@@ -27,6 +27,8 @@ la plataforma para gestionar su empresa, y quien va a extender el código.
 | Probar lo que sale hacia QuickBooks, sin llamar a Intuit | [desarrollo/probar-quickbooks.md](desarrollo/probar-quickbooks.md) |
 | Avisar de un fallo sin enseñar el crudo | [desarrollo/errores.md](desarrollo/errores.md) |
 | Añadir un país | [desarrollo/paises.md](desarrollo/paises.md) |
+| Qué usa la competencia en Italia, y qué construir | [desarrollo/competencia-italia.md](desarrollo/competencia-italia.md) |
+| El plan del MCP (y el MCP hablado, por país) | [desarrollo/plan-maestro-mcp.md](desarrollo/plan-maestro-mcp.md) |
 
 ---
 
