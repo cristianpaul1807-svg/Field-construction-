@@ -84,6 +84,16 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
     const luca = horas.personas?.[0];
     ok("IT: horas del mes para el consulente", [luca?.totales.ordinarias, luca?.totales.extraordinarias, luca?.totales.ausencias.maltempo, horas.sinAprobar, horas.zonaHoraria], [8, 1, 2, 1, "Europe/Rome"]);
     ok("IT: el detalle va por día", [luca?.dias["2026-09-01"].ordinarias, luca?.dias["2026-09-02"].ausencia], [8, "maltempo"]);
+    // La factura electrónica: con datos completos sale el XML; sin la
+    // dirección del cliente, la lista de lo que falta.
+    DATOS.businesses[0] = { ...DATOS.businesses[0], partita_iva: "06363391001", codice_fiscale: null, address_line: "Via Roma 12", postal_code: "00144", city: "Roma", province: "RM", regime_fiscale: "RF01" };
+    const facturaIt = { id: "11111111-1111-4111-8111-111111111111", number: "2026-0004", type: "deposito", status: "pendiente", description: "Acconto", subtotal: 12500, tax_breakdown: { country: "IT", ivaAliquota: 10, iva: 1250 }, holdback_amount: 0, holdback_released: 0, amount: 13750, due_date: null, created_at: "2026-09-10T10:00:00Z", client_id: "k1", projects: null };
+    DATOS.invoices = [{ ...facturaIt, clients: { name: "Bianchi S.p.A.", partita_iva: "01234567897", codice_destinatario: "M5UXCR1", address_line: "Corso Italia 4", postal_code: "20122", city: "Milano", region: "MI" } }];
+    const xml = await llamar("get_e_invoice", { id: facturaIt.id });
+    ok("IT: el XML de la factura, con su nombre de archivo", [/^IT06363391001_[0-9A-Z]{5}\.xml$/.test(xml.fileName ?? ""), /<TipoDocumento>TD02</.test(xml.xml ?? "")], [true, true]);
+    DATOS.invoices = [{ ...facturaIt, clients: { name: "Bianchi S.p.A.", partita_iva: "01234567897", address_line: "", postal_code: null, city: "Milano" } }];
+    const sinDatos = await llamar("get_e_invoice", { id: facturaIt.id });
+    ok("IT: sin la dirección del cliente, dice qué falta", sinDatos.error?.faltan?.cliente, ["indirizzo", "cap"]);
     ok("IT: clientes sin la llave del portal", Object.keys((await llamar("get_clients", { search: "Bian" })).clients[0]).includes("access_token"), false);
   }
   if (pais === "ES") {

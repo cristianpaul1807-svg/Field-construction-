@@ -85,6 +85,7 @@ node --experimental-strip-types scripts/prueba-mcp/roles.mjs            # MCP ne
 node --experimental-strip-types scripts/prueba-mcp/idiomas.mjs          # the MCP consent page speaks all four
 node scripts/prueba-mcp/servidor.mjs                                     # the real MCP server, per country, against a fake database
 node --experimental-strip-types scripts/prueba-italia/iva.mjs          # Italian VAT, fiscal IDs, and Italy staying hidden
+node --experimental-strip-types scripts/prueba-italia/fatturapa.mjs    # the Italian e-invoice XML, validated against the official schema
 ```
 
 `npm run build` is the marketing site generator, then `vite build`, then

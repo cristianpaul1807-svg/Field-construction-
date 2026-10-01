@@ -13,6 +13,7 @@ import { profitabilityByProject } from "./profitability";
 import { receivables } from "./receivables";
 import { calcularFactura } from "./calculoDeFactura";
 import { resumenDeHoras } from "./resumenDeHoras";
+import { fatturaPADeFactura, fatturaPADeNota } from "./fatturaPAServidor";
 import { grupoDePais, paisDe } from "../shared/paises";
 import { OPCIONES_IVA } from "../shared/iva";
 import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
@@ -1058,6 +1059,34 @@ function createMcpServer(context: ReadToolContext) {
       const result = await resumenDeHoras(admin, context.identity.businessId, month);
       await audit(context, "get_monthly_hours", true, { month, people: result.personas.length, unapproved: result.sinAprobar });
       return jsonResult(result);
+    },
+  );
+
+  server.registerTool(
+    "get_e_invoice",
+    {
+      title: "Italian e-invoice (FatturaPA XML)",
+      description:
+        "The FatturaPA XML of an issued invoice or credit note, ready to upload to the SDI, checked against the official schema. If the business or the client is missing data (Partita IVA, codice fiscale, address), it returns exactly what is missing and from whom instead of an XML the SDI would reject. Read-only: it does not send anything to the SDI.",
+      inputSchema: {
+        id: z.string().uuid().describe("Invoice id (from get_invoices) or credit note id"),
+        kind: z.enum(["invoice", "credit_note"]).optional().describe("Defaults to invoice"),
+      },
+    },
+    async ({ id, kind }) => {
+      const denied = requireRole(context, "get_e_invoice");
+      if (denied) {
+        await audit(context, "get_e_invoice", false, { code: "access_denied" });
+        return denied;
+      }
+      const r = kind === "credit_note"
+        ? await fatturaPADeNota(admin, context.identity.businessId, id)
+        : await fatturaPADeFactura(admin, context.identity.businessId, id);
+      await audit(context, "get_e_invoice", r.ok, r.ok ? { file: r.nombre } : { code: r.code });
+      // Lo que falta, entero y con su forma: Claude se lo cuenta a la persona
+      // y le dice dónde rellenarlo, en vez de un «no se pudo».
+      if (!r.ok) return { isError: true, content: [{ type: "text" as const, text: JSON.stringify({ error: "The e-invoice cannot be generated.", ...r }) }] };
+      return jsonResult({ fileName: r.nombre, xml: r.xml });
     },
   );
 

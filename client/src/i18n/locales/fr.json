@@ -1635,7 +1635,16 @@
     "pais_sin_configurar": "Les taxes de votre pays ne sont pas encore configurées ; les factures ne peuvent donc pas encore être émises. Écrivez au soutien et nous la préparerons avec vous.",
     "pagos_pais_no_listos": "Les paiements par carte ne sont pas encore disponibles dans votre pays. En attendant, vous pouvez marquer les factures comme payées en argent comptant, virement ou chèque.",
     "quickbooks_pais_no_listo": "La connexion avec QuickBooks n'est pas encore disponible dans votre pays.",
-    "mes_no_valido": "Choisissez un mois valide."
+    "mes_no_valido": "Choisissez un mois valide.",
+    "cap_no_valido": "Le CAP (code postal) compte 5 chiffres.",
+    "codice_destinatario_no_valido": "Le code destinataire SDI compte 7 lettres ou chiffres (ou 0000000).",
+    "pec_no_valida": "Cette adresse PEC ne semble pas valide.",
+    "provincia_no_valida": "Choisissez la province dans la liste.",
+    "fatturapa_solo_italia": "La facture électronique italienne n'existe que pour les entreprises en Italie.",
+    "fatturapa_no_encontrada": "Nous n'avons pas trouvé cette facture.",
+    "fatturapa_anulada": "Une facture annulée n'est pas envoyée au SDI. Pour corriger une facture déjà envoyée, émettez une note de crédit.",
+    "fatturapa_sin_iva": "Cette facture a été émise avant que l'entreprise soit en Italie et ne porte pas de TVA : elle ne peut pas devenir une facture électronique.",
+    "fatturapa_datos_incompletos": "Il manque des données pour la facture électronique."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2080,9 +2089,9 @@
         "fatturaElettronica": {
           "title": "La facture électronique (SDI)",
           "p1": "En Italie, la facture valide est un fichier XML qui passe par le Sistema di Interscambio. Le PDF produit ici est une copie de courtoisie : il sert à votre client pour la lire, pas à votre comptabilité.",
-          "p2": "Nous préparons le XML. En attendant, émettez la facture électronique avec votre logiciel habituel ou avec le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate, en recopiant les montants d'ici.",
-          "p3": "Ici, vous continuez à gérer le reste : la soumission, le chantier, l'encaissé et le dû. Quand le XML sera prêt, vous le verrez sur chaque facture, sans rien refaire.",
-          "nota": "Si votre commercialista a besoin de quelque chose de précis pour le passage au SDI, écrivez au soutien : cela nous aide à choisir quoi préparer en premier."
+          "p2": "Chaque facture dans {{menuFinanzas}} → {{menuFacturacion}} a « XML pour le SDI » : c'est la facture électronique, vérifiée contre le schéma officiel. Envoyez-la avec votre logiciel, votre intermédiaire ou le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate.",
+          "p3": "Pour la générer, il faut la Partita IVA et l'adresse de votre entreprise et, du client, sa Partita IVA (entreprise) ou son codice fiscale (particulier) et son adresse. S'il manque quelque chose, le bouton vous dit quoi et vous y emmène ; ceux du client vont sur sa fiche, dans {{menuCrm}}.",
+          "nota": "L'envoi direct au SDI, sans autre logiciel, est en préparation. Les notes de crédit ont aussi leur XML, à côté de la facture qu'elles corrigent."
         },
         "impuestosOtros": {
           "title": "Les taxes de mon pays",
@@ -2898,13 +2907,13 @@
     "listos": "Disponibles",
     "otros": "Autres pays",
     "sinConfigurar": "La configuration fiscale pour {{pais}} n'est pas encore prête. Vous pouvez vous inscrire et gérer vos chantiers, votre équipe et votre agenda dès aujourd'hui ; pour facturer avec les taxes de votre pays, écrivez au soutien et nous la préparerons avec vous.",
-    "enPruebas": "{{pais}} est en préparation : vous pouvez déjà gérer chantiers et soumissions avec TVA. La facture électronique (SDI) arrive bientôt ; d'ici là, écrivez au soutien si vous en avez besoin."
+    "enPruebas": "{{pais}} est en préparation : vous pouvez déjà gérer chantiers et soumissions avec TVA et télécharger le XML de chaque facture pour le SDI. L'envoi direct au SDI arrive bientôt."
   },
   "paisAviso": {
     "sinConfigurarTitulo": "La configuration fiscale pour {{pais}} n'est pas encore prête",
     "sinConfigurarTexto": "Vous pouvez utiliser chantiers, équipe, agenda et soumissions. Pour émettre des factures avec les taxes de votre pays, écrivez au soutien et nous la préparerons avec vous.",
     "enPruebasTitulo": "{{pais}} est en préparation",
-    "enPruebasTexto": "Vous facturez déjà avec TVA et en euros. La facture électronique (SDI) arrive bientôt ; si vous en avez besoin avant, écrivez au soutien.",
+    "enPruebasTexto": "Vous facturez déjà avec la TVA et en euros, et chaque facture a son XML pour le SDI. L'envoi direct au SDI arrive bientôt ; en attendant, envoyez-le avec votre logiciel ou écrivez au soutien.",
     "facturasTexto": "Les taxes de votre pays ({{pais}}) ne sont pas encore configurées, donc les factures ne peuvent pas encore être émises. Écrivez au soutien et nous les préparons avec vous."
   },
   "hoursSummary": {
@@ -2919,5 +2928,38 @@
     "days_other": "{{count}} jours",
     "unapproved_one": "Il y a {{count}} pointage non approuvé ce mois-ci, il ne compte pas. Approuvez-le dans {{menuFichaje}} avant d'envoyer.",
     "unapproved_other": "Il y a {{count}} pointages non approuvés ce mois-ci, ils ne comptent pas. Approuvez-les dans {{menuFichaje}} avant d'envoyer."
+  },
+  "clientFiscal": {
+    "title": "Données pour la facture électronique",
+    "hint": "Une entreprise : sa Partita IVA et son code SDI ou sa PEC. Un particulier : son codice fiscale. Les deux : l'adresse en parties.",
+    "complete": "Complet : la facture électronique peut être émise.",
+    "incomplete": "Il manque pour la facture électronique :",
+    "missing": {
+      "identificativo": "Partita IVA ou codice fiscale",
+      "indirizzo": "rue et numéro",
+      "cap": "CAP",
+      "comune": "commune"
+    },
+    "delivery": "Reçoit les factures à",
+    "codiceDestinatario": "Code destinataire SDI",
+    "codiceDestinatarioHint": "7 caractères. Vide pour un particulier ou s'il reçoit par PEC.",
+    "partitaIvaHint": "Seulement pour une entreprise ou un professionnel.",
+    "codiceFiscaleHint": "Obligatoire pour un particulier."
+  },
+  "fatturaPA": {
+    "download": "XML pour le SDI",
+    "missingTitle": "Données manquantes pour la facture électronique",
+    "missingBusiness": "De votre entreprise :",
+    "missingClient": "Du client :",
+    "goBusiness": "Compléter les données de l'entreprise",
+    "goClient": "Ouvrir la fiche du client",
+    "negocio": {
+      "partita_iva": "Partita IVA",
+      "indirizzo": "rue et numéro",
+      "cap": "CAP",
+      "comune": "commune",
+      "provincia": "province"
+    },
+    "howToSend": "Envoyez-le au SDI avec votre logiciel, votre intermédiaire ou le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate."
   }
 }

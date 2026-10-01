@@ -45,6 +45,8 @@ No se deben implementar todavía herramientas MCP como `clock_in`, `clock_out`, 
 | `get_estimates` | Presupuestos del negocio. `total` es antes de impuestos, que es lo que se guarda. |
 | `get_clients` | Clientes y contactos, con su Partita IVA o codice fiscale si los tienen. Nunca la llave del portal. |
 | `calculate_invoice` | Cuánto sería una factura —impuesto del país, retención, lo que paga el cliente— sin crearla. Usa `calcularFactura`, la misma cuenta que la factura emitida. Canadá e Italia. |
+| `get_monthly_hours` | Horas del mes por persona y día, con las ausencias: lo que necesita quien hace la nómina. |
+| `get_e_invoice` | El XML FatturaPA de una factura o nota de crédito, o lo que falta para generarlo. **Sólo en Italia.** |
 | `check_italian_tax_id` | Comprueba una Partita IVA o un codice fiscale con su dígito de control. **Sólo en Italia.** |
 
 ### El país

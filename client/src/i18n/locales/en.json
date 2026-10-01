@@ -1635,7 +1635,16 @@
     "pais_sin_configurar": "Your country's taxes aren't set up yet, so invoices can't be issued yet. Write to support and we'll set it up with you.",
     "pagos_pais_no_listos": "Card payments aren't available in your country yet. Meanwhile you can mark invoices as paid by cash, transfer or cheque.",
     "quickbooks_pais_no_listo": "The QuickBooks connection isn't available in your country yet.",
-    "mes_no_valido": "Pick a valid month."
+    "mes_no_valido": "Pick a valid month.",
+    "cap_no_valido": "The CAP (postcode) is 5 digits.",
+    "codice_destinatario_no_valido": "The SDI recipient code is 7 letters or digits (or 0000000).",
+    "pec_no_valida": "That PEC address doesn't look valid.",
+    "provincia_no_valida": "Pick the province from the list.",
+    "fatturapa_solo_italia": "The Italian e-invoice only exists for businesses in Italy.",
+    "fatturapa_no_encontrada": "We couldn't find that invoice.",
+    "fatturapa_anulada": "A cancelled invoice isn't sent to the SDI. To correct one already sent, issue a credit note.",
+    "fatturapa_sin_iva": "This invoice was issued before the business was set to Italy and carries no VAT: it can't become an e-invoice.",
+    "fatturapa_datos_incompletos": "Some details are missing for the e-invoice."
   },
   "workLog": {
     "title": "Work log",
@@ -2080,9 +2089,9 @@
         "fatturaElettronica": {
           "title": "E-invoicing (SDI)",
           "p1": "In Italy the valid invoice is an XML file that travels through the Sistema di Interscambio. The PDF produced here is a courtesy copy: it's for your client to read, not for your books.",
-          "p2": "We're preparing the XML. Meanwhile, issue the e-invoice with your usual software or with the free «Fatture e Corrispettivi» service of the Agenzia delle Entrate, copying the amounts from here.",
-          "p3": "Here you keep running everything else: the estimate, the job, what's paid and what's pending. When the XML is ready you'll see it on each invoice, without redoing anything.",
-          "nota": "If your commercialista needs something specific for the SDI step, write to support: it helps us decide what to prepare first."
+          "p2": "Each invoice in {{menuFinanzas}} → {{menuFacturacion}} has «XML for SDI»: that is the e-invoice, checked against the official schema. Upload it with your software, your intermediary or the free «Fatture e Corrispettivi» service of the Agenzia delle Entrate.",
+          "p3": "To generate it you need your business's Partita IVA and address and, from the client, their Partita IVA (company) or codice fiscale (individual) and address. If something is missing the button tells you what and takes you there; the client's go on their card, in {{menuCrm}}.",
+          "nota": "Sending straight to the SDI, without another program, is being prepared. Credit notes have their XML too, next to the invoice they correct."
         },
         "impuestosOtros": {
           "title": "My country's taxes",
@@ -2898,13 +2907,13 @@
     "listos": "Available",
     "otros": "Other countries",
     "sinConfigurar": "The tax setup for {{pais}} isn't ready yet. You can sign up and run your jobs, team and schedule today; to invoice with your country's taxes, write to support and we'll set it up with you.",
-    "enPruebas": "{{pais}} is being prepared: you can already run jobs and estimates with VAT. Electronic invoicing (SDI) is coming soon; until then, write to support if you need it."
+    "enPruebas": "{{pais}} is being prepared: you can already run jobs and estimates with VAT and download each invoice's XML for the SDI. Sending straight to the SDI is coming soon."
   },
   "paisAviso": {
     "sinConfigurarTitulo": "The tax setup for {{pais}} isn't ready yet",
     "sinConfigurarTexto": "You can use jobs, team, schedule and estimates. To issue invoices with your country's taxes, write to support and we'll set it up with you.",
     "enPruebasTitulo": "{{pais}} is being prepared",
-    "enPruebasTexto": "You already invoice with VAT and in euros. Electronic invoicing (SDI) is coming soon; if you need it sooner, write to support.",
+    "enPruebasTexto": "You already invoice with VAT and in euros, and each invoice has its XML for the SDI. Sending straight to the SDI is coming soon; meanwhile, upload it with your software or write to support.",
     "facturasTexto": "Your country's taxes ({{pais}}) aren't set up yet, so invoices can't be issued yet. Write to support and we'll set it up with you."
   },
   "hoursSummary": {
@@ -2919,5 +2928,38 @@
     "days_other": "{{count}} days",
     "unapproved_one": "There is {{count}} unapproved clock-in this month and it doesn't count. Approve it in {{menuFichaje}} before sending.",
     "unapproved_other": "There are {{count}} unapproved clock-ins this month and they don't count. Approve them in {{menuFichaje}} before sending."
+  },
+  "clientFiscal": {
+    "title": "E-invoice details",
+    "hint": "A company: its Partita IVA and SDI code or PEC. An individual: their codice fiscale. Both: the address in parts.",
+    "complete": "Complete: e-invoices can be issued to this client.",
+    "incomplete": "Missing for the e-invoice:",
+    "missing": {
+      "identificativo": "Partita IVA or codice fiscale",
+      "indirizzo": "street and number",
+      "cap": "CAP",
+      "comune": "town"
+    },
+    "delivery": "Receives invoices at",
+    "codiceDestinatario": "SDI recipient code",
+    "codiceDestinatarioHint": "7 characters. Empty for an individual or if they receive by PEC.",
+    "partitaIvaHint": "Only for a company or a professional.",
+    "codiceFiscaleHint": "Required for an individual."
+  },
+  "fatturaPA": {
+    "download": "XML for SDI",
+    "missingTitle": "Details missing for the e-invoice",
+    "missingBusiness": "From your business:",
+    "missingClient": "From the client:",
+    "goBusiness": "Complete business details",
+    "goClient": "Open the client's card",
+    "negocio": {
+      "partita_iva": "Partita IVA",
+      "indirizzo": "street and number",
+      "cap": "CAP",
+      "comune": "town",
+      "provincia": "province"
+    },
+    "howToSend": "Upload it to the SDI with your software, your intermediary or the free «Fatture e Corrispettivi» service of the Agenzia delle Entrate."
   }
 }

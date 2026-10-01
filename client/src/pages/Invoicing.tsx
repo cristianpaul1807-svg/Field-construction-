@@ -27,6 +27,8 @@ import { OPCIONES_IVA, type OpcionIva } from "@shared/iva";
 import { paisDe } from "@shared/paises";
 import { useAuth } from "@/contexts/AuthContext";
 import { PaisSinConfigurar } from "@/components/PaisAlert";
+import { BotonFatturaPA } from "@/components/BotonFatturaPA";
+import { NotasDeLaFactura } from "@/components/NotasDeLaFactura";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
@@ -332,6 +334,11 @@ function AccionesDeFactura({
           )}
           {copiedId === invoice.id ? t("invoicing.copied") : t("invoicing.copyPaymentLink")}
         </Button>
+      )}
+
+      {/* La factura de verdad en Italia: el XML que va al SDI. */}
+      {paisDe(country).impuestos === "italia" && invoice.status !== "cancelado" && (
+        <BotonFatturaPA ruta={`/api/invoices/${invoice.id}/fatturapa`} />
       )}
 
       {viva && <CobroManualDialog invoice={invoice} onDone={onDone} />}
@@ -783,9 +790,12 @@ export default function Invoicing() {
                     </p>
                   )}
                   {invoice.creditedAmount > 0 && (
-                    <p className="text-status-warning-fg">
-                      {t("creditNotes.credited", { amount: formatCurrency(invoice.creditedAmount) })}
-                    </p>
+                    <>
+                      <p className="text-status-warning-fg">
+                        {t("creditNotes.credited", { amount: formatCurrency(invoice.creditedAmount) })}
+                      </p>
+                      <NotasDeLaFactura invoiceId={invoice.id} />
+                    </>
                   )}
                   {invoice.status === "pagado" && invoice.paymentMethod && (
                     <p>
@@ -855,9 +865,12 @@ export default function Invoicing() {
                       </span>
                     )}
                     {invoice.creditedAmount > 0 && (
-                      <p className="text-xs text-status-warning-fg mt-0.5">
-                        {t("creditNotes.credited", { amount: formatCurrency(invoice.creditedAmount) })}
-                      </p>
+                      <>
+                        <p className="text-xs text-status-warning-fg mt-0.5">
+                          {t("creditNotes.credited", { amount: formatCurrency(invoice.creditedAmount) })}
+                        </p>
+                        <NotasDeLaFactura invoiceId={invoice.id} />
+                      </>
                     )}
                     <EstadoQuickBooks invoice={invoice} onRetried={reload} />
                   </td>

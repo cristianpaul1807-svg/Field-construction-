@@ -75,10 +75,11 @@ import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODO
 // importa así.
 import { calcularFactura, computeInvoiceTax } from "./calculoDeFactura";
 import { esTipoDeAusencia } from "../shared/ausencias";
+import { fatturaPADeFactura, fatturaPADeNota, type ResultadoFatturaPA } from "./fatturaPAServidor";
 import { esMesValido, resumenDeHoras, resumenEnCsv, TEXTOS_DEL_RESUMEN } from "./resumenDeHoras";
 import { aplicaLaCcq, esPaisConocido, esPaisDelRegistro, esRegionDe, paisDe, PAIS_POR_DEFECTO } from "../shared/paises";
 import { calcularIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "../shared/iva";
-import { esPartitaIvaValida, esCodiceFiscaleValido } from "../shared/fiscaleItalia";
+import { esPartitaIvaValida, esCodiceFiscaleValido, esCodiceDestinatarioValido, esCapValido } from "../shared/fiscaleItalia";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
 import {
@@ -5714,7 +5715,7 @@ apiRouter.get(
     const [client, activities, estimates, projects] = await Promise.all([
       supabase
         .from("clients")
-        .select("id, name, phone, email, address, lead_status, source, created_at, access_token")
+        .select("id, name, phone, email, address, lead_status, source, created_at, access_token, partita_iva, codice_fiscale, codice_destinatario, pec, address_line, postal_code, city, region")
         .eq("business_id", req.businessId!)
         .eq("id", clientId)
         .single(),
@@ -5752,6 +5753,19 @@ apiRouter.get(
       leadStatus: client.data.lead_status,
       source: client.data.source,
       createdAt: client.data.created_at,
+      // Lo que pide la factura electrónica italiana de quien la recibe. Se
+      // devuelve siempre —vacío fuera de Italia— y la pantalla decide si lo
+      // enseña según el país del negocio.
+      fiscal: {
+        partitaIva: client.data.partita_iva ?? null,
+        codiceFiscale: client.data.codice_fiscale ?? null,
+        codiceDestinatario: client.data.codice_destinatario ?? null,
+        pec: client.data.pec ?? null,
+        addressLine: client.data.address_line ?? null,
+        postalCode: client.data.postal_code ?? null,
+        city: client.data.city ?? null,
+        region: client.data.region ?? null,
+      },
       activities: activities.data.map((a) => ({
         id: a.id,
         type: a.type,
@@ -10181,6 +10195,59 @@ apiRouter.patch(
     if (body.phone !== undefined) update.phone = body.phone || null;
     if (body.email !== undefined) update.email = body.email || null;
     if (body.address !== undefined) update.address = body.address || null;
+    // Los datos fiscales italianos, comprobados al escribirlos: una Partita
+    // IVA con una cifra cambiada no se nota hasta que el SDI rechaza la
+    // factura días después, y entonces ya hay un cliente esperando.
+    if (body.partitaIva !== undefined) {
+      const pi = String(body.partitaIva ?? "").replace(/\s+/g, "").replace(/^IT/i, "");
+      if (pi && !esPartitaIvaValida(pi)) {
+        res.status(400).json({ error: "invalid partita IVA", code: "partita_iva_no_valida" });
+        return;
+      }
+      update.partita_iva = pi || null;
+    }
+    if (body.codiceFiscale !== undefined) {
+      const cf = String(body.codiceFiscale ?? "").replace(/\s+/g, "").toUpperCase();
+      if (cf && !esCodiceFiscaleValido(cf)) {
+        res.status(400).json({ error: "invalid codice fiscale", code: "codice_fiscale_no_valido" });
+        return;
+      }
+      update.codice_fiscale = cf || null;
+    }
+    if (body.codiceDestinatario !== undefined) {
+      const cd = String(body.codiceDestinatario ?? "").replace(/\s+/g, "").toUpperCase();
+      if (cd && !esCodiceDestinatarioValido(cd)) {
+        res.status(400).json({ error: "invalid codice destinatario", code: "codice_destinatario_no_valido" });
+        return;
+      }
+      update.codice_destinatario = cd || null;
+    }
+    if (body.pec !== undefined) {
+      const pec = String(body.pec ?? "").trim();
+      if (pec && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pec)) {
+        res.status(400).json({ error: "invalid PEC", code: "pec_no_valida" });
+        return;
+      }
+      update.pec = pec || null;
+    }
+    if (body.addressLine !== undefined) update.address_line = String(body.addressLine ?? "").trim() || null;
+    if (body.city !== undefined) update.city = String(body.city ?? "").trim() || null;
+    if (body.postalCode !== undefined) {
+      const cap = String(body.postalCode ?? "").trim();
+      if (cap && !esCapValido(cap)) {
+        res.status(400).json({ error: "invalid CAP", code: "cap_no_valido" });
+        return;
+      }
+      update.postal_code = cap || null;
+    }
+    if (body.region !== undefined) {
+      const region = String(body.region ?? "").trim().toUpperCase();
+      if (region && !esRegionDe("IT", region)) {
+        res.status(400).json({ error: "invalid province", code: "provincia_no_valida" });
+        return;
+      }
+      update.region = region || null;
+    }
     if (body.leadStatus !== undefined) {
       if (!["nuevo", "cotizado", "negociando", "ganado", "perdido"].includes(body.leadStatus)) {
         res.status(400).json({ error: "invalid leadStatus" });
@@ -11119,6 +11186,38 @@ apiRouter.get(
       await nombreDeDocumento("invoice", req.businessId!, req.params.id),
       req.query.download ? "attachment" : "inline"
     );
+  })
+);
+
+/**
+ * La factura electrónica italiana de una factura o una nota ya emitidas.
+ *
+ * Si falta algo se contesta 422 con la lista de qué y de quién —negocio o
+ * cliente—, para que la pantalla lleve a rellenarlo en vez de soltar un XML
+ * que el SDI rechazaría. Ver `server/fatturaPAServidor.ts`.
+ */
+function enviarFatturaPA(res: express.Response, r: ResultadoFatturaPA) {
+  if (r.ok) {
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${r.nombre}"`);
+    res.send(r.xml);
+    return;
+  }
+  const estado = r.code === "fatturapa_no_encontrada" ? 404 : r.code === "fatturapa_datos_incompletos" ? 422 : 409;
+  res.status(estado).json({ error: r.code, ...r });
+}
+
+apiRouter.get(
+  "/invoices/:id/fatturapa",
+  route(async (req, res) => {
+    enviarFatturaPA(res, await fatturaPADeFactura(getSupabaseAdmin(), req.businessId!, req.params.id));
+  })
+);
+
+apiRouter.get(
+  "/credit-notes/:id/fatturapa",
+  route(async (req, res) => {
+    enviarFatturaPA(res, await fatturaPADeNota(getSupabaseAdmin(), req.businessId!, req.params.id));
   })
 );
 

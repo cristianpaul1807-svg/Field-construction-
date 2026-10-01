@@ -1635,7 +1635,16 @@
     "pais_sin_configurar": "Le imposte del tuo paese non sono ancora configurate, quindi non si possono ancora emettere fatture. Scrivi all'assistenza e la prepariamo insieme.",
     "pagos_pais_no_listos": "I pagamenti con carta non sono ancora disponibili nel tuo paese. Nel frattempo puoi segnare le fatture come pagate in contanti, bonifico o assegno.",
     "quickbooks_pais_no_listo": "Il collegamento con QuickBooks non è ancora disponibile nel tuo paese.",
-    "mes_no_valido": "Scegli un mese valido."
+    "mes_no_valido": "Scegli un mese valido.",
+    "cap_no_valido": "Il CAP è di 5 cifre.",
+    "codice_destinatario_no_valido": "Il codice destinatario SDI è di 7 caratteri (o 0000000).",
+    "pec_no_valida": "Questo indirizzo PEC non sembra valido.",
+    "provincia_no_valida": "Scegli la provincia dall'elenco.",
+    "fatturapa_solo_italia": "La fattura elettronica esiste solo per le imprese in Italia.",
+    "fatturapa_no_encontrada": "Non troviamo questa fattura.",
+    "fatturapa_anulada": "Una fattura annullata non va allo SDI. Per correggerne una già inviata, emetti una nota di credito.",
+    "fatturapa_sin_iva": "Questa fattura è stata emessa prima che l'impresa fosse in Italia e non ha IVA: non può diventare fattura elettronica.",
+    "fatturapa_datos_incompletos": "Mancano dei dati per la fattura elettronica."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2080,9 +2089,9 @@
         "fatturaElettronica": {
           "title": "La fattura elettronica (SDI)",
           "p1": "In Italia la fattura valida è un XML che passa dal Sistema di Interscambio. Il PDF che esce da qui è una copia di cortesia: serve al tuo cliente per leggerla, non alla tua contabilità.",
-          "p2": "Stiamo preparando l'XML. Nel frattempo emetti la fattura elettronica con il tuo programma di sempre o con il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate, copiando gli importi da qui.",
-          "p3": "Qui continui a gestire tutto il resto: il preventivo, il cantiere, l'incassato e il da incassare. Quando l'XML sarà pronto lo vedrai su ogni fattura, senza rifare niente.",
-          "nota": "Se il tuo commercialista ha bisogno di qualcosa di preciso per il passaggio allo SDI, scrivi all'assistenza: ci aiuta a decidere cosa preparare per primo."
+          "p2": "Ogni fattura in {{menuFinanzas}} → {{menuFacturacion}} ha «XML per lo SDI»: è la fattura elettronica, controllata sullo schema ufficiale. Caricala con il tuo programma, il tuo intermediario o il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate.",
+          "p3": "Per generarla servono Partita IVA e indirizzo della tua impresa e, del cliente, Partita IVA (impresa) o codice fiscale (privato) e indirizzo. Se manca qualcosa, il pulsante ti dice cosa e ti porta a compilarlo; quelli del cliente vanno nella sua scheda, in {{menuCrm}}.",
+          "nota": "L'invio diretto allo SDI, senza un altro programma, è in preparazione. Anche le note di credito hanno il loro XML, accanto alla fattura che correggono."
         },
         "impuestosOtros": {
           "title": "Le imposte del mio paese",
@@ -2898,13 +2907,13 @@
     "listos": "Disponibili",
     "otros": "Altri paesi",
     "sinConfigurar": "La configurazione fiscale per {{pais}} non è ancora pronta. Puoi registrarti e gestire cantieri, squadra e agenda da oggi; per fatturare con le imposte del tuo paese, scrivi all'assistenza e la prepariamo insieme.",
-    "enPruebas": "{{pais}} è in preparazione: puoi già gestire cantieri e preventivi con IVA. La fattura elettronica (SDI) arriverà presto; nel frattempo, scrivi all'assistenza se ti serve."
+    "enPruebas": "{{pais}} è in preparazione: puoi già gestire cantieri e preventivi con IVA e scaricare l'XML di ogni fattura per lo SDI. L'invio diretto allo SDI arriverà presto."
   },
   "paisAviso": {
     "sinConfigurarTitulo": "La configurazione fiscale per {{pais}} non è ancora pronta",
     "sinConfigurarTexto": "Puoi usare cantieri, squadra, agenda e preventivi. Per emettere fatture con le imposte del tuo paese, scrivi all'assistenza e la prepariamo insieme.",
     "enPruebasTitulo": "{{pais}} è in preparazione",
-    "enPruebasTexto": "Fatturi già con IVA e in euro. La fattura elettronica (SDI) arriverà presto; se ti serve prima, scrivi all'assistenza.",
+    "enPruebasTexto": "Fatturi già con IVA e in euro, e ogni fattura ha il suo XML per lo SDI. L'invio diretto allo SDI arriverà presto; nel frattempo caricalo con il tuo programma o scrivi all'assistenza.",
     "facturasTexto": "Le imposte del tuo paese ({{pais}}) non sono ancora configurate, quindi le fatture non si possono ancora emettere. Scrivi all'assistenza e le prepariamo insieme."
   },
   "hoursSummary": {
@@ -2919,5 +2928,38 @@
     "days_other": "{{count}} giorni",
     "unapproved_one": "C'è {{count}} timbratura non approvata questo mese e non conta. Approvala in {{menuFichaje}} prima di inviare.",
     "unapproved_other": "Ci sono {{count}} timbrature non approvate questo mese e non contano. Approvale in {{menuFichaje}} prima di inviare."
+  },
+  "clientFiscal": {
+    "title": "Dati per la fattura elettronica",
+    "hint": "Un'impresa: Partita IVA e codice SDI o PEC. Un privato: codice fiscale. Entrambi: l'indirizzo completo.",
+    "complete": "Completo: si può emettere la fattura elettronica.",
+    "incomplete": "Manca per la fattura elettronica:",
+    "missing": {
+      "identificativo": "Partita IVA o codice fiscale",
+      "indirizzo": "via e numero civico",
+      "cap": "CAP",
+      "comune": "comune"
+    },
+    "delivery": "Riceve le fatture su",
+    "codiceDestinatario": "Codice destinatario SDI",
+    "codiceDestinatarioHint": "7 caratteri. Vuoto per un privato o se riceve via PEC.",
+    "partitaIvaHint": "Solo per imprese e professionisti.",
+    "codiceFiscaleHint": "Obbligatorio per un privato."
+  },
+  "fatturaPA": {
+    "download": "XML per lo SDI",
+    "missingTitle": "Mancano dati per la fattura elettronica",
+    "missingBusiness": "Della tua impresa:",
+    "missingClient": "Del cliente:",
+    "goBusiness": "Completa i dati dell'impresa",
+    "goClient": "Apri la scheda del cliente",
+    "negocio": {
+      "partita_iva": "Partita IVA",
+      "indirizzo": "via e numero civico",
+      "cap": "CAP",
+      "comune": "comune",
+      "provincia": "provincia"
+    },
+    "howToSend": "Caricalo sullo SDI con il tuo programma, il tuo intermediario o il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate."
   }
 }

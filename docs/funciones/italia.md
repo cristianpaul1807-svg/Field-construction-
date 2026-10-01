@@ -104,6 +104,47 @@ acuerdo de trabajo, que no tiene desglose, la saca del país del negocio.
 
 ---
 
+## La factura electrónica (FatturaPA)
+
+Cada factura emitida tiene el botón **XML para el SDI** en Facturación, y cada
+nota de crédito el suyo junto a la factura que corrige. Es el XML FatturaPA
+(formato FPR12, entre privados) que el negocio sube al SDI con su programa,
+su intermediario o el servicio gratuito «Fatture e Corrispettivi». También se
+pide por MCP (`get_e_invoice`).
+
+| Documento | TipoDocumento |
+|---|---|
+| Acconto (depósito) | TD02 |
+| SAL y saldo | TD01 |
+| Nota de crédito | TD04, con `DatiFattureCollegate` |
+
+- **El IVA** sale del `tax_breakdown` guardado; en inversione contabile, 0 %,
+  `Natura` N6.3 y la norma en `RiferimentoNormativo`.
+- **La ritenuta a garanzia** se resta en `ImportoPagamento` y se dice en la
+  `Causale`; lo que se libera en el saldo, igual.
+- **El cliente**: una empresa por su Partita IVA (y `Denominazione`), un
+  particular por su codice fiscale (y `Nome`/`Cognome`). Sin código SDI va
+  `0000000`, con su PEC si la tiene. Esos datos se escriben en la ficha del
+  cliente, en la tarjeta «Datos para la factura electrónica».
+- **El progresivo** sale del número (`progresivoDe`) y el archivo se llama
+  `IT<codice fiscale>_<progresivo>.xml`, como pide el SDI.
+- **Sólo caracteres latinos**: «€», comillas tipográficas o emojis en una
+  descripción hacen que el SDI rechace el archivo entero, así que se cambian.
+
+Si falta un dato del negocio o del cliente, no se genera nada: el servidor
+contesta qué falta y de quién (`fatturapa_datos_incompletos`), y la pantalla
+lleva a rellenarlo.
+
+**Cómo se sabe que está bien:** `scripts/prueba-italia/fatturapa.mjs` genera
+los casos que de verdad pasan y los valida con `xmllint` contra el esquema
+oficial 1.2.2 de la Agenzia delle Entrate, que vive en
+`scripts/prueba-italia/xsd/`.
+
+Código: `shared/fatturaPA.ts` (el XML, puro) y `server/fatturaPAServidor.ts`
+(reúne los datos).
+
+---
+
 ## Lo que tiene el consulente del lavoro
 
 La nómina no se hace aquí, pero el consulente necesita de la empresa las
@@ -123,8 +164,8 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
 1. **País, EUR e IVA.** ✅ Hecho. Y el resto del producto según el país: bot de
    ayuda, portal, correos, menú (sin Cobrar, Nómina ni QuickBooks). ✅
 2. **XML FatturaPA descargable**, para que el negocio lo suba al SDI con su
-   programa o su gestor. Con la natura N6.3, el CIG/CUP en obra pública y la
-   mención de la deducción cuando la hay.
+   programa o su gestor. ✅ Hecho: facturas y notas de crédito, validado
+   contra el esquema oficial. Falta, para la obra pública, el CIG/CUP.
 3. **Stripe en euros:** cuentas conectadas italianas, cobros en EUR y precios
    de suscripción italianos (79 €/mes y 790 €/año Chantier, 199 €/mes y
    1.990 €/año Entreprise). Stripe opera en Italia y la plataforma española
@@ -143,8 +184,10 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
 9. **Computo metrico con prezzario regional y SAL.** La pieza más grande; la
    que abre la obra mediana y la pública.
 
-Italia deja de estar en pruebas al terminar la fase 2: es la que hace que sus
-facturas sean válidas. Cada fase llega también **hablada** por el MCP (ver la
+Italia deja de estar en pruebas cuando un XML generado aquí haya sido
+aceptado por el SDI de verdad, en una cuenta real: el esquema lo valida, pero
+el SDI comprueba además cosas que el esquema no ve (que la Partita IVA exista,
+que el número no esté repetido). Cada fase llega también **hablada** por el MCP (ver la
 sección 11 de [plan-maestro-mcp.md](../desarrollo/plan-maestro-mcp.md)); el
 porqué de este orden está en
 [competencia-italia.md](../desarrollo/competencia-italia.md).

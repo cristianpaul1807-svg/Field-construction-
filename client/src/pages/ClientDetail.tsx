@@ -7,6 +7,10 @@ import { ArrowLeft, Phone, MessageCircle, StickyNote, FileText } from "lucide-re
 import { formatCurrency, type LeadStatus } from "@/lib/mockData";
 import { useApi } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+import { paisDe } from "@shared/paises";
+import type { DatosFiscalesCliente } from "@shared/fatturaPA";
+import { DatosFiscalesDelCliente } from "@/components/DatosFiscalesDelCliente";
 
 const activityIcon = {
   call: Phone,
@@ -33,12 +37,14 @@ interface ClientDetailResponse {
   }[];
   estimates: { id: string; number: string | null; status: string; total: number; createdAt: string }[];
   projects: { id: string; name: string }[];
+  fiscal: DatosFiscalesCliente;
 }
 
 export default function ClientDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
-  const { data: client, loading, error } = useApi<ClientDetailResponse>(id ? `/api/clients/${id}` : null);
+  const { data: client, loading, error, reload } = useApi<ClientDetailResponse>(id ? `/api/clients/${id}` : null);
+  const { country } = useAuth();
 
   if (loading) {
     return (
@@ -149,6 +155,12 @@ export default function ClientDetail() {
               </div>
             </dl>
           </Card>
+
+          {/* En Italia la factura electrónica no sale sin esto, así que vive
+              aquí, donde se escribe una vez y vale para todas sus facturas. */}
+          {paisDe(country).impuestos === "italia" && client.fiscal && (
+            <DatosFiscalesDelCliente clientId={client.id} datos={client.fiscal} onGuardado={reload} />
+          )}
 
           <Card className="p-4">
             <h3 className="font-semibold text-foreground mb-3 text-sm">{t("clientDetail.projects")}</h3>
