@@ -243,6 +243,14 @@ const FIXTURAS = {
   },
   "/api/invoices": [
     {
+      // El texto del bonifico parlante es una sola tira larga sin espacios
+      // donde partir (el codice fiscale, la Partita IVA): lo que más estira.
+      bonifico: {
+        bonus: "ristrutturazione",
+        causale: "Pagamento fattura n. FAC-2026-00042 del 10/09/2026 - per detrazione fiscale ai sensi dell'art. 16-bis D.P.R. 917/1986 - C.F. beneficiario RSSMRA80A01H501U - P.IVA 06363391001",
+        ritenuta: 12345.67,
+        faltaCodiceFiscale: false,
+      },
       id: "f-1",
       projectId: "p-1",
       number: "FAC-2026-00042",

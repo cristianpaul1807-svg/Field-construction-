@@ -94,6 +94,9 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
     DATOS.invoices = [{ ...facturaIt, clients: { name: "Bianchi S.p.A.", partita_iva: "01234567897", address_line: "", postal_code: null, city: "Milano" } }];
     const sinDatos = await llamar("get_e_invoice", { id: facturaIt.id });
     ok("IT: sin la dirección del cliente, dice qué falta", sinDatos.error?.faltan?.cliente, ["indirizzo", "cap"]);
+    DATOS.invoices = [{ number: "2026-0004", amount: 13750, paid_at: "2026-09-20", projects: { name: "Via Roma", bonus_fiscale: "ristrutturazione" }, clients: { name: "Mario" } }];
+    const ritenute = await llamar("get_bank_withholdings", { year: 2026 });
+    ok("IT: lo que retuvieron los bancos en el año", [ritenute.total, ritenute.invoices?.[0]?.withholding, ritenute.currency], [1239.75, 1239.75, "EUR"]);
     ok("IT: clientes sin la llave del portal", Object.keys((await llamar("get_clients", { search: "Bian" })).clients[0]).includes("access_token"), false);
   }
   if (pais === "ES") {

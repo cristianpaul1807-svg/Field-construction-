@@ -143,6 +143,7 @@ export const TOOL_ACCESS: Record<
   calculate_invoice: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["CA", "IT"] },
   // Comprobar una Partita IVA es aritmética sobre un número que trae la
   // persona; no lee nada del negocio. Sólo tiene sentido en Italia.
+  get_bank_withholdings: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["IT"] },
   get_e_invoice: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["IT"] },
   check_italian_tax_id: { roles: ["office", "admin"], area: "clientes", capability: "campo", soloEn: ["IT"] },
 };

@@ -18,6 +18,7 @@
  */
 
 import { calcularIva, esOpcionIva } from "../../shared/iva.ts";
+import { causaleBonifico, ritenutaBancaria } from "../../shared/bonusEdilizi.ts";
 import { esPartitaIvaValida, esCodiceFiscaleValido, esCodiceDestinatarioValido } from "../../shared/fiscaleItalia.ts";
 import { paisDe, paisesQueSeOfrecen, esRegionDe, aplicaLaCcq, detectarPais, esPaisDelRegistro, avisoDelPais, grupoDePais, stripeOperaEn } from "../../shared/paises.ts";
 
@@ -76,6 +77,14 @@ ok("tarjeta: sólo Canadá", ["CA", "IT", "ES"].map((c) => paisDe(c).cobrosConTa
 ok("QuickBooks: sólo Canadá", ["CA", "IT", "ES"].map((c) => paisDe(c).quickbooks), [true, false, false]);
 ok("Stripe opera en Italia y España, no en Colombia ni Venezuela", ["IT", "ES", "CO", "VE"].map(stripeOperaEn), [true, true, false, false]);
 ok("la ayuda de cada uno", [grupoDePais("CA"), grupoDePais("IT"), grupoDePais("ES"), grupoDePais(null)], ["CA", "IT", "otros", "CA"]);
+
+// El bonifico parlante: sin él, el cliente pierde la deducción.
+ok("la retención del banco: 11 % del importe con el IVA quitado al 22 %", ritenutaBancaria(13750), 1239.75);
+ok("el texto entero, con la ley, la factura, el C.F. y la P.IVA",
+   causaleBonifico({ bonus: "ristrutturazione", numeroFattura: "2026-0004", dataFattura: "2026-09-10", codiceFiscaleBeneficiario: "rssmra80a01h501u", partitaIvaImpresa: "06363391001" }),
+   "Pagamento fattura n. 2026-0004 del 10/09/2026 - per detrazione fiscale ai sensi dell'art. 16-bis D.P.R. 917/1986 - C.F. beneficiario RSSMRA80A01H501U - P.IVA 06363391001");
+ok("ecobonus cita su propia ley", /L\. 296\/2006/.test(causaleBonifico({ bonus: "ecobonus", numeroFattura: "1", dataFattura: "2026-01-01", codiceFiscaleBeneficiario: "X", partitaIvaImpresa: "1" }) ?? ""), true);
+ok("sin el codice fiscale del cliente no hay texto", causaleBonifico({ bonus: "ristrutturazione", numeroFattura: "1", dataFattura: "2026-01-01", codiceFiscaleBeneficiario: null, partitaIvaImpresa: "1" }), null);
 
 console.log(`\n${bien} bien, ${mal} mal`);
 if (mal > 0) process.exit(1);

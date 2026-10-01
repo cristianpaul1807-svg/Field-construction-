@@ -42,6 +42,12 @@ export interface PartyIdentity {
   address: string | null;
   phone: string | null;
   email: string | null;
+  /**
+   * Italia: «P. IVA …» o «C.F. …», ya escrito. Una copia de cortesía sin el
+   * identificativo del cliente es la que el commercialista no puede casar
+   * con su XML.
+   */
+  fiscalId?: string | null;
 }
 
 export interface DocLine {
@@ -241,6 +247,12 @@ export interface InvoiceDoc {
   /** Retención de facturas anteriores que esta cobra. Sin impuesto: ya se pagó. */
   holdbackReleased: number;
   total: number;
+  /**
+   * Italia: el texto del bonifico parlante, si la obra tiene un bonus. Va en
+   * el papel porque es lo que el cliente tiene delante cuando va a pagar, y
+   * un bonifico normal le hace perder la deducción.
+   */
+  bonifico?: string | null;
 }
 
 interface Copy {
@@ -275,6 +287,8 @@ interface Copy {
    * quien lee el documento en su idioma sepa qué está firmando.
    */
   notaInversione: string;
+  /** El rótulo encima del texto del bonifico parlante. */
+  bonificoTitulo: string;
   total: string;
   license: string;
   gstNumber: string;
@@ -386,6 +400,7 @@ const COPY: Record<DocLang, Copy> = {
     iva: (a) => `IVA ${a} %`,
     ivaInversione: "IVA 0 % (N6.3)",
     notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72. (Inversión del sujeto pasivo: el IVA lo ingresa el cliente.)",
+    bonificoTitulo: "Para no perder tu deducción fiscal, paga con bonifico parlante y esta causal:",
     total: "TOTAL",
     license: "Licencia",
     reportRows: (n: number) => (n === 1 ? "1 línea" : `${n} líneas`),
@@ -505,6 +520,7 @@ const COPY: Record<DocLang, Copy> = {
     iva: (a) => `VAT ${a}%`,
     ivaInversione: "VAT 0% (N6.3)",
     notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72. (Reverse charge: the customer accounts for the VAT.)",
+    bonificoTitulo: "To keep your tax deduction, pay by bonifico parlante with this description:",
     total: "TOTAL",
     license: "Licence",
     reportRows: (n: number) => (n === 1 ? "1 row" : `${n} rows`),
@@ -623,6 +639,7 @@ const COPY: Record<DocLang, Copy> = {
     iva: (a) => `TVA ${a} %`,
     ivaInversione: "TVA 0 % (N6.3)",
     notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72. (Autoliquidation : la TVA est due par le client.)",
+    bonificoTitulo: "Pour conserver votre déduction fiscale, payez par bonifico parlante avec ce libellé :",
     total: "TOTAL",
     license: "Licence RBQ",
     reportRows: (n: number) => (n === 1 ? "1 ligne" : `${n} lignes`),
@@ -741,6 +758,7 @@ const COPY: Record<DocLang, Copy> = {
     iva: (a) => `IVA ${a}%`,
     ivaInversione: "IVA 0% (N6.3)",
     notaInversione: "Operazione soggetta a inversione contabile ai sensi dell'art. 17, comma 6, lett. a), del DPR 633/72.",
+    bonificoTitulo: "Per non perdere la detrazione fiscale, paga con bonifico parlante con questa causale:",
     total: "TOTALE",
     license: "Licenza",
     reportRows: (n: number) => (n === 1 ? "1 riga" : `${n} righe`),
@@ -1038,7 +1056,7 @@ function parties(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy) {
     doc.font("Helvetica-Bold").fontSize(9).fillColor("#888888").text(copy.billTo.toUpperCase(), MARGIN, top);
     doc.font("Helvetica").fontSize(10).fillColor("#111111").text(data.client.name, MARGIN, doc.y + 2, { width: 250 });
     doc.fontSize(9).fillColor("#555555");
-    [data.client.address, data.client.phone, data.client.email]
+    [data.client.fiscalId, data.client.address, data.client.phone, data.client.email]
       .filter(Boolean)
       .forEach((line) => doc.text(line as string, MARGIN, doc.y, { width: 250 }));
   }
@@ -1177,6 +1195,14 @@ function totals(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: DocL
   if (tb.natura === "N6.3") {
     doc.y += 4;
     doc.font("Helvetica-Oblique").fontSize(8).fillColor("#555555").text(copy.notaInversione, MARGIN, doc.y, { width: CONTENT_WIDTH });
+  }
+
+  if (data.kind === "invoice" && data.bonifico) {
+    doc.y += 8;
+    ensureRoom(doc, 48, copy);
+    doc.font("Helvetica-Bold").fontSize(8.5).fillColor("#111111").text(copy.bonificoTitulo, MARGIN, doc.y, { width: CONTENT_WIDTH });
+    doc.y += 2;
+    doc.font("Courier").fontSize(8).fillColor("#111111").text(data.bonifico, MARGIN, doc.y, { width: CONTENT_WIDTH });
   }
 
   doc.y += 10;

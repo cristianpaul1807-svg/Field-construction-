@@ -551,7 +551,8 @@
     "noMatches": "Aucun client ne correspond à « {{query}} ».",
     "previewOf": "Aperçu de ce que voit {{name}}",
     "invoiceNumber": "Facture {{number}}",
-    "payDirectly": "Montant dû : {{amount}}. {{business}} vous dira comment le payer; le paiement par carte n'est pas encore disponible ici."
+    "payDirectly": "Montant dû : {{amount}}. {{business}} vous dira comment le payer; le paiement par carte n'est pas encore disponible ici.",
+    "amountDue": "Montant à payer : {{amount}}."
   },
   "worker": {
     "accessTitle": "Accès travailleur",
@@ -1644,7 +1645,8 @@
     "fatturapa_no_encontrada": "Nous n'avons pas trouvé cette facture.",
     "fatturapa_anulada": "Une facture annulée n'est pas envoyée au SDI. Pour corriger une facture déjà envoyée, émettez une note de crédit.",
     "fatturapa_sin_iva": "Cette facture a été émise avant que l'entreprise soit en Italie et ne porte pas de TVA : elle ne peut pas devenir une facture électronique.",
-    "fatturapa_datos_incompletos": "Il manque des données pour la facture électronique."
+    "fatturapa_datos_incompletos": "Il manque des données pour la facture électronique.",
+    "bonus_no_valido": "Ce bonus n'existe pas."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2961,5 +2963,26 @@
       "provincia": "province"
     },
     "howToSend": "Envoyez-le au SDI avec votre logiciel, votre intermédiaire ou le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate."
+  },
+  "bonus": {
+    "title": "Déduction fiscale du client",
+    "none": "Sans bonus",
+    "kind": {
+      "ristrutturazione": "Bonus rénovation (50 % / 36 %)",
+      "ecobonus": "Ecobonus (efficacité énergétique)",
+      "sismabonus": "Sismabonus (antisismique)",
+      "barriere": "Barrières architecturales"
+    },
+    "hintOff": "Si le client va déduire ce chantier, cochez-le : ses factures porteront le libellé du bonifico parlante à utiliser pour garder la déduction.",
+    "hintOn": "Ses factures portent le libellé du bonifico parlante, sur le PDF et dans son portail. La banque retiendra 11 % de chaque paiement (hors TVA) : c'est un crédit d'impôt, pas un impayé.",
+    "payTitle": "Payez par bonifico parlante ({{kind}})",
+    "payHint": "Pour garder votre déduction, faites le virement comme « bonifico parlante » dans votre banque et collez ce texte en libellé.",
+    "panelTitle": "Chantier avec bonus : {{kind}}",
+    "panelHint": "Ce que le client doit indiquer sur son virement. Il le voit déjà dans son portail et sur le PDF.",
+    "copy": "Copier le texte",
+    "copied": "Copié",
+    "missingCfClient": "Votre codice fiscale est nécessaire pour préparer votre bonifico. Envoyez-le à {{business}} dans {{messages}}.",
+    "missingCfPanel": "Le codice fiscale du client manque : sans lui, son bonifico ne peut pas être rédigé. Ajoutez-le à sa fiche.",
+    "withholding": "La banque retiendra environ {{amount}} (11 % hors TVA) : un crédit d'impôt pour vous."
   }
 }

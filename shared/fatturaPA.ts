@@ -84,6 +84,8 @@ export interface DocumentoFatturaPA {
   scadenza: string | null;
   ritenutaAGaranzia: number;
   ritenutaSvincolata: number;
+  /** Más líneas de causal: la deducción a la que corresponde, si la hay. */
+  causaliExtra?: string[];
   /** Sólo en una nota de crédito: la factura que corrige. */
   fatturaCollegata?: { numero: string; data: string } | null;
 }
@@ -187,6 +189,7 @@ export function generarFatturaPA(entrada: EntradaFatturaPA): string {
   for (let i = 0; i < descripcion.length; i += 200) causales.push(descripcion.slice(i, i + 200));
   if (documento.ritenutaAGaranzia > 0) causales.push(texto(`Ritenuta a garanzia trattenuta: ${importe(documento.ritenutaAGaranzia)} EUR`, 200));
   if (documento.ritenutaSvincolata > 0) causales.push(texto(`Svincolo ritenuta a garanzia: ${importe(documento.ritenutaSvincolata)} EUR`, 200));
+  for (const extra of documento.causaliExtra ?? []) causales.push(texto(extra, 200));
 
   const tipoDocumento = documento.tipo === "nota_di_credito" ? "TD04" : documento.tipo === "acconto" ? "TD02" : "TD01";
 

@@ -97,6 +97,7 @@ const particular = {
       tipo: "acconto", numero: "2026-0004", data: "2026-09-10", imponibile, desglose: breakdown,
       descrizione: "Acconto 30% ristrutturazione bagno — Via Roma 12 “piano terra”",
       importoPagamento: imponibile + breakdown.iva - 625, scadenza: "2026-10-10", ritenutaAGaranzia: 625, ritenutaSvincolata: 0,
+      causaliExtra: ["Lavori agevolati ai sensi dell'art. 16-bis D.P.R. 917/1986"],
     },
   });
   ok("acconto: cumple el esquema oficial", valida("acconto.xml", xml), true);
@@ -110,6 +111,7 @@ const particular = {
   ], [true, true]);
   ok("acconto: sin «€», comillas tipográficas ni rayas", /[€“”—«»]/.test(xml.replace(/«|»/g, "")), false);
   ok("acconto: la ritenuta, dicha en la causal", /Ritenuta a garanzia trattenuta: 625.00 EUR/.test(xml), true);
+  ok("acconto: la deducción del cliente, en la causal (con el apóstrofo escapado)", /Lavori agevolati ai sensi dell&apos;art. 16-bis/.test(xml), true);
 }
 
 // 2) Saldo a un particular, 22 %, con su PEC y sin código SDI.

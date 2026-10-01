@@ -25,6 +25,7 @@ import {
 import { esDesgloseIva } from "../shared/iva";
 import { paisDe } from "../shared/paises";
 import { fechaEnZona } from "../shared/zonaHoraria";
+import { esBonusFiscale, RIFERIMENTO_NORMATIVO } from "../shared/bonusEdilizi";
 
 type Admin = ReturnType<typeof getSupabaseAdmin>;
 
@@ -79,7 +80,7 @@ export async function fatturaPADeFactura(admin: Admin, businessId: string, invoi
 
   const { data: f } = await admin
     .from("invoices")
-    .select(`id, number, type, status, description, subtotal, tax_breakdown, holdback_amount, holdback_released, amount, due_date, created_at, client_id, clients(${SELECT_CLIENTE}), projects(name)`)
+    .select(`id, number, type, status, description, subtotal, tax_breakdown, holdback_amount, holdback_released, amount, due_date, created_at, client_id, clients(${SELECT_CLIENTE}), projects(name, bonus_fiscale)`)
     .eq("business_id", businessId)
     .eq("id", invoiceId)
     .maybeSingle();
@@ -97,6 +98,10 @@ export async function fatturaPADeFactura(admin: Admin, businessId: string, invoi
   }
 
   const proyecto = (f.projects as unknown as { name?: string } | null)?.name;
+  // Con bonus, la factura dice a qué deducción corresponde: es lo primero que
+  // mira quien revisa la detrazione del cliente.
+  const bonus = (f.projects as unknown as { bonus_fiscale?: string | null } | null)?.bonus_fiscale;
+  const causaliExtra = esBonusFiscale(bonus) ? [`Lavori agevolati ai sensi dell'${RIFERIMENTO_NORMATIVO[bonus]}`] : [];
   const entrada = {
     negocio: datosNegocio,
     cliente,
@@ -112,6 +117,7 @@ export async function fatturaPADeFactura(admin: Admin, businessId: string, invoi
       scadenza: f.due_date ?? null,
       ritenutaAGaranzia: Number(f.holdback_amount ?? 0),
       ritenutaSvincolata: Number(f.holdback_released ?? 0),
+      causaliExtra,
     },
   };
   return { ok: true, xml: generarFatturaPA(entrada), nombre: nombreDelArchivo(entrada) };

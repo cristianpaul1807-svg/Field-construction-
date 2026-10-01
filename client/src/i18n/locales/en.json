@@ -551,7 +551,8 @@
     "noMatches": "No client matches “{{query}}”.",
     "previewOf": "Preview of what {{name}} sees",
     "invoiceNumber": "Invoice {{number}}",
-    "payDirectly": "Amount due: {{amount}}. {{business}} will tell you how to pay it; card payment isn't available here yet."
+    "payDirectly": "Amount due: {{amount}}. {{business}} will tell you how to pay it; card payment isn't available here yet.",
+    "amountDue": "Amount due: {{amount}}."
   },
   "worker": {
     "accessTitle": "Worker access",
@@ -1644,7 +1645,8 @@
     "fatturapa_no_encontrada": "We couldn't find that invoice.",
     "fatturapa_anulada": "A cancelled invoice isn't sent to the SDI. To correct one already sent, issue a credit note.",
     "fatturapa_sin_iva": "This invoice was issued before the business was set to Italy and carries no VAT: it can't become an e-invoice.",
-    "fatturapa_datos_incompletos": "Some details are missing for the e-invoice."
+    "fatturapa_datos_incompletos": "Some details are missing for the e-invoice.",
+    "bonus_no_valido": "That bonus doesn't exist."
   },
   "workLog": {
     "title": "Work log",
@@ -2961,5 +2963,26 @@
       "provincia": "province"
     },
     "howToSend": "Upload it to the SDI with your software, your intermediary or the free «Fatture e Corrispettivi» service of the Agenzia delle Entrate."
+  },
+  "bonus": {
+    "title": "Client's tax deduction",
+    "none": "No bonus",
+    "kind": {
+      "ristrutturazione": "Renovation bonus (50% / 36%)",
+      "ecobonus": "Ecobonus (energy efficiency)",
+      "sismabonus": "Sismabonus (seismic)",
+      "barriere": "Architectural barriers"
+    },
+    "hintOff": "If the client will deduct this job, mark it: their invoices will carry the bonifico parlante text they must use to keep the deduction.",
+    "hintOn": "Their invoices carry the bonifico parlante text, on the PDF and in their portal. The bank will withhold 11% of each payment (net of VAT): a tax credit, not an unpaid amount.",
+    "payTitle": "Pay by bonifico parlante ({{kind}})",
+    "payHint": "To keep your deduction, make the transfer as a «bonifico parlante» at your bank and paste this text as the description.",
+    "panelTitle": "Bonus job: {{kind}}",
+    "panelHint": "What the client must put on their transfer. They already see it in their portal and on the PDF.",
+    "copy": "Copy the text",
+    "copied": "Copied",
+    "missingCfClient": "Your codice fiscale is needed to prepare your bonifico. Send it to {{business}} in {{messages}}.",
+    "missingCfPanel": "The client's codice fiscale is missing: without it their bonifico can't be written. Add it to their card.",
+    "withholding": "The bank will withhold about {{amount}} (11% net of VAT): a tax credit for you."
   }
 }

@@ -551,7 +551,8 @@
     "noMatches": "Ningún cliente coincide con «{{query}}».",
     "previewOf": "Vista previa de lo que ve {{name}}",
     "invoiceNumber": "Factura {{number}}",
-    "payDirectly": "Importe pendiente: {{amount}}. {{business}} te dirá cómo pagarlo; el pago con tarjeta todavía no está disponible aquí."
+    "payDirectly": "Importe pendiente: {{amount}}. {{business}} te dirá cómo pagarlo; el pago con tarjeta todavía no está disponible aquí.",
+    "amountDue": "Importe a pagar: {{amount}}."
   },
   "worker": {
     "accessTitle": "Acceso de trabajador",
@@ -1644,7 +1645,8 @@
     "fatturapa_no_encontrada": "No encontramos esa factura.",
     "fatturapa_anulada": "Una factura anulada no se manda al SDI. Para corregir una ya enviada, emite una nota de crédito.",
     "fatturapa_sin_iva": "Esta factura se emitió antes de que el negocio estuviera en Italia y no lleva IVA: no se puede pasar a factura electrónica.",
-    "fatturapa_datos_incompletos": "Faltan datos para la factura electrónica."
+    "fatturapa_datos_incompletos": "Faltan datos para la factura electrónica.",
+    "bonus_no_valido": "Ese bonus no existe."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2961,5 +2963,26 @@
       "provincia": "provincia"
     },
     "howToSend": "Súbelo al SDI con tu programa, tu intermediario o el servicio gratuito «Fatture e Corrispettivi» de la Agenzia delle Entrate."
+  },
+  "bonus": {
+    "title": "Deducción fiscal del cliente",
+    "none": "Sin bonus",
+    "kind": {
+      "ristrutturazione": "Bonus ristrutturazione (50 % / 36 %)",
+      "ecobonus": "Ecobonus (eficiencia energética)",
+      "sismabonus": "Sismabonus (antisísmico)",
+      "barriere": "Barreras arquitectónicas"
+    },
+    "hintOff": "Si el cliente va a deducir esta obra, márcalo: sus facturas llevarán el texto del bonifico parlante que tiene que usar para no perder la deducción.",
+    "hintOn": "Sus facturas llevan el texto del bonifico parlante, en el PDF y en su portal. El banco te retendrá el 11 % de cada pago (sin IVA): es un crédito ante Hacienda, no un impago.",
+    "payTitle": "Paga con bonifico parlante ({{kind}})",
+    "payHint": "Para no perder tu deducción, haz la transferencia como «bonifico parlante» en tu banco y copia este texto en la causal.",
+    "panelTitle": "Obra con bonus: {{kind}}",
+    "panelHint": "Lo que el cliente tiene que poner en su transferencia. Ya lo ve en su portal y en el PDF.",
+    "copy": "Copiar el texto",
+    "copied": "Copiado",
+    "missingCfClient": "Para preparar tu bonifico hace falta tu codice fiscale. Escríbeselo a {{business}} en {{messages}}.",
+    "missingCfPanel": "Falta el codice fiscale del cliente: sin él no se puede escribir su bonifico. Ponlo en su ficha.",
+    "withholding": "El banco te retendrá unos {{amount}} (11 % sin IVA): es un crédito ante Hacienda."
   }
 }

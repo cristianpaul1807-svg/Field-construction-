@@ -75,6 +75,8 @@ import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODO
 // importa así.
 import { calcularFactura, computeInvoiceTax } from "./calculoDeFactura";
 import { esTipoDeAusencia } from "../shared/ausencias";
+import { causaleBonifico, esBonusFiscale, ritenutaBancaria, type BonusFiscale } from "../shared/bonusEdilizi";
+import { fechaEnZona } from "../shared/zonaHoraria";
 import { fatturaPADeFactura, fatturaPADeNota, type ResultadoFatturaPA } from "./fatturaPAServidor";
 import { esMesValido, resumenDeHoras, resumenEnCsv, TEXTOS_DEL_RESUMEN } from "./resumenDeHoras";
 import { aplicaLaCcq, esPaisConocido, esPaisDelRegistro, esRegionDe, paisDe, PAIS_POR_DEFECTO } from "../shared/paises";
@@ -2583,6 +2585,42 @@ apiRouter.post(
  * ahí a ver a SU contratista: el que tiene que estar arriba es él, no
  * nosotros y desde luego no otro.
  */
+/**
+ * El bonifico parlante de una factura, si su obra tiene un bonus.
+ *
+ * Devuelve el texto entero que el cliente pega en su transferencia y lo que
+ * el banco le retendrá a la impresa. Si falta el codice fiscale del cliente
+ * no hay texto —un bonifico sin él le hace perder la deducción—, y se dice,
+ * para que alguien lo pida en vez de mandar un texto que no sirve.
+ */
+export async function bonificoDeLaFactura(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  invoiceId: string
+): Promise<{ bonus: BonusFiscale; causale: string | null; ritenuta: number; faltaCodiceFiscale: boolean } | null> {
+  const [{ data: negocio }, { data: f }] = await Promise.all([
+    admin.from("businesses").select("country, partita_iva").eq("id", businessId).maybeSingle(),
+    admin
+      .from("invoices")
+      .select("number, amount, created_at, projects(bonus_fiscale), clients(codice_fiscale)")
+      .eq("business_id", businessId)
+      .eq("id", invoiceId)
+      .maybeSingle(),
+  ]);
+  if (!negocio || paisDe(negocio.country).impuestos !== "italia" || !f?.number) return null;
+  const bonus = (f.projects as unknown as { bonus_fiscale?: string | null } | null)?.bonus_fiscale;
+  if (!esBonusFiscale(bonus)) return null;
+  const cf = (f.clients as unknown as { codice_fiscale?: string | null } | null)?.codice_fiscale ?? null;
+  const causale = causaleBonifico({
+    bonus,
+    numeroFattura: f.number,
+    dataFattura: fechaEnZona(new Date(f.created_at), "Europe/Rome"),
+    codiceFiscaleBeneficiario: cf,
+    partitaIvaImpresa: negocio.partita_iva ?? null,
+  });
+  return { bonus, causale, ritenuta: ritenutaBancaria(Number(f.amount)), faltaCodiceFiscale: !cf };
+}
+
 async function negocioDelCliente(
   admin: ReturnType<typeof getSupabaseAdmin>,
   businessId: string | null | undefined
@@ -2748,7 +2786,15 @@ apiRouter.get(
           }
         : null,
       pendingInvoice: pendingInvoice.data
-        ? { id: pendingInvoice.data.id, number: pendingInvoice.data.number ?? null, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
+        ? {
+            id: pendingInvoice.data.id,
+            number: pendingInvoice.data.number ?? null,
+            type: pendingInvoice.data.type,
+            amount: Number(pendingInvoice.data.amount),
+            status: pendingInvoice.data.status,
+            // Italia: cómo pagarla sin perder su deducción. Ver bonificoDeLaFactura.
+            bonifico: await bonificoDeLaFactura(getSupabaseAdmin(), (client.data as any)?.business_id ?? req.businessId!, pendingInvoice.data.id),
+          }
         : null,
       business: negocio,
       visiblePhotos,
@@ -6266,7 +6312,7 @@ apiRouter.get(
         // usar una en el listado y la otra en la ficha hacía que la misma obra
         // enseñara dos cifras distintas con el mismo rótulo.
         .select(
-          "id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, address, clients(name, address), estimates!projects_estimate_id_fkey(total)"
+          "id, client_id, estimate_id, name, type, status, progress_percent, start_date, end_date, address, bonus_fiscale, clients(name, address), estimates!projects_estimate_id_fkey(total)"
         )
         .eq("business_id", req.businessId!)
         .eq("id", projectId)
@@ -6339,6 +6385,8 @@ apiRouter.get(
       type: project.data.type,
       status: project.data.status,
       lifecycle,
+      // Italia: la deducción del cliente por esta obra. Ver shared/bonusEdilizi.ts.
+      bonusFiscale: (project.data as { bonus_fiscale?: string | null }).bonus_fiscale ?? null,
       progressPercent: Number(project.data.progress_percent),
       startDate: project.data.start_date,
       endDate: project.data.end_date,
@@ -8479,12 +8527,35 @@ apiRouter.get(
     const { data, error } = await supabase
       .from("invoices")
       .select(
-        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name), payments(method, reference, stripe_fee, stripe_fee_tax, stripe_net), credit_notes(amount)"
+        "id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name, bonus_fiscale), clients(name, codice_fiscale), payments(method, reference, stripe_fee, stripe_fee_tax, stripe_net), credit_notes(amount)"
       )
       .eq("business_id", req.businessId!)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
+
+    // El bonifico parlante de cada factura de una obra con bonus, en Italia.
+    // Se calcula aquí de una vez, con la Partita IVA del negocio leída una
+    // sola vez, y no factura por factura.
+    const { data: delNegocio } = await supabase.from("businesses").select("country, partita_iva").eq("id", req.businessId!).maybeSingle();
+    const enItalia = paisDe(delNegocio?.country).impuestos === "italia";
+    const bonificoDe = (i: any) => {
+      const bonus = i.projects?.bonus_fiscale;
+      if (!enItalia || !i.number || !esBonusFiscale(bonus)) return null;
+      const cf = i.clients?.codice_fiscale ?? null;
+      return {
+        bonus,
+        causale: causaleBonifico({
+          bonus,
+          numeroFattura: i.number,
+          dataFattura: fechaEnZona(new Date(i.created_at), "Europe/Rome"),
+          codiceFiscaleBeneficiario: cf,
+          partitaIvaImpresa: delNegocio?.partita_iva ?? null,
+        }),
+        ritenuta: ritenutaBancaria(Number(i.amount)),
+        faltaCodiceFiscale: !cf,
+      };
+    };
 
     // Aparte y no con un join: `quickbooks_links.local_id` apunta a tres
     // tablas distintas —cliente, factura, nota— así que no puede tener clave
@@ -8549,6 +8620,7 @@ apiRouter.get(
         // pantalla decía que le deben un dinero que ya nadie le debe.
         creditedAmount:
           Math.round((i.credit_notes ?? []).reduce((suma: number, n: any) => suma + Number(n.amount), 0) * 100) / 100,
+        bonifico: bonificoDe(i),
         // Si llegó a QuickBooks o no. `null` cuando el negocio no lo usa: una
         // insignia gris en cada fila de quien no tiene QuickBooks sería ruido
         // permanente sobre algo que no le importa.
@@ -10029,6 +10101,13 @@ apiRouter.patch(
         });
       }
     }
+    if (body.bonusFiscale !== undefined) {
+      if (body.bonusFiscale !== null && body.bonusFiscale !== "" && !esBonusFiscale(body.bonusFiscale)) {
+        res.status(400).json({ error: "invalid bonus", code: "bonus_no_valido" });
+        return;
+      }
+      update.bonus_fiscale = body.bonusFiscale || null;
+    }
     if (body.progressPercent !== undefined) {
       const pct = Number(body.progressPercent);
       if (Number.isNaN(pct) || pct < 0 || pct > 100) {
@@ -10689,7 +10768,7 @@ async function construirPdfDeNota(
   const { data: n } = await admin
     .from("credit_notes")
     .select(
-      "id, number, reason, subtotal, tax_amount, tax_breakdown, amount, created_at, invoices(number, created_at, amount, clients(name, address, phone, email))"
+      "id, number, reason, subtotal, tax_amount, tax_breakdown, amount, created_at, invoices(number, created_at, amount, clients(name, address, phone, email, partita_iva, codice_fiscale))"
     )
     .eq("business_id", businessId)
     .eq("id", creditNoteId)
@@ -10700,7 +10779,7 @@ async function construirPdfDeNota(
     number: string | null;
     created_at: string;
     amount: number;
-    clients: { name: string; address: string | null; phone: string | null; email: string | null } | null;
+    clients: { name: string; address: string | null; phone: string | null; email: string | null; partita_iva?: string | null; codice_fiscale?: string | null } | null;
   } | null;
 
   const { identity } = await loadBusinessIdentity(admin, businessId);
@@ -10716,6 +10795,11 @@ async function construirPdfDeNota(
         address: factura?.clients?.address ?? null,
         phone: factura?.clients?.phone ?? null,
         email: factura?.clients?.email ?? null,
+        fiscalId: factura?.clients?.partita_iva
+          ? `P. IVA ${factura.clients.partita_iva}`
+          : factura?.clients?.codice_fiscale
+            ? `C.F. ${factura.clients.codice_fiscale}`
+            : null,
       },
       correctsNumber: factura?.number ? `FAC-${factura.number}` : null,
       correctsDate: factura?.created_at ? new Date(factura.created_at) : null,
@@ -11083,7 +11167,7 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
   const [invoice, business] = await Promise.all([
     admin
       .from("invoices")
-      .select("id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, description, due_date, paid_at, created_at, clients(name, address, phone, email), projects(name)")
+      .select("id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, description, due_date, paid_at, created_at, clients(name, address, phone, email, partita_iva, codice_fiscale, address_line, postal_code, city, region), projects(name)")
       .eq("business_id", businessId)
       .eq("id", invoiceId)
       .maybeSingle(),
@@ -11094,8 +11178,24 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
   if (!invoice.data) return null;
 
   const client = invoice.data.clients as unknown as
-    | { name: string; address: string | null; phone: string | null; email: string | null }
+    | {
+        name: string;
+        address: string | null;
+        phone: string | null;
+        email: string | null;
+        partita_iva?: string | null;
+        codice_fiscale?: string | null;
+        address_line?: string | null;
+        postal_code?: string | null;
+        city?: string | null;
+        region?: string | null;
+      }
     | null;
+  // En Italia la dirección va por partes en la ficha (la que pide el XML);
+  // si está, es la que se imprime, para que el papel y el XML digan lo mismo.
+  const direccionItaliana = client?.address_line
+    ? [client.address_line, [client.postal_code, client.city, client.region && `(${client.region})`].filter(Boolean).join(" ")].filter(Boolean).join(", ")
+    : null;
 
   // Invoices issued before the tax columns existed only carry `amount`; that
   // figure is the amount actually charged, so it stands in as the total and
@@ -11122,7 +11222,8 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
       business: business.identity,
       client: {
         name: client?.name ?? "—",
-        address: client?.address ?? null,
+        address: direccionItaliana ?? client?.address ?? null,
+        fiscalId: client?.partita_iva ? `P. IVA ${client.partita_iva}` : client?.codice_fiscale ? `C.F. ${client.codice_fiscale}` : null,
         phone: client?.phone ?? null,
         email: client?.email ?? null,
       },
@@ -11148,6 +11249,7 @@ async function buildInvoicePdf(businessId: string, invoiceId: string, lang: DocL
         Math.round(
           (subtotal + taxAmount - Number(invoice.data.holdback_amount ?? 0) + Number(invoice.data.holdback_released ?? 0)) * 100
         ) / 100,
+      bonifico: (await bonificoDeLaFactura(admin, businessId, invoiceId))?.causale ?? null,
     },
     lang
   );
@@ -13442,7 +13544,15 @@ apiRouter.get(
           }
         : null,
       pendingInvoice: pendingInvoice.data
-        ? { id: pendingInvoice.data.id, number: pendingInvoice.data.number ?? null, type: pendingInvoice.data.type, amount: Number(pendingInvoice.data.amount), status: pendingInvoice.data.status }
+        ? {
+            id: pendingInvoice.data.id,
+            number: pendingInvoice.data.number ?? null,
+            type: pendingInvoice.data.type,
+            amount: Number(pendingInvoice.data.amount),
+            status: pendingInvoice.data.status,
+            // Italia: cómo pagarla sin perder su deducción. Ver bonificoDeLaFactura.
+            bonifico: await bonificoDeLaFactura(getSupabaseAdmin(), (client.data as any)?.business_id ?? req.businessId!, pendingInvoice.data.id),
+          }
         : null,
       business: negocio,
       visiblePhotos,

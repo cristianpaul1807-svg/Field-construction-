@@ -24,6 +24,10 @@ import { ArrowLeft, FileText, MessageCircle, MapPin, SlidersHorizontal, Plus } f
 import { formatCurrency, type ProjectStatus } from "@/lib/mockData";
 import { useApi, apiFetch, downloadFile, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+import { paisDe } from "@shared/paises";
+import type { BonusFiscale } from "@shared/bonusEdilizi";
+import { BonusDeLaObra } from "@/components/BonusDeLaObra";
 
 const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "confirmado", "completado", "pausado"];
 
@@ -40,6 +44,7 @@ interface ProjectDetailResponse {
   status: ProjectStatus;
   lifecycle: Lifecycle | null;
   progressPercent: number;
+  bonusFiscale?: BonusFiscale | null;
   startDate: string;
   endDate: string;
   team: TeamMember[];
@@ -79,6 +84,7 @@ function colorForId(id: string) {
 
 export default function ProjectDetailPage() {
   const { t, i18n } = useTranslation();
+  const { country } = useAuth();
   const { id } = useParams();
   const { data: project, loading, error, reload } = useApi<ProjectDetailResponse>(id ? `/api/projects/${id}` : null);
   const { data: milestones, reload: reloadMilestones } = useApi<PaymentMilestone[]>(
@@ -321,6 +327,9 @@ export default function ProjectDetailPage() {
                   {t("projects.spentOfContract", { spent: formatCurrency(budgetUsed) })}
                 </p>
               </Card>
+              {paisDe(country).impuestos === "italia" && (
+                <BonusDeLaObra projectId={project.id} valor={project.bonusFiscale ?? null} onCambio={reload} />
+              )}
               <Card className="p-4">
                 <p className="text-xs text-muted-foreground">{t("projects.dates")}</p>
                 <p className="text-sm text-foreground mt-1">{project.startDate} → {project.endDate}</p>

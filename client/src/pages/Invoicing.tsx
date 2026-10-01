@@ -28,6 +28,7 @@ import { paisDe } from "@shared/paises";
 import { useAuth } from "@/contexts/AuthContext";
 import { PaisSinConfigurar } from "@/components/PaisAlert";
 import { BotonFatturaPA } from "@/components/BotonFatturaPA";
+import { BonificoParlante, type DatosDelBonifico } from "@/components/BonificoParlante";
 import { NotasDeLaFactura } from "@/components/NotasDeLaFactura";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
@@ -73,6 +74,8 @@ interface Invoice {
     remoteTotal: number | null;
     remoteDeleted: boolean;
   } | null;
+  /** Italia: la factura de una obra con bonus, y cómo se paga. */
+  bonifico?: DatosDelBonifico | null;
 }
 
 /**
@@ -788,6 +791,11 @@ export default function Invoicing() {
                     <p className="text-status-success-fg">
                       {t("invoicing.holdbackReleased", { amount: formatCurrency(invoice.holdbackReleased) })}
                     </p>
+                  )}
+                  {invoice.bonifico && invoice.status !== "pagado" && invoice.status !== "cancelado" && (
+                    <div className="pt-1">
+                      <BonificoParlante datos={invoice.bonifico} vista="negocio" />
+                    </div>
                   )}
                   {invoice.creditedAmount > 0 && (
                     <>

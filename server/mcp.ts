@@ -14,6 +14,7 @@ import { receivables } from "./receivables";
 import { calcularFactura } from "./calculoDeFactura";
 import { resumenDeHoras } from "./resumenDeHoras";
 import { fatturaPADeFactura, fatturaPADeNota } from "./fatturaPAServidor";
+import { ritenutaBancaria } from "../shared/bonusEdilizi";
 import { grupoDePais, paisDe } from "../shared/paises";
 import { OPCIONES_IVA } from "../shared/iva";
 import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
@@ -812,7 +813,7 @@ function createMcpServer(context: ReadToolContext) {
         await audit(context, "get_invoices", false, { code: "access_denied" });
         return denied;
       }
-      let query = admin.from("invoices").select("id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name), clients(name)").eq("business_id", context.identity.businessId).order("created_at", { ascending: false }).limit(MAX_ROWS);
+      let query = admin.from("invoices").select("id, number, type, amount, subtotal, tax_amount, tax_breakdown, holdback_amount, holdback_released, status, due_date, description, created_at, paid_at, project_id, projects(name, bonus_fiscale), clients(name)").eq("business_id", context.identity.businessId).order("created_at", { ascending: false }).limit(MAX_ROWS);
       if (status) query = query.eq("status", status);
       const { data, error } = await query;
       if (error) throw error;
@@ -1087,6 +1088,46 @@ function createMcpServer(context: ReadToolContext) {
       // y le dice dónde rellenarlo, en vez de un «no se pudo».
       if (!r.ok) return { isError: true, content: [{ type: "text" as const, text: JSON.stringify({ error: "The e-invoice cannot be generated.", ...r }) }] };
       return jsonResult({ fileName: r.nombre, xml: r.xml });
+    },
+  );
+
+  server.registerTool(
+    "get_bank_withholdings",
+    {
+      title: "Bank withholdings on tax-bonus payments",
+      description:
+        "Italy: when a client pays an invoice of a job with a tax bonus (bonus edilizi) by bonifico parlante, the bank withholds 11% of the amount net of VAT (VAT always removed at 22%) on account of the business's taxes. This returns, for a year, each paid invoice of a bonus job with the expected withholding and the total: a tax credit for the business, not an unpaid amount.",
+      inputSchema: { year: z.number().int().min(2000).max(2100).describe("Year, e.g. 2026") },
+    },
+    async ({ year }) => {
+      const denied = requireRole(context, "get_bank_withholdings");
+      if (denied) {
+        await audit(context, "get_bank_withholdings", false, { code: "access_denied" });
+        return denied;
+      }
+      const { data, error } = await admin
+        .from("invoices")
+        .select("number, amount, paid_at, projects!inner(name, bonus_fiscale), clients(name)")
+        .eq("business_id", context.identity.businessId)
+        .eq("status", "pagado")
+        .not("projects.bonus_fiscale", "is", null)
+        .gte("paid_at", `${year}-01-01`)
+        .lt("paid_at", `${year + 1}-01-01`)
+        .order("paid_at")
+        .limit(MAX_ROWS);
+      if (error) throw error;
+      const invoices = (data ?? []).map((i: any) => ({
+        number: i.number,
+        client: i.clients?.name ?? null,
+        project: i.projects?.name ?? null,
+        bonus: i.projects?.bonus_fiscale ?? null,
+        paidAt: i.paid_at,
+        amount: Number(i.amount),
+        withholding: ritenutaBancaria(Number(i.amount)),
+      }));
+      const total = Math.round(invoices.reduce((s, i) => s + i.withholding, 0) * 100) / 100;
+      await audit(context, "get_bank_withholdings", true, { year, count: invoices.length });
+      return jsonResult({ currency, year, rate: 0.11, total, invoices });
     },
   );
 

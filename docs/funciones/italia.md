@@ -145,6 +145,35 @@ Código: `shared/fatturaPA.ts` (el XML, puro) y `server/fatturaPAServidor.ts`
 
 ---
 
+## Los bonus edilizi y el bonifico parlante
+
+El cliente que reforma su casa deduce el 50 % (vivienda principal) o el 36 %,
+pero **sólo si paga con un bonifico parlante** que cite la ley, el número y
+la fecha de la factura, su codice fiscale y la Partita IVA de la impresa.
+
+En la obra (tarjeta «Deducción fiscal del cliente») se marca el bonus:
+ristrutturazione, ecobonus, sismabonus o barreras arquitectónicas. De ahí
+sale, solo:
+
+- **El texto del bonifico**, entero y en italiano —lo lee el banco—, en el
+  PDF de cada factura, en el portal del cliente con un botón de copiar, y en
+  la lista de facturas del panel. Si falta el codice fiscale del cliente no
+  se escribe un texto que le haría perder la deducción: se pide.
+- **La retención del banco**: el 11 % del importe sin IVA, con el IVA quitado
+  siempre al 22 %. Es un crédito de la impresa ante Hacienda, no un impago, y
+  la pantalla lo dice. Por MCP, `get_bank_withholdings` da el total del año.
+- **La mención en el XML**: una `Causale` con la ley de la deducción.
+
+| Bonus | Ley que cita |
+|---|---|
+| Ristrutturazione y sismabonus | art. 16-bis D.P.R. 917/1986 |
+| Ecobonus | art. 1, commi 344-347, L. 296/2006 |
+| Barriere architettoniche | art. 119-ter D.L. 34/2020 |
+
+Código: `shared/bonusEdilizi.ts`; `projects.bonus_fiscale`.
+
+---
+
 ## Lo que tiene el consulente del lavoro
 
 La nómina no se hace aquí, pero el consulente necesita de la empresa las
@@ -175,7 +204,7 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
    Invoicetronic…), y el estado de cada factura (entregada, rechazada).
 6. **Bonus edilizi:** el texto del *bonifico parlante* en la factura y en el
    portal, y el 11 % que retiene la banca conciliado como retención y no como
-   impago.
+   impago. ✅ Hecho.
 7. **Vencimientos:** fecha de caducidad en los Papeles de cada persona y de
    cada subcontratista (DURC, patente a crediti, cursos de seguridad,
    tessera), con aviso.

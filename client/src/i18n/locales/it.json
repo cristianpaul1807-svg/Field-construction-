@@ -551,7 +551,8 @@
     "noMatches": "Nessun cliente corrisponde a «{{query}}».",
     "previewOf": "Anteprima di ciò che vede {{name}}",
     "invoiceNumber": "Fattura {{number}}",
-    "payDirectly": "Importo da pagare: {{amount}}. {{business}} ti dirà come pagarlo; il pagamento con carta qui non è ancora disponibile."
+    "payDirectly": "Importo da pagare: {{amount}}. {{business}} ti dirà come pagarlo; il pagamento con carta qui non è ancora disponibile.",
+    "amountDue": "Importo da pagare: {{amount}}."
   },
   "worker": {
     "accessTitle": "Accesso lavoratore",
@@ -1644,7 +1645,8 @@
     "fatturapa_no_encontrada": "Non troviamo questa fattura.",
     "fatturapa_anulada": "Una fattura annullata non va allo SDI. Per correggerne una già inviata, emetti una nota di credito.",
     "fatturapa_sin_iva": "Questa fattura è stata emessa prima che l'impresa fosse in Italia e non ha IVA: non può diventare fattura elettronica.",
-    "fatturapa_datos_incompletos": "Mancano dei dati per la fattura elettronica."
+    "fatturapa_datos_incompletos": "Mancano dei dati per la fattura elettronica.",
+    "bonus_no_valido": "Questo bonus non esiste."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2961,5 +2963,26 @@
       "provincia": "provincia"
     },
     "howToSend": "Caricalo sullo SDI con il tuo programma, il tuo intermediario o il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate."
+  },
+  "bonus": {
+    "title": "Detrazione fiscale del cliente",
+    "none": "Nessun bonus",
+    "kind": {
+      "ristrutturazione": "Bonus ristrutturazione (50% / 36%)",
+      "ecobonus": "Ecobonus (riqualificazione energetica)",
+      "sismabonus": "Sismabonus",
+      "barriere": "Barriere architettoniche"
+    },
+    "hintOff": "Se il cliente detrae questo lavoro, segnalo: le fatture riporteranno la causale del bonifico parlante da usare per non perdere la detrazione.",
+    "hintOn": "Le fatture riportano la causale del bonifico parlante, nel PDF e nel portale. La banca tratterrà l'11% di ogni pagamento (al netto IVA): è un credito d'imposta, non un mancato pagamento.",
+    "payTitle": "Paga con bonifico parlante ({{kind}})",
+    "payHint": "Per non perdere la detrazione, fai il bonifico come «bonifico parlante» nella tua banca e copia questo testo nella causale.",
+    "panelTitle": "Lavoro con bonus: {{kind}}",
+    "panelHint": "Quello che il cliente deve scrivere nel bonifico. Lo vede già nel portale e nel PDF.",
+    "copy": "Copia il testo",
+    "copied": "Copiato",
+    "missingCfClient": "Per preparare il bonifico serve il tuo codice fiscale. Scrivilo a {{business}} in {{messages}}.",
+    "missingCfPanel": "Manca il codice fiscale del cliente: senza non si può scrivere il bonifico. Inseriscilo nella sua scheda.",
+    "withholding": "La banca tratterrà circa {{amount}} (11% al netto IVA): è un tuo credito d'imposta."
   }
 }

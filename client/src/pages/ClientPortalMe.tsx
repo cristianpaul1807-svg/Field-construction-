@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileSignature, CreditCard, CheckCircle2, Download, FilePlus2, Image as ImageIcon, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { formatCurrency, fijarMonedaDelNegocio } from "@/lib/mockData";
 import { lineasDelDesglose } from "@/lib/taxes";
+import { BonificoParlante, type DatosDelBonifico } from "@/components/BonificoParlante";
 import { paisDe } from "@shared/paises";
 import { useApi, apiFetch, downloadFile, readJson, serverMessage } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,7 +43,7 @@ interface ClientPortalData {
     taxBreakdown?: unknown;
     signature: { name: string; signedAt: string; total: number } | null;
   } | null;
-  pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string } | null;
+  pendingInvoice: { id: string; number: string | null; type: string; amount: number; status: string; bonifico?: DatosDelBonifico | null } | null;
   /** De quién es el portal. Nulo sólo si al cliente le falta el negocio. */
   business: { name: string; logoUrl: string | null; country: string } | null;
   visiblePhotos: { id: string }[];
@@ -409,11 +410,20 @@ export default function ClientPortalMe() {
                       tiene dos facturas abiertas no sabe cuál está pagando. */}
                   {data.pendingInvoice && !pais.cobrosConTarjeta && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      {t("clientPortal.payDirectly", {
-                        amount: formatCurrency(data.pendingInvoice.amount),
-                        business: data.business?.name ?? "",
-                      })}
+                      {/* Con bonifico parlante ya se le dice cómo pagar justo
+                          debajo; «te dirá cómo» lo contradiría. */}
+                      {data.pendingInvoice.bonifico
+                        ? t("clientPortal.amountDue", { amount: formatCurrency(data.pendingInvoice.amount) })
+                        : t("clientPortal.payDirectly", {
+                            amount: formatCurrency(data.pendingInvoice.amount),
+                            business: data.business?.name ?? "",
+                          })}
                     </p>
+                  )}
+                  {data.pendingInvoice?.bonifico && (
+                    <div className="mt-3">
+                      <BonificoParlante datos={data.pendingInvoice.bonifico} negocio={data.business?.name} vista="cliente" />
+                    </div>
                   )}
                   {data.pendingInvoice?.number && (
                     <p className="text-xs text-muted-foreground mt-2">
