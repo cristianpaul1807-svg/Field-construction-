@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { ResumenDeHorasDelMes } from "@/components/ResumenDeHorasDelMes";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -207,6 +208,8 @@ export default function WorkLog() {
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-6xl mx-auto">
       <PageHeader title={t("workLog.title")} description={t("workLog.description")} />
+
+      <ResumenDeHorasDelMes />
 
       <SelectorDeObra />
 

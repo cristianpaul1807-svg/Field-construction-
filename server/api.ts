@@ -74,6 +74,8 @@ import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODO
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
 // importa así.
 import { calcularFactura, computeInvoiceTax } from "./calculoDeFactura";
+import { esTipoDeAusencia } from "../shared/ausencias";
+import { esMesValido, resumenDeHoras, resumenEnCsv, TEXTOS_DEL_RESUMEN } from "./resumenDeHoras";
 import { aplicaLaCcq, esPaisConocido, esPaisDelRegistro, esRegionDe, paisDe, PAIS_POR_DEFECTO } from "../shared/paises";
 import { calcularIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "../shared/iva";
 import { esPartitaIvaValida, esCodiceFiscaleValido } from "../shared/fiscaleItalia";
@@ -7299,6 +7301,33 @@ apiRouter.get(
 
 // ---------- Control de trabajo ----------
 
+/**
+ * Las horas del mes, por persona y día, para quien hace la nómina fuera.
+ *
+ * Va antes de `/work-log/:commessa` a propósito: si no, Express leería
+ * «hours-summary» como un número de obra. Ver `server/resumenDeHoras.ts`.
+ */
+apiRouter.get(
+  "/work-log/hours-summary",
+  route(async (req, res) => {
+    const mes = req.query.month;
+    if (!esMesValido(mes)) {
+      res.status(400).json({ error: "month must be YYYY-MM", code: "mes_no_valido" });
+      return;
+    }
+    const resumen = await resumenDeHoras(getSupabaseAdmin(), req.businessId!, mes);
+    if (req.query.format === "csv") {
+      const lang = normalizeDocLang(req.query.lang);
+      const textos = TEXTOS_DEL_RESUMEN[lang];
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="horas-${mes}.csv"`);
+      res.send(resumenEnCsv(resumen, textos.encabezados, (k) => textos.ausencias[k]));
+      return;
+    }
+    res.json(resumen);
+  })
+);
+
 /** Las horas de un turno, en horas decimales. Un turno abierto no cuenta. */
 function horasDeTurno(entrada: string, salida: string | null): number {
   if (!salida) return 0;
@@ -12309,9 +12338,7 @@ apiRouter.post(
       return;
     }
 
-    const kind = ["vacaciones", "enfermedad", "permiso", "festivo"].includes(req.body?.kind)
-      ? req.body.kind
-      : "vacaciones";
+    const kind = esTipoDeAusencia(req.body?.kind) ? req.body.kind : "vacaciones";
 
     const supabase = req.supabase!;
     // Lo que planifica la oficina nace aprobado: el contratista no se pide

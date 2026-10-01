@@ -51,6 +51,32 @@ lleva; si más adelante se le asigna una obra, coge número en ese momento.
 
 ---
 
+## Las horas del mes para la nómina
+
+Arriba del registro hay una tarjeta con el mes (por defecto, el pasado): por
+persona de la plantilla, horas ordinarias, horas extra y los días laborables
+de cada ausencia, y un botón que descarga el detalle día a día en CSV.
+
+Es lo que en Italia necesita el consulente del lavoro cada mes para hacer las
+nóminas y la declaración a la Cassa Edile —allí la nómina no se hace aquí—, y
+sirve igual a quien lleva la nómina fuera en cualquier país. También se pide
+hablando por MCP (`get_monthly_hours`).
+
+- **Sólo cuentan los fichajes aprobados**, como en la nómina. Los que no lo
+  están se cuentan aparte y la tarjeta lo dice: un resumen que sale corto sin
+  avisar es una nómina que se paga corta.
+- **El día es el de la obra**, en su zona horaria (`shared/zonaHoraria.ts`),
+  no el del servidor. Lo mismo al partir un turno en la octava hora.
+- Los subcontratistas no salen: facturan, no tienen nómina.
+
+| Ruta | Qué hace |
+|---|---|
+| `GET /api/work-log/hours-summary?month=AAAA-MM` | El resumen en JSON |
+| `GET /api/work-log/hours-summary?month=AAAA-MM&format=csv&lang=it` | El detalle día a día, con encabezados en ese idioma |
+
+La ruta va **antes** de `/work-log/:commessa`; si no, Express leería
+«hours-summary» como un número de obra.
+
 ## Por dentro
 
 **Tablas**

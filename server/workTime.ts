@@ -1,4 +1,5 @@
 import type { getSupabaseAdmin } from "./supabaseAdmin";
+import { diaEnZona, zonaHorariaDelNegocio } from "../shared/zonaHoraria";
 
 /**
  * The eight-hour day, and what comes after it.
@@ -20,12 +21,6 @@ type Admin = ReturnType<typeof getSupabaseAdmin>;
 export const REGULAR_HOURS_PER_DAY = 8;
 const MS_PER_HOUR = 3_600_000;
 
-/** Local midnight for a timestamp, which is the day a shift belongs to. */
-function startOfDay(iso: string): Date {
-  const day = new Date(iso);
-  day.setHours(0, 0, 0, 0);
-  return day;
-}
 
 export interface SplitResult {
   /** Milliseconds of the shift that counted as ordinary time. */
@@ -99,8 +94,13 @@ export async function closeEntryWithOvertime(
 
   try {
     const checkIn = new Date(entry.check_in_time);
-    const day = startOfDay(entry.check_in_time);
-    const nextDay = new Date(day.getTime() + 86_400_000);
+    // El día de la obra, no el del servidor: ver `shared/zonaHoraria.ts`.
+    const { data: negocio } = await admin
+      .from("businesses")
+      .select("country, province")
+      .eq("id", input.businessId)
+      .maybeSingle();
+    const { desde: day, hasta: nextDay } = diaEnZona(checkIn, zonaHorariaDelNegocio(negocio?.country, negocio?.province));
     const workerColumn = entry.employee_id ? "employee_id" : "subcontractor_id";
     const workerId = entry.employee_id ?? entry.subcontractor_id;
 

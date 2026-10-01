@@ -7,6 +7,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { Download } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
+import { paisDe } from "@shared/paises";
 
 /**
  * The books, downloadable.
@@ -42,6 +44,8 @@ function defaultRange() {
 
 export function AccountingExportCard() {
   const { t } = useTranslation();
+  const { country } = useAuth();
+  const pais = paisDe(country);
   const [range, setRange] = useState(defaultRange);
   const [busy, setBusy] = useState<Kind | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +105,9 @@ export function AccountingExportCard() {
         ))}
       </div>
 
+      {/* Sólo donde QuickBooks funciona: fuera de Canadá su código de impuesto
+          no existe y la importación rechazaría cada línea. */}
+      {pais.quickbooks && (
       <div className="pt-3 border-t border-border space-y-2">
         <p className="text-xs font-medium text-foreground">{t("accountingExport.quickbooksTitle")}</p>
         <p className="text-xs text-muted-foreground">{t("accountingExport.quickbooksNote")}</p>
@@ -117,9 +124,12 @@ export function AccountingExportCard() {
             una frase; descubrirlo, una tarde. */}
         <p className="text-xs text-muted-foreground">{t("accountingExport.quickbooksTaxNote")}</p>
       </div>
+      )}
 
       {error && <p className="text-sm text-status-error-fg">{error}</p>}
-      <p className="text-xs text-muted-foreground">{t("accountingExport.columnsNote")}</p>
+      <p className="text-xs text-muted-foreground">
+        {t(pais.impuestos === "italia" ? "accountingExport.columnsNoteItalia" : pais.impuestos === "canada" ? "accountingExport.columnsNote" : "accountingExport.columnsNoteGeneral")}
+      </p>
     </Card>
   );
 }

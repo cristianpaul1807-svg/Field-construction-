@@ -149,7 +149,15 @@ mayor parte de la necesidad con una fracción del trabajo.
 - **Las celdas que empiezan por `=`, `+`, `-` o `@` llevan un tabulador
   delante.** Esos caracteres hacen que una hoja de cálculo trate la celda como
   fórmula: además de estropear el dato, con una descripción preparada a
-  propósito es una forma de ejecutar algo en el ordenador del contable.
+  propósito es una forma de ejecutar algo en el ordenador del contable. **Un
+  importe negativo no**: `-1000.00` es un número, y con el tabulador la hoja
+  lo leía como texto y no lo sumaba —todas las notas de crédito salían así—.
+- **En Italia el archivo es otro.** Facturas y notas de crédito salen con su
+  número, la Partita IVA o el codice fiscale del cliente, `imponibile`,
+  `aliquota_iva`, `iva` y `natura` (N6.3 en inversione contabile), con los
+  encabezados en italiano porque los lee el commercialista. El tipo y el
+  estado se escriben como él los dice (acconto, SAL, saldo; da incassare,
+  incassata). La parte de QuickBooks no aparece fuera de Canadá.
 
 ### Por dentro
 

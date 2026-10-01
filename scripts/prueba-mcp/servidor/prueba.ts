@@ -51,6 +51,7 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
   const lista = await rpc("tools/list");
   const nombres = (lista.result?.tools ?? []).map((t: any) => t.name);
   console.log(`\n== ${pais}: ${nombres.length} herramientas`);
+  if (process.env.VER) console.log(nombres.join(" "));
   ok(`${pais}: QuickBooks`, nombres.includes("audit_quickbooks_sync"), pais === "CA");
   ok(`${pais}: calcular factura`, nombres.includes("calculate_invoice"), pais !== "ES");
   ok(`${pais}: Partita IVA`, nombres.includes("check_italian_tax_id"), pais === "IT");
@@ -70,6 +71,19 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
     ok("IT: inversione contabile", [rc.taxAmount, rc.taxBreakdown.natura], [0, "N6.3"]);
     ok("IT: Partita IVA buena", (await llamar("check_italian_tax_id", { value: "IT 06363391001" })).valid, true);
     ok("IT: Partita IVA mal tecleada", (await llamar("check_italian_tax_id", { value: "06363391002" })).valid, false);
+    // Un mes de un muratore: un día de 9 h (8 + 1 extra), un fichaje sin
+    // aprobar que no cuenta y dos días de mal tiempo.
+    DATOS.employees = [{ id: "e1", name: "Luca Rossi", role: "Muratore" }];
+    DATOS.time_entries = [
+      { employee_id: "e1", check_in_time: "2026-09-01T06:00:00Z", check_out_time: "2026-09-01T14:00:00Z", overtime: false, approved: true },
+      { employee_id: "e1", check_in_time: "2026-09-01T14:00:00Z", check_out_time: "2026-09-01T15:00:00Z", overtime: true, approved: true },
+      { employee_id: "e1", check_in_time: "2026-09-04T06:00:00Z", check_out_time: "2026-09-04T14:00:00Z", overtime: false, approved: false },
+    ];
+    DATOS.time_off = [{ employee_id: "e1", start_date: "2026-09-02", end_date: "2026-09-03", kind: "maltempo" }];
+    const horas = await llamar("get_monthly_hours", { month: "2026-09" });
+    const luca = horas.personas?.[0];
+    ok("IT: horas del mes para el consulente", [luca?.totales.ordinarias, luca?.totales.extraordinarias, luca?.totales.ausencias.maltempo, horas.sinAprobar, horas.zonaHoraria], [8, 1, 2, 1, "Europe/Rome"]);
+    ok("IT: el detalle va por día", [luca?.dias["2026-09-01"].ordinarias, luca?.dias["2026-09-02"].ausencia], [8, "maltempo"]);
     ok("IT: clientes sin la llave del portal", Object.keys((await llamar("get_clients", { search: "Bian" })).clients[0]).includes("access_token"), false);
   }
   if (pais === "ES") {

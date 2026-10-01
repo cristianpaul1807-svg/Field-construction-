@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, ClipboardList, Palmtree } from "lucide-react
 import { hashColor, cn } from "@/lib/utils";
 import { workerApiFetch } from "@/lib/workerSession";
 import { MonthGrid, claveDia, type DiaMarcado } from "@/components/MonthGrid";
+import type { TipoDeAusencia } from "@shared/ausencias";
 
 interface ScheduleEvent {
   id: string;
@@ -22,7 +23,7 @@ interface TimeOff {
   id: string;
   startDate: string;
   endDate: string;
-  kind: "vacaciones" | "enfermedad" | "permiso" | "festivo";
+  kind: TipoDeAusencia;
   status: "planificada" | "aprobada" | "rechazada";
 }
 

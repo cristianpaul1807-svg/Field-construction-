@@ -1505,7 +1505,9 @@
     },
     "quickbooksTitle": "Pour QuickBooks",
     "quickbooksNote": "Ces deux-là s'importent tels quels dans QuickBooks, sans toucher à aucune colonne. Importez-les dans cet ordre : QuickBooks refuse une facture d'un client qu'il ne connaît pas encore.",
-    "quickbooksTaxNote": "QuickBooks recalcule la taxe avec le code de votre province : les totaux viennent donc de ses règles, pas des nôtres. Si vous avez renommé vos codes de taxe dans QuickBooks, il faudra les associer au moment de l'importation."
+    "quickbooksTaxNote": "QuickBooks recalcule la taxe avec le code de votre province : les totaux viennent donc de ses règles, pas des nôtres. Si vous avez renommé vos codes de taxe dans QuickBooks, il faudra les associer au moment de l'importation.",
+    "columnsNoteItalia": "Chaque facture sort avec son numéro, la Partita IVA ou le codice fiscale du client, et l'imponibile, le taux de TVA, la TVA et la natura (N6.3 en autoliquidation) dans des colonnes séparées.",
+    "columnsNoteGeneral": "Les montants sont sans taxe : celle de votre pays n'est pas encore configurée."
   },
   "stripeBalance": {
     "title": "Argent chez Stripe",
@@ -1632,7 +1634,8 @@
     "pais_no_ofrecido": "Ce pays n'est pas encore disponible.",
     "pais_sin_configurar": "Les taxes de votre pays ne sont pas encore configurées ; les factures ne peuvent donc pas encore être émises. Écrivez au soutien et nous la préparerons avec vous.",
     "pagos_pais_no_listos": "Les paiements par carte ne sont pas encore disponibles dans votre pays. En attendant, vous pouvez marquer les factures comme payées en argent comptant, virement ou chèque.",
-    "quickbooks_pais_no_listo": "La connexion avec QuickBooks n'est pas encore disponible dans votre pays."
+    "quickbooks_pais_no_listo": "La connexion avec QuickBooks n'est pas encore disponible dans votre pays.",
+    "mes_no_valido": "Choisissez un mois valide."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2278,7 +2281,9 @@
       "institutionnel_commercial": "Institutionnel et commercial",
       "industriel": "Industriel",
       "genie_civil_voirie": "Génie civil et voirie"
-    }
+    },
+    "vacationItalia": "Congés et prime de Noël : la Cassa Edile les verse à partir des 18,5 % que l'entreprise cotise chaque mois, ils ne s'ajoutent donc pas ici.",
+    "vacationHintGeneral": "La part du salaire brut ajoutée comme indemnité de congés, s'il y en a une."
   },
   "workerAgreements": {
     "pendingTitle": "Une entente attend votre signature",
@@ -2302,7 +2307,9 @@
       "vacaciones": "Vacances",
       "enfermedad": "Congé de maladie",
       "permiso": "Congé",
-      "festivo": "Jour férié"
+      "festivo": "Jour férié",
+      "maltempo": "Intempéries",
+      "infortunio": "Accident du travail"
     },
     "from": "Du",
     "to": "Au",
@@ -2899,5 +2906,18 @@
     "enPruebasTitulo": "{{pais}} est en préparation",
     "enPruebasTexto": "Vous facturez déjà avec TVA et en euros. La facture électronique (SDI) arrive bientôt ; si vous en avez besoin avant, écrivez au soutien.",
     "facturasTexto": "Les taxes de votre pays ({{pais}}) ne sont pas encore configurées, donc les factures ne peuvent pas encore être émises. Écrivez au soutien et nous les préparons avec vous."
+  },
+  "hoursSummary": {
+    "title": "Heures du mois pour la paie",
+    "description": "Par personne : heures normales, heures supplémentaires et les jours de chaque absence. Téléchargez le détail jour par jour pour qui fait la paie.",
+    "month": "Mois",
+    "download": "Télécharger (CSV)",
+    "fileName": "heures",
+    "empty": "Il n'y a encore personne dans l'équipe.",
+    "totals": "{{regular}} h normales · {{overtime}} h sup.",
+    "days_one": "{{count}} jour",
+    "days_other": "{{count}} jours",
+    "unapproved_one": "Il y a {{count}} pointage non approuvé ce mois-ci, il ne compte pas. Approuvez-le dans {{menuFichaje}} avant d'envoyer.",
+    "unapproved_other": "Il y a {{count}} pointages non approuvés ce mois-ci, ils ne comptent pas. Approuvez-les dans {{menuFichaje}} avant d'envoyer."
   }
 }

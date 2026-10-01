@@ -91,6 +91,8 @@ acuerdo de trabajo, que no tiene desglose, la saca del país del negocio.
 
 - **Nómina:** fuera del menú (`Pais.nomina`).
 - **CCQ:** `aplicaLaCcq` ya exigía Quebec.
+- **Lo de Quebec en el personal:** el bloque de la CCQ de los acuerdos de
+  trabajo y el «% de vacaciones» (en Italia lo paga la Cassa Edile).
 - **Cobrar, enlace de pago y QuickBooks:** fuera del menú y cerrados en el
   servidor (`cobrosConTarjeta`, `quickbooks`). El portal y el correo de la
   factura no ofrecen «pagar ahora»: dicen el importe y que el negocio dirá
@@ -99,6 +101,20 @@ acuerdo de trabajo, que no tiene desglose, la saca del país del negocio.
   contabile, la factura electrónica, cobrar sin tarjeta— y ninguno de los de
   Canadá (TPS/TVQ, CCQ, T4, Stripe, QuickBooks). Los demás países ven los
   suyos: que todavía no se factura allí y a quién escribir.
+
+---
+
+## Lo que tiene el consulente del lavoro
+
+La nómina no se hace aquí, pero el consulente necesita de la empresa las
+horas de cada mes. En Registro de trabajo hay un resumen por persona —horas
+ordinarias, horas extra, y los días de vacaciones, malattia, permesso,
+festività, **maltempo** e **infortunio**— que se descarga en CSV con los
+encabezados en italiano, o se pide por MCP. Ver
+[control-de-trabajo.md](control-de-trabajo.md#las-horas-del-mes-para-la-nómina).
+
+Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
+(ver [finanzas.md](finanzas.md#exportar-para-el-contable)).
 
 ---
 

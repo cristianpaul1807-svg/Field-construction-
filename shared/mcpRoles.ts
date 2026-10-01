@@ -133,6 +133,9 @@ export const TOOL_ACCESS: Record<
   get_profitability: { roles: ["admin"], area: "dinero", capability: "margen" },
   audit_quickbooks_sync: { roles: ["office", "admin"], area: "dinero", capability: "contabilidad", requierePais: "quickbooks" },
   // Lo que una persona de oficina ya ve en Presupuestos y en el CRM.
+  // Horas y ausencias de cada persona: lo que el panel enseña en Registro de
+  // trabajo, sin un céntimo. Del terreno, como esa pantalla.
+  get_monthly_hours: { roles: ["manager", "office", "admin"], area: "campo", capability: "campo" },
   get_estimates: { roles: ["office", "admin"], area: "dinero", capability: "facturacion" },
   get_clients: { roles: ["office", "admin"], area: "clientes", capability: "campo" },
   // Calcular no guarda nada, pero dice cuánto se le va a cobrar a un cliente,

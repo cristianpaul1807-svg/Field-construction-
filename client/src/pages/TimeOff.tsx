@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Plus, Trash2, Check, X, Palmtree } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { TIPOS_DE_AUSENCIA } from "@shared/ausencias";
 
 /**
  * Vacaciones y ausencias.
@@ -22,7 +23,7 @@ import { AvisoDeFallo } from "@/components/AvisoDeFallo";
  * obliga a mirar día a día algo que se decide por semanas.
  */
 
-const TIPOS = ["vacaciones", "enfermedad", "permiso", "festivo"] as const;
+const TIPOS = TIPOS_DE_AUSENCIA;
 
 const TONO: Record<string, StatusTone> = {
   planificada: "warning",

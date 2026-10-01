@@ -1505,7 +1505,9 @@
     },
     "quickbooksTitle": "For QuickBooks",
     "quickbooksNote": "These two upload to QuickBooks as they are, without touching a single column. Upload them in this order: QuickBooks rejects an invoice for a customer it doesn't know yet.",
-    "quickbooksTaxNote": "QuickBooks recalculates the tax using your province's code, so the totals come from its rules and not ours. If you renamed your tax codes in QuickBooks, you'll have to match them up during the import."
+    "quickbooksTaxNote": "QuickBooks recalculates the tax using your province's code, so the totals come from its rules and not ours. If you renamed your tax codes in QuickBooks, you'll have to match them up during the import.",
+    "columnsNoteItalia": "Each invoice comes with its number, the client's Partita IVA or codice fiscale, and the taxable amount, VAT rate, VAT and natura (N6.3 for reverse charge) in separate columns.",
+    "columnsNoteGeneral": "Amounts carry no tax: your country's tax isn't set up yet."
   },
   "stripeBalance": {
     "title": "Money at Stripe",
@@ -1632,7 +1634,8 @@
     "pais_no_ofrecido": "That country isn't available yet.",
     "pais_sin_configurar": "Your country's taxes aren't set up yet, so invoices can't be issued yet. Write to support and we'll set it up with you.",
     "pagos_pais_no_listos": "Card payments aren't available in your country yet. Meanwhile you can mark invoices as paid by cash, transfer or cheque.",
-    "quickbooks_pais_no_listo": "The QuickBooks connection isn't available in your country yet."
+    "quickbooks_pais_no_listo": "The QuickBooks connection isn't available in your country yet.",
+    "mes_no_valido": "Pick a valid month."
   },
   "workLog": {
     "title": "Work log",
@@ -2278,7 +2281,9 @@
       "institutionnel_commercial": "Institutional and commercial",
       "industriel": "Industrial",
       "genie_civil_voirie": "Civil engineering and roads"
-    }
+    },
+    "vacationItalia": "Holidays and Christmas pay: the Cassa Edile pays them from the 18.5% the business pays in every month, so they are not added here.",
+    "vacationHintGeneral": "The share of gross wages added as holiday pay, if any."
   },
   "workerAgreements": {
     "pendingTitle": "You have an agreement waiting for your signature",
@@ -2302,7 +2307,9 @@
       "vacaciones": "Vacation",
       "enfermedad": "Sick leave",
       "permiso": "Leave",
-      "festivo": "Holiday"
+      "festivo": "Holiday",
+      "maltempo": "Bad weather",
+      "infortunio": "Work injury"
     },
     "from": "From",
     "to": "Until",
@@ -2899,5 +2906,18 @@
     "enPruebasTitulo": "{{pais}} is being prepared",
     "enPruebasTexto": "You already invoice with VAT and in euros. Electronic invoicing (SDI) is coming soon; if you need it sooner, write to support.",
     "facturasTexto": "Your country's taxes ({{pais}}) aren't set up yet, so invoices can't be issued yet. Write to support and we'll set it up with you."
+  },
+  "hoursSummary": {
+    "title": "Monthly hours for payroll",
+    "description": "Per person: regular hours, overtime and the days of each absence. Download the day-by-day detail for whoever does the payroll.",
+    "month": "Month",
+    "download": "Download (CSV)",
+    "fileName": "hours",
+    "empty": "There is nobody on staff yet.",
+    "totals": "{{regular}} h regular · {{overtime}} h overtime",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "unapproved_one": "There is {{count}} unapproved clock-in this month and it doesn't count. Approve it in {{menuFichaje}} before sending.",
+    "unapproved_other": "There are {{count}} unapproved clock-ins this month and they don't count. Approve them in {{menuFichaje}} before sending."
   }
 }

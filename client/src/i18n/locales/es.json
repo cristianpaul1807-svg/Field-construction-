@@ -1505,7 +1505,9 @@
     },
     "quickbooksTitle": "Para QuickBooks",
     "quickbooksNote": "Estos dos se suben a QuickBooks tal cual, sin tocar ninguna columna. Súbelos en este orden: QuickBooks rechaza una factura de un cliente que todavía no conoce.",
-    "quickbooksTaxNote": "El impuesto lo recalcula QuickBooks con el código de tu provincia, así que los totales salen de sus reglas y no de las nuestras. Si renombraste tus códigos de impuesto en QuickBooks, tendrás que emparejarlos al importar."
+    "quickbooksTaxNote": "El impuesto lo recalcula QuickBooks con el código de tu provincia, así que los totales salen de sus reglas y no de las nuestras. Si renombraste tus códigos de impuesto en QuickBooks, tendrás que emparejarlos al importar.",
+    "columnsNoteItalia": "Cada factura va con su número, la Partita IVA o el codice fiscale del cliente, y el imponibile, el tipo de IVA, el IVA y la natura (N6.3 en inversione contabile) en columnas separadas.",
+    "columnsNoteGeneral": "Los importes van sin impuesto: el de tu país todavía no está configurado."
   },
   "stripeBalance": {
     "title": "Dinero en Stripe",
@@ -1632,7 +1634,8 @@
     "pais_no_ofrecido": "Ese país todavía no está disponible.",
     "pais_sin_configurar": "Los impuestos de tu país aún no están configurados, así que todavía no se pueden emitir facturas. Escríbenos a soporte y lo preparamos contigo.",
     "pagos_pais_no_listos": "Los cobros con tarjeta todavía no están disponibles en tu país. Mientras tanto puedes marcar las facturas como cobradas en efectivo, transferencia o cheque.",
-    "quickbooks_pais_no_listo": "La conexión con QuickBooks todavía no está disponible en tu país."
+    "quickbooks_pais_no_listo": "La conexión con QuickBooks todavía no está disponible en tu país.",
+    "mes_no_valido": "Elige un mes válido."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2278,7 +2281,9 @@
       "institutionnel_commercial": "Institucional y comercial",
       "industriel": "Industrial",
       "genie_civil_voirie": "Obra civil y viaria"
-    }
+    },
+    "vacationItalia": "Vacaciones y paga de Navidad: las paga la Cassa Edile con el 18,5 % que el negocio ingresa cada mes, así que no se suman aquí.",
+    "vacationHintGeneral": "El porcentaje del salario bruto que se suma en concepto de vacaciones, si lo hay."
   },
   "workerAgreements": {
     "pendingTitle": "Tienes un acuerdo esperando tu firma",
@@ -2302,7 +2307,9 @@
       "vacaciones": "Vacaciones",
       "enfermedad": "Baja por enfermedad",
       "permiso": "Permiso",
-      "festivo": "Festivo"
+      "festivo": "Festivo",
+      "maltempo": "Mal tiempo",
+      "infortunio": "Accidente de trabajo"
     },
     "from": "Desde",
     "to": "Hasta",
@@ -2899,5 +2906,18 @@
     "enPruebasTitulo": "{{pais}} está en preparación",
     "enPruebasTexto": "Ya facturas con IVA y en euros. La factura electrónica (SDI) llegará pronto; si la necesitas antes, escríbenos a soporte.",
     "facturasTexto": "Los impuestos de tu país ({{pais}}) aún no están configurados, así que todavía no se pueden emitir facturas. Escríbenos a soporte y lo preparamos contigo."
+  },
+  "hoursSummary": {
+    "title": "Horas del mes para la nómina",
+    "description": "Por persona: horas ordinarias, horas extra y los días de cada ausencia. Descarga el detalle día a día para quien hace las nóminas.",
+    "month": "Mes",
+    "download": "Descargar (CSV)",
+    "fileName": "horas",
+    "empty": "No hay nadie en plantilla todavía.",
+    "totals": "{{regular}} h ordinarias · {{overtime}} h extra",
+    "days_one": "{{count}} día",
+    "days_other": "{{count}} días",
+    "unapproved_one": "Hay {{count}} fichaje sin aprobar este mes y no cuenta. Apruébalo en {{menuFichaje}} antes de mandarlo.",
+    "unapproved_other": "Hay {{count}} fichajes sin aprobar este mes y no cuentan. Apruébalos en {{menuFichaje}} antes de mandarlo."
   }
 }

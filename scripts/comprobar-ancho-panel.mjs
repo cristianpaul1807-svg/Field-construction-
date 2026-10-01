@@ -224,6 +224,23 @@ const FIXTURAS = {
       { id: "tmr_2", nombre: "Obra", modelo: "stripe_s700", enLinea: false, accion: null },
     ],
   },
+  // Las horas del mes para quien hace la nómina. Un nombre largo con tres
+  // ausencias distintas es lo que estira la fila en un móvil.
+  "/api/work-log/hours-summary": {
+    mes: "2026-09",
+    zonaHoraria: "Europe/Rome",
+    fechas: ["2026-09-01"],
+    sinAprobar: 3,
+    personas: [
+      {
+        id: "e1",
+        nombre: "Maximilien-Alexandre Bourgeois-Tremblay",
+        puesto: "Charpentier-menuisier compagnon",
+        dias: {},
+        totales: { ordinarias: 168.5, extraordinarias: 12.25, ausencias: { vacaciones: 5, enfermedad: 2, permiso: 0, festivo: 1, maltempo: 3, infortunio: 0 } },
+      },
+    ],
+  },
   "/api/invoices": [
     {
       id: "f-1",

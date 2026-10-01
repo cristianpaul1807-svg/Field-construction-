@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { FileSignature, Download, Send, Trash2, Plus, Pencil } from "lucide-react";
 import { useApi, apiFetch, readJson, downloadFile, serverMessage } from "@/lib/api";
 import { formatCurrency } from "@/lib/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { aplicaLaCcq, paisDe } from "@shared/paises";
 
 /**
  * Los acuerdos de una persona: empleado o subcontratista.
@@ -84,7 +86,7 @@ const ESTATUTOS_CCQ = [
   "occupation",
 ] as const;
 
-const vacio = (kind: "empleo" | "subcontrato"): Borrador => ({
+const vacio = (kind: "empleo" | "subcontrato", vacaciones = "4"): Borrador => ({
   kind,
   title: "",
   startDate: new Date().toISOString().slice(0, 10),
@@ -93,8 +95,10 @@ const vacio = (kind: "empleo" | "subcontrato"): Borrador => ({
   payAmount: "",
   payFrequency: kind === "subcontrato" ? "al_terminar" : "quincenal",
   hoursPerWeek: "",
-  // Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí.
-  vacationPercent: "4",
+  // Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí. Fuera
+  // de Canadá nace en cero: en Italia lo paga la Cassa Edile, y en un país
+  // que no sabemos hacer no hay porcentaje que proponer.
+  vacationPercent: vacaciones,
   ccqTrade: "",
   ccqStatus: "",
   ccqSector: "",
@@ -133,12 +137,18 @@ export function AcuerdosDeTrabajo({
   onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
+  const { country } = useAuth();
+  const pais = paisDe(country);
+  // La provincia hace falta para la CCQ, que es de Quebec y sólo de Quebec.
+  const { data: empresa } = useApi<{ province: string | null }>("/api/settings/company");
+  const conCcq = aplicaLaCcq(country, empresa?.province ?? null);
+  const vacacionesPorDefecto = pais.impuestos === "canada" ? "4" : "0";
   const [recarga, setRecarga] = useState(0);
   const query = kind === "employee" ? `employeeId=${workerId}` : `subcontractorId=${workerId}`;
   const { data: acuerdos, loading } = useApi<Acuerdo[]>(`/api/agreements?${query}&_r=${recarga}`);
 
   const [editando, setEditando] = useState<Acuerdo | "nuevo" | null>(null);
-  const [borrador, setBorrador] = useState<Borrador>(() => vacio(kind === "employee" ? "empleo" : "subcontrato"));
+  const [borrador, setBorrador] = useState<Borrador>(() => vacio(kind === "employee" ? "empleo" : "subcontrato", vacacionesPorDefecto));
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enviado, setEnviado] = useState<string | null>(null);
@@ -146,7 +156,7 @@ export function AcuerdosDeTrabajo({
   const recargar = () => setRecarga((n) => n + 1);
 
   const abrirNuevo = () => {
-    setBorrador(vacio(kind === "employee" ? "empleo" : "subcontrato"));
+    setBorrador(vacio(kind === "employee" ? "empleo" : "subcontrato", vacacionesPorDefecto));
     setEditando("nuevo");
     setError(null);
   };
@@ -313,8 +323,14 @@ export function AcuerdosDeTrabajo({
                 />
               </div>
               {/* Un subcontratista factura: no cobra vacaciones, así que el
-                  campo no existe para él en vez de existir puesto a cero. */}
-              {borrador.kind === "empleo" && (
+                  campo no existe para él en vez de existir puesto a cero.
+                  En Italia tampoco: las vacaciones y la paga de Navidad de
+                  los obreros las paga la Cassa Edile con lo que el negocio
+                  ingresa cada mes. Un porcentaje aquí se sumaría dos veces. */}
+              {borrador.kind === "empleo" && pais.impuestos === "italia" && (
+                <p className="text-xs text-muted-foreground sm:col-span-2">{t("agreements.vacationItalia")}</p>
+              )}
+              {borrador.kind === "empleo" && pais.impuestos !== "italia" && (
                 <div className="space-y-1.5">
                   <Label htmlFor="ac-vac">{t("agreements.vacationPercent")}</Label>
                   <Input
@@ -326,13 +342,18 @@ export function AcuerdosDeTrabajo({
                     value={borrador.vacationPercent}
                     onChange={(e) => setBorrador({ ...borrador, vacationPercent: e.target.value })}
                   />
-                  <p className="text-xs text-muted-foreground">{t("agreements.vacationHint")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(pais.impuestos === "canada" ? "agreements.vacationHint" : "agreements.vacationHintGeneral")}
+                  </p>
                 </div>
               )}
               {/* Lo de la CCQ vive en el acuerdo porque es lo que se pactó
                   con esta persona para este periodo. Quien cambia de oficio
                   firma otro acuerdo, y el informe de marzo tiene que seguir
-                  diciendo lo que era en marzo. */}
+                  diciendo lo que era en marzo. Y sólo en Quebec: a un negocio
+                  de Bolonia pedirle el oficio de la CCQ es pedirle algo que
+                  no existe. */}
+              {conCcq && (
               <div className="sm:col-span-2 space-y-3 rounded-lg border border-border p-3">
                 <div>
                   <p className="text-sm font-medium text-foreground">{t("agreements.ccqTitle")}</p>
@@ -387,7 +408,7 @@ export function AcuerdosDeTrabajo({
                   </div>
                 </div>
               </div>
-
+              )}
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="ac-cond">{t("agreements.terms")} ({t("common.optional")})</Label>
                 <Textarea

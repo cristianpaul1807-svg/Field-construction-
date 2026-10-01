@@ -12,6 +12,7 @@ import { hashToken } from "./supabaseAuth";
 import { profitabilityByProject } from "./profitability";
 import { receivables } from "./receivables";
 import { calcularFactura } from "./calculoDeFactura";
+import { resumenDeHoras } from "./resumenDeHoras";
 import { grupoDePais, paisDe } from "../shared/paises";
 import { OPCIONES_IVA } from "../shared/iva";
 import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
@@ -1037,6 +1038,26 @@ function createMcpServer(context: ReadToolContext) {
       // para saber que se usó la herramienta.
       await audit(context, "check_italian_tax_id", true, { kind, valid });
       return jsonResult({ value: limpio, kind, valid });
+    },
+  );
+
+  server.registerTool(
+    "get_monthly_hours",
+    {
+      title: "Monthly hours for payroll",
+      description:
+        "Per employee, for one month: regular hours, overtime hours and the working days of each absence (holiday, sickness, leave, public holiday, bad weather, work injury), with the day-by-day detail. This is what the payroll consultant needs (in Italy, the consulente del lavoro). Only approved clock-ins count; `sinAprobar` says how many were left out.",
+      inputSchema: { month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).describe("Month, YYYY-MM") },
+    },
+    async ({ month }) => {
+      const denied = requireRole(context, "get_monthly_hours");
+      if (denied) {
+        await audit(context, "get_monthly_hours", false, { code: "access_denied" });
+        return denied;
+      }
+      const result = await resumenDeHoras(admin, context.identity.businessId, month);
+      await audit(context, "get_monthly_hours", true, { month, people: result.personas.length, unapproved: result.sinAprobar });
+      return jsonResult(result);
     },
   );
 

@@ -36,7 +36,8 @@ estados.
 | Importe | Lo acordado. No se rotula «total»: no hay nada que sumar |
 | Frecuencia | `semanal`, `quincenal`, `mensual` o `al_terminar` |
 | Horas por semana | Opcional |
-| Vacaciones (%) | **Sólo en el empleo.** Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí |
+| Vacaciones (%) | **Sólo en el empleo.** Quebec: 4 % hasta los tres años de servicio, 6 % a partir de ahí. **En Italia no existe**: vacaciones y paga de Navidad las paga la Cassa Edile con el 18,5 % que ingresa la empresa, y un porcentaje aquí se sumaría dos veces. Fuera de Canadá nace en 0 |
+| Lo de la CCQ | Oficio, estatuto, sector y región. **Sólo en Quebec** (`aplicaLaCcq`) |
 | Condiciones | Texto libre. Es lo que se imprime como cláusulas |
 
 Un subcontratista **factura**, no cobra vacaciones. Por eso el campo no existe

@@ -11,6 +11,20 @@ prepara la nómina.
 
 ---
 
+## Los motivos
+
+`vacaciones`, `enfermedad`, `permiso`, `festivo`, `maltempo` e `infortunio`
+(`shared/ausencias.ts`, y la misma lista en `time_off_kind_check`).
+
+Los dos últimos llegaron con Italia y valen en todas partes. En la
+construcción italiana las horas perdidas por mal tiempo las paga el INPS por
+la cassa integrazione, y el consulente del lavoro las necesita aparte de las
+vacaciones; en Quebec la CCQ también separa las intemperies. Un accidente de
+trabajo no es una baja por enfermedad en ningún país: lo cubre otro (INAIL,
+CNESST) y se declara distinto.
+
+---
+
 ## Por qué tiene tabla propia
 
 Tiene fechas y sale en el mismo calendario que el trabajo, así que la tentación

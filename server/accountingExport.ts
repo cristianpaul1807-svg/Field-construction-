@@ -1,4 +1,5 @@
 import type { getSupabaseAdmin } from "./supabaseAdmin";
+import { paisDe } from "../shared/paises";
 
 /**
  * The books, in a file an accountant can import.
@@ -72,7 +73,10 @@ const CODIGO_DE_IMPUESTO: Record<string, string> = {
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return "";
   let text = String(value);
-  if (/^[=+\-@]/.test(text)) text = `\t${text}`;
+  // Un importe negativo empieza por «-» y no es una fórmula: con el tabulador
+  // delante la hoja de cálculo lo leía como texto y no lo sumaba, que en una
+  // columna de notas de crédito es justo lo que no puede pasar.
+  if (/^[=+\-@]/.test(text) && !/^-?\d+(\.\d+)?$/.test(text)) text = `\t${text}`;
   if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
   return text;
 }
@@ -86,6 +90,108 @@ export function toCsv(headers: string[], rows: unknown[][]): string {
 }
 
 const money = (value: unknown) => Number(value ?? 0).toFixed(2);
+
+/**
+ * El tipo y el estado, como los dice un commercialista. Lo guardado es el
+ * slug en castellano —es el dato—; esto es sólo cómo se lee en su archivo.
+ */
+const TIPO_IT: Record<string, string> = { deposito: "acconto", parcial: "SAL", final: "saldo" };
+const ESTADO_IT: Record<string, string> = { pendiente: "da incassare", pagado: "incassata", cancelado: "annullata", vencido: "scaduta" };
+
+/** Las columnas del IVA de una factura italiana, desde su desglose guardado. */
+function columnasIva(desglose: any): [string, string, string] {
+  if (!desglose || desglose.country !== "IT") return ["", "", ""];
+  return [String(desglose.ivaAliquota ?? ""), money(desglose.iva), desglose.natura ?? ""];
+}
+
+async function exportarItalia(
+  db: Db,
+  businessId: string,
+  kind: "invoices" | "credit-notes",
+  from: string,
+  to: string,
+  fromIso: string,
+  toIso: string
+): Promise<ExportResult> {
+  if (kind === "invoices") {
+    const { data } = await db
+      .from("invoices")
+      .select(
+        "number, created_at, due_date, paid_at, type, status, description, subtotal, tax_breakdown, holdback_amount, holdback_released, amount, clients(name, partita_iva, codice_fiscale), projects(name), payments(method, reference)"
+      )
+      .eq("business_id", businessId)
+      .gte("created_at", fromIso)
+      .lte("created_at", toIso)
+      .order("created_at");
+    const rows = ((data ?? []) as any[]).map((i) => [
+      i.number ?? "",
+      day(i.created_at),
+      day(i.due_date),
+      i.clients?.name ?? "",
+      i.clients?.partita_iva ?? "",
+      i.clients?.codice_fiscale ?? "",
+      i.projects?.name ?? "",
+      TIPO_IT[i.type] ?? i.type,
+      ESTADO_IT[i.status] ?? i.status,
+      i.description ?? "",
+      money(i.subtotal),
+      ...columnasIva(i.tax_breakdown),
+      money(i.holdback_amount),
+      money(i.holdback_released),
+      money(i.amount),
+      day(i.paid_at),
+      i.payments?.[0]?.method ?? "",
+      i.payments?.[0]?.reference ?? "",
+    ]);
+    return {
+      filename: `fatture-${from}-${to}.csv`,
+      rowCount: rows.length,
+      // En italiano: lo lee el commercialista, y así se llaman en su programa.
+      csv: toCsv(
+        [
+          "numero", "data", "scadenza", "cliente", "partita_iva_cliente", "codice_fiscale_cliente", "cantiere", "tipo", "stato", "descrizione",
+          "imponibile", "aliquota_iva", "iva", "natura", "ritenuta_a_garanzia", "ritenuta_svincolata", "totale_da_incassare",
+          "data_incasso", "mezzo_di_pagamento", "riferimento_pagamento",
+        ],
+        rows
+      ),
+    };
+  }
+
+  const { data } = await db
+    .from("credit_notes")
+    .select("number, created_at, reason, subtotal, tax_amount, tax_breakdown, amount, invoices(number, clients(name, partita_iva, codice_fiscale), projects(name))")
+    .eq("business_id", businessId)
+    .gte("created_at", fromIso)
+    .lte("created_at", toIso)
+    .order("created_at");
+  const rows = ((data ?? []) as any[]).map((n) => {
+    const [aliquota, iva, natura] = columnasIva(n.tax_breakdown);
+    return [
+      n.number ? `NC-${n.number}` : "",
+      day(n.created_at),
+      n.invoices?.number ?? "",
+      n.invoices?.clients?.name ?? "",
+      n.invoices?.clients?.partita_iva ?? "",
+      n.invoices?.clients?.codice_fiscale ?? "",
+      n.invoices?.projects?.name ?? "",
+      n.reason ?? "",
+      `-${money(n.subtotal)}`,
+      aliquota,
+      iva && Number(iva) !== 0 ? `-${iva}` : iva,
+      natura,
+      `-${money(n.amount)}`,
+    ];
+  });
+  return {
+    filename: `note-di-credito-${from}-${to}.csv`,
+    rowCount: rows.length,
+    csv: toCsv(
+      ["numero", "data", "rettifica_fattura", "cliente", "partita_iva_cliente", "codice_fiscale_cliente", "cantiere", "causale", "imponibile", "aliquota_iva", "iva", "natura", "totale"],
+      rows
+    ),
+  };
+}
 const day = (value: unknown) => (value ? String(value).slice(0, 10) : "");
 
 export interface ExportResult {
@@ -103,6 +209,15 @@ export async function exportAccounting(
 ): Promise<ExportResult> {
   const fromIso = `${from}T00:00:00`;
   const toIso = `${to}T23:59:59.999`;
+
+  // En Italia el commercialista no lee TPS ni TVQ: lee imponibile, aliquota,
+  // IVA y, cuando no hay IVA, la natura que dice por qué. Y la factura se
+  // identifica por su número y por la Partita IVA o el codice fiscale del
+  // cliente, que es como la busca en su programa y en el SDI.
+  const { data: delNegocio } = await db.from("businesses").select("country").eq("id", businessId).maybeSingle();
+  if (paisDe((delNegocio as { country?: string } | null)?.country).impuestos === "italia" && (kind === "invoices" || kind === "credit-notes")) {
+    return exportarItalia(db, businessId, kind, from, to, fromIso, toIso);
+  }
 
   if (kind === "invoices") {
     const { data } = await db
