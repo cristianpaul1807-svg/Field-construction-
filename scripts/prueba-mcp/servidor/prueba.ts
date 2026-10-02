@@ -119,6 +119,15 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
     ];
     const cg = await llamar("check_congruita", { projectId: "11111111-1111-4111-8111-111111111111" });
     ok("IT: congruità de una reforma de 100.000 €", [cg.estado, cg.valoreOpera, cg.minima, cg.manodopera, cg.falta, cg.oreSenzaCosto, cg.currency], ["non_congrua", 100000, 22000, 480, 21520, 4, "EUR"]);
+    // Un SAL ya certificado al 40 % sobre un presupuesto de 10.000 de coste
+    // con un 10 % de margen: 11.000 de contrato, 4.400 certificados.
+    DATOS.projects = [{ id: "p1", client_id: "k1", estimate_id: "est1", estimates: { id: "est1", margin_percent: 10, waste_percent: 0 } }];
+    DATOS.estimate_lines = [{ id: "l1", zone: "Bagno", item_name: "Piastrelle", quantity: 20, total: 10000 }];
+    DATOS.change_orders = [];
+    DATOS.sal = [{ id: "s1", numero: 1, data: "2026-09-30", avanzamento: { "l:l1": 40 }, importo_cumulato: 4400, importo: 4400, recupero_acconto: 0, note: null, invoice_id: null }];
+    DATOS.invoices = [];
+    const sal = await llamar("get_progress_claims", { projectId: "11111111-1111-4111-8111-111111111111" });
+    ok("IT: lo certificado de la obra", [sal.contractValue, sal.certifiedToDate, sal.items?.[0]?.percentComplete, sal.claims?.length, sal.currency], [11000, 4400, 40, 1, "EUR"]);
     ok("IT: clientes sin la llave del portal", Object.keys((await llamar("get_clients", { search: "Bian" })).clients[0]).includes("access_token"), false);
   }
   if (pais === "ES") {

@@ -1651,7 +1651,17 @@
     "categoria_congruita_no_valida": "Esa categoría de congruità no existe.",
     "valor_obra_no_valido": "El valor de la obra tiene que ser un número de 0 en adelante.",
     "congruita_solo_italia": "La congruità sólo existe para negocios en Italia.",
-    "congruita_no_encontrada": "No se encontró esa obra."
+    "congruita_no_encontrada": "No se encontró esa obra.",
+    "sal_obra_no_encontrada": "No se encontró esa obra.",
+    "sal_sin_contrato": "La obra no tiene un presupuesto con partidas sobre las que medir el SAL.",
+    "sal_sin_avance": "Este SAL no certifica nada nuevo: sube el % de alguna partida.",
+    "sal_fuera_de_rango": "Hay porcentajes fuera de 0–100:",
+    "sal_retrocede": "Lo ejecutado no puede bajar respecto al SAL anterior; para corregir lo facturado, haz una nota de crédito. Partidas:",
+    "sal_no_encontrado": "No se encontró ese SAL.",
+    "sal_ya_facturado": "Este SAL ya tiene factura. Si hay que corregirla, anúlala o haz una nota de crédito.",
+    "sal_sin_cliente": "La obra no tiene cliente: asígnaselo antes de facturar.",
+    "sal_nada_que_facturar": "Con el anticipo recuperado no queda nada que facturar en este SAL.",
+    "sal_no_es_el_ultimo": "Sólo se puede borrar el último SAL."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2142,6 +2152,14 @@
           "p2": "Desde entonces cada factura de esa obra lleva el texto exacto del bonifico parlante —ley, número y fecha de la factura, codice fiscale del cliente y tu Partita IVA—, en el PDF y en su portal, listo para copiar.",
           "p3": "El banco te retendrá el 11 % del importe sin IVA. No es un impago: es un crédito tuyo ante Hacienda, y la factura muestra cuánto será.",
           "nota": "Sin el codice fiscale del cliente el texto no se puede escribir: rellénalo en su ficha del {{menuCrm}}. Un bonifico sin él le hace perder la deducción."
+        },
+        "sal": {
+          "title": "Cobrar por lo ejecutado (certificaciones, SAL)",
+          "p1": "En {{menuProyectos}}, abre la obra y ve a la pestaña de certificaciones. Se mide sobre las partidas del presupuesto aceptado y los extras aprobados, a precio de contrato.",
+          "p2": "Nuevo SAL: escribe el % hecho hasta hoy de cada partida, acumulado. Abajo ves en el momento cuánto certifica y cuánto se factura.",
+          "p3": "Si facturaste un anticipo, cada SAL descuenta su parte proporcional y el último lo que quede. Así el anticipo no se cobra dos veces.",
+          "p4": "Cada SAL tiene su PDF para la firma del director de obra y un botón para facturarlo. El que deja la obra al 100 % sale como factura final y libera la retención.",
+          "nota": "Lo ejecutado no baja de un SAL al siguiente. Si algo se certificó de más, corrígelo con una nota de crédito. Si cobras por SAL, no uses a la vez las etapas de pago de la obra: se facturaría dos veces lo mismo."
         }
       },
       "problemas": {
@@ -3082,5 +3100,37 @@
       "os26": "OS26 · Pavimentos especiales",
       "os35": "OS35 · Obras de bajo impacto ambiental"
     }
+  },
+  "sal": {
+    "tab": "Certificaciones (SAL)",
+    "title": "Certificaciones de obra (SAL)",
+    "hint": "Cobra lo ejecutado: en cada SAL dices qué parte de cada partida del presupuesto está hecha, y se factura la diferencia con el anterior a precio de contrato.",
+    "nuevo": "Nuevo SAL",
+    "sinContrato": "Esta obra no tiene un presupuesto con partidas. El SAL se mide sobre ellas: enlaza o crea el presupuesto primero.",
+    "contratto": "Contrato (sin impuestos)",
+    "certificado": "Certificado hasta hoy",
+    "anticipo": "Anticipo facturado",
+    "recuperado": "{{importe}} ya recuperado en los SAL",
+    "numero": "SAL n.º {{numero}}",
+    "lineaImporte": "{{importe}} en este SAL · {{acumulado}} acumulado",
+    "lineaRecupero": "recupera {{importe}} del anticipo",
+    "factura": "Factura {{numero}}",
+    "facturar": "Facturar {{importe}}",
+    "facturada": "SAL n.º {{numero}} facturado.",
+    "borrar": "Borrar este SAL",
+    "confirmarBorrar": "¿Borrar el SAL n.º {{numero}}? Sólo se puede porque es el último y no tiene factura.",
+    "ninguno": "Todavía no hay ningún SAL.",
+    "dialogHint": "Escribe el % ejecutado hasta hoy de cada partida (acumulado, no sólo lo de este periodo). Las que dejes vacías se quedan como en el SAL anterior.",
+    "filaContrato": "{{importe}} · cant. {{cantidad}} · anterior {{anterior}} %",
+    "filaEste": "{{importe}} en este SAL",
+    "porcentaje": "% ejecutado de {{partida}}",
+    "fecha": "Fecha del SAL",
+    "nota": "Nota (opcional)",
+    "importeEste": "Importe de este SAL",
+    "recuperoEste": "Recuperación del anticipo",
+    "aFacturar": "A facturar (sin impuestos)",
+    "esFinal": "Con este SAL la obra queda certificada entera: su factura será la final y liberará la retención.",
+    "avisoRango": "Cada % tiene que estar entre el del SAL anterior y 100.",
+    "certificar": "Certificar SAL"
   }
 }

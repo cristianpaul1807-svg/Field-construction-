@@ -345,14 +345,17 @@ crédito).
 
 **Italia** (en el orden de [italia.md](../funciones/italia.md)):
 
-- `export_fatturapa` y después `send_to_sdi` / `get_sdi_status`;
-- `get_bonifico_parlante` — el texto exacto que el cliente tiene que poner en
-  la transferencia para no perder su deducción;
-- `check_congruita` — obras de 70.000 € o más y su incidencia de mano de obra ✅
-  frente a la mínima, antes del final;
+- `get_e_invoice` — el XML FatturaPA de una factura ✅; después
+  `send_to_sdi` / `get_sdi_status`, con la fase 5;
+- `get_bank_withholdings` — el 11 % que retienen los bancos sobre los
+  bonifici parlanti del año ✅ (el texto del bonifico va en cada factura);
+- `check_congruita` — obras de 70.000 € o más y su incidencia de mano de obra
+  frente a la mínima, antes del final ✅;
 - `get_expiring_documents` — patente a crediti, DURC de subcontratistas,
-  cursos de seguridad, tessere: lo que vence y cuándo;
-- `draft_sal` cuando exista el computo con prezzario.
+  cursos de seguridad, tessere: lo que vence y cuándo ✅;
+- `get_progress_claims` — lo certificado de una obra, SAL a SAL y partida a
+  partida ✅ (todos los países); `draft_sal` para certificar hablando llega
+  con la Fase B, que es la que trae el borrador con confirmación.
 
 **Canadá:**
 

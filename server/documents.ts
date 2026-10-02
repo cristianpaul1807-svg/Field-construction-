@@ -1475,6 +1475,15 @@ export interface ReportDoc {
   rows: string[][];
   /** La fila de totales, si la tabla tenía. */
   totals: string[] | null;
+  /**
+   * Una cuenta debajo de la tabla, rótulo y cifra, alineada a la derecha.
+   * La usa el SAL para ir de lo ejecutado a lo que se factura.
+   */
+  pie?: { label: string; value: string; bold?: boolean }[];
+  /** Para lo que no es un listado, «12 filas» no dice nada. */
+  sinRecuento?: boolean;
+  /** Una línea para firmar al final, si el documento se firma. */
+  firma?: string;
 }
 
 export function renderReportPdf(data: ReportDoc, lang: DocLang): Promise<Buffer> {
@@ -1500,7 +1509,7 @@ export function renderReportPdf(data: ReportDoc, lang: DocLang): Promise<Buffer>
   const meta = [
     data.scope,
     `${copy.date}: ${shortDate(data.generatedAt, lang)}`,
-    copy.reportRows(data.rows.length),
+    data.sinRecuento ? null : copy.reportRows(data.rows.length),
   ].filter(Boolean) as string[];
 
   let metaY = MARGIN + 26;
@@ -1590,6 +1599,34 @@ export function renderReportPdf(data: ReportDoc, lang: DocLang): Promise<Buffer>
       doc.text(data.totals![i] ?? "", equis[i], y, { width: anchos[i], align: c.align, lineBreak: false });
     });
     y += 16;
+  }
+
+  if (data.pie?.length) {
+    const anchoRotulo = 260;
+    const anchoCifra = 110;
+    const xCifra = anchoPagina - MARGIN - anchoCifra;
+    const xRotulo = xCifra - anchoRotulo - 8;
+    y += 8;
+    for (const fila of data.pie) {
+      if (y + 16 > fondoPagina) {
+        doc.addPage({ size: "A4", layout: "landscape", margin: MARGIN });
+        y = MARGIN;
+      }
+      doc.font(fila.bold ? "Helvetica-Bold" : "Helvetica").fontSize(fila.bold ? 10 : 9).fillColor("#111111");
+      doc.text(fila.label, xRotulo, y, { width: anchoRotulo, align: "right", lineBreak: false });
+      doc.text(fila.value, xCifra, y, { width: anchoCifra, align: "right", lineBreak: false });
+      y += fila.bold ? 16 : 14;
+    }
+  }
+
+  if (data.firma) {
+    if (y + 50 > fondoPagina) {
+      doc.addPage({ size: "A4", layout: "landscape", margin: MARGIN });
+      y = MARGIN;
+    }
+    y += 30;
+    doc.moveTo(MARGIN, y).lineTo(MARGIN + 220, y).strokeColor("#999999").lineWidth(0.5).stroke();
+    doc.font("Helvetica").fontSize(8).fillColor("#555555").text(data.firma, MARGIN, y + 4, { width: 220 });
   }
 
   pageNumbers(doc, copy);
@@ -1973,4 +2010,129 @@ export function renderAgreementPdf(data: AgreementDoc, lang: DocLang): Promise<B
 export function documentNumber(kind: "estimate" | "invoice" | "payroll", id: string) {
   const prefix = kind === "estimate" ? "EST" : kind === "payroll" ? "PAY" : "INV";
   return `${prefix}-${id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+}
+
+/**
+ * El documento de un SAL: lo que se certifica, partida a partida.
+ *
+ * Es lo que firma el director de obra y lo que el cliente compara con la
+ * factura, así que cada columna suma y el pie dice de dónde sale lo que se
+ * factura: el SAL menos el anticipo que recupera. Se monta sobre la tabla de
+ * los informes, que ya sabe partir páginas y repetir la cabecera.
+ */
+export interface SalDoc {
+  business: BusinessIdentity;
+  numero: number;
+  data: string;
+  projectName: string;
+  clientName: string | null;
+  righe: {
+    descrizione: string;
+    zona: string | null;
+    quantita: number;
+    prezzoUnitario: number;
+    importo: number;
+    percentuale: number;
+    precedente: number;
+    questo: number;
+    cumulato: number;
+  }[];
+  contratto: number;
+  cumulato: number;
+  precedente: number;
+  importo: number;
+  recuperoAcconto: number;
+  daFatturare: number;
+  note: string | null;
+}
+
+const SAL_COPY: Record<DocLang, {
+  titolo: (n: number) => string;
+  obra: string;
+  cliente: string;
+  cols: string[];
+  totale: string;
+  contratto: string;
+  cumulato: string;
+  precedente: string;
+  questo: string;
+  recupero: string;
+  daFatturare: string;
+  firma: string;
+}> = {
+  es: {
+    titolo: (n) => `Certificación de obra n.º ${n} (SAL)`,
+    obra: "Obra", cliente: "Cliente",
+    cols: ["Partida", "Cant.", "Precio", "Importe contrato", "% ejecutado", "Anterior", "Este SAL", "Acumulado"],
+    totale: "Total",
+    contratto: "Importe del contrato", cumulato: "Ejecutado hasta hoy", precedente: "Certificado en SAL anteriores", questo: "Importe de este SAL",
+    recupero: "Recuperación del anticipo", daFatturare: "A facturar (sin impuestos)", firma: "Dirección de obra",
+  },
+  en: {
+    titolo: (n) => `Progress claim no. ${n}`,
+    obra: "Job", cliente: "Client",
+    cols: ["Item", "Qty", "Price", "Contract amount", "% complete", "Previous", "This claim", "To date"],
+    totale: "Total",
+    contratto: "Contract amount", cumulato: "Completed to date", precedente: "Certified in previous claims", questo: "This claim",
+    recupero: "Deposit recovered", daFatturare: "To invoice (before tax)", firma: "Works director",
+  },
+  fr: {
+    titolo: (n) => `Décompte progressif n° ${n}`,
+    obra: "Chantier", cliente: "Client",
+    cols: ["Poste", "Qté", "Prix", "Montant contrat", "% exécuté", "Antérieur", "Ce décompte", "Cumulé"],
+    totale: "Total",
+    contratto: "Montant du contrat", cumulato: "Exécuté à ce jour", precedente: "Certifié aux décomptes antérieurs", questo: "Montant de ce décompte",
+    recupero: "Récupération de l'acompte", daFatturare: "À facturer (avant taxes)", firma: "Direction des travaux",
+  },
+  it: {
+    titolo: (n) => `Stato avanzamento lavori n. ${n}`,
+    obra: "Cantiere", cliente: "Committente",
+    cols: ["Voce", "Q.tà", "Prezzo", "Importo contratto", "% eseguito", "Precedente", "Questo SAL", "Cumulato"],
+    totale: "Totale",
+    contratto: "Importo contrattuale", cumulato: "Lavori eseguiti a oggi", precedente: "Certificato nei SAL precedenti", questo: "Importo del presente SAL",
+    recupero: "Recupero anticipazione", daFatturare: "Da fatturare (imponibile)", firma: "Il Direttore dei Lavori",
+  },
+};
+
+export function renderSalPdf(data: SalDoc, lang: DocLang): Promise<Buffer> {
+  const c = SAL_COPY[lang];
+  const moneda = paisDe(data.business.country ?? "CA").moneda;
+  const m = (x: number) => money(x, lang, moneda);
+  const n = (x: number) => new Intl.NumberFormat(moneda === "CAD" ? LOCALE[lang] : LOCALE_EURO[lang], { maximumFractionDigits: 2 }).format(x);
+  const suma = (k: "importo" | "precedente" | "questo" | "cumulato") => Math.round(data.righe.reduce((s, r) => s + r[k], 0) * 100) / 100;
+  return renderReportPdf(
+    {
+      kind: "report",
+      title: c.titolo(data.numero),
+      business: data.business,
+      scope: [`${c.obra}: ${data.projectName}`, data.clientName ? `${c.cliente}: ${data.clientName}` : null, data.note].filter(Boolean).join(" · "),
+      generatedAt: new Date(`${data.data}T12:00:00Z`),
+      columns: c.cols.map((label, i) => ({ label, align: i === 0 ? ("left" as const) : ("right" as const) })),
+      rows: data.righe.map((r) => [
+        r.zona ? `${r.zona} · ${r.descrizione}` : r.descrizione,
+        n(r.quantita),
+        m(r.prezzoUnitario),
+        m(r.importo),
+        `${n(r.percentuale)} %`,
+        m(r.precedente),
+        m(r.questo),
+        m(r.cumulato),
+      ]),
+      totals: [c.totale, "", "", m(suma("importo")), "", m(suma("precedente")), m(suma("questo")), m(suma("cumulato"))],
+      // La cuenta que lleva de lo ejecutado a lo que se factura, en el orden
+      // en que se lee. El anterior es el guardado, no la suma de la columna:
+      // es lo que de verdad se certificó.
+      pie: [
+        { label: c.contratto, value: m(data.contratto) },
+        { label: c.cumulato, value: m(data.cumulato) },
+        { label: c.precedente, value: m(data.precedente) },
+        { label: c.questo, value: m(data.importo), bold: true },
+        ...(data.recuperoAcconto > 0 ? [{ label: c.recupero, value: `- ${m(data.recuperoAcconto)}` }] : []),
+        { label: c.daFatturare, value: m(data.daFatturare), bold: true },
+      ],
+      sinRecuento: true,
+      firma: c.firma,
+    },
+    lang
+  );
 }

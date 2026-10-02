@@ -17,6 +17,7 @@ import { fatturaPADeFactura, fatturaPADeNota } from "./fatturaPAServidor";
 import { ritenutaBancaria } from "../shared/bonusEdilizi";
 import { papelesQueVencen } from "./papelesQueVencen";
 import { congruitaDeLaObra } from "./congruitaServidor";
+import { estadoSalDellaObra } from "./salServidor";
 import { grupoDePais, paisDe } from "../shared/paises";
 import { OPCIONES_IVA } from "../shared/iva";
 import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
@@ -1150,6 +1151,42 @@ function createMcpServer(context: ReadToolContext) {
       const result = await papelesQueVencen(admin, context.identity.businessId, days ?? 30);
       await audit(context, "get_expiring_documents", true, { count: result.length });
       return jsonResult({ documents: result });
+    },
+  );
+
+  server.registerTool(
+    "get_progress_claims",
+    {
+      title: "Progress claims (SAL) of a job",
+      description:
+        "The progress claims of a job (in Italy, SAL — stato avanzamento lavori): each one certifies, item by item of the accepted estimate plus approved change orders, the cumulative % completed, valued at contract prices. Returns the contract value, what is certified to date, the deposit invoiced and how much of it the claims already recovered, each claim with its amount and invoice, and every item with its % at the last claim. Amounts are before tax. Use get_projects to find the project id.",
+      inputSchema: { projectId: z.string().uuid().describe("Project id") },
+    },
+    async ({ projectId }) => {
+      const denied = requireRole(context, "get_progress_claims");
+      if (denied) {
+        await audit(context, "get_progress_claims", false, { code: "access_denied" });
+        return denied;
+      }
+      const estado = await estadoSalDellaObra(admin, context.identity.businessId, projectId);
+      await audit(context, "get_progress_claims", Boolean(estado), { projectId });
+      if (!estado) return { isError: true, content: [{ type: "text" as const, text: JSON.stringify({ error: "Project not found.", code: "not_found" }) }] };
+      return jsonResult({
+        currency,
+        contractValue: estado.contratto,
+        certifiedToDate: estado.cumulatoPrecedente,
+        depositInvoiced: estado.acconti,
+        depositRecovered: estado.accontoGiaRecuperato,
+        claims: estado.sal.map((s) => ({
+          number: s.numero,
+          date: s.data,
+          amount: s.importo,
+          cumulative: s.importoCumulato,
+          depositRecovered: s.recuperoAcconto,
+          invoiceNumber: s.invoiceStatus === "cancelado" ? null : s.invoiceNumber,
+        })),
+        items: estado.righe.map((r) => ({ description: r.descrizione, area: r.zona, contractAmount: r.importo, percentComplete: r.percentualePrecedente })),
+      });
     },
   );
 

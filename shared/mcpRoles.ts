@@ -151,6 +151,8 @@ export const TOOL_ACCESS: Record<
   // La congruità es el coste de la mano de obra de una obra: sale de lo que
   // cobra cada persona por hora, y eso es dinero aunque se enseñe en la obra.
   check_congruita: { roles: ["office", "admin"], area: "dinero", capability: "campo", soloEn: ["IT"] },
+  // Lo certificado de una obra son importes de contrato y facturas: dinero.
+  get_progress_claims: { roles: ["office", "admin"], area: "dinero", capability: "facturacion" },
   check_italian_tax_id: { roles: ["office", "admin"], area: "clientes", capability: "campo", soloEn: ["IT"] },
 };
 

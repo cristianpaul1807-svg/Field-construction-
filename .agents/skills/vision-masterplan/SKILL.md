@@ -78,7 +78,8 @@ Detalle en `docs/funciones/italia.md` y `docs/desarrollo/competencia-italia.md`.
 - [ ] Fase 4: PDFs, textos, web y legales UE.
 - [ ] Fase 5: envío directo al SDI.
 - [x] Fases 6-8: bonus edilizi y bonifico parlante, vencimientos (DURC, patente a crediti, cursos), congruità.
-- [ ] Fase 9: computo con prezzario y SAL.
+- [x] Fase 9a: SAL por partidas, con recuperación del anticipo, PDF y factura.
+- [ ] Fase 9b: importar el prezzario regional y unidades de medida en las partidas.
 
 ### [ ] Siguientes países
 - [ ] España: IVA, inversión del sujeto pasivo y **Verifactu** (sociedades 1-1-2027, autónomos 1-7-2027).

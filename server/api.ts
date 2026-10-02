@@ -38,6 +38,7 @@ import {
   renderEstimatePdf,
   renderInvoicePdf,
   renderReportPdf,
+  renderSalPdf,
   renderPayrollPdf,
   renderAgreementPdf,
   renderCreditNotePdf,
@@ -78,6 +79,7 @@ import { esTipoDeAusencia } from "../shared/ausencias";
 import { AVISAR_CON_DIAS, esTipoDePapel } from "../shared/papeles";
 import { papelesQueVencen } from "./papelesQueVencen";
 import { congruitaDeLaObra } from "./congruitaServidor";
+import { certificarSal, estadoSalDellaObra, ivaDeLaObra, salGuardado } from "./salServidor";
 import { esCategoriaCongruita } from "../shared/congruita";
 import { zonaHorariaDelNegocio } from "../shared/zonaHoraria";
 import { causaleBonifico, esBonusFiscale, ritenutaBancaria, type BonusFiscale } from "../shared/bonusEdilizi";
@@ -12719,6 +12721,155 @@ apiRouter.get(
       return;
     }
     res.json(r.congruita);
+  })
+);
+
+// ---------- SAL: certificar lo ejecutado ----------
+// Ver shared/sal.ts. Vale en cualquier país —en Canadá es el «progress
+// billing» de las obras grandes—, aunque en Italia es como se cobra la obra
+// mediana entera.
+
+apiRouter.get(
+  "/projects/:id/sal",
+  route(async (req, res) => {
+    const estado = await estadoSalDellaObra(getSupabaseAdmin(), req.businessId!, req.params.id);
+    if (!estado) {
+      res.status(404).json({ error: "project not found", code: "sal_obra_no_encontrada" });
+      return;
+    }
+    res.json(estado);
+  })
+);
+
+apiRouter.post(
+  "/projects/:id/sal",
+  route(async (req, res) => {
+    const r = await certificarSal(getSupabaseAdmin(), req.businessId!, req.params.id, req.body ?? {});
+    if (!r.ok) {
+      res.status(r.code === "sal_obra_no_encontrada" ? 404 : 400).json({ error: r.code, ...r });
+      return;
+    }
+    res.status(201).json({ id: r.id, numero: r.numero });
+  })
+);
+
+/** Lo que dice la factura de un SAL. Se escribe una vez, en el idioma de quien la emite. */
+const CONCEPTO_SAL: Record<DocLang, (n: number) => string> = {
+  es: (n) => `Certificación de obra n.º ${n} (SAL)`,
+  en: (n) => `Progress claim no. ${n}`,
+  fr: (n) => `Décompte progressif n° ${n}`,
+  it: (n) => `SAL n. ${n}`,
+};
+
+apiRouter.post(
+  "/sal/:id/invoice",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const sal = await salGuardado(admin, req.businessId!, req.params.id);
+    if (!sal) {
+      res.status(404).json({ error: "sal not found", code: "sal_no_encontrado" });
+      return;
+    }
+    // Una factura anulada no cuenta: el SAL vuelve a poder facturarse, que es
+    // justo lo que necesita quien la anuló para corregirla.
+    if (sal.invoiceId) {
+      const { data: previa } = await admin.from("invoices").select("status").eq("id", sal.invoiceId).maybeSingle();
+      if (previa && previa.status !== "cancelado") {
+        res.status(409).json({ error: "already invoiced", code: "sal_ya_facturado" });
+        return;
+      }
+    }
+    if (!sal.clientId) {
+      res.status(400).json({ error: "project has no client", code: "sal_sin_cliente" });
+      return;
+    }
+    if (sal.daFatturare <= 0) {
+      res.status(400).json({ error: "nothing to invoice", code: "sal_nada_que_facturar" });
+      return;
+    }
+    const lang = normalizeDocLang(req.body?.lang ?? req.query.lang);
+    const id = await createInvoiceRecord(admin, {
+      businessId: req.businessId!,
+      clientId: sal.clientId,
+      projectId: sal.projectId,
+      estimateId: sal.estimateId,
+      // El último SAL es la factura final: la que libera la retención.
+      type: sal.finale ? "final" : "parcial",
+      subtotal: sal.daFatturare,
+      description: CONCEPTO_SAL[lang](sal.numero),
+      iva: req.body?.iva ?? (await ivaDeLaObra(admin, req.businessId!, sal.projectId)),
+      aviso: {
+        baseUrl: `${req.protocol}://${req.get("host")}`,
+        lang: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")),
+      },
+    });
+    const { error } = await admin.from("sal").update({ invoice_id: id }).eq("business_id", req.businessId!).eq("id", sal.id);
+    if (error) throw error;
+    res.status(201).json({ id });
+  })
+);
+
+apiRouter.delete(
+  "/sal/:id",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const sal = await salGuardado(admin, req.businessId!, req.params.id);
+    if (!sal) {
+      res.status(404).json({ error: "sal not found", code: "sal_no_encontrado" });
+      return;
+    }
+    // Sólo el último y sólo sin factura viva. Borrar uno de en medio dejaría
+    // al siguiente descontando algo que ya no existe; borrar uno facturado,
+    // una factura sin el documento que la justifica.
+    const { data: posteriores } = await admin.from("sal").select("id").eq("business_id", req.businessId!).eq("project_id", sal.projectId).gt("numero", sal.numero).limit(1);
+    if (posteriores?.length) {
+      res.status(409).json({ error: "not the last one", code: "sal_no_es_el_ultimo" });
+      return;
+    }
+    if (sal.invoiceId) {
+      const { data: f } = await admin.from("invoices").select("status").eq("id", sal.invoiceId).maybeSingle();
+      if (f && f.status !== "cancelado") {
+        res.status(409).json({ error: "invoiced", code: "sal_ya_facturado" });
+        return;
+      }
+    }
+    const { error } = await admin.from("sal").delete().eq("business_id", req.businessId!).eq("id", sal.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
+apiRouter.get(
+  "/sal/:id/pdf",
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const sal = await salGuardado(admin, req.businessId!, req.params.id);
+    if (!sal) {
+      res.status(404).json({ error: "sal not found", code: "sal_no_encontrado" });
+      return;
+    }
+    const business = await loadBusinessIdentity(admin, req.businessId!);
+    const lang = normalizeDocLang(req.query.lang);
+    const contratto = Math.round(sal.righe.reduce((s, r) => s + r.importo, 0) * 100) / 100;
+    const pdf = await renderSalPdf(
+      {
+        business: business.identity,
+        numero: sal.numero,
+        data: sal.data,
+        projectName: sal.projectName,
+        clientName: sal.clientName,
+        righe: sal.righe,
+        contratto,
+        cumulato: sal.importoCumulato,
+        precedente: sal.precedente,
+        importo: sal.importo,
+        recuperoAcconto: sal.recuperoAcconto,
+        daFatturare: sal.daFatturare,
+        note: sal.note,
+      },
+      lang
+    );
+    sendPdf(res, pdf, `SAL-${sal.numero}.pdf`, req.query.download ? "attachment" : "inline");
   })
 );
 

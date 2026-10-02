@@ -1651,7 +1651,17 @@
     "categoria_congruita_no_valida": "That congruity category doesn't exist.",
     "valor_obra_no_valido": "The value of the work must be a number of 0 or more.",
     "congruita_solo_italia": "Congruity only applies to businesses in Italy.",
-    "congruita_no_encontrada": "That job wasn't found."
+    "congruita_no_encontrada": "That job wasn't found.",
+    "sal_obra_no_encontrada": "That job wasn't found.",
+    "sal_sin_contrato": "The job has no estimate with items to measure the claim against.",
+    "sal_sin_avance": "This claim certifies nothing new: raise the % of some item.",
+    "sal_fuera_de_rango": "Some percentages are outside 0–100:",
+    "sal_retrocede": "Completion can't go down from the previous claim; to correct what was invoiced, issue a credit note. Items:",
+    "sal_no_encontrado": "That claim wasn't found.",
+    "sal_ya_facturado": "This claim already has an invoice. To correct it, cancel it or issue a credit note.",
+    "sal_sin_cliente": "The job has no client: assign one before invoicing.",
+    "sal_nada_que_facturar": "After recovering the deposit there's nothing left to invoice in this claim.",
+    "sal_no_es_el_ultimo": "Only the last claim can be deleted."
   },
   "workLog": {
     "title": "Work log",
@@ -2142,6 +2152,14 @@
           "p2": "From then on every invoice for that job carries the exact bonifico parlante text —law, invoice number and date, the client's codice fiscale and your Partita IVA— on the PDF and in their portal, ready to copy.",
           "p3": "The bank will withhold 11% of the amount excluding VAT. It isn't an unpaid amount: it's a credit you hold with the tax office, and the invoice shows how much it will be.",
           "nota": "Without the client's codice fiscale the text can't be written: fill it in on their {{menuCrm}} record. A bonifico without it loses them the deduction."
+        },
+        "sal": {
+          "title": "Bill by work completed (progress claims)",
+          "p1": "In {{menuProyectos}}, open the job and go to the progress claims tab. It's measured against the items of the accepted estimate and the approved change orders, at contract prices.",
+          "p2": "New claim: enter the % done to date for each item, cumulative. Below you see right away how much it certifies and how much gets invoiced.",
+          "p3": "If you invoiced a deposit, each claim deducts its proportional share and the last one whatever remains. That way the deposit isn't charged twice.",
+          "p4": "Each claim has its PDF for the works director to sign and a button to invoice it. The one that takes the job to 100% becomes the final invoice and releases the holdback.",
+          "nota": "Completion never goes down from one claim to the next. If something was over-certified, correct it with a credit note. If you bill by claims, don't also use the job's payment stages: the same work would be invoiced twice."
         }
       },
       "problemas": {
@@ -3082,5 +3100,37 @@
       "os26": "OS26 · Special paving",
       "os35": "OS35 · Low environmental impact works"
     }
+  },
+  "sal": {
+    "tab": "Progress claims",
+    "title": "Progress claims",
+    "hint": "Bill what's done: in each claim you say how much of each estimate item is complete, and the difference from the previous one is invoiced at contract prices.",
+    "nuevo": "New claim",
+    "sinContrato": "This job has no estimate with items. Claims are measured against them: link or create the estimate first.",
+    "contratto": "Contract (before tax)",
+    "certificado": "Certified to date",
+    "anticipo": "Deposit invoiced",
+    "recuperado": "{{importe}} already recovered in claims",
+    "numero": "Claim no. {{numero}}",
+    "lineaImporte": "{{importe}} this claim · {{acumulado}} to date",
+    "lineaRecupero": "recovers {{importe}} of the deposit",
+    "factura": "Invoice {{numero}}",
+    "facturar": "Invoice {{importe}}",
+    "facturada": "Claim no. {{numero}} invoiced.",
+    "borrar": "Delete this claim",
+    "confirmarBorrar": "Delete claim no. {{numero}}? It's only possible because it's the last one and has no invoice.",
+    "ninguno": "No claims yet.",
+    "dialogHint": "Enter the % completed to date for each item (cumulative, not just this period). Items left blank stay as in the previous claim.",
+    "filaContrato": "{{importe}} · qty {{cantidad}} · previous {{anterior}}%",
+    "filaEste": "{{importe}} this claim",
+    "porcentaje": "% complete for {{partida}}",
+    "fecha": "Claim date",
+    "nota": "Note (optional)",
+    "importeEste": "This claim",
+    "recuperoEste": "Deposit recovered",
+    "aFacturar": "To invoice (before tax)",
+    "esFinal": "This claim certifies the whole job: its invoice will be the final one and will release the holdback.",
+    "avisoRango": "Each % must be between the previous claim's and 100.",
+    "certificar": "Certify claim"
   }
 }

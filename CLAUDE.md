@@ -87,6 +87,7 @@ node scripts/prueba-mcp/servidor.mjs                                     # the r
 node --experimental-strip-types scripts/prueba-italia/iva.mjs          # Italian VAT, fiscal IDs, and Italy staying hidden
 node --experimental-strip-types scripts/prueba-italia/fatturapa.mjs    # the Italian e-invoice XML, validated against the official schema
 node --experimental-strip-types scripts/prueba-italia/congruita.mjs    # the Cassa Edile labour minimum, index by index
+node --experimental-strip-types scripts/prueba-italia/sal.mjs          # progress claims: contract prices, no going backwards, deposit recovered to the cent
 ```
 
 `npm run build` is the marketing site generator, then `vite build`, then

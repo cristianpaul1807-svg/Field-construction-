@@ -1651,7 +1651,17 @@
     "categoria_congruita_no_valida": "Cette catégorie de congruité n'existe pas.",
     "valor_obra_no_valido": "La valeur de l'ouvrage doit être un nombre supérieur ou égal à 0.",
     "congruita_solo_italia": "La congruité ne concerne que les entreprises en Italie.",
-    "congruita_no_encontrada": "Ce chantier est introuvable."
+    "congruita_no_encontrada": "Ce chantier est introuvable.",
+    "sal_obra_no_encontrada": "Ce chantier est introuvable.",
+    "sal_sin_contrato": "Le chantier n'a pas de soumission avec des postes sur lesquels mesurer le décompte.",
+    "sal_sin_avance": "Ce décompte ne certifie rien de nouveau : augmentez le % d'un poste.",
+    "sal_fuera_de_rango": "Certains pourcentages sont hors de 0–100 :",
+    "sal_retrocede": "L'exécuté ne peut pas baisser par rapport au décompte précédent ; pour corriger ce qui a été facturé, émettez une note de crédit. Postes :",
+    "sal_no_encontrado": "Ce décompte est introuvable.",
+    "sal_ya_facturado": "Ce décompte a déjà une facture. Pour la corriger, annulez-la ou émettez une note de crédit.",
+    "sal_sin_cliente": "Le chantier n'a pas de client : attribuez-en un avant de facturer.",
+    "sal_nada_que_facturar": "Après récupération de l'acompte, il ne reste rien à facturer dans ce décompte.",
+    "sal_no_es_el_ultimo": "Seul le dernier décompte peut être supprimé."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2142,6 +2152,14 @@
           "p2": "Dès lors, chaque facture de ce chantier porte le texte exact du bonifico parlante —loi, numéro et date de facture, codice fiscale du client et votre Partita IVA— sur le PDF et dans son portail, prêt à copier.",
           "p3": "La banque retiendra 11 % du montant hors TVA. Ce n'est pas un impayé : c'est un crédit que vous détenez auprès du fisc, et la facture indique combien.",
           "nota": "Sans le codice fiscale du client, le texte ne peut pas être rédigé : complétez-le dans sa fiche {{menuCrm}}. Un bonifico sans lui lui fait perdre la déduction."
+        },
+        "sal": {
+          "title": "Facturer selon l'avancement (décomptes progressifs)",
+          "p1": "Dans {{menuProyectos}}, ouvrez le chantier et allez à l'onglet des décomptes. On mesure sur les postes de la soumission acceptée et les avenants approuvés, au prix du contrat.",
+          "p2": "Nouveau décompte : saisissez le % exécuté à ce jour pour chaque poste, cumulé. En dessous, vous voyez tout de suite combien il certifie et combien sera facturé.",
+          "p3": "Si vous avez facturé un acompte, chaque décompte en déduit sa part proportionnelle et le dernier ce qui reste. Ainsi l'acompte n'est pas facturé deux fois.",
+          "p4": "Chaque décompte a son PDF à faire signer par le directeur des travaux et un bouton pour le facturer. Celui qui amène le chantier à 100 % devient la facture finale et libère la retenue.",
+          "nota": "L'exécuté ne baisse jamais d'un décompte à l'autre. Si quelque chose a été certifié en trop, corrigez-le avec une note de crédit. Si vous facturez par décomptes, n'utilisez pas en même temps les étapes de paiement du chantier : le même travail serait facturé deux fois."
         }
       },
       "problemas": {
@@ -3082,5 +3100,37 @@
       "os26": "OS26 · Chaussées spéciales",
       "os35": "OS35 · Travaux à faible impact environnemental"
     }
+  },
+  "sal": {
+    "tab": "Décomptes",
+    "title": "Décomptes progressifs",
+    "hint": "Facturez ce qui est fait : à chaque décompte, indiquez la part exécutée de chaque poste de la soumission, et la différence avec le précédent est facturée au prix du contrat.",
+    "nuevo": "Nouveau décompte",
+    "sinContrato": "Ce chantier n'a pas de soumission avec des postes. Le décompte se mesure sur eux : liez ou créez d'abord la soumission.",
+    "contratto": "Contrat (avant taxes)",
+    "certificado": "Certifié à ce jour",
+    "anticipo": "Acompte facturé",
+    "recuperado": "{{importe}} déjà récupéré dans les décomptes",
+    "numero": "Décompte n° {{numero}}",
+    "lineaImporte": "{{importe}} ce décompte · {{acumulado}} cumulé",
+    "lineaRecupero": "récupère {{importe}} de l'acompte",
+    "factura": "Facture {{numero}}",
+    "facturar": "Facturer {{importe}}",
+    "facturada": "Décompte n° {{numero}} facturé.",
+    "borrar": "Supprimer ce décompte",
+    "confirmarBorrar": "Supprimer le décompte n° {{numero}} ? C'est possible uniquement parce que c'est le dernier et qu'il n'a pas de facture.",
+    "ninguno": "Aucun décompte pour l'instant.",
+    "dialogHint": "Saisissez le % exécuté à ce jour pour chaque poste (cumulé, pas seulement cette période). Les postes laissés vides restent comme au décompte précédent.",
+    "filaContrato": "{{importe}} · qté {{cantidad}} · antérieur {{anterior}} %",
+    "filaEste": "{{importe}} ce décompte",
+    "porcentaje": "% exécuté de {{partida}}",
+    "fecha": "Date du décompte",
+    "nota": "Note (facultative)",
+    "importeEste": "Montant de ce décompte",
+    "recuperoEste": "Récupération de l'acompte",
+    "aFacturar": "À facturer (avant taxes)",
+    "esFinal": "Ce décompte certifie tout le chantier : sa facture sera la finale et libérera la retenue.",
+    "avisoRango": "Chaque % doit être compris entre celui du décompte précédent et 100.",
+    "certificar": "Certifier le décompte"
   }
 }

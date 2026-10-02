@@ -216,6 +216,34 @@ La tabla entera, y su comprobación contra la publicada por la CNCE, está en
 
 ---
 
+## Los SAL: cobrar por lo ejecutado
+
+La obra mediana italiana no se cobra por hitos fijos sino por **stato
+avanzamento lavori**: cada cierto tiempo se mide qué parte de cada partida está
+hecha, se valora a precio de contrato y se factura la diferencia con el SAL
+anterior. Vale en todos los países (en Canadá es el *progress billing*), en la
+pestaña «Certificaciones (SAL)» de la obra.
+
+- Las **partidas** son las del presupuesto aceptado —con las mermas y el
+  margen repartidos como en su PDF— más los extras aprobados.
+- Cada SAL guarda el **% acumulado** de cada partida. No puede bajar: lo
+  certificado de más se corrige con una nota de crédito.
+- **El anticipo se recupera**: cada SAL descuenta del depósito facturado su
+  parte proporcional (anticipo × importe del SAL / contrato), y el último lo
+  que quede, al céntimo.
+- **La factura** sale del SAL con un botón: parcial, o final si deja la obra
+  al 100 % (y entonces libera la retención). En Italia hereda el IVA de la
+  última factura de la obra. Si se anula, el SAL se puede volver a facturar.
+- **El PDF** del SAL lleva cada partida (cantidad, precio, importe, %,
+  anterior, este SAL, acumulado), la cuenta hasta lo que se factura y la línea
+  de firma del director de obra.
+- Sólo se puede borrar el último SAL, y sólo si no tiene factura viva.
+
+Por MCP, `get_progress_claims`. Código: `shared/sal.ts` (la cuenta, la misma
+en la pantalla y en el servidor), `server/salServidor.ts`, tabla `sal`.
+
+---
+
 ## Lo que tiene el consulente del lavoro
 
 La nómina no se hace aquí, pero el consulente necesita de la empresa las
@@ -259,7 +287,11 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
    tarjeta en la obra con las 33 categorías oficiales, la tolerancia del 5 %
    y las horas sin coste a la vista. Por MCP, `check_congruita`.
 9. **Computo metrico con prezzario regional y SAL.** La pieza más grande; la
-   que abre la obra mediana y la pública.
+   que abre la obra mediana y la pública. ✅ Hecho el SAL: certificación por
+   partidas, recuperación del anticipo, PDF para firmar y factura con un
+   botón; por MCP, `get_progress_claims`. Falta importar el **prezzario
+   regional** (cada región publica el suyo) para montar el presupuesto desde
+   sus códigos, y la unidad de medida en cada partida.
 
 Italia deja de estar en pruebas cuando un XML generado aquí haya sido
 aceptado por el SDI de verdad, en una cuenta real: el esquema lo valida, pero

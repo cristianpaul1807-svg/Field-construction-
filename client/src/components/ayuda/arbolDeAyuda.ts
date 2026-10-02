@@ -148,6 +148,9 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // La deducción del cliente depende de cómo paga, y el que lo sabe es
       // quien emite la factura: si el bonifico sale mal, la culpa vuelve aquí.
       { id: "bonusFiscale", parrafos: 3, nota: true, ruta: "/projects", paises: ["IT"] },
+      // Cobrar por lo ejecutado y no por hitos fijos. Sin explicarlo, nadie
+      // adivina que el anticipo se descuenta solo y factura de más.
+      { id: "sal", parrafos: 4, nota: true, ruta: "/projects", paises: ["CA", "IT"] },
       { id: "impuestosOtros", parrafos: 3, nota: true, paises: ["otros"] },
       // Tres líneas de la nómina nacen a 0 % porque nadie de fuera las puede
       // saber: dependen del TD1 de cada persona, de la clasificación CNESST

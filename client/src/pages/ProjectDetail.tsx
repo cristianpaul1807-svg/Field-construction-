@@ -29,6 +29,7 @@ import { paisDe } from "@shared/paises";
 import type { BonusFiscale } from "@shared/bonusEdilizi";
 import { BonusDeLaObra } from "@/components/BonusDeLaObra";
 import { CongruitaDeLaObra } from "@/components/CongruitaDeLaObra";
+import { SalDeLaObra } from "@/components/SalDeLaObra";
 
 const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "confirmado", "completado", "pausado"];
 
@@ -296,6 +297,7 @@ export default function ProjectDetailPage() {
           <TabsTrigger value="documents">{t("projects.documents")}</TabsTrigger>
           <TabsTrigger value="photos">{t("projects.photos")}</TabsTrigger>
           <TabsTrigger value="changeOrders">{t("changeOrders.tab")}</TabsTrigger>
+          <TabsTrigger value="sal">{t("sal.tab")}</TabsTrigger>
           <TabsTrigger value="schedule">{t("projects.schedule")}</TabsTrigger>
         </TabsList>
 
@@ -526,6 +528,10 @@ export default function ProjectDetailPage() {
               )}
             </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="sal" className="mt-4">
+          <SalDeLaObra projectId={project.id} />
         </TabsContent>
 
         <TabsContent value="schedule" className="mt-4">
