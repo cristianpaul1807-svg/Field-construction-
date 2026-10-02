@@ -1661,7 +1661,10 @@
     "sal_ya_facturado": "This claim already has an invoice. To correct it, cancel it or issue a credit note.",
     "sal_sin_cliente": "The job has no client: assign one before invoicing.",
     "sal_nada_que_facturar": "After recovering the deposit there's nothing left to invoice in this claim.",
-    "sal_no_es_el_ultimo": "Only the last claim can be deleted."
+    "sal_no_es_el_ultimo": "Only the last claim can be deleted.",
+    "solo_italia": "This only exists for businesses in Italy.",
+    "tipo_de_papel_de_otro_pais": "That document type belongs to another country. Choose one from the list or «Other».",
+    "no_disponible_en_el_pais": "This feature isn't available in your business's country."
   },
   "workLog": {
     "title": "Work log",

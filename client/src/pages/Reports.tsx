@@ -20,6 +20,8 @@ import { HojaCcq } from "@/components/HojaCcq";
 import { StripeBalanceCard } from "@/components/StripeBalanceCard";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { useAuth } from "@/contexts/AuthContext";
+import { paisDe } from "@shared/paises";
 
 interface ReportsData {
   revenueByMonth: { month: string; ingresos: number; gastos: number }[];
@@ -35,6 +37,7 @@ interface ReportsData {
 
 export default function Reports() {
   const { t } = useTranslation();
+  const { country } = useAuth();
   const { data, loading, error, detalle, reload } = useApi<ReportsData>("/api/reports");
 
   return (
@@ -142,7 +145,8 @@ export default function Reports() {
       {/* Outside the loading gate above: it fetches on its own, and money
           owed is the thing on this page somebody actually acts on. */}
       <StripeBalanceCard />
-      <HojaCcq />
+      {/* La CCQ es de Quebec: fuera de Canadá ni se pide. */}
+      {paisDe(country).nomina && <HojaCcq />}
       <AccountingExportCard />
       <ProfitabilityPanel />
       <ReceivablesPanel />

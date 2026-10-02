@@ -82,6 +82,60 @@ llegamos — y la pantalla lo dice, con la invitación a pedirlo.
 
 ---
 
+## Lo de un país no se ve ni se escribe en otro
+
+Un negocio de Quebec no tiene por qué ver un DURC, ni guardar una Partita IVA
+en un cliente; uno de Roma no tiene por qué abrir la nómina con retenciones de
+Quebec. Esconderlo del menú no basta: la API se puede llamar a mano. Hay tres
+puertas, y una novedad de un país tiene que pasar por las tres.
+
+**1. La pantalla** no lo ofrece: el menú, las tarjetas y las listas miran
+`paisDe(country)` o `grupoDePais(country)`.
+
+**2. El servidor** lo rechaza con un mensaje en el idioma de quien lee:
+
+- Una puerta por familia de rutas, detrás del inicio de sesión
+  (`RUTAS_DEL_PAIS` en `server/api.ts`): `/payroll` y `/ccq` necesitan
+  `nomina`, `/stripe/terminal` necesita `cobrosConTarjeta`, `/quickbooks`
+  necesita `quickbooks`. Lee la ficha del país, no una lista de países.
+  Contesta `no_disponible_en_el_pais`.
+- En los PATCH de obra y de cliente, los campos de Italia
+  (`CAMPOS_SOLO_ITALIA` en `shared/soloDeUnPais.ts`) → `solo_italia`.
+- Al subir un papel, un tipo de otro país (`PAPELES_SOLO_DE`) →
+  `tipo_de_papel_de_otro_pais`.
+- Las rutas que sólo existen en Italia (congruità, XML FatturaPA) miran el
+  país ellas mismas, y el MCP esconde sus herramientas con `soloEn`.
+
+**3. La base de datos**, con triggers que valen aunque alguien escriba con su
+sesión directamente contra Supabase o el servidor se equivoque:
+
+| Trigger | Tabla | Qué impide fuera de su país |
+|---|---|---|
+| `private.exigir_italia_en_obra` | `projects` | `bonus_fiscale`, `congruita_categoria`, `valore_opera`, `lavoro_pubblico` |
+| `private.exigir_italia_en_cliente` | `clients` | `partita_iva`, `codice_fiscale`, `codice_destinatario`, `pec` |
+| `private.exigir_pais_en_papel` | `worker_documents` | tipos de Italia fuera de Italia; T4, RL-1 y talón fuera de Canadá |
+| `private.exigir_italia_en_iva` | `invoices`, `credit_notes` | un `tax_breakdown` con IVA italiano |
+
+Todos usan `private.pais_del_negocio()`, que trata un negocio sin país como
+Canadá, igual que `shared/paises.ts`. Sólo saltan cuando un valor **se pone o
+cambia**: quitarlo vale siempre, para que quien cambió de país pueda limpiar
+lo que le quedó, y editar otra cosa de una obra antigua no tropieza con su
+bonus de cuando era italiana. El error llega con el código como mensaje
+(`solo_italia`, `tipo_de_papel_de_otro_pais`) y `route()` lo convierte en un
+400 traducido.
+
+Se probaron contra la base real dentro de un bloque que se deshace al final:
+doce casos, de «Canadá no pone un bonus» a «Italia no sube un T4». Si añades
+una columna o un tipo de un país, añádelo a la lista de `soloDeUnPais.ts`, al
+trigger, y a `scripts/prueba-paises/aislamiento.mjs`.
+
+Aparte del país, cada fila sigue cerrada por negocio con RLS
+(`business_id = private.current_business_id()`), y el cliente del portal no
+lee las partidas de los SAL: incluyen las líneas que el negocio ocultó del
+presupuesto.
+
+---
+
 ## Lo que todavía está atado a Canadá
 
 Añadir una entrada al registro **no basta** para que un país funcione. Falta:

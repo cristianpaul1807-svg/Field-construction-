@@ -622,6 +622,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 
 export default function Invoicing() {
   const { t, i18n } = useTranslation();
+  const { country } = useAuth();
   const { data: invoices, loading, error, reload, detalle } = useApi<Invoice[]>("/api/invoices");
   // Chat charges are a pay button, so they only make sense once the business
   // can actually take a card.
@@ -638,6 +639,8 @@ export default function Invoicing() {
   // Si falla no se dice nada — quien viene a mirar sus facturas no tiene por
   // qué enterarse de que Intuit está caído.
   useEffect(() => {
+    // Fuera de Canadá no hay QuickBooks que mirar, y el servidor lo niega.
+    if (!paisDe(country).quickbooks) return;
     let vivo = true;
     apiFetch("/api/quickbooks/pull", { method: "POST" })
       .then((res) => (res.ok ? res.json() : null))
@@ -650,7 +653,7 @@ export default function Invoicing() {
     };
     // Una vez al entrar, no en cada cambio de filtro.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [country]);
 
   const { filtrar } = useFiltroDeObra();
   const visibles = filtrar(invoices, (i) => i.projectId);

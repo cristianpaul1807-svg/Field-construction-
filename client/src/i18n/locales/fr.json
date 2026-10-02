@@ -1661,7 +1661,10 @@
     "sal_ya_facturado": "Ce décompte a déjà une facture. Pour la corriger, annulez-la ou émettez une note de crédit.",
     "sal_sin_cliente": "Le chantier n'a pas de client : attribuez-en un avant de facturer.",
     "sal_nada_que_facturar": "Après récupération de l'acompte, il ne reste rien à facturer dans ce décompte.",
-    "sal_no_es_el_ultimo": "Seul le dernier décompte peut être supprimé."
+    "sal_no_es_el_ultimo": "Seul le dernier décompte peut être supprimé.",
+    "solo_italia": "Ceci n'existe que pour les entreprises en Italie.",
+    "tipo_de_papel_de_otro_pais": "Ce type de document appartient à un autre pays. Choisissez-en un dans la liste ou « Autre ».",
+    "no_disponible_en_el_pais": "Cette fonction n'est pas offerte dans le pays de votre entreprise."
   },
   "workLog": {
     "title": "Suivi des travaux",

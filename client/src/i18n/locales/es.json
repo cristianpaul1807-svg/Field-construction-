@@ -1661,7 +1661,10 @@
     "sal_ya_facturado": "Este SAL ya tiene factura. Si hay que corregirla, anúlala o haz una nota de crédito.",
     "sal_sin_cliente": "La obra no tiene cliente: asígnaselo antes de facturar.",
     "sal_nada_que_facturar": "Con el anticipo recuperado no queda nada que facturar en este SAL.",
-    "sal_no_es_el_ultimo": "Sólo se puede borrar el último SAL."
+    "sal_no_es_el_ultimo": "Sólo se puede borrar el último SAL.",
+    "solo_italia": "Esto sólo existe para negocios en Italia.",
+    "tipo_de_papel_de_otro_pais": "Ese tipo de documento es de otro país. Elige uno de la lista o «Otro».",
+    "no_disponible_en_el_pais": "Esta función no está disponible en el país de tu negocio."
   },
   "workLog": {
     "title": "Control de trabajo",

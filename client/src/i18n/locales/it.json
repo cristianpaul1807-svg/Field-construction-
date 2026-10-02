@@ -1661,7 +1661,10 @@
     "sal_ya_facturado": "Questo SAL ha già una fattura. Per correggerla, annullala o emetti una nota di credito.",
     "sal_sin_cliente": "Il cantiere non ha un committente: assegnalo prima di fatturare.",
     "sal_nada_que_facturar": "Con il recupero dell'anticipo non resta nulla da fatturare in questo SAL.",
-    "sal_no_es_el_ultimo": "Si può eliminare solo l'ultimo SAL."
+    "sal_no_es_el_ultimo": "Si può eliminare solo l'ultimo SAL.",
+    "solo_italia": "Questo esiste solo per le imprese in Italia.",
+    "tipo_de_papel_de_otro_pais": "Questo tipo di documento è di un altro paese. Scegline uno dall'elenco o «Altro».",
+    "no_disponible_en_el_pais": "Questa funzione non è disponibile nel paese della tua impresa."
   },
   "workLog": {
     "title": "Controllo lavori",

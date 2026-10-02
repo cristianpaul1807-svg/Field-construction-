@@ -81,12 +81,13 @@ import { papelesQueVencen } from "./papelesQueVencen";
 import { congruitaDeLaObra } from "./congruitaServidor";
 import { certificarSal, estadoSalDellaObra, ivaDeLaObra, salGuardado } from "./salServidor";
 import { esCategoriaCongruita } from "../shared/congruita";
+import { CAMPOS_SOLO_ITALIA, camposDeItaliaFuera, papelDeOtroPais } from "../shared/soloDeUnPais";
 import { zonaHorariaDelNegocio } from "../shared/zonaHoraria";
 import { causaleBonifico, esBonusFiscale, ritenutaBancaria, type BonusFiscale } from "../shared/bonusEdilizi";
 import { fechaEnZona } from "../shared/zonaHoraria";
 import { fatturaPADeFactura, fatturaPADeNota, type ResultadoFatturaPA } from "./fatturaPAServidor";
 import { esMesValido, resumenDeHoras, resumenEnCsv, TEXTOS_DEL_RESUMEN } from "./resumenDeHoras";
-import { aplicaLaCcq, esPaisConocido, esPaisDelRegistro, esRegionDe, paisDe, PAIS_POR_DEFECTO } from "../shared/paises";
+import { aplicaLaCcq, esPaisConocido, esPaisDelRegistro, esRegionDe, grupoDePais, paisDe, PAIS_POR_DEFECTO, type GrupoDePais } from "../shared/paises";
 import { calcularIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "../shared/iva";
 import { esPartitaIvaValida, esCodiceFiscaleValido, esCodiceDestinatarioValido, esCapValido } from "../shared/fiscaleItalia";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
@@ -1078,12 +1079,25 @@ async function advanceAndBill(
  * francófono pagando una factura leía el fallo en español. El texto se queda
  * como reserva legible en los registros; lo que viaja y manda es el código.
  */
+/** El grupo de país del negocio: CA, IT u otros. Sin país, Canadá. */
+async function grupoDelNegocio(businessId: string): Promise<GrupoDePais> {
+  const { data } = await getSupabaseAdmin().from("businesses").select("country").eq("id", businessId).maybeSingle();
+  return grupoDePais(data?.country ?? null);
+}
+
 class CodedError extends Error {
   constructor(public readonly code: string, message: string) {
     super(message);
     this.name = "CodedError";
   }
 }
+
+/**
+ * Los rechazos de los triggers de país (ver shared/soloDeUnPais.ts). Las rutas
+ * ya los comprueban antes con su propio mensaje; esto es para el camino que se
+ * les escape, que sin ello llegaría como un 500 sin explicación.
+ */
+const CODIGOS_DE_LA_BASE = new Set(["solo_italia", "tipo_de_papel_de_otro_pais"]);
 
 function route(handler: Handler) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -1094,6 +1108,11 @@ function route(handler: Handler) {
       }
       if (err instanceof CodedError) {
         res.status(400).json({ error: err.message, code: err.code });
+        return;
+      }
+      const mensaje = typeof err?.message === "string" ? err.message : "";
+      if (CODIGOS_DE_LA_BASE.has(mensaje)) {
+        res.status(400).json({ error: mensaje, code: mensaje === "solo_italia" ? "solo_italia" : "tipo_de_papel_de_otro_pais" });
         return;
       }
       next(err);
@@ -3979,6 +3998,39 @@ apiRouter.use((req, res, next) => {
     capacidad,
     plan,
   });
+});
+
+/**
+ * Lo que el país del negocio no tiene.
+ *
+ * La tercera puerta, junto a la de permisos y la de plan. La nómina de Quebec
+ * (RRQ, RQAP, CNESST) y la hoja de la CCQ, QuickBooks y los lectores de
+ * tarjeta existen en Canadá; un negocio de Italia no los ve en el menú, y
+ * aquí tampoco los abre llamando a la ruta a mano. Sin esto, una nómina
+ * pedida desde Roma salía calculada con las retenciones de Quebec.
+ *
+ * Por familia de rutas y leyendo la ficha de cada país (`shared/paises.ts`),
+ * no con una lista de países: el día que un país gane la nómina, se abre
+ * cambiando su ficha. El callback de QuickBooks está encima de la puerta y no
+ * pasa por aquí.
+ */
+const RUTAS_DEL_PAIS: { prefijo: string; necesita: "nomina" | "cobrosConTarjeta" | "quickbooks" }[] = [
+  { prefijo: "/payroll", necesita: "nomina" },
+  { prefijo: "/ccq", necesita: "nomina" },
+  { prefijo: "/stripe/terminal", necesita: "cobrosConTarjeta" },
+  { prefijo: "/quickbooks", necesita: "quickbooks" },
+];
+
+apiRouter.use(async (req, res, next) => {
+  const regla = RUTAS_DEL_PAIS.find((r) => req.path === r.prefijo || req.path.startsWith(`${r.prefijo}/`));
+  if (!regla) return next();
+  try {
+    const { data } = await getSupabaseAdmin().from("businesses").select("country").eq("id", req.businessId!).maybeSingle();
+    if (paisDe(data?.country ?? PAIS_POR_DEFECTO)[regla.necesita]) return next();
+    res.status(400).json({ error: "not available in this country", code: "no_disponible_en_el_pais" });
+  } catch (err) {
+    next(err);
+  }
 });
 
 /**
@@ -10108,6 +10160,11 @@ apiRouter.patch(
         });
       }
     }
+    // Lo de Italia, sólo en Italia. Quitarlo vale siempre.
+    if (camposDeItaliaFuera(await grupoDelNegocio(req.businessId!), body, CAMPOS_SOLO_ITALIA.obra).length) {
+      res.status(400).json({ error: "only for businesses in Italy", code: "solo_italia" });
+      return;
+    }
     if (body.bonusFiscale !== undefined) {
       if (body.bonusFiscale !== null && body.bonusFiscale !== "" && !esBonusFiscale(body.bonusFiscale)) {
         res.status(400).json({ error: "invalid bonus", code: "bonus_no_valido" });
@@ -10304,6 +10361,10 @@ apiRouter.patch(
     if (body.phone !== undefined) update.phone = body.phone || null;
     if (body.email !== undefined) update.email = body.email || null;
     if (body.address !== undefined) update.address = body.address || null;
+    if (camposDeItaliaFuera(await grupoDelNegocio(req.businessId!), body, CAMPOS_SOLO_ITALIA.cliente).length) {
+      res.status(400).json({ error: "only for businesses in Italy", code: "solo_italia" });
+      return;
+    }
     // Los datos fiscales italianos, comprobados al escribirlos: una Partita
     // IVA con una cifra cambiada no se nota hasta que el SDI rechaza la
     // factura días después, y entonces ya hay un cliente esperando.
@@ -12929,6 +12990,12 @@ apiRouter.post(
       return;
     }
     const tipo = esTipoDePapel(kind) ? kind : "otro";
+    // Un DURC en un negocio de Quebec, o un T4 en uno de Roma, no es de su
+    // país: se diría en su lista de vencimientos y en la app del trabajador.
+    if (papelDeOtroPais(await grupoDelNegocio(req.businessId!), tipo)) {
+      res.status(400).json({ error: "document kind of another country", code: "tipo_de_papel_de_otro_pais" });
+      return;
+    }
     const caduca = typeof expiresOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(expiresOn) ? expiresOn : null;
     if (expiresOn && !caduca) {
       res.status(400).json({ error: "expiresOn must be YYYY-MM-DD", code: "fecha_no_valida" });

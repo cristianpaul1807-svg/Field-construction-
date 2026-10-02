@@ -61,6 +61,13 @@ helper script and the verification step.
 slugs (`en_progreso`, `mano_obra`) because that is the data. Translate at
 display time with `t(\`group.${value}\`)`. Never translate on write.
 
+**What belongs to one country stays in that country.** A feature for one
+country (Italy's FatturaPA, Quebec's payroll) is closed at three gates: the
+screen doesn't offer it, the server refuses it (`RUTAS_DEL_PAIS` and
+`shared/soloDeUnPais.ts`), and a database trigger refuses to store it. Adding
+a country-specific column, document kind or route means adding it to all
+three — see `docs/desarrollo/paises.md`.
+
 **Money is rounded once, at the point it becomes a number a person sees.**
 `Math.round(x * 100) / 100`. Tax is computed on the full value of the work;
 only the payment is reduced by a holdback.
@@ -88,6 +95,7 @@ node --experimental-strip-types scripts/prueba-italia/iva.mjs          # Italian
 node --experimental-strip-types scripts/prueba-italia/fatturapa.mjs    # the Italian e-invoice XML, validated against the official schema
 node --experimental-strip-types scripts/prueba-italia/congruita.mjs    # the Cassa Edile labour minimum, index by index
 node --experimental-strip-types scripts/prueba-italia/sal.mjs          # progress claims: contract prices, no going backwards, deposit recovered to the cent
+node --experimental-strip-types scripts/prueba-paises/aislamiento.mjs  # what belongs to one country is neither written nor opened from another
 ```
 
 `npm run build` is the marketing site generator, then `vite build`, then
