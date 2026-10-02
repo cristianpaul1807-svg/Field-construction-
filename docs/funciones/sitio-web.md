@@ -58,18 +58,19 @@ Salida esperada:
 
 ```
 enlaces ok — 596 a páginas que existen, 280 a archivos que están
-sitio ok — 28 páginas en 4 idiomas, fr en es it
+sitio ok — 32 páginas en 4 idiomas, fr en es it
 ```
 
 ## Las páginas
 
-Siete por idioma. Las direcciones están **en cada idioma** —un francófono no
+Ocho por idioma. Las direcciones están **en cada idioma** —un francófono no
 teclea `/pricing`— y por eso no se puede deducir la ruta del francés:
 
 | Para qué | fr | en | es | it |
 |---|---|---|---|---|
 | Portada | `/fr/` | `/en/` | `/es/` | `/it/` |
 | Funciones | `/fr/fonctionnalites` | `/en/features` | `/es/funciones` | `/it/funzioni` |
+| Tu país | `/fr/pays` | `/en/countries` | `/es/paises` | `/it/paesi` |
 | CCQ e impuestos | `/fr/ccq-taxes` | `/en/ccq-taxes` | `/es/ccq-impuestos` | `/it/ccq-tasse` |
 | Precios | `/fr/tarifs` | `/en/pricing` | `/es/precios` | `/it/prezzi` |
 | Soporte | `/fr/support` | `/en/support` | `/es/soporte` | `/it/supporto` |
@@ -81,6 +82,42 @@ Más `estilo.css`, `sitio.js`, `robots.txt`, `sitemap.xml` y `rutas.json`.
 Cada página declara su `canonical` y un `hreflang` por idioma, y el
 `sitemap.xml` repite esas alternativas con `xhtml:link`. Sin eso Google trata
 las cuatro versiones como cuatro páginas que compiten entre sí.
+
+### Lo que se cuenta: problemas resueltos, por país
+
+El sitio nació escrito para Quebec, y un contratista de Roma no veía en él
+nada suyo. Ahora es general y enseña, en vez de explicar:
+
+- **La portada** va de lo que resuelve: seis problemas de cada semana con su
+  «antes / ahora», el «pregúntalo hablando» con conversaciones de verdad (las
+  respuestas son las que daría el MCP con esos datos, incluidas las cifras de
+  la factura), las reglas de cada país en tarjetas, y **capturas reales**.
+- **La escena de arriba usa el país de cada idioma**: el italiano ve una obra
+  de Roma con su SAL, su IVA y el XML para el SDI; el francés, el inglés y el
+  español, una de Montreal con TPS, TVQ y retención. Las cifras están en los
+  textos de cada idioma, no en el HTML.
+- **«Tu país»** cuenta Quebec, Italia y el resto con lo que ya funciona en
+  cada uno, y enlaza la guía de la CCQ. Italia dice «primeros clientes» y no
+  «disponible» mientras el registro la tenga en pruebas: el sitio no promete
+  lo que el alta todavía no ofrece.
+- **Los precios** van en la moneda del idioma —euros en italiano, dólares
+  canadienses en los demás— con una línea que dice la otra.
+
+### Las capturas, sacadas de la aplicación
+
+`sitio/capturas.mjs` abre la aplicación construida con datos de ejemplo y
+saca tres pantallas por idioma —el móvil del trabajador fichado, los SAL de
+una obra y el portal del cliente— a 390 px. El reloj del navegador va parado a
+un miércoles a las 11:31 hora local, para que la captura no dependa de cuándo
+se saca. Falla si una pantalla se sale de ancho: así encontró que el portal
+del cliente sacaba «Se déconnecter» fuera de la pantalla con un nombre largo.
+
+```bash
+npx vite build && node sitio/capturas.mjs && node sitio/construir.mjs
+```
+
+Las imágenes se guardan en `sitio/capturas/` (no corre en el despliegue, que
+no tiene navegador). Si una pantalla cambia, se vuelven a sacar.
 
 ### Las legales no se escriben aquí
 
@@ -115,7 +152,7 @@ sobra. Por eso ahora hay una que mide:
 node scripts/comprobar-ancho.mjs
 ```
 
-Abre las 28 páginas a 320 px (el iPhone SE, que sigue vivo en obra) y a 390, y
+Abre las 32 páginas a 320 px (el iPhone SE, que sigue vivo en obra) y a 390, y
 falla si el documento ocupa más de lo que cabe. Cuando falla dice **qué** se
 sale, con su nombre y sus coordenadas — saber que la portada mide 526 no sirve;
 saber que quien la estira es el botón de la cabecera sí.
@@ -198,7 +235,8 @@ Si cambias el logo: sustituye `assets/logo-source.png`, vuelve a correr
 | «Prueba» (naranja) | Cabecera, sólo en pantalla ancha | `/negocio/acceso` |
 | «Entrar» | Cabecera y pie | `/` — la aplicación |
 | «Soporte» | Pie de todas las páginas | La página de soporte |
-| «Ver qué hace» | Portada | La página de funciones |
+| «Ver lo que resuelve» | Portada | La sección de casos, más abajo en la portada |
+| «Ver cada país» | Portada | La página «Tu país» |
 
 **La llamada principal lleva a crear la cuenta, no al formulario.** El botón
 dice «sin tarjeta», y eso promete entrar ahora mismo. Llevar a un formulario
@@ -207,7 +245,7 @@ otra — y para un contratista que mira esto entre dos obras, esperar es no
 volver.
 
 Esa página dejó de ser un formulario de venta. Ahora es **soporte**, y está a
-un clic desde el pie de las 28 páginas.
+un clic desde el pie de las 32 páginas.
 
 `rutasDeLaAplicacion()` lee `client/src/App.tsx` y comprueba que la pantalla a
 la que manda el botón siga existiendo en el router. Si alguien renombra

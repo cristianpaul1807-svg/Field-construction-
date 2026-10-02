@@ -413,6 +413,13 @@ p { margin: 0; }
 .periodo-toggle button:not(.activo):hover { color: var(--tinta); }
 .etiqueta-ahorro { font-size: 11px; font-weight: 700; background: #16a34a; color: #fff; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
 .periodo-toggle button.activo .etiqueta-ahorro { background: rgba(255,255,255,.25); }
+/* En un teléfono estrecho «Annuel · 2 mois gratuits» no cabe al lado de
+   «Mensuel». La etiqueta se va del botón: ya sale junto al precio anual. */
+.periodo-toggle { max-width: 100%; }
+@media (max-width: 420px) {
+  .periodo-toggle button { padding: 9px 16px; }
+  .periodo-toggle .etiqueta-ahorro { display: none; }
+}
 
 .planes { display: grid; gap: 20px; margin-top: 28px; }
 @media (min-width: 900px) { .planes { grid-template-columns: repeat(2, 1fr); align-items: start; } }
@@ -420,6 +427,9 @@ p { margin: 0; }
 .plan.destacado { border-color: var(--azul); box-shadow: 0 0 0 1px var(--azul), var(--sombra-3); }
 .plan .insignia { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: var(--azul); color: #fff; padding: 5px 11px; border-radius: 7px; margin-bottom: 15px; }
 .plan .precio { display: flex; align-items: baseline; gap: 7px; margin: 17px 0 7px; flex-wrap: wrap; font-family: var(--display); font-size: 58px; font-weight: 800; line-height: 1; letter-spacing: -0.045em; }
+/* `display: flex` le ganaba al atributo `hidden`, y el precio anual salía
+   siempre debajo del mensual: el selector no escondía nada. */
+.plan .precio[hidden] { display: none; }
 .plan .precio .u { font-size: 16px; color: var(--apagado); font-weight: 400; letter-spacing: 0; }
 .plan .precio .ahorro { font-size: 13px; font-weight: 700; background: #16a34a; color: #fff; padding: 3px 10px; border-radius: 7px; letter-spacing: 0; align-self: center; }
 .plan .para { color: var(--tinta-2); font-size: 15.5px; }
@@ -849,4 +859,51 @@ body {
     color: #e9f1ff;
     border-color: rgba(190, 211, 240, .22);
   }
+}
+
+/* ---------- Lo que resolvemos: antes y ahora ----------
+ *
+ * Cada caso en dos líneas, la de antes apagada y la de ahora en tinta: se
+ * lee el cambio de un vistazo, que es lo que alguien hace con esta sección. */
+.resuelve { display: grid; gap: 16px; margin-top: 42px; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 980px) { .resuelve { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .resuelve { grid-template-columns: 1fr; } }
+.caso { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--radio); padding: 22px; box-shadow: var(--sombra-1); display: grid; gap: 14px; align-content: start; }
+.caso p { font-size: 15.5px; line-height: 1.5; }
+.caso-antes { color: var(--apagado); }
+.caso-ahora { color: var(--tinta); font-weight: 500; border-top: 1px solid var(--linea-suave); padding-top: 14px; }
+.caso-etiqueta { display: block; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 5px; }
+.caso-antes .caso-etiqueta { color: var(--apagado); }
+.caso-ahora .caso-etiqueta { color: var(--verde); }
+
+/* ---------- Pregúntalo hablando ---------- */
+.voz-rejilla { margin-top: 0; align-items: center; gap: 44px; }
+.conversacion { display: grid; gap: 10px; }
+.burbuja { font-size: 15px; line-height: 1.45; padding: 11px 14px; border-radius: 16px; max-width: 92%; overflow-wrap: anywhere; }
+.burbuja-tu { justify-self: end; background: var(--azul); color: #fff; border-bottom-right-radius: 5px; }
+.burbuja-sistema { justify-self: start; background: var(--superficie-2); color: var(--tinta); border-bottom-left-radius: 5px; }
+.seccion-oscura .burbuja-sistema { background: #1A2536; color: #DDE5EF; }
+.flotante .burbuja { font-size: 14px; max-width: 100%; margin-top: 6px; }
+.flotante .burbuja-tu { margin-left: 18px; }
+
+/* ---------- Países ---------- */
+.pais-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.pais-cabeza h3 { margin: 0; }
+.pastilla-gris { background: var(--superficie-2); color: var(--tinta-2); }
+.lista-corta { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; }
+.lista-corta li { display: flex; gap: 9px; font-size: 15px; color: var(--tinta-2); line-height: 1.45; }
+.lista-corta svg { width: 17px; height: 17px; flex-shrink: 0; margin-top: 3px; color: var(--verde); }
+
+/* ---------- Capturas reales ---------- */
+.capturas { display: grid; gap: 22px; margin-top: 42px; grid-template-columns: repeat(3, 1fr); align-items: start; }
+@media (max-width: 920px) { .capturas { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .capturas { grid-template-columns: 1fr; } }
+.captura { margin: 0; }
+.captura img { display: block; width: 100%; height: auto; border-radius: 22px; border: 1px solid var(--linea); box-shadow: var(--sombra-2); background: var(--superficie-2); }
+.captura figcaption { margin-top: 14px; font-size: 15px; color: var(--tinta-2); line-height: 1.5; }
+.captura figcaption strong { display: block; color: var(--tinta); font-size: 16px; margin-bottom: 3px; }
+
+@media (prefers-color-scheme: dark) {
+  .caso-ahora { color: var(--tinta); }
+  .burbuja-sistema { background: #1A2536; color: #DDE5EF; }
 }

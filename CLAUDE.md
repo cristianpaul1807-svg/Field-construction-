@@ -107,7 +107,7 @@ every page at 320 and 390 px and fail if anything is wider than the screen —
 the failure that makes a page draggable sideways on a phone, which is where
 this gets read.
 
-`comprobar-ancho.mjs` covers the 28 public pages, with the real fonts.
+`comprobar-ancho.mjs` covers the 32 public pages, with the real fonts.
 `comprobar-ancho-panel.mjs` covers the 31 panel screens, which need a session:
 it serves `dist/public`, answers any read of the Supabase session key with a
 fake one, and replies to every `/api/…` from a fixture table. Three things

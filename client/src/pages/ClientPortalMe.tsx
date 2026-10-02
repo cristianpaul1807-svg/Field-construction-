@@ -222,10 +222,13 @@ export default function ClientPortalMe() {
             <p className="text-xs text-muted-foreground leading-tight">{t("clientPortal.title")}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        {/* No encoge: es el nombre del negocio el que se recorta. En un móvil
+            el botón queda en su icono —«Se déconnecter» con un nombre largo
+            sacaba la página de la pantalla—, con su nombre para quien no ve. */}
+        <div className="flex items-center gap-1 shrink-0">
           <LanguageSwitcher />
-          <Button variant="ghost" size="sm" className="gap-2 min-h-11" onClick={leave}>
-            <LogOut size={14} /> {t("common.logout")}
+          <Button variant="ghost" size="sm" className="gap-2 min-h-11 min-w-11" onClick={leave} aria-label={t("common.logout")} title={t("common.logout")}>
+            <LogOut size={14} /> <span className="hidden sm:inline">{t("common.logout")}</span>
           </Button>
         </div>
       </div>

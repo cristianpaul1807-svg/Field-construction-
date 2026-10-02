@@ -3,7 +3,7 @@
  *
  *     node sitio/construir.mjs
  *
- * Cuatro idiomas por siete páginas son veintiocho ficheros. Escritos a mano se
+ * Cuatro idiomas por ocho páginas son treinta y dos ficheros. Escritos a mano se
  * desincronizan en la primera semana: alguien corrige una frase en francés y
  * las otras tres se quedan diciendo lo de antes, sin que nada falle. Aquí el
  * texto vive en `textos/` y la forma en este archivo, y **si a un idioma le
@@ -75,8 +75,23 @@ function conTipografia(valor) {
  */
 const frances = { ...conTipografia(fr), rutas: fr.rutas, codigo: fr.codigo, lang: fr.lang };
 
+/**
+ * Lo único de esa tipografía que vale en todos los idiomas: un número no se
+ * separa de su unidad. «ritenuta del 10» en un renglón y «%» solo en el
+ * siguiente se leía en italiano y en castellano igual de mal que en francés.
+ */
+function unidadesPegadas(valor) {
+  if (typeof valor === "string") return valor.replace(/(\d) ([%€$])/g, "$1\u00a0$2");
+  if (Array.isArray(valor)) return valor.map(unidadesPegadas);
+  if (valor && typeof valor === "object") {
+    return Object.fromEntries(Object.entries(valor).map(([k, v]) => [k, unidadesPegadas(v)]));
+  }
+  return valor;
+}
+const conUnidades = (t) => ({ ...unidadesPegadas(t), rutas: t.rutas, codigo: t.codigo, lang: t.lang });
+
 /** El francés manda: es la lengua del mercado y la que exige la Loi 96. */
-const IDIOMAS = [frances, en, es, it];
+const IDIOMAS = [frances, conUnidades(en), conUnidades(es), conUnidades(it)];
 const REFERENCIA = frances;
 
 /** La misma cifra en las dos monedas (ver `PRECIOS` en shared/planes.ts); la moneda la pone cada idioma. */
@@ -187,6 +202,7 @@ const ICONOS = {
   clientes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>`,
   dinero: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>`,
   cumplimiento: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
+  voz: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8M8 13h5"/></svg>`,
 };
 
 function marca(idioma) {
@@ -231,7 +247,7 @@ function cabecera(idioma, pagina) {
     ${marca(idioma)}
     <nav class="menu">
       ${item("funciones", idioma.nav.funciones)}
-      ${item("ccq", idioma.nav.ccq)}
+      ${item("paises", idioma.nav.paises)}
       ${item("precios", idioma.nav.precios)}
       ${selectorIdioma(idioma, pagina)}
       <a href="/iniciar-sesion" class="boton boton-secundario">${esc(idioma.nav.entrar)}</a>
@@ -254,6 +270,7 @@ function pie(idioma) {
         <h4>${esc(idioma.pie.producto)}</h4>
         <ul>
           ${l("funciones", idioma.nav.funciones)}
+          ${l("paises", idioma.nav.paises)}
           ${l("precios", idioma.nav.precios)}
           ${l("ccq", idioma.nav.ccq)}
         </ul>
@@ -375,7 +392,10 @@ function paginaInicio(idioma) {
         operatingSystem: "Web, iOS, Android",
         inLanguage: idioma.lang,
         description: t.meta.desc,
-        areaServed: { "@type": "AdministrativeArea", name: "Québec, Canada" },
+        areaServed: [
+          { "@type": "AdministrativeArea", name: "Québec, Canada" },
+          { "@type": "Country", name: "Italia" },
+        ],
         offers: [
           { "@type": "Offer", name: "Chantier", price: String(PRECIOS.chantier.mes), priceCurrency: idioma.precios.moneda },
           { "@type": "Offer", name: "Entreprise", price: String(PRECIOS.entreprise.mes), priceCurrency: idioma.precios.moneda },
@@ -391,7 +411,7 @@ function paginaInicio(idioma) {
         <a href="${REGISTRO}" class="boton boton-principal">${esc(t.cta)}
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
-        <a href="${url(idioma, "funciones")}" class="boton boton-secundario">${esc(t.cta2)}</a>
+        <a href="#resuelve" class="boton boton-secundario">${esc(t.cta2)}</a>
       </div>
       <p class="bajo-acciones">${esc(t.bajo)}</p>
 
@@ -405,33 +425,26 @@ function paginaInicio(idioma) {
             </svg>
           </div>
           <div class="mini-fila"><span>${esc(e.gpsQuien)}</span><span class="pastilla pastilla-verde">${esc(e.gpsEstado)}</span></div>
-          <div class="mini-fila"><span>${esc(e.gpsLlegada)}</span><span class="val">7 h 04</span></div>
+          <div class="mini-fila"><span>${esc(e.gpsLlegada)}</span><span class="val">${esc(e.gpsHora)}</span></div>
         </div>
 
         <div class="flotante f-nomina aparece">
-          <h4>${esc(e.nominaTitulo)}</h4>
-          <div class="mini-fila"><span>${esc(e.nominaNormales)}</span><span class="val">1 120,00 $</span></div>
-          <div class="mini-fila"><span>${esc(e.nominaExtra)}</span><span class="val">252,00 $</span></div>
-          <div class="mini-fila"><span>${esc(e.nominaRetenciones)}</span><span class="val">−112,84 $</span></div>
-          <div class="mini-total"><span>${esc(e.nominaNeto)}</span><span class="val">1 259,16 $</span></div>
+          <h4>${esc(e.vozTitulo)}</h4>
+          <p class="burbuja burbuja-tu">${esc(e.vozPregunta)}</p>
+          <p class="burbuja burbuja-sistema">${esc(e.vozRespuesta)}</p>
         </div>
 
         <div class="flotante f-factura aparece">
           <h4>${esc(e.facturaTitulo)}</h4>
-          <div class="mini-fila"><span>${esc(e.facturaTrabajos)}</span><span class="val">5 000,00 $</span></div>
-          <div class="mini-fila"><span>${esc(e.facturaTps)}</span><span class="val">250,00 $</span></div>
-          <div class="mini-fila"><span>${esc(e.facturaTvq)}</span><span class="val">498,75 $</span></div>
-          <div class="mini-fila"><span>${esc(e.facturaRetencion)}</span><span class="val">−500,00 $</span></div>
-          <div class="mini-total"><span>${esc(e.facturaPagar)}</span><span class="val">5 248,75 $</span></div>
+          ${e.facturaFilas.map(([a, b]) => `<div class="mini-fila"><span>${esc(a)}</span><span class="val">${esc(b)}</span></div>`).join("\n          ")}
+          <div class="mini-total"><span>${esc(e.facturaPagar)}</span><span class="val">${esc(e.facturaTotal)}</span></div>
         </div>
 
         <div class="flotante f-integra aparece">
-          <h4>${esc(e.integraTitulo)}</h4>
-          <div class="logos-integra">
-            <span class="logo-chip"><svg viewBox="0 0 24 24" fill="none" stroke="var(--verde)" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9.5a3.5 3.5 0 1 0 0 5M9 14.5a3.5 3.5 0 1 1 0-5" stroke-linecap="round"/></svg>QuickBooks</span>
-            <span class="logo-chip"><svg viewBox="0 0 24 24" fill="none" stroke="var(--azul)" stroke-width="2.2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/></svg>${esc(e.integraTarjeta)}</span>
-          </div>
-          <p style="font-size:14px;color:var(--tinta-2);margin-top:11px">${esc(e.integraPie)}</p>
+          <h4>${esc(e.firmaTitulo)}</h4>
+          <div class="mini-fila"><span>${esc(e.firmaQuien)}</span><span class="pastilla pastilla-verde">${esc(e.firmaEstado)}</span></div>
+          <div class="mini-fila"><span>${esc(e.firmaCuando)}</span><span class="val">${esc(e.firmaImporte)}</span></div>
+          <p style="font-size:14px;color:var(--tinta-2);margin-top:9px">${esc(e.firmaPie)}</p>
         </div>
 
         <div class="escena-centro">
@@ -466,54 +479,49 @@ function paginaInicio(idioma) {
     </div>
   </section>
 
-  <section class="seccion seccion-clara">
+  <section class="seccion seccion-clara" id="resuelve">
     <div class="envoltura">
       <div class="encabezado-seccion">
-        <p class="sobretitulo">${esc(t.cifrasSobre)}</p>
-        <h2>${esc(t.cifrasH2)}</h2>
-        <p class="entradilla">${esc(t.cifrasEntradilla)}</p>
+        <p class="sobretitulo">${esc(t.resuelveSobre)}</p>
+        <h2>${esc(t.resuelveH2)}</h2>
+        <p class="entradilla">${esc(t.resuelveEntradilla)}</p>
       </div>
-      <div class="cifras">
-        ${t.cifras
-          .map((c) => `<div class="cifra-caja aparece"><p class="valor">${esc(c.valor)}</p><p class="etiqueta">${esc(c.etiqueta)}</p></div>`)
-          .join("\n        ")}
-      </div>
-    </div>
-  </section>
-
-  <section class="seccion">
-    <div class="envoltura">
-      <div class="encabezado-seccion">
-        <p class="sobretitulo">${esc(t.razonesSobre)}</p>
-        <h2>${esc(t.razonesH2)}</h2>
-      </div>
-      <div class="razones">
-        ${t.razones
-          .map((r, i) => `<div class="razon aparece"><p class="cifra">0${i + 1}</p><h3>${esc(r.t)}</h3><p>${esc(r.p)}</p></div>`)
-          .join("\n        ")}
-      </div>
-    </div>
-  </section>
-
-  <section class="seccion seccion-oscura">
-    <div class="envoltura">
-      <div class="encabezado-seccion">
-        <p class="sobretitulo">${esc(t.remplazaSobre)}</p>
-        <h2>${esc(t.remplazaH2)}</h2>
-        <p class="entradilla">${esc(t.remplazaEntradilla)}</p>
-      </div>
-      <div class="rejilla rejilla-3">
-        ${t.remplaza
+      <div class="resuelve">
+        ${t.resuelve
           .map(
-            (x, i) =>
-              `<div class="tarjeta"><div class="icono">${ICONOS[["chantier", "dinero", "clientes"][i]]}</div><h3>${esc(x.t)}</h3><p>${esc(x.p)}</p></div>`
+            (r) => `<div class="caso aparece">
+          <p class="caso-antes"><span class="caso-etiqueta">${esc(t.antes)}</span>${esc(r.antes)}</p>
+          <p class="caso-ahora"><span class="caso-etiqueta">${esc(t.ahora)}</span>${esc(r.ahora)}</p>
+        </div>`
           )
           .join("\n        ")}
       </div>
     </div>
   </section>
 
-  <section class="seccion seccion-clara">
+${seccionCapturas(idioma)}
+
+  <section class="seccion seccion-oscura">
+    <div class="envoltura">
+      <div class="rejilla rejilla-2 voz-rejilla">
+        <div>
+          <p class="sobretitulo">${esc(t.vozSobre)}</p>
+          <h2 style="margin-top:11px">${esc(t.vozH2)}</h2>
+          <p class="entradilla" style="margin-top:16px">${esc(t.vozP)}</p>
+          <p class="pie-nota" style="margin-top:16px;color:#9FB0C4">${esc(t.vozNota)}</p>
+        </div>
+        <div class="conversacion">
+          ${t.vozEjemplos
+            .map((x) => `<p class="burbuja burbuja-tu">${esc(x.pregunta)}</p>\n          <p class="burbuja burbuja-sistema">${esc(x.respuesta)}</p>`)
+            .join("\n          ")}
+        </div>
+      </div>
+    </div>
+  </section>
+
+${seccionPaises(idioma, t.paisSobre, t.paisH2, t.paisP, true)}
+
+  <section class="seccion">
     <div class="envoltura">
       <div class="rejilla rejilla-2" style="margin-top:0;align-items:center;gap:44px">
         <div>
@@ -531,7 +539,7 @@ function paginaInicio(idioma) {
     </div>
   </section>
 
-  <section class="seccion">
+  <section class="seccion seccion-clara">
     <div class="envoltura estrecho">
       <p class="sobretitulo">${esc(t.preguntasSobre)}</p>
       <h2 style="margin-top:11px">${esc(t.preguntasH2)}</h2>
@@ -546,6 +554,117 @@ ${cierre(idioma, {
   ctaHref: REGISTRO,
   cta2: t.cierreCta2,
   cta2Href: url(idioma, "precios"),
+})}`,
+  });
+}
+
+/**
+ * Lo que se ve de verdad: capturas del producto, no dibujos.
+ *
+ * Las genera `sitio/capturas.mjs` desde la aplicación construida, con datos
+ * de ejemplo y en el idioma de cada página. Un dibujo promete; una captura
+ * enseña lo que hay, y si mañana la pantalla cambia, se vuelven a sacar.
+ */
+function seccionCapturas(idioma) {
+  const t = idioma.capturas;
+  return `  <section class="seccion">
+    <div class="envoltura">
+      <div class="encabezado-seccion">
+        <p class="sobretitulo">${esc(t.sobre)}</p>
+        <h2>${esc(t.h2)}</h2>
+        <p class="entradilla">${esc(t.entradilla)}</p>
+      </div>
+      <div class="capturas">
+        ${t.lista
+          .map(
+            (c, i) => `<figure class="captura aparece">
+          <img src="/sitio/capturas/${idioma.codigo}-${i + 1}.jpg" width="780" height="1300" alt="${esc(c.alt)}" loading="lazy" decoding="async">
+          <figcaption><strong>${esc(c.t)}</strong>${esc(c.p)}</figcaption>
+        </figure>`
+          )
+          .join("\n        ")}
+      </div>
+    </div>
+  </section>`;
+}
+
+/**
+ * Las reglas de cada país, en tarjetas. Va en la portada y, entera, en la
+ * página «Tu país»: el mismo dato en los dos sitios, de la misma fuente.
+ */
+function seccionPaises(idioma, sobre, h2, p, conEnlace) {
+  const t = idioma.paises;
+  return `  <section class="seccion seccion-clara">
+    <div class="envoltura">
+      <div class="encabezado-seccion">
+        <p class="sobretitulo">${esc(sobre)}</p>
+        <h2>${esc(h2)}</h2>
+        <p class="entradilla">${esc(p)}</p>
+      </div>
+      <div class="rejilla rejilla-3">
+        ${t.lista
+          .map(
+            (x) => `<div class="tarjeta pais">
+          <div class="pais-cabeza"><h3>${esc(x.nombre)}</h3><span class="pastilla ${x.listo ? "pastilla-verde" : "pastilla-gris"}">${esc(x.estado)}</span></div>
+          <ul class="lista-corta">${x.resumen.map((r) => `<li>${CHECK}<span>${esc(r)}</span></li>`).join("")}</ul>
+        </div>`
+          )
+          .join("\n        ")}
+      </div>
+      ${conEnlace ? `<p style="margin-top:26px"><a href="${url(idioma, "paises")}" class="boton boton-secundario">${esc(t.verTodo)}</a></p>` : ""}
+    </div>
+  </section>`;
+}
+
+function paginaPaises(idioma) {
+  const t = idioma.paises;
+  return documento(idioma, "paises", {
+    meta: t.meta,
+    cuerpo: `  <section class="portada" style="padding-bottom:0">
+    <div class="envoltura">
+      <p class="sobretitulo">${esc(t.sobretitulo)}</p>
+      <h1 style="font-size:clamp(32px,4.8vw,54px);max-width:20ch">${esc(t.h1)}</h1>
+      <p class="entradilla" style="margin-top:20px">${esc(t.entradilla)}</p>
+    </div>
+  </section>
+
+  <section class="seccion" style="padding-top:24px">
+    <div class="envoltura">
+      ${t.detalle
+        .map(
+          (b) => `<div class="bloque">
+        <div class="bloque-rejilla">
+          <div>
+            <span class="pastilla ${b.listo ? "pastilla-verde" : "pastilla-gris"}">${esc(b.estado)}</span>
+            <h2 style="font-size:clamp(26px,3.2vw,35px);margin-top:12px">${esc(b.t)}</h2>
+            <p class="entradilla" style="margin-top:14px">${esc(b.p)}</p>
+            ${b.enlace ? `<p style="margin-top:18px"><a href="${url(idioma, b.enlace)}" style="color:var(--azul);font-weight:600">${esc(b.enlaceTexto)} →</a></p>` : ""}
+          </div>
+          <ul class="lista-limpia">
+            ${b.items.map((i) => `<li>${CHECK}<span><strong>${esc(i.t)}</strong>${esc(i.p)}</span></li>`).join("\n            ")}
+          </ul>
+        </div>
+      </div>`
+        )
+        .join("\n      ")}
+    </div>
+  </section>
+
+  <section class="seccion seccion-oscura">
+    <div class="envoltura estrecho">
+      <p class="sobretitulo">${esc(t.separadoSobre)}</p>
+      <h2 style="margin-top:11px">${esc(t.separadoH2)}</h2>
+      <p class="entradilla" style="margin-top:16px;color:#C9D4E2">${esc(t.separadoP)}</p>
+    </div>
+  </section>
+
+${cierre(idioma, {
+  h2: t.cierreH2,
+  p: t.cierreP,
+  cta: t.cierreCta,
+  ctaHref: REGISTRO,
+  cta2: t.cierreCta2,
+  cta2Href: url(idioma, "contacto"),
 })}`,
   });
 }
@@ -734,14 +853,15 @@ function paginaPrecios(idioma) {
       <p class="sobretitulo">${esc(t.sobretitulo)}</p>
       <h1 style="font-size:clamp(34px,5.4vw,58px);max-width:17ch">${esc(t.h1)}</h1>
       <p class="entradilla" style="margin-top:20px">${esc(t.entradilla)}</p>
+      <p class="pie-nota" style="margin-top:12px">${esc(t.otraMoneda)}</p>
     </div>
   </section>
 
   <section class="seccion" style="padding-top:36px">
     <div class="envoltura">
-      <div class="periodo-toggle" role="tablist" aria-label="${esc(t.periodoLabel)}">
-        <button type="button" role="tab" class="activo" data-periodo="mes">${esc(t.mesBoton)}</button>
-        <button type="button" role="tab" data-periodo="ano">${esc(t.anoBoton)}<span class="etiqueta-ahorro">${esc(t.ahorro)}</span></button>
+      <div class="periodo-toggle" role="tablist" aria-label="${esc(`${t.mensual} / ${t.anual}`)}">
+        <button type="button" role="tab" class="activo" aria-selected="true" data-periodo="mes">${esc(t.mensual)}</button>
+        <button type="button" role="tab" aria-selected="false" data-periodo="ano">${esc(t.anual)}<span class="etiqueta-ahorro">${esc(t.ahorro)}</span></button>
       </div>
       <div class="planes">
         ${plan(t.chantier, PRECIOS.chantier, false)}
@@ -886,6 +1006,7 @@ function escribir() {
     const paginas = [
       ["inicio", paginaInicio(idioma)],
       ["funciones", paginaFunciones(idioma)],
+      ["paises", paginaPaises(idioma)],
       ["ccq", paginaCcq(idioma)],
       ["precios", paginaPrecios(idioma)],
       ["contacto", paginaContacto(idioma)],
@@ -906,7 +1027,7 @@ function escribir() {
 
   const sitemap =
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
-    ["inicio", "funciones", "ccq", "precios", "contacto", "privacidad", "condiciones"]
+    ["inicio", "funciones", "paises", "ccq", "precios", "contacto", "privacidad", "condiciones"]
       .map((p) =>
         IDIOMAS.map(
           (idioma) =>
@@ -932,6 +1053,8 @@ function escribir() {
   // nuevo en `estilo.css` no puede depender de que alguien se acuerde de
   // nombrarlo también aquí, porque el fallo sería una página que pinta bien
   // en local y con la letra de reserva en producción.
+  fs.cpSync(path.join(AQUI, "capturas"), path.join(SALIDA, "capturas"), { recursive: true });
+
   fs.rmSync(path.join(SALIDA, "fuentes"), { recursive: true, force: true });
   fs.cpSync(path.join(AQUI, "fuentes"), path.join(SALIDA, "fuentes"), { recursive: true });
 
