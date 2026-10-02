@@ -332,6 +332,10 @@ export default {
       "En dollars canadiens, par mois. C'est le montant exact qui est débité : rien ne s'ajoute au paiement. Mois par mois, sans contrat, et pas de négociation par en dessous — tout le monde paie la même chose.",
     mes: "CAD / mois",
     ano: "CAD / an",
+    // La moneda en que se cobra en este idioma. Italia paga en euros, la
+    // misma cifra; los demás, en dólares canadienses.
+    moneda: "CAD",
+    simbolo: "$",
     mensual: "Mensuel",
     anual: "Annuel",
     ahorro: "2 mois gratuits",

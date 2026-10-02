@@ -15,6 +15,8 @@
  */
 
 import { renovacionUnix, planDelPrecio, periodoDelPrecio } from "../../shared/suscripcionStripe.ts";
+import { claveDelPrecio, monedaDeCobro, PRECIOS } from "../../shared/planes.ts";
+import { paisDe } from "../../shared/paises.ts";
 
 /** Los cuatro con los que se vendió antes, copiados de server/subscription.ts. */
 const HEREDADOS = {
@@ -162,6 +164,25 @@ ok("Sin ninguno, null y no una fecha de 1970",
    renovacionUnix({ items: { data: [{}] } }), null);
 ok("Una suscripción sin artículos no rompe",
    renovacionUnix({}), null);
+
+/* ---------- En euros ----------
+ *
+ * Los precios de Italia son la misma cifra en euros, con su propia clave. Si
+ * el webhook no los reconociera, quien paga desde Roma pagaría de verdad y se
+ * quedaría con el plan de prueba.
+ */
+ok("Canadá conserva sus claves de siempre", claveDelPrecio("chantier", "mes", "CAD"), "chantier_mes");
+ok("Los euros llevan la suya", claveDelPrecio("entreprise", "ano", "EUR"), "entreprise_ano_eur");
+ok("Un precio en euros abre su plan",
+   planDelPrecio({ id: "price_x", lookup_key: "entreprise_mes_eur", metadata: { plan: "entreprise", periodo: "mes", moneda: "EUR" } }), "entreprise");
+ok("Aunque le falte la etiqueta, por la clave",
+   planDelPrecio({ id: "price_y", lookup_key: "chantier_ano_eur", metadata: {} }), "chantier");
+ok("Y su periodo, por el intervalo que se cobra",
+   periodoDelPrecio({ lookup_key: "chantier_ano_eur", recurring: { interval: "year" } }), "ano");
+ok("Italia paga en euros, Canadá en dólares, un país sin precio propio en dólares",
+   ["IT", "CA", "CO"].map((c) => monedaDeCobro(paisDe(c).moneda)), ["EUR", "CAD", "CAD"]);
+ok("La misma cifra en las dos monedas",
+   [PRECIOS.EUR.chantier.mes, PRECIOS.EUR.entreprise.mes, PRECIOS.EUR.entreprise.ano], [PRECIOS.CAD.chantier.mes, PRECIOS.CAD.entreprise.mes, PRECIOS.CAD.entreprise.ano]);
 
 /* ---------- Quién puede entrar ----------
  *

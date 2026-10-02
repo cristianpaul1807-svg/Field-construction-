@@ -69,7 +69,7 @@ import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permi
 import { planDelPrecio, periodoDelPrecio } from "../shared/suscripcionStripe";
 import { atribuirNegocio, anotarComision, panelDelAfiliado } from "./afiliados";
 import { clientesOAuth, clientIdDeClaude, conexionesVivas } from "./mcpClientes";
-import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIO, type Periodo, type PlanDePago } from "../shared/planes";
+import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, monedaDeCobro, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIOS, type MonedaDeCobro, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
 // `vite.config.ts` importa este archivo para montar la API en el servidor de
 // desarrollo, y ahí todavía no hay alias que valga. El resto de `server/` ya
@@ -4186,9 +4186,9 @@ apiRouter.post(
  * cambiar 99 por 109 es crear otro, y `scripts/stripe-precios.mjs` le traslada
  * la clave al nuevo.
  */
-async function precioDeStripe(plan: PlanDePago, periodo: Periodo) {
+async function precioDeStripe(plan: PlanDePago, periodo: Periodo, moneda: MonedaDeCobro) {
   const stripe = getStripe();
-  const clave = claveDelPrecio(plan, periodo);
+  const clave = claveDelPrecio(plan, periodo, moneda);
   const encontrados = await stripe.prices.list({ lookup_keys: [clave], active: true, limit: 1 });
   const precio = encontrados.data[0];
   if (!precio) {
@@ -4264,8 +4264,10 @@ async function clienteDeStripe(businessId: string, correo: string | null, nombre
  *
  * Una llamada sola y sólo en esta pantalla: los cuatro precios se piden juntos.
  */
-async function sePuedeCobrar(): Promise<{ sePuedeCobrar: boolean; porQueNo: string | null; clavesQueFaltan: string[] }> {
-  const claves = PLANES_DE_PAGO.flatMap((plan) => PERIODOS.map((periodo) => claveDelPrecio(plan, periodo)));
+async function sePuedeCobrar(moneda: MonedaDeCobro): Promise<{ sePuedeCobrar: boolean; porQueNo: string | null; clavesQueFaltan: string[] }> {
+  // Los precios de la moneda de este negocio: que existan los de Canadá no
+  // dice nada de si se le puede cobrar a uno de Roma.
+  const claves = PLANES_DE_PAGO.flatMap((plan) => PERIODOS.map((periodo) => claveDelPrecio(plan, periodo, moneda)));
   let stripe;
   try {
     stripe = getStripe();
@@ -4297,12 +4299,13 @@ apiRouter.get(
     const { data } = await admin
       .from("businesses")
       .select(
-        "subscription_plan, subscription_status, subscription_interval, subscription_period_end, subscription_cancel_at_period_end, trial_ends_at, stripe_customer_id"
+        "subscription_plan, subscription_status, subscription_interval, subscription_period_end, subscription_cancel_at_period_end, trial_ends_at, stripe_customer_id, country"
       )
       .eq("id", req.businessId!)
       .maybeSingle();
 
     const fila = (data ?? {}) as Record<string, unknown>;
+    const moneda = monedaDeCobro(paisDe((fila.country as string | null) ?? PAIS_POR_DEFECTO).moneda);
     res.json({
       plan: planDe(fila.subscription_plan as string | null),
       estado: (fila.subscription_status as string | null) ?? null,
@@ -4313,8 +4316,8 @@ apiRouter.get(
       // Sin cliente de Stripe no hay portal que abrir, y la pantalla tiene que
       // saberlo para no ofrecer un botón que devolvería un error.
       tienePortal: Boolean(fila.stripe_customer_id),
-      precios: PRECIO,
-      ...(await sePuedeCobrar()),
+      precios: PRECIOS[moneda],
+      ...(await sePuedeCobrar(moneda)),
     });
   })
 );
@@ -4340,12 +4343,13 @@ apiRouter.post(
     const admin = getSupabaseAdmin();
     const { data: negocio } = await admin
       .from("businesses")
-      .select("name, email")
+      .select("name, email, country")
       .eq("id", req.businessId!)
       .maybeSingle();
-    const datos = (negocio ?? {}) as { name?: string | null; email?: string | null };
+    const datos = (negocio ?? {}) as { name?: string | null; email?: string | null; country?: string | null };
 
-    const precio = await precioDeStripe(plan, periodo as Periodo);
+    const moneda = monedaDeCobro(paisDe(datos.country ?? PAIS_POR_DEFECTO).moneda);
+    const precio = await precioDeStripe(plan, periodo as Periodo, moneda);
     const cliente = await clienteDeStripe(req.businessId!, datos.email ?? null, datos.name ?? null);
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const lang = normalizeDocLang(req.body?.lang);
@@ -4365,7 +4369,7 @@ apiRouter.post(
       // La pasarela entera en su idioma. Sin esto Stripe elige por el
       // navegador, que no tiene por qué ser el idioma en el que trabaja.
       locale: lang,
-      subscription_data: { metadata: { businessId: req.businessId!, plan, periodo } },
+      subscription_data: { metadata: { businessId: req.businessId!, plan, periodo, moneda } },
       // Para que el negocio pueda meter su número de TPS/TVQ en la factura.
       tax_id_collection: { enabled: true },
       // Lo que exige lo de arriba con un cliente que ya existe, que aquí es

@@ -22,7 +22,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import { correoDeSoporte } from "@/lib/soporte";
-import { PRECIO, type Capacidad } from "@shared/planes";
+import { PRECIOS, monedaDeCobro, type Capacidad } from "@shared/planes";
+import { paisDe } from "@shared/paises";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function SinPlan({ capacidad }: { capacidad: Capacidad }) {
   const { t } = useTranslation();
@@ -36,7 +38,9 @@ export function SinPlan({ capacidad }: { capacidad: Capacidad }) {
     };
   }, []);
 
-  const precio = PRECIO.entreprise;
+  const { country } = useAuth();
+  // En la moneda en que se le cobraría: a un negocio de Roma, en euros.
+  const precio = PRECIOS[monedaDeCobro(paisDe(country).moneda)].entreprise;
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl mx-auto">

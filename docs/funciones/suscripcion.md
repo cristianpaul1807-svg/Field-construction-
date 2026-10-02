@@ -51,12 +51,26 @@ promete el sitio.
 
 ## Los precios
 
-Dos productos en Stripe, cuatro precios:
+Dos productos por moneda en Stripe, cuatro precios por moneda. **En euros, la
+misma cifra** que en dólares canadienses (decidido para el lanzamiento en
+Italia: un precio redondo en su moneda se entiende; uno convertido parece un
+error).
 
 | Plan | Al mes | Al año | Clave de búsqueda |
 |---|---|---|---|
 | Chantier | 99 $ CAD | 990 $ CAD | `chantier_mes`, `chantier_ano` |
 | Entreprise | 249 $ CAD | 2 490 $ CAD | `entreprise_mes`, `entreprise_ano` |
+| Chantier | 99 € | 990 € | `chantier_mes_eur`, `chantier_ano_eur` |
+| Entreprise | 249 € | 2 490 € | `entreprise_mes_eur`, `entreprise_ano_eur` |
+
+Un negocio paga en euros si su país usa el euro, y en dólares canadienses si no
+(`monedaDeCobro` en `shared/planes.ts`). Los de Canadá conservan sus claves de
+siempre; los de euros tienen **productos propios** (`metadata.moneda: "EUR"`)
+con la descripción en italiano, porque es lo que se lee en la pasarela y a un
+contratista de Roma no se le habla de TPS y TVQ. El portal del cliente conoce
+los cuatro productos, para que se pueda pasar de Chantier a Entreprise en
+cualquiera de las dos monedas. `scripts/stripe-precios.mjs` crea las dos
+monedas.
 
 **Pagar el año sale dos meses gratis.** Diez por doce y no un porcentaje: «paga
 diez meses, usa doce» se explica en una frase. Un 20 % dejaría el Chantier en
@@ -227,6 +241,16 @@ Los precios se crearon con `tax_behavior: "exclusive"`, que hoy no añade nada
 porque no hay ningún impuesto configurado, y es lo correcto **si algún día** se
 pasa a cobrarlos. `tax_behavior` no se puede cambiar en un precio existente, así
 que dejarlo así ahorra rehacerlos.
+
+**A Italia no se aplica lo de arriba.** Vender desde Italia a una empresa
+italiana es una venta interior: en régimen ordinario lleva **IVA del 22 %**, y
+la factura tiene que ir por el **SDI** como FatturaPA —la de Stripe no vale como
+factura italiana—. En régimen forfettario no se cobra IVA, pero la factura
+electrónica sigue siendo obligatoria. Por eso el sitio en italiano dice «IVA
+esclusa». Pendiente de confirmar el régimen con el commercialista: si es el
+ordinario, a la pasarela en euros hay que añadirle un tipo del 22 % para
+clientes italianos, y cada cobro emitir su FatturaPA (el propio producto la
+genera).
 
 `tax_id_collection` sigue encendido en la pasarela, y no es decorativo: que el
 contratista ponga su número de TPS/TVQ en la factura es justo lo que documenta

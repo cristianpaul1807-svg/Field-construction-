@@ -167,6 +167,33 @@ export const PRECIO: Partial<Record<Plan, { mes: number; ano: number; moneda: "C
 };
 
 /**
+ * Las monedas en que cobramos la suscripción.
+ *
+ * En euros, la misma cifra que en dólares canadienses: 99 € y 249 € al mes.
+ * Decidido así para el lanzamiento en Italia, sin convertir: un precio
+ * redondo en su moneda se entiende, uno convertido (67,43 €) parece un error.
+ */
+export const MONEDAS_DE_COBRO = ["CAD", "EUR"] as const;
+export type MonedaDeCobro = (typeof MONEDAS_DE_COBRO)[number];
+
+export const PRECIOS: Record<MonedaDeCobro, Partial<Record<Plan, { mes: number; ano: number; moneda: MonedaDeCobro }>>> = {
+  CAD: PRECIO,
+  EUR: {
+    chantier: { mes: 99, ano: 990, moneda: "EUR" },
+    entreprise: { mes: 249, ano: 2490, moneda: "EUR" },
+  },
+};
+
+/**
+ * En qué moneda se le cobra a un negocio: en euros si su país usa el euro, y
+ * en dólares canadienses si no. Un negocio de un país que todavía no tiene
+ * precio propio paga en la moneda de casa, que es la que Stripe nos liquida.
+ */
+export function monedaDeCobro(monedaDelPais: string | null | undefined): MonedaDeCobro {
+  return monedaDelPais === "EUR" ? "EUR" : "CAD";
+}
+
+/**
  * Pagar el año sale dos meses gratis.
  *
  * Diez por doce y no un porcentaje: «paga diez meses, usa doce» se explica en
@@ -188,8 +215,11 @@ export const PERIODOS: readonly Periodo[] = ["mes", "ano"];
  * se sigue cobrando lo de antes sin que nada falle. La clave de búsqueda se
  * mueve al precio nuevo y no hay nada que actualizar aquí.
  */
-export function claveDelPrecio(plan: Plan, periodo: Periodo): string {
-  return `${plan}_${periodo}`;
+export function claveDelPrecio(plan: Plan, periodo: Periodo, moneda: MonedaDeCobro = "CAD"): string {
+  // Los de Canadá se quedan con la clave de siempre: hay suscripciones vivas
+  // con ella y una cuenta de Stripe que ya la tiene. Las demás monedas llevan
+  // la suya detrás, y el webhook sigue leyendo el plan en la primera parte.
+  return moneda === "CAD" ? `${plan}_${periodo}` : `${plan}_${periodo}_${moneda.toLowerCase()}`;
 }
 
 /** Los planes que se pueden contratar. Los otros tres no se venden. */

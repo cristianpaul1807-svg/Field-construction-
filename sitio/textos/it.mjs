@@ -318,14 +318,18 @@ export default {
   precios: {
     meta: {
       title: "Prezzi — Logiciel Construction | Due piani, lavoratori illimitati",
-      desc: "Chantier a 99 $ e Entreprise a 249 $ al mese, in dollari canadesi. Lavoratori sul campo illimitati in tutti e due. Prova di 30 giorni senza carta, mese per mese, senza contratto.",
+      desc: "Chantier a 99 € e Entreprise a 249 € al mese. Lavoratori sul campo illimitati in tutti e due. Prova di 30 giorni senza carta, mese per mese, senza contratto.",
     },
     sobretitulo: "Prezzi",
     h1: "Due piani. Il prezzo scritto è il prezzo.",
     entradilla:
-      "In dollari canadesi, al mese. È esattamente quello che viene addebitato: al pagamento non si aggiunge nulla. Mese per mese, senza contratto, e niente trattative sottobanco — pagano tutti uguale.",
-    mes: "CAD / mese",
-    ano: "CAD / anno",
+      "In euro, al mese, IVA esclusa. Mese per mese, senza contratto, e niente trattative sottobanco — pagano tutti uguale.",
+    mes: "/ mese",
+    ano: "/ anno",
+    // La moneda en que se cobra en este idioma. Italia paga en euros, la
+    // misma cifra; los demás, en dólares canadienses.
+    moneda: "EUR",
+    simbolo: "€",
     mensual: "Mensile",
     anual: "Annuale",
     ahorro: "2 mesi gratis",

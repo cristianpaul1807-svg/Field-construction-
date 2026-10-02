@@ -326,6 +326,10 @@ export default {
       "In Canadian dollars, per month. That is the exact amount charged: nothing is added at checkout. Month to month, no contract, and no quiet negotiating — everybody pays the same.",
     mes: "CAD / month",
     ano: "CAD / year",
+    // La moneda en que se cobra en este idioma. Italia paga en euros, la
+    // misma cifra; los demás, en dólares canadienses.
+    moneda: "CAD",
+    simbolo: "$",
     mensual: "Monthly",
     anual: "Annual",
     ahorro: "2 months free",

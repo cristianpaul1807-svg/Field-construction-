@@ -25,7 +25,7 @@
  */
 
 import Stripe from "stripe";
-import { PRECIO, PLANES_DE_PAGO, PERIODOS, claveDelPrecio } from "../shared/planes.ts";
+import { PRECIOS, MONEDAS_DE_COBRO, PLANES_DE_PAGO, PERIODOS, claveDelPrecio } from "../shared/planes.ts";
 
 const CLAVE = process.env.STRIPE_SECRET_KEY?.trim();
 const ENSAYO = process.argv.includes("--dry");
@@ -38,7 +38,26 @@ if (!CLAVE) {
 
 const EN_VIVO = CLAVE.startsWith("sk_live_");
 
-/** Lo que se lee en la pasarela y en el recibo. No es documentación interna. */
+/**
+ * Lo que se lee en la pasarela y en el recibo. No es documentación interna.
+ *
+ * Uno por moneda, porque cada moneda es un mercado: a un contratista de Roma
+ * no se le habla de TPS y TVQ. Por eso los euros tienen sus propios productos
+ * (con `metadata.moneda`) en vez de colgar sus precios de los de Canadá.
+ */
+const DESCRIPCIONES = {
+  EUR: {
+    chantier:
+      "Cantieri, ordini di lavoro e agenda. Timbratura con GPS e foto dal cantiere. " +
+      "Preventivi firmati dal telefono. Fatture con IVA e XML FatturaPA, SAL per voci, " +
+      "bonifico parlante per i bonus edilizi, scadenze di DURC e corsi. Portale del cliente. " +
+      "Fino a 2 persone in ufficio, operai illimitati.",
+    entreprise:
+      "Tutto di Chantier, piu: congruita della manodopera e margine per cantiere in tempo reale, " +
+      "esportazioni per il commercialista, report. Accessi limitati per ruolo. " +
+      "Persone in ufficio senza limite.",
+  },
+};
 const DESCRIPCION = {
   chantier:
     "Obras, ordenes de trabajo y agenda. Fichaje con GPS y fotos desde la obra. " +
@@ -79,36 +98,38 @@ function decir(estado, texto) {
   console.log(`  ${marca} ${texto}`);
 }
 
-/** El producto del plan, buscándolo por su etiqueta y no por el nombre. */
-async function producto(plan) {
+/** El producto del plan en una moneda, buscándolo por su etiqueta y no por el nombre. */
+async function producto(plan, moneda) {
   // Por `metadata.plan` y no por nombre: el nombre es texto que alguien puede
   // cambiar en el panel para que se lea mejor en un recibo, y entonces este
-  // script crearía un producto duplicado sin que nada fallara.
+  // script crearía un producto duplicado sin que nada fallara. Los de Canadá
+  // nacieron sin `metadata.moneda`: sin ella, son los de CAD.
   const todos = await stripe.products.list({ active: true, limit: 100 });
-  const suyo = todos.data.find((p) => p.metadata?.plan === plan);
+  const suyo = todos.data.find((p) => p.metadata?.plan === plan && (p.metadata?.moneda ?? "CAD") === moneda);
 
   if (suyo) {
-    decir("igual", `producto ${plan} — ${suyo.id}`);
+    decir("igual", `producto ${plan} ${moneda} — ${suyo.id}`);
     return suyo;
   }
   if (ENSAYO) {
-    decir("nuevo", `producto ${plan} (ensayo, no se crea)`);
-    return { id: `ensayo_${plan}` };
+    decir("nuevo", `producto ${plan} ${moneda} (ensayo, no se crea)`);
+    return { id: `ensayo_${plan}_${moneda}` };
   }
   const creado = await stripe.products.create({
     name: plan === "chantier" ? "Chantier" : "Entreprise",
-    description: DESCRIPCION[plan],
-    metadata: { plan },
+    description: (DESCRIPCIONES[moneda] ?? DESCRIPCION)[plan],
+    metadata: { plan, moneda },
   });
-  decir("nuevo", `producto ${plan} — ${creado.id}`);
+  decir("nuevo", `producto ${plan} ${moneda} — ${creado.id}`);
   return creado;
 }
 
-async function precio(plan, periodo, productoId) {
-  const clave = claveDelPrecio(plan, periodo);
-  const importe = Math.round((periodo === "mes" ? PRECIO[plan].mes : PRECIO[plan].ano) * 100);
+async function precio(plan, periodo, monedaDeCobro, productoId) {
+  const clave = claveDelPrecio(plan, periodo, monedaDeCobro);
+  const tarifa = PRECIOS[monedaDeCobro][plan];
+  const importe = Math.round((periodo === "mes" ? tarifa.mes : tarifa.ano) * 100);
   const intervalo = periodo === "mes" ? "month" : "year";
-  const moneda = PRECIO[plan].moneda.toLowerCase();
+  const moneda = tarifa.moneda.toLowerCase();
 
   const existentes = await stripe.prices.list({ lookup_keys: [clave], active: true, limit: 1 });
   const actual = existentes.data[0];
@@ -141,7 +162,7 @@ async function precio(plan, periodo, productoId) {
     // Si había uno con esta clave, se la quita y se la queda este. El viejo se
     // queda vivo para quien ya lo estaba pagando.
     transfer_lookup_key: Boolean(actual),
-    metadata: { plan, periodo },
+    metadata: { plan, periodo, moneda: monedaDeCobro },
   });
   decir(actual ? "cambia" : "nuevo", `${clave} — ${importe / 100} ${moneda.toUpperCase()} — ${creado.id}`);
   if (actual) decir(" ", `   el anterior (${actual.id}) sigue vivo para quien ya lo paga`);
@@ -164,7 +185,19 @@ async function portal(productos) {
   const existentes = await stripe.billingPortal.configurations.list({ active: true, limit: 10 });
   const suya = existentes.data.find((c) => c.is_default);
   if (suya) {
-    decir("igual", `portal del cliente — ${suya.id}`);
+    // Ya existe, pero tiene que conocer los productos de cada moneda: sin
+    // ellos, quien paga en euros no puede pasar de Chantier a Entreprise desde
+    // el portal. Stripe sólo le enseña los precios de su moneda.
+    const tiene = new Set((suya.features?.subscription_update?.products ?? []).map((p) => p.product));
+    const faltan = productos.filter((p) => !tiene.has(p.product));
+    if (faltan.length === 0 || ENSAYO) {
+      decir(faltan.length ? "cambia" : "igual", `portal del cliente — ${suya.id}${faltan.length ? " (ensayo, no se toca)" : ""}`);
+      return;
+    }
+    await stripe.billingPortal.configurations.update(suya.id, {
+      features: { subscription_update: { enabled: true, default_allowed_updates: ["price", "promotion_code"], proration_behavior: "create_prorations", products: productos } },
+    });
+    decir("cambia", `portal del cliente — ${suya.id}, ahora con ${productos.length} productos`);
     return;
   }
   if (ENSAYO) {
@@ -212,16 +245,19 @@ async function main() {
   console.log(`\nCuenta: ${EN_VIVO ? "REAL — esto cobra dinero de verdad" : "de pruebas"}${ENSAYO ? "  ·  ENSAYO, no se escribe nada" : ""}\n`);
 
   const productos = [];
-  for (const plan of PLANES_DE_PAGO) {
-    const p = await producto(plan);
-    const precios = [];
-    for (const periodo of PERIODOS) precios.push(await precio(plan, periodo, p.id));
-    if (!ENSAYO) productos.push({ product: p.id, prices: precios.filter(Boolean) });
+  for (const moneda of MONEDAS_DE_COBRO) {
+    for (const plan of PLANES_DE_PAGO) {
+      const p = await producto(plan, moneda);
+      const precios = [];
+      for (const periodo of PERIODOS) precios.push(await precio(plan, periodo, moneda, p.id));
+      if (!ENSAYO) productos.push({ product: p.id, prices: precios.filter(Boolean) });
+    }
   }
 
   await portal(productos);
 
-  console.log(`\nlisto — 2 productos, ${PLANES_DE_PAGO.length * PERIODOS.length} precios, portal del cliente\n`);
+  const n = MONEDAS_DE_COBRO.length;
+  console.log(`\nlisto — ${n * PLANES_DE_PAGO.length} productos, ${n * PLANES_DE_PAGO.length * PERIODOS.length} precios (${MONEDAS_DE_COBRO.join(" y ")}), portal del cliente\n`);
 
   if (EN_VIVO && !ENSAYO) {
     console.log("Queda por hacer, y no lo hace esto:");

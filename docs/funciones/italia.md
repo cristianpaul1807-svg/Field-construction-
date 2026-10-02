@@ -265,10 +265,13 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
 2. **XML FatturaPA descargable**, para que el negocio lo suba al SDI con su
    programa o su gestor. ✅ Hecho: facturas y notas de crédito, validado
    contra el esquema oficial. Falta, para la obra pública, el CIG/CUP.
-3. **Stripe en euros:** cuentas conectadas italianas, cobros en EUR y precios
-   de suscripción italianos (79 €/mes y 790 €/año Chantier, 199 €/mes y
-   1.990 €/año Entreprise). Stripe opera en Italia y la plataforma española
-   puede crear esas cuentas.
+3. **Stripe en euros.** ✅ Hecha la suscripción: la misma cifra en euros
+   (99 €/mes y 990 €/año Chantier, 249 €/mes y 2.490 €/año Entreprise), con
+   productos propios en Stripe y el sitio en italiano en euros. Falta que el
+   negocio cobre con tarjeta a sus clientes en euros (cuentas conectadas
+   italianas); hasta entonces, transferencia, que en Italia es lo normal. Y
+   falta confirmar el IVA de nuestra propia suscripción (ver
+   [suscripcion.md](suscripcion.md)).
 4. **PDFs, textos y web** para el mercado italiano, y legales para la UE.
 5. **Envío directo al SDI** con un intermediario (A-Cube, Openapi,
    Invoicetronic…), y el estado de cada factura (entregada, rechazada).

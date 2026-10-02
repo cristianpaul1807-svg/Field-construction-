@@ -79,6 +79,7 @@ const frances = { ...conTipografia(fr), rutas: fr.rutas, codigo: fr.codigo, lang
 const IDIOMAS = [frances, en, es, it];
 const REFERENCIA = frances;
 
+/** La misma cifra en las dos monedas (ver `PRECIOS` en shared/planes.ts); la moneda la pone cada idioma. */
 const PRECIOS = {
   chantier:   { mes: 99,  ano: 990 },
   entreprise: { mes: 249, ano: 2490 },
@@ -376,8 +377,8 @@ function paginaInicio(idioma) {
         description: t.meta.desc,
         areaServed: { "@type": "AdministrativeArea", name: "Québec, Canada" },
         offers: [
-          { "@type": "Offer", name: "Chantier", price: String(PRECIOS.chantier.mes), priceCurrency: "CAD" },
-          { "@type": "Offer", name: "Entreprise", price: String(PRECIOS.entreprise.mes), priceCurrency: "CAD" },
+          { "@type": "Offer", name: "Chantier", price: String(PRECIOS.chantier.mes), priceCurrency: idioma.precios.moneda },
+          { "@type": "Offer", name: "Entreprise", price: String(PRECIOS.entreprise.mes), priceCurrency: idioma.precios.moneda },
         ],
       },
     ],
@@ -704,8 +705,8 @@ function paginaPrecios(idioma) {
           ${destacado ? `<span class="insignia">${esc(t.destacado)}</span>` : ""}
           <h3>${esc(p.nombre)}</h3>
           <p class="para">${esc(p.para)}</p>
-          <div class="precio dato-mes">${precios.mes} $<span class="u">${esc(t.mes)}</span></div>
-          <div class="precio dato-ano" hidden>${precios.ano} $<span class="u">${esc(t.ano)}</span><span class="ahorro">${esc(t.ahorro)}</span></div>
+          <div class="precio dato-mes">${precios.mes} ${t.simbolo}<span class="u">${esc(t.mes)}</span></div>
+          <div class="precio dato-ano" hidden>${precios.ano} ${t.simbolo}<span class="u">${esc(t.ano)}</span><span class="ahorro">${esc(t.ahorro)}</span></div>
           <p class="pie-nota">${esc(p.limite)}</p>
           <ul>${p.items.map((i) => `<li>${CHECK}<span>${fuerte(i)}</span></li>`).join("")}</ul>
           <a href="${REGISTRO}" class="boton ${destacado ? "boton-principal" : "boton-secundario"}">${esc(t.probar)}</a>
@@ -721,7 +722,7 @@ function paginaPrecios(idioma) {
         description: t.meta.desc,
         offers: {
           "@type": "AggregateOffer",
-          priceCurrency: "CAD",
+          priceCurrency: t.moneda,
           lowPrice: String(PRECIOS.chantier.mes),
           highPrice: String(PRECIOS.entreprise.ano),
           offerCount: 4,
