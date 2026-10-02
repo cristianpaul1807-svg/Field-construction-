@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { VencimientosProximos } from "@/components/VencimientosProximos";
 import { RateCell } from "@/components/RateCell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -266,6 +267,8 @@ export default function Technicians() {
         description={t("technicians.description")}
         action={<NewEmployeeDialog onCreated={() => setReloadToken((t) => t + 1)} />}
       />
+
+      <VencimientosProximos solo="employee" />
 
       <Card className="p-6">
         {loading && (

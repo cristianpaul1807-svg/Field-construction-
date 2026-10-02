@@ -17,8 +17,10 @@ import {
 import { Upload, Download, Trash2, EyeOff } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { useAuth } from "@/contexts/AuthContext";
+import { grupoDePais } from "@shared/paises";
+import { AVISAR_CON_DIAS, diasHasta, PAPELES_POR_ANIO, PAPELES_QUE_CADUCAN, tiposDePapelPara, type TipoDePapel } from "@shared/papeles";
 
-const TIPOS = ["contrato", "t4", "rl1", "talon", "otro"] as const;
 
 interface Papel {
   id: string;
@@ -28,6 +30,7 @@ interface Papel {
   note: string | null;
   visibleToWorker: boolean;
   uploadedAt: string;
+  expiresOn: string | null;
 }
 
 /**
@@ -56,7 +59,11 @@ export function PapelesDeLaPersona({
   workerName: string;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { country } = useAuth();
+  // En Quebec se sube el T4; en Italia, el DURC o el curso de seguridad.
+  const tipos = tiposDePapelPara(grupoDePais(country));
+  const hoy = new Date().toISOString().slice(0, 10);
   const [recarga, setRecarga] = useState(0);
   const parametro = kind === "employee" ? "employeeId" : "subcontractorId";
   const { data: papeles, loading, error, detalle, reload } = useApi<Papel[]>(
@@ -66,7 +73,8 @@ export function PapelesDeLaPersona({
   const [subiendo, setSubiendo] = useState(false);
   const [fallo, setFallo] = useState<string | null>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
-  const [tipo, setTipo] = useState<(typeof TIPOS)[number]>("t4");
+  const [tipo, setTipo] = useState<TipoDePapel>(tipos[0]);
+  const [caduca, setCaduca] = useState("");
   const [anio, setAnio] = useState(String(new Date().getFullYear() - 1));
   const [suyo, setSuyo] = useState(true);
   const [ocupado, setOcupado] = useState<string | null>(null);
@@ -87,13 +95,15 @@ export function PapelesDeLaPersona({
       cuerpo.append("kind", tipo);
       // El año sólo donde significa algo: un contrato no se busca por año
       // fiscal, un T4 sí.
-      if (tipo === "t4" || tipo === "rl1") cuerpo.append("year", anio);
+      if (PAPELES_POR_ANIO.includes(tipo)) cuerpo.append("year", anio);
+      if (caduca) cuerpo.append("expiresOn", caduca);
       cuerpo.append("visibleToWorker", String(suyo));
 
       const res = await apiFetch("/api/worker-documents", { method: "POST", body: cuerpo });
       const body = await readJson(res);
       if (!res.ok) throw new Error(serverMessage(body, t, t("workerDocs.uploadError")));
       setArchivo(null);
+      setCaduca("");
       refrescar();
     } catch (err) {
       setFallo(err instanceof Error ? err.message : t("workerDocs.uploadError"));
@@ -144,16 +154,27 @@ export function PapelesDeLaPersona({
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="papel-tipo">{t("workerDocs.kind")}</Label>
-              <Select value={tipo} onValueChange={(v) => setTipo(v as (typeof TIPOS)[number])}>
+              <Select value={tipo} onValueChange={(v) => setTipo(v as TipoDePapel)}>
                 <SelectTrigger id="papel-tipo"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {TIPOS.map((x) => (
+                  {tipos.map((x) => (
                     <SelectItem key={x} value={x}>{t(`workerDocs.kinds.${x}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            {(tipo === "t4" || tipo === "rl1") && (
+            {/* Lo que caduca pide su fecha; lo demás la deja poner si
+                se quiere (un contrato temporal también acaba). */}
+            {!PAPELES_POR_ANIO.includes(tipo) && (
+              <div className="space-y-1.5">
+                <Label htmlFor="papel-caduca">
+                  {t("workerDocs.expiresOn")}
+                  {!PAPELES_QUE_CADUCAN.includes(tipo) && ` (${t("common.optional")})`}
+                </Label>
+                <Input id="papel-caduca" type="date" value={caduca} onChange={(e) => setCaduca(e.target.value)} />
+              </div>
+            )}
+            {PAPELES_POR_ANIO.includes(tipo) && (
               <div className="space-y-1.5">
                 <Label htmlFor="papel-anio">{t("workerDocs.year")}</Label>
                 <Input
@@ -188,7 +209,7 @@ export function PapelesDeLaPersona({
 
           {fallo && <p className="text-sm text-status-error-fg">{fallo}</p>}
 
-          <Button className="gap-2" onClick={subir} disabled={!archivo || subiendo}>
+          <Button className="gap-2" onClick={subir} disabled={!archivo || subiendo || (PAPELES_QUE_CADUCAN.includes(tipo) && !caduca)}>
             {subiendo ? <Spinner className="size-4" /> : <Upload size={15} strokeWidth={1.75} />}
             {t("workerDocs.upload")}
           </Button>
@@ -211,6 +232,7 @@ export function PapelesDeLaPersona({
                     {papel.year && <span className="text-muted-foreground"> · {papel.year}</span>}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">{papel.name}</p>
+                  {papel.expiresOn && <Caducidad fecha={papel.expiresOn} hoy={hoy} idioma={i18n.language} />}
                   {!papel.visibleToWorker && (
                     <p className="text-xs text-status-warning-fg inline-flex items-center gap-1 mt-0.5">
                       <EyeOff size={11} /> {t("workerDocs.hiddenFromWorker")}
@@ -263,4 +285,20 @@ export function PapelesDeLaPersona({
       </DialogContent>
     </Dialog>
   );
+}
+
+/**
+ * Hasta cuándo vale un papel, dicho como se lee con prisa: vencido en rojo,
+ * a punto de vencer en ámbar, y la fecha sin más cuando queda tiempo.
+ */
+export function Caducidad({ fecha, hoy, idioma }: { fecha: string; hoy: string; idioma: string }) {
+  const { t } = useTranslation();
+  const dias = diasHasta(fecha, hoy);
+  const bonita = new Date(`${fecha}T12:00:00Z`).toLocaleDateString(idioma, { day: "numeric", month: "short", year: "numeric" });
+  if (dias < 0) return <p className="text-xs text-status-error-fg mt-0.5">{t("workerDocs.expired", { date: bonita })}</p>;
+  // Hoy aparte: «vence en 0 días» no lo dice nadie, y en francés el plural
+  // de cero es el singular, que habría dicho «mañana».
+  if (dias === 0) return <p className="text-xs text-status-warning-fg mt-0.5">{t("workerDocs.expiresToday")}</p>;
+  if (dias <= AVISAR_CON_DIAS) return <p className="text-xs text-status-warning-fg mt-0.5">{t("workerDocs.expiresSoon", { count: dias, date: bonita })}</p>;
+  return <p className="text-xs text-muted-foreground mt-0.5">{t("workerDocs.validUntil", { date: bonita })}</p>;
 }

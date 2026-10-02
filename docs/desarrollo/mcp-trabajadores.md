@@ -46,6 +46,7 @@ No se deben implementar todavía herramientas MCP como `clock_in`, `clock_out`, 
 | `get_clients` | Clientes y contactos, con su Partita IVA o codice fiscale si los tienen. Nunca la llave del portal. |
 | `calculate_invoice` | Cuánto sería una factura —impuesto del país, retención, lo que paga el cliente— sin crearla. Usa `calcularFactura`, la misma cuenta que la factura emitida. Canadá e Italia. |
 | `get_monthly_hours` | Horas del mes por persona y día, con las ausencias: lo que necesita quien hace la nómina. |
+| `get_expiring_documents` | Papeles vencidos o que vencen pronto (DURC, cursos, revisiones médicas…), de todo el equipo. Área de personas. |
 | `get_bank_withholdings` | Lo que los bancos retuvieron (11 %) en el año por los pagos de obras con bonus. **Sólo en Italia.** |
 | `get_e_invoice` | El XML FatturaPA de una factura o nota de crédito, o lo que falta para generarlo. **Sólo en Italia.** |
 | `check_italian_tax_id` | Comprueba una Partita IVA o un codice fiscale con su dígito de control. **Sólo en Italia.** |

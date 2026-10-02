@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { VencimientosProximos } from "@/components/VencimientosProximos";
 import { RateCell } from "@/components/RateCell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -192,6 +193,8 @@ export default function Subcontractors() {
         description={t("subcontractors.description")}
         action={<NewSubcontractorDialog onCreated={() => setReloadToken((t) => t + 1)} />}
       />
+
+      <VencimientosProximos solo="subcontractor" />
 
       {loading && (
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">

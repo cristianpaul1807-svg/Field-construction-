@@ -1646,7 +1646,8 @@
     "fatturapa_anulada": "Une facture annulée n'est pas envoyée au SDI. Pour corriger une facture déjà envoyée, émettez une note de crédit.",
     "fatturapa_sin_iva": "Cette facture a été émise avant que l'entreprise soit en Italie et ne porte pas de TVA : elle ne peut pas devenir une facture électronique.",
     "fatturapa_datos_incompletos": "Il manque des données pour la facture électronique.",
-    "bonus_no_valido": "Ce bonus n'existe pas."
+    "bonus_no_valido": "Ce bonus n'existe pas.",
+    "fecha_no_valida": "Cette date n'est pas valide."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2453,7 +2454,14 @@
       "t4": "T4",
       "rl1": "RL-1",
       "talon": "Talon de paie",
-      "otro": "Autre"
+      "otro": "Autre",
+      "busta_paga": "Bulletin de paie (busta paga)",
+      "unilav": "Déclaration d'embauche (UNILAV)",
+      "durc": "DURC",
+      "patente_crediti": "Patente a crediti",
+      "formazione_sicurezza": "Formation sécurité",
+      "visita_medica": "Visite médicale",
+      "tessera": "Carte de chantier"
     },
     "year": "Année d'imposition",
     "file": "Fichier (PDF ou photo)",
@@ -2466,7 +2474,15 @@
     "hiddenFromWorker": "Bureau seulement",
     "hide": "Cesser de le partager",
     "share": "Le partager avec elle",
-    "mine": "Mes documents ({{count}})"
+    "mine": "Mes documents ({{count}})",
+    "expiresOn": "Expire le",
+    "expired": "Expiré le {{date}}",
+    "expiresSoon_one": "Expire demain ({{date}})",
+    "expiresSoon_other": "Expire dans {{count}} jours ({{date}})",
+    "validUntil": "Valable jusqu'au {{date}}",
+    "expiringTitle_one": "1 document expiré ou sur le point d'expirer",
+    "expiringTitle_other": "{{count}} documents expirés ou sur le point d'expirer",
+    "expiresToday": "Expire aujourd'hui"
   },
   "legal": {
     "updatedOn": "2026-09-15",

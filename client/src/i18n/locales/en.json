@@ -1646,7 +1646,8 @@
     "fatturapa_anulada": "A cancelled invoice isn't sent to the SDI. To correct one already sent, issue a credit note.",
     "fatturapa_sin_iva": "This invoice was issued before the business was set to Italy and carries no VAT: it can't become an e-invoice.",
     "fatturapa_datos_incompletos": "Some details are missing for the e-invoice.",
-    "bonus_no_valido": "That bonus doesn't exist."
+    "bonus_no_valido": "That bonus doesn't exist.",
+    "fecha_no_valida": "That date isn't valid."
   },
   "workLog": {
     "title": "Work log",
@@ -2453,7 +2454,14 @@
       "t4": "T4",
       "rl1": "RL-1",
       "talon": "Pay stub",
-      "otro": "Other"
+      "otro": "Other",
+      "busta_paga": "Payslip (busta paga)",
+      "unilav": "Hiring notice (UNILAV)",
+      "durc": "DURC",
+      "patente_crediti": "Patente a crediti",
+      "formazione_sicurezza": "Safety training",
+      "visita_medica": "Medical check",
+      "tessera": "Site ID card"
     },
     "year": "Tax year",
     "file": "File (PDF or photo)",
@@ -2466,7 +2474,15 @@
     "hiddenFromWorker": "Office only",
     "hide": "Stop sharing it",
     "share": "Share it with them",
-    "mine": "My documents ({{count}})"
+    "mine": "My documents ({{count}})",
+    "expiresOn": "Expires on",
+    "expired": "Expired on {{date}}",
+    "expiresSoon_one": "Expires tomorrow ({{date}})",
+    "expiresSoon_other": "Expires in {{count}} days ({{date}})",
+    "validUntil": "Valid until {{date}}",
+    "expiringTitle_one": "1 document expired or about to expire",
+    "expiringTitle_other": "{{count}} documents expired or about to expire",
+    "expiresToday": "Expires today"
   },
   "legal": {
     "updatedOn": "2026-09-15",

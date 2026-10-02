@@ -1646,7 +1646,8 @@
     "fatturapa_anulada": "Una fattura annullata non va allo SDI. Per correggerne una già inviata, emetti una nota di credito.",
     "fatturapa_sin_iva": "Questa fattura è stata emessa prima che l'impresa fosse in Italia e non ha IVA: non può diventare fattura elettronica.",
     "fatturapa_datos_incompletos": "Mancano dei dati per la fattura elettronica.",
-    "bonus_no_valido": "Questo bonus non esiste."
+    "bonus_no_valido": "Questo bonus non esiste.",
+    "fecha_no_valida": "Questa data non è valida."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2453,7 +2454,14 @@
       "t4": "T4",
       "rl1": "RL-1",
       "talon": "Busta paga",
-      "otro": "Altro"
+      "otro": "Altro",
+      "busta_paga": "Busta paga",
+      "unilav": "Comunicazione UNILAV",
+      "durc": "DURC",
+      "patente_crediti": "Patente a crediti",
+      "formazione_sicurezza": "Attestato formazione sicurezza",
+      "visita_medica": "Idoneità sanitaria",
+      "tessera": "Tessera di riconoscimento"
     },
     "year": "Anno fiscale",
     "file": "File (PDF o foto)",
@@ -2466,7 +2474,15 @@
     "hiddenFromWorker": "Solo l'ufficio",
     "hide": "Smetti di condividerlo",
     "share": "Condividilo con lui",
-    "mine": "I miei documenti ({{count}})"
+    "mine": "I miei documenti ({{count}})",
+    "expiresOn": "Scade il",
+    "expired": "Scaduto il {{date}}",
+    "expiresSoon_one": "Scade domani ({{date}})",
+    "expiresSoon_other": "Scade tra {{count}} giorni ({{date}})",
+    "validUntil": "Valido fino al {{date}}",
+    "expiringTitle_one": "1 documento scaduto o in scadenza",
+    "expiringTitle_other": "{{count}} documenti scaduti o in scadenza",
+    "expiresToday": "Scade oggi"
   },
   "legal": {
     "updatedOn": "2026-09-15",

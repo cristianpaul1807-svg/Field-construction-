@@ -97,6 +97,13 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
     DATOS.invoices = [{ number: "2026-0004", amount: 13750, paid_at: "2026-09-20", projects: { name: "Via Roma", bonus_fiscale: "ristrutturazione" }, clients: { name: "Mario" } }];
     const ritenute = await llamar("get_bank_withholdings", { year: 2026 });
     ok("IT: lo que retuvieron los bancos en el año", [ritenute.total, ritenute.invoices?.[0]?.withholding, ritenute.currency], [1239.75, 1239.75, "EUR"]);
+    // Un DURC vencido ayer y un curso que vence dentro de un año: ambos
+    // vuelven (el filtro de fechas lo hace la base, que aquí no filtra),
+    // pero cada uno con sus días contados desde hoy en Roma.
+    const ayer = new Date(Date.now() - 86_400_000).toLocaleDateString("en-CA", { timeZone: "Europe/Rome" });
+    DATOS.worker_documents = [{ id: "d1", kind: "durc", name: "durc.pdf", expires_on: ayer, employee_id: null, subcontractor_id: "s1", employees: null, subcontractors: { name: "Bianchi Srl" } }];
+    const vencen = await llamar("get_expiring_documents", {});
+    ok("IT: el DURC del subcontratista, vencido ayer", [vencen.documents?.[0]?.kind, vencen.documents?.[0]?.daysLeft, vencen.documents?.[0]?.personName], ["durc", -1, "Bianchi Srl"]);
     ok("IT: clientes sin la llave del portal", Object.keys((await llamar("get_clients", { search: "Bian" })).clients[0]).includes("access_token"), false);
   }
   if (pais === "ES") {

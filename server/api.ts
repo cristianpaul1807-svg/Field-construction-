@@ -75,6 +75,9 @@ import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, planDe, tiene, PERIODO
 // importa así.
 import { calcularFactura, computeInvoiceTax } from "./calculoDeFactura";
 import { esTipoDeAusencia } from "../shared/ausencias";
+import { AVISAR_CON_DIAS, esTipoDePapel } from "../shared/papeles";
+import { papelesQueVencen } from "./papelesQueVencen";
+import { zonaHorariaDelNegocio } from "../shared/zonaHoraria";
 import { causaleBonifico, esBonusFiscale, ritenutaBancaria, type BonusFiscale } from "../shared/bonusEdilizi";
 import { fechaEnZona } from "../shared/zonaHoraria";
 import { fatturaPADeFactura, fatturaPADeNota, type ResultadoFatturaPA } from "./fatturaPAServidor";
@@ -12681,7 +12684,14 @@ function acuerdoParaElPanel(a: any) {
  * de un T4 con un lector automático acierta casi siempre, y «casi siempre» en
  * una cifra que va a una declaración es peor que no tenerla.
  */
-const TIPOS_DE_PAPEL = ["contrato", "t4", "rl1", "talon", "otro"] as const;
+
+apiRouter.get(
+  "/worker-documents/expiring",
+  route(async (req, res) => {
+    const dias = Math.min(365, Math.max(0, Number(req.query.days ?? AVISAR_CON_DIAS) || AVISAR_CON_DIAS));
+    res.json(await papelesQueVencen(getSupabaseAdmin(), req.businessId!, dias));
+  })
+);
 
 apiRouter.get(
   "/worker-documents",
@@ -12689,7 +12699,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     let q = supabase
       .from("worker_documents")
-      .select("id, kind, name, year, note, visible_to_worker, uploaded_at, employee_id, subcontractor_id")
+      .select("id, kind, name, year, note, visible_to_worker, uploaded_at, employee_id, subcontractor_id, expires_on")
       .eq("business_id", req.businessId!)
       .order("uploaded_at", { ascending: false });
     if (req.query.employeeId) q = q.eq("employee_id", String(req.query.employeeId));
@@ -12706,6 +12716,7 @@ apiRouter.get(
         note: d.note,
         visibleToWorker: d.visible_to_worker === true,
         uploadedAt: d.uploaded_at,
+        expiresOn: d.expires_on ?? null,
         employeeId: d.employee_id,
         subcontractorId: d.subcontractor_id,
       }))
@@ -12717,7 +12728,7 @@ apiRouter.post(
   "/worker-documents",
   upload.single("file"),
   route(async (req, res) => {
-    const { employeeId, subcontractorId, kind, name, year, note, visibleToWorker } = req.body ?? {};
+    const { employeeId, subcontractorId, kind, name, year, note, visibleToWorker, expiresOn } = req.body ?? {};
     const file = req.file;
     if (!file) {
       res.status(400).json({ error: "file is required", code: "file_required" });
@@ -12729,7 +12740,12 @@ apiRouter.post(
       res.status(400).json({ error: "pass exactly one of employeeId or subcontractorId" });
       return;
     }
-    const tipo = (TIPOS_DE_PAPEL as readonly string[]).includes(kind) ? kind : "otro";
+    const tipo = esTipoDePapel(kind) ? kind : "otro";
+    const caduca = typeof expiresOn === "string" && /^\d{4}-\d{2}-\d{2}$/.test(expiresOn) ? expiresOn : null;
+    if (expiresOn && !caduca) {
+      res.status(400).json({ error: "expiresOn must be YYYY-MM-DD", code: "fecha_no_valida" });
+      return;
+    }
     const anio = year ? Number(year) : null;
     if (anio !== null && (!Number.isInteger(anio) || anio < 2000 || anio > 2100)) {
       res.status(400).json({ error: "year out of range", code: "year_out_of_range" });
@@ -12758,6 +12774,7 @@ apiRouter.post(
         // Suyo salvo que digan lo contrario: el documento va sobre esa persona.
         visible_to_worker: visibleToWorker === undefined ? true : visibleToWorker === "true" || visibleToWorker === true,
         note: (typeof note === "string" && note.trim()) || null,
+        expires_on: caduca,
       })
       .select("id")
       .single();
@@ -12773,6 +12790,16 @@ apiRouter.patch(
     if (req.body?.visibleToWorker !== undefined) cambios.visible_to_worker = Boolean(req.body.visibleToWorker);
     if (req.body?.name !== undefined) cambios.name = String(req.body.name).trim() || null;
     if (req.body?.note !== undefined) cambios.note = String(req.body.note).trim() || null;
+    // La fecha se corrige sin volver a subir el archivo: el DURC renovado
+    // llega como PDF nuevo, pero un curso mal fechado se arregla aquí.
+    if (req.body?.expiresOn !== undefined) {
+      const f = req.body.expiresOn;
+      if (f !== null && f !== "" && !(typeof f === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f))) {
+        res.status(400).json({ error: "expiresOn must be YYYY-MM-DD", code: "fecha_no_valida" });
+        return;
+      }
+      cambios.expires_on = f || null;
+    }
     if (Object.keys(cambios).length === 0) {
       res.status(400).json({ error: "nothing to change" });
       return;

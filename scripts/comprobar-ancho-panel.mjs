@@ -241,6 +241,12 @@ const FIXTURAS = {
       },
     ],
   },
+  // Lo que vence: el nombre de una empresa subcontratada y el tipo de papel
+  // más largo, en la misma línea.
+  "/api/worker-documents/expiring": [
+    { id: "d1", kind: "formazione_sicurezza", name: "attestato.pdf", expiresOn: "2020-01-01", daysLeft: -30, personKind: "employee", personId: "e1", personName: "Maximilien-Alexandre Bourgeois-Tremblay" },
+    { id: "d2", kind: "durc", name: "durc.pdf", expiresOn: "2099-01-01", daysLeft: 12, personKind: "subcontractor", personId: "s1", personName: "Costruzioni Generali Bianchi & Figli S.r.l. Unipersonale" },
+  ],
   "/api/invoices": [
     {
       // El texto del bonifico parlante es una sola tira larga sin espacios

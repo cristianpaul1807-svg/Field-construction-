@@ -207,7 +207,11 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
    impago. ✅ Hecho.
 7. **Vencimientos:** fecha de caducidad en los Papeles de cada persona y de
    cada subcontratista (DURC, patente a crediti, cursos de seguridad,
-   tessera), con aviso.
+   tessera), con aviso. ✅ Hecho: los Papeles ofrecen los tipos italianos,
+   piden la fecha de lo que caduca, y Técnicos y Subcontratistas enseñan
+   arriba lo vencido y lo que vence en 30 días. Por MCP,
+   `get_expiring_documents`. Falta la patente a crediti **de la propia
+   empresa**, que no es de una persona.
 8. **Congruità:** obras de 70.000 € o más, horas fichadas frente a la
    incidencia mínima de mano de obra, avisando antes del final.
 9. **Computo metrico con prezzario regional y SAL.** La pieza más grande; la

@@ -143,6 +143,9 @@ export const TOOL_ACCESS: Record<
   calculate_invoice: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["CA", "IT"] },
   // Comprobar una Partita IVA es aritmética sobre un número que trae la
   // persona; no lee nada del negocio. Sólo tiene sentido en Italia.
+  // Los papeles de cada persona son del área de personas, la más cerrada: un
+  // jefe de obra con sólo campo no los ve en el panel, y tampoco aquí.
+  get_expiring_documents: { roles: ["office", "admin"], area: "personas", capability: "campo" },
   get_bank_withholdings: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["IT"] },
   get_e_invoice: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["IT"] },
   check_italian_tax_id: { roles: ["office", "admin"], area: "clientes", capability: "campo", soloEn: ["IT"] },

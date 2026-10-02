@@ -1646,7 +1646,8 @@
     "fatturapa_anulada": "Una factura anulada no se manda al SDI. Para corregir una ya enviada, emite una nota de crédito.",
     "fatturapa_sin_iva": "Esta factura se emitió antes de que el negocio estuviera en Italia y no lleva IVA: no se puede pasar a factura electrónica.",
     "fatturapa_datos_incompletos": "Faltan datos para la factura electrónica.",
-    "bonus_no_valido": "Ese bonus no existe."
+    "bonus_no_valido": "Ese bonus no existe.",
+    "fecha_no_valida": "Esa fecha no es válida."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2453,7 +2454,14 @@
       "t4": "T4",
       "rl1": "RL-1",
       "talon": "Talón de pago",
-      "otro": "Otro"
+      "otro": "Otro",
+      "busta_paga": "Nómina (busta paga)",
+      "unilav": "Alta laboral (UNILAV)",
+      "durc": "DURC",
+      "patente_crediti": "Patente a crediti",
+      "formazione_sicurezza": "Curso de seguridad",
+      "visita_medica": "Revisión médica",
+      "tessera": "Tarjeta de obra"
     },
     "year": "Año fiscal",
     "file": "Archivo (PDF o foto)",
@@ -2466,7 +2474,15 @@
     "hiddenFromWorker": "Sólo lo ve la oficina",
     "hide": "Dejar de compartirlo",
     "share": "Compartirlo con la persona",
-    "mine": "Mis papeles ({{count}})"
+    "mine": "Mis papeles ({{count}})",
+    "expiresOn": "Vence el",
+    "expired": "Vencido el {{date}}",
+    "expiresSoon_one": "Vence mañana ({{date}})",
+    "expiresSoon_other": "Vence en {{count}} días ({{date}})",
+    "validUntil": "Válido hasta el {{date}}",
+    "expiringTitle_one": "1 papel vencido o a punto de vencer",
+    "expiringTitle_other": "{{count}} papeles vencidos o a punto de vencer",
+    "expiresToday": "Vence hoy"
   },
   "legal": {
     "updatedOn": "2026-09-15",

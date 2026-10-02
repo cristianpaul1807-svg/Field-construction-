@@ -15,6 +15,7 @@ import { calcularFactura } from "./calculoDeFactura";
 import { resumenDeHoras } from "./resumenDeHoras";
 import { fatturaPADeFactura, fatturaPADeNota } from "./fatturaPAServidor";
 import { ritenutaBancaria } from "../shared/bonusEdilizi";
+import { papelesQueVencen } from "./papelesQueVencen";
 import { grupoDePais, paisDe } from "../shared/paises";
 import { OPCIONES_IVA } from "../shared/iva";
 import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
@@ -1128,6 +1129,26 @@ function createMcpServer(context: ReadToolContext) {
       const total = Math.round(invoices.reduce((s, i) => s + i.withholding, 0) * 100) / 100;
       await audit(context, "get_bank_withholdings", true, { year, count: invoices.length });
       return jsonResult({ currency, year, rate: 0.11, total, invoices });
+    },
+  );
+
+  server.registerTool(
+    "get_expiring_documents",
+    {
+      title: "Documents that expire",
+      description:
+        "Workers' and subcontractors' documents that have expired or expire within `days` (default 30): in Italy the DURC, safety training, medical checks, the patente a crediti, the site ID card. `daysLeft` is negative when already expired. Someone with an expired document can't work on site.",
+      inputSchema: { days: z.number().int().min(0).max(365).optional().describe("Look this many days ahead (default 30)") },
+    },
+    async ({ days }) => {
+      const denied = requireRole(context, "get_expiring_documents");
+      if (denied) {
+        await audit(context, "get_expiring_documents", false, { code: "access_denied" });
+        return denied;
+      }
+      const result = await papelesQueVencen(admin, context.identity.businessId, days ?? 30);
+      await audit(context, "get_expiring_documents", true, { count: result.length });
+      return jsonResult({ documents: result });
     },
   );
 
