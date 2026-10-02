@@ -121,6 +121,12 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // Papeles en la ficha no lo abre nadie porque nadie sabe para qué es.
       { id: "papeles", parrafos: 3, nota: true, ruta: "/technicians", paises: ["CA"] },
       { id: "papelesGeneral", parrafos: 3, nota: true, ruta: "/technicians", paises: ["IT", "otros"] },
+      // Una fecha de caducidad puesta al subir el papel es lo que convierte
+      // un archivo guardado en un aviso a tiempo. Vale en todos los países.
+      { id: "caducidades", parrafos: 3, nota: true, ruta: "/technicians" },
+      // Lo que la Cassa Edile mira antes del saldo final. Quien se entera al
+      // terminar la obra tiene quince días y una diferencia que pagar.
+      { id: "congruita", parrafos: 4, nota: true, ruta: "/projects", paises: ["IT"] },
     ],
   },
   {
@@ -139,6 +145,9 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // En Italia un PDF no es una factura. Decirlo aquí es lo que evita que
       // alguien le mande a su cliente un papel que su commercialista rechaza.
       { id: "fatturaElettronica", parrafos: 3, nota: true, paises: ["IT"] },
+      // La deducción del cliente depende de cómo paga, y el que lo sabe es
+      // quien emite la factura: si el bonifico sale mal, la culpa vuelve aquí.
+      { id: "bonusFiscale", parrafos: 3, nota: true, ruta: "/projects", paises: ["IT"] },
       { id: "impuestosOtros", parrafos: 3, nota: true, paises: ["otros"] },
       // Tres líneas de la nómina nacen a 0 % porque nadie de fuera las puede
       // saber: dependen del TD1 de cada persona, de la clasificación CNESST

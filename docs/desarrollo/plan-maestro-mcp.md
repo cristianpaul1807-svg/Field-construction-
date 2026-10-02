@@ -348,7 +348,7 @@ crédito).
 - `export_fatturapa` y después `send_to_sdi` / `get_sdi_status`;
 - `get_bonifico_parlante` — el texto exacto que el cliente tiene que poner en
   la transferencia para no perder su deducción;
-- `check_congruita` — obras de 70.000 € o más y su incidencia de mano de obra
+- `check_congruita` — obras de 70.000 € o más y su incidencia de mano de obra ✅
   frente a la mínima, antes del final;
 - `get_expiring_documents` — patente a crediti, DURC de subcontratistas,
   cursos de seguridad, tessere: lo que vence y cuándo;

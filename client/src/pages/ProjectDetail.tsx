@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { paisDe } from "@shared/paises";
 import type { BonusFiscale } from "@shared/bonusEdilizi";
 import { BonusDeLaObra } from "@/components/BonusDeLaObra";
+import { CongruitaDeLaObra } from "@/components/CongruitaDeLaObra";
 
 const PROJECT_STATUSES: ProjectStatus[] = ["planificacion", "en_progreso", "confirmado", "completado", "pausado"];
 
@@ -330,6 +331,7 @@ export default function ProjectDetailPage() {
               {paisDe(country).impuestos === "italia" && (
                 <BonusDeLaObra projectId={project.id} valor={project.bonusFiscale ?? null} onCambio={reload} />
               )}
+              {paisDe(country).impuestos === "italia" && <CongruitaDeLaObra projectId={project.id} />}
               <Card className="p-4">
                 <p className="text-xs text-muted-foreground">{t("projects.dates")}</p>
                 <p className="text-sm text-foreground mt-1">{project.startDate} → {project.endDate}</p>

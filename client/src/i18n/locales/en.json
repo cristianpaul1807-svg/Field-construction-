@@ -1647,7 +1647,11 @@
     "fatturapa_sin_iva": "This invoice was issued before the business was set to Italy and carries no VAT: it can't become an e-invoice.",
     "fatturapa_datos_incompletos": "Some details are missing for the e-invoice.",
     "bonus_no_valido": "That bonus doesn't exist.",
-    "fecha_no_valida": "That date isn't valid."
+    "fecha_no_valida": "That date isn't valid.",
+    "categoria_congruita_no_valida": "That congruity category doesn't exist.",
+    "valor_obra_no_valido": "The value of the work must be a number of 0 or more.",
+    "congruita_solo_italia": "Congruity only applies to businesses in Italy.",
+    "congruita_no_encontrada": "That job wasn't found."
   },
   "workLog": {
     "title": "Work log",
@@ -1982,6 +1986,21 @@
           "p2": "Payroll is done by whoever does it now —your accountant or labour adviser— and can't be pulled in automatically from their software. You upload it as a file, and that's it.",
           "p3": "By default the person sees them on their phone, below their day's work. That way they don't have to ask you every time a bank or an office wants them. If you'd rather keep one to yourself, untick it when uploading.",
           "nota": "They're stored privately and only the office and that person see them, never a co-worker."
+        },
+        "caducidades": {
+          "title": "Don't miss a document that expires",
+          "p1": "When you upload a document in {{menuCampo}} → {{menuTecnicos}} → Documents, set the date it expires: a safety course, a medical check, a licence, an insurance certificate.",
+          "p2": "At the top of the workers list and the subcontractors list you'll see what has already expired and what expires in the next 30 days, with the person's name.",
+          "p3": "When the new document arrives, upload it with its new date and the warning goes away by itself.",
+          "nota": "Without a date the document is still stored, but nobody warns you. Someone with an expired document shouldn't be on site."
+        },
+        "congruita": {
+          "title": "Labour congruity (congruità)",
+          "p1": "Before the final payment of a public job, or a private one worth €70,000 or more, the Cassa Edile checks that the declared labour reaches a minimum: a percentage of the value of the work that depends on the type of work. Without that congruity the client cannot pay you the final balance.",
+          "p2": "In {{menuProyectos}}, open the job: the congruity card is in the right-hand column. Choose the work category (e.g. «Renovation of residential buildings», 22%) and, if it's public works, tick it.",
+          "p3": "The value of the work comes from the contract: the estimate plus approved change orders, excluding VAT. If you declared a different one to the Cassa Edile, enter it on the same card.",
+          "p4": "The card shows how much labour you've recorded, how much the Cassa Edile requires and how much is missing. If you're 5% short or less, it still certifies with a statement from the works director.",
+          "nota": "It's an estimate using approved hours and each person's hourly cost: anyone without a cost doesn't count. The official figure is what you and your subcontractors declare to the Cassa Edile."
         }
       },
       "dinero": {
@@ -2116,6 +2135,13 @@
           "p2": "If they aren't there, copy the link or share it over WhatsApp. And if you have a Stripe reader paired, you send it the amount and the client taps their card.",
           "p3": "The screen changes by itself when the payment comes in and the invoice is marked paid. Nothing to mark by hand.",
           "nota": "You need your Stripe account connected, in {{menuAjustes}} → {{menuPagos}}. If it's an extra with no invoice, create the invoice first: it's what carries the tax."
+        },
+        "bonusFiscale": {
+          "title": "Jobs with a tax bonus (bonifico parlante)",
+          "p1": "If your client is deducting the job (ristrutturazione, ecobonus, sismabonus, barriers), mark it in {{menuProyectos}} → the job → Client's tax deduction.",
+          "p2": "From then on every invoice for that job carries the exact bonifico parlante text —law, invoice number and date, the client's codice fiscale and your Partita IVA— on the PDF and in their portal, ready to copy.",
+          "p3": "The bank will withhold 11% of the amount excluding VAT. It isn't an unpaid amount: it's a credit you hold with the tax office, and the invoice shows how much it will be.",
+          "nota": "Without the client's codice fiscale the text can't be written: fill it in on their {{menuCrm}} record. A bonifico without it loses them the deduction."
         }
       },
       "problemas": {
@@ -3000,5 +3026,61 @@
     "missingCfClient": "Your codice fiscale is needed to prepare your bonifico. Send it to {{business}} in {{messages}}.",
     "missingCfPanel": "The client's codice fiscale is missing: without it their bonifico can't be written. Add it to their card.",
     "withholding": "The bank will withhold about {{amount}} (11% net of VAT): a tax credit for you."
+  },
+  "congruita": {
+    "title": "Labour congruity (congruità)",
+    "estado": {
+      "congrua": "Recorded labour already meets the Cassa Edile minimum.",
+      "tolleranza": "{{falta}} short, within the 5% tolerance: the Cassa Edile certifies with a statement from the works director.",
+      "non_congrua": "{{falta}} of labour missing to reach the minimum. Without congruity the client cannot pay the final balance.",
+      "no_aplica": "Private job under {{soglia}}: congruity does not need to be proven.",
+      "sin_valor": "The value of the work is missing: enter it below or create the estimate.",
+      "sin_categoria": "Choose the work category to see how much labour the Cassa Edile requires."
+    },
+    "cifras": "Recorded {{manodopera}} of a {{minima}} minimum ({{indice}} of the value of the work).",
+    "oreSenzaCosto": "{{ore}} approved hours belong to people with no hourly cost and don't count: set their cost on their profile.",
+    "categoria": "Work category",
+    "sinCategoria": "Not chosen",
+    "grupoOG": "General categories (OG)",
+    "grupoOS": "Specialised categories (OS)",
+    "valore": "Value of the work (excl. VAT)",
+    "valoreHint": "Left empty, the contract is used: estimate plus approved change orders. Enter it if you declared a different one to the Cassa Edile.",
+    "pubblico": "Public works",
+    "hint": "This is an estimate using approved hours and each person's hourly cost. The official check is done by the Cassa Edile, using what you and your subcontractors declare, before the final balance.",
+    "cat": {
+      "og1_civile": "OG1 · New residential building, incl. systems and supplies",
+      "og1_industriale": "OG1 · New industrial building, excl. systems",
+      "ristrutturazione_civile": "Renovation of residential buildings",
+      "ristrutturazione_industriale": "Renovation of industrial buildings, excl. systems",
+      "og2": "OG2 · Restoration and maintenance of listed buildings",
+      "og3": "OG3 · Roads, bridges, etc.",
+      "og3_bitumatura": "OG3 · Asphalt paving",
+      "og4": "OG4 · Underground works",
+      "og5": "OG5 · Dams",
+      "og6_acquedotti": "OG6 · Water mains and sewers",
+      "og6_gasdotti": "OG6 · Gas pipelines",
+      "og6_oleodotti": "OG6 · Oil pipelines",
+      "og6_irrigazione": "OG6 · Irrigation and drainage",
+      "og7": "OG7 · Marine works",
+      "og8": "OG8 · River works",
+      "og9": "OG9 · Power generation plants",
+      "og10": "OG10 · Power transformation and distribution",
+      "og12_og13": "OG12-OG13 · Remediation and environmental protection",
+      "os1": "OS1 · Earthworks",
+      "os2a": "OS2-A · Decorated surfaces and cultural heritage",
+      "os6": "OS6 · Finishes in wood, plastic, metal and glass",
+      "os7": "OS7 · Building and technical finishes",
+      "os8": "OS8 · Waterproofing",
+      "os11": "OS11 · Special structural devices",
+      "os12a": "OS12-A · Road safety barriers",
+      "os12b": "OS12-B · Rockfall and snow barriers",
+      "os13": "OS13 · Precast concrete structures",
+      "os21": "OS21 · Special structural works",
+      "os23": "OS23 · Demolition",
+      "os24": "OS24 · Landscaping and street furniture",
+      "os25": "OS25 · Archaeological excavations",
+      "os26": "OS26 · Special paving",
+      "os35": "OS35 · Low environmental impact works"
+    }
   }
 }

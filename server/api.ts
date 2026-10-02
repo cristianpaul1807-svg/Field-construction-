@@ -77,6 +77,8 @@ import { calcularFactura, computeInvoiceTax } from "./calculoDeFactura";
 import { esTipoDeAusencia } from "../shared/ausencias";
 import { AVISAR_CON_DIAS, esTipoDePapel } from "../shared/papeles";
 import { papelesQueVencen } from "./papelesQueVencen";
+import { congruitaDeLaObra } from "./congruitaServidor";
+import { esCategoriaCongruita } from "../shared/congruita";
 import { zonaHorariaDelNegocio } from "../shared/zonaHoraria";
 import { causaleBonifico, esBonusFiscale, ritenutaBancaria, type BonusFiscale } from "../shared/bonusEdilizi";
 import { fechaEnZona } from "../shared/zonaHoraria";
@@ -10111,6 +10113,29 @@ apiRouter.patch(
       }
       update.bonus_fiscale = body.bonusFiscale || null;
     }
+    // Italia: lo que necesita la congruità. Ver shared/congruita.ts.
+    if (body.congruitaCategoria !== undefined) {
+      if (body.congruitaCategoria !== null && body.congruitaCategoria !== "" && !esCategoriaCongruita(body.congruitaCategoria)) {
+        res.status(400).json({ error: "invalid category", code: "categoria_congruita_no_valida" });
+        return;
+      }
+      update.congruita_categoria = body.congruitaCategoria || null;
+    }
+    if (body.lavoroPubblico !== undefined) update.lavoro_pubblico = Boolean(body.lavoroPubblico);
+    if (body.valoreOpera !== undefined) {
+      // Vacío vuelve al valor del contrato; escrito, manda sobre él. Se escribe
+      // cuando el valor declarado a la Cassa Edile no es el del presupuesto.
+      if (body.valoreOpera === null || body.valoreOpera === "") {
+        update.valore_opera = null;
+      } else {
+        const valor = Number(body.valoreOpera);
+        if (!Number.isFinite(valor) || valor < 0) {
+          res.status(400).json({ error: "invalid value", code: "valor_obra_no_valido" });
+          return;
+        }
+        update.valore_opera = Math.round(valor * 100) / 100;
+      }
+    }
     if (body.progressPercent !== undefined) {
       const pct = Number(body.progressPercent);
       if (Number.isNaN(pct) || pct < 0 || pct > 100) {
@@ -12684,6 +12709,18 @@ function acuerdoParaElPanel(a: any) {
  * de un T4 con un lector automático acierta casi siempre, y «casi siempre» en
  * una cifra que va a una declaración es peor que no tenerla.
  */
+
+apiRouter.get(
+  "/projects/:id/congruita",
+  route(async (req, res) => {
+    const r = await congruitaDeLaObra(getSupabaseAdmin(), req.businessId!, req.params.id);
+    if (!r.ok) {
+      res.status(r.code === "congruita_no_encontrada" ? 404 : 400).json({ error: r.code, code: r.code });
+      return;
+    }
+    res.json(r.congruita);
+  })
+);
 
 apiRouter.get(
   "/worker-documents/expiring",

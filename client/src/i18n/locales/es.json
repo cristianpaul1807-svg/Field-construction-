@@ -1647,7 +1647,11 @@
     "fatturapa_sin_iva": "Esta factura se emitió antes de que el negocio estuviera en Italia y no lleva IVA: no se puede pasar a factura electrónica.",
     "fatturapa_datos_incompletos": "Faltan datos para la factura electrónica.",
     "bonus_no_valido": "Ese bonus no existe.",
-    "fecha_no_valida": "Esa fecha no es válida."
+    "fecha_no_valida": "Esa fecha no es válida.",
+    "categoria_congruita_no_valida": "Esa categoría de congruità no existe.",
+    "valor_obra_no_valido": "El valor de la obra tiene que ser un número de 0 en adelante.",
+    "congruita_solo_italia": "La congruità sólo existe para negocios en Italia.",
+    "congruita_no_encontrada": "No se encontró esa obra."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1982,6 +1986,21 @@
           "p2": "La nómina la hace quien la lleva ahora —tu gestor o tu asesor laboral— y no se puede traer sola desde su programa. Se sube como archivo, y ya está.",
           "p3": "Por defecto la persona los ve en su móvil, debajo de su trabajo del día. Así no tiene que pedírtelos cada vez que un banco o una administración se los pide. Si alguno prefieres guardártelo, quítale la marca al subirlo.",
           "nota": "Se guardan en un sitio privado y sólo los ven la oficina y esa persona, nunca un compañero."
+        },
+        "caducidades": {
+          "title": "Que no se te pase un papel que caduca",
+          "p1": "Al subir un papel en {{menuCampo}} → {{menuTecnicos}} → Papeles, ponle la fecha en que caduca: el DURC, un curso de seguridad, la revisión médica, una licencia.",
+          "p2": "Arriba de la lista de trabajadores y de la de subcontratistas aparece lo que ya ha caducado y lo que caduca en los próximos 30 días, con el nombre de la persona.",
+          "p3": "Cuando te llegue el papel nuevo, súbelo con su nueva fecha y el aviso desaparece solo.",
+          "nota": "Sin fecha, el papel se guarda igual pero nadie te avisa. Alguien con un papel caducado no debería entrar en la obra."
+        },
+        "congruita": {
+          "title": "La congruità de la mano de obra",
+          "p1": "Antes del saldo final de una obra pública, o de una privada de 70.000 € o más, la Cassa Edile comprueba que la mano de obra declarada llega a un mínimo: un porcentaje del valor de la obra que depende del tipo de trabajo. Sin esa congruità el cliente no puede pagarte el saldo.",
+          "p2": "En {{menuProyectos}}, abre la obra: en la columna de la derecha está la tarjeta de congruità. Elige la categoría de los trabajos (por ejemplo «Reforma de edificios civiles», 22 %) y, si es una obra pública, márcalo.",
+          "p3": "El valor de la obra sale del contrato: el presupuesto más los extras aprobados, sin IVA. Si a la Cassa Edile le declaraste otro, escríbelo en la misma tarjeta.",
+          "p4": "La tarjeta te dice cuánta mano de obra llevas, cuánta pide la Cassa Edile y cuánto falta. Si te quedas a un 5 % o menos, certifica igual con una declaración del director de obra.",
+          "nota": "Es una estimación con las horas aprobadas y el coste por hora de cada persona: quien no tiene coste no suma. La cifra oficial es la que declaráis tú y tus subcontratas a la Cassa Edile."
         }
       },
       "dinero": {
@@ -2116,6 +2135,13 @@
           "p2": "Si no está delante, copia el enlace o compártelo por WhatsApp. Y si tienes un lector de Stripe emparejado, le mandas el importe y el cliente acerca la tarjeta.",
           "p3": "La pantalla cambia sola cuando entra el pago y la factura queda cobrada. No hay que marcar nada a mano.",
           "nota": "Hace falta tu cuenta de Stripe conectada, en {{menuAjustes}} → {{menuPagos}}. Si el cobro es un extra sin factura, crea primero la factura: es la que lleva el impuesto."
+        },
+        "bonusFiscale": {
+          "title": "Obras con bonus fiscal (bonifico parlante)",
+          "p1": "Si tu cliente deduce la obra (ristrutturazione, ecobonus, sismabonus, barreras), márcalo en {{menuProyectos}} → la obra → Deducción fiscal del cliente.",
+          "p2": "Desde entonces cada factura de esa obra lleva el texto exacto del bonifico parlante —ley, número y fecha de la factura, codice fiscale del cliente y tu Partita IVA—, en el PDF y en su portal, listo para copiar.",
+          "p3": "El banco te retendrá el 11 % del importe sin IVA. No es un impago: es un crédito tuyo ante Hacienda, y la factura muestra cuánto será.",
+          "nota": "Sin el codice fiscale del cliente el texto no se puede escribir: rellénalo en su ficha del {{menuCrm}}. Un bonifico sin él le hace perder la deducción."
         }
       },
       "problemas": {
@@ -3000,5 +3026,61 @@
     "missingCfClient": "Para preparar tu bonifico hace falta tu codice fiscale. Escríbeselo a {{business}} en {{messages}}.",
     "missingCfPanel": "Falta el codice fiscale del cliente: sin él no se puede escribir su bonifico. Ponlo en su ficha.",
     "withholding": "El banco te retendrá unos {{amount}} (11 % sin IVA): es un crédito ante Hacienda."
+  },
+  "congruita": {
+    "title": "Congruità de la mano de obra",
+    "estado": {
+      "congrua": "La mano de obra registrada ya llega al mínimo de la Cassa Edile.",
+      "tolleranza": "Faltan {{falta}}, dentro del 5 % que se tolera: la Cassa Edile certifica con una declaración del director de obra.",
+      "non_congrua": "Faltan {{falta}} de mano de obra para llegar al mínimo. Sin congruità el cliente no puede pagar el saldo final.",
+      "no_aplica": "Obra privada de menos de {{soglia}}: no hace falta demostrar la congruità.",
+      "sin_valor": "Falta el valor de la obra: escríbelo abajo o crea el presupuesto.",
+      "sin_categoria": "Elige la categoría de la obra para saber cuánta mano de obra pide la Cassa Edile."
+    },
+    "cifras": "Registrada {{manodopera}} de un mínimo de {{minima}} ({{indice}} del valor de la obra).",
+    "oreSenzaCosto": "{{ore}} h aprobadas son de personas sin coste por hora y no cuentan: ponles el coste en su ficha.",
+    "categoria": "Categoría de los trabajos",
+    "sinCategoria": "Sin elegir",
+    "grupoOG": "Categorías generales (OG)",
+    "grupoOS": "Categorías especializadas (OS)",
+    "valore": "Valor de la obra (sin IVA)",
+    "valoreHint": "Vacío, se usa el contrato: presupuesto más extras aprobados. Escríbelo si a la Cassa Edile declaraste otro.",
+    "pubblico": "Obra pública",
+    "hint": "Es una estimación con las horas aprobadas y el coste por hora de cada persona. La verificación oficial la hace la Cassa Edile con lo que declaran tú y tus subcontratas, antes del saldo final.",
+    "cat": {
+      "og1_civile": "OG1 · Obra nueva civil, con instalaciones y suministros",
+      "og1_industriale": "OG1 · Obra nueva industrial, sin instalaciones",
+      "ristrutturazione_civile": "Reforma de edificios civiles",
+      "ristrutturazione_industriale": "Reforma de edificios industriales, sin instalaciones",
+      "og2": "OG2 · Restauración y mantenimiento de bienes protegidos",
+      "og3": "OG3 · Carreteras, puentes, etc.",
+      "og3_bitumatura": "OG3 · Asfaltado",
+      "og4": "OG4 · Obras subterráneas",
+      "og5": "OG5 · Presas",
+      "og6_acquedotti": "OG6 · Acueductos y alcantarillado",
+      "og6_gasdotti": "OG6 · Gasoductos",
+      "og6_oleodotti": "OG6 · Oleoductos",
+      "og6_irrigazione": "OG6 · Riego y drenaje",
+      "og7": "OG7 · Obras marítimas",
+      "og8": "OG8 · Obras fluviales",
+      "og9": "OG9 · Plantas de producción eléctrica",
+      "og10": "OG10 · Transformación y distribución eléctrica",
+      "og12_og13": "OG12-OG13 · Saneamiento y protección ambiental",
+      "os1": "OS1 · Movimiento de tierras",
+      "os2a": "OS2-A · Superficies decoradas y bienes culturales",
+      "os6": "OS6 · Acabados en madera, plástico, metal y vidrio",
+      "os7": "OS7 · Acabados de obra y técnicos",
+      "os8": "OS8 · Impermeabilización",
+      "os11": "OS11 · Equipos estructurales especiales",
+      "os12a": "OS12-A · Barreras de seguridad viales",
+      "os12b": "OS12-B · Barreras contra caída de rocas y nieve",
+      "os13": "OS13 · Estructuras prefabricadas de hormigón",
+      "os21": "OS21 · Obras estructurales especiales",
+      "os23": "OS23 · Demolición",
+      "os24": "OS24 · Zonas verdes y mobiliario urbano",
+      "os25": "OS25 · Excavaciones arqueológicas",
+      "os26": "OS26 · Pavimentos especiales",
+      "os35": "OS35 · Obras de bajo impacto ambiental"
+    }
   }
 }

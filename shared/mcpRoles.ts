@@ -148,6 +148,9 @@ export const TOOL_ACCESS: Record<
   get_expiring_documents: { roles: ["office", "admin"], area: "personas", capability: "campo" },
   get_bank_withholdings: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["IT"] },
   get_e_invoice: { roles: ["office", "admin"], area: "dinero", capability: "facturacion", soloEn: ["IT"] },
+  // La congruità es el coste de la mano de obra de una obra: sale de lo que
+  // cobra cada persona por hora, y eso es dinero aunque se enseñe en la obra.
+  check_congruita: { roles: ["office", "admin"], area: "dinero", capability: "campo", soloEn: ["IT"] },
   check_italian_tax_id: { roles: ["office", "admin"], area: "clientes", capability: "campo", soloEn: ["IT"] },
 };
 

@@ -55,6 +55,7 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
   ok(`${pais}: QuickBooks`, nombres.includes("audit_quickbooks_sync"), pais === "CA");
   ok(`${pais}: calcular factura`, nombres.includes("calculate_invoice"), pais !== "ES");
   ok(`${pais}: Partita IVA`, nombres.includes("check_italian_tax_id"), pais === "IT");
+  ok(`${pais}: congruità`, nombres.includes("check_congruita"), pais === "IT");
   ok(`${pais}: títulos sin francés`, (lista.result?.tools ?? []).filter((t: any) => /[éèàç]|Mes |Mon /.test(t.title ?? "")).map((t: any) => t.title), []);
   const resumen = await llamar("get_business_summary");
   ok(`${pais}: el resumen dice la moneda`, resumen.business?.currency, pais === "CA" ? "CAD" : "EUR");
@@ -104,6 +105,20 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
     DATOS.worker_documents = [{ id: "d1", kind: "durc", name: "durc.pdf", expires_on: ayer, employee_id: null, subcontractor_id: "s1", employees: null, subcontractors: { name: "Bianchi Srl" } }];
     const vencen = await llamar("get_expiring_documents", {});
     ok("IT: el DURC del subcontratista, vencido ayer", [vencen.documents?.[0]?.kind, vencen.documents?.[0]?.daysLeft, vencen.documents?.[0]?.personName], ["durc", -1, "Bianchi Srl"]);
+    // Una reforma de 90.000 € más 10.000 de extras pide un 22 % de mano de
+    // obra: 22.000 €. Con 16 h a 30 €/h faltan 21.520; las 4 h del
+    // subcontratista sin coste no suman y se dicen aparte.
+    DATOS.projects = [{ id: "p1", congruita_categoria: "ristrutturazione_civile", lavoro_pubblico: false, valore_opera: null, estimates: { total: 90000 } }];
+    DATOS.change_orders = [{ amount: 10000 }];
+    DATOS.employees = [{ id: "e1", hourly_rate: 30 }];
+    DATOS.subcontractors = [{ id: "s1", hourly_rate: null }];
+    DATOS.time_entries = [
+      { employee_id: "e1", subcontractor_id: null, check_in_time: "2026-09-01T06:00:00Z", check_out_time: "2026-09-01T14:00:00Z" },
+      { employee_id: "e1", subcontractor_id: null, check_in_time: "2026-09-02T06:00:00Z", check_out_time: "2026-09-02T14:00:00Z" },
+      { employee_id: null, subcontractor_id: "s1", check_in_time: "2026-09-02T06:00:00Z", check_out_time: "2026-09-02T10:00:00Z" },
+    ];
+    const cg = await llamar("check_congruita", { projectId: "11111111-1111-4111-8111-111111111111" });
+    ok("IT: congruità de una reforma de 100.000 €", [cg.estado, cg.valoreOpera, cg.minima, cg.manodopera, cg.falta, cg.oreSenzaCosto, cg.currency], ["non_congrua", 100000, 22000, 480, 21520, 4, "EUR"]);
     ok("IT: clientes sin la llave del portal", Object.keys((await llamar("get_clients", { search: "Bian" })).clients[0]).includes("access_token"), false);
   }
   if (pais === "ES") {

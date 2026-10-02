@@ -585,6 +585,13 @@ const localeDelDinero = (): string => {
 export const formatCurrency = (value: number) =>
   new Intl.NumberFormat(localeDelDinero(), { style: "currency", currency: monedaDelNegocio, currencyDisplay: "narrowSymbol" }).format(value);
 
+// Porcentajes y cantidades con la coma o el punto del idioma: «14,28 %» en
+// italiano, no «14.28 %».
+export const formatPercent = (fraction: number) =>
+  new Intl.NumberFormat(localeDelDinero(), { style: "percent", maximumFractionDigits: 2 }).format(fraction);
+export const formatNumber = (value: number) =>
+  new Intl.NumberFormat(localeDelDinero(), { maximumFractionDigits: 2 }).format(value);
+
 // For headline totals, where the cents are noise and the shape of the number
 // is the point. Only for aggregates — never for anything owed.
 export const formatCurrencyRounded = (value: number) =>

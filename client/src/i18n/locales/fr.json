@@ -1647,7 +1647,11 @@
     "fatturapa_sin_iva": "Cette facture a été émise avant que l'entreprise soit en Italie et ne porte pas de TVA : elle ne peut pas devenir une facture électronique.",
     "fatturapa_datos_incompletos": "Il manque des données pour la facture électronique.",
     "bonus_no_valido": "Ce bonus n'existe pas.",
-    "fecha_no_valida": "Cette date n'est pas valide."
+    "fecha_no_valida": "Cette date n'est pas valide.",
+    "categoria_congruita_no_valida": "Cette catégorie de congruité n'existe pas.",
+    "valor_obra_no_valido": "La valeur de l'ouvrage doit être un nombre supérieur ou égal à 0.",
+    "congruita_solo_italia": "La congruité ne concerne que les entreprises en Italie.",
+    "congruita_no_encontrada": "Ce chantier est introuvable."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1982,6 +1986,21 @@
           "p2": "La paie est faite par qui la fait aujourd'hui —votre comptable ou votre conseiller en paie— et ne peut pas être importée seule depuis son logiciel. On la dépose comme fichier, et c'est tout.",
           "p3": "Par défaut, la personne les voit sur son téléphone, sous son travail du jour. Ainsi elle n'a pas à vous les redemander chaque fois qu'une banque ou une administration les exige. Si vous préférez en garder un pour vous, décochez-le au dépôt.",
           "nota": "Ils sont conservés dans un espace privé et seuls le bureau et cette personne les voient, jamais un collègue."
+        },
+        "caducidades": {
+          "title": "Ne pas laisser passer un document qui expire",
+          "p1": "Quand vous téléversez un document dans {{menuCampo}} → {{menuTecnicos}} → Documents, indiquez sa date d'expiration : une formation sécurité, un examen médical, un permis, une attestation d'assurance.",
+          "p2": "En haut de la liste des travailleurs et de celle des sous-traitants apparaît ce qui est déjà expiré et ce qui expire dans les 30 prochains jours, avec le nom de la personne.",
+          "p3": "Quand le nouveau document arrive, téléversez-le avec sa nouvelle date et l'avis disparaît tout seul.",
+          "nota": "Sans date, le document est conservé quand même, mais personne ne vous prévient. Une personne dont le document est expiré ne devrait pas entrer sur le chantier."
+        },
+        "congruita": {
+          "title": "La congruité de la main-d'œuvre (congruità)",
+          "p1": "Avant le solde final d'un chantier public, ou d'un chantier privé de 70 000 € ou plus, la Cassa Edile vérifie que la main-d'œuvre déclarée atteint un minimum : un pourcentage de la valeur de l'ouvrage qui dépend du type de travaux. Sans cette congruité, le client ne peut pas vous payer le solde.",
+          "p2": "Dans {{menuProyectos}}, ouvrez le chantier : la carte de congruité est dans la colonne de droite. Choisissez la catégorie des travaux (par exemple « Rénovation de bâtiments civils », 22 %) et, s'il s'agit de travaux publics, cochez-le.",
+          "p3": "La valeur de l'ouvrage vient du contrat : la soumission plus les avenants approuvés, hors TVA. Si vous en avez déclaré une autre à la Cassa Edile, saisissez-la sur la même carte.",
+          "p4": "La carte indique combien de main-d'œuvre vous avez enregistrée, combien la Cassa Edile en exige et combien il en manque. S'il manque 5 % ou moins, elle certifie quand même avec une déclaration du directeur des travaux.",
+          "nota": "C'est une estimation à partir des heures approuvées et du coût horaire de chaque personne : une personne sans coût ne compte pas. Le chiffre officiel est celui que vous et vos sous-traitants déclarez à la Cassa Edile."
         }
       },
       "dinero": {
@@ -2116,6 +2135,13 @@
           "p2": "S'il n'est pas là, copiez le lien ou partagez-le par WhatsApp. Et si vous avez un lecteur Stripe jumelé, vous lui envoyez le montant et le client approche sa carte.",
           "p3": "L'écran change tout seul quand le paiement entre, et la facture est marquée payée. Rien à cocher à la main.",
           "nota": "Il faut votre compte Stripe connecté, dans {{menuAjustes}} → {{menuPagos}}. Si c'est un extra sans facture, créez d'abord la facture : c'est elle qui porte les taxes."
+        },
+        "bonusFiscale": {
+          "title": "Chantiers avec bonus fiscal (bonifico parlante)",
+          "p1": "Si votre client déduit le chantier (ristrutturazione, ecobonus, sismabonus, barrières), indiquez-le dans {{menuProyectos}} → le chantier → Déduction fiscale du client.",
+          "p2": "Dès lors, chaque facture de ce chantier porte le texte exact du bonifico parlante —loi, numéro et date de facture, codice fiscale du client et votre Partita IVA— sur le PDF et dans son portail, prêt à copier.",
+          "p3": "La banque retiendra 11 % du montant hors TVA. Ce n'est pas un impayé : c'est un crédit que vous détenez auprès du fisc, et la facture indique combien.",
+          "nota": "Sans le codice fiscale du client, le texte ne peut pas être rédigé : complétez-le dans sa fiche {{menuCrm}}. Un bonifico sans lui lui fait perdre la déduction."
         }
       },
       "problemas": {
@@ -3000,5 +3026,61 @@
     "missingCfClient": "Votre codice fiscale est nécessaire pour préparer votre bonifico. Envoyez-le à {{business}} dans {{messages}}.",
     "missingCfPanel": "Le codice fiscale du client manque : sans lui, son bonifico ne peut pas être rédigé. Ajoutez-le à sa fiche.",
     "withholding": "La banque retiendra environ {{amount}} (11 % hors TVA) : un crédit d'impôt pour vous."
+  },
+  "congruita": {
+    "title": "Congruité de la main-d'œuvre (congruità)",
+    "estado": {
+      "congrua": "La main-d'œuvre enregistrée atteint déjà le minimum de la Cassa Edile.",
+      "tolleranza": "Il manque {{falta}}, dans la tolérance de 5 % : la Cassa Edile certifie avec une déclaration du directeur des travaux.",
+      "non_congrua": "Il manque {{falta}} de main-d'œuvre pour atteindre le minimum. Sans congruité, le client ne peut pas payer le solde final.",
+      "no_aplica": "Chantier privé de moins de {{soglia}} : la congruité n'a pas à être démontrée.",
+      "sin_valor": "La valeur de l'ouvrage manque : saisissez-la ci-dessous ou créez la soumission.",
+      "sin_categoria": "Choisissez la catégorie des travaux pour savoir combien de main-d'œuvre exige la Cassa Edile."
+    },
+    "cifras": "Enregistré {{manodopera}} sur un minimum de {{minima}} ({{indice}} de la valeur de l'ouvrage).",
+    "oreSenzaCosto": "{{ore}} h approuvées appartiennent à des personnes sans coût horaire et ne comptent pas : indiquez leur coût dans leur fiche.",
+    "categoria": "Catégorie des travaux",
+    "sinCategoria": "Non choisie",
+    "grupoOG": "Catégories générales (OG)",
+    "grupoOS": "Catégories spécialisées (OS)",
+    "valore": "Valeur de l'ouvrage (hors TVA)",
+    "valoreHint": "Vide, on utilise le contrat : soumission plus avenants approuvés. Saisissez-la si vous avez déclaré une autre valeur à la Cassa Edile.",
+    "pubblico": "Travaux publics",
+    "hint": "C'est une estimation à partir des heures approuvées et du coût horaire de chaque personne. La vérification officielle est faite par la Cassa Edile, avec ce que vous et vos sous-traitants déclarez, avant le solde final.",
+    "cat": {
+      "og1_civile": "OG1 · Construction neuve civile, installations et fournitures comprises",
+      "og1_industriale": "OG1 · Construction neuve industrielle, hors installations",
+      "ristrutturazione_civile": "Rénovation de bâtiments civils",
+      "ristrutturazione_industriale": "Rénovation de bâtiments industriels, hors installations",
+      "og2": "OG2 · Restauration et entretien de biens protégés",
+      "og3": "OG3 · Routes, ponts, etc.",
+      "og3_bitumatura": "OG3 · Enrobage bitumineux",
+      "og4": "OG4 · Ouvrages souterrains",
+      "og5": "OG5 · Barrages",
+      "og6_acquedotti": "OG6 · Aqueducs et égouts",
+      "og6_gasdotti": "OG6 · Gazoducs",
+      "og6_oleodotti": "OG6 · Oléoducs",
+      "og6_irrigazione": "OG6 · Irrigation et drainage",
+      "og7": "OG7 · Ouvrages maritimes",
+      "og8": "OG8 · Ouvrages fluviaux",
+      "og9": "OG9 · Centrales de production électrique",
+      "og10": "OG10 · Transformation et distribution électrique",
+      "og12_og13": "OG12-OG13 · Dépollution et protection de l'environnement",
+      "os1": "OS1 · Terrassement",
+      "os2a": "OS2-A · Surfaces décorées et biens culturels",
+      "os6": "OS6 · Finitions en bois, plastique, métal et verre",
+      "os7": "OS7 · Finitions de bâtiment et techniques",
+      "os8": "OS8 · Imperméabilisation",
+      "os11": "OS11 · Appareils structurels spéciaux",
+      "os12a": "OS12-A · Glissières de sécurité",
+      "os12b": "OS12-B · Barrières pare-blocs et paraneige",
+      "os13": "OS13 · Structures préfabriquées en béton armé",
+      "os21": "OS21 · Ouvrages structurels spéciaux",
+      "os23": "OS23 · Démolition",
+      "os24": "OS24 · Espaces verts et mobilier urbain",
+      "os25": "OS25 · Fouilles archéologiques",
+      "os26": "OS26 · Chaussées spéciales",
+      "os35": "OS35 · Travaux à faible impact environnemental"
+    }
   }
 }

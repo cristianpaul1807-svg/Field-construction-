@@ -1647,7 +1647,11 @@
     "fatturapa_sin_iva": "Questa fattura è stata emessa prima che l'impresa fosse in Italia e non ha IVA: non può diventare fattura elettronica.",
     "fatturapa_datos_incompletos": "Mancano dei dati per la fattura elettronica.",
     "bonus_no_valido": "Questo bonus non esiste.",
-    "fecha_no_valida": "Questa data non è valida."
+    "fecha_no_valida": "Questa data non è valida.",
+    "categoria_congruita_no_valida": "Questa categoria di congruità non esiste.",
+    "valor_obra_no_valido": "Il valore dell'opera deve essere un numero da 0 in su.",
+    "congruita_solo_italia": "La congruità vale solo per le imprese in Italia.",
+    "congruita_no_encontrada": "Cantiere non trovato."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -1982,6 +1986,21 @@
           "p2": "Le buste paga le fa chi le fa adesso —il tuo consulente del lavoro— e non si possono importare da sole dal suo programma. Si caricano come file, e basta.",
           "p3": "Di default la persona le vede sul telefono, sotto il lavoro del giorno. Così non deve chiedertele ogni volta che una banca o un ufficio le vuole. Se preferisci tenerne una per te, togli la spunta quando la carichi.",
           "nota": "Sono conservati in uno spazio privato e li vedono solo l'ufficio e quella persona, mai un collega."
+        },
+        "caducidades": {
+          "title": "Non farti scadere un documento",
+          "p1": "Quando carichi un documento in {{menuCampo}} → {{menuTecnicos}} → Documenti, inserisci la data di scadenza: il DURC, un corso sulla sicurezza, la visita medica, la patente a crediti.",
+          "p2": "In cima all'elenco dei lavoratori e a quello dei subappaltatori compare ciò che è già scaduto e ciò che scade nei prossimi 30 giorni, con il nome della persona.",
+          "p3": "Quando arriva il documento nuovo, caricalo con la sua nuova data e l'avviso sparisce da solo.",
+          "nota": "Senza data il documento si salva comunque, ma nessuno ti avvisa. Chi ha un documento scaduto non dovrebbe entrare in cantiere."
+        },
+        "congruita": {
+          "title": "La congruità della manodopera",
+          "p1": "Prima del saldo finale di un lavoro pubblico, o di uno privato da 70.000 € in su, la Cassa Edile verifica che la manodopera denunciata raggiunga un minimo: una percentuale del valore dell'opera che dipende dal tipo di lavori. Senza congruità il committente non può pagarti il saldo.",
+          "p2": "In {{menuProyectos}}, apri il cantiere: la scheda della congruità è nella colonna di destra. Scegli la categoria dei lavori (per esempio «Ristrutturazione di edifici civili», 22%) e, se è un lavoro pubblico, segnalo.",
+          "p3": "Il valore dell'opera viene dal contratto: il preventivo più le varianti approvate, IVA esclusa. Se alla Cassa Edile hai dichiarato un valore diverso, scrivilo nella stessa scheda.",
+          "p4": "La scheda ti dice quanta manodopera hai registrato, quanta ne chiede la Cassa Edile e quanta ne manca. Se lo scostamento è del 5% o meno, attesta comunque con una dichiarazione del direttore dei lavori.",
+          "nota": "È una stima con le ore approvate e il costo orario di ogni persona: chi non ha un costo non conta. Il dato ufficiale è quello che tu e i tuoi subappaltatori denunciate alla Cassa Edile."
         }
       },
       "dinero": {
@@ -2116,6 +2135,13 @@
           "p2": "Se non è lì, copia il link o condividilo su WhatsApp. E se hai un lettore Stripe abbinato, gli mandi l'importo e il cliente avvicina la carta.",
           "p3": "La schermata cambia da sola quando entra il pagamento e la fattura risulta incassata. Niente da segnare a mano.",
           "nota": "Serve il tuo account Stripe collegato, in {{menuAjustes}} → {{menuPagos}}. Se è un extra senza fattura, crea prima la fattura: è quella che porta le imposte."
+        },
+        "bonusFiscale": {
+          "title": "Lavori con bonus fiscale (bonifico parlante)",
+          "p1": "Se il tuo cliente detrae i lavori (ristrutturazione, ecobonus, sismabonus, barriere), segnalo in {{menuProyectos}} → il cantiere → Detrazione fiscale del cliente.",
+          "p2": "Da quel momento ogni fattura di quel cantiere riporta il testo esatto del bonifico parlante —norma, numero e data della fattura, codice fiscale del cliente e la tua Partita IVA— nel PDF e nel suo portale, pronto da copiare.",
+          "p3": "La banca ti tratterrà l'11% dell'importo al netto dell'IVA. Non è un mancato pagamento: è un tuo credito verso il Fisco, e la fattura mostra a quanto ammonta.",
+          "nota": "Senza il codice fiscale del cliente il testo non si può scrivere: inseriscilo nella sua scheda in {{menuCrm}}. Un bonifico senza codice fiscale fa perdere la detrazione."
         }
       },
       "problemas": {
@@ -3000,5 +3026,61 @@
     "missingCfClient": "Per preparare il bonifico serve il tuo codice fiscale. Scrivilo a {{business}} in {{messages}}.",
     "missingCfPanel": "Manca il codice fiscale del cliente: senza non si può scrivere il bonifico. Inseriscilo nella sua scheda.",
     "withholding": "La banca tratterrà circa {{amount}} (11% al netto IVA): è un tuo credito d'imposta."
+  },
+  "congruita": {
+    "title": "Congruità della manodopera",
+    "estado": {
+      "congrua": "La manodopera registrata raggiunge già il minimo della Cassa Edile.",
+      "tolleranza": "Mancano {{falta}}, entro lo scostamento del 5%: la Cassa Edile attesta con una dichiarazione del direttore dei lavori.",
+      "non_congrua": "Mancano {{falta}} di manodopera per raggiungere il minimo. Senza congruità il committente non può pagare il saldo finale.",
+      "no_aplica": "Lavoro privato sotto i {{soglia}}: la congruità non va dimostrata.",
+      "sin_valor": "Manca il valore dell'opera: scrivilo qui sotto o crea il preventivo.",
+      "sin_categoria": "Scegli la categoria dei lavori per sapere quanta manodopera chiede la Cassa Edile."
+    },
+    "cifras": "Registrata {{manodopera}} su un minimo di {{minima}} ({{indice}} del valore dell'opera).",
+    "oreSenzaCosto": "{{ore}} ore approvate sono di persone senza costo orario e non contano: inserisci il costo nella loro scheda.",
+    "categoria": "Categoria dei lavori",
+    "sinCategoria": "Non scelta",
+    "grupoOG": "Categorie generali (OG)",
+    "grupoOS": "Categorie specialistiche (OS)",
+    "valore": "Valore dell'opera (IVA esclusa)",
+    "valoreHint": "Se vuoto, si usa il contratto: preventivo più varianti approvate. Scrivilo se alla Cassa Edile hai dichiarato un altro valore.",
+    "pubblico": "Lavoro pubblico",
+    "hint": "È una stima con le ore approvate e il costo orario di ogni persona. La verifica ufficiale la fa la Cassa Edile, con quanto denunciato da te e dai subappaltatori, prima del saldo finale.",
+    "cat": {
+      "og1_civile": "OG1 · Nuova edilizia civile, compresi impianti e forniture",
+      "og1_industriale": "OG1 · Nuova edilizia industriale, esclusi impianti",
+      "ristrutturazione_civile": "Ristrutturazione di edifici civili",
+      "ristrutturazione_industriale": "Ristrutturazione di edifici industriali, esclusi impianti",
+      "og2": "OG2 · Restauro e manutenzione di beni tutelati",
+      "og3": "OG3 · Opere stradali, ponti, etc.",
+      "og3_bitumatura": "OG3 · Lavori di bitumatura",
+      "og4": "OG4 · Opere d'arte nel sottosuolo",
+      "og5": "OG5 · Dighe",
+      "og6_acquedotti": "OG6 · Acquedotti e fognature",
+      "og6_gasdotti": "OG6 · Gasdotti",
+      "og6_oleodotti": "OG6 · Oleodotti",
+      "og6_irrigazione": "OG6 · Opere di irrigazione ed evacuazione",
+      "og7": "OG7 · Opere marittime",
+      "og8": "OG8 · Opere fluviali",
+      "og9": "OG9 · Impianti per la produzione di energia elettrica",
+      "og10": "OG10 · Impianti per la trasformazione e distribuzione",
+      "og12_og13": "OG12-OG13 · Bonifica e protezione ambientale",
+      "os1": "OS1 · Lavori in terra",
+      "os2a": "OS2-A · Superfici decorate e beni culturali",
+      "os6": "OS6 · Finiture in materiali lignei, plastici, metallici e vetrosi",
+      "os7": "OS7 · Finiture di opere generali di natura edile e tecnica",
+      "os8": "OS8 · Opere di impermeabilizzazione",
+      "os11": "OS11 · Apparecchiature strutturali speciali",
+      "os12a": "OS12-A · Barriere stradali di sicurezza",
+      "os12b": "OS12-B · Barriere paramassi, fermaneve e simili",
+      "os13": "OS13 · Strutture prefabbricate in cemento armato",
+      "os21": "OS21 · Opere strutturali speciali",
+      "os23": "OS23 · Demolizione di opere",
+      "os24": "OS24 · Verde e arredo urbano",
+      "os25": "OS25 · Scavi archeologici",
+      "os26": "OS26 · Pavimentazioni e sovrastrutture speciali",
+      "os35": "OS35 · Interventi a basso impatto ambientale"
+    }
   }
 }

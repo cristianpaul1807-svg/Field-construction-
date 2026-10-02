@@ -86,6 +86,7 @@ node --experimental-strip-types scripts/prueba-mcp/idiomas.mjs          # the MC
 node scripts/prueba-mcp/servidor.mjs                                     # the real MCP server, per country, against a fake database
 node --experimental-strip-types scripts/prueba-italia/iva.mjs          # Italian VAT, fiscal IDs, and Italy staying hidden
 node --experimental-strip-types scripts/prueba-italia/fatturapa.mjs    # the Italian e-invoice XML, validated against the official schema
+node --experimental-strip-types scripts/prueba-italia/congruita.mjs    # the Cassa Edile labour minimum, index by index
 ```
 
 `npm run build` is the marketing site generator, then `vite build`, then

@@ -16,6 +16,7 @@ import { resumenDeHoras } from "./resumenDeHoras";
 import { fatturaPADeFactura, fatturaPADeNota } from "./fatturaPAServidor";
 import { ritenutaBancaria } from "../shared/bonusEdilizi";
 import { papelesQueVencen } from "./papelesQueVencen";
+import { congruitaDeLaObra } from "./congruitaServidor";
 import { grupoDePais, paisDe } from "../shared/paises";
 import { OPCIONES_IVA } from "../shared/iva";
 import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
@@ -1149,6 +1150,27 @@ function createMcpServer(context: ReadToolContext) {
       const result = await papelesQueVencen(admin, context.identity.businessId, days ?? 30);
       await audit(context, "get_expiring_documents", true, { count: result.length });
       return jsonResult({ documents: result });
+    },
+  );
+
+  server.registerTool(
+    "check_congruita",
+    {
+      title: "Labour congruity of a job",
+      description:
+        "Italy (DM 143/2021): before the final payment of a public job, or a private one worth €70,000 or more, the Cassa Edile checks that the labour declared on the job reaches a minimum percentage of its value, set by work category (e.g. 22% for renovating residential buildings). Without it the client cannot pay the final balance. This estimates it from approved hours × each person's hourly cost. `estado`: congrua (reached), tolleranza (short by 5% or less: certified with the works director's statement), non_congrua (short; `falta` is the missing labour amount), no_aplica, sin_categoria, sin_valor. `oreSenzaCosto` are approved hours of people with no hourly cost, which don't count. Use get_projects to find the project id.",
+      inputSchema: { projectId: z.string().uuid().describe("Project id") },
+    },
+    async ({ projectId }) => {
+      const denied = requireRole(context, "check_congruita");
+      if (denied) {
+        await audit(context, "check_congruita", false, { code: "access_denied" });
+        return denied;
+      }
+      const r = await congruitaDeLaObra(admin, context.identity.businessId, projectId);
+      await audit(context, "check_congruita", r.ok, r.ok ? { projectId, estado: r.congruita.estado } : { projectId, code: r.code });
+      if (!r.ok) return { isError: true, content: [{ type: "text" as const, text: JSON.stringify({ error: "Congruity cannot be checked.", code: r.code }) }] };
+      return jsonResult({ currency, ...r.congruita });
     },
   );
 

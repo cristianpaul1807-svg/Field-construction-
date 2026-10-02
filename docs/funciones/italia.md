@@ -174,6 +174,48 @@ Código: `shared/bonusEdilizi.ts`; `projects.bonus_fiscale`.
 
 ---
 
+## La congruità de la mano de obra
+
+Antes del saldo final de una obra pública, o de una privada de **70.000 € o
+más**, la Cassa Edile comprueba que la mano de obra declarada llega a un
+mínimo: un porcentaje del valor de la obra que depende de la categoría
+(DM 143/2021). Sin el DURC di congruità el cliente no puede pagar el saldo, y
+la impresa se entera con la obra terminada y quince días para pagar la
+diferencia.
+
+En la obra, tarjeta «Congruità de la mano de obra»:
+
+- Se elige la **categoría** (33: las OG del Accordo del 10/09/2020 y las OS y
+  la bitumatura del Accordo del 24/06/2022) y se marca si es **obra pública**.
+- El **valor** sale del contrato —presupuesto más extras aprobados, sin IVA—
+  y se puede escribir a mano si a la Cassa Edile se declaró otro.
+- La **mano de obra** son las horas aprobadas de la obra por el coste por hora
+  de cada persona. Las horas de quien no tiene coste no suman, y la tarjeta
+  dice cuántas son, porque son la razón más probable de una cifra baja.
+- El veredicto: congrua, **tolleranza** (falta un 5 % o menos del mínimo: la
+  Cassa Edile certifica con una declaración del director de obra) o no
+  congrua, con lo que falta en euros.
+
+Es una estimación y lo dice: la cifra oficial es la que declaran la impresa y
+sus subcontratas. Por MCP, `check_congruita`.
+
+| Categoría | Índice | Categoría | Índice |
+|---|---|---|---|
+| OG1 nueva edilizia civile | 14,28 % | OS1 lavori in terra | 10 % |
+| OG1 nueva edilizia industriale | 5,36 % | OS2-A superfici decorate | 35 % |
+| Ristrutturazione edifici civili | 22 % | OS6 finiture lignee, metalliche… | 14 % |
+| Ristrutturazione edifici industriali | 6,69 % | OS7 finiture edili e tecniche | 18 % |
+| OG2 restauro beni tutelati | 30 % | OS8 impermeabilizzazione | 18 % |
+| OG3 strade, ponti | 13,77 % | OS13 prefabbricati in c.a. | 6 % |
+| OG3 bitumatura | 6 % | OS23 demolizione | 10 % |
+
+La tabla entera, y su comprobación contra la publicada por la CNCE, está en
+`shared/congruita.ts` y `scripts/prueba-italia/congruita.mjs`. Campos:
+`projects.congruita_categoria`, `projects.lavoro_pubblico`,
+`projects.valore_opera`.
+
+---
+
 ## Lo que tiene el consulente del lavoro
 
 La nómina no se hace aquí, pero el consulente necesita de la empresa las
@@ -213,7 +255,9 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
    `get_expiring_documents`. Falta la patente a crediti **de la propia
    empresa**, que no es de una persona.
 8. **Congruità:** obras de 70.000 € o más, horas fichadas frente a la
-   incidencia mínima de mano de obra, avisando antes del final.
+   incidencia mínima de mano de obra, avisando antes del final. ✅ Hecho:
+   tarjeta en la obra con las 33 categorías oficiales, la tolerancia del 5 %
+   y las horas sin coste a la vista. Por MCP, `check_congruita`.
 9. **Computo metrico con prezzario regional y SAL.** La pieza más grande; la
    que abre la obra mediana y la pública.
 
