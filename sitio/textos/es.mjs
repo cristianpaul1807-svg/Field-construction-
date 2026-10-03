@@ -467,7 +467,7 @@ export default {
       },
       {
         nombre: "Italia",
-        estado: "Primeros clientes",
+        estado: "Disponible",
         listo: true,
         resumen: ["IVA del 22, 10 y 4 %, e inversione contabile", "XML FatturaPA validado, listo para el SDI", "SAL por partidas y congruità de la mano de obra", "Bonifico parlante y vencimientos del DURC"],
       },
@@ -497,9 +497,9 @@ export default {
       },
       {
         t: "Italia",
-        estado: "Primeros clientes",
+        estado: "Disponible",
         listo: true,
-        p: "Lo que una impresa edile hace con tres programas y su commercialista, en uno. Abierto ya a los primeros clientes.",
+        p: "Lo que una impresa edile hace con tres programas y su commercialista, en uno.",
         items: [
           { t: "El IVA lo decide la obra", p: "22 %, 10 % en reformas de vivienda, 4 % en primera vivienda, e inversione contabile para las subcontratas, con su código N6.3." },
           { t: "Factura electrónica FatturaPA", p: "El XML de cada factura y nota de crédito, validado contra el esquema oficial. Si falta un dato del cliente, te dice cuál." },

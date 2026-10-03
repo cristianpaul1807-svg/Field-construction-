@@ -97,9 +97,9 @@ nada suyo. Ahora es general y enseña, en vez de explicar:
   español, una de Montreal con TPS, TVQ y retención. Las cifras están en los
   textos de cada idioma, no en el HTML.
 - **«Tu país»** cuenta Quebec, Italia y el resto con lo que ya funciona en
-  cada uno, y enlaza la guía de la CCQ. Italia dice «primeros clientes» y no
-  «disponible» mientras el registro la tenga en pruebas: el sitio no promete
-  lo que el alta todavía no ofrece.
+  cada uno, y enlaza la guía de la CCQ. Lo que dice de cada país sigue a
+  `enPruebas` en `shared/paises.ts`: un país en pruebas no se anuncia como
+  disponible, porque el sitio no promete lo que el alta todavía no ofrece.
 - **Los precios** van en la moneda del idioma —euros en italiano, dólares
   canadienses en los demás— con una línea que dice la otra.
 

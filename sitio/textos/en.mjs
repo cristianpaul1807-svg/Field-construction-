@@ -467,7 +467,7 @@ export default {
       },
       {
         nombre: "Italy",
-        estado: "First customers",
+        estado: "Available",
         listo: true,
         resumen: ["22, 10 and 4% VAT, and reverse charge", "Validated FatturaPA XML, ready for the SDI", "Item-by-item SAL and labour congruità", "Bonifico parlante and DURC expiry dates"],
       },
@@ -497,9 +497,9 @@ export default {
       },
       {
         t: "Italy",
-        estado: "First customers",
+        estado: "Available",
         listo: true,
-        p: "What an Italian impresa edile does with three programs and its commercialista, in one. Open now to its first customers.",
+        p: "What an Italian impresa edile does with three programs and its commercialista, in one.",
         items: [
           { t: "The job decides the VAT", p: "22%, 10% for home renovations, 4% for a first home, and reverse charge for subcontracting, with its N6.3 code." },
           { t: "FatturaPA e-invoicing", p: "The XML for every invoice and credit note, validated against the official schema. If a client detail is missing, it tells you which." },

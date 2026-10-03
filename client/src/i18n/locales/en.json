@@ -3025,7 +3025,8 @@
       "comune": "town",
       "provincia": "province"
     },
-    "howToSend": "Upload it to the SDI with your software, your intermediary or the free «Fatture e Corrispettivi» service of the Agenzia delle Entrate."
+    "howToSend": "Upload it to the SDI with your software, your intermediary or the free «Fatture e Corrispettivi» service of the Agenzia delle Entrate.",
+    "notaListado": "Every invoice has its XML for the SDI («XML for SDI» button): that's the valid invoice in Italy. Upload it with your software, your intermediary or the Agenzia delle Entrate's free «Fatture e Corrispettivi» service."
   },
   "bonus": {
     "title": "Client's tax deduction",

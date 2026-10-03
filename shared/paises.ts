@@ -68,7 +68,8 @@ export interface Pais {
    * Todavía no se ofrece. El país está entero en el código, pero falta algo
    * para que sus facturas sean válidas —en Italia, la factura electrónica—, y
    * ofrecerlo sería darle a alguien documentos con aspecto de buenos que no lo
-   * son. Sólo lo ve quien ya lo tiene puesto (el negocio de pruebas).
+   * son. Sólo lo ve quien ya lo tiene puesto. Hoy ningún país lo lleva: Italia
+   * lo llevó hasta tener su XML FatturaPA.
    */
   enPruebas?: boolean;
 }
@@ -165,7 +166,9 @@ export const PAISES: Pais[] = [
     // Llega con las cuentas de Stripe italianas, en euros (fase 3).
     cobrosConTarjeta: false,
     quickbooks: false,
-    enPruebas: true,
+    // Abierta desde octubre de 2026: el XML FatturaPA se genera y se valida
+    // contra el esquema oficial. El envío al SDI lo hace todavía el negocio
+    // con su programa o su commercialista, y la pantalla de facturas lo dice.
   },
 ];
 

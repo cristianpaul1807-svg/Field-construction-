@@ -467,7 +467,7 @@ export default {
       },
       {
         nombre: "Italia",
-        estado: "Primi clienti",
+        estado: "Disponibile",
         listo: true,
         resumen: ["IVA al 22, 10 e 4 %, e inversione contabile", "XML FatturaPA validato, pronto per lo SDI", "SAL per voci e congruità della manodopera", "Bonifico parlante e scadenze del DURC"],
       },
@@ -497,9 +497,9 @@ export default {
       },
       {
         t: "Italia",
-        estado: "Primi clienti",
+        estado: "Disponibile",
         listo: true,
-        p: "Quello che un'impresa edile fa con tre programmi e il commercialista, in uno solo. Aperto adesso ai primi clienti.",
+        p: "Quello che un'impresa edile fa con tre programmi e il commercialista, in uno solo.",
         items: [
           { t: "L'IVA la decide il lavoro", p: "22 %, 10 % per le ristrutturazioni di abitazioni, 4 % per la prima casa, e inversione contabile per i subappalti, con il codice N6.3." },
           { t: "Fattura elettronica FatturaPA", p: "L'XML di ogni fattura e nota di credito, validato sullo schema ufficiale. Se manca un dato del cliente, ti dice quale." },

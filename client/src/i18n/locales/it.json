@@ -3025,7 +3025,8 @@
       "comune": "comune",
       "provincia": "provincia"
     },
-    "howToSend": "Caricalo sullo SDI con il tuo programma, il tuo intermediario o il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate."
+    "howToSend": "Caricalo sullo SDI con il tuo programma, il tuo intermediario o il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate.",
+    "notaListado": "Ogni fattura ha il suo XML per lo SDI (pulsante «XML per lo SDI»): è la fattura valida in Italia. Caricalo con il tuo programma, il tuo intermediario o il servizio gratuito «Fatture e Corrispettivi» dell'Agenzia delle Entrate."
   },
   "bonus": {
     "title": "Detrazione fiscale del cliente",

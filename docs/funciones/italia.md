@@ -6,18 +6,21 @@
 
 ---
 
-## Por qué está en pruebas
+## Abierta desde octubre de 2026
 
 En Italia **un PDF no es una factura**. La factura válida es un XML
 (FatturaPA) que viaja por el Sistema di Interscambio (SDI) de la Agenzia delle
-Entrate. Hasta que el producto genere ese XML, ofrecer Italia sería darle a
-alguien documentos con aspecto de buenos que su contable tendría que rehacer.
+Entrate. Mientras el producto no lo generaba, `IT` llevó `enPruebas: true`:
+se podía elegir al darse de alta, con un aviso, y no se ofrecía a nadie más.
 
-Por eso `IT` lleva `enPruebas: true`. Quien se da de alta desde Italia puede
-elegirla y lleva obras, presupuestos y facturas con IVA y en euros, pero el
-alta y el panel le avisan de que la factura electrónica está en preparación
-(`avisoDelPais`). Lo que no se puede es pasarse a Italia desde Configuración
-siendo de otro país (`pais_no_ofrecido`).
+Con el XML generado y validado contra el esquema oficial, Italia se abrió: se
+elige en el registro sin aviso y en Configuración como cualquier país. Lo que
+todavía hace el negocio es **enviar** el XML al SDI —con su programa, su
+intermediario o el servicio gratuito «Fatture e Corrispettivi»—, y la pantalla
+de facturas lo dice a la vista (`fatturaPA.notaListado`), no en un rótulo que
+sólo sale al pasar el ratón. La primera factura real de un cliente es la
+prueba que queda: si el SDI la rechaza por algo que el esquema no ve, se
+arregla aquí.
 
 ---
 

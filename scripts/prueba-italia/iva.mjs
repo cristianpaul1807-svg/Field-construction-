@@ -48,7 +48,7 @@ ok("codice fiscale de sociedad = su Partita IVA", esCodiceFiscaleValido("0636339
 ok("codice destinatario de 7", esCodiceDestinatarioValido("M5UXCR1"), true);
 
 // El país.
-ok("a un negocio de Quebec no se le ofrece Italia", paisesQueSeOfrecen("CA").map((p) => p.codigo), ["CA"]);
+ok("Italia se ofrece ya a cualquiera, también desde Quebec", paisesQueSeOfrecen("CA").map((p) => p.codigo), ["CA", "IT"]);
 ok("quien ya es italiano la sigue viendo", paisesQueSeOfrecen("IT").map((p) => p.codigo), ["CA", "IT"]);
 ok("107 provincias italianas", paisDe("IT").regiones.length, 107);
 ok("«PE» es de los dos países y cada uno lo reconoce", [esRegionDe("IT", "PE"), esRegionDe("CA", "PE")], [true, true]);
@@ -68,8 +68,8 @@ ok("España: euros y sin configurar", [paisDe("ES").moneda, paisDe("ES").impuest
 ok("España no hereda la TPS/TVQ de Canadá", paisDe("ES").identificadoresFiscales.length, 0);
 ok("sin país guardado sigue siendo Canadá", paisDe(null).codigo, "CA");
 ok("un código inventado no se registra", esPaisDelRegistro("ZZ"), false);
-ok("el aviso del panel por país", [avisoDelPais("CA"), avisoDelPais("IT"), avisoDelPais("ES")], [null, "en_pruebas", "sin_configurar"]);
-ok("quien es de España ve su país en la ficha", paisesQueSeOfrecen("ES").map((p) => p.codigo), ["CA", "ES"]);
+ok("el aviso del panel por país: Italia ya no está en pruebas", [avisoDelPais("CA"), avisoDelPais("IT"), avisoDelPais("ES")], [null, null, "sin_configurar"]);
+ok("quien es de España ve su país en la ficha", paisesQueSeOfrecen("ES").map((p) => p.codigo), ["CA", "IT", "ES"]);
 
 // Lo que cada país puede usar. Un botón de pagar o una conexión a QuickBooks
 // donde no funcionan es un botón que lleva a un error.

@@ -725,6 +725,14 @@ export default function Invoicing() {
         </TabsContent>
 
         <TabsContent value="invoices" className="mt-4 space-y-6">
+      {/* En Italia el PDF no es la factura: lo es el XML, y todavía lo sube
+          el negocio. Escrito a la vista, porque el botón de cada factura sólo
+          lo dice al pasar el ratón, y en un teléfono no se pasa. */}
+      {paisDe(country).impuestos === "italia" && (
+        <p className="text-sm text-muted-foreground rounded-lg border border-border bg-card px-4 py-3">
+          {t("fatturaPA.notaListado")}
+        </p>
+      )}
       <SelectorDeObra />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-6">

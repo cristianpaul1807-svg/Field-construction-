@@ -473,7 +473,7 @@ export default {
       },
       {
         nombre: "Italie",
-        estado: "Premiers clients",
+        estado: "Disponible",
         listo: true,
         resumen: ["TVA de 22, 10 et 4 %, et autoliquidation", "XML FatturaPA validé, prêt pour le SDI", "SAL par poste et congruità de la main-d'œuvre", "Virement « parlant » et échéances du DURC"],
       },
@@ -503,9 +503,9 @@ export default {
       },
       {
         t: "Italie",
-        estado: "Premiers clients",
+        estado: "Disponible",
         listo: true,
-        p: "Ce qu'une impresa edile fait avec trois logiciels et son commercialista, en un seul. Ouvert dès maintenant aux premiers clients.",
+        p: "Ce qu'une impresa edile fait avec trois logiciels et son commercialista, en un seul.",
         items: [
           { t: "La TVA dépend du chantier", p: "22 %, 10 % pour les rénovations résidentielles, 4 % pour la première résidence, et l'autoliquidation pour la sous-traitance, avec son code N6.3." },
           { t: "Facture électronique FatturaPA", p: "Le XML de chaque facture et note de crédit, validé contre le schéma officiel. S'il manque une donnée du client, il vous dit laquelle." },

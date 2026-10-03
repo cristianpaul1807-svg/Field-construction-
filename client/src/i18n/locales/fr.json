@@ -3025,7 +3025,8 @@
       "comune": "commune",
       "provincia": "province"
     },
-    "howToSend": "Envoyez-le au SDI avec votre logiciel, votre intermédiaire ou le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate."
+    "howToSend": "Envoyez-le au SDI avec votre logiciel, votre intermédiaire ou le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate.",
+    "notaListado": "Chaque facture a son XML pour le SDI (bouton « XML pour le SDI ») : c'est la facture valable en Italie. Téléversez-le avec votre logiciel, votre intermédiaire ou le service gratuit « Fatture e Corrispettivi » de l'Agenzia delle Entrate."
   },
   "bonus": {
     "title": "Déduction fiscale du client",

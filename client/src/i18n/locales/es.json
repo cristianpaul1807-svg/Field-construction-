@@ -3025,7 +3025,8 @@
       "comune": "municipio",
       "provincia": "provincia"
     },
-    "howToSend": "Súbelo al SDI con tu programa, tu intermediario o el servicio gratuito «Fatture e Corrispettivi» de la Agenzia delle Entrate."
+    "howToSend": "Súbelo al SDI con tu programa, tu intermediario o el servicio gratuito «Fatture e Corrispettivi» de la Agenzia delle Entrate.",
+    "notaListado": "Cada factura tiene su XML para el SDI (botón «XML para el SDI»): es la factura válida en Italia. Súbelo con tu programa, tu intermediario o el servicio gratuito «Fatture e Corrispettivi» de la Agenzia delle Entrate."
   },
   "bonus": {
     "title": "Deducción fiscal del cliente",
