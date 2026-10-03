@@ -288,7 +288,10 @@
     "paraQueSirveLaCategoria": "Raggruppa i tuoi preventivi per tipo di lavoro (cucina, bagno, tetti…). In ogni categoria puoi tenere a portata di mano preventivi passati approvati come riferimento per prezzi e margini.",
     "sinCategoriasAun": "Non hai ancora categorie. Creale nella scheda «Categorie e riferimenti» e potrai assegnarne una dal preventivo.",
     "planificarUnTrabajo": "Pianifica un lavoro",
-    "sinImpuestoPais": "Senza imposte: quelle del tuo paese non sono ancora configurate."
+    "sinImpuestoPais": "Senza imposte: quelle del tuo paese non sono ancora configurate.",
+    "unit": "U.m.",
+    "unitShort": "u.m.",
+    "unitPlaceholder": "m², h, cad."
   },
   "invoicing": {
     "title": "Fatturazione e pagamenti",
@@ -1664,7 +1667,10 @@
     "sal_no_es_el_ultimo": "Si può eliminare solo l'ultimo SAL.",
     "solo_italia": "Questo esiste solo per le imprese in Italia.",
     "tipo_de_papel_de_otro_pais": "Questo tipo di documento è di un altro paese. Scegline uno dall'elenco o «Altro».",
-    "no_disponible_en_el_pais": "Questa funzione non è disponibile nel paese della tua impresa."
+    "no_disponible_en_el_pais": "Questa funzione non è disponibile nel paese della tua impresa.",
+    "prezzario_sin_fonte": "Dai un nome al prezzario.",
+    "prezzario_troppe_voci": "Troppe voci in un solo invio.",
+    "prezzario_vuoto": "Nessuna voce ha codice e descrizione. Controlla le colonne."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -1924,6 +1930,14 @@
           "p3": "Perché il sistema sappia che è già partito, premi «Approva e segna come inviato» e scegli «Approva senza inviare». Risulta inviato senza che al cliente arrivi nulla da qui, perché gliel'hai già mandato tu.",
           "p4": "Quando ti dice di sì, torna al preventivo e accettalo tu. È questo che apre il cantiere, mette il lavoro in calendario ed emette la prima fattura. Se non lo fai non succede niente: il preventivo resta fermo e il cantiere non nasce.",
           "nota": "Le fatture si scaricano allo stesso modo, da {{menuFinanzas}} → {{menuFacturacion}}. E se ti pagano in contanti, con assegno o con bonifico, lì c'è «Segna incassata» per registrarlo."
+        },
+        "prezzario": {
+          "title": "Preventivi con il prezzario regionale",
+          "p1": "Ogni regione pubblica il suo prezzario: l'elenco ufficiale dei prezzi delle opere, ogni voce con codice, descrizione, unità di misura e prezzo. Lo richiedono i lavori pubblici e i bonus fiscali per ritenere congruo un prezzo.",
+          "p2": "Scarica il file della tua regione in Excel o CSV. In {{menuMateriales}}, in fondo, premi Carica file: le colonne di codice, descrizione, unità di misura e prezzo si trovano da sole. Controllale, dagli un nome (per esempio «Lazio 2025») e carica.",
+          "p3": "In {{menuPresupuestos}}, aggiungendo una riga, premi Dal prezzario e cerca con due o tre parole o con il codice. La voce compila la riga con codice, descrizione, unità di misura e prezzo; tu indichi la zona e la quantità.",
+          "p4": "Il PDF del preventivo riporta il codice davanti a ogni voce e la quantità con la sua unità di misura, come un computo metrico. Ogni anno carica la nuova edizione con un altro nome; i preventivi già fatti non cambiano.",
+          "nota": "I prezzi del prezzario comprendono già spese generali e utile (di solito 15% + 10%): lascia il margine del preventivo a 0 o applica il tuo ribasso, altrimenti li fai pagare due volte."
         }
       },
       "trabajo": {
@@ -3137,5 +3151,41 @@
     "esFinal": "Con questo SAL l'opera è certificata per intero: la sua fattura sarà quella finale e svincolerà la ritenuta.",
     "avisoRango": "Ogni % deve essere tra quella del SAL precedente e 100.",
     "certificar": "Certifica SAL"
+  },
+  "prezzario": {
+    "titulo": "Prezzario regionale",
+    "entradilla": "Carica il file dei prezzi pubblicato dalla tua regione (Excel o CSV) e aggiungi le sue voci ai preventivi con codice, unità di misura e prezzo ufficiali.",
+    "cargarArchivo": "Carica file",
+    "noSeLee": "Non è stato possibile leggere il file. Salvalo come .xlsx o .csv da Excel e riprova.",
+    "columna": {
+      "codice": "Colonna del codice",
+      "descrizione": "Colonna della descrizione",
+      "unita": "Colonna dell'unità di misura",
+      "prezzo": "Colonna del prezzo"
+    },
+    "ninguna": "Nessuna",
+    "nombreFonte": "Nome del prezzario",
+    "nombreFontePista": "Lazio 2025",
+    "faltaNombre": "Dagli un nome per ritrovarlo dopo.",
+    "ningunaVoce": "Con queste colonne non risulta nessuna voce. Controlla quale è il codice e quale la descrizione.",
+    "encontradas": "{{n}} voci. Le prime tre:",
+    "sinUnidad": "senza u.m.",
+    "sinPrecio": "senza prezzo",
+    "demasiadas": "Sono più di {{max}} voci: non sembra un prezzario. Controlla le colonne.",
+    "cargarN": "Carica {{n}} voci",
+    "cargando": "Caricamento {{hechas}} di {{total}}…",
+    "cargadas": "{{n}} voci caricate in «{{fonte}}».",
+    "noCarga": "Non è stato possibile caricare i prezzari.",
+    "vacio": "Non hai ancora caricato nessun prezzario.",
+    "vociDe": "{{n}} voci",
+    "borrar": "Elimina «{{fonte}}»",
+    "borrarConfirm": "Eliminare il prezzario «{{fonte}}»? I preventivi già fatti non cambiano.",
+    "notaPrecios": "I prezzi del prezzario comprendono già spese generali e utile d'impresa (di solito 15% + 10%). Se li usi così come sono, lascia il margine del preventivo a 0 o applica il tuo ribasso.",
+    "dalPrezzario": "Dal prezzario",
+    "dalPrezzarioQue": "Scegli una voce: compila la riga con codice, descrizione, unità di misura e prezzo. Poi indica la zona e la quantità.",
+    "buscar": "Cerca nel prezzario",
+    "buscarPista": "intonaco calce, E04.001…",
+    "noBusca": "La ricerca non è riuscita. Riprova.",
+    "nadaEncontrado": "Nessuna voce con queste parole. Se non hai ancora caricato il prezzario, fallo in {{menu}}."
   }
 }

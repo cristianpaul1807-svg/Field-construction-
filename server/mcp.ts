@@ -17,6 +17,7 @@ import { fatturaPADeFactura, fatturaPADeNota } from "./fatturaPAServidor";
 import { ritenutaBancaria } from "../shared/bonusEdilizi";
 import { papelesQueVencen } from "./papelesQueVencen";
 import { congruitaDeLaObra } from "./congruitaServidor";
+import { cercaNelPrezzario } from "./prezzarioServidor";
 import { calcoloDaEstado, estadoSalDellaObra, ivaDeLaObra, salGuardado } from "./salServidor";
 import { cancelarAccion, confirmarAccion, prepararAccion } from "./mcpAcciones";
 import { grupoDePais, paisDe } from "../shared/paises";
@@ -970,6 +971,33 @@ function createMcpServer(context: ReadToolContext) {
   );
 
   server.registerTool(
+    "get_price_list_items",
+    {
+      title: "Search the regional price list (prezzario)",
+      description:
+        "Searches the regional price lists (prezzario regionale) this business has loaded: official code, description, unit of measure and price before VAT, in `currency`. Every word must appear in the description or the code. Use it to price estimate lines; pass the code and unit on to draft_estimate. Italy only. Read-only.",
+      inputSchema: {
+        query: z.string().min(2).max(120).describe("Words or code to look for, e.g. 'intonaco calce' or 'E04.001'"),
+        source: z.string().max(120).optional().describe("Only this price list, e.g. 'Lazio 2025'"),
+      },
+    },
+    async ({ query, source }) => {
+      const denied = requireRole(context, "get_price_list_items");
+      if (denied) {
+        await audit(context, "get_price_list_items", false, { code: "access_denied" });
+        return denied;
+      }
+      const voci = await cercaNelPrezzario(admin, context.identity.businessId, query, source ?? null, 25);
+      await audit(context, "get_price_list_items", true, { count: voci.length });
+      return jsonResult({
+        currency,
+        items: voci.map((v) => ({ source: v.fonte, code: v.codice, description: v.descrizione, unit: v.unita, price: v.prezzo, chapter: v.capitolo })),
+        note: voci.length ? undefined : "Nothing found. The business may not have loaded a price list yet (Materials and costs → Prezzario regionale in the panel).",
+      });
+    },
+  );
+
+  server.registerTool(
     "get_clients",
     {
       title: "Clients",
@@ -1475,6 +1503,8 @@ function createMcpServer(context: ReadToolContext) {
             z.object({
               description: z.string().min(1).max(200),
               quantity: z.number().positive(),
+              unit: z.string().max(20).optional().describe("Unit of measure: m², m³, m, kg, h, each…"),
+              code: z.string().max(80).optional().describe("Price-list code (from get_price_list_items) or supplier code"),
               unitPrice: z.number().min(0).describe("Sale price per unit, before tax"),
               area: z.string().max(80).optional().describe("Room or area, e.g. Bathroom"),
               kind: z.enum(["materials", "labour", "subcontract"]).optional(),
@@ -1505,6 +1535,8 @@ function createMcpServer(context: ReadToolContext) {
         area: l.area?.trim() || "General",
         description: l.description.trim(),
         quantity: l.quantity,
+        unit: l.unit?.trim() || null,
+        code: l.code?.trim() || null,
         unitPrice: r2(l.unitPrice),
         category: CATEGORIA[l.kind ?? "materials"],
         total: r2(l.quantity * l.unitPrice),

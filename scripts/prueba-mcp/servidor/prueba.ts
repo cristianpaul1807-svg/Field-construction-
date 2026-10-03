@@ -57,6 +57,7 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
   ok(`${pais}: calcular factura`, nombres.includes("calculate_invoice"), pais !== "ES");
   ok(`${pais}: Partita IVA`, nombres.includes("check_italian_tax_id"), pais === "IT");
   ok(`${pais}: congruità`, nombres.includes("check_congruita"), pais === "IT");
+  ok(`${pais}: prezzario`, nombres.includes("get_price_list_items"), pais === "IT");
   ok(`${pais}: en solo lectura no hay nada que prepare`, nombres.filter((n: string) => n.startsWith("draft_") || n.endsWith("_action")), []);
   ok(`${pais}: títulos sin francés`, (lista.result?.tools ?? []).filter((t: any) => /[éèàç]|Mes |Mon /.test(t.title ?? "")).map((t: any) => t.title), []);
   const resumen = await llamar("get_business_summary");
@@ -130,6 +131,9 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
     DATOS.invoices = [];
     const sal = await llamar("get_progress_claims", { projectId: "11111111-1111-4111-8111-111111111111" });
     ok("IT: lo certificado de la obra", [sal.contractValue, sal.certifiedToDate, sal.items?.[0]?.percentComplete, sal.claims?.length, sal.currency], [11000, 4400, 40, 1, "EUR"]);
+    DATOS.prezzario_voci = [{ id: "v1", fonte: "Lazio 2025", codice: "A03.01.001", descrizione: "Scavo di sbancamento", unita: "m³", prezzo: "8.42", capitolo: "Scavi" }];
+    const pz = await llamar("get_price_list_items", { query: "scavo" });
+    ok("IT: el prezzario, con unidad y precio en número", [pz.items?.[0]?.code, pz.items?.[0]?.unit, pz.items?.[0]?.price, pz.currency], ["A03.01.001", "m³", 8.42, "EUR"]);
     ok("IT: clientes sin la llave del portal", Object.keys((await llamar("get_clients", { search: "Bian" })).clients[0]).includes("access_token"), false);
   }
   if (pais === "ES") {

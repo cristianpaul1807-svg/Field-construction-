@@ -36,8 +36,13 @@ Cada línea vive en una **zona** (Cocina, Baño 2, Exterior…) y una
 **categoría** (Materiales, Mano de obra, Subcontratistas).
 
 1. En *Agregar línea*: escribe la zona, elige la categoría, escribe el ítem,
-   la cantidad y el costo unitario.
+   la cantidad, la unidad (m², h, ud.) y el costo unitario. Si eliges el
+   ítem del catálogo, la unidad y su código de proveedor llegan solos.
 2. **Agregar**.
+
+La unidad sale en el PDF junto a la cantidad («12,5 m²»), y el código delante
+del ítem. En Italia, **Del prezzario** rellena la línea con una voce oficial
+de la región: ver [prezzario.md](prezzario.md).
 
 Para editar una línea, escribe encima. **Se guarda al salir del campo**, no
 hay botón de guardar por línea.

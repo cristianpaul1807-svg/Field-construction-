@@ -288,7 +288,10 @@
     "paraQueSirveLaCategoria": "Groups your estimates by type of job (kitchen, bathroom, roofing…). In each category you can keep past approved estimates on hand as a reference for prices and margins.",
     "sinCategoriasAun": "You don't have any categories yet. Create them in the \"Categories & references\" tab and you can assign one from the estimate.",
     "planificarUnTrabajo": "Plan a job",
-    "sinImpuestoPais": "No tax: your country's taxes aren't set up yet."
+    "sinImpuestoPais": "No tax: your country's taxes aren't set up yet.",
+    "unit": "Unit",
+    "unitShort": "unit",
+    "unitPlaceholder": "m², h, each"
   },
   "invoicing": {
     "title": "Invoicing & Payments",
@@ -1664,7 +1667,10 @@
     "sal_no_es_el_ultimo": "Only the last claim can be deleted.",
     "solo_italia": "This only exists for businesses in Italy.",
     "tipo_de_papel_de_otro_pais": "That document type belongs to another country. Choose one from the list or «Other».",
-    "no_disponible_en_el_pais": "This feature isn't available in your business's country."
+    "no_disponible_en_el_pais": "This feature isn't available in your business's country.",
+    "prezzario_sin_fonte": "Give the price list a name.",
+    "prezzario_troppe_voci": "Too many items in one upload.",
+    "prezzario_vuoto": "No item has both a code and a description. Check the columns."
   },
   "workLog": {
     "title": "Work log",
@@ -1924,6 +1930,14 @@
           "p3": "So the system knows it's out the door, press “Approve and mark as sent” and choose “Approve without sending”. It's marked as sent without anything reaching the client here, because you already sent it yourself.",
           "p4": "When they say yes, come back to the estimate and accept it yourself. That's what opens the project, puts the work on the calendar and issues the first invoice. Skip it and nothing at all happens: the estimate sits still and the project never comes into being.",
           "nota": "Invoices download the same way, from {{menuFinanzas}} → {{menuFacturacion}}. And if they pay you in cash, by cheque or by transfer, “Mark as paid” is right there to record it."
+        },
+        "prezzario": {
+          "title": "Pricing with the regional price list",
+          "p1": "Every region publishes its prezzario: the official list of construction prices, each item with a code, a description, a unit and a price. Public works and tax bonuses ask for it to accept a price as fair.",
+          "p2": "Download your region's file as Excel or CSV. In {{menuMateriales}}, at the bottom, press Load file: the code, description, unit and price columns are found on their own. Check them, give it a name (for example “Lazio 2025”) and load.",
+          "p3": "In {{menuPresupuestos}}, when adding a line, press From price list and search with two or three words or the code. The item fills the line with its code, description, unit and price; you add the area and the quantity.",
+          "p4": "The estimate PDF shows the code before each item and the quantity with its unit, like a computo metrico. Each year, load the new edition under another name; existing estimates don't change.",
+          "nota": "Price list prices already include overheads and profit (usually 15% + 10%): leave the estimate margin at 0 or apply your discount, or you'll charge them twice."
         }
       },
       "trabajo": {
@@ -3137,5 +3151,41 @@
     "esFinal": "This claim certifies the whole job: its invoice will be the final one and will release the holdback.",
     "avisoRango": "Each % must be between the previous claim's and 100.",
     "certificar": "Certify claim"
+  },
+  "prezzario": {
+    "titulo": "Regional price list (prezzario)",
+    "entradilla": "Load the price file your region publishes (Excel or CSV) and add its items to estimates with the official code, unit and price.",
+    "cargarArchivo": "Load file",
+    "noSeLee": "The file could not be read. Save it as .xlsx or .csv from Excel and try again.",
+    "columna": {
+      "codice": "Code column",
+      "descrizione": "Description column",
+      "unita": "Unit column",
+      "prezzo": "Price column"
+    },
+    "ninguna": "None",
+    "nombreFonte": "Price list name",
+    "nombreFontePista": "Lazio 2025",
+    "faltaNombre": "Give it a name so you can find it later.",
+    "ningunaVoce": "No items come out with these columns. Check which one is the code and which the description.",
+    "encontradas": "{{n}} items. The first three:",
+    "sinUnidad": "no unit",
+    "sinPrecio": "no price",
+    "demasiadas": "That's over {{max}} items: it doesn't look like a price list. Check the columns.",
+    "cargarN": "Load {{n}} items",
+    "cargando": "Loading {{hechas}} of {{total}}…",
+    "cargadas": "{{n}} items loaded into “{{fonte}}”.",
+    "noCarga": "The price lists could not be loaded.",
+    "vacio": "You haven't loaded a price list yet.",
+    "vociDe": "{{n}} items",
+    "borrar": "Delete “{{fonte}}”",
+    "borrarConfirm": "Delete the price list “{{fonte}}”? Existing estimates don't change.",
+    "notaPrecios": "Price list prices already include overheads and contractor's profit (usually 15% + 10%). If you use them as they are, leave the estimate margin at 0 or apply your discount.",
+    "dalPrezzario": "From price list",
+    "dalPrezzarioQue": "Pick an item: it fills the line with its code, description, unit and price. Then add the area and quantity.",
+    "buscar": "Search the price list",
+    "buscarPista": "intonaco calce, E04.001…",
+    "noBusca": "The search failed. Try again.",
+    "nadaEncontrado": "No items with those words. If you haven't loaded the price list yet, do it in {{menu}}."
   }
 }

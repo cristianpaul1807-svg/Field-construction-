@@ -95,6 +95,7 @@ node --experimental-strip-types scripts/prueba-italia/iva.mjs          # Italian
 node --experimental-strip-types scripts/prueba-italia/fatturapa.mjs    # the Italian e-invoice XML, validated against the official schema
 node --experimental-strip-types scripts/prueba-italia/congruita.mjs    # the Cassa Edile labour minimum, index by index
 node --experimental-strip-types scripts/prueba-italia/sal.mjs          # progress claims: contract prices, no going backwards, deposit recovered to the cent
+node --experimental-strip-types scripts/prueba-italia/prezzario.mjs    # the regional price list read from the region's own Excel or CSV
 node --experimental-strip-types scripts/prueba-paises/aislamiento.mjs  # what belongs to one country is neither written nor opened from another
 ```
 
@@ -108,7 +109,8 @@ the failure that makes a page draggable sideways on a phone, which is where
 this gets read.
 
 `comprobar-ancho.mjs` covers the 32 public pages, with the real fonts.
-`comprobar-ancho-panel.mjs` covers the 31 panel screens, which need a session:
+`comprobar-ancho-panel.mjs` covers the 32 panel screens, and the six that change
+for an Italian business a second time as one, which need a session:
 it serves `dist/public`, answers any read of the Supabase session key with a
 fake one, and replies to every `/api/…` from a fixture table. Three things
 about it are load-bearing, and each is there because its absence produced a

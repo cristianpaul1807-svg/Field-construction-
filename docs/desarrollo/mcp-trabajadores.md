@@ -50,6 +50,7 @@ Siguen sin existir herramientas MCP como `clock_in`, `clock_out`, `report_incide
 | `get_bank_withholdings` | Lo que los bancos retuvieron (11 %) en el año por los pagos de obras con bonus. **Sólo en Italia.** |
 | `get_e_invoice` | El XML FatturaPA de una factura o nota de crédito, o lo que falta para generarlo. **Sólo en Italia.** |
 | `check_italian_tax_id` | Comprueba una Partita IVA o un codice fiscale con su dígito de control. **Sólo en Italia.** |
+| `get_price_list_items` | Busca en el prezzario regional cargado: código, descripción, unidad y precio. **Sólo en Italia.** |
 
 ### El país
 

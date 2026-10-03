@@ -90,6 +90,8 @@ import { fatturaPADeFactura, fatturaPADeNota, type ResultadoFatturaPA } from "./
 import { esMesValido, resumenDeHoras, resumenEnCsv, TEXTOS_DEL_RESUMEN } from "./resumenDeHoras";
 import { aplicaLaCcq, esPaisConocido, esPaisDelRegistro, esRegionDe, grupoDePais, paisDe, PAIS_POR_DEFECTO, type GrupoDePais } from "../shared/paises";
 import { calcularIva, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "../shared/iva";
+import { VOCI_POR_ENVIO, voceValida } from "../shared/prezzario";
+import { cercaNelPrezzario } from "./prezzarioServidor";
 import { esPartitaIvaValida, esCodiceFiscaleValido, esCodiceDestinatarioValido, esCapValido } from "../shared/fiscaleItalia";
 import { enviarCorreo, plantilla, esc, type ResultadoDeCorreo } from "./correo";
 import { TEXTOS_CORREO, normalizarLangCorreo, type LangCorreo } from "./correoTextos";
@@ -4015,11 +4017,12 @@ apiRouter.use((req, res, next) => {
  * cambiando su ficha. El callback de QuickBooks está encima de la puerta y no
  * pasa por aquí.
  */
-const RUTAS_DEL_PAIS: { prefijo: string; necesita: "nomina" | "cobrosConTarjeta" | "quickbooks" }[] = [
+const RUTAS_DEL_PAIS: { prefijo: string; necesita: "nomina" | "cobrosConTarjeta" | "quickbooks" | "prezzario" }[] = [
   { prefijo: "/payroll", necesita: "nomina" },
   { prefijo: "/ccq", necesita: "nomina" },
   { prefijo: "/stripe/terminal", necesita: "cobrosConTarjeta" },
   { prefijo: "/quickbooks", necesita: "quickbooks" },
+  { prefijo: "/prezzario", necesita: "prezzario" },
 ];
 
 apiRouter.use(async (req, res, next) => {
@@ -4720,7 +4723,7 @@ apiRouter.get(
         .single(),
       supabase
         .from("estimate_lines")
-        .select("id, zone, category, item_name, quantity, unit_cost, total, visible_to_client")
+        .select("id, zone, category, item_name, quantity, unit, code, unit_cost, total, visible_to_client")
         .eq("business_id", req.businessId!)
         .eq("estimate_id", req.params.id)
         .order("zone"),
@@ -4756,6 +4759,8 @@ apiRouter.get(
         category: l.category,
         item: l.item_name,
         quantity: Number(l.quantity),
+        unit: l.unit ?? null,
+        code: l.code ?? null,
         unitCost: Number(l.unit_cost),
         total: Number(l.total),
         visibleToClient: l.visible_to_client,
@@ -4763,6 +4768,16 @@ apiRouter.get(
     });
   })
 );
+
+/**
+ * La unidad y el código de una línea. Vacío es «sin unidad», no una unidad
+ * que se llama "": así el PDF no pinta una columna con huecos raros.
+ */
+function textoCorto(valor: unknown, max: number): string | null {
+  if (typeof valor !== "string") return null;
+  const t = valor.trim().slice(0, max);
+  return t || null;
+}
 
 // Recomputes and persists estimates.total from its current lines + margin/waste,
 // mirroring the client-side preview formula exactly. Called after every line
@@ -4874,6 +4889,8 @@ apiRouter.post(
         category: body.category,
         item_name: body.itemName,
         quantity: body.quantity ?? 1,
+        unit: textoCorto(body.unit, 20),
+        code: textoCorto(body.code, 80),
         unit_cost: body.unitCost ?? 0,
         visible_to_client: body.visibleToClient ?? false,
       })
@@ -4895,6 +4912,8 @@ apiRouter.patch(
     if (body.category !== undefined) update.category = body.category;
     if (body.itemName !== undefined) update.item_name = body.itemName;
     if (body.quantity !== undefined) update.quantity = body.quantity;
+    if (body.unit !== undefined) update.unit = textoCorto(body.unit, 20);
+    if (body.code !== undefined) update.code = textoCorto(body.code, 80);
     if (body.unitCost !== undefined) update.unit_cost = body.unitCost;
     if (body.visibleToClient !== undefined) update.visible_to_client = body.visibleToClient;
 
@@ -4945,7 +4964,7 @@ apiRouter.post(
     const { data: items, error: itemsError } = await supabase
       .from("assembly_items")
       .select(
-        "quantity_default, materials_catalog(name, price), labor_rates(name, hourly_rate), subcontractors(name)"
+        "quantity_default, materials_catalog(name, price, unit, sku), labor_rates(name, hourly_rate), subcontractors(name)"
       )
       .eq("business_id", req.businessId!)
       .eq("assembly_template_id", templateId);
@@ -4965,6 +4984,8 @@ apiRouter.post(
           category: "Materiales",
           item_name: i.materials_catalog.name,
           quantity: Number(i.quantity_default),
+          unit: i.materials_catalog.unit ?? null,
+          code: i.materials_catalog.sku ?? null,
           unit_cost: Number(i.materials_catalog.price ?? 0),
         };
       }
@@ -4976,6 +4997,8 @@ apiRouter.post(
           category: "Mano de obra",
           item_name: i.labor_rates.name,
           quantity: Number(i.quantity_default),
+          // La tarifa es por hora: la cantidad son horas.
+          unit: "h",
           unit_cost: Number(i.labor_rates.hourly_rate ?? 0),
         };
       }
@@ -9871,6 +9894,84 @@ apiRouter.delete(
   })
 );
 
+// ---------- Prezzario regionale (sólo Italia) ----------
+// La lista oficial de precios de cada región. Se carga entera desde el
+// archivo que publica la región —lo lee el navegador, ver shared/prezzario.ts—
+// y vive aparte del catálogo: son miles de voces, y mezcladas con los
+// cuarenta materiales que el negocio usa de verdad el catálogo dejaría de
+// servir. La puerta de país está en RUTAS_DEL_PAIS y en el trigger
+// private.exigir_italia_en_prezzario.
+
+apiRouter.get(
+  "/prezzario",
+  route(async (req, res) => {
+    const { data, error } = await req.supabase!.rpc("prezzario_fonti");
+    if (error) throw error;
+    res.json({
+      fonti: ((data ?? []) as { fonte: string; voci: number; aggiornato: string }[]).map((f) => ({
+        fonte: f.fonte,
+        voci: Number(f.voci),
+        aggiornato: f.aggiornato,
+      })),
+    });
+  })
+);
+
+apiRouter.get(
+  "/prezzario/voci",
+  route(async (req, res) => {
+    const q = typeof req.query.q === "string" ? req.query.q : "";
+    const fonte = typeof req.query.fonte === "string" && req.query.fonte.trim() ? req.query.fonte.trim() : null;
+    res.json({ voci: await cercaNelPrezzario(req.supabase!, req.businessId!, q, fonte, 40) });
+  })
+);
+
+apiRouter.post(
+  "/prezzario/import",
+  route(async (req, res) => {
+    const fonte = typeof req.body?.fonte === "string" ? req.body.fonte.trim().slice(0, 120) : "";
+    if (!fonte) {
+      res.status(400).json({ error: "fonte required", code: "prezzario_sin_fonte" });
+      return;
+    }
+    const llegadas: unknown[] = Array.isArray(req.body?.voci) ? req.body.voci : [];
+    if (llegadas.length > VOCI_POR_ENVIO) {
+      res.status(400).json({ error: "too many", code: "prezzario_troppe_voci" });
+      return;
+    }
+    const voci = llegadas.map(voceValida).filter((v): v is NonNullable<typeof v> => v !== null);
+    if (voci.length === 0) {
+      res.status(400).json({ error: "nothing valid", code: "prezzario_vuoto" });
+      return;
+    }
+    // Volver a cargar el mismo archivo corregido sustituye cada voce por su
+    // código, sin duplicar: es lo que pasa cada año con la nueva edición si
+    // se le pone el mismo nombre.
+    const { error } = await req.supabase!.from("prezzario_voci").upsert(
+      voci.map((v) => ({ business_id: req.businessId!, fonte, ...v, creata_en: new Date().toISOString() })),
+      { onConflict: "business_id,fonte,codice" }
+    );
+    if (error) throw error;
+    res.json({ guardate: voci.length, scartate: llegadas.length - voci.length });
+  })
+);
+
+apiRouter.delete(
+  "/prezzario/fonte",
+  route(async (req, res) => {
+    const fonte = typeof req.query.fonte === "string" ? req.query.fonte : "";
+    if (!fonte) {
+      res.status(400).json({ error: "fonte required", code: "prezzario_sin_fonte" });
+      return;
+    }
+    // Borrar el prezzario no toca los presupuestos: sus líneas guardaron una
+    // copia del código, la unidad y el precio el día que se añadieron.
+    const { error } = await req.supabase!.from("prezzario_voci").delete().eq("business_id", req.businessId!).eq("fonte", fonte);
+    if (error) throw error;
+    res.json({ ok: true });
+  })
+);
+
 apiRouter.post(
   "/labor-rates",
   route(async (req, res) => {
@@ -11030,7 +11131,7 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       .maybeSingle(),
     admin
       .from("estimate_lines")
-      .select("zone, category, item_name, quantity, unit_cost, total, visible_to_client")
+      .select("zone, category, item_name, quantity, unit, code, unit_cost, total, visible_to_client")
       .eq("business_id", businessId)
       .eq("estimate_id", estimateId)
       .order("zone"),
@@ -11063,7 +11164,9 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
     return {
       zone: l.zone,
       item: l.item_name,
+      code: l.code ?? null,
       quantity,
+      unit: l.unit ?? null,
       unitCost: quantity ? Math.round((total / quantity) * 100) / 100 : total,
       total,
     };
@@ -11142,7 +11245,7 @@ async function buildEstimatePdf(businessId: string, estimateId: string, lang: Do
       materials: business.showMaterials
         ? visible
             .filter((l) => l.category === "Materiales")
-            .map((l) => ({ name: l.item_name, quantity: Number(l.quantity), unit: null }))
+            .map((l) => ({ name: l.item_name, quantity: Number(l.quantity), unit: l.unit ?? null }))
         : [],
       schedule:
         business.showSchedule && !projection.error
@@ -12934,7 +13037,7 @@ registrarEjecutor("sal", async (admin, quien, d) => {
 });
 
 registrarEjecutor("presupuesto", async (admin, quien, d) => {
-  const lineas = (d.lines as { area: string; description: string; quantity: number; unitPrice: number; category: string }[]) ?? [];
+  const lineas = (d.lines as { area: string; description: string; quantity: number; unit?: string | null; code?: string | null; unitPrice: number; category: string }[]) ?? [];
   // Precios de venta tal cual los dijo la persona: sin margen ni mermas
   // encima, o el total que se le confirmó no sería el que queda guardado.
   const { data: presupuesto, error } = await admin
@@ -12964,6 +13067,8 @@ registrarEjecutor("presupuesto", async (admin, quien, d) => {
         category: l.category,
         item_name: l.description,
         quantity: l.quantity,
+        unit: textoCorto(l.unit, 20),
+        code: textoCorto(l.code, 80),
         unit_cost: l.unitPrice,
         // Son los precios que verá el cliente: se dijeron para él.
         visible_to_client: true,

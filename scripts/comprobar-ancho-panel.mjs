@@ -86,6 +86,14 @@ const PANTALLAS = [
   "/settings/afiliados",
 ];
 
+/**
+ * Las que cambian cuando el negocio es italiano: el prezzario en Materiales,
+ * su botón en el presupuesto, la Partita IVA en los datos de la empresa. Una
+ * pantalla que sólo existe en un país sólo se mide si alguien la abre en ese
+ * país; con la pasada canadiense sola, nada de Italia se había medido nunca.
+ */
+const PANTALLAS_ITALIA = ["/materials", "/budgets", "/invoicing", "/settings/company", "/work-log", "/subcontractors"];
+
 /** Lo único que se deja salir a la red. Las fuentes deciden el ancho del texto. */
 const FUERA = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
@@ -107,6 +115,36 @@ const FIXTURAS = {
     subscriptionStatus: "active",
     trialEndsAt: null,
     subscriptionPeriodEnd: "2027-01-01T00:00:00Z",
+  },
+  // El presupuesto abierto en el constructor: el primero de la lista se abre
+  // solo. Líneas con descripción de prezzario, código largo y unidad, que es
+  // lo que estira una fila.
+  "/api/estimates": [
+    { id: "e-1", number: "2026-0142", clientName: LARGO, status: "borrador", createdBy: "human", categoryName: "Rénovation complète", description: LARGO, total: 184320.55, createdAt: "2026-09-20T10:00:00Z", signature: null },
+  ],
+  "/api/estimates/e-1": {
+    id: "e-1",
+    number: "2026-0142",
+    clientName: LARGO,
+    clientAddress: "1234, boulevard Saint-Laurent, bureau 5600, Montréal (Québec) H2X 2S8",
+    clientPhone: "+1 514 555 0199",
+    clientEmail: CORREO,
+    status: "borrador",
+    createdBy: "human",
+    categoryId: null,
+    categoryName: null,
+    description: LARGO,
+    marginType: "global",
+    marginPercent: 12,
+    wastePercent: 5,
+    createdAt: "2026-09-20T10:00:00Z",
+    lines: [
+      { id: "l-1", zone: "Salle de bain principale — étage", category: "Materiales", item: "Intonaco civile per interni a base di calce e cemento, tirato in piano con regolo e frattazzato", quantity: 1284.5, unit: "m²", code: "TOS25_01.E04.001.001", unitCost: 23.46, visibleToClient: true },
+      { id: "l-2", zone: "Salle de bain principale — étage", category: "Mano de obra", item: "Charpentier-menuisier compagnon", quantity: 40, unit: "h", code: null, unitCost: 62.5, visibleToClient: false },
+    ],
+  },
+  "/api/prezzario": {
+    fonti: [{ fonte: "Prezzario dei lavori pubblici della Regione Toscana — edizione 2025 aggiornata", voci: 18452, aggiornato: "2026-09-30T10:00:00Z" }],
   },
   "/api/settings/users": {
     users: [
@@ -372,6 +410,20 @@ async function main() {
   let miradas = 0;
   let comprobadasLasFuentes = false;
 
+  const PASADAS = [
+    { pais: "CA", pantallas: PANTALLAS, fixturas: FIXTURAS },
+    {
+      pais: "IT",
+      pantallas: PANTALLAS_ITALIA,
+      fixturas: {
+        ...FIXTURAS,
+        "/api/auth/me": { ...FIXTURAS["/api/auth/me"], country: "IT" },
+        "/api/settings/company": { ...FIXTURAS["/api/settings/company"], country: "IT", province: "RM", taxConfig: { ivaPredefinita: "10" } },
+      },
+    },
+  ];
+
+  for (const { pais, pantallas: PANTALLAS_DE_LA_PASADA, fixturas: FIXTURAS_DE_LA_PASADA } of PASADAS)
   for (const ancho of ANCHOS) {
     const contexto = await navegador.newContext({ viewport: { width: ancho, height: 800 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 
@@ -385,7 +437,7 @@ async function main() {
       const url = new URL(ruta.request().url());
       if (url.origin === base) {
         if (!url.pathname.startsWith("/api/")) return ruta.continue();
-        const cuerpo = FIXTURAS[url.pathname] ?? [];
+        const cuerpo = FIXTURAS_DE_LA_PASADA[url.pathname] ?? [];
         return ruta.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(cuerpo) });
       }
       if (FUERA.some((host) => url.host === host)) return ruta.continue();
@@ -394,7 +446,7 @@ async function main() {
 
     const pagina = await contexto.newPage();
 
-    for (const pantalla of PANTALLAS) {
+    for (const pantalla of PANTALLAS_DE_LA_PASADA) {
       await pagina.goto(base + pantalla, { waitUntil: "networkidle" });
 
       // Que haya pintado algo y que sea **esta** pantalla. Sin la segunda
@@ -447,7 +499,7 @@ async function main() {
       miradas += 1;
       const mal = await medir(pagina);
       if (mal) {
-        fallos.push(`  · ${pantalla} a ${ancho}px — ocupa ${Math.round(mal.ocupa)} y caben ${mal.cabe}\n` + mal.quien.map((q) => `      ${q}`).join("\n"));
+        fallos.push(`  · ${pantalla} (${pais}) a ${ancho}px — ocupa ${Math.round(mal.ocupa)} y caben ${mal.cabe}\n` + mal.quien.map((q) => `      ${q}`).join("\n"));
       }
 
       // Y cada ficha desplegada, de una en una. Lo que el dueño encontró en su
@@ -474,7 +526,7 @@ async function main() {
         miradas += 1;
         const malAbierta = await medir(pagina);
         if (malAbierta) {
-          fallos.push(`  · ${pantalla} a ${ancho}px, con «${nombre}» abierta — ocupa ${Math.round(malAbierta.ocupa)} y caben ${malAbierta.cabe}\n` + malAbierta.quien.map((q) => `      ${q}`).join("\n"));
+          fallos.push(`  · ${pantalla} (${pais}) a ${ancho}px, con «${nombre}» abierta — ocupa ${Math.round(malAbierta.ocupa)} y caben ${malAbierta.cabe}\n` + malAbierta.quien.map((q) => `      ${q}`).join("\n"));
         }
 
         // Cerrarla deja la pantalla como estaba para la siguiente. Si no se
@@ -497,7 +549,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`ancho del panel ok — ${miradas} vistas, ninguna se sale en ${ANCHOS.join(" ni ")} px`);
+  console.log(`ancho del panel ok — ${miradas} vistas (Canadá e Italia), ninguna se sale en ${ANCHOS.join(" ni ")} px`);
 }
 
 main().catch((err) => {

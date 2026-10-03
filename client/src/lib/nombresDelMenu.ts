@@ -54,6 +54,7 @@ export function nombresDelMenu(t: (clave: string) => string) {
       menuPortal: t("nav.clientPortalShort"),
       menuProyectos: t("nav.projects"),
       menuPresupuestos: t("nav.budgets"),
+      menuMateriales: t("nav.materials"),
       menuVacaciones: t("nav.timeOff"),
       menuQuickBooks: t("nav.quickbooks"),
       menuCobrar: t("nav.cobrar"),

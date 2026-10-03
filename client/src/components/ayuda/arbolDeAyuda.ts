@@ -96,6 +96,7 @@ export const ARBOL_DE_AYUDA: SeccionDeAyuda[] = [
       // presupuesto sale, el cliente dice que sí por fuera, y aquí dentro no
       // pasa nada porque nadie lo marcó.
       { id: "porFuera", parrafos: 4, nota: true, ruta: "/budgets" },
+      { id: "prezzario", parrafos: 4, nota: true, ruta: "/materials", paises: ["IT"] },
     ],
   },
   {

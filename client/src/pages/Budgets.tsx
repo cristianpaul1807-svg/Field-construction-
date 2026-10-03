@@ -17,7 +17,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Trash2, Check, Download } from "lucide-react";
+import { FileText, Plus, Trash2, Check, Download, Search } from "lucide-react";
 import { AssemblyTemplateDialog } from "@/components/AssemblyTemplateDialog";
 import { AssignClientControl } from "@/components/AssignClientControl";
 import { formatCurrency } from "@/lib/mockData";
@@ -30,6 +30,7 @@ import { NewEstimateDialog } from "@/components/NewEstimateDialog";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 import { BorrarConHistorial } from "@/components/BorrarConHistorial";
+import { BuscadorDelPrezzario } from "@/components/PrezzarioRegionale";
 
 interface EstimateSummary {
   id: string;
@@ -55,6 +56,10 @@ interface EstimateLine {
   category: "Materiales" | "Mano de obra" | "Subcontratistas";
   item: string;
   quantity: number;
+  /** m², m³, h… Sin ella, la cantidad sale sola. */
+  unit: string | null;
+  /** El código de la voce del prezzario o del proveedor. */
+  code: string | null;
   unitCost: number;
   visibleToClient: boolean;
 }
@@ -91,11 +96,13 @@ function ErrorNote({ message, detalle, onReintentar }: { message: string; detall
   return <AvisoDeFallo mensaje={t("common.loadError", { message })} detalle={detalle} onReintentar={onReintentar} />;
 }
 
-const emptyLineForm: { zone: string; category: EstimateLine["category"]; item: string; quantity: number; unitCost: number } = {
+const emptyLineForm: { zone: string; category: EstimateLine["category"]; item: string; quantity: number; unit: string; code: string; unitCost: number } = {
   zone: "",
   category: "Materiales",
   item: "",
   quantity: 1,
+  unit: "",
+  code: "",
   unitCost: 0,
 };
 
@@ -161,20 +168,22 @@ export default function Budgets() {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const [lineEdits, setLineEdits] = useState<Record<string, { item: string; quantity: number; unitCost: number }>>({});
+  const [lineEdits, setLineEdits] = useState<Record<string, { item: string; quantity: number; unit: string; unitCost: number }>>({});
+  const [prezzarioAbierto, setPrezzarioAbierto] = useState(false);
   const [lineForm, setLineForm] = useState(emptyLineForm);
   const [catalogPick, setCatalogPick] = useState("");
   const { data: catalog } = useApi<{
-    materials: { id: string; name: string; price: number | null }[];
+    materials: { id: string; name: string; price: number | null; unit: string | null; sku: string | null }[];
     laborRates: { id: string; name: string; hourlyRate: number }[];
     subcontractors: { id: string; name: string; trade: string | null }[];
   }>("/api/materials");
 
   // One shape for three tables, so the picker does not care which catalog it
   // is showing — only what the chosen category points at.
-  const catalogFor = (category: string): { id: string; name: string; price: number | null }[] => {
+  const catalogFor = (category: string): { id: string; name: string; price: number | null; unit?: string | null; code?: string | null }[] => {
     if (category === "Mano de obra") {
-      return (catalog?.laborRates ?? []).map((l) => ({ id: l.id, name: l.name, price: l.hourlyRate }));
+      // La tarifa es por hora: la cantidad de la línea son horas.
+      return (catalog?.laborRates ?? []).map((l) => ({ id: l.id, name: l.name, price: l.hourlyRate, unit: "h" }));
     }
     if (category === "Subcontratistas") {
       return (catalog?.subcontractors ?? []).map((s) => ({
@@ -183,7 +192,7 @@ export default function Budgets() {
         price: null,
       }));
     }
-    return (catalog?.materials ?? []).map((m) => ({ id: m.id, name: m.name, price: m.price }));
+    return (catalog?.materials ?? []).map((m) => ({ id: m.id, name: m.name, price: m.price, unit: m.unit, code: m.sku }));
   };
   const [addingLine, setAddingLine] = useState(false);
   const [falloDeLinea, setFalloDeLinea] = useState<string | null>(null);
@@ -202,7 +211,7 @@ export default function Budgets() {
     setWastePercent(draft.wastePercent);
     setVisibility(draft.lines.map((l) => l.visibleToClient));
     setLineEdits(
-      Object.fromEntries(draft.lines.map((l) => [l.id, { item: l.item, quantity: l.quantity, unitCost: l.unitCost }]))
+      Object.fromEntries(draft.lines.map((l) => [l.id, { item: l.item, quantity: l.quantity, unit: l.unit ?? "", unitCost: l.unitCost }]))
     );
   }, [draft]);
 
@@ -228,7 +237,7 @@ export default function Budgets() {
     await apiEnviar(`/api/estimates/${draftId}/lines/${lineId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemName: edit.item, quantity: edit.quantity, unitCost: edit.unitCost }),
+      body: JSON.stringify({ itemName: edit.item, quantity: edit.quantity, unit: edit.unit, unitCost: edit.unitCost }),
     });
     refresh();
   };
@@ -274,6 +283,8 @@ export default function Budgets() {
           category: lineForm.category,
           itemName: lineForm.item.trim(),
           quantity: lineForm.quantity,
+          unit: lineForm.unit,
+          code: lineForm.code,
           unitCost: lineForm.unitCost,
         }),
       });
@@ -452,7 +463,7 @@ export default function Budgets() {
                         <h2 className="text-base font-semibold text-foreground break-words">
                           {t("budgets.budgetNumber", { id: draft.number ?? draft.id.slice(0, 8).toUpperCase() })}
                         </h2>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground break-words">
                           {draft.clientName ?? t("budgets.noClient")}
                           {draft.clientPhone && ` · ${draft.clientPhone}`}
                           {draft.clientEmail && ` · ${draft.clientEmail}`}
@@ -531,7 +542,7 @@ export default function Budgets() {
                             <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">{t(`budgets.lineCategories.${category}`, { defaultValue: category })}</h4>
                             <div className="space-y-2">
                               {zoneLines.map(({ line, idx }) => {
-                                const edit = lineEdits[line.id] ?? { item: line.item, quantity: line.quantity, unitCost: line.unitCost };
+                                const edit = lineEdits[line.id] ?? { item: line.item, quantity: line.quantity, unit: line.unit ?? "", unitCost: line.unitCost };
                                 return (
                                   // On a phone the five controls cannot share one
                                   // row: the item name collapsed to nothing and
@@ -539,12 +550,22 @@ export default function Budgets() {
                                   // gets its own line, and quantity × price =
                                   // total reads underneath it.
                                   <div key={line.id} className="text-sm border border-border rounded-lg p-2 sm:border-0 sm:p-0 sm:flex sm:items-center sm:gap-2">
+                                    {/* En el teléfono el código va en su línea: a su
+                                        lado dejaba la descripción sin sitio. */}
+                                    {line.code && (
+                                      <span className="block sm:hidden font-mono text-[11px] text-muted-foreground mb-1 break-all">{line.code}</span>
+                                    )}
                                     <div className="flex items-center gap-2 sm:contents">
                                       <Checkbox
                                         checked={visibility[idx]}
                                         onCheckedChange={(checked) => toggleLineVisibility(line.id, idx, checked === true)}
                                         aria-label={t("budgets.visibleToClientShort")}
                                       />
+                                      {line.code && (
+                                        <span className="hidden sm:inline font-mono text-[11px] text-muted-foreground shrink-0 max-w-24 truncate" title={line.code}>
+                                          {line.code}
+                                        </span>
+                                      )}
                                       <Input
                                         value={edit.item}
                                         onChange={(e) =>
@@ -562,7 +583,11 @@ export default function Budgets() {
                                         <Trash2 size={14} />
                                       </button>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:contents">
+                                    {/* Cantidad, unidad, precio y total no caben en
+                                        320 px con importes de cinco cifras: se
+                                        parten, y el total baja a su propia línea
+                                        a la derecha en vez de empujar la página. */}
+                                    <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 sm:contents">
                                       <Input
                                         type="number"
                                         value={edit.quantity}
@@ -572,6 +597,17 @@ export default function Budgets() {
                                         onBlur={() => saveLineEdit(line.id)}
                                         className="h-8 w-20 flex-shrink-0"
                                         aria-label={t("budgets.quantity")}
+                                      />
+                                      <Input
+                                        value={edit.unit}
+                                        maxLength={20}
+                                        onChange={(e) =>
+                                          setLineEdits((prev) => ({ ...prev, [line.id]: { ...edit, unit: e.target.value } }))
+                                        }
+                                        onBlur={() => saveLineEdit(line.id)}
+                                        placeholder={t("budgets.unitShort")}
+                                        className="h-8 w-14 flex-shrink-0 px-2"
+                                        aria-label={t("budgets.unit")}
                                       />
                                       <span className="text-muted-foreground sm:hidden">×</span>
                                       <Input
@@ -584,7 +620,7 @@ export default function Budgets() {
                                         className="h-8 w-24 flex-shrink-0"
                                         aria-label={t("budgets.unitCost")}
                                       />
-                                      <span className="text-foreground font-medium flex-1 sm:flex-none sm:w-20 text-right">
+                                      <span className="text-foreground font-medium ml-auto whitespace-nowrap sm:ml-0 sm:w-20 text-right">
                                         {formatCurrency(edit.quantity * edit.unitCost)}
                                       </span>
                                     </div>
@@ -603,7 +639,7 @@ export default function Budgets() {
 
                   <div className="border-t border-border pt-4">
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-3">{t("budgets.addLine")}</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
+                    <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-end">
                       <div className="space-y-1 col-span-2 sm:col-span-1">
                         <Label className="text-xs">
                           {t("budgets.zone")} <span className="text-status-error-fg">*</span>
@@ -620,7 +656,7 @@ export default function Budgets() {
                         <Select
                           value={lineForm.category}
                           onValueChange={(v) => {
-                            setLineForm((f) => ({ ...f, category: v as EstimateLine["category"], item: "" }));
+                            setLineForm((f) => ({ ...f, category: v as EstimateLine["category"], item: "", unit: "", code: "" }));
                             setCatalogPick("");
                           }}
                         >
@@ -645,7 +681,7 @@ export default function Budgets() {
                           onValueChange={(v) => {
                             setCatalogPick(v);
                             if (v === "otro") {
-                              setLineForm((f) => ({ ...f, item: "" }));
+                              setLineForm((f) => ({ ...f, item: "", code: "" }));
                               return;
                             }
                             const entry = catalogFor(lineForm.category).find((c) => c.id === v);
@@ -653,6 +689,8 @@ export default function Budgets() {
                               setLineForm((f) => ({
                                 ...f,
                                 item: entry.name,
+                                unit: entry.unit ?? "",
+                                code: entry.code ?? "",
                                 unitCost: entry.price ?? f.unitCost,
                               }));
                             }
@@ -690,6 +728,16 @@ export default function Budgets() {
                         />
                       </div>
                       <div className="space-y-1">
+                        <Label className="text-xs">{t("budgets.unit")}</Label>
+                        <Input
+                          value={lineForm.unit}
+                          maxLength={20}
+                          onChange={(e) => setLineForm((f) => ({ ...f, unit: e.target.value }))}
+                          placeholder={t("budgets.unitPlaceholder")}
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="space-y-1">
                         <Label className="text-xs">{t("budgets.unitCost")}</Label>
                         <Input
                           type="number"
@@ -703,6 +751,11 @@ export default function Budgets() {
                       <Button size="sm" className="gap-2" onClick={addLine} disabled={addingLine || !!faltaEnLaLinea}>
                         <Plus size={14} /> {t("budgets.addLine")}
                       </Button>
+                      {paisDe(empresa?.country).prezzario && (
+                        <Button size="sm" variant="outline" className="gap-2" onClick={() => setPrezzarioAbierto(true)}>
+                          <Search size={14} /> {t("prezzario.dalPrezzario")}
+                        </Button>
+                      )}
                       {faltaEnLaLinea && (
                         <span className="text-xs text-muted-foreground">{t(`budgets.falta.${faltaEnLaLinea}`)}</span>
                       )}
@@ -912,6 +965,30 @@ export default function Budgets() {
           onCerrar={() => setBorrandoPresupuesto(false)}
         />
       )}
+
+      <Dialog open={prezzarioAbierto} onOpenChange={setPrezzarioAbierto}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>{t("prezzario.dalPrezzario")}</DialogTitle>
+            <DialogDescription>{t("prezzario.dalPrezzarioQue")}</DialogDescription>
+          </DialogHeader>
+          {/* Elegir rellena el formulario, no añade la línea: falta la
+              zona y la cantidad, que son de esta obra y no de la región. */}
+          <BuscadorDelPrezzario
+            onElegir={(v) => {
+              setCatalogPick("otro");
+              setLineForm((f) => ({
+                ...f,
+                item: v.descrizione,
+                unit: v.unita ?? "",
+                code: v.codice,
+                unitCost: v.prezzo ?? 0,
+              }));
+              setPrezzarioAbierto(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
 
       {draft && (
         <Dialog open={pdfOpen} onOpenChange={setPdfOpen}>

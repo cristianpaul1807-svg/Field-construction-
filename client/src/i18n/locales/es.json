@@ -288,7 +288,10 @@
     "paraQueSirveLaCategoria": "Agrupa tus presupuestos por tipo de trabajo (cocina, baño, techos…). En cada categoría puedes guardar presupuestos antiguos aprobados para tenerlos a mano como referencia de precios y márgenes.",
     "sinCategoriasAun": "Todavía no tienes categorías. Créalas en la pestaña «Categorías y referencias» y podrás asignarla desde el presupuesto.",
     "planificarUnTrabajo": "Planificar un trabajo",
-    "sinImpuestoPais": "Sin impuestos: los de tu país todavía no están configurados."
+    "sinImpuestoPais": "Sin impuestos: los de tu país todavía no están configurados.",
+    "unit": "Unidad",
+    "unitShort": "ud.",
+    "unitPlaceholder": "m², h, ud."
   },
   "invoicing": {
     "title": "Facturación y pagos",
@@ -1664,7 +1667,10 @@
     "sal_no_es_el_ultimo": "Sólo se puede borrar el último SAL.",
     "solo_italia": "Esto sólo existe para negocios en Italia.",
     "tipo_de_papel_de_otro_pais": "Ese tipo de documento es de otro país. Elige uno de la lista o «Otro».",
-    "no_disponible_en_el_pais": "Esta función no está disponible en el país de tu negocio."
+    "no_disponible_en_el_pais": "Esta función no está disponible en el país de tu negocio.",
+    "prezzario_sin_fonte": "Ponle un nombre al prezzario.",
+    "prezzario_troppe_voci": "Demasiadas partidas en un solo envío.",
+    "prezzario_vuoto": "Ninguna partida tiene código y descripción. Revisa las columnas."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -1924,6 +1930,14 @@
           "p3": "Para que el sistema sepa que ya salió, pulsa «Aprobar y marcar como enviado» y elige «Aprobar sin enviar». Queda como enviado sin que al cliente le llegue nada por aquí, porque ya se lo mandaste tú.",
           "p4": "Cuando te diga que sí, vuelve al presupuesto y acéptalo tú. Eso es lo que abre la obra, mete el trabajo en el calendario y emite la primera factura. Si no lo haces no pasa nada de nada: el presupuesto se queda quieto y la obra no llega a existir.",
           "nota": "Las facturas se descargan igual, desde {{menuFinanzas}} → {{menuFacturacion}}. Y si te pagan en efectivo, por cheque o por transferencia, ahí mismo tienes «Marcar cobrada» para apuntarlo."
+        },
+        "prezzario": {
+          "title": "Presupuestar con el prezzario regional",
+          "p1": "Cada región publica su prezzario: la lista oficial de precios de obra, con un código, una descripción, una unidad y un precio por partida. Lo piden las obras públicas y los bonus fiscales para dar por bueno un precio.",
+          "p2": "Descarga el archivo de tu región en Excel o CSV. En {{menuMateriales}}, abajo, pulsa Cargar archivo: se buscan solas las columnas del código, la descripción, la unidad y el precio. Compruébalas, ponle un nombre (por ejemplo «Lazio 2025») y carga.",
+          "p3": "En {{menuPresupuestos}}, al añadir una línea, pulsa Del prezzario y busca con dos o tres palabras o con el código. La partida rellena la línea con su código, descripción, unidad y precio; tú pones la zona y la cantidad.",
+          "p4": "El PDF del presupuesto lleva el código delante de cada partida y la cantidad con su unidad, como un computo metrico. Cada año, carga la nueva edición con otro nombre; los presupuestos hechos no cambian.",
+          "nota": "Los precios del prezzario ya llevan gastos generales y beneficio (normalmente 15 % + 10 %): deja el margen del presupuesto en 0 o aplica tu descuento, o los cobrarás dos veces."
         }
       },
       "trabajo": {
@@ -3137,5 +3151,41 @@
     "esFinal": "Con este SAL la obra queda certificada entera: su factura será la final y liberará la retención.",
     "avisoRango": "Cada % tiene que estar entre el del SAL anterior y 100.",
     "certificar": "Certificar SAL"
+  },
+  "prezzario": {
+    "titulo": "Prezzario regional",
+    "entradilla": "Carga el archivo de precios que publica tu región (Excel o CSV) y añade sus partidas al presupuesto con el código, la unidad y el precio oficiales.",
+    "cargarArchivo": "Cargar archivo",
+    "noSeLee": "No se pudo leer el archivo. Guárdalo como .xlsx o .csv desde Excel e inténtalo de nuevo.",
+    "columna": {
+      "codice": "Columna del código",
+      "descrizione": "Columna de la descripción",
+      "unita": "Columna de la unidad",
+      "prezzo": "Columna del precio"
+    },
+    "ninguna": "Ninguna",
+    "nombreFonte": "Nombre del prezzario",
+    "nombreFontePista": "Lazio 2025",
+    "faltaNombre": "Ponle un nombre para poder buscarlo después.",
+    "ningunaVoce": "Con estas columnas no sale ninguna partida. Revisa cuál es el código y cuál la descripción.",
+    "encontradas": "{{n}} partidas. Las tres primeras:",
+    "sinUnidad": "sin unidad",
+    "sinPrecio": "sin precio",
+    "demasiadas": "Son más de {{max}} partidas: no parece un prezzario. Revisa las columnas.",
+    "cargarN": "Cargar {{n}} partidas",
+    "cargando": "Cargando {{hechas}} de {{total}}…",
+    "cargadas": "{{n}} partidas cargadas en «{{fonte}}».",
+    "noCarga": "No se pudieron cargar los prezzari.",
+    "vacio": "Todavía no has cargado ningún prezzario.",
+    "vociDe": "{{n}} partidas",
+    "borrar": "Borrar «{{fonte}}»",
+    "borrarConfirm": "¿Borrar el prezzario «{{fonte}}»? Los presupuestos ya hechos no cambian.",
+    "notaPrecios": "Los precios del prezzario ya incluyen gastos generales y beneficio de empresa (normalmente 15 % + 10 %). Si los usas tal cual, deja el margen del presupuesto en 0 o aplica tu descuento.",
+    "dalPrezzario": "Del prezzario",
+    "dalPrezzarioQue": "Elige una partida: rellena la línea con su código, descripción, unidad y precio. Luego pon la zona y la cantidad.",
+    "buscar": "Buscar en el prezzario",
+    "buscarPista": "intonaco calce, E04.001…",
+    "noBusca": "No se pudo buscar. Inténtalo de nuevo.",
+    "nadaEncontrado": "No hay partidas con esas palabras. Si aún no cargaste el prezzario, hazlo en {{menu}}."
   }
 }

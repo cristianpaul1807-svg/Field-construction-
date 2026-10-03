@@ -68,6 +68,7 @@ directamente al paso a paso.
 | *(dentro de Proyectos)* Órdenes de cambio | [funciones/proyectos.md](funciones/proyectos.md#órdenes-de-cambio) |
 | *(dentro de Proyectos)* Orden de ejecución y estados | [funciones/proyectos.md](funciones/proyectos.md#el-orden-de-ejecución) |
 | Materiales y costos | [funciones/materiales.md](funciones/materiales.md) |
+| *(Italia, dentro de Materiales y Presupuestos)* Prezzario regional | [funciones/prezzario.md](funciones/prezzario.md) |
 | Control de costos | [funciones/control-de-costos.md](funciones/control-de-costos.md) |
 | Contratos y documentos | [funciones/documentos-y-fotos.md](funciones/documentos-y-fotos.md#contratos-y-documentos) |
 | Galería de fotos | [funciones/documentos-y-fotos.md](funciones/documentos-y-fotos.md#galería-de-fotos) |

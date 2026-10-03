@@ -295,9 +295,10 @@ Y el commercialista recibe sus facturas con imponibile, aliquota, IVA y natura
 9. **Computo metrico con prezzario regional y SAL.** La pieza más grande; la
    que abre la obra mediana y la pública. ✅ Hecho el SAL: certificación por
    partidas, recuperación del anticipo, PDF para firmar y factura con un
-   botón; por MCP, `get_progress_claims`. Falta importar el **prezzario
-   regional** (cada región publica el suyo) para montar el presupuesto desde
-   sus códigos, y la unidad de medida en cada partida.
+   botón; por MCP, `get_progress_claims`. ✅ Hecho también el **prezzario
+   regional**: se carga el Excel o CSV de la región y el presupuesto se monta
+   con sus códigos, unidades y precios ([prezzario.md](prezzario.md)); por
+   MCP, `get_price_list_items`.
 
 Italia deja de estar en pruebas cuando un XML generado aquí haya sido
 aceptado por el SDI de verdad, en una cuenta real: el esquema lo valida, pero

@@ -97,7 +97,7 @@ puertas, y una novedad de un país tiene que pasar por las tres.
 - Una puerta por familia de rutas, detrás del inicio de sesión
   (`RUTAS_DEL_PAIS` en `server/api.ts`): `/payroll` y `/ccq` necesitan
   `nomina`, `/stripe/terminal` necesita `cobrosConTarjeta`, `/quickbooks`
-  necesita `quickbooks`. Lee la ficha del país, no una lista de países.
+  necesita `quickbooks`, `/prezzario` necesita `prezzario`. Lee la ficha del país, no una lista de países.
   Contesta `no_disponible_en_el_pais`.
 - En los PATCH de obra y de cliente, los campos de Italia
   (`CAMPOS_SOLO_ITALIA` en `shared/soloDeUnPais.ts`) → `solo_italia`.
@@ -115,6 +115,7 @@ sesión directamente contra Supabase o el servidor se equivoque:
 | `private.exigir_italia_en_cliente` | `clients` | `partita_iva`, `codice_fiscale`, `codice_destinatario`, `pec` |
 | `private.exigir_pais_en_papel` | `worker_documents` | tipos de Italia fuera de Italia; T4, RL-1 y talón fuera de Canadá |
 | `private.exigir_italia_en_iva` | `invoices`, `credit_notes` | un `tax_breakdown` con IVA italiano |
+| `private.exigir_italia_en_prezzario` | `prezzario_voci` | cualquier voce: la tabla entera es de Italia (borrar sí vale) |
 
 Todos usan `private.pais_del_negocio()`, que trata un negocio sin país como
 Canadá, igual que `shared/paises.ts`. Sólo saltan cuando un valor **se pone o

@@ -58,14 +58,15 @@ ok("Sin país guardado es Canadá", grupoDePais(null), "CA");
 ok("Canadá: nómina, tarjeta y QuickBooks", ["nomina", "cobrosConTarjeta", "quickbooks"].map((f) => paisDe("CA")[f]), [true, true, true]);
 ok("Italia: ni nómina de Quebec, ni lectores, ni QuickBooks", ["nomina", "cobrosConTarjeta", "quickbooks"].map((f) => paisDe("IT")[f]), [false, false, false]);
 ok("España (sin configurar): tampoco", ["nomina", "cobrosConTarjeta", "quickbooks"].map((f) => paisDe("ES")[f]), [false, false, false]);
+ok("El prezzario regionale, sólo en Italia", ["CA", "IT", "ES"].map((c) => paisDe(c).prezzario), [false, true, false]);
 
-// Y que la puerta exista, con sus cuatro familias, después del inicio de sesión.
+// Y que la puerta exista, con sus familias, después del inicio de sesión.
 const api = fs.readFileSync(new URL("../../server/api.ts", import.meta.url), "utf8");
 const puerta = api.indexOf("apiRouter.use(requireBusinessAuth);");
 const reglas = api.indexOf("const RUTAS_DEL_PAIS");
 ok("La puerta de país va detrás del inicio de sesión", puerta > 0 && reglas > puerta, true);
 const familias = [...api.slice(reglas, api.indexOf("];", reglas)).matchAll(/prefijo: "([^"]+)", necesita: "([^"]+)"/g)].map((m) => `${m[1]}=${m[2]}`);
-ok("Las familias cerradas por país", familias, ["/payroll=nomina", "/ccq=nomina", "/stripe/terminal=cobrosConTarjeta", "/quickbooks=quickbooks"]);
+ok("Las familias cerradas por país", familias, ["/payroll=nomina", "/ccq=nomina", "/stripe/terminal=cobrosConTarjeta", "/quickbooks=quickbooks", "/prezzario=prezzario"]);
 
 console.log(`\n${bien} bien, ${mal} mal`);
 process.exit(mal ? 1 : 0);

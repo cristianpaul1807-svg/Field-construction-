@@ -65,6 +65,14 @@ export interface Pais {
    */
   quickbooks: boolean;
   /**
+   * Si se carga un prezzario regionale. Es la lista oficial de precios de
+   * obra de cada región italiana, la que piden las obras públicas y los
+   * bonus fiscales para dar por bueno un precio; fuera de Italia no existe
+   * nada que se le parezca, y una lista así en un negocio de Quebec serían
+   * precios en euros de otra legislación.
+   */
+  prezzario: boolean;
+  /**
    * Todavía no se ofrece. El país está entero en el código, pero falta algo
    * para que sus facturas sean válidas —en Italia, la factura electrónica—, y
    * ofrecerlo sería darle a alguien documentos con aspecto de buenos que no lo
@@ -142,6 +150,7 @@ export const PAISES: Pais[] = [
     nomina: true,
     cobrosConTarjeta: true,
     quickbooks: true,
+    prezzario: false,
   },
   {
     codigo: "IT",
@@ -166,6 +175,7 @@ export const PAISES: Pais[] = [
     // Llega con las cuentas de Stripe italianas, en euros (fase 3).
     cobrosConTarjeta: false,
     quickbooks: false,
+    prezzario: true,
     // Abierta desde octubre de 2026: el XML FatturaPA se genera y se valida
     // contra el esquema oficial. El envío al SDI lo hace todavía el negocio
     // con su programa o su commercialista, y la pantalla de facturas lo dice.
@@ -240,6 +250,7 @@ function paisSinConfigurar(codigo: string): Pais {
     nomina: false,
     cobrosConTarjeta: false,
     quickbooks: false,
+    prezzario: false,
   };
 }
 

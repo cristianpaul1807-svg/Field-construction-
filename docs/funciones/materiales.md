@@ -103,6 +103,15 @@ un presupuesto enviado es un compromiso a un precio.
 
 ---
 
+## El prezzario regional (Italia)
+
+En un negocio italiano, debajo del catálogo está el **Prezzario regionale**:
+la lista oficial de la región, cargada desde su Excel o CSV. Vive aparte del
+catálogo a propósito —son miles de voces— y se usa desde el presupuesto con
+**Del prezzario**. Ver [prezzario.md](prezzario.md).
+
+---
+
 ## Relación con las plantillas
 
 Una plantilla apunta a **filas de este catálogo**, no a copias de sus precios.

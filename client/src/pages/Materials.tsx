@@ -19,6 +19,9 @@ import { formatCurrency } from "@/lib/mockData";
 import { useApi, apiFetch, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { PrezzarioRegionale } from "@/components/PrezzarioRegionale";
+import { useAuth } from "@/contexts/AuthContext";
+import { paisDe } from "@shared/paises";
 
 interface MaterialRow {
   id: string;
@@ -64,6 +67,7 @@ const EMPTY_LABOR: LaborDraft = { id: null, name: "", hourlyRate: "" };
 
 export default function Materials() {
   const { t } = useTranslation();
+  const { country } = useAuth();
   const { data, loading, error, reload, detalle } = useApi<MaterialsResponse>("/api/materials");
   const [query, setQuery] = useState("");
   const [soloFaltan, setSoloFaltan] = useState(false);
@@ -343,6 +347,8 @@ export default function Materials() {
           </div>
         )}
       </Card>
+
+      {paisDe(country).prezzario && <PrezzarioRegionale />}
 
       <Dialog open={material !== null} onOpenChange={(open) => !open && setMaterial(null)}>
         <DialogContent className="sm:max-w-md">

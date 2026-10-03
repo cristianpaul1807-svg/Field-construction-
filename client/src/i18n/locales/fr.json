@@ -288,7 +288,10 @@
     "paraQueSirveLaCategoria": "Regroupe vos soumissions par type de travaux (cuisine, salle de bain, toiture…). Dans chaque catégorie, vous pouvez garder d'anciennes soumissions approuvées sous la main comme référence de prix et de marges.",
     "sinCategoriasAun": "Vous n'avez pas encore de catégories. Créez-les dans l'onglet « Catégories et références » et vous pourrez en attribuer une depuis la soumission.",
     "planificarUnTrabajo": "Planifier un travail",
-    "sinImpuestoPais": "Sans taxes : celles de votre pays ne sont pas encore configurées."
+    "sinImpuestoPais": "Sans taxes : celles de votre pays ne sont pas encore configurées.",
+    "unit": "Unité",
+    "unitShort": "unité",
+    "unitPlaceholder": "m², h, unité"
   },
   "invoicing": {
     "title": "Facturation et paiements",
@@ -1664,7 +1667,10 @@
     "sal_no_es_el_ultimo": "Seul le dernier décompte peut être supprimé.",
     "solo_italia": "Ceci n'existe que pour les entreprises en Italie.",
     "tipo_de_papel_de_otro_pais": "Ce type de document appartient à un autre pays. Choisissez-en un dans la liste ou « Autre ».",
-    "no_disponible_en_el_pais": "Cette fonction n'est pas offerte dans le pays de votre entreprise."
+    "no_disponible_en_el_pais": "Cette fonction n'est pas offerte dans le pays de votre entreprise.",
+    "prezzario_sin_fonte": "Donnez un nom au prezzario.",
+    "prezzario_troppe_voci": "Trop de postes dans un seul envoi.",
+    "prezzario_vuoto": "Aucun poste n'a de code et de description. Vérifiez les colonnes."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -1924,6 +1930,14 @@
           "p3": "Pour que le système sache qu'elle est partie, appuyez sur « Approuver et marquer comme envoyée » et choisissez « Approuver sans envoyer ». Elle passe à envoyée sans que rien n'arrive au client ici, puisque vous la lui avez déjà envoyée.",
           "p4": "Quand il vous dit oui, revenez à la soumission et acceptez-la vous-même. C'est ça qui ouvre le chantier, met les travaux au calendrier et émet la première facture. Sans ce geste, rien ne se passe : la soumission reste figée et le chantier n'existe jamais.",
           "nota": "Les factures se téléchargent de la même façon, depuis {{menuFinanzas}} → {{menuFacturacion}}. Et s'il vous paie comptant, par chèque ou par virement, « Marquer payée » est juste là pour l'enregistrer."
+        },
+        "prezzario": {
+          "title": "Chiffrer avec le prezzario régional",
+          "p1": "Chaque région publie son prezzario : la liste officielle des prix de travaux, chaque poste avec un code, une description, une unité et un prix. Les travaux publics et les bonus fiscaux l'exigent pour valider un prix.",
+          "p2": "Téléchargez le fichier de votre région en Excel ou CSV. Dans {{menuMateriales}}, en bas, appuyez sur Charger un fichier : les colonnes du code, de la description, de l'unité et du prix sont trouvées toutes seules. Vérifiez-les, donnez-lui un nom (par exemple « Lazio 2025 ») et chargez.",
+          "p3": "Dans {{menuPresupuestos}}, en ajoutant une ligne, appuyez sur Du prezzario et cherchez avec deux ou trois mots ou le code. Le poste remplit la ligne avec son code, sa description, son unité et son prix ; vous ajoutez la zone et la quantité.",
+          "p4": "Le PDF de la soumission porte le code devant chaque poste et la quantité avec son unité, comme un computo metrico. Chaque année, chargez la nouvelle édition sous un autre nom ; les soumissions déjà faites ne changent pas.",
+          "nota": "Les prix du prezzario incluent déjà les frais généraux et le bénéfice (en général 15 % + 10 %) : laissez la marge de la soumission à 0 ou appliquez votre rabais, sinon vous les facturerez deux fois."
         }
       },
       "trabajo": {
@@ -3137,5 +3151,41 @@
     "esFinal": "Ce décompte certifie tout le chantier : sa facture sera la finale et libérera la retenue.",
     "avisoRango": "Chaque % doit être compris entre celui du décompte précédent et 100.",
     "certificar": "Certifier le décompte"
+  },
+  "prezzario": {
+    "titulo": "Prezzario régional",
+    "entradilla": "Chargez le fichier de prix publié par votre région (Excel ou CSV) et ajoutez ses postes aux soumissions avec le code, l'unité et le prix officiels.",
+    "cargarArchivo": "Charger un fichier",
+    "noSeLee": "Le fichier n'a pas pu être lu. Enregistrez-le en .xlsx ou .csv depuis Excel et réessayez.",
+    "columna": {
+      "codice": "Colonne du code",
+      "descrizione": "Colonne de la description",
+      "unita": "Colonne de l'unité",
+      "prezzo": "Colonne du prix"
+    },
+    "ninguna": "Aucune",
+    "nombreFonte": "Nom du prezzario",
+    "nombreFontePista": "Lazio 2025",
+    "faltaNombre": "Donnez-lui un nom pour le retrouver ensuite.",
+    "ningunaVoce": "Aucun poste avec ces colonnes. Vérifiez laquelle est le code et laquelle la description.",
+    "encontradas": "{{n}} postes. Les trois premiers :",
+    "sinUnidad": "sans unité",
+    "sinPrecio": "sans prix",
+    "demasiadas": "Plus de {{max}} postes : cela ne ressemble pas à un prezzario. Vérifiez les colonnes.",
+    "cargarN": "Charger {{n}} postes",
+    "cargando": "Chargement {{hechas}} sur {{total}}…",
+    "cargadas": "{{n}} postes chargés dans « {{fonte}} ».",
+    "noCarga": "Les prezzari n'ont pas pu être chargés.",
+    "vacio": "Vous n'avez encore chargé aucun prezzario.",
+    "vociDe": "{{n}} postes",
+    "borrar": "Supprimer « {{fonte}} »",
+    "borrarConfirm": "Supprimer le prezzario « {{fonte}} » ? Les soumissions déjà faites ne changent pas.",
+    "notaPrecios": "Les prix du prezzario incluent déjà les frais généraux et le bénéfice de l'entreprise (en général 15 % + 10 %). Si vous les utilisez tels quels, laissez la marge de la soumission à 0 ou appliquez votre rabais.",
+    "dalPrezzario": "Du prezzario",
+    "dalPrezzarioQue": "Choisissez un poste : il remplit la ligne avec son code, sa description, son unité et son prix. Ajoutez ensuite la zone et la quantité.",
+    "buscar": "Chercher dans le prezzario",
+    "buscarPista": "intonaco calce, E04.001…",
+    "noBusca": "La recherche a échoué. Réessayez.",
+    "nadaEncontrado": "Aucun poste avec ces mots. Si vous n'avez pas encore chargé le prezzario, faites-le dans {{menu}}."
   }
 }

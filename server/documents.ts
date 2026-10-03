@@ -53,7 +53,11 @@ export interface PartyIdentity {
 export interface DocLine {
   zone: string | null;
   item: string;
+  /** El código de la voce del prezzario, o el del proveedor. Va delante del texto. */
+  code?: string | null;
   quantity: number;
+  /** m², m³, h… Sin ella la cantidad sale sola, como antes. */
+  unit?: string | null;
   unitCost: number;
   total: number;
 }
@@ -911,16 +915,18 @@ const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
 // Columns are fixed rather than measured so a long item name wraps inside its
 // own column instead of pushing the money out of alignment.
+// La cantidad lleva su unidad («12,5 m²»), así que necesita más sitio que un
+// número suelto; se lo quita a la descripción, que es la que puede partirse.
 const COL = {
   item: MARGIN,
-  qty: MARGIN + 250,
-  unit: MARGIN + 310,
+  qty: MARGIN + 220,
+  unit: MARGIN + 305,
   total: MARGIN + 400,
 };
 const COL_WIDTH = {
-  item: 240,
-  qty: 50,
-  unit: 80,
+  item: 212,
+  qty: 80,
+  unit: 90,
   total: 95,
 };
 
@@ -1128,12 +1134,16 @@ function lineTable(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy, lang: D
     }
 
     doc.font("Helvetica").fontSize(9).fillColor("#333333");
-    const height = doc.heightOfString(line.item, { width: COL_WIDTH.item });
+    // El código delante, como en un computo metrico: es por donde el
+    // cliente o el técnico buscan la voce en el prezzario de la región.
+    const texto = line.code ? `${line.code} — ${line.item}` : line.item;
+    const height = doc.heightOfString(texto, { width: COL_WIDTH.item });
     ensureRoom(doc, height + 10, copy);
 
     const y = doc.y;
-    doc.text(line.item, COL.item, y, { width: COL_WIDTH.item });
-    doc.text(String(line.quantity), COL.qty, y, { width: COL_WIDTH.qty, align: "right" });
+    doc.text(texto, COL.item, y, { width: COL_WIDTH.item });
+    const cantidad = new Intl.NumberFormat(LOCALE[lang], { maximumFractionDigits: 3 }).format(line.quantity);
+    doc.text(line.unit ? `${cantidad} ${line.unit}` : cantidad, COL.qty, y, { width: COL_WIDTH.qty, align: "right" });
     doc.text(money(line.unitCost, lang, monedaDe(data)), COL.unit, y, { width: COL_WIDTH.unit, align: "right" });
     doc.text(money(line.total, lang, monedaDe(data)), COL.total, y, { width: COL_WIDTH.total, align: "right" });
     doc.y = y + height + 5;
