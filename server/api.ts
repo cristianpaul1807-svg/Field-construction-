@@ -80,6 +80,7 @@ import { AVISAR_CON_DIAS, esTipoDePapel } from "../shared/papeles";
 import { papelesQueVencen } from "./papelesQueVencen";
 import { congruitaDeLaObra } from "./congruitaServidor";
 import { certificarSal, estadoSalDellaObra, ivaDeLaObra, salGuardado } from "./salServidor";
+import { registrarEjecutor } from "./mcpAcciones";
 import { esCategoriaCongruita } from "../shared/congruita";
 import { CAMPOS_SOLO_ITALIA, camposDeItaliaFuera, papelDeOtroPais } from "../shared/soloDeUnPais";
 import { zonaHorariaDelNegocio } from "../shared/zonaHoraria";
@@ -12826,53 +12827,154 @@ const CONCEPTO_SAL: Record<DocLang, (n: number) => string> = {
   it: (n) => `SAL n. ${n}`,
 };
 
+/**
+ * Facturar un SAL. La usan el panel y la voz (`server/mcpAcciones.ts`): las
+ * mismas comprobaciones y la misma factura, sin una segunda copia.
+ */
+async function facturarSal(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  businessId: string,
+  salId: string,
+  opciones: { lang: DocLang; iva?: unknown; baseUrl: string; langCorreo: LangCorreo }
+): Promise<{ ok: true; id: string } | { ok: false; status: number; code: "sal_no_encontrado" | "sal_ya_facturado" | "sal_sin_cliente" | "sal_nada_que_facturar" }> {
+  const sal = await salGuardado(admin, businessId, salId);
+  if (!sal) return { ok: false, status: 404, code: "sal_no_encontrado" };
+  // Una factura anulada no cuenta: el SAL vuelve a poder facturarse, que es
+  // justo lo que necesita quien la anuló para corregirla.
+  if (sal.invoiceId) {
+    const { data: previa } = await admin.from("invoices").select("status").eq("id", sal.invoiceId).maybeSingle();
+    if (previa && previa.status !== "cancelado") return { ok: false, status: 409, code: "sal_ya_facturado" };
+  }
+  if (!sal.clientId) return { ok: false, status: 400, code: "sal_sin_cliente" };
+  if (sal.daFatturare <= 0) return { ok: false, status: 400, code: "sal_nada_que_facturar" };
+  const id = await createInvoiceRecord(admin, {
+    businessId,
+    clientId: sal.clientId,
+    projectId: sal.projectId,
+    estimateId: sal.estimateId,
+    // El último SAL es la factura final: la que libera la retención.
+    type: sal.finale ? "final" : "parcial",
+    subtotal: sal.daFatturare,
+    description: CONCEPTO_SAL[opciones.lang](sal.numero),
+    iva: opciones.iva ?? (await ivaDeLaObra(admin, businessId, sal.projectId)),
+    aviso: { baseUrl: opciones.baseUrl, lang: opciones.langCorreo },
+  });
+  const { error } = await admin.from("sal").update({ invoice_id: id }).eq("business_id", businessId).eq("id", sal.id);
+  if (error) throw error;
+  return { ok: true, id };
+}
+
 apiRouter.post(
   "/sal/:id/invoice",
   route(async (req, res) => {
-    const admin = getSupabaseAdmin();
-    const sal = await salGuardado(admin, req.businessId!, req.params.id);
-    if (!sal) {
-      res.status(404).json({ error: "sal not found", code: "sal_no_encontrado" });
-      return;
-    }
-    // Una factura anulada no cuenta: el SAL vuelve a poder facturarse, que es
-    // justo lo que necesita quien la anuló para corregirla.
-    if (sal.invoiceId) {
-      const { data: previa } = await admin.from("invoices").select("status").eq("id", sal.invoiceId).maybeSingle();
-      if (previa && previa.status !== "cancelado") {
-        res.status(409).json({ error: "already invoiced", code: "sal_ya_facturado" });
-        return;
-      }
-    }
-    if (!sal.clientId) {
-      res.status(400).json({ error: "project has no client", code: "sal_sin_cliente" });
-      return;
-    }
-    if (sal.daFatturare <= 0) {
-      res.status(400).json({ error: "nothing to invoice", code: "sal_nada_que_facturar" });
-      return;
-    }
-    const lang = normalizeDocLang(req.body?.lang ?? req.query.lang);
-    const id = await createInvoiceRecord(admin, {
-      businessId: req.businessId!,
-      clientId: sal.clientId,
-      projectId: sal.projectId,
-      estimateId: sal.estimateId,
-      // El último SAL es la factura final: la que libera la retención.
-      type: sal.finale ? "final" : "parcial",
-      subtotal: sal.daFatturare,
-      description: CONCEPTO_SAL[lang](sal.numero),
-      iva: req.body?.iva ?? (await ivaDeLaObra(admin, req.businessId!, sal.projectId)),
-      aviso: {
-        baseUrl: `${req.protocol}://${req.get("host")}`,
-        lang: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")),
-      },
+    const r = await facturarSal(getSupabaseAdmin(), req.businessId!, req.params.id, {
+      lang: normalizeDocLang(req.body?.lang ?? req.query.lang),
+      iva: req.body?.iva,
+      baseUrl: `${req.protocol}://${req.get("host")}`,
+      langCorreo: normalizarLangCorreo(req.body?.lang ?? req.get("accept-language")),
     });
-    const { error } = await admin.from("sal").update({ invoice_id: id }).eq("business_id", req.businessId!).eq("id", sal.id);
-    if (error) throw error;
-    res.status(201).json({ id });
+    if (!r.ok) {
+      res.status(r.status).json({ error: r.code, code: r.code });
+      return;
+    }
+    res.status(201).json({ id: r.id });
   })
 );
+
+// ---------- Lo que la voz ejecuta al confirmar (MCP Fase B) ----------
+// Las mismas funciones que el panel. Ver server/mcpAcciones.ts.
+
+const numeroDeFactura = async (admin: ReturnType<typeof getSupabaseAdmin>, businessId: string, id: string) => {
+  const { data } = await admin.from("invoices").select("number, amount").eq("business_id", businessId).eq("id", id).maybeSingle();
+  return { invoiceId: id, number: data?.number ?? null, amount: Number(data?.amount ?? 0) };
+};
+
+registrarEjecutor("factura", async (admin, quien, d) => {
+  const id = await createInvoiceRecord(admin, {
+    businessId: quien.businessId,
+    clientId: String(d.clientId),
+    projectId: (d.projectId as string | null) ?? null,
+    estimateId: (d.estimateId as string | null) ?? null,
+    type: d.type as "deposito" | "parcial" | "final",
+    subtotal: Number(d.subtotal),
+    description: (d.description as string | null) ?? null,
+    iva: d.iva ?? undefined,
+    aviso: { baseUrl: quien.baseUrl, lang: normalizarLangCorreo(d.lang) },
+  });
+  return { ok: true, detalle: await numeroDeFactura(admin, quien.businessId, id) };
+});
+
+registrarEjecutor("factura_sal", async (admin, quien, d) => {
+  const r = await facturarSal(admin, quien.businessId, String(d.salId), {
+    lang: normalizeDocLang(d.lang),
+    baseUrl: quien.baseUrl,
+    langCorreo: normalizarLangCorreo(d.lang),
+  });
+  if (!r.ok) return { ok: false, code: r.code };
+  return { ok: true, detalle: await numeroDeFactura(admin, quien.businessId, r.id) };
+});
+
+registrarEjecutor("cobro", async (admin, quien, d) => {
+  const hecho = await registrarCobro(admin, {
+    businessId: quien.businessId,
+    invoiceId: String(d.invoiceId),
+    medio: d.method as MedioDeCobro,
+    referencia: (d.reference as string | null) ?? null,
+    cobradoEl: d.paidAt ? new Date(`${String(d.paidAt)}T12:00:00Z`).toISOString() : undefined,
+    actor: "admin",
+  });
+  if (!hecho) return { ok: false, code: "invoice_already_paid" };
+  return { ok: true, detalle: { invoiceId: d.invoiceId, status: "pagado" } };
+});
+
+registrarEjecutor("sal", async (admin, quien, d) => {
+  const r = await certificarSal(admin, quien.businessId, String(d.projectId), { avanzamento: d.avanzamento, data: d.data, note: d.note });
+  if (!r.ok) return { ok: false, code: r.code };
+  return { ok: true, detalle: { salId: r.id, number: r.numero, amount: r.calcolo.importo, toInvoice: r.calcolo.daFatturare } };
+});
+
+registrarEjecutor("presupuesto", async (admin, quien, d) => {
+  const lineas = (d.lines as { area: string; description: string; quantity: number; unitPrice: number; category: string }[]) ?? [];
+  // Precios de venta tal cual los dijo la persona: sin margen ni mermas
+  // encima, o el total que se le confirmó no sería el que queda guardado.
+  const { data: presupuesto, error } = await admin
+    .from("estimates")
+    .insert({
+      business_id: quien.businessId,
+      client_id: (d.clientId as string | null) ?? null,
+      project_id: (d.projectId as string | null) ?? null,
+      description: (d.description as string | null) ?? null,
+      margin_type: "global",
+      margin_percent: 0,
+      waste_percent: 0,
+      status: "borrador",
+      // «bot» es el del chat público, el de los clientes que piden
+      // presupuesto; éste lo dictó el propietario.
+      created_by: "human",
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  if (lineas.length) {
+    const { error: errorLineas } = await admin.from("estimate_lines").insert(
+      lineas.map((l) => ({
+        business_id: quien.businessId,
+        estimate_id: presupuesto.id,
+        zone: l.area,
+        category: l.category,
+        item_name: l.description,
+        quantity: l.quantity,
+        unit_cost: l.unitPrice,
+        // Son los precios que verá el cliente: se dijeron para él.
+        visible_to_client: true,
+      }))
+    );
+    if (errorLineas) throw errorLineas;
+  }
+  await recalcEstimateTotal(admin, presupuesto.id);
+  const { data: total } = await admin.from("estimates").select("total").eq("id", presupuesto.id).maybeSingle();
+  return { ok: true, detalle: { estimateId: presupuesto.id, status: "borrador", total: Number(total?.total ?? 0) } };
+});
 
 apiRouter.delete(
   "/sal/:id",

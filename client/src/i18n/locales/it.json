@@ -1813,7 +1813,7 @@
           "title": "Collegare Claude al MCP di Logiciel Construction",
           "p1": "Vai a {{menuAjustes}} → MCP Conexiones AI e apri la scheda Claude. Qui trovi l’URL MCP e l’OAuth Client ID; usa i pulsanti Copia e non condividere mai password o codici nella chat.",
           "p2": "In Claude aggiungi un connettore MCP personalizzato e incolla URL e Client ID. Quando Claude apre Logiciel Construction, accedi con l’e-mail e la password dell’account autorizzato, oppure usa il codice per un lavoratore sul campo o un subappaltatore.",
-          "p3": "Controlla l’autorizzazione mcp:read, che è di sola lettura, e premi Autorizza. Claude potrà consultare solo le informazioni consentite dal tuo ruolo, perimetro e piano aziendale.",
+          "p3": "La connessione è di sola lettura (mcp:read): Claude consulta solo ciò che consentono il tuo ruolo, il tuo perimetro e il piano aziendale. Se sei il proprietario principale, puoi spuntare anche la casella perché prepari fatture, preventivi, SAL e incassi; ognuno arriva prima come bozza con il suo riepilogo esatto e viene emesso solo quando dici sì. Premi Autorizza.",
           "p4": "Se cambi ruolo, l’accesso cambia automaticamente. Per interrompere una connessione, torna in questa scheda e premi Revoca connessione.",
           "nota": "La fase attuale non consente a Claude di creare, modificare o eliminare dati."
         },
@@ -2844,8 +2844,8 @@
   "mcpConex": {
     "titulo": "Connessioni IA (MCP)",
     "entradilla": "Collega Claude ai dati di Logiciel Construction che il tuo ruolo e il tuo piano permettono di consultare.",
-    "seguroTitulo": "Sola lettura e sempre revocabile",
-    "seguroCuerpo": "Le connessioni usano OAuth e PKCE. Non condividere password o codici in chat: l'autorizzazione si completa nella schermata sicura di Logiciel Construction.",
+    "seguroTitulo": "Sola lettura di default, sempre revocabile",
+    "seguroCuerpo": "Le connessioni usano OAuth e PKCE. Non condividere password o codici in chat: l'autorizzazione si completa nella schermata sicura di Logiciel Construction. Solo il proprietario principale può permettere anche di preparare fatture, preventivi e incassi; niente viene emesso senza il suo «sì».",
     "alcance": "Ambito attivo:",
     "noCarga": "Non è stato possibile caricare le connessioni IA.",
     "revocada": "Connessione revocata. Quello strumento non può più consultare Logiciel Construction.",
@@ -2861,7 +2861,7 @@
     "paso1": "Apri {{plataforma}} e aggiungi un connettore MCP personalizzato.",
     "paso2": "Copia l'URL MCP e il Client ID qui sotto.",
     "paso3": "Quando {{plataforma}} apre Logiciel Construction, accedi come proprietario o usa il codice del lavoratore.",
-    "paso4": "Controlla che dica «sola lettura» e premi autorizza.",
+    "paso4": "Se sei il proprietario principale e vuoi che prepari anche documenti, spunta la casella; altrimenti lasciala vuota e resta in sola lettura. Premi autorizza.",
     "urlMcp": "URL MCP",
     "clientId": "Client ID OAuth",
     "callback": "Ritorno: {{url}}",
@@ -2881,7 +2881,8 @@
     "caducada": "Non usata: potrebbe essere già stata rimossa da Claude",
     "usadaEl": "Usata il {{fecha}}",
     "nuncaUsada": "Mai usata",
-    "noAvisan": "Se qualcuno rimuove il connettore da Claude, a noi non arriva nessun avviso. Per questo conviene guardare l’ultimo uso e tagliare a mano ciò che non serve più."
+    "noAvisan": "Se qualcuno rimuove il connettore da Claude, a noi non arriva nessun avviso. Per questo conviene guardare l’ultimo uso e tagliare a mano ciò che non serve più.",
+    "puedeEmitir": "Prepara ed emette su conferma"
   },
   "afiliado": {
     "titulo": "Il tuo link di raccomandazione",

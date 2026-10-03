@@ -30,6 +30,8 @@ export type IdentidadParaRol = {
   areas: Area[] | null;
   /** El país del negocio. Sin él, lo que `paisDe` entiende: Canadá. */
   country?: string | null;
+  /** Si la conexión tiene `mcp:write` y es del propietario principal. */
+  escritura?: boolean;
 };
 
 /**
@@ -118,6 +120,8 @@ export const TOOL_ACCESS: Record<
     requierePais?: RequisitoDePais;
     /** Sólo para estos países. Calcular una factura no tiene respuesta donde no hay impuesto. */
     soloEn?: GrupoDePais[];
+    /** Prepara algo que se emite al confirmar (`mcp:write`). Ver `server/mcpAcciones.ts`. */
+    escritura?: boolean;
   }
 > = {
   get_projects: { roles: ["manager", "office", "admin"], area: "campo", capability: "campo" },
@@ -153,6 +157,15 @@ export const TOOL_ACCESS: Record<
   check_congruita: { roles: ["office", "admin"], area: "dinero", capability: "campo", soloEn: ["IT"] },
   // Lo certificado de una obra son importes de contrato y facturas: dinero.
   get_progress_claims: { roles: ["office", "admin"], area: "dinero", capability: "facturacion" },
+  // Fase B: preparar y, al confirmar, emitir. Sólo el propietario principal
+  // con escritura concedida (`escritura: true` lo exige además del rol).
+  draft_invoice: { roles: ["admin"], area: "dinero", capability: "facturacion", soloEn: ["CA", "IT"], escritura: true },
+  draft_invoice_from_progress_claim: { roles: ["admin"], area: "dinero", capability: "facturacion", soloEn: ["CA", "IT"], escritura: true },
+  draft_progress_claim: { roles: ["admin"], area: "dinero", capability: "facturacion", escritura: true },
+  draft_payment: { roles: ["admin"], area: "dinero", capability: "facturacion", escritura: true },
+  draft_estimate: { roles: ["admin"], area: "dinero", capability: "facturacion", escritura: true },
+  confirm_action: { roles: ["admin"], area: "dinero", capability: "facturacion", escritura: true },
+  cancel_action: { roles: ["admin"], area: "dinero", capability: "facturacion", escritura: true },
   check_italian_tax_id: { roles: ["office", "admin"], area: "clientes", capability: "campo", soloEn: ["IT"] },
 };
 
@@ -168,5 +181,7 @@ export function puedeUsarHerramienta(identity: IdentidadParaRol, toolName: strin
   if (!access) return false;
   if (access.requierePais && !paisDe(identity.country)[access.requierePais]) return false;
   if (access.soloEn && !access.soloEn.includes(grupoDePais(identity.country))) return false;
+  // Lo que escribe, sólo con escritura concedida. Ni el rol ni el área bastan.
+  if (access.escritura && !identity.escritura) return false;
   return access.roles.includes(roleOf(identity)) && puede(identity.areas, access.area);
 }

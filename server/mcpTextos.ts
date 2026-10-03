@@ -60,6 +60,13 @@ interface TextosMcp {
   esperando: string;
   faltanDatos: string;
   idioma: string;
+  /**
+   * La casilla del permiso de escritura. Desmarcada siempre de entrada: lo que
+   * se escribe se escribe porque el propietario lo eligió, no porque no vio
+   * una casilla marcada.
+   */
+  escrituraEtiqueta: string;
+  escrituraPista: string;
 }
 
 export const TEXTOS_MCP: Record<LangMcp, TextosMcp> = {
@@ -77,6 +84,8 @@ export const TEXTOS_MCP: Record<LangMcp, TextosMcp> = {
     esperando: "Demande envoyée. En attente de la réponse de Logiciel Construction…",
     faltanDatos: "Saisissez le code du travailleur, ou bien le courriel et le mot de passe du propriétaire.",
     idioma: "Langue",
+    escrituraEtiqueta: "Permettre aussi de préparer des documents (factures, soumissions, paiements) et de les émettre quand je confirme",
+    escrituraPista: "Propriétaire principal seulement. Rien n'est émis sans votre « oui » : chaque action est d'abord un brouillon avec son résumé exact.",
   },
   en: {
     titulo: "Connect Logiciel Construction",
@@ -92,6 +101,8 @@ export const TEXTOS_MCP: Record<LangMcp, TextosMcp> = {
     esperando: "Request sent. Waiting for Logiciel Construction to answer…",
     faltanDatos: "Enter the worker code, or else the owner's email and password.",
     idioma: "Language",
+    escrituraEtiqueta: "Also allow it to prepare documents (invoices, estimates, payments) and issue them when I confirm",
+    escrituraPista: "Main owner only. Nothing is issued without your «yes»: every action is first a draft with its exact summary.",
   },
   es: {
     titulo: "Conectar Logiciel Construction",
@@ -107,6 +118,8 @@ export const TEXTOS_MCP: Record<LangMcp, TextosMcp> = {
     esperando: "Solicitud enviada. Esperando respuesta de Logiciel Construction…",
     faltanDatos: "Introduce el código del trabajador o, alternativamente, el email y la contraseña del propietario.",
     idioma: "Idioma",
+    escrituraEtiqueta: "Permitir también que prepare documentos (facturas, presupuestos, cobros) y los emita cuando yo confirme",
+    escrituraPista: "Sólo el propietario principal. Nada se emite sin tu «sí»: cada acción es primero un borrador con su resumen exacto.",
   },
   it: {
     titulo: "Collega Logiciel Construction",
@@ -122,6 +135,8 @@ export const TEXTOS_MCP: Record<LangMcp, TextosMcp> = {
     esperando: "Richiesta inviata. In attesa della risposta di Logiciel Construction…",
     faltanDatos: "Inserisci il codice del lavoratore, oppure l'email e la password del proprietario.",
     idioma: "Lingua",
+    escrituraEtiqueta: "Permetti anche di preparare documenti (fatture, preventivi, incassi) e di emetterli quando confermo",
+    escrituraPista: "Solo il proprietario principale. Niente viene emesso senza il tuo «sì»: ogni azione è prima una bozza con il suo riepilogo esatto.",
   },
 };
 

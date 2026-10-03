@@ -323,23 +323,27 @@ Criterio, cumplido: las pruebas de `scripts/prueba-mcp/` cubren un negocio
 canadiense, uno italiano y uno de un país sin configurar, y el catálogo de
 cada uno es el que le toca.
 
-### 11.3 Fase B — escribir, siempre en dos pasos (sólo propietario)
+### 11.3 Fase B — escribir, siempre en dos pasos (sólo propietario) ✅
 
 Todo lo que crea algo sigue el mismo patrón: **la herramienta prepara un
 borrador y devuelve el resumen exacto** (cliente, importes, impuesto, qué va a
-pasar después); **nada se emite hasta `confirm_action`**. Usa la máquina de
-estados de la sección 6, guardada en Supabase, no en memoria.
+pasar después); **nada se emite hasta `confirm_action`**. Los borradores viven
+en la tabla `mcp_acciones` (Supabase, no memoria) y caducan a los 15 minutos.
+El detalle está en `server/mcpAcciones.ts` y en
+[mcp-trabajadores.md](./mcp-trabajadores.md#fase-b-preparar-y-emitir-con-confirmación).
 
 | Herramienta | Qué hace al confirmar | Reutiliza |
 |---|---|---|
-| `draft_estimate` | Crea el presupuesto en borrador | El constructor de presupuestos |
+| `draft_estimate` | Guarda el presupuesto en borrador, sin mandarlo | `recalcEstimateTotal` |
 | `draft_invoice` | Emite la factura: número, impuesto del país, correo al cliente | `createInvoiceRecord` (que ya rechaza `pais_sin_configurar`) |
-| `record_payment` | La marca cobrada, con medio y fecha | La ruta de cobro manual |
-| `send_estimate` | Se lo manda al cliente para firmar | `avisarDelPresupuesto` |
+| `draft_payment` | La marca cobrada, con medio y fecha | `registrarCobro`, la del cobro manual |
+| `draft_progress_claim` | Certifica un SAL | `certificarSal` |
+| `draft_invoice_from_progress_claim` | Factura un SAL certificado | `facturarSal`, la de la ruta del panel |
 
 Lo que el panel prohíbe, el MCP también: emitir sin impuesto configurado,
 borrar una factura, cambiar una factura emitida (se corrige con nota de
-crédito).
+crédito). Mandar el presupuesto al cliente (`send_estimate`) se queda en el
+panel: el borrador se revisa allí antes de que lo vea nadie.
 
 ### 11.4 Fase C — lo de cada país
 
@@ -354,8 +358,8 @@ crédito).
 - `get_expiring_documents` — patente a crediti, DURC de subcontratistas,
   cursos de seguridad, tessere: lo que vence y cuándo ✅;
 - `get_progress_claims` — lo certificado de una obra, SAL a SAL y partida a
-  partida ✅ (todos los países); `draft_sal` para certificar hablando llega
-  con la Fase B, que es la que trae el borrador con confirmación.
+  partida ✅ (todos los países); certificar y facturar hablando con
+  `draft_progress_claim` y `draft_invoice_from_progress_claim` ✅ (Fase B).
 
 **Canadá:**
 

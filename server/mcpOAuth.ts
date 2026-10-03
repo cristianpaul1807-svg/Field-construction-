@@ -9,6 +9,12 @@ import { accesoDe, planDe } from "../shared/planes";
 import { aviso, langDelMcp, IDIOMAS_MCP, TEXTOS_MCP, type LangMcp } from "./mcpTextos";
 
 const DEFAULT_SCOPE = "mcp:read";
+/**
+ * Lo que se concede además cuando el propietario principal marca la casilla
+ * de escribir. Va junto al de lectura, nunca solo: quien prepara una factura
+ * tiene que poder ver a quién se la hace. Ver `server/mcpAcciones.ts`.
+ */
+const WRITE_SCOPE = "mcp:write";
 const ACCESS_TTL_SECONDS = 3600;
 const REFRESH_TTL_SECONDS = 60 * 60 * 24 * 30;
 
@@ -131,13 +137,13 @@ async function issueConnection(identity: WorkerIdentity, client: OAuthClient, sc
     .maybeSingle();
   if (existing.error) throw existing.error;
   if (existing.data) {
-    const { error } = await admin.from("mcp_connections").update({ status: "active", scopes: [scope], revoked_at: null }).eq("id", existing.data.id);
+    const { error } = await admin.from("mcp_connections").update({ status: "active", scopes: scope.split(" "), revoked_at: null }).eq("id", existing.data.id);
     if (error) throw error;
     return existing.data.id as string;
   }
   const { data, error } = await admin.from("mcp_connections").insert({
     business_id: identity.businessId, [column]: identity.workerId, provider, external_subject: `${client.client_id}:${identity.workerId}`,
-    status: "active", scopes: [scope],
+    status: "active", scopes: scope.split(" "),
   }).select("id").single();
   if (error) throw error;
   return data.id as string;
@@ -161,7 +167,9 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   // señala al sitio equivocado cuesta más que no tener mensaje.
   const { data, error } = await withTimeout(authAttempt, 8000, "Supabase Auth");
   if (error || !data.user) {
-    const msg = `[MCP] signInWithPassword falló para ${email}: ${error?.message}\n`;
+    // Sin el correo: este registro es un fichero en el disco del servidor, y
+    // un correo es un dato personal que no hace falta para saber qué falló.
+    const msg = `[MCP] signInWithPassword falló: ${error?.message}\n`;
     console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     return null;
   }
@@ -181,7 +189,7 @@ async function resolveOwnerCredentials(email: string, password: string): Promise
   const row = employee.data ?? subcontractor.data;
   if (employee.error && subcontractor.error) throw employee.error;
   if (!row) {
-    const msg = `[MCP] No se encontró negocio ni perfil de trabajador para el usuario ${data.user.id} (${email})\n`;
+    const msg = `[MCP] No se encontró negocio ni perfil de trabajador para el usuario ${data.user.id}\n`;
     console.error(msg); fs.appendFileSync("mcp_debug.log", msg);
     return null;
   }
@@ -226,7 +234,7 @@ export function consentPage(pending: PendingAuthorization, lang: LangMcp, error?
       ? `<span aria-current="true">${esc(idioma.nombre)}</span>`
       : `<a href="${esc(pending.enlaceDeIdioma(idioma.codigo))}" hreflang="${idioma.codigo}">${esc(idioma.nombre)}</a>`
   ).join("");
-  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(t.titulo)}</title><style>body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#171717;margin:0;padding:32px}.card{max-width:440px;margin:7vh auto;background:white;border-radius:20px;padding:28px;box-shadow:0 10px 40px #0001}h1{font-size:24px;margin:0 0 8px}p{color:#555;line-height:1.5}label{font-weight:600;font-size:14px;display:block;margin:18px 0 7px}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}.scope{background:#f5f5f7;border-radius:12px;padding:12px;margin:18px 0;font-size:14px}.section{border-top:1px solid #eee;margin-top:20px;padding-top:5px}.hint{font-size:13px;color:#666}.error{color:#a40000;background:#fff0f0;padding:10px;border-radius:10px;font-size:14px}.progress{color:#174ea6;background:#eaf2ff;padding:10px;border-radius:10px;font-size:14px;margin-top:12px}button{width:100%;border:0;border-radius:11px;padding:13px;background:#111;color:#fff;font-weight:650;font-size:15px;margin-top:20px}button:disabled{opacity:0.7}.idiomas{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:0 0 18px}.idiomas a{color:#174ea6}.idiomas span[aria-current]{font-weight:650;color:#171717}</style></head><body><main class="card"><nav class="idiomas" aria-label="${esc(t.idioma)}">${idiomas}</nav><h1>${esc(t.titulo)}</h1><p>${t.intro(esc(pending.client.client_name))}</p><div class="scope">${esc(t.alcance)}</div><div id="client-error" class="error" role="alert" ${error ? "" : "hidden"}>${error ? esc(error) : ""}</div><div id="progress" class="progress" role="status" hidden></div><form method="post" action="${esc(pending.authorizationAction)}" id="auth-form">${hidden("client_id", pending.client.client_id)}${hidden("redirect_uri", pending.redirectUri)}${hidden("state", pending.state)}${hidden("scope", pending.scope)}${hidden("resource", pending.resource)}${hidden("code_challenge", pending.codeChallenge)}${hidden("lang", lang)}<div class="section"><label for="worker_token">${esc(t.trabajadorEtiqueta)}</label><input id="worker_token" name="worker_token" autocomplete="off" autocapitalize="none"><p class="hint">${esc(t.trabajadorPista)}</p></div><div class="section"><label for="owner_email">${esc(t.propietarioEmail)}</label><input id="owner_email" name="owner_email" type="email" autocomplete="username" autocapitalize="none"><label for="owner_password">${esc(t.propietarioClave)}</label><input id="owner_password" name="owner_password" type="password" autocomplete="current-password"><p class="hint">${esc(t.propietarioPista)}</p></div><button id="btn" type="submit">${esc(t.boton)}</button></form></main><script>const form=document.getElementById("auth-form"),btn=document.getElementById("btn"),progress=document.getElementById("progress"),errorBox=document.getElementById("client-error");form.addEventListener("submit",function(event){const w=document.getElementById("worker_token").value.trim(),e=document.getElementById("owner_email").value.trim(),p=document.getElementById("owner_password").value;if((!w&&!e&&!p)||(!w&&(!!e!==!!p))||(w&&(e||p))){event.preventDefault();errorBox.textContent=${JSON.stringify(t.faltanDatos)};errorBox.hidden=false;return;}btn.disabled=true;btn.innerText=${JSON.stringify(t.conectando)};progress.textContent=${JSON.stringify(t.esperando)};progress.hidden=false;});</script></body></html>`;
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(t.titulo)}</title><style>body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#171717;margin:0;padding:32px}.card{max-width:440px;margin:7vh auto;background:white;border-radius:20px;padding:28px;box-shadow:0 10px 40px #0001}h1{font-size:24px;margin:0 0 8px}p{color:#555;line-height:1.5}label{font-weight:600;font-size:14px;display:block;margin:18px 0 7px}input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}.check{display:flex;gap:10px;align-items:flex-start;font-weight:500;line-height:1.4}.check input{width:auto;margin:3px 0 0;flex-shrink:0}.scope{background:#f5f5f7;border-radius:12px;padding:12px;margin:18px 0;font-size:14px}.section{border-top:1px solid #eee;margin-top:20px;padding-top:5px}.hint{font-size:13px;color:#666}.error{color:#a40000;background:#fff0f0;padding:10px;border-radius:10px;font-size:14px}.progress{color:#174ea6;background:#eaf2ff;padding:10px;border-radius:10px;font-size:14px;margin-top:12px}button{width:100%;border:0;border-radius:11px;padding:13px;background:#111;color:#fff;font-weight:650;font-size:15px;margin-top:20px}button:disabled{opacity:0.7}.idiomas{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:0 0 18px}.idiomas a{color:#174ea6}.idiomas span[aria-current]{font-weight:650;color:#171717}</style></head><body><main class="card"><nav class="idiomas" aria-label="${esc(t.idioma)}">${idiomas}</nav><h1>${esc(t.titulo)}</h1><p>${t.intro(esc(pending.client.client_name))}</p><div class="scope">${esc(t.alcance)}</div><div id="client-error" class="error" role="alert" ${error ? "" : "hidden"}>${error ? esc(error) : ""}</div><div id="progress" class="progress" role="status" hidden></div><form method="post" action="${esc(pending.authorizationAction)}" id="auth-form">${hidden("client_id", pending.client.client_id)}${hidden("redirect_uri", pending.redirectUri)}${hidden("state", pending.state)}${hidden("scope", pending.scope)}${hidden("resource", pending.resource)}${hidden("code_challenge", pending.codeChallenge)}${hidden("lang", lang)}<div class="section"><label for="worker_token">${esc(t.trabajadorEtiqueta)}</label><input id="worker_token" name="worker_token" autocomplete="off" autocapitalize="none"><p class="hint">${esc(t.trabajadorPista)}</p></div><div class="section"><label for="owner_email">${esc(t.propietarioEmail)}</label><input id="owner_email" name="owner_email" type="email" autocomplete="username" autocapitalize="none"><label for="owner_password">${esc(t.propietarioClave)}</label><input id="owner_password" name="owner_password" type="password" autocomplete="current-password"><p class="hint">${esc(t.propietarioPista)}</p><label class="check"><input type="checkbox" name="allow_write" value="1"> ${esc(t.escrituraEtiqueta)}</label><p class="hint">${esc(t.escrituraPista)}</p></div><button id="btn" type="submit">${esc(t.boton)}</button></form></main><script>const form=document.getElementById("auth-form"),btn=document.getElementById("btn"),progress=document.getElementById("progress"),errorBox=document.getElementById("client-error");form.addEventListener("submit",function(event){const w=document.getElementById("worker_token").value.trim(),e=document.getElementById("owner_email").value.trim(),p=document.getElementById("owner_password").value;if((!w&&!e&&!p)||(!w&&(!!e!==!!p))||(w&&(e||p))){event.preventDefault();errorBox.textContent=${JSON.stringify(t.faltanDatos)};errorBox.hidden=false;return;}btn.disabled=true;btn.innerText=${JSON.stringify(t.conectando)};progress.textContent=${JSON.stringify(t.esperando)};progress.hidden=false;});</script></body></html>`;
 }
 
 async function authorizeGet(req: Request, res: Response) {
@@ -277,10 +285,16 @@ async function authorizePost(req: Request, res: Response) {
       return;
     }
 
+    // Escribir, sólo si lo pidió marcando la casilla y es el propietario
+    // principal. Un trabajador o un segundo administrador que la marque se
+    // queda en lectura: no es un error, es lo que le corresponde.
+    const scopeConcedido = bodyString(req, "allow_write") === "1" && identity.workerKind === "owner" && identity.propietarioPrincipal
+      ? `${DEFAULT_SCOPE} ${WRITE_SCOPE}`
+      : DEFAULT_SCOPE;
     await withTimeout(persistCimdClient(client), 5000, "El registro del cliente OAuth");
-    const connectionId = await withTimeout(issueConnection(identity, client, DEFAULT_SCOPE), 6000, "La conexión del negocio");
+    const connectionId = await withTimeout(issueConnection(identity, client, scopeConcedido), 6000, "La conexión del negocio");
     const rawCode = opaqueToken("mcp_code");
-    const { error } = await withTimeout((async () => getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: DEFAULT_SCOPE, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() }))(), 5000, "La creación del código OAuth");
+    const { error } = await withTimeout((async () => getSupabaseAdmin().from("mcp_oauth_codes").insert({ code_hash: hashToken(rawCode), client_id: client.client_id, redirect_uri: redirectUri, resource, code_challenge: challenge, scope: scopeConcedido, connection_id: connectionId, expires_at: new Date(Date.now() + 5 * 60_000).toISOString() }))(), 5000, "La creación del código OAuth");
     if (error) throw error;
     // RFC 9207 / MCP authorization response: the issuer lets clients such as
     // Claude bind the callback to the authorization server they discovered.
@@ -328,7 +342,7 @@ async function rotateRefresh(res: Response, rawRefresh: string, clientId: string
 
 export function mcpOAuthRoutes(router: Router) {
   router.get("/.well-known/oauth-protected-resource/mcp", (req, res) => res.json({ resource: resourceUrl(req), authorization_servers: [baseUrl(req)] }));
-  router.get("/.well-known/oauth-authorization-server", (req, res) => { const issuer = baseUrl(req); res.json({ issuer, authorization_endpoint: `${issuer}/oauth/authorize`, token_endpoint: `${issuer}/oauth/token`, registration_endpoint: `${issuer}/oauth/register`, revocation_endpoint: `${issuer}/oauth/revoke`, response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"], code_challenge_methods_supported: ["S256"], token_endpoint_auth_methods_supported: ["none"], scopes_supported: [DEFAULT_SCOPE], client_id_metadata_document_supported: true }); });
+  router.get("/.well-known/oauth-authorization-server", (req, res) => { const issuer = baseUrl(req); res.json({ issuer, authorization_endpoint: `${issuer}/oauth/authorize`, token_endpoint: `${issuer}/oauth/token`, registration_endpoint: `${issuer}/oauth/register`, revocation_endpoint: `${issuer}/oauth/revoke`, response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"], code_challenge_methods_supported: ["S256"], token_endpoint_auth_methods_supported: ["none"], scopes_supported: [DEFAULT_SCOPE, WRITE_SCOPE], client_id_metadata_document_supported: true }); });
   router.post("/oauth/register", async (req, res, next) => { try { const redirects = Array.isArray(req.body?.redirect_uris) ? req.body.redirect_uris.filter((v: unknown): v is string => typeof v === "string") : []; if (!redirects.length || redirects.some((uri: string) => !/^https:\/\//.test(uri) && !/^http:\/\/localhost(?::\d+)?\//.test(uri))) { res.status(400).json({ error: "invalid_client_metadata" }); return; } const clientId = `mcp_client_${randomUUID()}`; const { error } = await getSupabaseAdmin().from("mcp_oauth_clients").insert({ client_id: clientId, client_name: String(req.body?.client_name ?? "MCP client").slice(0, 120), redirect_uris: redirects, token_endpoint_auth_method: "none" }); if (error) throw error; res.status(201).json({ client_id: clientId, client_name: String(req.body?.client_name ?? "MCP client").slice(0, 120), redirect_uris: redirects, token_endpoint_auth_method: "none", grant_types: ["authorization_code", "refresh_token"], response_types: ["code"] }); } catch (error) { next(error); } });
   router.all("/oauth/authorize", async (req, res, next) => { try { if (req.method === "GET") await authorizeGet(req, res); else if (req.method === "POST") await authorizePost(req, res); else res.status(405).end(); } catch (error) { next(error); } });
   router.post("/oauth/token", async (req, res, next) => { try { await token(req, res); } catch (error) { next(error); } });

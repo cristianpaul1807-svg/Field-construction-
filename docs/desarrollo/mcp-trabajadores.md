@@ -8,7 +8,7 @@ La primera fase del MCP de Field-Construction está preparada como una interfaz 
 
 La identidad se obtiene del mismo bearer token que ya usa la PWA `/campo`. El servidor resuelve el token contra `employees.access_token_hash` y `subcontractors.access_token_hash`, y siempre conserva el par `worker_id + business_id`. No se acepta un `business_id` enviado por el cliente MCP.
 
-Cada herramienta filtra explícitamente por el negocio y por el trabajador autenticado. Las herramientas no crean, actualizan ni eliminan información.
+Cada herramienta filtra explícitamente por el negocio y por el trabajador autenticado. Las herramientas de lectura no crean, actualizan ni eliminan información. Desde la Fase B, el propietario principal puede además preparar documentos y emitirlos con su confirmación (ver más abajo); nadie más.
 
 ## Política de fases
 
@@ -16,9 +16,9 @@ La **Fase 1 y las primeras fases de lectura** son exclusivamente informativas pa
 
 Esto se aplica a trabajadores, subcontratistas, jefes de obra, oficina, contabilidad, administradores secundarios y propietarios. El hecho de que una persona tenga permisos de escritura dentro del panel web no le concede escritura mediante MCP durante esta fase.
 
-La **Fase 2** solo podrá activar autonomía controlada inicialmente para el propietario principal que creó la cuenta de empresa. Esa autorización será independiente del nombre genérico `admin` y deberá comprobar el vínculo de propietario principal, el plan, el estado del negocio, la herramienta concreta y la confirmación explícita de la acción. Los demás roles continuarán en solo lectura salvo decisión posterior documentada.
+La **Fase B** abre la escritura sólo para el propietario principal que creó la cuenta de empresa, y sólo si al conectar marcó la casilla «preparar y emitir con mi confirmación» (permiso `mcp:write`, desmarcada por defecto). No depende del nombre genérico `admin`: un administrador segundo con el mismo rol sigue en solo lectura, y el permiso se vuelve a comprobar en cada llamada, de modo que si la cuenta cambia de dueño no viaja con la conexión. Los demás roles —trabajadores, subcontratistas, oficina, contabilidad— continúan en solo lectura salvo decisión posterior documentada; ninguna identidad MCP distinta del propietario principal puede crear, modificar ni eliminar nada.
 
-No se deben implementar todavía herramientas MCP como `clock_in`, `clock_out`, `report_incident`, `create_work_order`, `assign_worker`, `update_work_order`, `create_invoice` o sincronizaciones con QuickBooks. Primero deben completarse y probarse las herramientas de lectura y sus límites de seguridad.
+Siguen sin existir herramientas MCP como `clock_in`, `clock_out`, `report_incident`, `create_work_order`, `assign_worker`, `update_work_order`, borrar una factura o sincronizar QuickBooks.
 
 ## Herramientas iniciales
 
@@ -71,7 +71,33 @@ Claude, que contesta en su idioma.
 
 El servidor aplica la función de acceso y la capacidad de campo del plan antes de ejecutar una herramienta. Cuando el negocio está bloqueado o el plan no incluye el área de campo, responde con un error de autorización y registra el intento.
 
-Las herramientas operativas de encargado exigen un rol reconocido y limitan los resultados a proyectos donde la identidad está vinculada por asignación, agenda u orden. Las herramientas financieras exigen el rol correspondiente y la capacidad del plan. Todas son de lectura —las que calculan o comprueban tampoco guardan nada—; las herramientas de creación, modificación, envío y sincronización siguen fuera del servidor MCP.
+Las herramientas operativas de encargado exigen un rol reconocido y limitan los resultados a proyectos donde la identidad está vinculada por asignación, agenda u orden. Las herramientas financieras exigen el rol correspondiente y la capacidad del plan. Las de lectura —también las que calculan o comprueban— no guardan nada.
+
+## Fase B: preparar y emitir con confirmación
+
+Siempre en dos pasos, y es lo único que importa:
+
+1. Una herramienta `draft_*` comprueba lo que se pide, lo calcula con la misma función que el panel y guarda un **borrador** en `mcp_acciones` con el resumen exacto: cliente, obra, impuesto del país, retención, lo que paga el cliente, a quién se le avisa. No toca nada más.
+2. Sólo `confirm_action`, con el `actionId` de ese borrador, lo ejecuta. Claude lo llama cuando la persona ha dicho que sí. Si cambia de idea, `cancel_action`; si no dice nada, el borrador caduca a los 15 minutos.
+
+| Herramienta | Al confirmar |
+|---|---|
+| `draft_invoice` | Emite la factura con su número y avisa al cliente, como desde el panel. Canadá e Italia. |
+| `draft_invoice_from_progress_claim` | Factura un SAL ya certificado, descontando el anticipo que recupera. Canadá e Italia. |
+| `draft_progress_claim` | Certifica un SAL nuevo: % acumulado por partida, a precios del contrato; nunca hacia atrás. |
+| `draft_payment` | Marca cobrada una factura (efectivo, transferencia, cheque u otro). |
+| `draft_estimate` | Guarda un presupuesto **en borrador** en el panel; no se le manda al cliente. |
+| `confirm_action` / `cancel_action` | Ejecutan o descartan un borrador. Cada uno se confirma una sola vez. |
+
+Las garantías, cada una con su prueba en `scripts/prueba-mcp/servidor.mjs`:
+
+- **Preparar no escribe** fuera de `mcp_acciones` y la auditoría. `scripts/check-mcp-readonly.py` sigue prohibiendo cualquier `insert`/`update`/`delete` dentro de `createMcpServer`: la escritura vive en `server/mcpAcciones.ts`.
+- **Una confirmación, una factura.** El paso de `awaiting_confirmation` a `running` es un `update` condicionado al estado: si Claude confirma dos veces, la segunda no encuentra el borrador en espera (`action_already_done`).
+- **Lo ejecuta el panel.** Los ejecutores se registran desde `server/api.ts` con las funciones de las rutas (`createInvoiceRecord`, `registrarCobro`, `certificarSal`, `facturarSal`), así que lo que el panel rechaza —emitir sin impuesto configurado, cobrar una factura anulada, facturar dos veces un SAL— lo rechaza también la voz.
+- **Caducado o cancelado no se ejecuta** (`action_expired`, `action_cancelled`).
+- **Sólo con el permiso.** Sin `mcp:write`, o sin ser el propietario principal, las herramientas `draft_*` ni siquiera aparecen en `tools/list` (`escritura: true` en `TOOL_ACCESS`).
+
+`mcp_acciones` tiene RLS activado sin políticas: sólo el servidor la lee y escribe, con el cliente service-role, y cada fila lleva `business_id` y `owner_auth_user_id`.
 
 ## Seguridad y borrado
 
@@ -95,7 +121,7 @@ El servidor implementa **OAuth 2.1 Authorization Code con PKCE S256**. Claude de
 - `POST /api/oauth/token`
 - `POST /api/oauth/revoke`
 
-El recurso canónico es `https://logiciel-construction.com/api/mcp` y el único alcance de esta fase es `mcp:read`. Se aceptan redirecciones HTTPS y redirecciones HTTP únicamente para `localhost`.
+El recurso canónico es `https://logiciel-construction.com/api/mcp`. El alcance por defecto es `mcp:read`; `mcp:write` sólo se concede al propietario principal que marca la casilla de escritura en el consentimiento, y siempre junto a `mcp:read`. Se aceptan redirecciones HTTPS y redirecciones HTTP únicamente para `localhost`.
 
 La autorización abre una pantalla de consentimiento de Field. El trabajador introduce su código de acceso de `/campo`; el propietario principal introduce el email y la contraseña de la cuenta que creó la empresa. Field comprueba la identidad, el vínculo con el negocio, el estado de suscripción y el plan, y después crea una conexión revocable en `mcp_connections`. La contraseña del propietario solo se valida contra Supabase Auth y no se guarda. El código de autorización dura cinco minutos, el access token dura una hora y el refresh token dura treinta días con rotación: cada renovación revoca el token anterior.
 
@@ -112,8 +138,8 @@ No se debe pegar un token de trabajador en una conversación de Claude. El token
 
 La guía paso a paso para Claude está en [conectar-mcp-claude.md](./conectar-mcp-claude.md). Incluye la URL del servidor, el Client ID específico de Claude y la indicación de dejar vacío el Client Secret.
 
-## Criterios para la siguiente fase
+## Criterios para seguir ampliando
 
-Antes de activar acciones de escritura se debe comprobar que la lectura funciona con un trabajador de prueba, que un trabajador no puede ver proyectos de otro negocio, que un trabajador eliminado deja de autenticar, que revocar la conexión invalida sus tokens y que el plan bloqueado no recibe datos. Después se podrán diseñar herramientas de escritura independientes, con confirmación explícita y auditoría ampliada.
+Antes de abrir más escritura se debe comprobar que la lectura funciona con un trabajador de prueba, que un trabajador no puede ver proyectos de otro negocio, que un trabajador eliminado deja de autenticar, que revocar la conexión invalida sus tokens y que el plan bloqueado no recibe datos.
 
-Además, la validación debe confirmar que todos los roles permanecen en solo lectura y que no existe ninguna herramienta MCP registrada cuyo nombre o comportamiento cree, actualice o elimine datos. La autonomía del propietario principal se evaluará únicamente después de cerrar esta batería de pruebas.
+Toda herramienta nueva que cree algo sigue el patrón de la Fase B —borrador, resumen, `confirm_action`— y lleva `escritura: true` en `TOOL_ACCESS`; el guardia lo exige. Todos los demás roles permanecen en solo lectura: ninguna identidad MCP que no sea el propietario principal con `mcp:write` puede ver una herramienta que cree, actualice o elimine datos.

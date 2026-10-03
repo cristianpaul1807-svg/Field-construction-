@@ -12,12 +12,13 @@
  */
 import express from "express";
 import { mcpHandler } from "../../../server/mcp";
+import { registrarEjecutor } from "../../../server/mcpAcciones";
 import { DATOS, ESCRITO } from "./supabaseFalso";
 
 const futuro = new Date(Date.now() + 3600e3).toISOString();
 function negocio(country: string, province: string, extra: any = {}) {
   DATOS.employees = []; DATOS.subcontractors = []; DATOS.users = [];
-  DATOS.mcp_oauth_tokens = [{ connection_id: "c1", scope: "mcp:read", resource: "x", access_expires_at: futuro, revoked_at: null, mcp_connections: { business_id: "b1", employee_id: null, subcontractor_id: null, owner_auth_user_id: "u1", status: "active" } }];
+  DATOS.mcp_oauth_tokens = [{ connection_id: "c1", scope: extra.scope ?? "mcp:read", resource: "x", access_expires_at: futuro, revoked_at: null, mcp_connections: { business_id: "b1", employee_id: null, subcontractor_id: null, owner_auth_user_id: "u1", status: "active" } }];
   DATOS.businesses = [{ id: "b1", name: "Negocio", subscription_plan: "entreprise", subscription_status: "active", trial_ends_at: null, country, province, tax_config: extra.tax_config ?? null, holdback_percent: extra.holdback ?? 0 }];
   DATOS.canada_tax_rates = [{ province: "QC", label: "Québec", is_hst: false, gst_rate: 0.05, pst_rate: 0.09975, hst_rate: 0 }];
   DATOS.invoices = [];
@@ -56,6 +57,7 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
   ok(`${pais}: calcular factura`, nombres.includes("calculate_invoice"), pais !== "ES");
   ok(`${pais}: Partita IVA`, nombres.includes("check_italian_tax_id"), pais === "IT");
   ok(`${pais}: congruità`, nombres.includes("check_congruita"), pais === "IT");
+  ok(`${pais}: en solo lectura no hay nada que prepare`, nombres.filter((n: string) => n.startsWith("draft_") || n.endsWith("_action")), []);
   ok(`${pais}: títulos sin francés`, (lista.result?.tools ?? []).filter((t: any) => /[éèàç]|Mes |Mon /.test(t.title ?? "")).map((t: any) => t.title), []);
   const resumen = await llamar("get_business_summary");
   ok(`${pais}: el resumen dice la moneda`, resumen.business?.currency, pais === "CA" ? "CAD" : "EUR");
@@ -137,6 +139,38 @@ for (const [pais, prov, extra] of [["CA", "QC", { holdback: 10 }], ["IT", "RM", 
 }
 const escrituras = ESCRITO.filter((e) => !["mcp_audit_log", "mcp_connections"].includes(e.tabla));
 ok("Nada escribió fuera de la auditoría", escrituras, []);
+
+// ---------- Fase B: el propietario que concedió `mcp:write` ----------
+// Los ejecutores de verdad son los del panel y se registran en api.ts; aquí
+// uno que apunta cuántas veces lo llamaron, que es lo que importa: una.
+const emitidas: any[] = [];
+registrarEjecutor("factura", async (_admin, _quien, datos) => { emitidas.push(datos); return { ok: true, detalle: { invoiceNumber: "2026-0001" } }; });
+negocio("CA", "QC", { holdback: 10, scope: "mcp:read mcp:write" });
+DATOS.businesses[0].primary_auth_user_id = "u1";
+DATOS.mcp_acciones = [];
+const conEscritura = ((await rpc("tools/list")).result?.tools ?? []).map((t: any) => t.name);
+ok("Escritura: ve las herramientas de preparar", ["draft_invoice", "draft_payment", "draft_estimate", "confirm_action", "cancel_action"].every((n) => conEscritura.includes(n)), true);
+DATOS.projects = [];
+const b = await llamar("draft_invoice", { subtotal: 10000, type: "deposito", clientId: "11111111-1111-4111-8111-111111111111" });
+ok("Escritura: el borrador dice exactamente lo que va a emitir", [b.summary?.client, b.summary?.taxAmount, b.summary?.amountDue, b.summary?.currency], ["Mario Bianchi", 1497.5, 10497.5, "CAD"]);
+ok("Escritura: preparar no emite", emitidas.length, 0);
+ok("Escritura: preparar no escribe en ninguna tabla de negocio", ESCRITO.filter((e) => !["mcp_audit_log", "mcp_connections", "mcp_acciones"].includes(e.tabla)), []);
+const c1 = await llamar("confirm_action", { actionId: b.actionId });
+ok("Escritura: confirmar emite", [c1.done, c1.result?.invoiceNumber, emitidas.length], [true, "2026-0001", 1]);
+const c2 = await llamar("confirm_action", { actionId: b.actionId });
+ok("Escritura: confirmar dos veces no emite dos", [c2.error?.code, emitidas.length], ["action_already_done", 1]);
+const b2 = await llamar("draft_invoice", { subtotal: 500, type: "parcial", clientId: "11111111-1111-4111-8111-111111111111" });
+ok("Escritura: cancelar", (await llamar("cancel_action", { actionId: b2.actionId })).cancelled, true);
+ok("Escritura: lo cancelado ya no se confirma", [(await llamar("confirm_action", { actionId: b2.actionId })).error?.code, emitidas.length], ["action_cancelled", 1]);
+const b3 = await llamar("draft_invoice", { subtotal: 700, type: "parcial", clientId: "11111111-1111-4111-8111-111111111111" });
+DATOS.mcp_acciones.find((a) => a.id === b3.actionId).expira_en = new Date(Date.now() - 1000).toISOString();
+ok("Escritura: un borrador caducado no se confirma", [(await llamar("confirm_action", { actionId: b3.actionId })).error?.code, emitidas.length], ["action_expired", 1]);
+// El mismo permiso en una cuenta que ya no es suya: la escritura se comprueba
+// en cada llamada, no viaja con la conexión.
+DATOS.businesses[0].primary_auth_user_id = "otro";
+DATOS.users = [{ auth_user_id: "u1", business_id: "b1", roles: { name: "admin", permissions: null } }];
+const sinSerDueño = ((await rpc("tools/list")).result?.tools ?? []).map((t: any) => t.name);
+ok("Escritura: sin ser el propietario principal no hay nada que prepare", sinSerDueño.filter((n: string) => n.startsWith("draft_") || n.endsWith("_action")), []);
 srv.close();
 console.log(`\n${mal ? "HAY FALLOS" : "todo bien"}`);
 process.exit(mal ? 1 : 0);

@@ -150,6 +150,9 @@ export default function SettingsMcpConnections() {
                       {/* Sin refresco vivo es que Claude dejó de venir. No se
                           borra sola: se dice, y que decida quien sabe si esa
                           persona sigue en la empresa. */}
+                      {connection.scopes?.includes("mcp:write") && (
+                        <span className="block text-xs text-foreground">{t("mcpConex.puedeEmitir")}</span>
+                      )}
                       {!connection.viva && (
                         <span className="block text-xs text-status-warning-fg">{t("mcpConex.caducada")}</span>
                       )}

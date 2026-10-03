@@ -1813,7 +1813,7 @@
           "title": "Connect Claude to Logiciel Construction MCP",
           "p1": "Go to {{menuAjustes}} → MCP Conexiones AI and open the Claude card. You will find the MCP URL and OAuth Client ID there; use the Copy buttons and never share passwords or codes in chat.",
           "p2": "In Claude, add a custom MCP connector and paste the URL and Client ID. When Claude opens Field, sign in with the authorized account's email and password, or use the worker code for a field worker or subcontractor.",
-          "p3": "Check the mcp:read permission, which is read-only, and press Authorize. Claude can only query information allowed by your role, project perimeter and company plan.",
+          "p3": "The connection is read-only (mcp:read): Claude only queries what your role, project perimeter and company plan allow. If you're the main owner, you can also tick the box so it prepares invoices, estimates, progress claims and payments; each one arrives first as a draft with its exact summary and is issued only when you say yes. Press Authorize.",
           "p4": "If you change roles, access changes automatically. To cut off a connection, return to this card and press Revoke connection.",
           "nota": "The current phase does not allow Claude to create, edit or delete data."
         },
@@ -2844,8 +2844,8 @@
   "mcpConex": {
     "titulo": "AI connections (MCP)",
     "entradilla": "Connect Claude to the Logiciel Construction data your role and plan allow you to read.",
-    "seguroTitulo": "Read-only, and revocable at any time",
-    "seguroCuerpo": "Connections use OAuth and PKCE. Never share passwords or codes in a chat: authorisation is completed on the secure Logiciel Construction screen.",
+    "seguroTitulo": "Read-only by default, revocable at any time",
+    "seguroCuerpo": "Connections use OAuth and PKCE. Never share passwords or codes in a chat: authorisation is completed on the secure Logiciel Construction screen. Only the main owner can also allow it to prepare invoices, estimates and payments; nothing is issued without their “yes”.",
     "alcance": "Active scope:",
     "noCarga": "The AI connections could not be loaded.",
     "revocada": "Connection revoked. That tool can no longer read Logiciel Construction.",
@@ -2861,7 +2861,7 @@
     "paso1": "Open {{plataforma}} and add a custom MCP connector.",
     "paso2": "Copy the MCP URL and the Client ID shown below.",
     "paso3": "When {{plataforma}} opens Logiciel Construction, sign in as the owner or use the worker access code.",
-    "paso4": "Check that it says “read-only” and press authorise.",
+    "paso4": "If you're the main owner and want it to prepare documents too, tick the box; otherwise leave it empty and it stays read-only. Press authorise.",
     "urlMcp": "MCP URL",
     "clientId": "OAuth Client ID",
     "callback": "Callback: {{url}}",
@@ -2881,7 +2881,8 @@
     "caducada": "Unused: it may already have been removed from Claude",
     "usadaEl": "Used on {{fecha}}",
     "nuncaUsada": "Never used",
-    "noAvisan": "If someone removes the connector from Claude, we get no notice. That’s why it’s worth checking when each was last used and cutting by hand what no longer belongs."
+    "noAvisan": "If someone removes the connector from Claude, we get no notice. That’s why it’s worth checking when each was last used and cutting by hand what no longer belongs.",
+    "puedeEmitir": "Prepares and issues on confirmation"
   },
   "afiliado": {
     "titulo": "Your referral link",

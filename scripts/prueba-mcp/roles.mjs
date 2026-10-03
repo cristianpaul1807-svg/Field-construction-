@@ -125,5 +125,19 @@ ok("Sin país guardado se comporta como Canadá", catalogo(null), catalogo("CA")
 ok("Un trabajador de campo no calcula facturas en ningún país",
    ["CA", "IT"].map((country) => puedeUsarHerramienta({ workerKind: "employee", areas: null, country }, "calculate_invoice")), [false, false]);
 
+// Fase B: preparar y emitir. Sólo con `escritura`, que sólo lleva el
+// propietario principal que marcó la casilla; el rol admin no basta.
+const escribe = Object.keys(TOOL_ACCESS).filter((h) => TOOL_ACCESS[h].escritura);
+ok("Las herramientas que escriben son las del borrador y la confirmación",
+   escribe.every((h) => h.startsWith("draft_") || h === "confirm_action" || h === "cancel_action"), true);
+ok("Sin escritura concedida, ni el propietario prepara nada",
+   escribe.filter((h) => puedeUsarHerramienta({ workerKind: "owner", areas: null, country: "CA" }, h)), []);
+ok("Con escritura, el propietario prepara y confirma",
+   escribe.every((h) => puedeUsarHerramienta({ workerKind: "owner", areas: null, country: "CA", escritura: true }, h)), true);
+ok("Un trabajador con escritura puesta por error tampoco",
+   escribe.filter((h) => puedeUsarHerramienta({ workerKind: "employee", areas: null, country: "CA", escritura: true }, h)), []);
+ok("Facturar hablando, sólo donde hay impuesto configurado",
+   puedeUsarHerramienta({ workerKind: "owner", areas: null, country: "ES", escritura: true }, "draft_invoice"), false);
+
 console.log(`\n${bien} bien, ${mal} mal`);
 process.exit(mal ? 1 : 0);

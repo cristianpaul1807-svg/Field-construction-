@@ -24,13 +24,13 @@ Para probar un trabajador o subcontratista, debe existir en Field y tener un có
 
 7. Deje **OAuth Client Secret** vacío.
 8. Guarde el conector y pulse **Conectar**.
-9. En la ventana de autorización de Field, compruebe que la aplicación solicita acceso de **solo lectura**.
+9. En la ventana de autorización de Field, compruebe que la aplicación indica que el acceso es de **solo lectura** por defecto.
 10. Para trabajador o subcontratista, introduzca el código de acceso de `/campo`. Para el propietario principal, introduzca el email y la contraseña de la cuenta que creó la empresa.
-11. Compruebe que la pantalla indica **solo lectura**.
-12. Pulse **Autorizar acceso de solo lectura**.
+11. Sólo el propietario principal: si quiere que Claude **prepare** facturas, presupuestos, SAL y cobros, marque la casilla «preparar y emitir cuando yo confirme». Si la deja vacía, la conexión queda en solo lectura.
+12. Pulse **Autorizar**.
 13. Espere a que Claude vuelva automáticamente y confirme que el conector está conectado.
 
-## Permisos de esta primera versión
+## Permisos
 
 El conector solo puede consultar la información que corresponde al trabajador autorizado y al negocio vinculado:
 
@@ -41,9 +41,11 @@ El conector solo puede consultar la información que corresponde al trabajador a
 - horas registradas;
 - documentos visibles para el trabajador.
 
-El conector no puede crear, modificar ni borrar datos.
+El conector de un trabajador, un subcontratista o cualquier rol que no sea el propietario principal no puede crear, modificar ni borrar datos.
 
 El propietario principal obtiene las lecturas administrativas permitidas por su plan, como resumen de empresa, facturas, cuentas por cobrar, pagos, gastos, rentabilidad y auditoría de QuickBooks. Los demás roles solo reciben el área que corresponda a su identidad y permisos.
+
+Si el propietario principal marcó la casilla de escritura, Claude puede además preparar facturas, facturas de un SAL, SAL, cobros y presupuestos. Cada uno llega primero como **borrador con su resumen exacto** (cliente, impuesto, retención, lo que paga el cliente); sólo se emite cuando el propietario dice que sí, y caduca a los 15 minutos si no lo dice. En **Configuración → Conexiones de IA** la conexión aparece con «Prepara y emite con confirmación»; revocarla y volver a conectar sin la casilla la devuelve a solo lectura. El detalle técnico está en [mcp-trabajadores.md](./mcp-trabajadores.md#fase-b-preparar-y-emitir-con-confirmación).
 
 ## Si vuelve a abrir `/campo`
 

@@ -17,7 +17,8 @@ import { fatturaPADeFactura, fatturaPADeNota } from "./fatturaPAServidor";
 import { ritenutaBancaria } from "../shared/bonusEdilizi";
 import { papelesQueVencen } from "./papelesQueVencen";
 import { congruitaDeLaObra } from "./congruitaServidor";
-import { estadoSalDellaObra } from "./salServidor";
+import { calcoloDaEstado, estadoSalDellaObra, ivaDeLaObra, salGuardado } from "./salServidor";
+import { cancelarAccion, confirmarAccion, prepararAccion } from "./mcpAcciones";
 import { grupoDePais, paisDe } from "../shared/paises";
 import { OPCIONES_IVA } from "../shared/iva";
 import { esCodiceFiscaleValido, esPartitaIvaValida } from "../shared/fiscaleItalia";
@@ -49,11 +50,21 @@ export type WorkerIdentity = {
    * funciona—, igual que decide el menú del panel.
    */
   country: string | null;
+  /** Quien creó la cuenta. Es el único que puede conceder escritura. */
+  propietarioPrincipal?: boolean;
+  /**
+   * Si esta conexión puede preparar y emitir documentos (`mcp:write`, ver
+   * `server/mcpAcciones.ts`). Sólo el propietario principal que marcó la
+   * casilla al conectar; cualquier otra identidad, nunca.
+   */
+  escritura?: boolean;
 };
 
 type ReadToolContext = {
   identity: WorkerIdentity;
   requestId: string;
+  /** De dónde llegó la petición, para los enlaces de los correos que se manden. */
+  baseUrl?: string;
 };
 
 function bearerToken(req: Request): string | null {
@@ -120,6 +131,7 @@ export async function resolveOwnerIdentity(
     negocio: { id: string; name?: string | null; subscription_plan?: string | null; subscription_status?: string | null; trial_ends_at?: string | null; country?: string | null },
     rol: string,
     areas: Area[] | null,
+    principal = false,
   ): WorkerIdentity => {
     const plan = planDe(negocio.subscription_plan);
     return {
@@ -136,6 +148,7 @@ export async function resolveOwnerIdentity(
         pruebaHasta: negocio.trial_ends_at ?? null,
       }),
       country: negocio.country ?? null,
+      propietarioPrincipal: principal,
     };
   };
 
@@ -156,7 +169,7 @@ export async function resolveOwnerIdentity(
       .eq("business_id", suyo.id)
       .limit(1)
       .maybeSingle();
-    return construir(suyo, "admin", areasDelRol((fila as { roles?: { permissions?: unknown } | null } | null)?.roles));
+    return construir(suyo, "admin", areasDelRol((fila as { roles?: { permissions?: unknown } | null } | null)?.roles), true);
   }
 
   // Y si no, un usuario del negocio. Las cuentas antiguas no tienen
@@ -201,7 +214,10 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
   if (!oauth || oauth.revoked_at || new Date(oauth.access_expires_at).getTime() <= Date.now()) return null;
   if (oauth.resource !== `${process.env.MCP_OAUTH_ISSUER?.trim().replace(/\/$/, "") || ""}/mcp` && process.env.MCP_OAUTH_ISSUER) return null;
   const connection = oauth.mcp_connections as unknown as { business_id: string; employee_id: string | null; subcontractor_id: string | null; owner_auth_user_id: string | null; status: string } | null;
-  if (!connection || connection.status !== "active" || oauth.scope !== "mcp:read") return null;
+  // `mcp:read` siempre; `mcp:write` además, si el propietario lo concedió.
+  // Cualquier otra cosa —un permiso que no conocemos— no entra.
+  const scopes = String(oauth.scope ?? "").split(" ").filter(Boolean);
+  if (!connection || connection.status !== "active" || !scopes.includes("mcp:read") || scopes.some((s) => s !== "mcp:read" && s !== "mcp:write")) return null;
   const id = connection.employee_id ?? connection.subcontractor_id ?? connection.owner_auth_user_id;
   if (!id) return null;
 
@@ -226,7 +242,11 @@ async function resolveWorkerFromOAuthToken(token: string): Promise<WorkerIdentit
     // La **misma** función que usó el formulario de consentimiento para dejarle
     // entrar. Ver `resolveOwnerIdentity`: que aquí se comprobara otra cosa es
     // lo que tenía a Claude dando vueltas.
-    return resolveOwnerIdentity(connection.owner_auth_user_id, connection.business_id);
+    const propietario = await resolveOwnerIdentity(connection.owner_auth_user_id, connection.business_id);
+    // La escritura se vuelve a comprobar en cada llamada, no sólo al conceder:
+    // si la cuenta cambió de dueño, el permiso no viaja con la conexión.
+    if (propietario) propietario.escritura = scopes.includes("mcp:write") && propietario.propietarioPrincipal === true;
+    return propietario;
   }
   const table = connection.employee_id ? "employees" : "subcontractors";
   const select = connection.employee_id
@@ -1185,7 +1205,7 @@ function createMcpServer(context: ReadToolContext) {
           depositRecovered: s.recuperoAcconto,
           invoiceNumber: s.invoiceStatus === "cancelado" ? null : s.invoiceNumber,
         })),
-        items: estado.righe.map((r) => ({ description: r.descrizione, area: r.zona, contractAmount: r.importo, percentComplete: r.percentualePrecedente })),
+        items: estado.righe.map((r) => ({ key: r.chiave, description: r.descrizione, area: r.zona, contractAmount: r.importo, percentComplete: r.percentualePrecedente })),
       });
     },
   );
@@ -1208,6 +1228,333 @@ function createMcpServer(context: ReadToolContext) {
       await audit(context, "check_congruita", r.ok, r.ok ? { projectId, estado: r.congruita.estado } : { projectId, code: r.code });
       if (!r.ok) return { isError: true, content: [{ type: "text" as const, text: JSON.stringify({ error: "Congruity cannot be checked.", code: r.code }) }] };
       return jsonResult({ currency, ...r.congruita });
+    },
+  );
+
+  // ---------- Fase B: preparar, y emitir sólo al confirmar ----------
+  //
+  // Cada `draft_*` comprueba, calcula y guarda un borrador con su resumen;
+  // no crea nada. Lo crea `confirm_action`, y sólo con el id que devolvió el
+  // borrador. Ver server/mcpAcciones.ts.
+
+  const quien = () => ({
+    businessId: context.identity.businessId,
+    ownerAuthUserId: context.identity.workerId,
+    requestId: context.requestId,
+    baseUrl: context.baseUrl ?? "",
+  });
+  const enItalia = grupoDePais(context.identity.country) === "IT";
+  const idiomaDelPais = enItalia ? "it" : "fr";
+  const CONFIRMAR =
+    "Nothing has been created yet. Show the person this summary, in their language, and call confirm_action with actionId ONLY after they explicitly say yes. If they want changes, call cancel_action and prepare a new draft. The draft expires in 15 minutes.";
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+
+  const borrador = async (
+    herramienta: string,
+    tipo: Parameters<typeof prepararAccion>[2],
+    datos: Record<string, unknown>,
+    resumen: Record<string, unknown>
+  ) => {
+    const { actionId, expiresAt } = await prepararAccion(admin, quien(), tipo, datos, resumen);
+    await audit(context, herramienta, true, { actionId, tipo });
+    return jsonResult({ actionId, expiresAt, summary: resumen, instructions: CONFIRMAR });
+  };
+
+  /** El cliente y la obra de una factura, comprobados contra este negocio. */
+  const clienteYObra = async (clientId?: string, projectId?: string) => {
+    let obra: { id: string; name: string; client_id: string | null; estimate_id: string | null } | null = null;
+    if (projectId) {
+      const { data } = await admin.from("projects").select("id, name, client_id, estimate_id").eq("business_id", context.identity.businessId).eq("id", projectId).maybeSingle();
+      if (!data) return { error: "project_not_found" as const };
+      obra = data;
+    }
+    const idCliente = clientId ?? obra?.client_id ?? null;
+    if (!idCliente) return { error: "client_required" as const };
+    const { data: cliente } = await admin.from("clients").select("id, name, email").eq("business_id", context.identity.businessId).eq("id", idCliente).maybeSingle();
+    if (!cliente) return { error: "client_not_found" as const };
+    return { cliente, obra };
+  };
+
+  server.registerTool(
+    "draft_invoice",
+    {
+      title: "Prepare an invoice (issued only on confirmation)",
+      description:
+        "Prepares an invoice and returns its exact summary: client, tax of this business's country, holdback and amount due. It is NOT issued until confirm_action is called with the returned actionId after the person explicitly agrees. On confirmation it gets its number and the client is emailed, exactly as from the panel. Use get_clients / get_projects to find the ids.",
+      inputSchema: {
+        subtotal: z.number().positive().describe("Amount before tax"),
+        type: z.enum(["deposito", "parcial", "final"]).describe("deposito (deposit), parcial (progress payment) or final"),
+        projectId: z.string().uuid().optional().describe("The project; its client is used if clientId is not given"),
+        clientId: z.string().uuid().optional().describe("The client, if there is no project"),
+        description: z.string().max(300).optional().describe("What the invoice is for, as it should read on it"),
+        iva: z.enum(OPCIONES_IVA).optional().describe("Italy only: 22, 10, 4, or rc. Defaults to the business's usual VAT"),
+        language: z.enum(["es", "en", "fr", "it"]).optional().describe("Language of the email to the client"),
+      },
+    },
+    async ({ subtotal, type, projectId, clientId, description, iva, language }) => {
+      const denied = requireRole(context, "draft_invoice");
+      if (denied) {
+        await audit(context, "draft_invoice", false, { code: "access_denied" });
+        return denied;
+      }
+      const cy = await clienteYObra(clientId, projectId);
+      if ("error" in cy) return errorResult("The client or project was not found in this business.", cy.error ?? "not_found");
+      const cuenta = await calcularFactura(admin, { businessId: context.identity.businessId, subtotal, type, projectId: projectId ?? null, iva: enItalia ? iva : undefined });
+      if ((cuenta.breakdown as { sinConfigurar?: boolean }).sinConfigurar) {
+        return errorResult("This country's taxes are not configured yet, so invoices cannot be issued.", "pais_sin_configurar");
+      }
+      return borrador(
+        "draft_invoice",
+        "factura",
+        { clientId: cy.cliente.id, projectId: cy.obra?.id ?? null, estimateId: cy.obra?.estimate_id ?? null, type, subtotal: r2(subtotal), description: description ?? null, iva: enItalia ? iva ?? null : null, lang: language ?? idiomaDelPais },
+        {
+          action: "issue_invoice",
+          currency,
+          client: cy.cliente.name,
+          project: cy.obra?.name ?? null,
+          type,
+          description: description ?? null,
+          subtotal: r2(subtotal),
+          taxBreakdown: cuenta.breakdown,
+          taxAmount: cuenta.taxAmount,
+          holdbackWithheld: cuenta.holdbackAmount,
+          holdbackReleased: cuenta.holdbackReleased,
+          amountDue: cuenta.amount,
+          emailTo: cy.cliente.email ?? null,
+        }
+      );
+    },
+  );
+
+  server.registerTool(
+    "draft_invoice_from_progress_claim",
+    {
+      title: "Prepare the invoice of a progress claim (SAL)",
+      description:
+        "Prepares the invoice of an already certified progress claim (SAL) of a project: the claim amount minus the deposit it recovers, with the project's VAT. Issued only when confirm_action is called after the person agrees. Use get_progress_claims to see the claims.",
+      inputSchema: {
+        projectId: z.string().uuid().describe("Project id"),
+        claimNumber: z.number().int().positive().describe("The claim number (SAL n.)"),
+        language: z.enum(["es", "en", "fr", "it"]).optional().describe("Language of the invoice text and the email to the client"),
+      },
+    },
+    async ({ projectId, claimNumber, language }) => {
+      const denied = requireRole(context, "draft_invoice_from_progress_claim");
+      if (denied) {
+        await audit(context, "draft_invoice_from_progress_claim", false, { code: "access_denied" });
+        return denied;
+      }
+      const { data: fila } = await admin.from("sal").select("id").eq("business_id", context.identity.businessId).eq("project_id", projectId).eq("numero", claimNumber).maybeSingle();
+      const sal = fila ? await salGuardado(admin, context.identity.businessId, fila.id) : null;
+      if (!sal) return errorResult("That progress claim does not exist for this project.", "sal_no_encontrado");
+      if (sal.invoiceId) {
+        const { data: previa } = await admin.from("invoices").select("status").eq("business_id", context.identity.businessId).eq("id", sal.invoiceId).maybeSingle();
+        if (previa && previa.status !== "cancelado") return errorResult("This progress claim already has an invoice.", "sal_ya_facturado");
+      }
+      if (sal.daFatturare <= 0) return errorResult("After recovering the deposit there is nothing left to invoice in this claim.", "sal_nada_que_facturar");
+      const iva = await ivaDeLaObra(admin, context.identity.businessId, sal.projectId);
+      const tipo = sal.finale ? "final" : "parcial";
+      const cuenta = await calcularFactura(admin, { businessId: context.identity.businessId, subtotal: sal.daFatturare, type: tipo, projectId: sal.projectId, iva });
+      return borrador(
+        "draft_invoice_from_progress_claim",
+        "factura_sal",
+        { salId: sal.id, lang: language ?? idiomaDelPais },
+        {
+          action: "issue_progress_claim_invoice",
+          currency,
+          client: sal.clientName,
+          project: sal.projectName,
+          claimNumber: sal.numero,
+          claimAmount: sal.importo,
+          depositRecovered: sal.recuperoAcconto,
+          subtotal: sal.daFatturare,
+          type: tipo,
+          taxBreakdown: cuenta.breakdown,
+          taxAmount: cuenta.taxAmount,
+          holdbackWithheld: cuenta.holdbackAmount,
+          holdbackReleased: cuenta.holdbackReleased,
+          amountDue: cuenta.amount,
+        }
+      );
+    },
+  );
+
+  server.registerTool(
+    "draft_progress_claim",
+    {
+      title: "Prepare a progress claim (SAL)",
+      description:
+        "Prepares a new progress claim (SAL) for a project: the cumulative % complete of each item, valued at contract prices. Items not mentioned stay as in the previous claim; a % can never go down. Returns what it certifies and what would be invoiced; it is saved only with confirm_action after the person agrees. Use get_progress_claims for the item keys and current %.",
+      inputSchema: {
+        projectId: z.string().uuid().describe("Project id"),
+        items: z.array(z.object({ key: z.string().describe("Item key from get_progress_claims"), percent: z.number().min(0).max(100).describe("Cumulative % complete to date") })).min(1).max(200),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Date of the claim, YYYY-MM-DD (today by default)"),
+        note: z.string().max(500).optional(),
+      },
+    },
+    async ({ projectId, items, date, note }) => {
+      const denied = requireRole(context, "draft_progress_claim");
+      if (denied) {
+        await audit(context, "draft_progress_claim", false, { code: "access_denied" });
+        return denied;
+      }
+      const estado = await estadoSalDellaObra(admin, context.identity.businessId, projectId);
+      if (!estado) return errorResult("Project not found.", "sal_obra_no_encontrada");
+      if (!estado.righe.length) return errorResult("The project has no estimate items to measure the claim against.", "sal_sin_contrato");
+      const desconocidas = items.filter((i) => !estado.righe.some((r) => r.chiave === i.key)).map((i) => i.key);
+      if (desconocidas.length) return errorResult(`Unknown item keys: ${desconocidas.join(", ")}`, "sal_partida_desconocida");
+      const avanzamento = Object.fromEntries(items.map((i) => [i.key, i.percent]));
+      const calcolo = calcoloDaEstado(estado, avanzamento);
+      if (calcolo.errori.retrocede.length) return errorResult("Completion cannot go down from the previous claim; correct invoiced work with a credit note.", "sal_retrocede");
+      if (calcolo.importo <= 0) return errorResult("This claim certifies nothing new.", "sal_sin_avance");
+      return borrador(
+        "draft_progress_claim",
+        "sal",
+        { projectId, avanzamento, data: date ?? null, note: note ?? null },
+        {
+          action: "certify_progress_claim",
+          currency,
+          claimNumber: (estado.sal[estado.sal.length - 1]?.numero ?? 0) + 1,
+          changedItems: calcolo.righe.filter((r) => r.questo > 0).map((r) => ({ description: r.descrizione, from: r.percentualePrecedente, to: r.percentuale, amount: r.questo })),
+          contractValue: calcolo.contratto,
+          certifiedToDate: calcolo.cumulato,
+          thisClaim: calcolo.importo,
+          depositRecovered: calcolo.recuperoAcconto,
+          toInvoice: calcolo.daFatturare,
+          isFinal: calcolo.finale,
+          note: "The claim is saved but not invoiced; invoice it afterwards with draft_invoice_from_progress_claim.",
+        }
+      );
+    },
+  );
+
+  server.registerTool(
+    "draft_payment",
+    {
+      title: "Prepare recording a payment received",
+      description:
+        "Prepares marking an invoice as paid by cash, bank transfer, cheque or other (card payments record themselves). Saved only with confirm_action after the person agrees. Use get_invoices or get_receivables to find the invoice.",
+      inputSchema: {
+        invoiceId: z.string().uuid().describe("Invoice id"),
+        method: z.enum(["efectivo", "transferencia", "cheque", "otro"]).describe("efectivo (cash), transferencia (bank transfer), cheque, otro (other)"),
+        reference: z.string().max(120).optional().describe("Transfer reference or cheque number"),
+        paidAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Date the money came in, YYYY-MM-DD (today by default)"),
+      },
+    },
+    async ({ invoiceId, method, reference, paidAt }) => {
+      const denied = requireRole(context, "draft_payment");
+      if (denied) {
+        await audit(context, "draft_payment", false, { code: "access_denied" });
+        return denied;
+      }
+      const { data: factura } = await admin.from("invoices").select("id, number, amount, status, clients(name)").eq("business_id", context.identity.businessId).eq("id", invoiceId).maybeSingle();
+      if (!factura) return errorResult("Invoice not found.", "invoice_not_found");
+      if (factura.status === "pagado") return errorResult("This invoice is already paid.", "invoice_already_paid");
+      if (factura.status === "cancelado") return errorResult("A cancelled invoice cannot be paid.", "cancelled_invoice_not_payable");
+      return borrador(
+        "draft_payment",
+        "cobro",
+        { invoiceId, method, reference: reference ?? null, paidAt: paidAt ?? null },
+        { action: "record_payment", currency, invoiceNumber: factura.number, client: (factura.clients as unknown as { name?: string } | null)?.name ?? null, amount: Number(factura.amount), method, reference: reference ?? null, paidAt: paidAt ?? "today" }
+      );
+    },
+  );
+
+  server.registerTool(
+    "draft_estimate",
+    {
+      title: "Prepare an estimate (saved as a draft on confirmation)",
+      description:
+        "Prepares an estimate from items with their sale prices, before tax. On confirm_action it is saved as a DRAFT in the panel (not sent to the client) so the person can review and send it from there. Use get_clients / get_projects for the ids.",
+      inputSchema: {
+        clientId: z.string().uuid().optional().describe("The client (an estimate can also be prepared without one)"),
+        projectId: z.string().uuid().optional(),
+        description: z.string().max(300).optional(),
+        lines: z
+          .array(
+            z.object({
+              description: z.string().min(1).max(200),
+              quantity: z.number().positive(),
+              unitPrice: z.number().min(0).describe("Sale price per unit, before tax"),
+              area: z.string().max(80).optional().describe("Room or area, e.g. Bathroom"),
+              kind: z.enum(["materials", "labour", "subcontract"]).optional(),
+            })
+          )
+          .min(1)
+          .max(100),
+      },
+    },
+    async ({ clientId, projectId, description, lines }) => {
+      const denied = requireRole(context, "draft_estimate");
+      if (denied) {
+        await audit(context, "draft_estimate", false, { code: "access_denied" });
+        return denied;
+      }
+      let clienteNombre: string | null = null;
+      if (clientId) {
+        const { data } = await admin.from("clients").select("name").eq("business_id", context.identity.businessId).eq("id", clientId).maybeSingle();
+        if (!data) return errorResult("Client not found.", "client_not_found");
+        clienteNombre = data.name;
+      }
+      if (projectId) {
+        const { data } = await admin.from("projects").select("id").eq("business_id", context.identity.businessId).eq("id", projectId).maybeSingle();
+        if (!data) return errorResult("Project not found.", "project_not_found");
+      }
+      const CATEGORIA = { materials: "Materiales", labour: "Mano de obra", subcontract: "Subcontratistas" } as const;
+      const lineas = lines.map((l) => ({
+        area: l.area?.trim() || "General",
+        description: l.description.trim(),
+        quantity: l.quantity,
+        unitPrice: r2(l.unitPrice),
+        category: CATEGORIA[l.kind ?? "materials"],
+        total: r2(l.quantity * l.unitPrice),
+      }));
+      return borrador(
+        "draft_estimate",
+        "presupuesto",
+        { clientId: clientId ?? null, projectId: projectId ?? null, description: description ?? null, lines: lineas },
+        { action: "save_estimate_draft", currency, client: clienteNombre, description: description ?? null, lines: lineas, totalBeforeTax: r2(lineas.reduce((s2, l) => s2 + l.total, 0)), afterConfirm: "Saved as a draft in the panel, not sent to the client." }
+      );
+    },
+  );
+
+  server.registerTool(
+    "confirm_action",
+    {
+      title: "Confirm a prepared action",
+      description:
+        "Executes a draft prepared by a draft_* tool. Call it ONLY after the person has seen the summary and explicitly said yes. Each draft can be confirmed once.",
+      inputSchema: { actionId: z.string().uuid().describe("The actionId returned by the draft") },
+    },
+    async ({ actionId }) => {
+      const denied = requireRole(context, "confirm_action");
+      if (denied) {
+        await audit(context, "confirm_action", false, { code: "access_denied" });
+        return denied;
+      }
+      const r = await confirmarAccion(admin, quien(), actionId);
+      await audit(context, "confirm_action", r.ok, r.ok ? { actionId, tipo: r.tipo } : { actionId, code: r.code });
+      if (!r.ok) return { isError: true, content: [{ type: "text" as const, text: JSON.stringify({ error: "The action was not carried out.", code: r.code, detail: r.detalle ?? null }) }] };
+      return jsonResult({ done: true, currency, summary: r.resumen, result: r.detalle });
+    },
+  );
+
+  server.registerTool(
+    "cancel_action",
+    {
+      title: "Cancel a prepared action",
+      description: "Discards a draft that has not been confirmed. Nothing is created.",
+      inputSchema: { actionId: z.string().uuid().describe("The actionId returned by the draft") },
+    },
+    async ({ actionId }) => {
+      const denied = requireRole(context, "cancel_action");
+      if (denied) {
+        await audit(context, "cancel_action", false, { code: "access_denied" });
+        return denied;
+      }
+      const cancelada = await cancelarAccion(admin, quien(), actionId);
+      await audit(context, "cancel_action", cancelada, { actionId });
+      return jsonResult({ cancelled: cancelada });
     },
   );
 
@@ -1239,7 +1586,7 @@ export function mcpHandler(req: Request, res: Response, next: NextFunction) {
         res.status(403).json({ error: "Business access is blocked", code: "business_access_blocked" });
         return;
       }
-      const context: ReadToolContext = { identity, requestId: req.header("x-request-id") ?? randomUUID() };
+      const context: ReadToolContext = { identity, requestId: req.header("x-request-id") ?? randomUUID(), baseUrl: `${req.protocol}://${req.get("host")}` };
       const mcp = createMcpServer(context);
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       await mcp.connect(transport);
