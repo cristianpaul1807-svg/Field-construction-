@@ -86,6 +86,7 @@ python3 scripts/check-pantallas-area.py  # no panel screen ships without an area
 python3 scripts/check-respuestas-tiradas.py  # no call to the server throws its answer away
 node scripts/comprobar-ancho.mjs      # no public page scrolls sideways on a phone
 node scripts/comprobar-ancho-panel.mjs  # nor does any panel screen, open cards included
+node scripts/comprobar-sitio-servido.mjs  # the production server really serves every file the site links
 node --experimental-strip-types scripts/prueba-suscripcion/mapeo.mjs    # Stripe payload -> what we store
 node --experimental-strip-types scripts/prueba-suscripcion/bloqueo.mjs  # when the trial ends, and what stays open
 node --experimental-strip-types scripts/prueba-mcp/roles.mjs            # MCP never opens what the panel closes
@@ -102,6 +103,13 @@ node --experimental-strip-types scripts/prueba-paises/aislamiento.mjs  # what be
 `npm run build` is the marketing site generator, then `vite build`, then
 `esbuild server/…`. Running only `vite build` checks the client and silently
 skips the server bundle — which is the half that has to boot in production.
+
+`comprobar-sitio-servido.mjs` boots the built `dist/index.js` itself and asks
+it for every `/sitio/…` file the pages link. It exists because the site's
+product screenshots were broken in production for weeks while everything was
+green: the width check serves the site with its own server, and the real one
+had no route for `/sitio/capturas/`, so each image came back as the app's
+`index.html`. A new kind of site asset needs its route in `server/index.ts`.
 
 Both width checks read what the build wrote, so they go **after** it. They open
 every page at 320 and 390 px and fail if anything is wider than the screen —

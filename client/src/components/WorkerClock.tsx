@@ -1,3 +1,4 @@
+import { formatNumber } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -301,12 +302,12 @@ export function WorkerClock() {
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50 text-xs">
                   <div className="flex flex-col">
                     <span className="text-muted-foreground">{t("worker.regularHours")}</span>
-                    <span className="font-semibold text-foreground">{regularHours.toFixed(1)} hrs</span>
+                    <span className="font-semibold text-foreground">{t("performance.hoursShort", { hours: formatNumber(Math.round(regularHours * 10) / 10) })}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-muted-foreground">{t("worker.overtimeHours")}</span>
                     <span className={`font-semibold ${overtimeHours > 0 ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground"}`}>
-                      {overtimeHours.toFixed(1)} hrs
+                      {t("performance.hoursShort", { hours: formatNumber(Math.round(overtimeHours * 10) / 10) })}
                     </span>
                   </div>
                 </div>

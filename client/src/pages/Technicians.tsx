@@ -1,3 +1,4 @@
+import { formatNumber } from "@/lib/mockData";
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { VencimientosProximos } from "@/components/VencimientosProximos";
@@ -304,7 +305,7 @@ export default function Technicians() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                   <span>{t("technicians.currentProject")}: {emp.currentProject ?? "—"}</span>
-                  <span className="text-right">{emp.hoursThisPeriod} hrs</span>
+                  <span className="text-right">{t("performance.hoursShort", { hours: formatNumber(emp.hoursThisPeriod) })}</span>
                 </div>
                 <AccessCode code={emp.accessCode} />
                 {/* Se parte en dos líneas antes que apretar los botones: en un
@@ -374,7 +375,7 @@ export default function Technicians() {
                       <StatusBadge tone={statusTone[emp.status]}>{t(`technicians.status.${emp.status}`)}</StatusBadge>
                     </td>
                     <td className="py-3 text-muted-foreground">{emp.currentProject ?? "—"}</td>
-                    <td className="py-3 text-right text-foreground">{emp.hoursThisPeriod} hrs</td>
+                    <td className="py-3 text-right text-foreground">{t("performance.hoursShort", { hours: formatNumber(emp.hoursThisPeriod) })}</td>
                     <td className="py-3 text-right">
                       <div className="flex justify-end">
                         <RateCell

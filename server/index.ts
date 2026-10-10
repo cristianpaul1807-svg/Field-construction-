@@ -191,6 +191,23 @@ async function startServer() {
         fallthrough: false,
       }),
     );
+    /**
+     * Las capturas del producto que enseña la portada.
+     *
+     * Estuvieron sin ruta: todo `/sitio/…` que no está en la lista de arriba
+     * caía en el `*` del final, que contesta con el `index.html` de la
+     * aplicación. El navegador recibía una página donde esperaba una foto y
+     * pintaba el icono de imagen rota — en la sección que existe para
+     * enseñar el producto de verdad. `fallthrough: false` hace que una
+     * captura que falte sea un 404, no otra página.
+     *
+     * Sin `immutable`: el nombre no cambia cuando se regeneran, así que un
+     * día de caché y no un año.
+     */
+    app.use(
+      "/sitio/capturas",
+      express.static(path.join(sitioPath, "capturas"), { maxAge: "1d", fallthrough: false }),
+    );
     for (const fichero of ["robots.txt", "sitemap.xml"]) {
       app.get(`/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
     }

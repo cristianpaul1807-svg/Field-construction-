@@ -284,6 +284,15 @@ function vitePluginSitio(): Plugin {
         });
       }
 
+      // Capturas del producto, igual que en producción (server/index.ts).
+      server.middlewares.use("/sitio/capturas", (req, res, next) => {
+        const cleanUrl = (req.url || "/").split("?")[0];
+        const filePath = path.join(sitioPath, "capturas", path.basename(cleanUrl));
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) return next();
+        res.setHeader("Content-Type", "image/jpeg");
+        fs.createReadStream(filePath).pipe(res);
+      });
+
       // Fuentes
       server.middlewares.use("/sitio/fuentes", (req, res, next) => {
         const cleanUrl = (req.url || "/").split("?")[0];
