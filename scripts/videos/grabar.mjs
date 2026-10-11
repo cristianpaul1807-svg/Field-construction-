@@ -199,9 +199,11 @@ function herramientas(pagina, idioma, inicio) {
    *
    * `tipo`: "problema" (naranja), "resultado" (verde) o nada (azul).
    * `capitulo`: el nombre con el que sale en los capítulos de YouTube.
+   * `durante`: lo que se hace detrás mientras se lee, normalmente `navegar`.
+   *   Cargar una pantalla nueva eran cinco u ocho segundos de «Chargement…»
+   *   en mitad del vídeo; tapados por la tarjeta, no se ven.
    */
-  const tarjeta = async ({ sobre = "", titulo, texto = "", cifra = "", pie = "", tipo = "", ms = 3800, capitulo = null }) => {
-    empezar();
+  const tarjeta = async ({ sobre = "", titulo, texto = "", cifra = "", pie = "", tipo = "", ms = 3800, capitulo = null, durante = null }) => {
     const espera = inicio.vozHasta - ahora();
     if (espera > 0) await pausa(espera * 1000);
     await pagina.evaluate(
@@ -226,10 +228,18 @@ function herramientas(pagina, idioma, inicio) {
       },
       [{ sobre, titulo, texto, cifra, pie, tipo }, CASCO]
     );
+    // Si el vídeo empieza por esta tarjeta, empieza con ella ya puesta y no
+    // con medio segundo de lo que hubiera debajo (el panel, tras entrar).
+    if (inicio.primeraPintada === null) {
+      await pausa(700);
+      empezar();
+    }
     apuntar([sobre, cifra, titulo, texto].filter(Boolean).join(" — ").replace(/\*/g, ""));
     if (capitulo) inicio.capitulos.push({ t: ahora(), titulo: capitulo });
     const dura = await narrar(locucionDeTarjeta({ titulo, texto }));
+    const detras = durante ? durante() : null;
     await pausa(Math.max(ms, dura * 1000 + 700));
+    await detras;
     await pagina.evaluate(() => {
       const t = document.getElementById("lc-tarjeta");
       if (t) { t.classList.remove("ve"); setTimeout(() => t.remove(), 400); }
@@ -271,6 +281,20 @@ function herramientas(pagina, idioma, inicio) {
     // Lo grabado antes de que la primera página esté pintada es blanco: se
     // corta al convertir.
     empezar();
+  };
+  /**
+   * Ir a otra pantalla sin recargar, como un enlace de la propia aplicación.
+   * La tarjeta, el puntero y el subtítulo viven fuera de React y sobreviven
+   * al cambio; con `ir` la página entera se recarga y se los lleva.
+   * `espera`: algo que tiene que verse antes de dar la pantalla por cargada.
+   */
+  const navegar = async (ruta, espera = null) => {
+    await pagina.evaluate((r) => {
+      history.pushState(null, "", r);
+      dispatchEvent(new PopStateEvent("popstate"));
+    }, ruta);
+    await pagina.waitForLoadState("networkidle").catch(() => {});
+    if (espera) await (typeof espera === "string" ? pagina.locator(espera).first() : espera).waitFor({ timeout: 30_000 });
   };
   /**
    * Entrar en el panel con la cuenta de pruebas, fuera de cámara: lo que se
@@ -364,7 +388,7 @@ function herramientas(pagina, idioma, inicio) {
     for (let i = 0; i < valor; i++) { await pagina.keyboard.press("ArrowRight"); await pausa(55); }
     await pausa(500);
   };
-  return { pagina, idioma, BASE, pausa, decir, callar, tarjeta, capitulo, resaltar, ir, entrar, api, tocar, escribir, deslizar, bajar };
+  return { pagina, idioma, BASE, pausa, decir, callar, tarjeta, capitulo, resaltar, ir, navegar, entrar, api, tocar, escribir, deslizar, bajar };
 }
 
 async function grabar(nombre, idioma) {

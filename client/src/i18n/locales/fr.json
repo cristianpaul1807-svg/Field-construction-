@@ -172,7 +172,7 @@
     "description": "Constructeur de soumissions avec hiérarchie Zone → Catégorie → Article",
     "newBudget": "Nouvelle soumission",
     "requestsAndBudgets": "Demandes et soumissions",
-    "newFromChat": "Nouvelle du clavardage",
+    "newFromChat": "Reçue par clavardage",
     "noCategory": "Aucune catégorie",
     "noBudgets": "Cette entreprise n'a pas encore de soumissions.",
     "budgetNumber": "Soumission n° {{id}}",
