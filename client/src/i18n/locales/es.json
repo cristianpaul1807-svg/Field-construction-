@@ -158,7 +158,14 @@
       "fichajes": "Fichajes"
     },
     "deleteClient": "Borrar cliente",
-    "deleteClientConfirm": "¿Borrar a {{name}}? No se puede deshacer."
+    "deleteClientConfirm": "¿Borrar a {{name}}? No se puede deshacer.",
+    "origen": {
+      "manual": "Añadido a mano",
+      "link_publico": "Chat público",
+      "chat_cliente": "Portal del cliente",
+      "proyeccion": "Proyección de trabajo",
+      "otro": "Otro"
+    }
   },
   "budgets": {
     "title": "Presupuestos",

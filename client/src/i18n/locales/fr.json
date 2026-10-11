@@ -158,7 +158,14 @@
       "fichajes": "Pointages"
     },
     "deleteClient": "Supprimer le client",
-    "deleteClientConfirm": "Supprimer {{name}} ? C'est irréversible."
+    "deleteClientConfirm": "Supprimer {{name}} ? C'est irréversible.",
+    "origen": {
+      "manual": "Ajouté à la main",
+      "link_publico": "Clavardage public",
+      "chat_cliente": "Portail client",
+      "proyeccion": "Projection des travaux",
+      "otro": "Autre"
+    }
   },
   "budgets": {
     "title": "Soumissions",

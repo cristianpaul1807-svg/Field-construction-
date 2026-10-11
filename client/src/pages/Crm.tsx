@@ -83,20 +83,20 @@ function NewLeadDialog({ onCreated }: { onCreated: () => void }) {
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label>{t("common.name")}</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("crm.newLeadName")} autoFocus />
+            <Label htmlFor="nuevo-nombre">{t("common.name")}</Label>
+            <Input id="nuevo-nombre" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("crm.newLeadName")} autoFocus />
           </div>
           <div className="space-y-1.5">
-            <Label>{t("common.phone")} ({t("common.optional")})</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Label htmlFor="nuevo-telefono">{t("common.phone")} ({t("common.optional")})</Label>
+            <Input id="nuevo-telefono" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>{t("common.email")} ({t("common.optional")})</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Label htmlFor="nuevo-correo">{t("common.email")} ({t("common.optional")})</Label>
+            <Input id="nuevo-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>{t("common.address")} ({t("common.optional")})</Label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+            <Label htmlFor="nuevo-direccion">{t("common.address")} ({t("common.optional")})</Label>
+            <Input id="nuevo-direccion" value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
           {error && <p className="text-sm text-status-error-fg">{error}</p>}
           <Button className="w-full" onClick={create} disabled={!name.trim() || saving}>
@@ -258,7 +258,12 @@ export default function Crm() {
                         {t(`crm.status.${client.leadStatus}`, { defaultValue: client.leadStatus })}
                       </StatusBadge>
                     </td>
-                    <td className="py-3 text-muted-foreground">{client.source}</td>
+                    {/* Lo guardado es la clave (`manual`, `link_publico`); se traduce
+                        al enseñarla. Salía tal cual: «manual» en una tabla en
+                        francés. */}
+                    <td className="py-3 text-muted-foreground">
+                      {client.source ? t(`crm.origen.${client.source}`, { defaultValue: t("crm.origen.otro") }) : "—"}
+                    </td>
                     <td className="py-3 text-muted-foreground">{client.lastActivity?.slice(0, 10)}</td>
                     <td className="py-3 text-right">
                       <button

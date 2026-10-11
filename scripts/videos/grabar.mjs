@@ -52,7 +52,8 @@ function puntero() {
     .lc-onda{position:fixed;z-index:2147483646;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid rgba(242,138,78,.9);pointer-events:none;animation:lc-onda .55s ease-out forwards}
     @keyframes lc-onda{to{transform:scale(3.2);opacity:0}}
     #lc-subtitulo{position:fixed;z-index:2147483645;left:50%;bottom:6%;transform:translateX(-50%);max-width:min(88vw,1200px);padding:14px 26px;border-radius:16px;background:rgba(11,18,32,.88);color:#fff;font:600 clamp(16px,2.2vw,30px)/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.35);transition:opacity .25s;pointer-events:none}
-    #lc-subtitulo:empty{opacity:0}`;
+    #lc-subtitulo:empty{opacity:0}
+    #lc-subtitulo.arriba{bottom:auto;top:11%}`;
   const poner = () => {
     if (document.getElementById("lc-puntero")) return;
     document.head.appendChild(css);
@@ -73,8 +74,12 @@ function puntero() {
 /** Lo que un guion puede hacer, a ritmo de persona y no de robot. */
 function herramientas(pagina, idioma, inicio) {
   const pausa = (ms) => pagina.waitForTimeout(ms);
-  const decir = async (texto, ms = 2600) => {
-    await pagina.evaluate((t) => { const s = document.getElementById("lc-subtitulo"); if (s) s.textContent = t; }, texto);
+  /** El subtítulo; `arriba` cuando lo que se enseña está abajo y lo taparía. */
+  const decir = async (texto, ms = 2600, { arriba = false } = {}) => {
+    await pagina.evaluate(([t, a]) => {
+      const s = document.getElementById("lc-subtitulo");
+      if (s) { s.textContent = t; s.classList.toggle("arriba", a); }
+    }, [texto, arriba]);
     if (ms) await pausa(ms);
   };
   const callar = () => pagina.evaluate(() => { const s = document.getElementById("lc-subtitulo"); if (s) s.textContent = ""; });
@@ -120,12 +125,33 @@ function herramientas(pagina, idioma, inicio) {
     await pagina.keyboard.type(texto, { delay: 55 });
     await pausa(500);
   };
+  /**
+   * Llamar a la API con la sesión de la página, para preparar o limpiar
+   * fuera de cámara (que repetir una grabación no deje duplicados).
+   */
+  const api = (metodo, ruta, cuerpo) =>
+    pagina.evaluate(
+      async ([m, r, c]) => {
+        const clave = Object.keys(localStorage).find((k) => /^sb-.+-auth-token$/.test(k));
+        const token = clave ? JSON.parse(localStorage.getItem(clave)).access_token : null;
+        const res = await fetch(r, {
+          method: m,
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: c === undefined ? undefined : JSON.stringify(c),
+        });
+        const texto = await res.text();
+        let datos = null;
+        try { datos = JSON.parse(texto); } catch {}
+        return { ok: res.ok, estado: res.status, datos };
+      },
+      [metodo, ruta, cuerpo]
+    );
   /** Bajar despacio, para que se pueda leer lo que pasa. */
   const bajar = async (px, pasos = 14) => {
     for (let i = 0; i < pasos; i++) { await pagina.mouse.wheel(0, px / pasos); await pausa(45); }
     await pausa(700);
   };
-  return { pagina, idioma, BASE, pausa, decir, callar, ir, entrar, tocar, escribir, bajar };
+  return { pagina, idioma, BASE, pausa, decir, callar, ir, entrar, api, tocar, escribir, bajar };
 }
 
 async function grabar(nombre, idioma) {

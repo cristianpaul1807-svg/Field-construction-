@@ -158,7 +158,14 @@
       "fichajes": "Clock-ins"
     },
     "deleteClient": "Delete client",
-    "deleteClientConfirm": "Delete {{name}}? This can't be undone."
+    "deleteClientConfirm": "Delete {{name}}? This can't be undone.",
+    "origen": {
+      "manual": "Added by hand",
+      "link_publico": "Public chat",
+      "chat_cliente": "Client portal",
+      "proyeccion": "Work projection",
+      "otro": "Other"
+    }
   },
   "budgets": {
     "title": "Budgets & Estimates",

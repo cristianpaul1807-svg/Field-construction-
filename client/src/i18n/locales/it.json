@@ -158,7 +158,14 @@
       "fichajes": "Timbrature"
     },
     "deleteClient": "Elimina cliente",
-    "deleteClientConfirm": "Eliminare {{name}}? Non si può annullare."
+    "deleteClientConfirm": "Eliminare {{name}}? Non si può annullare.",
+    "origen": {
+      "manual": "Aggiunto a mano",
+      "link_publico": "Chat pubblica",
+      "chat_cliente": "Portale del cliente",
+      "proyeccion": "Proiezione dei lavori",
+      "otro": "Altro"
+    }
   },
   "budgets": {
     "title": "Preventivi",
