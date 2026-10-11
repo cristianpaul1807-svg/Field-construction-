@@ -533,6 +533,15 @@ export default {
     cierreCta: "Empezar la prueba",
     cierreCta2: "Escribirnos",
   },
+  video: {
+    sobre: "En menos de dos minutos",
+    h2: "Mira cómo funciona.",
+    entradilla: "La obra, las facturas con el impuesto correcto, la retención y tu asistente respondiendo con tus datos reales.",
+    etiqueta: "Vídeo: Logiciel Construction en menos de dos minutos",
+    nombre: "Logiciel Construction — cómo funciona",
+    sinVideo: "Tu navegador no puede reproducir este vídeo.",
+    descargar: "Descárgalo aquí",
+  },
   capturas: {
     sobre: "Así se ve",
     h2: "El producto de verdad, no un dibujo.",

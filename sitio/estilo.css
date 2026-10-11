@@ -898,6 +898,10 @@ body {
 .capturas { display: grid; gap: 22px; margin-top: 42px; grid-template-columns: repeat(3, 1fr); align-items: start; }
 @media (max-width: 920px) { .capturas { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .capturas { grid-template-columns: 1fr; } }
+/* El vídeo del producto: 16:9 reservado de antemano, para que la página no
+   salte al cargar el póster. */
+.video-producto { margin-top: 42px; border-radius: 22px; overflow: hidden; border: 1px solid var(--linea); box-shadow: var(--sombra-2); background: #0b1220; aspect-ratio: 16 / 9; }
+.video-producto video { display: block; width: 100%; height: 100%; }
 .captura { margin: 0; }
 .captura img { display: block; width: 100%; height: auto; border-radius: 22px; border: 1px solid var(--linea); box-shadow: var(--sombra-2); background: var(--superficie-2); }
 .captura figcaption { margin-top: 14px; font-size: 15px; color: var(--tinta-2); line-height: 1.5; }

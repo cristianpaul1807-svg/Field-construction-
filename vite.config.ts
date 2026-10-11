@@ -293,6 +293,17 @@ function vitePluginSitio(): Plugin {
         fs.createReadStream(filePath).pipe(res);
       });
 
+      // Vídeos del producto. En desarrollo se mandan enteros: Chrome los
+      // reproduce así; el `Range` que pide Safari lo da el servidor de
+      // producción (server/index.ts).
+      server.middlewares.use("/sitio/videos", (req, res, next) => {
+        const cleanUrl = (req.url || "/").split("?")[0];
+        const filePath = path.join(sitioPath, "videos", path.basename(cleanUrl));
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) return next();
+        res.setHeader("Content-Type", filePath.endsWith(".mp4") ? "video/mp4" : "image/jpeg");
+        fs.createReadStream(filePath).pipe(res);
+      });
+
       // Fuentes
       server.middlewares.use("/sitio/fuentes", (req, res, next) => {
         const cleanUrl = (req.url || "/").split("?")[0];

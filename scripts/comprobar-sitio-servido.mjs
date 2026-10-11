@@ -13,7 +13,8 @@
  *
  * Así que aquí se arranca `dist/index.js` tal cual y se le pide cada
  * `/sitio/…` que aparezca en una página. Falla si no es un 200 o si lo que
- * vuelve es HTML: un CSS, una foto o una letra no son nunca una página.
+ * vuelve es HTML: un CSS, una foto o una letra no son nunca una página. Y a
+ * los vídeos les pide un trozo, como hace el iPhone.
  */
 
 import { spawn } from "node:child_process";
@@ -41,7 +42,7 @@ function htmlDe(dir) {
 const enlazados = new Set();
 for (const pagina of htmlDe(PAGINAS)) {
   const html = fs.readFileSync(pagina, "utf8");
-  for (const m of html.matchAll(/(?:src|href)="(\/sitio\/[^"#?]+)/g)) enlazados.add(m[1]);
+  for (const m of html.matchAll(/(?:src|href|poster)="(\/sitio\/[^"#?]+)/g)) enlazados.add(m[1]);
 }
 // Lo que pide el CSS (las letras) también va por el servidor.
 const css = fs.readFileSync(path.join(PAGINAS, "estilo.css"), "utf8");
@@ -82,6 +83,15 @@ for (const ruta of [...enlazados].sort()) {
   await res.arrayBuffer();
   if (res.status !== 200) mal.push(`${ruta} → ${res.status}`);
   else if (tipo.startsWith("text/html")) mal.push(`${ruta} → contesta una página HTML, no el archivo`);
+}
+
+// Un vídeo, además, tiene que poder pedirse a trozos: Safari en el iPhone no
+// reproduce uno que sólo llega entero, y lo que se ve es el póster con un
+// botón de reproducir que no hace nada.
+for (const ruta of [...enlazados].filter((r) => /\.(mp4|webm)$/.test(r))) {
+  const res = await fetch(base + ruta, { headers: { Range: "bytes=0-1" } });
+  await res.arrayBuffer();
+  if (res.status !== 206) mal.push(`${ruta} → no contesta por trozos (Range dio ${res.status}, no 206): el iPhone no lo reproduciría`);
 }
 hijo.kill();
 

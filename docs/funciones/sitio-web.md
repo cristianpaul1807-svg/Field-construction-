@@ -119,6 +119,27 @@ npx vite build && node sitio/capturas.mjs && node sitio/construir.mjs
 Las imágenes se guardan en `sitio/capturas/` (no corre en el despliegue, que
 no tiene navegador). Si una pantalla cambia, se vuelven a sacar.
 
+### El vídeo del producto
+
+En la portada, justo después de la cabecera, va un vídeo de unos dos minutos
+**sólo en los idiomas que tienen el suyo**: hoy italiano y francés. La lista
+está en `VIDEOS` de `sitio/construir.mjs`, con la duración de cada uno (la
+leen los buscadores, en el `VideoObject`). Inglés y español no enseñan vídeo:
+mejor ninguno que uno con la voz de otro idioma. Cuando llegue el suyo:
+
+1. Deja `logiciel-<idioma>.mp4` en `sitio/videos/` (H.264 + AAC, con el
+   índice al principio para que arranque sin descargarse entero:
+   `ffmpeg -i entrada.mp4 -c copy -movflags +faststart logiciel-xx.mp4`).
+2. Saca el póster del fotograma del título:
+   `ffmpeg -ss 2 -i logiciel-xx.mp4 -frames:v 1 -vf scale=1280:-2 -q:v 4 logiciel-xx.jpg`.
+3. Añade la línea a `VIDEOS` con su duración (`PT1M47S`).
+
+Va con `preload="none"`: son 7 MB que sólo descarga quien le da a
+reproducir. El servidor los sirve por trozos (`Range` → 206), que es lo que
+pide Safari en el iPhone; sin eso el vídeo no arranca.
+`scripts/comprobar-sitio-servido.mjs` lo comprueba contra el servidor de
+producción.
+
 ### Las legales no se escriben aquí
 
 `paginaLegal()` construye privacidad y condiciones desde

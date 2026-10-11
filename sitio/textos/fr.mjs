@@ -539,6 +539,15 @@ export default {
     cierreCta: "Commencer l'essai",
     cierreCta2: "Nous écrire",
   },
+  video: {
+    sobre: "En moins de deux minutes",
+    h2: "Regardez comment ça marche.",
+    entradilla: "Le chantier, les factures avec les bonnes taxes, la retenue, et votre assistant qui répond avec vos vraies données.",
+    etiqueta: "Vidéo : Logiciel Construction en moins de deux minutes",
+    nombre: "Logiciel Construction — comment ça marche",
+    sinVideo: "Votre navigateur ne lit pas cette vidéo.",
+    descargar: "Téléchargez-la ici",
+  },
   capturas: {
     sobre: "Voilà de quoi ça a l'air",
     h2: "Le vrai produit, pas un dessin.",

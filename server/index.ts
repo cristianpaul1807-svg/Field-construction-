@@ -208,6 +208,16 @@ async function startServer() {
       "/sitio/capturas",
       express.static(path.join(sitioPath, "capturas"), { maxAge: "1d", fallthrough: false }),
     );
+    /**
+     * Los vídeos del producto. `express.static` contesta a las peticiones por
+     * trozos (`Range` → 206), que es lo que pide Safari en el iPhone para
+     * reproducir un vídeo: sin eso no arranca, y en el móvil del dueño se
+     * quedaría el póster con un botón que no hace nada.
+     */
+    app.use(
+      "/sitio/videos",
+      express.static(path.join(sitioPath, "videos"), { maxAge: "1d", fallthrough: false }),
+    );
     for (const fichero of ["robots.txt", "sitemap.xml"]) {
       app.get(`/${fichero}`, (_req, res) => res.sendFile(path.join(sitioPath, fichero)));
     }

@@ -533,6 +533,15 @@ export default {
     cierreCta: "Start the trial",
     cierreCta2: "Write to us",
   },
+  video: {
+    sobre: "In under two minutes",
+    h2: "See how it works.",
+    entradilla: "The job site, invoices with the right tax, holdback, and your assistant answering with your real data.",
+    etiqueta: "Video: Logiciel Construction in under two minutes",
+    nombre: "Logiciel Construction — how it works",
+    sinVideo: "Your browser can't play this video.",
+    descargar: "Download it here",
+  },
   capturas: {
     sobre: "What it looks like",
     h2: "The real product, not a drawing.",

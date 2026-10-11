@@ -401,6 +401,21 @@ function paginaInicio(idioma) {
           { "@type": "Offer", name: "Entreprise", price: String(PRECIOS.entreprise.mes), priceCurrency: idioma.precios.moneda },
         ],
       },
+      ...(VIDEOS[idioma.codigo]
+        ? [
+            {
+              "@context": "https://schema.org",
+              "@type": "VideoObject",
+              name: idioma.video.nombre,
+              description: idioma.video.entradilla,
+              inLanguage: idioma.lang,
+              thumbnailUrl: `${DOMINIO}/sitio/videos/logiciel-${idioma.codigo}.jpg`,
+              contentUrl: `${DOMINIO}/sitio/videos/logiciel-${idioma.codigo}.mp4`,
+              uploadDate: "2026-10-10",
+              duration: VIDEOS[idioma.codigo],
+            },
+          ]
+        : []),
     ],
     cuerpo: `  <section class="portada">
     <div class="envoltura">
@@ -479,6 +494,7 @@ function paginaInicio(idioma) {
     </div>
   </section>
 
+${seccionVideo(idioma)}
   <section class="seccion seccion-clara" id="resuelve">
     <div class="envoltura">
       <div class="encabezado-seccion">
@@ -556,6 +572,42 @@ ${cierre(idioma, {
   cta2Href: url(idioma, "precios"),
 })}`,
   });
+}
+
+/**
+ * Los vídeos del producto que hay, con su duración (ISO 8601, para el
+ * VideoObject que leen los buscadores). Un idioma que no está aquí no enseña
+ * vídeo: mejor ninguno que uno con la voz de otro idioma. Cuando llegue el
+ * suyo, se deja el archivo en `sitio/videos/` y se añade una línea.
+ */
+const VIDEOS = { it: "PT1M47S", fr: "PT1M32S" };
+
+/**
+ * El vídeo del producto, donde lo hay.
+ * `preload="none"` porque son 7 MB que no tiene por qué
+ * pagar quien no lo pulsa; el póster es el primer fotograma de título, para
+ * que antes de darle a reproducir no se vea un recuadro negro.
+ */
+function seccionVideo(idioma) {
+  const t = idioma.video;
+  if (!VIDEOS[idioma.codigo]) return "";
+  const src = `/sitio/videos/logiciel-${idioma.codigo}.mp4`;
+  return `  <section class="seccion">
+    <div class="envoltura">
+      <div class="encabezado-seccion">
+        <p class="sobretitulo">${esc(t.sobre)}</p>
+        <h2>${esc(t.h2)}</h2>
+        <p class="entradilla">${esc(t.entradilla)}</p>
+      </div>
+      <div class="video-producto aparece">
+        <video controls playsinline preload="none" width="1920" height="1080" poster="/sitio/videos/logiciel-${idioma.codigo}.jpg" aria-label="${esc(t.etiqueta)}">
+          <source src="${src}" type="video/mp4">
+          <p>${esc(t.sinVideo)} <a href="${src}">${esc(t.descargar)}</a></p>
+        </video>
+      </div>
+    </div>
+  </section>
+`;
 }
 
 /**
@@ -1054,6 +1106,7 @@ function escribir() {
   // nombrarlo también aquí, porque el fallo sería una página que pinta bien
   // en local y con la letra de reserva en producción.
   fs.cpSync(path.join(AQUI, "capturas"), path.join(SALIDA, "capturas"), { recursive: true });
+  fs.cpSync(path.join(AQUI, "videos"), path.join(SALIDA, "videos"), { recursive: true });
 
   fs.rmSync(path.join(SALIDA, "fuentes"), { recursive: true, force: true });
   fs.cpSync(path.join(AQUI, "fuentes"), path.join(SALIDA, "fuentes"), { recursive: true });
@@ -1093,8 +1146,9 @@ function comprobarEnlaces(rutas) {
     for (const fichero of fs.readdirSync(dir)) {
       const html = fs.readFileSync(path.join(dir, fichero), "utf-8");
       // `href` y `src`: el logo entra por `src`, y una imagen que falta se ve
-      // igual de mal que un enlace roto.
-      for (const [, destino] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
+      // igual de mal que un enlace roto. `poster` también: sin él, el vídeo
+      // es un recuadro negro hasta que alguien le da a reproducir.
+      for (const [, destino] of html.matchAll(/(?:href|src|poster)="([^"]+)"/g)) {
         if (/^(https?:|mailto:|#|data:)/.test(destino)) continue;
         if (validas.has(destino) || deLaAplicacion.has(destino)) {
           paginas += 1;

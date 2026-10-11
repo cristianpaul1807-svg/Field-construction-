@@ -533,6 +533,15 @@ export default {
     cierreCta: "Inizia la prova",
     cierreCta2: "Scrivici",
   },
+  video: {
+    sobre: "In meno di due minuti",
+    h2: "Guarda come funziona.",
+    entradilla: "Il cantiere, le fatture con l'IVA giusta, l'XML per lo SDI e il tuo assistente che risponde con i tuoi dati.",
+    etiqueta: "Video: Logiciel Construction in meno di due minuti",
+    nombre: "Logiciel Construction — come funziona",
+    sinVideo: "Il tuo browser non riproduce questo video.",
+    descargar: "Scaricalo qui",
+  },
   capturas: {
     sobre: "Ecco com'è",
     h2: "Il prodotto vero, non un disegno.",
