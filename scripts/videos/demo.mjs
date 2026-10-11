@@ -26,11 +26,15 @@ export async function asegurarCliente(api, idioma) {
   return nuevo.datos.id;
 }
 
-/** Borra las soumissions/preventivi del cliente de la historia (de grabaciones anteriores). */
+/**
+ * Borra las soumissions/preventivi del cliente de la historia que quedaron a
+ * medias en grabaciones anteriores. Las aceptadas no: de ellas salen la obra,
+ * su plan de pagos y sus facturas, que es lo que enseñan los vídeos 4 y 5.
+ */
 export async function borrarPresupuestosDe(api, idioma) {
   const nombre = CLIENTE[idioma].name;
   const lista = await api("GET", "/api/estimates");
-  for (const e of (Array.isArray(lista.datos) ? lista.datos : []).filter((e) => e.clientName === nombre)) {
+  for (const e of (Array.isArray(lista.datos) ? lista.datos : []).filter((e) => e.clientName === nombre && e.status !== "aceptado")) {
     await api("DELETE", `/api/estimates/${e.id}`);
   }
 }
