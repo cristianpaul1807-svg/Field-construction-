@@ -254,6 +254,10 @@ function herramientas(pagina, idioma, inicio) {
   /** Oscurecer todo menos una parte de la pantalla, mientras se explica. */
   const resaltar = async (objetivo, ms = 2600, texto = null, opciones = {}) => {
     const el = typeof objetivo === "string" ? pagina.locator(objetivo).first() : objetivo;
+    // El foco va con su frase: si se mueve mientras la voz aún dice la
+    // anterior, se oye «tus trabajadores» con el recuadro ya en los clientes.
+    const antes = inicio.vozHasta - ahora();
+    if (antes > 0) await pausa(antes * 1000);
     await el.evaluate((e) => e.scrollIntoView({ block: "center", behavior: "smooth" }));
     await pausa(450);
     const caja = await el.boundingBox();
@@ -268,7 +272,8 @@ function herramientas(pagina, idioma, inicio) {
       requestAnimationFrame(() => requestAnimationFrame(() => f.classList.add("ve")));
     }, caja);
     if (texto) await decir(texto, 0, opciones);
-    await pausa(ms);
+    // Y no se apaga hasta que la frase acaba, aunque `ms` sea más corto.
+    await pausa(Math.max(ms, (inicio.vozHasta - ahora()) * 1000));
     await pagina.evaluate(() => {
       const f = document.getElementById("lc-foco");
       if (f) { f.classList.remove("ve"); setTimeout(() => f.remove(), 400); }

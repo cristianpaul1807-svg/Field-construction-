@@ -538,7 +538,7 @@
     "estimateNumber": "Estimate #{{id}}",
     "signEstimate": "Sign estimate",
     "payDeposit": "Pay deposit",
-    "payInvoice": "Pay {{type}} ({{amount}})",
+    "payInvoice": "Pay {{amount}} — {{type}}",
     "sharedPhotos": "Photos shared by the company",
     "noPhotos": "No photos have been marked visible to you yet.",
     "noPhotosAdmin": "No photos have been marked visible to this client yet.",
@@ -713,7 +713,7 @@
     "emailNotSending": "We couldn't send the code: the app's email isn't set up. Tell whoever administers it — retrying won't help."
   },
   "landing": {
-    "hubName": "Logiciel - Construction",
+    "hubName": "Logiciel Construction",
     "intro": "The operational command center for your construction business — estimates, projects, crew and clients all in one place.",
     "tagline": "The all-in-one system for your construction company",
     "subtitle": "Estimates, projects, crew, clients and payments — all in one place.",
@@ -725,7 +725,7 @@
     "forgotPasswordLink": "Forgot password? Reset password",
     "registerBusinessLink": "No account? Register my business",
     "workerDoorTitle": "Field worker",
-    "workerDoorDesc": "Access /campo with your PIN code",
+    "workerDoorDesc": "Sign in with the code your company gave you",
     "clientDoorTitle": "Client portal",
     "clientDoorDesc": "Review your project progress and estimates",
     "emailPlaceholder": "company@example.com"
@@ -1024,6 +1024,21 @@
         "cliente_confirmo": "The client signed the work off",
         "factura_final_pagada": "Final invoice paid",
         "cambio_manual": "Changed by hand"
+      },
+      "cliente": {
+        "title": "Your project, step by step",
+        "subtitle": "Where your work stands. Each step is ticked only when it actually happens.",
+        "steps": {
+          "solicitud_chat": "We received your request",
+          "solicitud_portal": "We received your request",
+          "alta_manual": "Your project is open",
+          "presupuesto_aceptado": "Estimate accepted",
+          "trabajo_programado": "Work scheduled",
+          "equipo_en_obra": "The crew is on site",
+          "ordenes_completadas": "Work finished",
+          "factura_final_emitida": "Final invoice sent",
+          "factura_final_pagada": "Final invoice paid"
+        }
       }
     },
     "teamEnablesClockIn": "Anyone listed here can clock in to this job from their phone.",

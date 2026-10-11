@@ -538,7 +538,7 @@
     "estimateNumber": "Preventivo n. {{id}}",
     "signEstimate": "Firma preventivo",
     "payDeposit": "Paga l'acconto",
-    "payInvoice": "Paga {{type}} ({{amount}})",
+    "payInvoice": "Paga {{amount}} — {{type}}",
     "sharedPhotos": "Foto condivise dall'impresa",
     "noPhotos": "Non ci sono ancora foto rese visibili per te.",
     "noPhotosAdmin": "Non ci sono ancora foto rese visibili per questo cliente.",
@@ -713,7 +713,7 @@
     "emailNotSending": "Non siamo riusciti a inviare il codice: l'email dell'app non è configurata. Avvisa chi la amministra — riprovare non servirà."
   },
   "landing": {
-    "hubName": "Logiciel - Construction",
+    "hubName": "Logiciel Construction",
     "intro": "Il centro operativo della tua impresa edile — preventivi, progetti, squadra e clienti in un unico posto.",
     "tagline": "Il sistema tutto-in-uno per la tua impresa edile",
     "subtitle": "Preventivi, progetti, squadra, clienti e pagamenti — in un unico posto.",
@@ -725,7 +725,7 @@
     "forgotPasswordLink": "Password dimenticata? Recupera password",
     "registerBusinessLink": "Non hai un account? Registra la mia impresa",
     "workerDoorTitle": "Lavoratore di cantiere",
-    "workerDoorDesc": "Accedi con il tuo codice PIN su /campo",
+    "workerDoorDesc": "Entra con il codice che ti ha dato la tua impresa",
     "clientDoorTitle": "Portale clienti",
     "clientDoorDesc": "Controlla l'avanzamento dei progetti e preventivi",
     "emailPlaceholder": "azienda@esempio.com"
@@ -1024,6 +1024,21 @@
         "cliente_confirmo": "Il cliente ha confermato il lavoro",
         "factura_final_pagada": "Fattura finale incassata",
         "cambio_manual": "Cambio manuale"
+      },
+      "cliente": {
+        "title": "Le tappe del tuo cantiere",
+        "subtitle": "A che punto sono i tuoi lavori. Ogni tappa si spunta da sola quando succede davvero.",
+        "steps": {
+          "solicitud_chat": "Abbiamo ricevuto la tua richiesta",
+          "solicitud_portal": "Abbiamo ricevuto la tua richiesta",
+          "alta_manual": "Il tuo cantiere è aperto",
+          "presupuesto_aceptado": "Preventivo accettato",
+          "trabajo_programado": "Lavori in calendario",
+          "equipo_en_obra": "La squadra è in cantiere",
+          "ordenes_completadas": "Lavori terminati",
+          "factura_final_emitida": "Fattura finale inviata",
+          "factura_final_pagada": "Fattura finale pagata"
+        }
       }
     },
     "teamEnablesClockIn": "Chi è in questo elenco potrà timbrare in questo cantiere dal telefono.",

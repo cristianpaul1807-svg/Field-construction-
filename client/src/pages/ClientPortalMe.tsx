@@ -303,7 +303,7 @@ export default function ClientPortalMe() {
 
                   {data.project.lifecycle && (
                     <div className="mt-4">
-                      <LifecyclePanel lifecycle={data.project.lifecycle} showHistory={false} />
+                      <LifecyclePanel lifecycle={data.project.lifecycle} showHistory={false} paraCliente />
                     </div>
                   )}
 

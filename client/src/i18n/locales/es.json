@@ -538,7 +538,7 @@
     "estimateNumber": "Presupuesto #{{id}}",
     "signEstimate": "Firmar presupuesto",
     "payDeposit": "Pagar depósito",
-    "payInvoice": "Pagar {{type}} ({{amount}})",
+    "payInvoice": "Pagar {{amount}} — {{type}}",
     "sharedPhotos": "Fotos compartidas por la empresa",
     "noPhotos": "Aún no hay fotos marcadas como visibles para ti.",
     "noPhotosAdmin": "Aún no hay fotos marcadas como visibles para este cliente.",
@@ -713,7 +713,7 @@
     "emailNotSending": "No pudimos enviarte el código: el correo de la aplicación no está configurado. Avisa a quien la administra — reintentar no va a servir."
   },
   "landing": {
-    "hubName": "Logiciel - Construction",
+    "hubName": "Logiciel Construction",
     "intro": "El centro de operaciones para tu negocio de construcción: presupuestos, proyectos, equipo y clientes en un solo lugar.",
     "tagline": "El sistema todo-en-uno para tu empresa de construcción",
     "subtitle": "Presupuestos, proyectos, equipo, clientes y pagos — en un solo lugar.",
@@ -725,7 +725,7 @@
     "forgotPasswordLink": "¿Olvidaste tu contraseña? Recuperar contraseña",
     "registerBusinessLink": "¿No tienes cuenta? Registrar mi negocio",
     "workerDoorTitle": "Trabajador de campo",
-    "workerDoorDesc": "Accede con tu código PIN a /campo",
+    "workerDoorDesc": "Entra con el código que te dio tu empresa",
     "clientDoorTitle": "Portal de clientes",
     "clientDoorDesc": "Revisa el avance de tu proyecto y presupuestos",
     "emailPlaceholder": "empresa@ejemplo.com"
@@ -1024,6 +1024,21 @@
         "cliente_confirmo": "El cliente confirmó el trabajo",
         "factura_final_pagada": "Factura final cobrada",
         "cambio_manual": "Cambio manual"
+      },
+      "cliente": {
+        "title": "Las etapas de tu obra",
+        "subtitle": "En qué punto están tus obras. Cada paso se marca solo cuando de verdad ocurre.",
+        "steps": {
+          "solicitud_chat": "Recibimos tu solicitud",
+          "solicitud_portal": "Recibimos tu solicitud",
+          "alta_manual": "Tu obra está abierta",
+          "presupuesto_aceptado": "Presupuesto aceptado",
+          "trabajo_programado": "Trabajos con fecha",
+          "equipo_en_obra": "El equipo está en la obra",
+          "ordenes_completadas": "Trabajos terminados",
+          "factura_final_emitida": "Factura final enviada",
+          "factura_final_pagada": "Factura final pagada"
+        }
       }
     },
     "teamEnablesClockIn": "Quien esté aquí podrá fichar en esta obra desde su móvil.",

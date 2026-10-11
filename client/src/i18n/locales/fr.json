@@ -538,7 +538,7 @@
     "estimateNumber": "Soumission n° {{id}}",
     "signEstimate": "Signer la soumission",
     "payDeposit": "Payer l'acompte",
-    "payInvoice": "Payer {{type}} ({{amount}})",
+    "payInvoice": "Payer {{amount}} — {{type}}",
     "sharedPhotos": "Photos partagées par l'entreprise",
     "noPhotos": "Aucune photo n'a encore été rendue visible pour vous.",
     "noPhotosAdmin": "Aucune photo n'a encore été rendue visible pour ce client.",
@@ -713,7 +713,7 @@
     "emailNotSending": "Impossible d'envoyer le code : le courriel de l'application n'est pas configuré. Prévenez la personne qui l'administre — réessayer ne changera rien."
   },
   "landing": {
-    "hubName": "Logiciel - Construction",
+    "hubName": "Logiciel Construction",
     "intro": "Le centre d'opérations pour votre entreprise de construction — soumissions, projets, équipe et clients au même endroit.",
     "tagline": "Le système tout-en-un pour votre entreprise de construction",
     "subtitle": "Soumissions, projets, équipe, clients et paiements — au même endroit.",
@@ -725,7 +725,7 @@
     "forgotPasswordLink": "Mot de passe oublié ? Réinitialiser",
     "registerBusinessLink": "Pas de compte ? Inscrire mon entreprise",
     "workerDoorTitle": "Travailleur de chantier",
-    "workerDoorDesc": "Accédez avec votre code PIN à /campo",
+    "workerDoorDesc": "Entrez avec le code que votre entreprise vous a donné",
     "clientDoorTitle": "Portail client",
     "clientDoorDesc": "Consultez l'avancement de vos projets et soumissions",
     "emailPlaceholder": "entreprise@exemple.com"
@@ -904,7 +904,7 @@
     "categoryLabor": "Main-d'œuvre",
     "categorySubcontractors": "Sous-traitants",
     "referenceOnly": "Référence seulement",
-    "quotedPerProject": "Devis par projet",
+    "quotedPerProject": "Soumissions par projet",
     "noResults": "Aucun matériau trouvé.",
     "deleteConfirm": "Supprimer cette entrée du catalogue ?",
     "nameRateRequired": "Saisissez un nom et un taux horaire.",
@@ -996,7 +996,7 @@
         "solicitud_chat": "Demande reçue via le chat public",
         "solicitud_portal": "Demande du client depuis son portail",
         "alta_manual": "Chantier saisi dans le panneau",
-        "presupuesto_aceptado": "Devis accepté",
+        "presupuesto_aceptado": "Soumission acceptée",
         "trabajo_programado": "Travaux planifiés à l'agenda",
         "equipo_en_obra": "Équipe pointant sur le chantier",
         "ordenes_completadas": "Bons de travail terminés",
@@ -1016,7 +1016,7 @@
       },
       "triggers": {
         "proyecto_creado": "Chantier créé",
-        "presupuesto_aceptado": "Devis accepté",
+        "presupuesto_aceptado": "Soumission acceptée",
         "trabajo_programado": "Travaux planifiés",
         "primer_fichaje": "Premier pointage sur le chantier",
         "orden_iniciada": "Bon de travail démarré",
@@ -1024,6 +1024,21 @@
         "cliente_confirmo": "Le client a validé les travaux",
         "factura_final_pagada": "Facture finale encaissée",
         "cambio_manual": "Changement manuel"
+      },
+      "cliente": {
+        "title": "Les étapes de votre chantier",
+        "subtitle": "Où en sont vos travaux. Chaque étape se coche d'elle-même quand elle se produit vraiment.",
+        "steps": {
+          "solicitud_chat": "Votre demande est reçue",
+          "solicitud_portal": "Votre demande est reçue",
+          "alta_manual": "Votre chantier est ouvert",
+          "presupuesto_aceptado": "Soumission acceptée",
+          "trabajo_programado": "Travaux planifiés",
+          "equipo_en_obra": "L'équipe est sur le chantier",
+          "ordenes_completadas": "Travaux terminés",
+          "factura_final_emitida": "Facture finale envoyée",
+          "factura_final_pagada": "Facture finale payée"
+        }
       }
     },
     "teamEnablesClockIn": "Toute personne listée ici pourra pointer sur ce chantier depuis son téléphone.",
@@ -1289,7 +1304,7 @@
     "title": "Échéancier de paiement",
     "subtitle": "Chaque étape se facture d'elle-même quand le chantier y arrive.",
     "settingsTitle": "Comment vous êtes payé pour un chantier",
-    "settingsNote": "C'est le plan copié sur chaque nouveau chantier à l'acceptation du devis. Le modifier ne touche pas les chantiers en cours.",
+    "settingsNote": "C'est le plan copié sur chaque nouveau chantier à l'acceptation de la soumission. Le modifier ne touche pas les chantiers en cours.",
     "stageName": "Étape",
     "stageNamePlaceholder": "Acompte",
     "percent": "%",
@@ -1305,7 +1320,7 @@
     "billError": "La facture de cette étape n'a pas pu être émise",
     "triggers": {
       "manual": "Quand je le décide",
-      "al_aceptar": "À l'acceptation du devis",
+      "al_aceptar": "À l'acceptation de la soumission",
       "al_iniciar": "Au démarrage des travaux",
       "al_confirmar": "À la validation des travaux"
     },

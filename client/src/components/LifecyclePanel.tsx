@@ -33,8 +33,22 @@ export interface Lifecycle {
   }>;
 }
 
-export function LifecyclePanel({ lifecycle, showHistory = true }: { lifecycle: Lifecycle; showHistory?: boolean }) {
+/**
+ * `paraCliente`: la misma lista contada al cliente en su portal. La del panel
+ * habla de cómo lo ve la oficina («creado a mano en el panel», «lo que el
+ * software sabe de esta obra»), y eso, leído por el cliente, es la trastienda.
+ */
+export function LifecyclePanel({
+  lifecycle,
+  showHistory = true,
+  paraCliente = false,
+}: {
+  lifecycle: Lifecycle;
+  showHistory?: boolean;
+  paraCliente?: boolean;
+}) {
   const { t, i18n } = useTranslation();
+  const textos = paraCliente ? "projects.lifecycle.cliente" : "projects.lifecycle";
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: "numeric", month: "short", year: "numeric" });
@@ -45,13 +59,15 @@ export function LifecyclePanel({ lifecycle, showHistory = true }: { lifecycle: L
           mano en el panel" fuera de la tarjeta, donde se cortaba a media
           palabra. Que baje a su propia línea cuando no quepa al lado. */}
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 mb-1">
-        <h3 className="font-semibold text-foreground text-sm">{t("projects.lifecycle.title")}</h3>
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <DoorOpen size={13} />
-          {t(`projects.lifecycle.origin.${lifecycle.origin}`)}
-        </span>
+        <h3 className="font-semibold text-foreground text-sm">{t(`${textos}.title`)}</h3>
+        {!paraCliente && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <DoorOpen size={13} />
+            {t(`projects.lifecycle.origin.${lifecycle.origin}`)}
+          </span>
+        )}
       </div>
-      <p className="text-xs text-muted-foreground mb-4">{t("projects.lifecycle.subtitle")}</p>
+      <p className="text-xs text-muted-foreground mb-4">{t(`${textos}.subtitle`)}</p>
 
       <ol className="space-y-2.5">
         {lifecycle.steps.map((step) => {
@@ -69,7 +85,7 @@ export function LifecyclePanel({ lifecycle, showHistory = true }: { lifecycle: L
               </span>
               <div className="min-w-0">
                 <p className={step.done ? "text-sm text-foreground" : "text-sm text-muted-foreground"}>
-                  {t(`projects.lifecycle.steps.${step.key}`)}
+                  {t(`${textos}.steps.${step.key}`)}
                 </p>
                 {isNext && (
                   <p className="text-xs text-primary font-medium">{t("projects.lifecycle.nextStep")}</p>
