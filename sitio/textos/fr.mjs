@@ -39,6 +39,7 @@ export default {
     ensayo: "Essai de 30 jours",
     derechos: "© 2026 Logiciel Construction",
     hecho: "Québec · Italie · Données hébergées au Canada",
+    canal: "Nos vidéos sur YouTube",
   },
   inicio: {
     meta: {

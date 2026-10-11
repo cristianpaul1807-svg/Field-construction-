@@ -257,6 +257,9 @@ function cabecera(idioma, pagina) {
 </header>`;
 }
 
+/** El canal de YouTube. Va en el pie de todas las páginas y en `sameAs`. */
+const CANAL_YOUTUBE = "https://www.youtube.com/@Logiciel-Construction";
+
 function pie(idioma) {
   const l = (p, texto) => `<li><a href="${url(idioma, p)}">${esc(texto)}</a></li>`;
   return `<footer class="pie">
@@ -265,6 +268,10 @@ function pie(idioma) {
       <div>
         ${marca(idioma)}
         <p style="max-width:34ch;margin-top:14px">${esc(idioma.pie.tagline)}</p>
+        <a class="pie-canal" href="${CANAL_YOUTUBE}" rel="me noopener" target="_blank">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/></svg>
+          ${esc(idioma.pie.canal)}
+        </a>
       </div>
       <div>
         <h4>${esc(idioma.pie.producto)}</h4>
@@ -384,6 +391,14 @@ function paginaInicio(idioma) {
   return documento(idioma, "inicio", {
     meta: t.meta,
     jsonLd: [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "Logiciel Construction",
+        url: DOMINIO,
+        logo: `${DOMINIO}/sitio/logo.png`,
+        sameAs: [CANAL_YOUTUBE],
+      },
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",

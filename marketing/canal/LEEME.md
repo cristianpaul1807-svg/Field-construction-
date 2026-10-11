@@ -25,8 +25,9 @@ quién lo lleva, el canal no se va con esa persona.
 2. Foto de perfil (arriba a la derecha) → **Configuración** → **Añadir o
    administrar canales** → **Crear un canal**.
 3. Nombre: **Logiciel Construction**.
-4. Identificador (handle): **@logicielconstruction**. Si está cogido:
-   `@logiciel-construction` o `@logicielconstructionapp`.
+4. Identificador (handle): **@Logiciel-Construction** — es el que quedó:
+   https://www.youtube.com/@Logiciel-Construction. Ya está enlazado desde
+   el pie de la web y en los datos que leen los buscadores (`sameAs`).
 
 ## 2. Personalizarlo
 
@@ -168,6 +169,5 @@ en `0:00` y cada uno dura al menos 10 segundos. Los he medido sobre el vídeo.
 - **Un vídeo por función** (2–4 minutos): el SAL, la congruità, la factura
   electrónica, el rapport CCQ. Responden a búsquedas concretas que hace un
   contratista antes de buscar un programa, igual que la página de la CCQ.
-- **Cuando el canal exista**, pásame su dirección y lo enlazo desde el pie
-  de la web y en los datos que leen los buscadores (`sameAs`). Mientras no
-  exista no lo pongo: sería un enlace a ninguna parte.
+- **Cuando los vídeos estén subidos**, la web puede enlazar cada uno desde
+  su sección para quien prefiera verlo en YouTube.

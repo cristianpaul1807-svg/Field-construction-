@@ -33,6 +33,7 @@ export default {
     ensayo: "30-day trial",
     derechos: "© 2026 Logiciel Construction",
     hecho: "Quebec · Italy · Data hosted in Canada",
+    canal: "Our videos on YouTube",
   },
   inicio: {
     meta: {
