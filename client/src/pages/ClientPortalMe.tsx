@@ -112,6 +112,20 @@ function colorForId(id: string) {
   return `oklch(0.74 0.07 ${hash % 360})`;
 }
 
+/**
+ * Con quién se habla en el saludo. La primera palabra sirve para «Marie
+ * Tremblay» (Bonjour, Marie), pero el cliente también puede ser «Famille
+ * Tremblay» o «Constructions Bélanger inc.», y entonces saludaba a «Famille»
+ * o a «Constructions». Si la primera palabra no parece un nombre de pila, se
+ * usa el nombre entero.
+ */
+const NO_SON_NOMBRES = /^(famille|famiglia|familia|family|les|the|la|le|el|il|constructions?|costruzioni|construcciones|entreprises?|impresa|empresa|groupe|gruppo|grupo|studio|soci[eé]t[eé]|societ[aà])$/i;
+function nombreParaSaludar(nombre: string): string {
+  const limpio = nombre.trim();
+  const primera = limpio.split(/\s+/)[0] ?? limpio;
+  return NO_SON_NOMBRES.test(primera) ? limpio : primera;
+}
+
 export default function ClientPortalMe() {
   const { t, i18n } = useTranslation();
   const { signOut } = useAuth();
@@ -272,7 +286,7 @@ export default function ClientPortalMe() {
                   clic ha servido de algo, y de ese clic cuelga la factura
                   final. */}
               <p className="text-xs text-muted-foreground">{t("clientPortal.yourProject")}</p>
-              <h2 className="text-lg font-semibold text-foreground mt-0.5">{t("clientPortal.hello", { name: data.client.name.split(" ")[0] })}</h2>
+              <h2 className="text-lg font-semibold text-foreground mt-0.5">{t("clientPortal.hello", { name: nombreParaSaludar(data.client.name) })}</h2>
             </div>
 
             <div className="p-6 space-y-6">
