@@ -25,8 +25,9 @@ quién lo lleva, el canal no se va con esa persona.
 2. Foto de perfil (arriba a la derecha) → **Configuración** → **Añadir o
    administrar canales** → **Crear un canal**.
 3. Nombre: **Logiciel Construction**.
-4. Identificador (handle): **@Logiciel-Construction** — es el que quedó:
-   https://www.youtube.com/@Logiciel-Construction. Ya está enlazado desde
+4. Identificador (handle): **@LogicielConstruction** — es el que quedó:
+   https://www.youtube.com/@LogicielConstruction. Si algún día cambia, hay
+   que cambiarlo también en `CANAL_YOUTUBE` de `sitio/construir.mjs`. Ya está enlazado desde
    el pie de la web y en los datos que leen los buscadores (`sameAs`).
 
 ## 2. Personalizarlo

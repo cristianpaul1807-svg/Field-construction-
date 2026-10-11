@@ -258,7 +258,7 @@ function cabecera(idioma, pagina) {
 }
 
 /** El canal de YouTube. Va en el pie de todas las páginas y en `sameAs`. */
-const CANAL_YOUTUBE = "https://www.youtube.com/@Logiciel-Construction";
+const CANAL_YOUTUBE = "https://www.youtube.com/@LogicielConstruction";
 
 function pie(idioma) {
   const l = (p, texto) => `<li><a href="${url(idioma, p)}">${esc(texto)}</a></li>`;
