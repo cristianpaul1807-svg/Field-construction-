@@ -1308,6 +1308,11 @@
       "al_aceptar": "All'accettazione del preventivo",
       "al_iniciar": "All'inizio dei lavori",
       "al_confirmar": "Alla conferma del lavoro"
+    },
+    "etapaDeCasa": {
+      "deposito": "Acconto iniziale",
+      "avance": "Pagamento di avanzamento",
+      "final": "Saldo finale"
     }
   },
   "stripeAlert": {

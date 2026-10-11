@@ -1,4 +1,5 @@
 import { paisDe } from "../shared/paises";
+import { traducirEtapa } from "../shared/etapasDePago";
 import PDFDocument from "pdfkit";
 
 // Estimates and invoices are the two documents a construction business
@@ -1081,7 +1082,10 @@ function parties(doc: Doc, data: EstimateDoc | InvoiceDoc, copy: Copy) {
   doc.y = Math.max(leftBottom, doc.y) + 16;
 
   if (data.description) {
-    doc.font("Helvetica").fontSize(9).fillColor("#555555").text(data.description, MARGIN, doc.y, {
+    // La descripción de una factura emitida por una etapa de casa lleva el
+    // relleno en castellano («Depósito inicial — 50%»): se imprime en el
+    // idioma del documento. Ver shared/etapasDePago.ts.
+    doc.font("Helvetica").fontSize(9).fillColor("#555555").text(traducirEtapa(data.description, copy.defaultStages), MARGIN, doc.y, {
       width: CONTENT_WIDTH,
     });
     doc.y += 12;

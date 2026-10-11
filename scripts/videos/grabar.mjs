@@ -37,6 +37,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { chromium } from "../ancho/medir.mjs";
 
@@ -44,6 +45,47 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const CASCO = `data:image/png;base64,${fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "client", "public", "icons", "icon-1024.png")).toString("base64")}`;
 const RAIZ = path.resolve(AQUI, "..", "..");
 const BASE = (process.env.LOGICIEL_URL || "https://logiciel-construction.com").replace(/\/$/, "");
+
+/** La voz de cada idioma: una persona del país, no un francés de París leyendo Quebec. */
+const VOCES = { fr: "fr-CA-SylvieNeural", it: "it-IT-ElsaNeural", es: "es-ES-ElviraNeural", en: "en-CA-ClaraNeural" };
+const CACHE_VOZ = path.join(RAIZ, "node_modules", ".cache", "voz");
+
+/**
+ * Una frase en audio, con su duración. Se guarda por su texto: grabar otra
+ * vez el mismo vídeo no vuelve a pedir la voz, y no hay esperas de red en
+ * mitad de una grabación.
+ */
+function voz(idioma, texto) {
+  const limpio = texto.replace(/\*/g, "").replace(/\s+/g, " ").trim();
+  if (!limpio) return null;
+  fs.mkdirSync(CACHE_VOZ, { recursive: true });
+  const archivo = path.join(CACHE_VOZ, `${createHash("sha1").update(`${VOCES[idioma]}|${limpio}`).digest("hex")}.mp3`);
+  if (!fs.existsSync(archivo) || fs.statSync(archivo).size === 0) {
+    execFileSync("/usr/bin/python3", [path.join(AQUI, "voz.py"), VOCES[idioma], archivo, limpio], {
+      env: { ...process.env, SSL_CERT_FILE: process.env.SSL_CERT_FILE || "/root/.ccr/ca-bundle.crt" },
+      stdio: ["ignore", "ignore", "pipe"],
+      timeout: 60_000,
+    });
+  }
+  const segundos = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", archivo]).toString());
+  return { archivo, segundos };
+}
+
+/** Lo que se va a decir en un guion, para pedir todas las voces antes de grabar. */
+function frasesDe(textos) {
+  const salida = [];
+  const recorrer = (o, clave) => {
+    if (typeof o === "string") { if (!["b", "lineas", "caps", "datos", "pie", "sobre"].includes(clave)) salida.push(o); return; }
+    if (!o || typeof o !== "object" || ["b", "lineas", "caps", "datos"].includes(clave)) return;
+    if (o.titulo) { salida.push(locucionDeTarjeta(o)); return; }
+    for (const [k, v] of Object.entries(o)) recorrer(v, k);
+  };
+  recorrer(textos, "");
+  return salida;
+}
+function locucionDeTarjeta({ titulo = "", texto = "" }) {
+  return [titulo, texto].filter(Boolean).join(" ").replace(/\*/g, "");
+}
 
 const FORMATOS = {
   // 1280 px escalado a 1080p: a 1920 reales la interfaz sale diminuta en
@@ -118,13 +160,32 @@ function herramientas(pagina, idioma, inicio) {
     if (texto) inicio.frases.push({ ini: ahora(), fin: null, texto });
   };
   /** El subtítulo; `arriba` cuando lo que se enseña está abajo y lo taparía. */
+  /**
+   * La voz: no empieza una frase hasta que acaba la anterior, y devuelve
+   * cuánto le queda por decir.
+   */
+  const narrar = async (texto) => {
+    const v = voz(idioma, texto);
+    if (!v) return 0;
+    const espera = inicio.vozHasta - ahora();
+    if (espera > 0) await pausa(espera * 1000);
+    inicio.audios.push({ t: ahora(), archivo: v.archivo });
+    inicio.vozHasta = ahora() + v.segundos + 0.25;
+    return v.segundos;
+  };
   const decir = async (texto, ms = 2600, { arriba = false } = {}) => {
+    // Primero se espera a que acabe la frase anterior, y entonces cambia el
+    // subtítulo: así lo escrito y lo dicho van siempre juntos.
+    const espera = inicio.vozHasta - ahora();
+    if (espera > 0) await pausa(espera * 1000);
     await pagina.evaluate(([t, a]) => {
       const s = document.getElementById("lc-subtitulo");
       if (s) { s.textContent = t; s.classList.toggle("arriba", a); }
     }, [texto, arriba]);
     apuntar(texto);
-    if (ms) await pausa(ms);
+    const dura = await narrar(texto);
+    // Con `ms`, se queda en pantalla al menos lo que tarda en decirse.
+    if (ms) await pausa(Math.max(ms, dura * 1000 + 300));
   };
   const callar = async () => {
     await pagina.evaluate(() => { const s = document.getElementById("lc-subtitulo"); if (s) s.textContent = ""; });
@@ -141,6 +202,8 @@ function herramientas(pagina, idioma, inicio) {
    */
   const tarjeta = async ({ sobre = "", titulo, texto = "", cifra = "", pie = "", tipo = "", ms = 3800, capitulo = null }) => {
     empezar();
+    const espera = inicio.vozHasta - ahora();
+    if (espera > 0) await pausa(espera * 1000);
     await pagina.evaluate(
       ([d, casco]) => {
         document.getElementById("lc-tarjeta")?.remove();
@@ -165,7 +228,8 @@ function herramientas(pagina, idioma, inicio) {
     );
     apuntar([sobre, cifra, titulo, texto].filter(Boolean).join(" — ").replace(/\*/g, ""));
     if (capitulo) inicio.capitulos.push({ t: ahora(), titulo: capitulo });
-    await pausa(ms);
+    const dura = await narrar(locucionDeTarjeta({ titulo, texto }));
+    await pausa(Math.max(ms, dura * 1000 + 700));
     await pagina.evaluate(() => {
       const t = document.getElementById("lc-tarjeta");
       if (t) { t.classList.remove("ve"); setTimeout(() => t.remove(), 400); }
@@ -306,6 +370,9 @@ function herramientas(pagina, idioma, inicio) {
 async function grabar(nombre, idioma) {
   const guion = (await import(path.join(AQUI, "guiones", `${nombre}.mjs`))).default;
   const formato = FORMATOS[guion.formato ?? "horizontal"];
+  // Las voces antes de abrir el navegador: pedir una en mitad de la grabación
+  // deja un silencio de un segundo con la pantalla quieta.
+  if (guion.textos?.[idioma]) for (const f of frasesDe(guion.textos[idioma])) voz(idioma, f);
   const tmp = fs.mkdtempSync(path.join(RAIZ, "node_modules", ".cache", "video-"));
   const salida = path.join(RAIZ, "marketing", "videos", idioma);
   fs.mkdirSync(salida, { recursive: true });
@@ -321,7 +388,7 @@ async function grabar(nombre, idioma) {
   await contexto.addInitScript(puntero);
   // El idioma de la interfaz, el mismo que guarda el selector de idioma.
   await contexto.addInitScript((l) => { try { localStorage.setItem("fsm-language", l); } catch {} }, idioma);
-  const inicio = { t0: Date.now(), primeraPintada: null, frases: [], capitulos: [] };
+  const inicio = { t0: Date.now(), primeraPintada: null, frases: [], capitulos: [], audios: [], vozHasta: 0 };
   const pagina = await contexto.newPage();
 
   // Los fotogramas, sacados del propio navegador a su resolución real.
@@ -383,6 +450,16 @@ async function grabar(nombre, idioma) {
   execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", listaArchivo, "-vf", `scale=${formato.width * formato.escala}:${formato.height * formato.escala}:flags=lanczos,fps=30`, "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-tune", "stillimage", "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", mp4]);
   fs.rmSync(tmp, { recursive: true, force: true });
   const dur = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", mp4]).toString());
+
+  // La narración, cada frase en su sitio, sobre el vídeo.
+  if (inicio.audios.length) {
+    const conVoz = path.join(salida, `.${nombre}.voz.mp4`);
+    const entradas = inicio.audios.flatMap((a) => ["-i", a.archivo]);
+    const retrasos = inicio.audios.map((a, i) => `[${i + 1}:a]adelay=${Math.round(Math.max(0, a.t - desde) * 1000)}:all=1[a${i}]`);
+    const filtro = `${retrasos.join(";")};${inicio.audios.map((_, i) => `[a${i}]`).join("")}amix=inputs=${inicio.audios.length}:normalize=0:dropout_transition=0,apad[voz]`;
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", mp4, ...entradas, "-filter_complex", filtro, "-map", "0:v", "-map", "[voz]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart", conVoz]);
+    fs.renameSync(conVoz, mp4);
+  }
 
   // Los subtítulos, con los tiempos del vídeo ya recortado.
   const t = (epoca) => Math.max(0, Math.min(dur, epoca - desde));

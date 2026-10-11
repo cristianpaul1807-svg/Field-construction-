@@ -5,6 +5,7 @@ import { StatusBadge, invoiceStatusTone } from "@/components/StatusBadge";
 import { Receipt } from "lucide-react";
 import { formatCurrency } from "@/lib/mockData";
 import { useTranslation } from "react-i18next";
+import { traducirEtapa } from "@shared/etapasDePago";
 
 /**
  * A project's payment schedule, as the contractor and the customer both see it.
@@ -39,6 +40,7 @@ export function PaymentScheduleCard({
   billingId?: string | null;
 }) {
   const { t } = useTranslation();
+  const etapasDeCasa = { deposito: t("paymentPlan.etapaDeCasa.deposito"), avance: t("paymentPlan.etapaDeCasa.avance"), final: t("paymentPlan.etapaDeCasa.final") };
 
   return (
     <Card className="p-6">
@@ -61,7 +63,7 @@ export function PaymentScheduleCard({
               >
                 <div className="min-w-0">
                   <p className="text-sm text-foreground">
-                    <span className="text-muted-foreground">{milestone.position}.</span> {milestone.label}
+                    <span className="text-muted-foreground">{milestone.position}.</span> {traducirEtapa(milestone.label, etapasDeCasa)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {t("paymentPlan.percentOfTotal", { percent: milestone.percent })}

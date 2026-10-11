@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2 } from "lucide-react";
 import { useApi, apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { traducirEtapa } from "@shared/etapasDePago";
 
 /**
  * The business's default payment schedule.
@@ -42,8 +43,15 @@ export function PaymentPlanEditor() {
     // Defensive on the shape, not just on null: a response that is not what
     // this expects must land the editor on an empty, usable form rather than
     // leave it spinning forever with no way to tell what went wrong.
-    if (data) setRows(Array.isArray(data.milestones) ? data.milestones : []);
-  }, [data]);
+    //
+    // Las etapas de casa llegan con su relleno en castellano: se enseñan en el
+    // idioma de quien las mira. Si guarda el plan, lo guarda ya en el suyo, que
+    // es lo que habría escrito él.
+    if (data) {
+      const nombres = { deposito: t("paymentPlan.etapaDeCasa.deposito"), avance: t("paymentPlan.etapaDeCasa.avance"), final: t("paymentPlan.etapaDeCasa.final") };
+      setRows(Array.isArray(data.milestones) ? data.milestones.map((m) => ({ ...m, label: traducirEtapa(m.label, nombres) })) : []);
+    }
+  }, [data, t]);
 
   const triggers = data?.triggers ?? ["manual"];
   const total = (rows ?? []).reduce((sum, r) => sum + (Number(r.percent) || 0), 0);

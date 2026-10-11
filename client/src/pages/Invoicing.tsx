@@ -32,6 +32,7 @@ import { BonificoParlante, type DatosDelBonifico } from "@/components/BonificoPa
 import { NotasDeLaFactura } from "@/components/NotasDeLaFactura";
 import { NeedsFirst } from "@/components/NeedsFirst";
 import { useTranslation } from "react-i18next";
+import { traducirEtapa } from "@shared/etapasDePago";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
 
 const INVOICE_TYPES = ["deposito", "parcial", "final"] as const;
@@ -622,6 +623,7 @@ function NewInvoiceDialog({ onCreated }: { onCreated: () => void }) {
 
 export default function Invoicing() {
   const { t, i18n } = useTranslation();
+  const etapasDeCasa = { deposito: t("paymentPlan.etapaDeCasa.deposito"), avance: t("paymentPlan.etapaDeCasa.avance"), final: t("paymentPlan.etapaDeCasa.final") };
   const { country } = useAuth();
   const { data: invoices, loading, error, reload, detalle } = useApi<Invoice[]>("/api/invoices");
   // Chat charges are a pay button, so they only make sense once the business
@@ -783,7 +785,7 @@ export default function Invoicing() {
                       {invoice.clientName ?? invoice.projectName}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {invoice.description ?? "-"} · {t(`invoicing.type.${invoice.type}`)}
+                      {invoice.description ? traducirEtapa(invoice.description, etapasDeCasa) : "-"} · {t(`invoicing.type.${invoice.type}`)}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -869,7 +871,7 @@ export default function Invoicing() {
                       llamar, y lo que el contable busca. */}
                   <td className="py-3"><Codigo code={invoice.number} /></td>
                   <td className="py-3 text-foreground font-medium">{invoice.clientName ?? invoice.projectName}</td>
-                  <td className="py-3 text-muted-foreground">{invoice.description ?? "-"}</td>
+                  <td className="py-3 text-muted-foreground">{invoice.description ? traducirEtapa(invoice.description, etapasDeCasa) : "-"}</td>
                   <td className="py-3 text-muted-foreground">{t(`invoicing.type.${invoice.type}`)}</td>
                   <td className="py-3 pr-6 text-right text-foreground">
                     {formatCurrency(invoice.amount)}

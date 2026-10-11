@@ -43,6 +43,7 @@ Pour les entrepreneurs en construction et en rénovation au Québec : salle de b
 
 export default {
   formato: "horizontal",
+  textos: T,
   youtube,
   async pasos({ pagina, idioma, tarjeta, capitulo, resaltar, decir, ir, entrar, api, tocar, escribir, deslizar, pausa }) {
     const t = T[idioma];

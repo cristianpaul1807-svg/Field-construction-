@@ -1308,6 +1308,11 @@
       "al_aceptar": "When the estimate is accepted",
       "al_iniciar": "When the work starts",
       "al_confirmar": "When the work is signed off"
+    },
+    "etapaDeCasa": {
+      "deposito": "Initial deposit",
+      "avance": "Progress payment",
+      "final": "Final payment"
     }
   },
   "stripeAlert": {

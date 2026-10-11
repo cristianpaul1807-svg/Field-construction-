@@ -1308,6 +1308,11 @@
       "al_aceptar": "Al aceptar el presupuesto",
       "al_iniciar": "Al empezar la obra",
       "al_confirmar": "Al confirmar el trabajo"
+    },
+    "etapaDeCasa": {
+      "deposito": "Depósito inicial",
+      "avance": "Avance de obra",
+      "final": "Entrega final"
     }
   },
   "stripeAlert": {

@@ -1308,6 +1308,11 @@
       "al_aceptar": "À l'acceptation du devis",
       "al_iniciar": "Au démarrage des travaux",
       "al_confirmar": "À la validation des travaux"
+    },
+    "etapaDeCasa": {
+      "deposito": "Acompte initial",
+      "avance": "Paiement d'étape",
+      "final": "Paiement final"
     }
   },
   "stripeAlert": {
