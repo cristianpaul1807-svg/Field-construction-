@@ -815,7 +815,7 @@
     "ccqEmployerNumber": "Numero di datore di lavoro CCQ",
     "ccqEmployerNumberHint": "Quello che ti hanno dato all'iscrizione. Compare su ogni rapporto mensile che trasmetti.",
     "country": "Paese",
-    "countryHint": "Da qui esce quali dati fiscali ti vengono chiesti e quali regole ti si applicano. Per ora solo il Canada: è l'unico posto di cui sappiamo fare le regole per intero. Se sei altrove, diccelo e lo aggiungiamo.",
+    "countryHint": "Da qui esce quali dati fiscali ti vengono chiesti e quali regole ti si applicano: in Canada TPS/TVQ e ritenuta, in Italia IVA, Partita IVA e fattura elettronica. Se sei altrove, diccelo e lo aggiungiamo.",
     "whatTheySee": "Cosa vede questa persona",
     "seesAll": "Amministratore generale",
     "seesAllHint": "Vede e fa tutto, come te.",

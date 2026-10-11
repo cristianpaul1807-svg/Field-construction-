@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Check, Upload, Trash2, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useApi, apiFetch, serverMessage } from "@/lib/api";
+import { useApi, apiFetch, serverMessage, avisarCambio } from "@/lib/api";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { useNombresDelMenu } from "@/lib/nombresDelMenu";
@@ -124,6 +124,7 @@ export default function SettingsCompany() {
       const res = await apiFetch("/api/settings/logo", { method: "POST", body });
       if (!res.ok) throw new Error(serverMessage(await res.json().catch(() => null), t, t("common.genericError")));
       reload();
+      avisarCambio("/api/settings/company");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : t("common.genericError"));
     } finally {
@@ -135,7 +136,10 @@ export default function SettingsCompany() {
     setLogoBusy(true);
     try {
       const res = await apiFetch("/api/settings/logo", { method: "DELETE" });
-      if (res.ok) reload();
+      if (res.ok) {
+        reload();
+        avisarCambio("/api/settings/company");
+      }
     } finally {
       setLogoBusy(false);
     }
@@ -213,6 +217,7 @@ export default function SettingsCompany() {
         throw new Error(serverMessage(body, t, t("common.genericError")));
       }
       reload();
+      avisarCambio("/api/settings/company");
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {

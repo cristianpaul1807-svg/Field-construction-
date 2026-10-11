@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ExternalLink, Unplug, CheckCircle2, AlertTriangle, Stethoscope, Copy, Check, RefreshCw, ChevronDown } from "lucide-react";
-import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar, avisarCambio } from "@/lib/api";
 
 /**
  * La conexión con QuickBooks.
@@ -59,7 +59,9 @@ function QuienLlevaLaNomina() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ payrollInQuickbooks: valor }),
-    }).catch(() => null);
+    })
+      .then(() => avisarCambio("/api/settings/company"))
+      .catch(() => null);
     setGuardando(false);
   };
 

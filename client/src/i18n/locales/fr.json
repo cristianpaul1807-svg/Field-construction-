@@ -815,7 +815,7 @@
     "ccqEmployerNumber": "Numéro d'employeur CCQ",
     "ccqEmployerNumberHint": "Celui qu'on vous a donné à l'inscription. Il figure sur chaque rapport mensuel que vous transmettez.",
     "country": "Pays",
-    "countryHint": "C'est de là que sortent les renseignements fiscaux qu'on vous demande et les règles qui s'appliquent. Pour l'instant le Canada seulement : c'est le seul endroit dont on sait faire les règles au complet. Si vous êtes ailleurs, dites-le-nous et on l'ajoute.",
+    "countryHint": "C'est de là que sortent les renseignements fiscaux qu'on vous demande et les règles qui s'appliquent : TPS/TVQ et retenue au Canada, TVA, Partita IVA et facture électronique en Italie. Si vous êtes ailleurs, dites-le-nous et on l'ajoute.",
     "whatTheySee": "Ce que cette personne voit",
     "seesAll": "Administrateur général",
     "seesAllHint": "Voit et fait tout, comme vous.",

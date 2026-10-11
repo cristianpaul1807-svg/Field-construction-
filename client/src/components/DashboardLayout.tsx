@@ -337,7 +337,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               already truncates; it just needed permission to. */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0">
             <MarcaDelNegocio logoUrl={company?.logoUrl} name={company?.name} size={28} recurso="plataforma" className="flex-shrink-0" />
-            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] xl:max-w-[8rem] 2xl:max-w-[12rem] inline md:hidden xl:inline">
+            <span className="font-medium text-foreground text-sm truncate max-w-[9rem] 2xl:max-w-[12rem] inline md:hidden 2xl:inline">
               {company?.name ?? t("common.loading")}
             </span>
           </Link>
@@ -348,10 +348,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               mitad de palabra no se lee como "hay más": se lee como roto.
 
               Por debajo de xl se quitan la flecha y la mitad del relleno, que
-              es adorno, y entre 1024 y 1280 el nombre del negocio desaparece y
+              es adorno, y entre 1024 y 1536 el nombre del negocio desaparece y
               queda el logotipo: un nombre recortado a seis letras no dice de
               quién es la empresa, y ese hueco sí hace que el menú entre entero.
-              En el móvil vuelve, porque allí no compite con nada. */}
+              Hasta 1280 no bastaba: en francés, a 1280 justos, «PARAMÈTRES»
+              volvía a salir cortado en «PARAMÈ». En el móvil vuelve, porque
+              allí no compite con nada. */}
           {!isMobile && (
             <nav className="flex items-center gap-0.5 min-w-0 overflow-x-auto ml-1 xl:ml-2">
               {secciones.map((section) => (

@@ -815,7 +815,7 @@
     "ccqEmployerNumber": "Número de empleador de la CCQ",
     "ccqEmployerNumberHint": "El que te dieron al darte de alta. Sale en cada informe mensual que mandas.",
     "country": "País",
-    "countryHint": "De aquí sale qué datos fiscales se te piden y qué reglas se te aplican. Por ahora sólo Canadá: es el único sitio cuyas reglas sabemos hacer enteras. Si estás en otro país, dínoslo y lo añadimos.",
+    "countryHint": "De aquí sale qué datos fiscales se te piden y qué reglas se te aplican: en Canadá la TPS/TVQ y la retención, en Italia el IVA, la Partita IVA y la factura electrónica. Si estás en otro país, dínoslo y lo añadimos.",
     "whatTheySee": "Qué ve esta persona",
     "seesAll": "Administrador general",
     "seesAllHint": "Ve y hace todo, igual que tú.",

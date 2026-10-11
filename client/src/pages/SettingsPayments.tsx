@@ -7,7 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, ExternalLink, Receipt, ShieldCheck, Smartphone } from "lucide-react";
-import { useApi, apiFetch, readJson, serverMessage, apiEnviar } from "@/lib/api";
+import { useApi, apiFetch, readJson, serverMessage, apiEnviar, avisarCambio } from "@/lib/api";
 import { OPCIONES_IVA, esOpcionIva, IVA_POR_DEFECTO, type OpcionIva } from "@shared/iva";
 import { paisDe, stripeOperaEn } from "@shared/paises";
 import { useTranslation } from "react-i18next";
@@ -131,6 +131,7 @@ export default function SettingsPayments() {
         body: JSON.stringify({ province }),
       });
       setReloadToken((t) => t + 1);
+      avisarCambio("/api/settings/company");
     } finally {
       setSavingProvince(false);
     }
@@ -157,6 +158,7 @@ export default function SettingsPayments() {
         body: JSON.stringify({ taxConfig: { ...(company?.taxConfig ?? {}), ivaPredefinita: opcion } }),
       });
       setReloadToken((t) => t + 1);
+      avisarCambio("/api/settings/company");
     } finally {
       setSavingProvince(false);
     }

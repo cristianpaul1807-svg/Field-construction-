@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { getClientSession } from "@/lib/clientSession";
@@ -164,6 +164,20 @@ export async function downloadFile(
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/**
+ * Avisar de que algo ha cambiado en el servidor, para que todo lo que lo
+ * muestra se refresque.
+ *
+ * Cada pantalla lee con su propio `useApi`, así que guardar en una no se
+ * enteraba nadie más: se guardaban los datos de la empresa y el aviso de
+ * arriba seguía diciendo «faltan tus números de TPS y TVQ», y la cabecera
+ * seguía con el nombre viejo, hasta recargar la página. Quien guarda llama
+ * a esto con la ruta que lee; cada `useApi` de esa ruta vuelve a pedirla.
+ */
+export function avisarCambio(ruta: string) {
+  window.dispatchEvent(new CustomEvent("api-cambio", { detail: ruta }));
+}
+
 // Small fetch hook — no data library in this project yet, and the app's
 // data needs (a handful of read endpoints per screen) don't warrant adding one.
 // Pass `null` as the path to skip fetching (e.g. while waiting on a prerequisite id).
@@ -176,6 +190,17 @@ export function useApi<T>(path: string | null): ApiState<T> {
   });
   const [nonce, setNonce] = useState(0);
   const reload = useCallback(() => setNonce((n) => n + 1), []);
+  const ultimaRuta = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (path === null) return;
+    const base = path.split("?")[0];
+    const alCambiar = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === base) reload();
+    };
+    window.addEventListener("api-cambio", alCambiar);
+    return () => window.removeEventListener("api-cambio", alCambiar);
+  }, [path, reload]);
 
   useEffect(() => {
     if (path === null) {
@@ -184,7 +209,11 @@ export function useApi<T>(path: string | null): ApiState<T> {
     }
 
     let cancelled = false;
-    setState({ data: null, loading: true, error: null, detalle: null });
+    // Volver a pedir la misma ruta no borra lo que ya se ve: la cabecera no
+    // parpadea en blanco mientras llega el nombre nuevo de la empresa.
+    const misma = ultimaRuta.current === path;
+    ultimaRuta.current = path;
+    setState((prev) => (misma ? { ...prev, loading: true } : { data: null, loading: true, error: null, detalle: null }));
 
     apiFetch(path)
       .then(async (res) => {
