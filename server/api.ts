@@ -1688,11 +1688,16 @@ apiRouter.get(
       // Sus días libres, en el mismo sitio donde mira qué le toca. Tenerlos
       // sólo en el panel de la oficina significaba que el trabajador se
       // enteraba de sus propias vacaciones preguntando.
+      //
+      // Una ausencia es suya (`employee_id`), no se le asigna como una cita
+      // (`assigned_employee_id`). Con la columna de las citas, esta consulta
+      // fallaba siempre, y con ella la ruta entera: todo trabajador abría su
+      // agenda y la encontraba vacía, aunque tuviera el día lleno.
       admin
         .from("time_off")
         .select("id, start_date, end_date, kind, status")
         .eq("business_id", req.workerBusinessId!)
-        .eq(column, req.workerId!)
+        .eq(columnaDelDueno(req), req.workerId!)
         .neq("status", "rechazada")
         .order("start_date"),
     ]);
@@ -7004,12 +7009,18 @@ apiRouter.get(
   route(async (req, res) => {
     const supabase = req.supabase!;
 
-    const [employees, subcontractors, assignments] = await Promise.all([
+    // Un fichaje abierto de hoy es la prueba más directa de que alguien está
+    // en obra. Antes sólo contaba el estado de la ficha («en_proyecto»), que
+    // nadie cambia al fichar: el mapa enseñaba al trabajador en la obra y,
+    // justo debajo, «Activos ahora» decía que no había nadie. Las dieciséis
+    // horas son las de la app del trabajador: pasado eso es una salida que se
+    // olvidó, no alguien trabajando.
+    const desdeAbiertos = new Date(Date.now() - 16 * 3_600_000).toISOString();
+    const [employees, subcontractors, assignments, abiertos] = await Promise.all([
       supabase
         .from("employees")
         .select("id, name, status")
-        .eq("business_id", req.businessId!)
-        .eq("status", "en_proyecto"),
+        .eq("business_id", req.businessId!),
       supabase
         .from("subcontractors")
         .select("id, name")
@@ -7018,27 +7029,45 @@ apiRouter.get(
         .from("assignments")
         .select("employee_id, subcontractor_id, projects(name)")
         .eq("business_id", req.businessId!),
+      supabase
+        .from("time_entries")
+        .select("employee_id, subcontractor_id, projects(name)")
+        .eq("business_id", req.businessId!)
+        .is("check_out_time", null)
+        .gte("check_in_time", desdeAbiertos),
     ]);
 
     if (employees.error) throw employees.error;
     if (subcontractors.error) throw subcontractors.error;
     if (assignments.error) throw assignments.error;
+    if (abiertos.error) throw abiertos.error;
 
-    const activeEmployees = employees.data.map((e) => ({
-      id: e.id,
-      name: e.name,
-      kind: "employee" as const,
-      currentProject: (assignments.data as any[]).find((a) => a.employee_id === e.id)?.projects?.name ?? null,
-    }));
+    // La obra en la que fichó manda sobre la asignada: es donde está.
+    const fichadoEn = new Map<string, string | null>();
+    for (const a of abiertos.data as any[]) {
+      const id = a.employee_id ?? a.subcontractor_id;
+      if (id) fichadoEn.set(id, a.projects?.name ?? null);
+    }
+    const obraDe = (id: string, columna: "employee_id" | "subcontractor_id") =>
+      fichadoEn.get(id) ?? (assignments.data as any[]).find((a) => a[columna] === id)?.projects?.name ?? null;
+
+    const activeEmployees = employees.data
+      .filter((e) => e.status === "en_proyecto" || fichadoEn.has(e.id))
+      .map((e) => ({
+        id: e.id,
+        name: e.name,
+        kind: "employee" as const,
+        currentProject: obraDe(e.id, "employee_id"),
+      }));
 
     const assignedSubIds = new Set((assignments.data as any[]).filter((a) => a.subcontractor_id).map((a) => a.subcontractor_id));
     const activeSubcontractors = subcontractors.data
-      .filter((s) => assignedSubIds.has(s.id))
+      .filter((s) => assignedSubIds.has(s.id) || fichadoEn.has(s.id))
       .map((s) => ({
         id: s.id,
         name: s.name,
         kind: "subcontractor" as const,
-        currentProject: (assignments.data as any[]).find((a) => a.subcontractor_id === s.id)?.projects?.name ?? null,
+        currentProject: obraDe(s.id, "subcontractor_id"),
       }));
 
     // Where people actually are comes from their check-ins, which already

@@ -408,6 +408,9 @@ async function grabar(nombre, idioma) {
     isMobile: guion.formato === "vertical",
     hasTouch: guion.formato === "vertical",
     locale: { it: "it-IT", fr: "fr-CA", en: "en-CA", es: "es-ES" }[idioma],
+    // Lo que el guion necesite del teléfono: la ubicación para fichar, la
+    // hora del día que cuenta la historia.
+    ...(guion.contexto?.(idioma) ?? {}),
   });
   await contexto.addInitScript(puntero);
   // El idioma de la interfaz, el mismo que guarda el selector de idioma.

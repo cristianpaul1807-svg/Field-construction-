@@ -609,7 +609,7 @@
     "serviceDown": "No se pudo comprobar tu código ahora mismo. No es culpa del código: vuelve a intentarlo en un momento.",
     "shiftSummary": "Resumen del turno",
     "checkInTimeLabel": "Hora de entrada",
-    "checkOutTimeLabel": "Hora de salida",
+    "nowTimeLabel": "Ahora",
     "calculatedDuration": "Tiempo calculado",
     "regularHours": "Horas ordinarias",
     "overtimeHours": "Horas extra",

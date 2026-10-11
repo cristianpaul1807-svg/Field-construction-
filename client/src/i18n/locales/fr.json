@@ -289,7 +289,7 @@
     "deleteEstimateConfirm": "Supprimer la soumission {{number}} ? C'est irréversible.",
     "falta": {
       "zone": "Nomme la zone du chantier : la cuisine, la salle de bain, le rez-de-chaussée…",
-      "item": "Choisis un article du catalogue ou écris son nom."
+      "item": "Choisissez un article du catalogue ou écrivez son nom."
     },
     "crearPrimeraCategoria": "Créer la première catégorie",
     "paraQueSirveLaCategoria": "Regroupe vos soumissions par type de travaux (cuisine, salle de bain, toiture…). Dans chaque catégorie, vous pouvez garder d'anciennes soumissions approuvées sous la main comme référence de prix et de marges.",
@@ -598,7 +598,7 @@
     "noActiveEntry": "Aucun pointage actif",
     "serviceType": "Type de service",
     "noProjects": "Aucun projet pour l'instant.",
-    "selectProject": "Choisis un chantier",
+    "selectProject": "Choisissez un chantier",
     "selectPlaceholder": "Choisis",
     "clockIn": "Pointer l'arrivée",
     "clockOut": "Pointer le départ",
@@ -609,7 +609,7 @@
     "serviceDown": "Impossible de vérifier votre code pour le moment. Ce n'est pas le code : réessayez dans un instant.",
     "shiftSummary": "Résumé du quart de travail",
     "checkInTimeLabel": "Heure d'arrivée",
-    "checkOutTimeLabel": "Heure de départ",
+    "nowTimeLabel": "Maintenant",
     "calculatedDuration": "Temps calculé",
     "regularHours": "Heures régulières",
     "overtimeHours": "Heures supplémentaires",

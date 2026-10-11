@@ -34,3 +34,33 @@ export async function borrarPresupuestosDe(api, idioma) {
     await api("DELETE", `/api/estimates/${e.id}`);
   }
 }
+
+/**
+ * Las siete y media de la mañana, se grabe cuando se grabe.
+ *
+ * La jornada del trabajador empieza a las 7:00 y la agenda se abre en la hora
+ * actual: grabado a las cuatro de la tarde en Montreal, se veía la tarde vacía
+ * y un fichaje de entrada a las 16:25. El móvil del vídeo se pone en la zona
+ * horaria donde ahora son entre las 7:00 y las 8:00; lo único que cambia es
+ * la hora que enseña la pantalla, y la del servidor sigue siendo la de verdad.
+ *
+ * Devuelve la zona para el navegador y `hora(h, m)`, ese momento de hoy en
+ * esa zona, para programarle el trabajo del día.
+ */
+export function primeraHora() {
+  const ahora = new Date();
+  let desfase = Math.round(7.5 - (ahora.getUTCHours() + ahora.getUTCMinutes() / 60));
+  while (desfase < -12) desfase += 24;
+  while (desfase > 14) desfase -= 24;
+  // Los nombres Etc/GMT llevan el signo al revés: UTC+11 es «Etc/GMT-11».
+  const zona = desfase === 0 ? "Etc/UTC" : `Etc/GMT${desfase > 0 ? "-" : "+"}${Math.abs(desfase)}`;
+  const local = new Date(ahora.getTime() + desfase * 3_600_000);
+  const medianoche = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) - desfase * 3_600_000;
+  return { zona, hora: (h, m = 0) => new Date(medianoche + (h * 60 + m) * 60_000).toISOString() };
+}
+
+/** El trabajador de la historia: en la obra de la familia, y con su propio código. */
+export const TRABAJADOR = {
+  fr: { name: "Jean-Philippe Roy", role: "Charpentier-menuisier", phone: "514 555-0177", tarea: "Démolition de la cuisine", obra: { latitude: 45.5299, longitude: -73.5806 } },
+  it: { name: "Marco Bianchi", role: "Muratore", phone: "333 555 0177", tarea: "Demolizione della cucina", obra: { latitude: 41.8846, longitude: 12.4731 } },
+};

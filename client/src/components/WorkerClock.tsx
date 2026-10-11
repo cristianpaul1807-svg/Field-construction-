@@ -101,7 +101,12 @@ export function WorkerClock() {
   const load = () => {
     workerApiFetch("/api/worker/time-entries/active")
       .then((res) => res.json())
-      .then(setActive);
+      .then((a) => {
+        // El reloj de la tarjeta sólo avanza cada diez segundos: recién
+        // fichado, todavía marcaba la hora de antes de pulsar.
+        setNowMs(Date.now());
+        setActive(a);
+      });
     // El desfase del móvil va en la pregunta: "lo de hoy" tiene que ser el hoy
     // de quien está mirando la pantalla, y el servidor corre en UTC.
     workerApiFetch(`/api/worker/projects?tzOffset=${new Date().getTimezoneOffset()}`)
@@ -216,7 +221,11 @@ export function WorkerClock() {
 
   // Calculate shift duration and hours breakdown (8h regular vs overtime)
   const shiftStartMs = active ? new Date(active.checkInTime).getTime() : 0;
-  const elapsedMs = active ? Math.max(0, nowMs - shiftStartMs) : 0;
+  // La entrada la pone el reloj del servidor y "ahora" el del móvil. Basta
+  // que el móvil vaya medio minuto atrasado para que salga "ahora: 07:36"
+  // debajo de "entrada: 07:37"; ninguna de las dos horas es anterior a la otra.
+  const ahoraMs = active ? Math.max(nowMs, shiftStartMs) : nowMs;
+  const elapsedMs = active ? ahoraMs - shiftStartMs : 0;
   const elapsedTotalHours = elapsedMs / 3_600_000;
   const regularHours = Math.min(8.0, elapsedTotalHours);
   const overtimeHours = Math.max(0.0, elapsedTotalHours - 8.0);
@@ -265,9 +274,11 @@ export function WorkerClock() {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-0.5">{t("worker.checkOutTimeLabel")}</p>
+                {/* "Ahora", no "salida": con el fichaje abierto no hay hora
+                    de salida, y con esa etiqueta parecía que ya la había. */}
+                <p className="text-xs text-muted-foreground mb-0.5">{t("worker.nowTimeLabel")}</p>
                 <p className="text-lg font-bold text-primary">
-                  {new Date(nowMs).toLocaleTimeString(i18n.language, {
+                  {new Date(ahoraMs).toLocaleTimeString(i18n.language, {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}

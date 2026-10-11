@@ -49,9 +49,13 @@ Pulsa un marcador y debajo del mapa se abre su ficha:
 Arrastrar el mapa **no** abre la ficha del marcador que quede debajo del dedo:
 sólo cuenta el toque que no se ha movido.
 
-A la derecha, **Activos ahora** (quién está en obra según su estado) y
-**Check-in recientes**, con un enlace para abrir cada posición en un mapa
-completo.
+A la derecha, **Activos ahora** y **Check-in recientes**, con un enlace para
+abrir cada posición en un mapa completo.
+
+**Activos ahora** es quien tiene un fichaje abierto de las últimas 16 horas
+(con la obra en la que fichó), más quien tenga el estado «en proyecto» en su
+ficha. Antes contaba sólo el estado, que nadie cambia al fichar, y el mapa
+enseñaba a alguien en obra mientras esta lista decía que no había nadie.
 
 ### El mapa siempre se ve
 

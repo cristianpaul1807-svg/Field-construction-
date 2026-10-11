@@ -83,25 +83,36 @@ export function WorkerScheduleView() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[] | null>(null);
   const [timeOff, setTimeOff] = useState<TimeOff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fallo, setFallo] = useState<string | null>(null);
+  const [intento, setIntento] = useState(0);
   const [view, setView] = useState<"dia" | "semana" | "mes">("dia");
   const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setFallo(null);
+    // Si el servidor falla, se dice. Antes un error dejaba la rejilla vacía,
+    // que es exactamente lo que ve quien hoy no tiene nada: la agenda estuvo
+    // rota para todos los trabajadores y cada uno creyó que tenía el día libre.
     workerApiFetch("/api/worker/schedule")
-      .then((res) => res.json())
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error ?? res.statusText);
+        return body;
+      })
       .then((body) => {
         if (cancelled) return;
         setEvents(body.events ?? []);
         setWorkOrders(body.workOrders ?? []);
         setTimeOff(body.timeOff ?? []);
       })
+      .catch((e) => !cancelled && setFallo(e instanceof Error ? e.message : String(e)))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [intento]);
 
   const dayEvents = useMemo(() => (events ?? []).filter((e) => isSameDay(e.startTime, currentDate)), [events, currentDate]);
 
@@ -180,6 +191,17 @@ export function WorkerScheduleView() {
     return (
       <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
         <Spinner className="size-4" /> {t("common.loading")}
+      </div>
+    );
+  }
+
+  if (fallo) {
+    return (
+      <div className="rounded-xl border border-border bg-status-error-bg/40 p-4 space-y-3 text-sm text-status-error-fg">
+        <p>{t("common.loadError", { message: fallo })}</p>
+        <Button size="sm" variant="outline" onClick={() => setIntento((n) => n + 1)}>
+          {t("errores.reintentar")}
+        </Button>
       </div>
     );
   }

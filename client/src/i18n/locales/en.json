@@ -609,7 +609,7 @@
     "serviceDown": "We couldn't check your code right now. It's not the code: try again in a moment.",
     "shiftSummary": "Shift summary",
     "checkInTimeLabel": "Check-in time",
-    "checkOutTimeLabel": "Check-out time",
+    "nowTimeLabel": "Now",
     "calculatedDuration": "Calculated duration",
     "regularHours": "Regular hours",
     "overtimeHours": "Overtime hours",
