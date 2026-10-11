@@ -2684,7 +2684,9 @@ apiRouter.get(
         .from("projects")
         .select("id, name, progress_percent, business_id, status, estimate_id")
         .eq("client_id", clientId)
-        .order("created_at", { ascending: false })
+        // `projects` no tiene created_at: pedirlo tumbó el portal entero.
+        // La que se movió la última es la que está viva.
+        .order("status_changed_at", { ascending: false, nullsFirst: false })
         .limit(20),
       supabase
         .from("estimates")
@@ -13992,7 +13994,7 @@ apiRouter.get(
         .select("id, name, progress_percent, estimate_id")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
-        .order("created_at", { ascending: false })
+        .order("status_changed_at", { ascending: false, nullsFirst: false })
         .limit(20),
       supabase
         .from("estimates")
