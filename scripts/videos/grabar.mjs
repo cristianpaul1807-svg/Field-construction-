@@ -122,6 +122,9 @@ function herramientas(pagina, idioma, inicio) {
   };
   const escribir = async (objetivo, texto) => {
     await tocar(objetivo, 200);
+    // Lo que hubiera se sustituye: un campo numérico vacío vuelve a «0» y lo
+    // tecleado salía detrás («0120»).
+    await pagina.keyboard.press("Control+A");
     await pagina.keyboard.type(texto, { delay: 55 });
     await pausa(500);
   };
@@ -151,7 +154,23 @@ function herramientas(pagina, idioma, inicio) {
     for (let i = 0; i < pasos; i++) { await pagina.mouse.wheel(0, px / pasos); await pausa(45); }
     await pausa(700);
   };
-  return { pagina, idioma, BASE, pausa, decir, callar, ir, entrar, api, tocar, escribir, bajar };
+  /**
+   * Llevar una barra deslizante a un valor. Pulsarla en el centro la pone a
+   * la mitad, así que se enfoca, se lleva al principio y se avanza a teclado,
+   * con el puntero encima para que se vea quién la mueve.
+   */
+  const deslizar = async (objetivo, valor) => {
+    const el = typeof objetivo === "string" ? pagina.locator(objetivo).first() : objetivo;
+    await el.evaluate((e) => e.scrollIntoView({ block: "center", behavior: "smooth" }));
+    await pausa(400);
+    const caja = await el.boundingBox();
+    if (caja) await pagina.mouse.move(caja.x + 8, caja.y + caja.height / 2, { steps: 18 });
+    await el.focus();
+    await pagina.keyboard.press("Home");
+    for (let i = 0; i < valor; i++) { await pagina.keyboard.press("ArrowRight"); await pausa(55); }
+    await pausa(500);
+  };
+  return { pagina, idioma, BASE, pausa, decir, callar, ir, entrar, api, tocar, escribir, deslizar, bajar };
 }
 
 async function grabar(nombre, idioma) {

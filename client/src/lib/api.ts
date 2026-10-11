@@ -211,7 +211,12 @@ export function useApi<T>(path: string | null): ApiState<T> {
     let cancelled = false;
     // Volver a pedir la misma ruta no borra lo que ya se ve: la cabecera no
     // parpadea en blanco mientras llega el nombre nuevo de la empresa.
-    const misma = ultimaRuta.current === path;
+    // `?_r=` es sólo el número con el que una pantalla fuerza a volver a
+    // pedir: con él la ruta parecía otra, se borraba todo y el constructor de
+    // presupuestos volvía arriba («Chargement…») cada vez que se añadía una
+    // línea.
+    const sinContador = (r: string | null) => r?.replace(/([?&])_r=[^&]*&?/, "$1").replace(/[?&]$/, "") ?? null;
+    const misma = sinContador(ultimaRuta.current) === sinContador(path);
     ultimaRuta.current = path;
     setState((prev) => (misma ? { ...prev, loading: true } : { data: null, loading: true, error: null, detalle: null }));
 
