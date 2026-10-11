@@ -245,7 +245,9 @@ export function renderFlowMessage(content: string, lang: unknown): string {
   const p = ref.p ?? {};
   switch (ref.k) {
     case "welcome":
-      return c.welcome(p.business ?? "");
+      // La frase acaba en punto detrás del nombre, y muchos nombres de empresa
+      // ya acaban en uno («… inc.», «S.r.l.»): salía «inc.. Je vais…».
+      return c.welcome(p.business ?? "").replace(/\.\./g, ".");
     case "done":
       return c.done(p.name ?? "", p.business ?? "");
     case "accountReady":
