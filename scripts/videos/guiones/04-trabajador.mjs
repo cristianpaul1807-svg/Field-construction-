@@ -24,7 +24,7 @@ const T = {
     prueba: "Et chaque pointage reste comme preuve : pour la paie, et pour le client.",
     resultado: { sobre: "Le résultat", titulo: "Des heures *exactes*, sans courir après personne.", texto: "Elles vont directement dans la paie et dans le rapport mensuel de la CCQ." },
     cierre: { titulo: "Logiciel Construction", texto: "Le pointage GPS de vos travailleurs, depuis leur cellulaire.", pie: "<b>Essai gratuit de 30 jours</b> · logiciel-construction.com" },
-    b: { entrar: "Entrer", pointage: "Pointage", llegada: "Pointer l'arrivée", recientes: "Pointages récents" },
+    b: { entrar: "Entrer", pointage: "Pointage", llegada: "Pointer l'arrivée", recientes: "Pointages récents", turno: "Résumé du quart de travail" },
   },
 };
 
@@ -101,7 +101,7 @@ export default {
     await decir(t.ficha, 0, { arriba: true });
     await tocar(pagina.getByRole("button", { name: t.b.llegada }), 2600);
     // La tarjeta del turno, ya con la hora de entrada y el contador.
-    const turno = pagina.locator("div.rounded-xl").first();
+    const turno = pagina.getByText(t.b.turno).first().locator("xpath=ancestor::div[contains(@class,'rounded-xl')][1]");
     await resaltar(turno, 2400, t.cuenta);
     await callar();
 

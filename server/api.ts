@@ -223,6 +223,10 @@ async function ensureClientAccount(businessId: string, clientId: string) {
     .eq("business_id", businessId)
     .eq("participant_type", "client")
     .eq("participant_id", clientId)
+    // El más antiguo, y no `maybeSingle()` a secas: con dos canales eso da
+    // error, se leía como «no hay ninguno» y se creaba un tercero.
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   // Keep speaking whatever language this client already chose in the public
@@ -2674,14 +2678,14 @@ apiRouter.get(
     const supabase = req.supabase!;
     const clientId = req.clientId!;
 
-    const [client, project, estimate, pendingInvoice] = await Promise.all([
+    const [client, projects, estimate, pendingInvoice] = await Promise.all([
       supabase.from("clients").select("id, name, business_id").eq("id", clientId).single(),
       supabase
         .from("projects")
-        .select("id, name, progress_percent, business_id, status")
+        .select("id, name, progress_percent, business_id, status, estimate_id")
         .eq("client_id", clientId)
-        .limit(1)
-        .maybeSingle(),
+        .order("created_at", { ascending: false })
+        .limit(20),
       supabase
         .from("estimates")
         // El negocio viene con el presupuesto porque requireClientAuth no pone
@@ -2706,9 +2710,17 @@ apiRouter.get(
 
     if (client.error) throw client.error;
     const negocio = await negocioDelCliente(getSupabaseAdmin(), (client.data as any)?.business_id);
-    if (project.error) throw project.error;
+    if (projects.error) throw projects.error;
     if (estimate.error) throw estimate.error;
     if (pendingInvoice.error) throw pendingInvoice.error;
+
+    // La obra de la soumission que se le enseña, y si no, la más reciente. Se
+    // pedía una cualquiera (`limit(1)` sin orden): a un cliente que repite le
+    // podía salir la reforma del año pasado al lado de la soumission de ahora,
+    // con sus etapas y su plan de pagos, que no eran los de este trabajo.
+    const project = {
+      data: projects.data.find((p) => estimate.data && p.estimate_id === estimate.data.id) ?? projects.data[0] ?? null,
+    };
 
     // What they signed, so the portal can show it back instead of offering to
     // sign something already signed.
@@ -13634,6 +13646,10 @@ async function ensureClientChannel(
     .eq("participant_type", "client")
     .eq("participant_id", clientId)
     .eq("system", "interno")
+    // Ver ensureClientAccount: con un duplicado, `maybeSingle()` falla y cada
+    // llamada abría otra conversación con el mismo cliente.
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (existing) return existing.id;
 
@@ -13964,7 +13980,7 @@ apiRouter.get(
     const supabase = req.supabase!;
     const clientId = req.params.clientId;
 
-    const [client, project, estimate, pendingInvoice] = await Promise.all([
+    const [client, projects, estimate, pendingInvoice] = await Promise.all([
       supabase
         .from("clients")
         .select("id, name, business_id")
@@ -13973,11 +13989,11 @@ apiRouter.get(
         .single(),
       supabase
         .from("projects")
-        .select("id, name, progress_percent")
+        .select("id, name, progress_percent, estimate_id")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
-        .limit(1)
-        .maybeSingle(),
+        .order("created_at", { ascending: false })
+        .limit(20),
       supabase
         .from("estimates")
         .select("id, number, status, total, business_id")
@@ -13999,9 +14015,15 @@ apiRouter.get(
 
     if (client.error) throw client.error;
     const negocio = await negocioDelCliente(getSupabaseAdmin(), req.businessId!);
-    if (project.error) throw project.error;
+    if (projects.error) throw projects.error;
     if (estimate.error) throw estimate.error;
     if (pendingInvoice.error) throw pendingInvoice.error;
+
+    // La misma obra que ve el cliente en /client-portal/me: la vista previa
+    // que no enseña lo mismo que el cliente no sirve de vista previa.
+    const project = {
+      data: projects.data.find((p) => estimate.data && p.estimate_id === estimate.data.id) ?? projects.data[0] ?? null,
+    };
 
     // What they signed, so the portal can show it back instead of offering to
     // sign something already signed.
@@ -14322,6 +14344,8 @@ apiRouter.post(
       .eq("business_id", req.businessId!)
       .eq("participant_type", participantType)
       .eq("participant_id", participantId)
+      .order("created_at", { ascending: true })
+      .limit(1)
       .maybeSingle();
     if (existing) {
       res.json({ id: existing.id });
