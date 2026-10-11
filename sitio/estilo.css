@@ -898,10 +898,55 @@ body {
 .capturas { display: grid; gap: 22px; margin-top: 42px; grid-template-columns: repeat(3, 1fr); align-items: start; }
 @media (max-width: 920px) { .capturas { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .capturas { grid-template-columns: 1fr; } }
-/* El vídeo del producto: 16:9 reservado de antemano, para que la página no
-   salte al cargar el póster. */
-.video-producto { margin-top: 42px; border-radius: 22px; overflow: hidden; border: 1px solid var(--linea); box-shadow: var(--sombra-2); background: #0b1220; aspect-ratio: 16 / 9; }
+/* ---------- El vídeo que avanza con el scroll ----------
+   Sin la clase `activo` (sin JS, con «reducir movimiento» o si el vídeo no
+   carga) es una sección normal: el título y el reproductor con audio. Con
+   ella, una pantalla fija dentro de un tramo alto; ver `seccionVideo()`. */
+.capitulo-video { background: #0B1220; color: #fff; padding-bottom: 64px; }
+.capitulo-video .sobretitulo { color: #7BA6EE; }
+.capitulo-video h2 { color: #fff; }
+.capitulo-video .entradilla { color: rgba(255,255,255,.72); }
+.scrub-pantalla { padding-top: 72px; }
+.scrub-lienzo, .scrub-pie, .ver-con-audio { display: none; }
+.video-producto { margin-top: 32px; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); background: #0B1220; aspect-ratio: 16 / 9; }
 .video-producto video { display: block; width: 100%; height: 100%; }
+
+.scrub.activo { height: var(--alto); position: relative; }
+.scrub.activo .scrub-pantalla {
+  position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 18px;
+  /* La cabecera es pegajosa y mide 70 px: el título empieza debajo. */
+  padding: 86px 0 22px;
+}
+.scrub.activo .scrub-texto h2 { font-size: clamp(28px, 4vw, 46px); }
+.scrub.activo .scrub-texto .entradilla { margin-top: 10px; font-size: 16px; max-width: 60ch; }
+.scrub.activo .scrub-lienzo { display: block; flex: 1 1 auto; min-height: 0; }
+/* `contain` y no `cover`: el vídeo lleva texto, y en un móvil en vertical
+   `cover` le cortaría los dos lados. */
+.scrub-lienzo video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.scrub.activo .scrub-pie { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.scrub-pista { display: flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.66); min-width: 0; }
+.scrub-pista .pista { position: relative; width: 120px; height: 2px; background: rgba(255,255,255,.18); border-radius: 2px; flex-shrink: 1; min-width: 40px; }
+.scrub-pista .relleno { position: absolute; inset: 0 auto 0 0; width: 0%; background: #7BA6EE; border-radius: 2px; }
+.scrub-cue { margin: 0; font-size: 13px; color: rgba(255,255,255,.66); transition: opacity .3s; text-align: right; }
+@media (max-width: 600px) {
+  .scrub.activo .scrub-pie { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .scrub-cue { text-align: left; }
+}
+/* En un teléfono en vertical un vídeo horizontal no llena la pantalla sin
+   cortarle el texto. En vez de dejarlo flotando en medio de un lienzo vacío,
+   el lienzo mide lo que el vídeo y el conjunto se centra. */
+@media (max-aspect-ratio: 1/1) {
+  .scrub.activo .scrub-lienzo { flex: 0 0 auto; width: 100%; aspect-ratio: 16 / 9; }
+  .scrub.activo .scrub-pantalla { gap: 22px; }
+}
+
+.scrub.activo + .video-completo { padding-top: 28px; }
+.scrub.activo + .video-completo .ver-con-audio { display: inline-flex; }
+.scrub.activo + .video-completo .video-producto { display: none; }
+.scrub.activo + .video-completo.abierto .video-producto { display: block; }
+.capitulo-video .boton-secundario { color: #fff; border-color: rgba(255,255,255,.28); background: transparent; }
+
 .captura { margin: 0; }
 .captura img { display: block; width: 100%; height: auto; border-radius: 22px; border: 1px solid var(--linea); box-shadow: var(--sombra-2); background: var(--superficie-2); }
 .captura figcaption { margin-top: 14px; font-size: 15px; color: var(--tinta-2); line-height: 1.5; }

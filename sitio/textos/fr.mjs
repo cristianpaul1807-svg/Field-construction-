@@ -547,6 +547,10 @@ export default {
     nombre: "Logiciel Construction — comment ça marche",
     sinVideo: "Votre navigateur ne lit pas cette vidéo.",
     descargar: "Téléchargez-la ici",
+    pistaInicio: "Du chantier",
+    pistaFin: "au paiement",
+    desplaza: "Faites défiler pour avancer",
+    conAudio: "Regardez-la avec le son",
   },
   capturas: {
     sobre: "Voilà de quoi ça a l'air",

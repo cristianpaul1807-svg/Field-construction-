@@ -42,7 +42,7 @@ function htmlDe(dir) {
 const enlazados = new Set();
 for (const pagina of htmlDe(PAGINAS)) {
   const html = fs.readFileSync(pagina, "utf8");
-  for (const m of html.matchAll(/(?:src|href|poster)="(\/sitio\/[^"#?]+)/g)) enlazados.add(m[1]);
+  for (const m of html.matchAll(/(?:src|href|poster|data-src)="(\/sitio\/[^"#?]+)/g)) enlazados.add(m[1]);
 }
 // Lo que pide el CSS (las letras) también va por el servidor.
 const css = fs.readFileSync(path.join(PAGINAS, "estilo.css"), "utf8");

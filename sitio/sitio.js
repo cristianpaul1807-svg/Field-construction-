@@ -26,6 +26,111 @@ document.documentElement.classList.add("js");
   entran.forEach(function (el) { vigia.observe(el); });
 })();
 
+/* ---------- El vídeo que avanza con el scroll ----------
+ *
+ * Copiado del motor de Ta Maison, con lo que allí se aprendió en producción:
+ *
+ * - El vídeo no se pausa nunca. Safari pinta su botón de reproducir encima de
+ *   cualquier vídeo pausado, llegue como llegue a ese estado; la única forma
+ *   de que no salga es tenerlo «reproduciendo» a velocidad 0. Si el navegador
+ *   lo pausa solo (cambio de pestaña, ahorro de batería), se vuelve a cebar.
+ * - El scroll es lo único que mueve el fotograma: `currentTime` en un
+ *   `requestAnimationFrame`, como mucho uno por pantalla pintada.
+ *
+ * El archivo (`data-src`) no se pide hasta que la sección está a una pantalla
+ * y media: son 6 MB que no tiene por qué pagar quien no baja hasta aquí. Si
+ * el navegador no puede con él, el tramo se apaga y queda el reproductor
+ * normal, en vez de seis pantallas de póster quieto. */
+(function () {
+  var tramos = document.querySelectorAll(".scrub");
+  if (!tramos.length) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!("IntersectionObserver" in window)) return;
+
+  tramos.forEach(function (tramo) {
+    var video = tramo.querySelector(".scrub-video");
+    var completo = tramo.nextElementSibling;
+    if (!video || !video.dataset.src) return;
+    var relleno = tramo.querySelector(".relleno");
+    var cue = tramo.querySelector(".scrub-cue");
+    var listo = false;
+    var duracion = 0;
+    var pendiente = false;
+
+    tramo.classList.add("activo");
+
+    function apagar() {
+      tramo.classList.remove("activo");
+      document.removeEventListener("scroll", alMover);
+      window.removeEventListener("resize", alMover);
+    }
+
+    function cebar() {
+      var p = video.play();
+      var congelar = function () { video.playbackRate = 0; };
+      if (p && typeof p.then === "function") {
+        p.then(congelar).catch(function () { try { video.currentTime = 0.01; } catch (e) {} });
+      } else {
+        congelar();
+      }
+    }
+
+    function pintar() {
+      pendiente = false;
+      var caja = tramo.getBoundingClientRect();
+      var total = tramo.offsetHeight - window.innerHeight;
+      if (total <= 0) return;
+      var avance = Math.min(Math.max(-caja.top, 0), total) / total;
+      if (listo && duracion && caja.top < window.innerHeight && caja.bottom > 0) {
+        video.currentTime = avance * duracion;
+      }
+      if (relleno) relleno.style.width = avance * 100 + "%";
+      if (cue) cue.style.opacity = avance < 0.04 ? 1 : 0;
+    }
+
+    function alMover() {
+      if (pendiente) return;
+      pendiente = true;
+      requestAnimationFrame(pintar);
+    }
+
+    video.addEventListener("loadedmetadata", function () {
+      listo = true;
+      duracion = video.duration;
+      cebar();
+      pintar();
+    });
+    video.addEventListener("pause", function () { if (listo) cebar(); });
+    video.addEventListener("error", apagar);
+
+    var vigia = new IntersectionObserver(function (entradas) {
+      if (!entradas.some(function (e) { return e.isIntersecting; })) return;
+      vigia.disconnect();
+      video.src = video.dataset.src;
+      video.load();
+    }, { rootMargin: "150% 0px 150% 0px" });
+    vigia.observe(tramo);
+
+    document.addEventListener("scroll", alMover, { passive: true });
+    window.addEventListener("resize", alMover);
+    pintar();
+
+    // «Con el audio»: el reproductor normal, debajo, y arrancado por el
+    // propio toque, que es lo que deja al navegador sonar.
+    var boton = completo && completo.querySelector(".ver-con-audio");
+    var normal = completo && completo.querySelector(".video-producto video");
+    if (boton && normal) {
+      boton.addEventListener("click", function () {
+        completo.classList.add("abierto");
+        boton.hidden = true;
+        var p = normal.play();
+        if (p && typeof p.catch === "function") p.catch(function () {});
+        normal.focus();
+      });
+    }
+  });
+})();
+
 /* ---------- Selector de idioma ----------
  *
  * El desplegable es un `<details>`, así que se abre y se cierra sin esto. Lo

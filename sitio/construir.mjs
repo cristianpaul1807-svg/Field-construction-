@@ -412,7 +412,7 @@ function paginaInicio(idioma) {
               thumbnailUrl: `${DOMINIO}/sitio/videos/logiciel-${idioma.codigo}.jpg`,
               contentUrl: `${DOMINIO}/sitio/videos/logiciel-${idioma.codigo}.mp4`,
               uploadDate: "2026-10-10",
-              duration: VIDEOS[idioma.codigo],
+              duration: duracionIso(VIDEOS[idioma.codigo]),
             },
           ]
         : []),
@@ -575,34 +575,67 @@ ${cierre(idioma, {
 }
 
 /**
- * Los vídeos del producto que hay, con su duración (ISO 8601, para el
- * VideoObject que leen los buscadores). Un idioma que no está aquí no enseña
- * vídeo: mejor ninguno que uno con la voz de otro idioma. Cuando llegue el
- * suyo, se deja el archivo en `sitio/videos/` y se añade una línea.
+ * Los vídeos del producto que hay, con su duración en segundos. Un idioma que
+ * no está aquí no enseña vídeo: mejor ninguno que uno con la voz de otro
+ * idioma. Cuando llegue el suyo, se dejan sus archivos en `sitio/videos/`
+ * (ver docs/funciones/sitio-web.md) y se añade una línea.
  */
-const VIDEOS = { it: "PT1M47S", fr: "PT1M32S" };
+const VIDEOS = { it: 106.5, fr: 92.0 };
+
+/** La duración como la leen los buscadores en el VideoObject: `PT1M47S`. */
+function duracionIso(segundos) {
+  const s = Math.round(segundos);
+  return `PT${Math.floor(s / 60)}M${s % 60}S`;
+}
 
 /**
- * El vídeo del producto, donde lo hay.
- * `preload="none"` porque son 7 MB que no tiene por qué
- * pagar quien no lo pulsa; el póster es el primer fotograma de título, para
- * que antes de darle a reproducir no se vea un recuadro negro.
+ * El vídeo del producto, avanzando con el scroll —como en Ta Maison—.
+ *
+ * Una pantalla fija (`position: sticky`) dentro de un tramo alto de página: al
+ * bajar, el vídeo avanza; al subir, retrocede. No se reproduce solo. Lo mueve
+ * `sitio.js`, con la versión `-scroll.mp4` (sin audio y con un fotograma clave
+ * cada medio segundo, para que ir hacia atrás no dé tirones).
+ *
+ * El tramo mide unos 5,5 vh por segundo de vídeo: lo bastante para leer cada
+ * escena sin que haya que bajar veinte pantallas. En Ta Maison eran 34 vh por
+ * segundo, pero su vídeo duraba diez segundos y éste casi dos minutos.
+ *
+ * Sin JavaScript, con «reducir movimiento» o si el navegador no puede con el
+ * vídeo, el tramo no se activa y queda el reproductor normal, con audio. Con
+ * el tramo activo, el mismo reproductor está a un botón: «con el audio».
  */
 function seccionVideo(idioma) {
   const t = idioma.video;
-  if (!VIDEOS[idioma.codigo]) return "";
-  const src = `/sitio/videos/logiciel-${idioma.codigo}.mp4`;
-  return `  <section class="seccion">
-    <div class="envoltura">
-      <div class="encabezado-seccion">
-        <p class="sobretitulo">${esc(t.sobre)}</p>
-        <h2>${esc(t.h2)}</h2>
-        <p class="entradilla">${esc(t.entradilla)}</p>
+  const segundos = VIDEOS[idioma.codigo];
+  if (!segundos) return "";
+  const base = `/sitio/videos/logiciel-${idioma.codigo}`;
+  const alto = Math.round(segundos * 5.5);
+  return `  <section class="capitulo-video" aria-label="${esc(t.etiqueta)}">
+    <div class="scrub" style="--alto:${alto}vh">
+      <div class="scrub-pantalla">
+        <div class="envoltura scrub-texto">
+          <p class="sobretitulo">${esc(t.sobre)}</p>
+          <h2>${esc(t.h2)}</h2>
+          <p class="entradilla">${esc(t.entradilla)}</p>
+        </div>
+        <div class="scrub-lienzo">
+          <video class="scrub-video" muted playsinline webkit-playsinline autoplay preload="none" width="1280" height="720" poster="${base}.jpg" data-src="${base}-scroll.mp4" disablepictureinpicture disableremoteplayback aria-hidden="true" tabindex="-1"></video>
+        </div>
+        <div class="envoltura scrub-pie">
+          <div class="scrub-pista" aria-hidden="true"><span>${esc(t.pistaInicio)}</span><span class="pista"><span class="relleno"></span></span><span>${esc(t.pistaFin)}</span></div>
+          <p class="scrub-cue" aria-hidden="true">${esc(t.desplaza)}</p>
+        </div>
       </div>
-      <div class="video-producto aparece">
-        <video controls playsinline preload="none" width="1920" height="1080" poster="/sitio/videos/logiciel-${idioma.codigo}.jpg" aria-label="${esc(t.etiqueta)}">
-          <source src="${src}" type="video/mp4">
-          <p>${esc(t.sinVideo)} <a href="${src}">${esc(t.descargar)}</a></p>
+    </div>
+    <div class="envoltura video-completo">
+      <button type="button" class="boton boton-secundario ver-con-audio">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        ${esc(t.conAudio)}
+      </button>
+      <div class="video-producto">
+        <video controls playsinline preload="none" width="1920" height="1080" poster="${base}.jpg" aria-label="${esc(t.etiqueta)}">
+          <source src="${base}.mp4" type="video/mp4">
+          <p>${esc(t.sinVideo)} <a href="${base}.mp4">${esc(t.descargar)}</a></p>
         </video>
       </div>
     </div>
@@ -1148,7 +1181,7 @@ function comprobarEnlaces(rutas) {
       // `href` y `src`: el logo entra por `src`, y una imagen que falta se ve
       // igual de mal que un enlace roto. `poster` también: sin él, el vídeo
       // es un recuadro negro hasta que alguien le da a reproducir.
-      for (const [, destino] of html.matchAll(/(?:href|src|poster)="([^"]+)"/g)) {
+      for (const [, destino] of html.matchAll(/(?:href|src|poster|data-src)="([^"]+)"/g)) {
         if (/^(https?:|mailto:|#|data:)/.test(destino)) continue;
         if (validas.has(destino) || deLaAplicacion.has(destino)) {
           paginas += 1;

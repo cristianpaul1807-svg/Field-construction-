@@ -119,26 +119,46 @@ npx vite build && node sitio/capturas.mjs && node sitio/construir.mjs
 Las imágenes se guardan en `sitio/capturas/` (no corre en el despliegue, que
 no tiene navegador). Si una pantalla cambia, se vuelven a sacar.
 
-### El vídeo del producto
+### El vídeo del producto, avanzando con el scroll
 
-En la portada, justo después de la cabecera, va un vídeo de unos dos minutos
-**sólo en los idiomas que tienen el suyo**: hoy italiano y francés. La lista
-está en `VIDEOS` de `sitio/construir.mjs`, con la duración de cada uno (la
-leen los buscadores, en el `VideoObject`). Inglés y español no enseñan vídeo:
-mejor ninguno que uno con la voz de otro idioma. Cuando llegue el suyo:
+En la portada, justo después de la cabecera, el vídeo de unos dos minutos
+**avanza con el scroll**, como en Ta Maison (el motor sale de su
+`scroll-scrub-site`): una pantalla fija dentro de un tramo alto; al bajar el
+vídeo avanza y al subir retrocede. No se reproduce solo. Debajo, un botón
+**«con el audio»** abre el reproductor normal.
 
-1. Deja `logiciel-<idioma>.mp4` en `sitio/videos/` (H.264 + AAC, con el
-   índice al principio para que arranque sin descargarse entero:
-   `ffmpeg -i entrada.mp4 -c copy -movflags +faststart logiciel-xx.mp4`).
-2. Saca el póster del fotograma del título:
+Sólo en los idiomas que tienen el suyo: hoy italiano y francés. La lista está
+en `VIDEOS` de `sitio/construir.mjs`, con la duración en segundos; de ahí
+salen el alto del tramo (5,5 vh por segundo) y la duración del
+`VideoObject` que leen los buscadores. Cuando llegue otro idioma:
+
+1. `sitio/videos/logiciel-xx.mp4`: el vídeo con audio (H.264 + AAC, índice
+   al principio: `ffmpeg -i entrada.mp4 -c copy -movflags +faststart logiciel-xx.mp4`).
+2. `logiciel-xx-scroll.mp4`: la versión del scroll, sin audio y con un
+   fotograma clave cada medio segundo para que ir hacia atrás no dé tirones:
+   `ffmpeg -i logiciel-xx.mp4 -an -vf "scale=1280:-2,fps=24" -c:v libx264 -preset slow -crf 27 -tune animation -g 12 -keyint_min 12 -sc_threshold 0 -pix_fmt yuv420p -movflags +faststart logiciel-xx-scroll.mp4`.
+3. `logiciel-xx.jpg`: el póster, del fotograma del título:
    `ffmpeg -ss 2 -i logiciel-xx.mp4 -frames:v 1 -vf scale=1280:-2 -q:v 4 logiciel-xx.jpg`.
-3. Añade la línea a `VIDEOS` con su duración (`PT1M47S`).
+4. La línea en `VIDEOS`.
 
-Va con `preload="none"`: son 7 MB que sólo descarga quien le da a
-reproducir. El servidor los sirve por trozos (`Range` → 206), que es lo que
-pide Safari en el iPhone; sin eso el vídeo no arranca.
-`scripts/comprobar-sitio-servido.mjs` lo comprueba contra el servidor de
-producción.
+Lo que no hay que «arreglar» en `sitio.js`, porque viene aprendido de
+producción en Ta Maison:
+
+- **El vídeo no se pausa nunca.** Safari pinta su botón de reproducir sobre
+  cualquier vídeo pausado; se deja «reproduciendo» a velocidad 0 y el scroll
+  mueve `currentTime`. Si el navegador lo pausa solo, se vuelve a cebar.
+- **El servidor tiene que servirlo por trozos** (`Range` → 206). Sin eso el
+  navegador no puede saltar a otro fotograma y el vídeo se queda en el
+  primero. `scripts/comprobar-sitio-servido.mjs` lo comprueba.
+
+El archivo no se pide hasta que la sección está a pantalla y media (son
+6 MB). Sin JavaScript, con «reducir movimiento» o si el navegador no puede
+con el vídeo, el tramo no se activa y queda el reproductor normal con audio.
+
+`object-fit: contain`, no `cover`: el vídeo lleva texto, y en un teléfono en
+vertical `cover` le cortaría los lados. Por eso en el móvil se ve como una
+banda centrada; para que ocupe la pantalla entera haría falta una versión
+vertical (9:16) del vídeo.
 
 ### Las legales no se escriben aquí
 

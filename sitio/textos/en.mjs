@@ -541,6 +541,10 @@ export default {
     nombre: "Logiciel Construction — how it works",
     sinVideo: "Your browser can't play this video.",
     descargar: "Download it here",
+    pistaInicio: "From the site",
+    pistaFin: "to getting paid",
+    desplaza: "Scroll to move forward",
+    conAudio: "Watch it with sound",
   },
   capturas: {
     sobre: "What it looks like",

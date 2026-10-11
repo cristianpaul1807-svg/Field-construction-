@@ -541,6 +541,10 @@ export default {
     nombre: "Logiciel Construction — cómo funciona",
     sinVideo: "Tu navegador no puede reproducir este vídeo.",
     descargar: "Descárgalo aquí",
+    pistaInicio: "De la obra",
+    pistaFin: "al cobro",
+    desplaza: "Desliza para avanzar",
+    conAudio: "Míralo con el audio",
   },
   capturas: {
     sobre: "Así se ve",
