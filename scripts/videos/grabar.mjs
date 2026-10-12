@@ -21,6 +21,8 @@
  *   LOGICIEL_PRUEBA_CODIGO_CLIENTE  el código de un cliente (portal)
  *   AZURE_SPEECH_KEY / _REGION      la voz por el servicio oficial de Microsoft
  *                                   (la misma Sylvie); sin ellas, edge-tts
+ *   PIPER_MODELO                    ruta a una voz Piper (.onnx): libre y local,
+ *                                   para cuando no hay ninguna de las otras
  *   SIN_VOZ=1                       ensayar sin pedir ninguna voz: sale mudo,
  *                                   con el ritmo que tendría hablado
  *
@@ -72,7 +74,10 @@ function voz(idioma, texto) {
   // es el del vídeo de verdad, pero sale mudo.
   if (process.env.SIN_VOZ) return { archivo: null, segundos: limpio.length / 15 };
   fs.mkdirSync(CACHE_VOZ, { recursive: true });
-  const archivo = path.join(CACHE_VOZ, `${createHash("sha1").update(`${VOCES[idioma]}|${limpio}`).digest("hex")}.mp3`);
+  // La voz que suena entra en la clave: una frase dicha por Piper no puede
+  // salir de la caché en un vídeo que se graba con Sylvie, ni al revés.
+  const quien = process.env.PIPER_MODELO ? `piper:${path.basename(process.env.PIPER_MODELO)}` : VOCES[idioma];
+  const archivo = path.join(CACHE_VOZ, `${createHash("sha1").update(`${quien}|${limpio}`).digest("hex")}.mp3`);
   if (!fs.existsSync(archivo) || fs.statSync(archivo).size === 0) {
     execFileSync("/usr/bin/python3", [path.join(AQUI, "voz.py"), VOCES[idioma], archivo, limpio], {
       env: { ...process.env, SSL_CERT_FILE: process.env.SSL_CERT_FILE || "/root/.ccr/ca-bundle.crt" },
@@ -121,7 +126,7 @@ function puntero() {
     #lc-subtitulo{position:fixed;z-index:2147483645;left:50%;bottom:6%;transform:translateX(-50%);max-width:min(88vw,1200px);padding:14px 26px;border-radius:16px;background:rgba(11,18,32,.88);color:#fff;font:600 clamp(16px,2.2vw,30px)/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.35);transition:opacity .25s;pointer-events:none}
     #lc-subtitulo:empty{opacity:0}
     #lc-subtitulo.arriba{bottom:auto;top:11%}
-    #lc-tarjeta{position:fixed;inset:0;z-index:2147483644;display:flex;flex-direction:column;justify-content:center;padding:0 9vw;background:radial-gradient(ellipse 80% 70% at 50% 0%,#1d3f8a 0%,#0f2350 45%,#0B1220 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;opacity:0;transition:opacity .35s}
+    #lc-tarjeta{position:fixed;inset:0;z-index:2147483644;pointer-events:none;display:flex;flex-direction:column;justify-content:center;padding:0 9vw;background:radial-gradient(ellipse 80% 70% at 50% 0%,#1d3f8a 0%,#0f2350 45%,#0B1220 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;opacity:0;transition:opacity .35s}
     #lc-tarjeta.ve{opacity:1}
     #lc-tarjeta .marca{position:absolute;top:5.5vh;left:9vw;display:flex;align-items:center;gap:12px;font-weight:800;font-size:clamp(14px,1.7vw,22px);letter-spacing:-.02em;opacity:.92}
     #lc-tarjeta .marca span{width:clamp(30px,3.4vw,44px);height:clamp(30px,3.4vw,44px);border-radius:28%;background:#fff;display:grid;place-items:center}
@@ -630,6 +635,8 @@ async function grabar(nombre, idioma) {
       `${prueba} ${enlace}`,
       ...(validos ? ["", capTitulo, ...caps.map((c) => `${mmss(c.t)} ${c.titulo}`)] : []),
       "",
+      // La voz de Piper (SIWIS) es CC BY 4.0: se puede usar citándola.
+      ...(process.env.PIPER_MODELO ? ["Voix : corpus SIWIS (CC BY 4.0), synthèse Piper.", ""] : []),
       yt.hashtags.map((h) => `#${h}`).join(" "),
       "",
       `TAGS / ETIQUETAS:\n${yt.etiquetas.join(", ")}`,

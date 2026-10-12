@@ -56,8 +56,28 @@ async def main(voz: str, salida: str, texto: str) -> None:
     await edge_tts.Communicate(texto, voz, rate="+4%").save(salida)
 
 
+def piper(salida: str, texto: str) -> None:
+    """Una voz libre que corre aquí mismo, sin cuenta ni red (Piper).
+
+    Para cuando no hay clave de Azure y edge-tts está cortado. Suena menos
+    natural y no hay voz de Quebec: es el recurso, no la opción buena.
+    PIPER_MODELO es la ruta al .onnx de la voz.
+    """
+    import subprocess
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(suffix=".wav") as wav:
+        subprocess.run(
+            [sys.executable, "-m", "piper", "-m", os.environ["PIPER_MODELO"], "-f", wav.name],
+            input=texto.encode("utf-8"), check=True, capture_output=True,
+        )
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", wav.name, "-b:a", "128k", salida], check=True)
+
+
 if __name__ == "__main__":
-    if os.environ.get("AZURE_SPEECH_KEY") and os.environ.get("AZURE_SPEECH_REGION"):
+    if os.environ.get("PIPER_MODELO"):
+        piper(sys.argv[2], sys.argv[3])
+    elif os.environ.get("AZURE_SPEECH_KEY") and os.environ.get("AZURE_SPEECH_REGION"):
         azure(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
         asyncio.run(main(sys.argv[1], sys.argv[2], sys.argv[3]))

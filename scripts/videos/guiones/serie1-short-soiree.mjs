@@ -64,10 +64,8 @@ export default {
     await decir(t.lineas, 0, { arriba: true });
     for (const l of LINEAS[idioma].slice(0, 2)) {
       await escribir(bloque.locator(`input[placeholder="${t.b.zona}"]`), l.zona, { rapido: true });
-      await tocar(bloque.getByRole("combobox").nth(0), 250);
-      await tocar(pagina.getByRole("option", { name: t.b.categoria[l.categoria] }), 250);
-      await tocar(bloque.getByRole("combobox").nth(1), 250);
-      await tocar(pagina.getByRole("option", { name: t.b.otro }), 250);
+      await elegir(bloque.getByRole("combobox").nth(0), t.b.categoria[l.categoria], 250);
+      await elegir(bloque.getByRole("combobox").nth(1), t.b.otro, 250);
       await escribir(bloque.locator(`input[placeholder="${t.b.item}"]`), l.item, { rapido: true });
       const numeros = bloque.locator('input[type="number"]');
       await escribir(numeros.nth(0), String(l.cantidad), { rapido: true });

@@ -91,10 +91,8 @@ export default {
       const r = { rapido: i > 0 };
       await decir(frases[i], 0);
       await escribir(bloque.locator(`input[placeholder="${t.b.zona}"]`), l.zona, r);
-      await tocar(bloque.getByRole("combobox").nth(0), 350);
-      await tocar(pagina.getByRole("option", { name: t.b.categoria[l.categoria] }), 350);
-      await tocar(bloque.getByRole("combobox").nth(1), 350);
-      await tocar(pagina.getByRole("option", { name: t.b.otro }), 350);
+      await elegir(bloque.getByRole("combobox").nth(0), t.b.categoria[l.categoria], 350);
+      await elegir(bloque.getByRole("combobox").nth(1), t.b.otro, 350);
       await escribir(bloque.locator(`input[placeholder="${t.b.item}"]`), l.item, r);
       const numeros = bloque.locator('input[type="number"]');
       await escribir(numeros.nth(0), String(l.cantidad), r);
