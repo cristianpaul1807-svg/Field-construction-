@@ -555,8 +555,9 @@ async function grabar(nombre, idioma) {
   pagina.on("pageerror", (e) => errores.push(String(e)));
 
   let fallo = null;
+  const util = herramientas(pagina, idioma, inicio);
   try {
-    await guion.pasos(herramientas(pagina, idioma, inicio));
+    await guion.pasos(util);
   } catch (err) {
     fallo = err;
   }
@@ -564,6 +565,12 @@ async function grabar(nombre, idioma) {
   // screencast sólo manda fotogramas cuando algo cambia.
   const fin = Date.now() / 1000;
   await cdp.send("Page.stopScreencast").catch(() => {});
+  // Lo que se hace ya sin cámara: sobre todo, cambiar los códigos de acceso
+  // que han salido en pantalla, para que el que se ve en el vídeo no abra
+  // nada. Va también cuando el guion falla a medias.
+  if (guion.despues && util) {
+    try { await guion.despues(util); } catch (e) { console.error(`  (después de «${nombre}»: ${e.message})`); }
+  }
   await contexto.close();
   await navegador.close();
 

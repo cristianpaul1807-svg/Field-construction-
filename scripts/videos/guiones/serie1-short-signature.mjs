@@ -2,7 +2,7 @@
  * Serie 1, Short «la firma»: el gancho es el cliente que dice que firma
  * mañana y no firma nunca; debajo, el cliente entrando y firmando con el dedo.
  */
-import { asegurarCliente, borrarPresupuestosDe, soumissionPreparada } from "../demo.mjs";
+import { asegurarCliente, borrarPresupuestosDe, soumissionPreparada, cambiarCodigos } from "../demo.mjs";
 import { FINAL_SERIE1 } from "./serie1-comun.mjs";
 
 const T = {
@@ -32,6 +32,8 @@ export default {
   formato: "vertical",
   textos: T,
   youtube,
+  // Los códigos que salen tecleados en el vídeo dejan de valer al acabar.
+  despues: (util) => cambiarCodigos(util, util.idioma),
   async pasos({ pagina, BASE, idioma, gancho, soltarGancho, tarjeta, resaltar, decir, callar, entrar, api, tocar, escribir, pausa }) {
     const t = T[idioma];
     if (!t) throw new Error(`sin textos en ${idioma}`);

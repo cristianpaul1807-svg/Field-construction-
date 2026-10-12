@@ -9,7 +9,7 @@
  * soumission, el cliente la firma en su portal, y el contratista encuentra la
  * obra ya creada. Los cambios de sesión van tapados por las tarjetas.
  */
-import { CLIENTE, LINEAS, asegurarCliente, borrarPresupuestosDe } from "../demo.mjs";
+import { CLIENTE, LINEAS, asegurarCliente, borrarPresupuestosDe, cambiarCodigos } from "../demo.mjs";
 
 const T = {
   fr: {
@@ -61,6 +61,8 @@ export default {
   formato: "horizontal",
   textos: T,
   youtube,
+  // Los códigos que salen tecleados en el vídeo dejan de valer al acabar.
+  despues: (util) => cambiarCodigos(util, util.idioma),
   async pasos({ pagina, BASE, idioma, tarjeta, capitulo, resaltar, decir, callar, entrar, api, tocar, elegir, escribir, deslizar, pausa }) {
     const t = T[idioma];
     if (!t) throw new Error(`sin textos en ${idioma}`);

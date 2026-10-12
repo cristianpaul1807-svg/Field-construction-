@@ -104,3 +104,88 @@ export async function soumissionPreparada(api, idioma, { enviada = false, margen
   }
   return id;
 }
+
+/**
+ * El trabajador de la historia, listo para grabar: dado de alta, con su
+ * jornada de hoy (7:00–15:30 en la hora de `manana`) en la obra de la
+ * familia, sin lo programado en grabaciones anteriores y sin fichajes abiertos.
+ *
+ * `codigo`: genera uno nuevo y lo devuelve. Sin él, el código se genera
+ * delante de la cámara, desde el panel.
+ */
+export async function trabajadorPreparado(api, idioma, manana, { codigo = true } = {}) {
+  const quien = TRABAJADOR[idioma];
+  const rol = ((await api("GET", "/api/worker-roles")).datos ?? []).find((r) => r.name === "trabajador_de_campo");
+  if (!rol) throw new Error("el negocio no tiene el rol de trabajador de campo");
+  let empleado = ((await api("GET", "/api/employees")).datos ?? []).find((e) => e.name === quien.name);
+  if (!empleado) {
+    const creado = await api("POST", "/api/employees", { name: quien.name, role: quien.role, phone: quien.phone, roleId: rol.id });
+    if (!creado.ok) throw new Error(`no se pudo crear el trabajador (${creado.estado})`);
+    empleado = creado.datos;
+  }
+  const obras = ((await api("GET", "/api/projects")).datos ?? []).filter((p) => p.clientName === CLIENTE[idioma].name);
+  const obra = obras.sort((a, b) => b.budgetTotal - a.budgetTotal)[0];
+  if (!obra) throw new Error("no hay obra de la familia: graba antes la serie 1");
+  for (const e of ((await api("GET", "/api/schedule-events")).datos ?? []).filter((e) => e.assignedWorkerId === empleado.id)) {
+    await api("DELETE", `/api/schedule-events/${e.id}`);
+  }
+  const cita = await api("POST", "/api/schedule-events", {
+    projectId: obra.id, title: quien.tarea, type: "visita",
+    startTime: manana.hora(7), endTime: manana.hora(15, 30), assignedEmployeeId: empleado.id,
+  });
+  if (!cita.ok) throw new Error(`no se pudo programar su jornada (${cita.estado})`);
+  let token = null;
+  if (codigo) {
+    token = (await api("POST", `/api/employees/${empleado.id}/access-token`)).datos?.token;
+    if (!token) throw new Error("no se pudo generar el código del trabajador");
+  }
+  return { empleado, obra, token, citaId: cita.datos?.id };
+}
+
+/**
+ * Fichar (o cerrar el fichaje abierto) como el trabajador, sin pasar por su
+ * pantalla: para los vídeos que empiezan con él ya en la obra, y para no
+ * dejar un fichaje abierto al terminar.
+ */
+export function fichajeDelTrabajador(pagina, token, gps) {
+  const llamar = (ruta, cuerpo) =>
+    pagina.evaluate(async ([r, t, c]) => {
+      const res = await fetch(r, {
+        method: c === undefined ? "GET" : "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+        body: c === undefined ? undefined : JSON.stringify(c),
+      });
+      return { ok: res.ok, estado: res.status, datos: await res.json().catch(() => null) };
+    }, [ruta, token, cuerpo]);
+  return {
+    async entrar(projectId, scheduleEventId) {
+      const r = await llamar("/api/worker/time-entries/check-in", { projectId, scheduleEventId, billable: true, ...gps });
+      if (!r.ok) throw new Error(`no se pudo fichar la entrada (${r.estado})`);
+    },
+    async salir() {
+      const abierto = await llamar("/api/worker/time-entries/active");
+      if (abierto.datos?.id) await llamar(`/api/worker/time-entries/${abierto.datos.id}/check-out`, gps);
+    },
+  };
+}
+
+/**
+ * Para el `despues` de cada guion: cambia los códigos del trabajador y del
+ * cliente de la historia, que salen tecleados en pantalla. El que se ve en un
+ * vídeo publicado deja de abrir nada en cuanto acaba la grabación. Y si el
+ * trabajador quedó fichado, le cierra el fichaje con su código nuevo.
+ */
+export async function cambiarCodigos({ pagina, entrar, api }, idioma) {
+  await pagina.evaluate(() => {
+    for (const k of Object.keys(localStorage)) if (k !== "fsm-language") localStorage.removeItem(k);
+  });
+  await entrar();
+  const empleado = ((await api("GET", "/api/employees")).datos ?? []).find((e) => e.name === TRABAJADOR[idioma].name);
+  if (empleado) {
+    const token = (await api("POST", `/api/employees/${empleado.id}/access-token`)).datos?.token;
+    if (token) await fichajeDelTrabajador(pagina, token, TRABAJADOR[idioma].obra).salir();
+  }
+  const cliente = ((await api("GET", "/api/clients")).datos ?? []).find((c) => c.name === CLIENTE[idioma].name);
+  // Sin correo, así que no le llega a nadie (ver CLIENTE).
+  if (cliente && !cliente.email) await api("POST", `/api/clients/${cliente.id}/access-token`);
+}

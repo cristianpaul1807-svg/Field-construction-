@@ -6,7 +6,7 @@
  * etapas tiene marcado que el equipo está allí, que es lo que el cliente
  * quiere saber.
  */
-import { asegurarCliente } from "../demo.mjs";
+import { asegurarCliente, cambiarCodigos } from "../demo.mjs";
 
 const T = {
   fr: {
@@ -46,6 +46,8 @@ export default {
   formato: "vertical",
   textos: T,
   youtube,
+  // Los códigos que salen tecleados en el vídeo dejan de valer al acabar.
+  despues: (util) => cambiarCodigos(util, util.idioma),
   async pasos({ pagina, BASE, idioma, tarjeta, resaltar, decir, callar, entrar, api, tocar, escribir, pausa }) {
     const t = T[idioma];
     if (!t) throw new Error(`sin textos en ${idioma}`);

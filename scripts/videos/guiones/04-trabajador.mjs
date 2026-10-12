@@ -6,7 +6,7 @@
  * El trabajador es uno de demostración, no uno de verdad de la cuenta: generar
  * un código nuevo deja sin acceso al que tuviera el anterior.
  */
-import { CLIENTE, TRABAJADOR, primeraHora } from "../demo.mjs";
+import { CLIENTE, TRABAJADOR, primeraHora, cambiarCodigos } from "../demo.mjs";
 
 const MANANA = primeraHora();
 
@@ -43,6 +43,8 @@ export default {
   formato: "vertical",
   textos: T,
   youtube,
+  // Los códigos que salen tecleados en el vídeo dejan de valer al acabar.
+  despues: (util) => cambiarCodigos(util, util.idioma),
   contexto: (idioma) => ({
     geolocation: TRABAJADOR[idioma].obra,
     permissions: ["geolocation"],
