@@ -21,9 +21,43 @@ if ca and os.path.exists(ca):
     communicate._SSL_CTX = ssl.create_default_context(cafile=ca)
 
 
+def azure(voz: str, salida: str, texto: str) -> None:
+    """La misma voz por el servicio oficial (Azure Speech), con licencia.
+
+    edge-tts usa la puerta del navegador Edge, que no es para esto: en
+    octubre de 2026 empezó a contestar 403 a todo y no hubo arreglo. Con
+    AZURE_SPEECH_KEY y AZURE_SPEECH_REGION se va por la de pago, que tiene un
+    nivel gratuito de sobra para un canal.
+    """
+    import urllib.request
+    from xml.sax.saxutils import escape
+
+    idioma = "-".join(voz.split("-")[:2])
+    ssml = (
+        f'<speak version="1.0" xml:lang="{idioma}"><voice name="{voz}">'
+        f'<prosody rate="+4%">{escape(texto)}</prosody></voice></speak>'
+    )
+    peticion = urllib.request.Request(
+        f"https://{os.environ['AZURE_SPEECH_REGION']}.tts.speech.microsoft.com/cognitiveservices/v1",
+        data=ssml.encode("utf-8"),
+        headers={
+            "Ocp-Apim-Subscription-Key": os.environ["AZURE_SPEECH_KEY"],
+            "Content-Type": "application/ssml+xml",
+            "X-Microsoft-OutputFormat": "audio-24khz-96kbitrate-mono-mp3",
+            "User-Agent": "logiciel-construction-videos",
+        },
+    )
+    contexto = ssl.create_default_context(cafile=ca) if ca and os.path.exists(ca) else None
+    with urllib.request.urlopen(peticion, context=contexto, timeout=60) as r, open(salida, "wb") as f:
+        f.write(r.read())
+
+
 async def main(voz: str, salida: str, texto: str) -> None:
     await edge_tts.Communicate(texto, voz, rate="+4%").save(salida)
 
 
 if __name__ == "__main__":
-    asyncio.run(main(sys.argv[1], sys.argv[2], sys.argv[3]))
+    if os.environ.get("AZURE_SPEECH_KEY") and os.environ.get("AZURE_SPEECH_REGION"):
+        azure(sys.argv[1], sys.argv[2], sys.argv[3])
+    else:
+        asyncio.run(main(sys.argv[1], sys.argv[2], sys.argv[3]))

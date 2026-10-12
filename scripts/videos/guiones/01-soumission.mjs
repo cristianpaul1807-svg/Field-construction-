@@ -59,6 +59,9 @@ export default {
     await decir(t.cliente, 0);
     await tocar(pagina.getByRole("button", { name: t.b.nueva }).first(), 900);
     const dialogo = pagina.getByRole("dialog");
+    // Mientras cargan los clientes su desplegable no existe, y el primero es
+    // el de la obra, que también tiene una «Famille Tremblay»: se esperan los tres.
+    for (let i = 0; i < 40 && (await dialogo.getByRole("combobox").count()) < 3; i++) await pausa(250);
     await tocar(dialogo.getByRole("combobox").first(), 600);
     await tocar(pagina.getByRole("option", { name: CLIENTE[idioma].name }), 600);
     await tocar(dialogo.getByRole("button", { name: t.b.crear }), 2000);

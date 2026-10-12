@@ -68,3 +68,39 @@ export const TRABAJADOR = {
   fr: { name: "Jean-Philippe Roy", role: "Charpentier-menuisier", phone: "514 555-0177", tarea: "Démolition de la cuisine", obra: { latitude: 45.5299, longitude: -73.5806 } },
   it: { name: "Marco Bianchi", role: "Muratore", phone: "333 555 0177", tarea: "Demolizione della cucina", obra: { latitude: 41.8846, longitude: 12.4731 } },
 };
+
+/** Las líneas de la soumission de la historia: el baño de la familia. */
+export const LINEAS = {
+  fr: [
+    { zona: "Salle de bain", categoria: "Materiales", item: "Céramique murale 12 x 24 po", cantidad: 120, unidad: "pi²", precio: 6.5 },
+    { zona: "Salle de bain", categoria: "Mano de obra", item: "Carreleur", cantidad: 24, unidad: "h", precio: 65 },
+    { zona: "Salle de bain", categoria: "Materiales", item: "Vanité 36 po avec comptoir", cantidad: 1, unidad: "unité", precio: 890 },
+  ],
+};
+
+/**
+ * Una soumission ya hecha, fuera de cámara, para los vídeos que empiezan
+ * después: el Short de la firma necesita una enviada, el de las taxes una en
+ * borrador. Así cada Short se graba solo, sin depender de que otro vaya antes.
+ *
+ * `enviada`: la deja en «enviado», que es lo que el cliente ve para firmar.
+ * El cliente de la historia no tiene correo, así que no le llega nada a nadie.
+ */
+export async function soumissionPreparada(api, idioma, { enviada = false, margen = 15, perdidas = 5 } = {}) {
+  const clienteId = await asegurarCliente(api, idioma);
+  const nueva = await api("POST", "/api/estimates", { clientId: clienteId });
+  const id = nueva.datos?.id;
+  if (!id) throw new Error(`no se pudo crear la soumission de demostración (${nueva.estado})`);
+  for (const l of LINEAS[idioma]) {
+    const r = await api("POST", `/api/estimates/${id}/lines`, {
+      zone: l.zona, category: l.categoria, itemName: l.item, quantity: l.cantidad, unit: l.unidad, unitCost: l.precio, visibleToClient: true,
+    });
+    if (!r.ok) throw new Error(`no se pudo añadir la línea «${l.item}» (${r.estado})`);
+  }
+  await api("PATCH", `/api/estimates/${id}`, { marginType: "global", marginPercent: margen, wastePercent: perdidas });
+  if (enviada) {
+    const r = await api("PATCH", `/api/estimates/${id}/status`, { status: "enviado" });
+    if (!r.ok) throw new Error(`no se pudo marcar como enviada (${r.estado})`);
+  }
+  return id;
+}

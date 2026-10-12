@@ -19,6 +19,15 @@
  *   LOGICIEL_PRUEBA_IT_EMAIL / _IT_CLAVE   el de Italia, si es otro
  *   LOGICIEL_PRUEBA_CODIGO_CAMPO    el código de un trabajador (app /campo)
  *   LOGICIEL_PRUEBA_CODIGO_CLIENTE  el código de un cliente (portal)
+ *   AZURE_SPEECH_KEY / _REGION      la voz por el servicio oficial de Microsoft
+ *                                   (la misma Sylvie); sin ellas, edge-tts
+ *   SIN_VOZ=1                       ensayar sin pedir ninguna voz: sale mudo,
+ *                                   con el ritmo que tendría hablado
+ *
+ * Los vídeos van por series: un vídeo largo horizontal (`serieN-largo`) que
+ * explica un proceso entero con capítulos, y Shorts verticales
+ * (`serieN-short-*`) que abren con un gancho —la frase del problema encima de
+ * la aplicación ya en marcha— y acaban mandando al largo.
  *
  * Sale en `marketing/videos/<idioma>/`:
  *
@@ -58,6 +67,10 @@ const CACHE_VOZ = path.join(RAIZ, "node_modules", ".cache", "voz");
 function voz(idioma, texto) {
   const limpio = texto.replace(/\*/g, "").replace(/\s+/g, " ").trim();
   if (!limpio) return null;
+  // SIN_VOZ=1: para ensayar un guion sin pedir ninguna voz. Cada frase dura lo
+  // que tardaría en decirse (unos 15 caracteres por segundo), así que el ritmo
+  // es el del vídeo de verdad, pero sale mudo.
+  if (process.env.SIN_VOZ) return { archivo: null, segundos: limpio.length / 15 };
   fs.mkdirSync(CACHE_VOZ, { recursive: true });
   const archivo = path.join(CACHE_VOZ, `${createHash("sha1").update(`${VOCES[idioma]}|${limpio}`).digest("hex")}.mp3`);
   if (!fs.existsSync(archivo) || fs.statSync(archivo).size === 0) {
@@ -127,13 +140,57 @@ function puntero() {
     #lc-tarjeta.ve .linea.d1{transition-delay:.15s}#lc-tarjeta.ve .linea.d2{transition-delay:.35s}#lc-tarjeta.ve .linea.d3{transition-delay:.6s}
     body.lc-en-tarjeta #lc-puntero{opacity:0}
     #lc-foco{position:fixed;z-index:2147483643;border:3px solid #F28A4E;border-radius:14px;box-shadow:0 0 0 200vmax rgba(11,18,32,.55);pointer-events:none;opacity:0;transition:opacity .35s}
-    #lc-foco.ve{opacity:1}`;
+    #lc-foco.ve{opacity:1}
+    #lc-tarjeta.ya,#lc-tarjeta.ya .linea{transition:none}
+    #lc-gancho{position:fixed;z-index:2147483645;left:0;right:0;top:0;padding:7vh 7vw 9vh;background:linear-gradient(180deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.86) 62%,rgba(11,18,32,0) 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;pointer-events:none;opacity:0;transform:translateY(-12px);transition:opacity .3s,transform .3s}
+    #lc-gancho.ve{opacity:1;transform:none}
+    #lc-gancho .sobre{font-weight:800;font-size:clamp(12px,1.5vw,18px);letter-spacing:.14em;text-transform:uppercase;color:#F28A4E;margin-bottom:1.2vh}
+    #lc-gancho h1{margin:0;font-weight:800;font-size:clamp(28px,4.6vw,64px);line-height:1.05;letter-spacing:-.035em}
+    #lc-gancho h1 em{font-style:normal;color:#F28A4E}`;
+  /**
+   * Pintar la tarjeta informativa. Vive aquí, en lo que se inyecta en cada
+   * página, y no en el guion, porque una tarjeta tiene que sobrevivir a una
+   * recarga: es lo que tapa el cambio de una sesión a otra (del panel al
+   * móvil del cliente). Lo que se está enseñando se guarda en sessionStorage
+   * y la página nueva lo vuelve a pintar ya puesto, sin animación.
+   */
+  window.__lcTarjeta = (d, casco, ya) => {
+    document.getElementById("lc-tarjeta")?.remove();
+    const s = document.getElementById("lc-subtitulo"); if (s) s.textContent = "";
+    const t = document.createElement("div");
+    t.id = "lc-tarjeta";
+    if (ya) t.className = "ya ve";
+    const esc = (x) => x.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+    // *palabra* sale en naranja: la que importa de la frase.
+    const marcar = (x) => esc(x).replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    t.innerHTML =
+      `<div class="marca"><span><img src="${casco}"></span>Logiciel Construction</div>` +
+      (d.sobre ? `<div class="sobre linea ${d.tipo}">${esc(d.sobre)}</div>` : "") +
+      (d.cifra ? `<div class="cifra linea d1">${esc(d.cifra)}</div>` : "") +
+      `<h1 class="linea d1">${marcar(d.titulo)}</h1>` +
+      (d.texto ? `<p class="linea d2">${marcar(d.texto)}</p>` : "") +
+      (d.pie ? `<div class="pie linea d3">${d.pie}</div>` : "");
+    document.body.appendChild(t);
+    document.body.classList.add("lc-en-tarjeta");
+    if (!ya) requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add("ve")));
+  };
+  let guardada = null;
+  try { guardada = JSON.parse(sessionStorage.getItem("lc-tarjeta") ?? "null"); } catch {}
+  // Mientras carga la página nueva, fondo oscuro y no blanco: entre una página
+  // y otra no hay tarjeta todavía, y un destello blanco en mitad se ve.
+  // El script entra antes de que exista <html>: se espera a que aparezca.
+  if (guardada) {
+    const oscurecer = () => { document.documentElement.style.background = "#0B1220"; };
+    if (document.documentElement) oscurecer();
+    else new MutationObserver((_, o) => { if (document.documentElement) { oscurecer(); o.disconnect(); } }).observe(document, { childList: true });
+  }
   const poner = () => {
     if (document.getElementById("lc-puntero")) return;
     document.head.appendChild(css);
     const p = document.createElement("div"); p.id = "lc-puntero"; p.style.left = "-40px"; p.style.top = "-40px";
     const s = document.createElement("div"); s.id = "lc-subtitulo";
     document.body.append(p, s);
+    if (guardada) window.__lcTarjeta(guardada.d, guardada.casco, true);
   };
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", poner) : poner();
   addEventListener("mousemove", (e) => { const p = document.getElementById("lc-puntero"); if (p) { p.style.left = e.clientX + "px"; p.style.top = e.clientY + "px"; } }, true);
@@ -169,7 +226,7 @@ function herramientas(pagina, idioma, inicio) {
     if (!v) return 0;
     const espera = inicio.vozHasta - ahora();
     if (espera > 0) await pausa(espera * 1000);
-    inicio.audios.push({ t: ahora(), archivo: v.archivo });
+    if (v.archivo) inicio.audios.push({ t: ahora(), archivo: v.archivo });
     inicio.vozHasta = ahora() + v.segundos + 0.25;
     return v.segundos;
   };
@@ -208,23 +265,8 @@ function herramientas(pagina, idioma, inicio) {
     if (espera > 0) await pausa(espera * 1000);
     await pagina.evaluate(
       ([d, casco]) => {
-        document.getElementById("lc-tarjeta")?.remove();
-        const s = document.getElementById("lc-subtitulo"); if (s) s.textContent = "";
-        const t = document.createElement("div");
-        t.id = "lc-tarjeta";
-        const esc = (x) => x.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
-        // *palabra* sale en naranja: la que importa de la frase.
-        const marcar = (x) => esc(x).replace(/\*([^*]+)\*/g, "<em>$1</em>");
-        t.innerHTML =
-          `<div class="marca"><span><img src="${casco}"></span>Logiciel Construction</div>` +
-          (d.sobre ? `<div class="sobre linea ${d.tipo}">${esc(d.sobre)}</div>` : "") +
-          (d.cifra ? `<div class="cifra linea d1">${esc(d.cifra)}</div>` : "") +
-          `<h1 class="linea d1">${marcar(d.titulo)}</h1>` +
-          (d.texto ? `<p class="linea d2">${marcar(d.texto)}</p>` : "") +
-          (d.pie ? `<div class="pie linea d3">${d.pie}</div>` : "");
-        document.body.appendChild(t);
-        document.body.classList.add("lc-en-tarjeta");
-        requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add("ve")));
+        try { sessionStorage.setItem("lc-tarjeta", JSON.stringify({ d, casco })); } catch {}
+        window.__lcTarjeta(d, casco, false);
       },
       [{ sobre, titulo, texto, cifra, pie, tipo }, CASCO]
     );
@@ -241,12 +283,54 @@ function herramientas(pagina, idioma, inicio) {
     await pausa(Math.max(ms, dura * 1000 + 700));
     await detras;
     await pagina.evaluate(() => {
+      try { sessionStorage.removeItem("lc-tarjeta"); } catch {}
+      document.documentElement.style.background = "";
       const t = document.getElementById("lc-tarjeta");
-      if (t) { t.classList.remove("ve"); setTimeout(() => t.remove(), 400); }
+      if (t) { t.classList.remove("ya", "ve"); setTimeout(() => t.remove(), 400); }
       document.body.classList.remove("lc-en-tarjeta");
     });
     cerrarFrase();
     await pausa(450);
+  };
+
+  /**
+   * El gancho de un Short: la frase del problema arriba, grande, con la
+   * aplicación ya moviéndose debajo desde el primer segundo. En el feed de
+   * Shorts se decide en un segundo si se sigue mirando, y una tarjeta quieta
+   * de cinco segundos es lo que hace pasar de largo.
+   *
+   * `durante`: lo que pasa debajo mientras se lee (escribir, tocar…).
+   * Se queda puesto hasta `soltarGancho()` o hasta que acaba `durante`.
+   */
+  const gancho = async ({ sobre = "", titulo, durante = null, ms = 0 }) => {
+    const espera = inicio.vozHasta - ahora();
+    if (espera > 0) await pausa(espera * 1000);
+    await pagina.evaluate(([d]) => {
+      document.getElementById("lc-gancho")?.remove();
+      const g = document.createElement("div");
+      g.id = "lc-gancho";
+      const esc = (x) => x.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+      g.innerHTML = (d.sobre ? `<div class="sobre">${esc(d.sobre)}</div>` : "") + `<h1>${esc(d.titulo).replace(/\*([^*]+)\*/g, "<em>$1</em>")}</h1>`;
+      document.body.appendChild(g);
+      requestAnimationFrame(() => requestAnimationFrame(() => g.classList.add("ve")));
+    }, [{ sobre, titulo }]);
+    if (inicio.primeraPintada === null) {
+      await pausa(350);
+      empezar();
+    }
+    apuntar([sobre, titulo].filter(Boolean).join(" — ").replace(/\*/g, ""));
+    const dura = await narrar(titulo);
+    const t0 = ahora();
+    if (durante) await durante();
+    const resta = Math.max(ms / 1000, dura + 0.4) - (ahora() - t0);
+    if (resta > 0) await pausa(resta * 1000);
+  };
+  const soltarGancho = async () => {
+    await pagina.evaluate(() => {
+      const g = document.getElementById("lc-gancho");
+      if (g) { g.classList.remove("ve"); setTimeout(() => g.remove(), 350); }
+    });
+    cerrarFrase();
   };
   /** Marcar un capítulo sin tarjeta: cuando la escena de la aplicación ya lo dice. */
   const capitulo = (titulo) => inicio.capitulos.push({ t: ahora(), titulo });
@@ -339,6 +423,24 @@ function herramientas(pagina, idioma, inicio) {
     await pausa(ms);
   };
   /**
+   * Abrir un desplegable y elegir una opción. Si la lista se abre antes de
+   * que hayan llegado sus datos (los clientes de la soumission), sale vacía y
+   * no se rellena sola: se cierra y se vuelve a abrir.
+   */
+  const elegir = async (desplegable, opcion, ms = 500) => {
+    const el = typeof desplegable === "string" ? pagina.locator(desplegable).first() : desplegable;
+    const op = pagina.getByRole("option", { name: opcion, exact: true });
+    for (let intento = 0; intento < 4; intento++) {
+      await tocar(el, 400);
+      if (await op.first().isVisible().catch(() => false)) return tocar(op.first(), ms);
+      await op.first().waitFor({ timeout: 2500 }).catch(() => {});
+      if (await op.first().isVisible().catch(() => false)) return tocar(op.first(), ms);
+      await pagina.keyboard.press("Escape");
+      await pausa(1200);
+    }
+    throw new Error(`no aparece la opción «${opcion}» en el desplegable`);
+  };
+  /**
    * Escribir en un campo. `rapido`: cuando ya se ha visto teclear una vez y
    * repetirlo sólo alarga el vídeo, el texto entra de golpe.
    */
@@ -393,7 +495,7 @@ function herramientas(pagina, idioma, inicio) {
     for (let i = 0; i < valor; i++) { await pagina.keyboard.press("ArrowRight"); await pausa(55); }
     await pausa(500);
   };
-  return { pagina, idioma, BASE, pausa, decir, callar, tarjeta, capitulo, resaltar, ir, navegar, entrar, api, tocar, escribir, deslizar, bajar };
+  return { pagina, idioma, BASE, pausa, decir, callar, tarjeta, gancho, soltarGancho, capitulo, resaltar, ir, navegar, entrar, api, tocar, elegir, escribir, deslizar, bajar };
 }
 
 async function grabar(nombre, idioma) {
@@ -545,7 +647,7 @@ if (!que) {
   console.error("Uso: node scripts/videos/grabar.mjs <guion|--todos> <idioma>");
   process.exit(1);
 }
-const lista = que === "--todos" ? fs.readdirSync(path.join(AQUI, "guiones")).filter((f) => f.endsWith(".mjs")).map((f) => f.slice(0, -4)).sort() : [que];
+const lista = que === "--todos" ? fs.readdirSync(path.join(AQUI, "guiones")).filter((f) => f.endsWith(".mjs") && !f.endsWith("-comun.mjs")).map((f) => f.slice(0, -4)).sort() : [que];
 let mal = 0;
 for (const nombre of lista) {
   try { await grabar(nombre, idioma); } catch (e) { mal++; console.error(`✗ ${e.message}`); }
