@@ -115,6 +115,13 @@ acceso.
 Lo que **no** ve: tus costes, tus márgenes, tus proveedores, ni las líneas del
 presupuesto que hayas marcado como internas.
 
+**Ni un presupuesto que no le hayas enviado.** El portal enseña el más reciente
+de los que están enviados, aceptados o rechazados; un borrador o la demanda
+que dejó el bot sin cifrar no aparecen, ni se pueden descargar aunque se
+conozca su enlace. Antes enseñaba el último fuera cual fuera: un borrador
+nuevo se le aparecía al cliente con su PDF, y además tapaba el que ya había
+firmado. La vista previa del portal desde el panel sigue la misma regla.
+
 ### Por dentro
 
 | Ruta | Qué hace |

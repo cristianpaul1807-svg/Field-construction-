@@ -2671,6 +2671,16 @@ async function negocioDelCliente(
   return data ? { name: data.name, logoUrl: data.logo_url ?? null, country: data.country ?? "CA" } : null;
 }
 
+/**
+ * Lo que un cliente puede ver de sus soumissions: las que se le han enviado,
+ * y las que ya aceptó o rechazó. Un borrador, o la demanda que dejó el bot y
+ * que el contratista aún no ha cifrado, no son suyas todavía: son precios a
+ * medio hacer. El portal enseñaba la más reciente fuera cual fuera, así que
+ * un borrador nuevo se le aparecía al cliente —con su PDF descargable— y
+ * además tapaba la que ya había firmado.
+ */
+const ESTADOS_QUE_VE_EL_CLIENTE = ["enviado", "aceptado", "rechazado"];
+
 apiRouter.get(
   "/client-portal/me",
   requireClientAuth,
@@ -2695,6 +2705,7 @@ apiRouter.get(
         // ni negocio propio, y de ahí sale la provincia del impuesto.
         .select("id, number, status, total, business_id")
         .eq("client_id", clientId)
+        .in("status", ESTADOS_QUE_VE_EL_CLIENTE)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -3796,6 +3807,9 @@ apiRouter.get(
       .select("id, business_id")
       .eq("id", req.params.id)
       .eq("client_id", req.clientId!)
+      // Un borrador no se descarga aunque se conozca su id: es el mismo
+      // «no existe» que para una soumission de otro cliente.
+      .in("status", ESTADOS_QUE_VE_EL_CLIENTE)
       .maybeSingle();
     if (!owned) {
       res.status(404).json({ error: "estimate not found" });
@@ -14001,6 +14015,8 @@ apiRouter.get(
         .select("id, number, status, total, business_id")
         .eq("business_id", req.businessId!)
         .eq("client_id", clientId)
+        // La vista previa enseña lo que ve el cliente, y él no ve borradores.
+        .in("status", ESTADOS_QUE_VE_EL_CLIENTE)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
