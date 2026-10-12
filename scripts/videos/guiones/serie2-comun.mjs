@@ -23,4 +23,10 @@ export const FINAL_SERIE2 = {
     texto: "Le code, la journée, le pointage GPS, la carte et les heures pour la paie.",
     pie: "<b>Essai gratuit de 30 jours</b> · logiciel-construction.com",
   },
+  it: {
+    sobre: "Il video completo è sul canale",
+    titulo: "La tua squadra *timbrata, localizzata*, ore pronte.",
+    texto: "Il codice, la giornata, la timbratura GPS, la mappa e le ore per le paghe.",
+    pie: "<b>Prova gratuita di 30 giorni</b> · logiciel-construction.com",
+  },
 };

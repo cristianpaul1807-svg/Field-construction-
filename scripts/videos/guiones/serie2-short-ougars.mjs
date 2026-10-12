@@ -15,6 +15,14 @@ const T = {
   },
 };
 
+T.it = {
+  gancho: { sobre: "Imprese edili", titulo: "Lunedì, ore 7. *Dove sono i miei operai?*" },
+  mapa: "Compaiono sulla mappa appena timbrano, nel punto del cantiere.",
+  activos: "Chi è sul posto, e in quale cantiere. Senza chiamare nessuno.",
+  final: FINAL_SERIE2.it,
+  b: { activos: "Attivi ora" },
+};
+
 export const youtube = {
   fr: {
     titulo: "Lundi 7 h : où sont mes gars ? #shorts",
@@ -24,6 +32,15 @@ export const youtube = {
     hashtags: ["shorts", "construction", "chantier"],
     etiquetas: ["localisation employés", "pointage GPS", "gestion d'équipe chantier", "logiciel construction", "entrepreneur Québec"],
   },
+};
+
+youtube.it = {
+  titulo: "Lunedì ore 7: dove sono i miei operai? #shorts",
+  descripcion: `Appena un operaio timbra in cantiere dal cellulare, compare sulla mappa in ufficio, con il cantiere in cui si trova. Non serve più chiamare per sapere chi è dove.
+
+▶ Il processo completo, dall'accesso dell'operaio alle ore per le paghe: sul canale @LogicielConstruction.`,
+  hashtags: ["shorts", "edilizia", "cantiere"],
+  etiquetas: ["localizzazione operai", "timbratura GPS", "gestione squadra cantiere", "gestionale edilizia", "impresa edile"],
 };
 
 export default {

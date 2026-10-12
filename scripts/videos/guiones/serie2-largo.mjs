@@ -32,8 +32,33 @@ const T = {
     aprobar: "Vous approuvez, et les heures partent dans la paie et dans le rapport mensuel de la CCQ.",
     resultado: { sobre: "Le résultat", titulo: "Des heures *exactes*, sans courir après personne.", texto: "Et un client qui peut voir que l'équipe est bien sur son chantier." },
     cierre: { titulo: "Logiciel Construction", texto: "Abonnez-vous : chaque vidéo explique un processus de votre entreprise, du début à la fin.", pie: "<b>Essai gratuit de 30 jours</b> · logiciel-construction.com" },
-    b: { codigo: "Générer un autre code", hecho: "Terminé", entrar: "Entrer", pointage: "Pointage", llegada: "Pointer l'arrivée", turno: "Résumé du quart de travail", activos: "Actifs maintenant", aprobar: "Approuver les heures" },
+    b: { codigo: /^Générer (un|un autre) code$/, hecho: "Terminé", entrar: "Entrer", pointage: "Pointage", llegada: "Pointer l'arrivée", turno: "Résumé du quart de travail", activos: "Actifs maintenant", aprobar: "Approuver les heures" },
   },
+};
+
+T.it = {
+  problema: { sobre: "Il problema", titulo: "Lunedì, ore 7: *dove sono i miei operai?*", texto: "Telefonate per sapere chi è dove, fogli ore il venerdì, e ore arrotondate." },
+  plan: { sobre: "In questo video", titulo: "La tua squadra *timbrata, localizzata*, ore pronte per le paghe.", texto: "Il suo codice, la sua giornata, la timbratura con GPS, la mappa in ufficio e le ore da approvare." },
+  caps: ["Il problema", "1. Dare l'accesso all'operaio", "2. La sua giornata in agenda", "3. In cantiere, timbra", "4. In ufficio, la mappa", "5. Le ore, pronte per le paghe", "Il risultato"],
+  equipo: "La tua squadra è qui: dipendenti, ruolo e ore del periodo.",
+  codigo: "Per dargli l'accesso basta un codice. Niente email, niente password.",
+  mostrar: "Il codice si vede una sola volta: glielo mandi per SMS o su WhatsApp.",
+  calendario: "La sua giornata è in agenda: la demolizione della cucina dalla famiglia Rossi, dalle 7 alle 15 e 30.",
+  movil: { sobre: "Sul suo cellulare", titulo: "Entra con *quel codice*. Tutto qui.", texto: "Niente da scaricare dagli store: è un indirizzo, che tiene sulla schermata home." },
+  entra: "Scrive il codice…",
+  dia: "…e vede la sua giornata: dove andare e cosa fare.",
+  elige: "Arrivato sul posto, sceglie il cantiere…",
+  ficha: "…e timbra. L'ora e la posizione GPS vengono registrate.",
+  turno: "Il contatore gira. Dopo 8 ore nella giornata, il resto passa in straordinario, da solo.",
+  oficina: { sobre: "In ufficio, nello stesso momento", titulo: "Sai chi è *in quale cantiere*.", texto: "Senza chiamare nessuno." },
+  mapa: "Compare sulla mappa, nel punto in cui ha timbrato.",
+  activos: "E nella lista degli attivi: chi è sul posto adesso, e in quale cantiere.",
+  horas: { sobre: "A fine settimana", titulo: "Le ore sono *già lì*.", texto: "Ogni timbratura, con l'ora e la posizione, pronta da approvare." },
+  lista: "Ogni timbratura arriva qui: il cantiere, l'entrata e l'uscita, e la posizione di ognuno.",
+  aprobar: "Approvi, e le ore sono pronte per le paghe.",
+  resultado: { sobre: "Il risultato", titulo: "Ore *esatte*, senza rincorrere nessuno.", texto: "E un cliente che può vedere che la squadra è davvero nel suo cantiere." },
+  cierre: { titulo: "Logiciel Construction", texto: "Iscriviti: ogni video spiega un processo della tua impresa, dall'inizio alla fine.", pie: "<b>Prova gratuita di 30 giorni</b> · logiciel-construction.com" },
+  b: { codigo: /^Genera (un altro )?codice$/, hecho: "Fatto", entrar: "Entra", pointage: "Timbratura", llegada: "Timbra entrata", turno: "Riepilogo del turno", activos: "Attivi ora", aprobar: "Approva ore" },
 };
 
 export const youtube = {
@@ -45,6 +70,15 @@ Pour les entrepreneurs en construction et en rénovation au Québec.`,
     hashtags: ["construction", "chantier", "entrepreneur"],
     etiquetas: ["pointage GPS", "feuille de temps construction", "application pointage employés", "heures supplémentaires construction", "rapport mensuel CCQ", "gestion d'équipe chantier", "planification chantier", "logiciel construction", "entrepreneur Québec"],
   },
+};
+
+youtube.it = {
+  titulo: "Timbratura GPS, agenda e ore degli operai edili: il processo completo",
+  descripcion: `Come gestire una squadra in cantiere senza rincorrere nessuno: dare l'accesso a un operaio con un semplice codice, pianificare la sua giornata, farlo timbrare dal cellulare con la posizione GPS, vederlo sulla mappa in ufficio e ritrovare le sue ore — ordinarie e straordinarie — pronte da approvare per le paghe.
+
+Per imprese edili e di ristrutturazione.`,
+  hashtags: ["edilizia", "cantiere", "impresaedile"],
+  etiquetas: ["timbratura GPS", "foglio ore cantiere", "app presenze operai", "straordinari edilizia", "gestione squadra cantiere", "pianificazione cantiere", "gestionale edilizia", "impresa edile"],
 };
 
 export default {

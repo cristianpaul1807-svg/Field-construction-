@@ -16,6 +16,15 @@ const T = {
   },
 };
 
+T.it = {
+  gancho: { sobre: "Imprese edili", titulo: "Un'app da scaricare? *I tuoi operai non lo faranno.*" },
+  codigo: "Qui basta un codice. Niente store, niente account, niente password.",
+  dia: "Ed è già nella sua giornata: il cantiere, l'orario, cosa fare.",
+  pestanas: "La sua agenda, la timbratura e i tuoi messaggi. Nient'altro da imparare.",
+  final: FINAL_SERIE2.it,
+  b: { entrar: "Entra" },
+};
+
 export const youtube = {
   fr: {
     titulo: "Une app que vos gars vont vraiment utiliser #shorts",
@@ -25,6 +34,15 @@ export const youtube = {
     hashtags: ["shorts", "construction", "entrepreneur"],
     etiquetas: ["application chantier", "application employés construction", "logiciel construction", "entrepreneur Québec"],
   },
+};
+
+youtube.it = {
+  titulo: "Un'app che i tuoi operai useranno davvero #shorts",
+  descripcion: `Niente store, niente account, niente password: il tuo operaio entra con un codice e vede subito la sua giornata, la timbratura e i tuoi messaggi.
+
+▶ Il processo completo, dall'accesso dell'operaio alle ore per le paghe: sul canale @LogicielConstruction.`,
+  hashtags: ["shorts", "edilizia", "impresaedile"],
+  etiquetas: ["app cantiere", "app operai edili", "gestionale edilizia", "impresa edile"],
 };
 
 export default {

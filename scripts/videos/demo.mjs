@@ -76,6 +76,11 @@ export const LINEAS = {
     { zona: "Salle de bain", categoria: "Mano de obra", item: "Carreleur", cantidad: 24, unidad: "h", precio: 65 },
     { zona: "Salle de bain", categoria: "Materiales", item: "Vanité 36 po avec comptoir", cantidad: 1, unidad: "unité", precio: 890 },
   ],
+  it: [
+    { zona: "Bagno", categoria: "Materiales", item: "Piastrelle in gres 30 x 60", cantidad: 12, unidad: "m²", precio: 38 },
+    { zona: "Bagno", categoria: "Mano de obra", item: "Piastrellista", cantidad: 24, unidad: "h", precio: 32 },
+    { zona: "Bagno", categoria: "Materiales", item: "Mobile bagno con lavabo", cantidad: 1, unidad: "pz", precio: 640 },
+  ],
 };
 
 /**
@@ -123,9 +128,7 @@ export async function trabajadorPreparado(api, idioma, manana, { codigo = true }
     if (!creado.ok) throw new Error(`no se pudo crear el trabajador (${creado.estado})`);
     empleado = creado.datos;
   }
-  const obras = ((await api("GET", "/api/projects")).datos ?? []).filter((p) => p.clientName === CLIENTE[idioma].name);
-  const obra = obras.sort((a, b) => b.budgetTotal - a.budgetTotal)[0];
-  if (!obra) throw new Error("no hay obra de la familia: graba antes la serie 1");
+  const obra = await obraDeLaHistoria(api, idioma);
   for (const e of ((await api("GET", "/api/schedule-events")).datos ?? []).filter((e) => e.assignedWorkerId === empleado.id)) {
     await api("DELETE", `/api/schedule-events/${e.id}`);
   }
@@ -188,4 +191,29 @@ export async function cambiarCodigos({ pagina, entrar, api }, idioma) {
   const cliente = ((await api("GET", "/api/clients")).datos ?? []).find((c) => c.name === CLIENTE[idioma].name);
   // Sin correo, así que no le llega a nadie (ver CLIENTE).
   if (cliente && !cliente.email) await api("POST", `/api/clients/${cliente.id}/access-token`);
+}
+
+/**
+ * La obra de la familia de la historia. Si todavía no hay ninguna (la primera
+ * grabación en un idioma), se hace como en la vida real: una soumission
+ * enviada y aceptada, que es lo que crea la obra.
+ */
+export async function obraDeLaHistoria(api, idioma) {
+  const suyas = () => api("GET", "/api/projects").then((r) => (r.datos ?? []).filter((p) => p.clientName === CLIENTE[idioma].name));
+  let obras = await suyas();
+  if (!obras.length) {
+    const id = await soumissionPreparada(api, idioma, { enviada: true });
+    // Con el nombre de la familia, como hace el panel: sin él la obra se
+    // queda con el nombre por defecto y no se sabe de quién es.
+    const r = await api("POST", `/api/estimates/${id}/accept`, { projectName: CLIENTE[idioma].name });
+    if (!r.ok) throw new Error(`no se pudo aceptar la soumission para crear la obra (${r.estado})`);
+    obras = await suyas();
+  }
+  const obra = obras.sort((a, b) => b.budgetTotal - a.budgetTotal)[0];
+  if (!obra) throw new Error("no apareció la obra de la familia");
+  if (obra.name !== CLIENTE[idioma].name) {
+    await api("PATCH", `/api/projects/${obra.id}`, { name: CLIENTE[idioma].name });
+    obra.name = CLIENTE[idioma].name;
+  }
+  return obra;
 }

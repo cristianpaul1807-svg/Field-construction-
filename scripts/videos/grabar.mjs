@@ -643,7 +643,8 @@ async function grabar(nombre, idioma) {
       ...(validos ? ["", capTitulo, ...caps.map((c) => `${mmss(c.t)} ${c.titulo}`)] : []),
       "",
       // La voz de Piper (SIWIS) es CC BY 4.0: se puede usar citándola.
-      ...(process.env.PIPER_MODELO ? ["Voix : corpus SIWIS (CC BY 4.0), synthèse Piper.", ""] : []),
+      // La de Paola es CC0 y no lo pide.
+      ...(process.env.PIPER_MODELO?.includes("siwis") ? ["Voix : corpus SIWIS (CC BY 4.0), synthèse Piper.", ""] : []),
       yt.hashtags.map((h) => `#${h}`).join(" "),
       "",
       `TAGS / ETIQUETAS:\n${yt.etiquetas.join(", ")}`,

@@ -16,6 +16,15 @@ const T = {
   },
 };
 
+T.it = {
+  gancho: { sobre: "Imprese edili", titulo: "Venerdì, i fogli ore. *Nessuno se lo ricorda.*" },
+  dia: "Il tuo operaio vede la sua giornata sul cellulare.",
+  ficha: "Arriva, sceglie il cantiere e timbra. L'ora e la posizione GPS vengono registrate.",
+  cuenta: "Le ore ordinarie e gli straordinari si contano da soli.",
+  final: FINAL_SERIE2.it,
+  b: { entrar: "Entra", pointage: "Timbratura", llegada: "Timbra entrata", turno: "Riepilogo del turno" },
+};
+
 export const youtube = {
   fr: {
     titulo: "Les feuilles de temps du vendredi ? Plus jamais #shorts",
@@ -25,6 +34,15 @@ export const youtube = {
     hashtags: ["shorts", "construction", "chantier"],
     etiquetas: ["feuille de temps", "pointage GPS", "heures travailleurs", "logiciel construction", "entrepreneur Québec"],
   },
+};
+
+youtube.it = {
+  titulo: "I fogli ore del venerdì? Mai più #shorts",
+  descripcion: `Il tuo operaio vede la sua giornata sul cellulare, arriva in cantiere e timbra: l'ora e la posizione GPS vengono registrate, e le ore ordinarie e gli straordinari si contano da soli.
+
+▶ Il processo completo, dall'accesso dell'operaio alle ore per le paghe: sul canale @LogicielConstruction.`,
+  hashtags: ["shorts", "edilizia", "cantiere"],
+  etiquetas: ["foglio ore", "timbratura GPS", "presenze operai", "gestionale edilizia", "impresa edile"],
 };
 
 export default {
