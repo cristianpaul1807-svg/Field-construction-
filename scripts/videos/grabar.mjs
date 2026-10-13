@@ -632,6 +632,14 @@ async function grabar(nombre, idioma) {
     const validos = caps.length >= 3 && caps.every((c, i) => (i + 1 < caps.length ? caps[i + 1].t : dur) - c.t >= 10);
     const enlace = `https://logiciel-construction.com/${idioma}/?utm_source=youtube&utm_medium=video&utm_campaign=${nombre}`;
     const prueba = { fr: "👉 Essai gratuit de 30 jours, sans carte :", it: "👉 Prova gratuita di 30 giorni, senza carta:", es: "👉 Prueba gratuita de 30 días, sin tarjeta:", en: "👉 30-day free trial, no card:" }[idioma];
+    // El programa de afiliados, en cada descripción: quien mira un tutorial
+    // de un programa para contratistas suele conocer a otros contratistas.
+    const afiliados = {
+      fr: "💰 Vous connaissez des entrepreneurs ? Gagnez 30 % en nous recommandant :",
+      it: "💰 Conosci altre imprese edili? Guadagna il 30% consigliandoci:",
+      es: "💰 ¿Conoces a otros contratistas? Gana el 30 % recomendándonos:",
+      en: "💰 Know other contractors? Earn 30% by referring us:",
+    }[idioma];
     const capTitulo = { fr: "⏱️ Chapitres", it: "⏱️ Capitoli", es: "⏱️ Capítulos", en: "⏱️ Chapters" }[idioma];
     const texto = [
       `TITRE / TITOLO (máx. 100):\n${yt.titulo}`,
@@ -640,6 +648,7 @@ async function grabar(nombre, idioma) {
       yt.descripcion.trim(),
       "",
       `${prueba} ${enlace}`,
+      `${afiliados} https://logiciel-construction.com/afiliados?lang=${idioma}`,
       ...(validos ? ["", capTitulo, ...caps.map((c) => `${mmss(c.t)} ${c.titulo}`)] : []),
       "",
       // La voz de Piper (SIWIS) es CC BY 4.0: se puede usar citándola.

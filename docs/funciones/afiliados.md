@@ -36,18 +36,40 @@ su contenido, no con un descuento.
 
 1. Abre `/afiliados`. Ve el 30 %, los 12 meses y los tres pasos.
 2. Correo, contraseña, su nombre o el de su canal, **dónde lo va a
-   compartir**, su país, y la casilla de las condiciones (sin marcar de
-   antemano: aceptar es lo que firma el contrato).
-3. Le llega el código de 8 cifras —el mismo alta que una empresa—.
-4. Al verificarlo ya tiene su enlace, en su panel.
+   compartir** y su país.
+3. **Firma el contrato.** En el mismo formulario está resumido en cinco
+   puntos (cuánto, qué cuenta como suyo, la espera, el cobro, lo prohibido),
+   con el texto entero a un clic. Firma escribiendo su nombre completo —y
+   con el dedo si quiere— y marca la casilla, que no viene marcada. Sin
+   firma el botón no se activa y el servidor tampoco la acepta
+   (`afiliado_sin_firma`): el enlace se da después de firmar, nunca antes.
+4. Le llega el código de 8 cifras —el mismo alta que una empresa—.
+5. Al verificarlo ya tiene su enlace, en su panel, con la línea «Contrato
+   firmado el … por …» al pie.
 
 Quien **ya tiene cuenta** (una empresa cliente) entra con ella en
 `/afiliados` y sólo rellena lo que falta. Su enlace queda a nombre de su
 empresa, lo que impide que se refiera a sí misma.
 
-Al apuntarse se guardan `contrato_en` (ahora) y `condiciones_version`. Cambiar
-el texto de las condiciones es cambiar `VERSION_DE_LAS_CONDICIONES`: así
-queda qué aceptó cada uno.
+Al apuntarse se guardan `contrato_en` (ahora), `condiciones_version`, y la
+prueba de la firma: `firma_nombre`, `firma_imagen` (el trazo, si lo hizo),
+`firma_ip` y `firma_agente`. Cambiar el texto de las condiciones es cambiar
+`VERSION_DE_LAS_CONDICIONES`: así queda qué firmó cada uno.
+
+## Dónde se anuncia
+
+«Gana dinero recomendándonos» está en todo sitio por donde pasa alguien que
+conoce a otros contratistas, siempre al final y nunca tapando lo suyo:
+
+- **El sitio**: una franja encima del pie en las 32 páginas y un enlace en
+  la columna «Empezar» del pie, a `/afiliados?lang=xx` para que la puerta
+  abra en el idioma de la página.
+- **La entrada** (`/`): una puerta más, junto a la del trabajador y la del
+  cliente.
+- **El panel de la empresa** (al final del inicio, hacia Ajustes), **la app
+  del trabajador** y **el portal del cliente**: `AnuncioAfiliados`.
+- **Las descripciones de los vídeos** de YouTube, que escribe
+  `scripts/videos/grabar.mjs`.
 
 ---
 

@@ -25,6 +25,12 @@ export default {
     entrar: "Entrar",
     idioma: "Idioma",
   },
+  afiliados: {
+    titulo: "¿Conoces a otros contratistas?",
+    texto: "Recomienda Logiciel Construction y cobra el 30 % de lo que paguen durante 12 meses.",
+    cta: "Hazte afiliado",
+    pie: "Gana el 30 % recomendándonos",
+  },
   pie: {
     tagline: "El sistema de gestión para empresas de construcción. En tu idioma y con las reglas de tu país.",
     producto: "El producto",

@@ -17,6 +17,7 @@ import {
   Legend,
 } from "recharts";
 import { useTranslation } from "react-i18next";
+import { AnuncioAfiliados } from "@/components/AnuncioAfiliados";
 
 interface Project {
   id: string;
@@ -223,6 +224,7 @@ export default function Dashboard() {
               </div>
             </Card>
           </div>
+          <AnuncioAfiliados destino="/settings/afiliados" />
         </>
       )}
     </div>

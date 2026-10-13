@@ -31,6 +31,12 @@ export default {
     entrar: "Connexion",
     idioma: "Langue",
   },
+  afiliados: {
+    titulo: "Vous connaissez des entrepreneurs ?",
+    texto: "Recommandez Logiciel Construction et touchez 30 % de ce qu'ils paient pendant 12 mois.",
+    cta: "Devenir affilié",
+    pie: "Gagnez 30 % en nous recommandant",
+  },
   pie: {
     tagline: "Le logiciel de gestion des entreprises de construction. Dans votre langue, avec les règles de votre pays.",
     producto: "Le produit",

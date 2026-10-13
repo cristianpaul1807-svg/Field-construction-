@@ -33,6 +33,7 @@ interface Panel {
   minimoCad: number;
   pais: string | null;
   stripeConectado: boolean;
+  contrato: { fecha: string; nombre: string | null; version: string | null } | null;
   clientes: { total: number; enPrueba: number; pagando: number };
   enEsperaCad: number;
   disponibleCad: number;
@@ -288,6 +289,11 @@ export default function AfiliadosPanel() {
             </Card>
 
             <p className="text-center text-xs text-muted-foreground">
+              {panel.contrato && (
+                <span className="block pb-1">
+                  {t("afiliados.contratoFirmado", { fecha: fecha(panel.contrato.fecha), nombre: panel.contrato.nombre ?? "" })}
+                </span>
+              )}
               <Link href="/afiliados/condiciones" className="hover:text-foreground underline underline-offset-2">
                 {t("afiliados.verCondiciones")}
               </Link>

@@ -20,6 +20,7 @@ import { LifecyclePanel, type Lifecycle } from "@/components/LifecyclePanel";
 import { SignEstimateDialog } from "@/components/SignEstimateDialog";
 import { PaymentScheduleCard, type PaymentMilestone } from "@/components/PaymentScheduleCard";
 import { AvisoDeFallo } from "@/components/AvisoDeFallo";
+import { AnuncioAfiliados } from "@/components/AnuncioAfiliados";
 
 interface ClientPortalData {
   client: { id: string; name: string };
@@ -542,6 +543,12 @@ export default function ClientPortalMe() {
             <ClientChat />
           </TabsContent>
         </Tabs>
+
+        {/* Un cliente contento es quien mejor recomienda a su contratista,
+            y a quien hizo posible la obra. */}
+        <div className="mt-6">
+          <AnuncioAfiliados />
+        </div>
       </div>
 
       {data?.estimate && (

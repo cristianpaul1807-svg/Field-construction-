@@ -56,8 +56,13 @@ export const idiomaListo = i18n
     // A visitor arriving at /c/[slug] should get their browser's language
     // without ever having picked one; the explicit choice, once made, wins
     // and persists.
+    //
+    // `?lang=` va delante: la web de presentación está en cuatro idiomas y
+    // sus enlaces a la aplicación (el programa de afiliados) lo llevan. Sin
+    // él, quien leía la web en italiano llegaba al alta en francés.
     detection: {
-      order: ["localStorage", "navigator"],
+      order: ["querystring", "localStorage", "navigator"],
+      lookupQuerystring: "lang",
       lookupLocalStorage: LANGUAGE_STORAGE_KEY,
       caches: ["localStorage"],
     },

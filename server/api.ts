@@ -4048,12 +4048,22 @@ apiRouter.post(
       res.status(400).json({ error: "Falta dónde lo vas a compartir", code: "afiliado_sin_canal" });
       return;
     }
-    // Aceptar las condiciones es lo que firma el contrato: sin ese sí
-    // explícito no hay alta, porque una comisión es una promesa por escrito.
+    // Sin contrato firmado no hay enlace: una comisión es una promesa por
+    // escrito, y por eso se pide la casilla *y* el nombre escrito como firma.
     if (req.body?.aceptaCondiciones !== true) {
       res.status(400).json({ error: "Hay que aceptar las condiciones", code: "afiliado_sin_condiciones" });
       return;
     }
+    const firmaNombre = String(req.body?.firmaNombre ?? "").trim().slice(0, 160);
+    if (firmaNombre.length < 3) {
+      res.status(400).json({ error: "Falta la firma", code: "afiliado_sin_firma" });
+      return;
+    }
+    // El trazo es opcional y nunca la prueba por sí solo. Acotado, como en
+    // la firma de soumissions: un lienzo puede dar un data URI enorme.
+    const firmaImagenCruda = typeof req.body?.firmaImagen === "string" ? req.body.firmaImagen : "";
+    const firmaImagen = firmaImagenCruda.startsWith("data:image/png;base64,") ? firmaImagenCruda.slice(0, 200_000) : null;
+    const ip = (req.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.ip || null;
     const pais = typeof req.body?.pais === "string" && /^[A-Z]{2}$/.test(req.body.pais) ? req.body.pais : null;
     const idioma = normalizarLangCorreo(req.body?.idioma ?? req.get("accept-language"));
     const afiliado = await apuntarAlPrograma(getSupabaseAdmin(), {
@@ -4063,6 +4073,7 @@ apiRouter.post(
       dondeComparte,
       pais,
       idioma,
+      firma: { nombre: firmaNombre, imagen: firmaImagen, ip, agente: (req.get("user-agent") ?? "").slice(0, 300) || null },
     });
     res.status(201).json({ codigo: afiliado.codigo });
   })

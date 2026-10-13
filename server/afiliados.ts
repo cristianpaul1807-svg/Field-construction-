@@ -74,6 +74,8 @@ export interface AltaDeAfiliado {
   pais?: string | null;
   idioma?: string | null;
   condicionesVersion?: string | null;
+  /** La firma del contrato: su nombre escrito, el trazo si lo hizo, desde dónde. */
+  firma?: { nombre: string; imagen: string | null; ip: string | null; agente: string | null } | null;
   notas?: string | null;
 }
 
@@ -102,6 +104,10 @@ export async function crearAfiliado(admin: Admin, alta: AltaDeAfiliado) {
         pais: alta.pais ?? null,
         idioma: alta.idioma ?? null,
         condiciones_version: alta.condicionesVersion ?? null,
+        firma_nombre: alta.firma?.nombre ?? null,
+        firma_imagen: alta.firma?.imagen ?? null,
+        firma_ip: alta.firma?.ip ?? null,
+        firma_agente: alta.firma?.agente ?? null,
         notas: alta.notas ?? null,
       })
       .select("id, codigo, nombre, comision_pct, contrato_en")
@@ -119,15 +125,27 @@ export async function crearAfiliado(admin: Admin, alta: AltaDeAfiliado) {
 /**
  * Apuntarse al programa: la persona que acaba de crear su cuenta en
  * `/afiliados`, o quien ya la tenía (un contratista cliente que además
- * recomienda). Aceptar las condiciones es lo que firma el contrato, así que
- * `contrato_en` es ahora, con la versión de lo que aceptó.
+ * recomienda).
+ *
+ * El enlace se da **después de firmar el contrato**, no antes: se guarda su
+ * nombre escrito como firma, el trazo si lo hizo, la versión exacta de las
+ * condiciones, la hora (`contrato_en`), la IP y el navegador. Es lo que
+ * prueba, el día que haga falta, quién aceptó qué y cuándo.
  *
  * Si ya era afiliado, devuelve el que había: pulsar dos veces no da dos
  * enlaces.
  */
 export async function apuntarAlPrograma(
   admin: Admin,
-  datos: { authUserId: string; email: string | null; nombre: string; dondeComparte: string; pais: string | null; idioma: string | null }
+  datos: {
+    authUserId: string;
+    email: string | null;
+    nombre: string;
+    dondeComparte: string;
+    pais: string | null;
+    idioma: string | null;
+    firma: { nombre: string; imagen: string | null; ip: string | null; agente: string | null };
+  }
 ) {
   const { data: ya } = await admin.from("afiliados").select("id, codigo").eq("auth_user_id", datos.authUserId).maybeSingle();
   if (ya) return ya;
@@ -147,6 +165,7 @@ export async function apuntarAlPrograma(
     pais: datos.pais,
     idioma: datos.idioma,
     condicionesVersion: VERSION_DE_LAS_CONDICIONES,
+    firma: datos.firma,
   });
 }
 
@@ -351,7 +370,7 @@ async function comisionesDe(admin: Admin, afiliadoId: string) {
 export async function panelDeAfiliado(admin: Admin, afiliadoId: string) {
   const { data: afiliado } = await admin
     .from("afiliados")
-    .select("id, codigo, estado, nombre, contrato_en, comision_pct, meses_comision, pais, stripe_account_id")
+    .select("id, codigo, estado, nombre, contrato_en, condiciones_version, firma_nombre, comision_pct, meses_comision, pais, stripe_account_id")
     .eq("id", afiliadoId)
     .maybeSingle();
   if (!afiliado) return null;
@@ -374,6 +393,10 @@ export async function panelDeAfiliado(admin: Admin, afiliadoId: string) {
     minimoCad: MINIMO_PARA_RETIRAR_CAD,
     pais: afiliado.pais,
     firmado: Boolean(afiliado.contrato_en),
+    // Lo que firmó, a la vista: es su contrato tanto como el nuestro.
+    contrato: afiliado.contrato_en
+      ? { fecha: afiliado.contrato_en, nombre: afiliado.firma_nombre, version: afiliado.condiciones_version }
+      : null,
     stripeConectado: Boolean(afiliado.stripe_account_id),
     clientes: {
       total: referidos.length,

@@ -25,6 +25,12 @@ export default {
     entrar: "Sign in",
     idioma: "Language",
   },
+  afiliados: {
+    titulo: "Know other contractors?",
+    texto: "Recommend Logiciel Construction and earn 30% of what they pay for 12 months.",
+    cta: "Become an affiliate",
+    pie: "Earn 30% by referring us",
+  },
   pie: {
     tagline: "The management software for construction businesses. In your language, with your country's rules.",
     producto: "The product",

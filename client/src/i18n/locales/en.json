@@ -729,7 +729,9 @@
     "workerDoorDesc": "Sign in with the code your company gave you",
     "clientDoorTitle": "Client portal",
     "clientDoorDesc": "Review your project progress and estimates",
-    "emailPlaceholder": "company@example.com"
+    "emailPlaceholder": "company@example.com",
+    "affiliateDoorTitle": "Earn 30% by referring us",
+    "affiliateDoorDesc": "Affiliate program: your link instantly, paid through Stripe"
   },
   "settings": {
     "companyTitle": "Company Data",
@@ -1708,7 +1710,8 @@
     "afiliado_cobro_sin_cuenta": "Your Stripe payout account isn't ready yet. Finish the setup on Stripe and try again.",
     "afiliado_suspendido": "Your payouts are on hold. Write to us to find out why.",
     "afiliado_bajo_minimo": "You haven't reached the minimum payout yet.",
-    "afiliado_transferencia_fallida": "Stripe didn't accept the transfer. Your balance is still available; try again or write to us."
+    "afiliado_transferencia_fallida": "Stripe didn't accept the transfer. Your balance is still available; try again or write to us.",
+    "afiliado_sin_firma": "Sign the contract by typing your full name."
   },
   "workLog": {
     "title": "Work log",
@@ -3304,12 +3307,11 @@
     "entrar": "Sign in",
     "yaSoy": "Already an affiliate?",
     "todaviaNo": "Not an affiliate yet?",
-    "apuntarme": "Join",
     "nombre": "Your name or your channel's name",
     "dondeComparte": "Where will you share it?",
     "dondeCompartePista": "Your channel, website or social account. For example: youtube.com/@mychannel",
     "pais": "Country you live in",
-    "acepto": "I have read and accept the program terms",
+    "acepto": "I have read the contract and I accept it",
     "verCondiciones": "Program terms",
     "unirmeTitulo": "Join the program",
     "unirmeTexto": "You already have an account: we just need these details to give you your link.",
@@ -3353,6 +3355,25 @@
     "verCanal": "Watch the videos on YouTube",
     "suspendido": "Your payouts are on hold. Write to progetmanagement@gmail.com to find out why.",
     "mensajeListo": "Ready-to-post text",
-    "mensaje": "If you run a construction or renovation company, check out Logiciel Construction: estimates, GPS time tracking, invoices and a client portal in one app. 30-day free trial: {{enlace}}"
+    "mensaje": "If you run a construction or renovation company, check out Logiciel Construction: estimates, GPS time tracking, invoices and a client portal in one app. 30-day free trial: {{enlace}}",
+    "contratoTitulo": "Your affiliate contract",
+    "contrato": {
+      "r1": "You earn 30% of what each company you bring pays, excluding taxes, for its first 12 months.",
+      "r2": "A company is yours if it signs up within 90 days of opening your link. Never your own company.",
+      "r3": "Each commission waits 30 days; a refund or chargeback cancels it.",
+      "r4": "You get paid to your Stripe account from $50. Declaring what you earn is up to you.",
+      "r5": "Not allowed: spam, promising what doesn't exist, bidding on our brand in ads, or impersonating us."
+    },
+    "leerContrato": "Read the full contract",
+    "firmaNombre": "Signature: type your full name",
+    "firmaTrazo": "Also sign with your finger (optional)",
+    "borrarTrazo": "Clear",
+    "firmaAviso": "When you sign, we keep your name, your signature, the date, the contract version and where you signed from, as proof for you and for us. Your link appears right after.",
+    "firmarYRecibir": "Sign and get my link",
+    "contratoFirmado": "Contract signed on {{fecha}} by {{nombre}}."
+  },
+  "anuncioAfiliados": {
+    "titulo": "Earn money by recommending us",
+    "texto": "Know other contractors? Earn 30% of what they pay for 12 months."
   }
 }

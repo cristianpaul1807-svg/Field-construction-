@@ -729,7 +729,9 @@
     "workerDoorDesc": "Entra con el código que te dio tu empresa",
     "clientDoorTitle": "Portal de clientes",
     "clientDoorDesc": "Revisa el avance de tu proyecto y presupuestos",
-    "emailPlaceholder": "empresa@ejemplo.com"
+    "emailPlaceholder": "empresa@ejemplo.com",
+    "affiliateDoorTitle": "Gana el 30 % recomendándonos",
+    "affiliateDoorDesc": "Programa de afiliados: tu enlace al instante, cobro en Stripe"
   },
   "settings": {
     "companyTitle": "Datos de la empresa",
@@ -1708,7 +1710,8 @@
     "afiliado_cobro_sin_cuenta": "Tu cuenta de cobro en Stripe todavía no está lista. Termina el alta en Stripe y vuelve a intentarlo.",
     "afiliado_suspendido": "Tus pagos están parados. Escríbenos para saber por qué.",
     "afiliado_bajo_minimo": "Todavía no llegas al mínimo para retirar.",
-    "afiliado_transferencia_fallida": "Stripe no ha aceptado la transferencia. Tu saldo sigue disponible; vuelve a intentarlo o escríbenos."
+    "afiliado_transferencia_fallida": "Stripe no ha aceptado la transferencia. Tu saldo sigue disponible; vuelve a intentarlo o escríbenos.",
+    "afiliado_sin_firma": "Firma el contrato escribiendo tu nombre completo."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -3304,12 +3307,11 @@
     "entrar": "Entrar",
     "yaSoy": "¿Ya eres afiliado?",
     "todaviaNo": "¿Todavía no eres afiliado?",
-    "apuntarme": "Apuntarme",
     "nombre": "Tu nombre o el de tu canal",
     "dondeComparte": "¿Dónde lo vas a compartir?",
     "dondeCompartePista": "Tu canal, tu web o tu red social. Por ejemplo: youtube.com/@micanal",
     "pais": "País donde vives",
-    "acepto": "He leído y acepto las condiciones del programa",
+    "acepto": "He leído el contrato y lo acepto",
     "verCondiciones": "Condiciones del programa",
     "unirmeTitulo": "Únete al programa",
     "unirmeTexto": "Ya tienes cuenta: solo faltan estos datos para darte tu enlace.",
@@ -3353,6 +3355,25 @@
     "verCanal": "Ver los vídeos en YouTube",
     "suspendido": "Tus pagos están parados. Escríbenos a progetmanagement@gmail.com para saber por qué.",
     "mensajeListo": "Texto listo para publicar",
-    "mensaje": "Si llevas una empresa de construcción o reformas, mira Logiciel Construction: presupuestos, horas con GPS, facturas y portal del cliente en una sola app. Prueba 30 días gratis: {{enlace}}"
+    "mensaje": "Si llevas una empresa de construcción o reformas, mira Logiciel Construction: presupuestos, horas con GPS, facturas y portal del cliente en una sola app. Prueba 30 días gratis: {{enlace}}",
+    "contratoTitulo": "Tu contrato de afiliado",
+    "contrato": {
+      "r1": "Cobras el 30 % de lo que pague cada empresa que traigas, sin impuestos, durante sus 12 primeros meses.",
+      "r2": "Una empresa es tuya si se da de alta en los 90 días siguientes a abrir tu enlace. Nunca tu propia empresa.",
+      "r3": "Cada comisión espera 30 días; si hay reembolso o contracargo, se anula.",
+      "r4": "Cobras en tu cuenta de Stripe a partir de 50 $. Declarar lo que cobras es cosa tuya.",
+      "r5": "Prohibido: spam, prometer lo que no existe, pujar por nuestra marca en anuncios o hacerte pasar por nosotros."
+    },
+    "leerContrato": "Leer el contrato completo",
+    "firmaNombre": "Firma: escribe tu nombre completo",
+    "firmaTrazo": "Firma también con el dedo (opcional)",
+    "borrarTrazo": "Borrar",
+    "firmaAviso": "Al firmar, guardamos tu nombre, tu firma, la fecha, la versión del contrato y desde dónde firmaste, como prueba para ti y para nosotros. Tu enlace aparece justo después.",
+    "firmarYRecibir": "Firmar y recibir mi enlace",
+    "contratoFirmado": "Contrato firmado el {{fecha}} por {{nombre}}."
+  },
+  "anuncioAfiliados": {
+    "titulo": "Gana dinero recomendándonos",
+    "texto": "¿Conoces a otros contratistas? Cobra el 30 % de lo que paguen durante 12 meses."
   }
 }

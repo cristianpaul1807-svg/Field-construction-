@@ -475,6 +475,15 @@ p { margin: 0; }
 
 /* ---------- Pie ---------- */
 
+/* La franja del programa de afiliados, encima del pie de todas las páginas.
+   Colores fijos y no los del tema: en oscuro --azul se aclara y el texto
+   blanco encima dejaría de leerse. */
+.franja-afiliados { background: #1546A0; color: #fff; padding-block: 22px; }
+.franja-afiliados-dentro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; }
+.franja-afiliados p { margin: 0; max-width: 62ch; font-size: 16px; line-height: 1.45; color: #DCE6F7; }
+.franja-afiliados strong { color: #fff; }
+.boton-claro { background: #fff; color: #1546A0; }
+.boton-claro:hover { background: #EAF0FB; transform: translateY(-1px); }
 .pie { background: var(--tinta); color: #93A3B8; padding-block: 56px 36px; font-size: 15px; }
 .pie a { color: #C0CDDC; text-decoration: none; }
 .pie a:hover { color: #fff; text-decoration: underline; }

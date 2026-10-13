@@ -25,6 +25,12 @@ export default {
     entrar: "Accedi",
     idioma: "Lingua",
   },
+  afiliados: {
+    titulo: "Conosci altre imprese edili?",
+    texto: "Consiglia Logiciel Construction e ricevi il 30% di quello che pagano per 12 mesi.",
+    cta: "Diventa affiliato",
+    pie: "Guadagna il 30% consigliandoci",
+  },
   pie: {
     tagline: "Il gestionale per le imprese edili. Nella tua lingua, con le regole del tuo paese.",
     producto: "Il prodotto",

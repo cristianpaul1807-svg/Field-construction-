@@ -260,9 +260,30 @@ function cabecera(idioma, pagina) {
 /** El canal de YouTube. Va en el pie de todas las páginas y en `sameAs`. */
 const CANAL_YOUTUBE = "https://www.youtube.com/@LogicielConstruction";
 
+/**
+ * El programa de afiliados, en la aplicación. Con el idioma de la página: la
+ * aplicación lo lee de `?lang=` y así no salta a otro idioma al cruzar.
+ */
+const afiliados = (idioma) => `/afiliados?lang=${idioma.codigo}`;
+
+/**
+ * La franja «gana dinero recomendándonos». En todas las páginas, justo encima
+ * del pie: quien llega al final de una página ya sabe qué es el producto, que
+ * es lo que hace falta para recomendarlo.
+ */
+function franjaAfiliados(idioma) {
+  return `<aside class="franja-afiliados">
+  <div class="envoltura franja-afiliados-dentro">
+    <p><strong>${esc(idioma.afiliados.titulo)}</strong> ${esc(idioma.afiliados.texto)}</p>
+    <a class="boton boton-claro" href="${afiliados(idioma)}">${esc(idioma.afiliados.cta)}</a>
+  </div>
+</aside>`;
+}
+
 function pie(idioma) {
   const l = (p, texto) => `<li><a href="${url(idioma, p)}">${esc(texto)}</a></li>`;
-  return `<footer class="pie">
+  return `${franjaAfiliados(idioma)}
+<footer class="pie">
   <div class="envoltura">
     <div class="pie-rejilla">
       <div>
@@ -288,6 +309,7 @@ function pie(idioma) {
           <li><a href="${REGISTRO}">${esc(idioma.pie.ensayo)}</a></li>
           ${l("contacto", idioma.nav.hablar)}
           <li><a href="/iniciar-sesion">${esc(idioma.nav.entrar)}</a></li>
+          <li><a href="${afiliados(idioma)}">${esc(idioma.afiliados.pie)}</a></li>
         </ul>
       </div>
       <div>
@@ -1198,7 +1220,10 @@ function comprobarEnlaces(rutas) {
       // es un recuadro negro hasta que alguien le da a reproducir.
       for (const [, destino] of html.matchAll(/(?:href|src|poster|data-src)="([^"]+)"/g)) {
         if (/^(https?:|mailto:|#|data:)/.test(destino)) continue;
-        if (validas.has(destino) || deLaAplicacion.has(destino)) {
+        // La consulta no cambia a qué página se va: `/afiliados?lang=it` es
+        // la ruta `/afiliados` de la aplicación, en italiano.
+        const camino = destino.split("?")[0];
+        if (validas.has(camino) || deLaAplicacion.has(camino)) {
           paginas += 1;
           continue;
         }

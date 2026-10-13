@@ -178,6 +178,7 @@ const FIXTURAS = {
     pais: "CA",
     stripeConectado: true,
     firmado: true,
+    contrato: { fecha: "2026-10-13T12:00:00Z", nombre: "Construcciones y Reformas Integrales del Valle del Saint-Laurent", version: "2026-10" },
     clientes: { total: 128, enPrueba: 37, pagando: 91 },
     enEsperaCad: 12345.67,
     disponibleCad: 23456.78,

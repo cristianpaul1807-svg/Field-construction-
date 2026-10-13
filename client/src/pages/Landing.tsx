@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { HardHat, LogIn, UserRound, ArrowRight, Building2, KeyRound } from "lucide-react";
+import { HardHat, LogIn, UserRound, ArrowRight, Building2, KeyRound, HandCoins } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { InstalarApp } from "@/components/InstalarApp";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -219,6 +219,21 @@ export default function Landing() {
               </Card>
             </Link>
           </div>
+
+          {/* La quinta puerta, más discreta que las otras: quien llega aquí
+              viene a trabajar, pero el que trae clientes también pasa por aquí. */}
+          <Link href="/afiliados">
+            <Card className="p-3 hover:border-primary/60 transition-colors cursor-pointer flex items-center gap-3">
+              <div className="w-8 h-8 shrink-0 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <HandCoins size={16} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-foreground text-xs leading-tight">{t("landing.affiliateDoorTitle")}</h3>
+                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{t("landing.affiliateDoorDesc")}</p>
+              </div>
+              <ArrowRight size={14} className="shrink-0 text-muted-foreground" />
+            </Card>
+          </Link>
 
           {/* Debajo de las puertas y no encima: quien llega aquí viene a
               entrar, y esto es lo que se ofrece después de haber entrado. Se

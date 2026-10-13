@@ -729,7 +729,9 @@
     "workerDoorDesc": "Entrez avec le code que votre entreprise vous a donné",
     "clientDoorTitle": "Portail client",
     "clientDoorDesc": "Consultez l'avancement de vos projets et soumissions",
-    "emailPlaceholder": "entreprise@exemple.com"
+    "emailPlaceholder": "entreprise@exemple.com",
+    "affiliateDoorTitle": "Gagnez 30 % en nous recommandant",
+    "affiliateDoorDesc": "Programme d'affiliation : votre lien tout de suite, payé par Stripe"
   },
   "settings": {
     "companyTitle": "Données de l'entreprise",
@@ -1708,7 +1710,8 @@
     "afiliado_cobro_sin_cuenta": "Votre compte de paiement Stripe n'est pas encore prêt. Terminez l'inscription sur Stripe et réessayez.",
     "afiliado_suspendido": "Vos paiements sont suspendus. Écrivez-nous pour savoir pourquoi.",
     "afiliado_bajo_minimo": "Vous n'avez pas encore atteint le minimum pour retirer.",
-    "afiliado_transferencia_fallida": "Stripe n'a pas accepté le virement. Votre solde reste disponible ; réessayez ou écrivez-nous."
+    "afiliado_transferencia_fallida": "Stripe n'a pas accepté le virement. Votre solde reste disponible ; réessayez ou écrivez-nous.",
+    "afiliado_sin_firma": "Signez le contrat en écrivant votre nom complet."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -3304,12 +3307,11 @@
     "entrar": "Se connecter",
     "yaSoy": "Déjà affilié ?",
     "todaviaNo": "Pas encore affilié ?",
-    "apuntarme": "M'inscrire",
     "nombre": "Votre nom ou celui de votre chaîne",
     "dondeComparte": "Où allez-vous le partager ?",
     "dondeCompartePista": "Votre chaîne, votre site ou votre réseau social. Par exemple : youtube.com/@machaine",
     "pais": "Pays de résidence",
-    "acepto": "J'ai lu et j'accepte les conditions du programme",
+    "acepto": "J'ai lu le contrat et je l'accepte",
     "verCondiciones": "Conditions du programme",
     "unirmeTitulo": "Rejoignez le programme",
     "unirmeTexto": "Vous avez déjà un compte : il ne manque que ces informations pour vous donner votre lien.",
@@ -3353,6 +3355,25 @@
     "verCanal": "Voir les vidéos sur YouTube",
     "suspendido": "Vos paiements sont suspendus. Écrivez à progetmanagement@gmail.com pour savoir pourquoi.",
     "mensajeListo": "Texte prêt à publier",
-    "mensaje": "Si vous avez une entreprise de construction ou de rénovation, regardez Logiciel Construction : soumissions, pointage GPS, factures et portail client dans une seule app. Essai gratuit de 30 jours : {{enlace}}"
+    "mensaje": "Si vous avez une entreprise de construction ou de rénovation, regardez Logiciel Construction : soumissions, pointage GPS, factures et portail client dans une seule app. Essai gratuit de 30 jours : {{enlace}}",
+    "contratoTitulo": "Votre contrat d'affilié",
+    "contrato": {
+      "r1": "Vous touchez 30 % de ce que paie chaque entreprise que vous amenez, hors taxes, pendant ses 12 premiers mois.",
+      "r2": "Une entreprise est la vôtre si elle s'inscrit dans les 90 jours suivant l'ouverture de votre lien. Jamais votre propre entreprise.",
+      "r3": "Chaque commission attend 30 jours ; un remboursement ou une contestation l'annule.",
+      "r4": "Vous êtes payé sur votre compte Stripe dès 50 $. Déclarer ce que vous gagnez vous revient.",
+      "r5": "Interdit : pourriel, promettre ce qui n'existe pas, miser sur notre marque dans les annonces ou vous faire passer pour nous."
+    },
+    "leerContrato": "Lire le contrat complet",
+    "firmaNombre": "Signature : écrivez votre nom complet",
+    "firmaTrazo": "Signez aussi avec le doigt (facultatif)",
+    "borrarTrazo": "Effacer",
+    "firmaAviso": "En signant, nous conservons votre nom, votre signature, la date, la version du contrat et l'endroit d'où vous avez signé, comme preuve pour vous et pour nous. Votre lien apparaît juste après.",
+    "firmarYRecibir": "Signer et recevoir mon lien",
+    "contratoFirmado": "Contrat signé le {{fecha}} par {{nombre}}."
+  },
+  "anuncioAfiliados": {
+    "titulo": "Gagnez de l'argent en nous recommandant",
+    "texto": "Vous connaissez d'autres entrepreneurs ? Touchez 30 % de ce qu'ils paient pendant 12 mois."
   }
 }

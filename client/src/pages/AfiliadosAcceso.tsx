@@ -51,7 +51,7 @@ export default function AfiliadosAcceso() {
   const [modo, setModo] = useState<"alta" | "entrar">("alta");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [datos, setDatos] = useState<Datos>({ nombre: "", dondeComparte: "", pais: paisDelAparato(), acepta: false });
+  const [datos, setDatos] = useState<Datos>({ nombre: "", dondeComparte: "", pais: paisDelAparato(), firmaNombre: "", firmaImagen: null, acepta: false });
   const [pideCodigo, setPideCodigo] = useState(false);
   const [codigo, setCodigo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -80,6 +80,8 @@ export default function AfiliadosAcceso() {
         pais: datos.pais,
         idioma: i18n.language.slice(0, 2),
         aceptaCondiciones: datos.acepta,
+        firmaNombre: datos.firmaNombre,
+        firmaImagen: datos.firmaImagen,
       }),
     });
     if (!res.ok) throw new Error(serverMessage(await readJson(res), t, t("auth.somethingWentWrong")));
@@ -217,7 +219,7 @@ export default function AfiliadosAcceso() {
               <DatosDeAfiliado datos={datos} onCambio={setDatos} />
               {error && <p className="text-sm text-status-error-fg">{error}</p>}
               <Button type="submit" className="w-full" disabled={busy || !datosCompletos(datos)}>
-                {t("afiliados.apuntarme")}
+                {t("afiliados.firmarYRecibir")}
               </Button>
             </form>
           ) : pideCodigo ? (
@@ -276,7 +278,7 @@ export default function AfiliadosAcceso() {
                 className="w-full"
                 disabled={busy || !email || !password || (modo === "alta" && !datosCompletos(datos))}
               >
-                {modo === "alta" ? t("afiliados.crearCuenta") : t("afiliados.entrar")}
+                {modo === "alta" ? t("afiliados.firmarYRecibir") : t("afiliados.entrar")}
               </Button>
             </form>
           )}

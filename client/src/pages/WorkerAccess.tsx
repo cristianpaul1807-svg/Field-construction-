@@ -19,6 +19,7 @@ import { Logo } from "@/components/Logo";
 import { MarcaDelNegocio } from "@/components/MarcaDelNegocio";
 import { StatusBadge } from "@/components/StatusBadge";
 import { workerApiFetch } from "@/lib/workerSession";
+import { AnuncioAfiliados } from "@/components/AnuncioAfiliados";
 
 /**
  * Si este trabajador tiene la IA conectada, en un solo sitio.
@@ -329,6 +330,9 @@ function WorkerHome({ session, onLogout }: { session: WorkerSession; onLogout: (
             <WorkerChat />
           </TabsContent>
         </Tabs>
+
+        {/* Un trabajador conoce a otros contratistas mejor que nadie. */}
+        <AnuncioAfiliados />
       </div>
     </div>
   );
