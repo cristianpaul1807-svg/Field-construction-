@@ -70,6 +70,14 @@ conoce a otros contratistas, siempre al final y nunca tapando lo suyo:
   del trabajador** y **el portal del cliente**: `AnuncioAfiliados`.
 - **Las descripciones de los vídeos** de YouTube, que escribe
   `scripts/videos/grabar.mjs`.
+- **Su propia serie de vídeos** (`scripts/videos/guiones/serie4-*`): un
+  largo que explica el programa de la puerta al banco y tres Shorts (el
+  enlace, la cifra, las reglas). Le hablan a quien quiere ganar, no al
+  contratista, y su descripción manda a `/afiliados` en vez de a la prueba.
+  Se graban sobre el paquete de este disco (`npm run build` antes), con un
+  panel de ejemplo contestado desde el guion: un panel con clientes
+  inventados no se puede sembrar en producción, porque serían comisiones de
+  mentira en las tablas de las que se paga. El vídeo dice que es un ejemplo.
 
 ---
 

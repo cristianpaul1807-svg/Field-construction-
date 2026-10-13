@@ -109,6 +109,10 @@ const FORMATOS = {
   // 1280 px escalado a 1080p: a 1920 reales la interfaz sale diminuta en
   // un teléfono, que es donde se ven los vídeos.
   horizontal: { width: 1280, height: 720, escala: 1.5 },
+  // También 1080p, pero con la página a 960 px: para pantallas estrechas
+  // (un formulario, un panel de una columna) que a 1280 salen en una tira
+  // con letra de hormiga.
+  "horizontal-cerca": { width: 960, height: 540, escala: 2 },
   // El móvil se graba a su tamaño real y se escala: así la app se ve como en
   // un teléfono y no como una web estirada.
   // 432 × 768 por 2,5 = 1080 × 1920: el 9:16 de Shorts, Reels y TikTok.
@@ -641,14 +645,20 @@ async function grabar(nombre, idioma) {
       en: "💰 Know other contractors? Earn 30% by referring us:",
     }[idioma];
     const capTitulo = { fr: "⏱️ Chapitres", it: "⏱️ Capitoli", es: "⏱️ Capítulos", en: "⏱️ Chapters" }[idioma];
+    const puerta = `https://logiciel-construction.com/afiliados?lang=${idioma}&utm_source=youtube&utm_medium=video&utm_campaign=${nombre}`;
+    // Los vídeos de la serie de afiliados le hablan a quien quiere ganar, no
+    // a quien busca un programa: su enlace es la puerta del programa, y la
+    // prueba gratuita no pinta nada ahí.
+    const enlaces = guion.paraAfiliados
+      ? [`${{ fr: "👉 Inscription gratuite au programme :", it: "👉 Iscrizione gratuita al programma:", es: "👉 Inscripción gratuita al programa:", en: "👉 Join the program for free:" }[idioma]} ${puerta}`]
+      : [`${prueba} ${enlace}`, `${afiliados} https://logiciel-construction.com/afiliados?lang=${idioma}`];
     const texto = [
       `TITRE / TITOLO (máx. 100):\n${yt.titulo}`,
       "",
       "DESCRIPTION / DESCRIZIONE:",
       yt.descripcion.trim(),
       "",
-      `${prueba} ${enlace}`,
-      `${afiliados} https://logiciel-construction.com/afiliados?lang=${idioma}`,
+      ...enlaces,
       ...(validos ? ["", capTitulo, ...caps.map((c) => `${mmss(c.t)} ${c.titulo}`)] : []),
       "",
       // La voz de Piper (SIWIS) es CC BY 4.0: se puede usar citándola.
