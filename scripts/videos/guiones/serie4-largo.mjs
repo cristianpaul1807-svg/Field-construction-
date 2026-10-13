@@ -20,7 +20,7 @@ const T = {
       titulo: "Le programme d'affiliation, *de l'inscription au paiement*.",
       texto: "L'offre, le contrat que vous signez, votre lien, votre panneau, et comment l'argent arrive à votre banque.",
     },
-    caps: ["L'idée", "1. L'offre", "2. L'inscription et le contrat", "3. Votre lien et votre panneau", "4. Comment vous êtes payé", "Les règles", "Pour commencer"],
+    caps: ["L'idée", "1. L'offre", "2. L'inscription et le contrat", "3. Votre lien et votre panneau", "4. Comment vous êtes payé", "Les règles"],
     franja: "Sur chaque page de notre site, il y a cette porte : devenir affilié.",
     oferta: "L'offre est simple : 30 % de ce que paie chaque entreprise que vous amenez, pendant ses 12 premiers mois.",
     pasos: "Trois étapes : vous vous inscrivez, vous partagez votre lien, et vous êtes payé dès 50 $.",
@@ -80,7 +80,7 @@ T.it = {
     titulo: "Il programma di affiliazione, *dall'iscrizione al pagamento*.",
     texto: "L'offerta, il contratto che firmi, il tuo link, il tuo pannello, e come arrivano i soldi in banca.",
   },
-  caps: ["L'idea", "1. L'offerta", "2. L'iscrizione e il contratto", "3. Il tuo link e il tuo pannello", "4. Come vieni pagato", "Le regole", "Per iniziare"],
+  caps: ["L'idea", "1. L'offerta", "2. L'iscrizione e il contratto", "3. Il tuo link e il tuo pannello", "4. Come vieni pagato", "Le regole"],
   franja: "In ogni pagina del nostro sito c'è questa porta: diventa affiliato.",
   oferta: "L'offerta è semplice: il 30 % di quello che paga ogni impresa che porti, per i suoi primi 12 mesi.",
   pasos: "Tre passi: ti iscrivi, condividi il tuo link, e vieni pagato da 50 dollari.",
@@ -130,7 +130,7 @@ T.it = {
 
 export const youtube = {
   fr: {
-    titulo: "Gagnez 30 % en recommandant un logiciel aux entrepreneurs en construction : le programme d'affiliation",
+    titulo: "Gagnez 30 % en recommandant un logiciel aux entrepreneurs : le programme d'affiliation",
     descripcion: `Vous connaissez des entrepreneurs en construction ou en rénovation ? Recommandez Logiciel Construction et touchez 30 % de ce que paie chaque entreprise que vous amenez, pendant ses 12 premiers mois.
 
 Dans cette vidéo : l'offre, l'inscription et le contrat que vous signez avant de recevoir votre lien, votre panneau d'affilié (avec des chiffres d'exemple), et comment vous êtes payé : par Stripe, sur un compte à votre nom, dès 50 $ disponibles.
@@ -230,6 +230,8 @@ export default {
     await callar();
 
     await tarjeta({ ...t.reglas, tipo: "problema", capitulo: t.caps[5], ms: 5000 });
-    await tarjeta({ ...t.cierre, tipo: "resultado", capitulo: t.caps[6], ms: 6000 });
+    // Sin capítulo propio: YouTube no enseña ninguno si uno dura menos de
+    // diez segundos, y el cierre solo no los llega a durar.
+    await tarjeta({ ...t.cierre, tipo: "resultado", ms: 6000 });
   },
 };

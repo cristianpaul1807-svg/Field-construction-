@@ -130,6 +130,8 @@ function puntero() {
     #lc-subtitulo{position:fixed;z-index:2147483645;left:50%;bottom:6%;transform:translateX(-50%);max-width:min(88vw,1200px);padding:14px 26px;border-radius:16px;background:rgba(11,18,32,.88);color:#fff;font:600 clamp(16px,2.2vw,30px)/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.35);transition:opacity .25s;pointer-events:none}
     #lc-subtitulo:empty{opacity:0}
     #lc-subtitulo.arriba{bottom:auto;top:11%}
+    /* En vertical, con left:50% el subtítulo sólo podía ocupar media pantalla y salía en una columna estrecha. */
+    @media (max-aspect-ratio:1/1){#lc-subtitulo{left:5vw;right:5vw;transform:none;margin:0 auto;width:fit-content;max-width:none;font-size:18px}}
     #lc-tarjeta{position:fixed;inset:0;z-index:2147483644;pointer-events:none;display:flex;flex-direction:column;justify-content:center;padding:0 9vw;background:radial-gradient(ellipse 80% 70% at 50% 0%,#1d3f8a 0%,#0f2350 45%,#0B1220 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;opacity:0;transition:opacity .35s}
     #lc-tarjeta.ve{opacity:1}
     #lc-tarjeta .marca{position:absolute;top:5.5vh;left:9vw;display:flex;align-items:center;gap:12px;font-weight:800;font-size:clamp(14px,1.7vw,22px);letter-spacing:-.02em;opacity:.92}
@@ -151,7 +153,8 @@ function puntero() {
     #lc-foco{position:fixed;z-index:2147483643;border:3px solid #F28A4E;border-radius:14px;box-shadow:0 0 0 200vmax rgba(11,18,32,.55);pointer-events:none;opacity:0;transition:opacity .35s}
     #lc-foco.ve{opacity:1}
     #lc-tarjeta.ya,#lc-tarjeta.ya .linea{transition:none}
-    #lc-gancho{position:fixed;z-index:2147483645;left:0;right:0;top:0;padding:7vh 7vw 9vh;background:linear-gradient(180deg,rgba(11,18,32,.94) 0%,rgba(11,18,32,.86) 62%,rgba(11,18,32,0) 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;pointer-events:none;opacity:0;transform:translateY(-12px);transition:opacity .3s,transform .3s}
+    /* Opaco detrás de la frase: con un 4 % de transparencia el titular de la página se leía por debajo, como un fantasma. */
+    #lc-gancho{position:fixed;z-index:2147483645;left:0;right:0;top:0;padding:7vh 7vw 9vh;background:linear-gradient(180deg,#0B1220 0%,#0B1220 calc(100% - 9vh),rgba(11,18,32,0) 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;pointer-events:none;opacity:0;transform:translateY(-12px);transition:opacity .3s,transform .3s}
     #lc-gancho.ve{opacity:1;transform:none}
     #lc-gancho .sobre{font-weight:800;font-size:clamp(12px,1.5vw,18px);letter-spacing:.14em;text-transform:uppercase;color:#F28A4E;margin-bottom:1.2vh}
     #lc-gancho h1{margin:0;font-weight:800;font-size:clamp(28px,4.6vw,64px);line-height:1.05;letter-spacing:-.035em}
