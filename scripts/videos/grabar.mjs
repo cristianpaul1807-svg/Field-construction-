@@ -610,7 +610,7 @@ async function grabar(nombre, idioma) {
     const entradas = inicio.audios.flatMap((a) => ["-i", a.archivo]);
     const retrasos = inicio.audios.map((a, i) => `[${i + 1}:a]adelay=${Math.round(Math.max(0, a.t - desde) * 1000)}:all=1[a${i}]`);
     const filtro = `${retrasos.join(";")};${inicio.audios.map((_, i) => `[a${i}]`).join("")}amix=inputs=${inicio.audios.length}:normalize=0:dropout_transition=0,apad[voz]`;
-    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", mp4, ...entradas, "-filter_complex", filtro, "-map", "0:v", "-map", "[voz]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest", "-movflags", "+faststart", conVoz]);
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", mp4, ...entradas, "-filter_complex", filtro, "-map", "0:v", "-map", "[voz]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2", "-shortest", "-movflags", "+faststart", conVoz]);
     fs.renameSync(conVoz, mp4);
   }
 
