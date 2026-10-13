@@ -179,7 +179,28 @@ const FIXTURAS = {
     stripeConectado: true,
     firmado: true,
     contrato: { fecha: "2026-10-13T12:00:00Z", nombre: "Construcciones y Reformas Integrales del Valle del Saint-Laurent", version: "2026-10" },
+    cobroListo: true,
     clientes: { total: 128, enPrueba: 37, pagando: 91 },
+    // Una fila por etapa: cada una lleva su pastilla y su frase, y la más
+    // larga en el idioma más largo es la que no cabe.
+    listaDeClientes: [
+      ["prueba", "2026-11-12T00:00:00Z", 0, 0],
+      ["prueba_vencida", "2026-09-01T00:00:00Z", 0, 0],
+      ["pagando", "2027-08-01T00:00:00Z", 12345.67, 0],
+      ["pagando", null, 23456.78, 0],
+      ["se_va", "2027-08-01T00:00:00Z", 98765.43, 54.32],
+      ["impago", null, 12345.67, 0],
+      ["cancelada", null, 98765.43, 23456.78],
+      ["comision_terminada", "2026-07-01T00:00:00Z", 98765.43, 0],
+      ["anulado", null, 0, 98765.43],
+    ].map(([etapa, hasta, ganadoCad, anuladoCad]) => ({
+      nombre: "Cons••••",
+      llegoEn: "2025-07-01T00:00:00Z",
+      etapa,
+      hasta,
+      ganadoCad,
+      anuladoCad,
+    })),
     enEsperaCad: 12345.67,
     disponibleCad: 23456.78,
     pagadoCad: 98765.43,

@@ -5,8 +5,9 @@
  * las comisiones (ver server/afiliados.ts). Aquí no se suma nada: lo que el
  * afiliado ve es exactamente lo que el servidor le pagaría.
  *
- * Sin nombres de las empresas que trajo: son clientes nuestros, y su nombre
- * es suyo. Ve cuántas, en qué estado, y cuánto le han generado.
+ * De las empresas que trajo ve cada una, en qué etapa está y cuánto le ha
+ * dado, pero sólo el principio del nombre: son clientes nuestros, y su
+ * nombre es suyo (ver `nombreVelado` en el servidor).
  */
 import { useCallback, useEffect, useState } from "react";
 import { Redirect, Link, useLocation } from "wouter";
@@ -33,14 +34,37 @@ interface Panel {
   minimoCad: number;
   pais: string | null;
   stripeConectado: boolean;
+  cobroListo: boolean;
   contrato: { fecha: string; nombre: string | null; version: string | null } | null;
   clientes: { total: number; enPrueba: number; pagando: number };
+  listaDeClientes: {
+    nombre: string | null;
+    llegoEn: string;
+    etapa: Etapa;
+    hasta: string | null;
+    ganadoCad: number;
+    anuladoCad: number;
+  }[];
   enEsperaCad: number;
   disponibleCad: number;
   pagadoCad: number;
   ultimasComisiones: { periodo: string; importeCad: number; estado: "en_espera" | "disponible" | "pagada" | "anulada"; disponibleEn: string }[];
   pagos: { importeCad: number; estado: "enviando" | "enviado" | "fallido"; fecha: string }[];
 }
+
+type Etapa = "prueba" | "prueba_vencida" | "pagando" | "se_va" | "impago" | "cancelada" | "comision_terminada" | "anulado";
+
+/** El color dice si con ese cliente todavía se gana, se puede ganar, o ya no. */
+const COLOR_DE_ETAPA: Record<Etapa, string> = {
+  prueba: "bg-status-info-bg text-status-info-fg",
+  prueba_vencida: "bg-muted text-muted-foreground",
+  pagando: "bg-status-success-bg text-status-success-fg",
+  se_va: "bg-status-warning-bg text-status-warning-fg",
+  impago: "bg-status-error-bg text-status-error-fg",
+  cancelada: "bg-muted text-muted-foreground",
+  comision_terminada: "bg-muted text-muted-foreground",
+  anulado: "bg-status-error-bg text-status-error-fg",
+};
 
 const CANAL = "https://www.youtube.com/@LogicielConstruction";
 
@@ -214,6 +238,41 @@ export default function AfiliadosPanel() {
             </div>
 
             <Card className="space-y-3 p-5">
+              <div>
+                <h2 className="font-semibold text-foreground">{t("afiliados.tusClientes")}</h2>
+                <p className="text-xs text-muted-foreground">{t("afiliados.tusClientesPista")}</p>
+              </div>
+              {panel.listaDeClientes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("afiliados.sinClientes")}</p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {panel.listaDeClientes.map((c, i) => (
+                    <li key={i} className="space-y-1.5 py-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                        <span className="min-w-0 break-words font-medium text-foreground">{c.nombre ?? t("afiliados.sinNombre")}</span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${COLOR_DE_ETAPA[c.etapa]}`}>
+                          {t(`afiliados.etapa.${c.etapa}`)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t(c.etapa === "pagando" && !c.hasta ? "afiliados.etapaPista.pagandoSinFecha" : `afiliados.etapaPista.${c.etapa}`, {
+                          fecha: c.hasta ? fecha(c.hasta) : "",
+                          pct: panel.comisionPct,
+                          meses: panel.meses,
+                        })}
+                      </p>
+                      <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                        <span>{t("afiliados.llego", { fecha: fecha(c.llegoEn) })}</span>
+                        {c.ganadoCad > 0 && <span className="font-medium text-foreground">{t("afiliados.ganadoConEste", { importe: dinero(c.ganadoCad) })}</span>}
+                        {c.anuladoCad > 0 && <span className="text-status-error-fg">{t("afiliados.anuladoConEste", { importe: dinero(c.anuladoCad) })}</span>}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+
+            <Card className="space-y-3 p-5">
               <h2 className="font-semibold text-foreground">{t("afiliados.cobroTitulo")}</h2>
               {!panel.stripeConectado ? (
                 <>
@@ -224,6 +283,13 @@ export default function AfiliadosPanel() {
                   </div>
                   <Button onClick={conectar} disabled={busy} className="h-auto gap-1.5 whitespace-normal py-2">
                     <ExternalLink size={14} /> {t("afiliados.conectar")}
+                  </Button>
+                </>
+              ) : !panel.cobroListo ? (
+                <>
+                  <p className="text-sm text-muted-foreground">{t("afiliados.cobroAMedias")}</p>
+                  <Button onClick={conectar} disabled={busy} className="h-auto gap-1.5 whitespace-normal py-2">
+                    <ExternalLink size={14} /> {t("afiliados.terminarStripe")}
                   </Button>
                 </>
               ) : (

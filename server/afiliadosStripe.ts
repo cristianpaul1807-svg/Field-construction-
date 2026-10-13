@@ -124,6 +124,25 @@ export async function enlaceDeAltaDeCobro(stripe: Stripe, cuentaId: string, base
   return enlace.url;
 }
 
+/**
+ * La entrada a su panel Express de Stripe: ahí ve cada pago que le hicimos,
+ * cuándo llega a su banco, y cambia de banco sin pasar por nosotros. Es la
+ * respuesta a «¿dónde está mi dinero?», y no la podemos dar nosotros porque
+ * su banco no lo vemos.
+ *
+ * `null` si Stripe no la da (la cuenta aún no ha terminado el alta): entonces
+ * lo útil es el enlace de alta, y eso decide quien llama.
+ */
+export async function enlaceAlPanelDeCobro(stripe: Stripe, cuentaId: string): Promise<string | null> {
+  try {
+    const enlace = await stripe.accounts.createLoginLink(cuentaId);
+    return enlace.url;
+  } catch (err) {
+    console.error("[afiliados] no se pudo abrir el panel Express", cuentaId, err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
 /** Si la cuenta ya puede recibir transferencias. */
 export async function puedeRecibir(stripe: Stripe, cuentaId: string): Promise<boolean> {
   try {

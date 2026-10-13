@@ -120,10 +120,18 @@ también añade los eventos que falten a los destinos que ya existían.
 
 ## Cómo cobra el afiliado
 
-1. En su panel elige el país de su cuenta bancaria y pulsa **Conectar mi
-   cuenta de cobro**. Se crea una cuenta de Stripe **sólo para recibir
-   transferencias** (configuración `recipient`, panel Express) a su nombre, y
-   Stripe le pide identidad y banco. Nosotros no los vemos.
+1. En su panel elige el país de su cuenta bancaria y pulsa **Crear mi
+   cuenta de cobro en Stripe**. No necesita tener nada de Stripe antes: se
+   crea una cuenta de Stripe **sólo para recibir transferencias**
+   (configuración `recipient`, panel Express) a su nombre, unida a la
+   nuestra, y Stripe le pide identidad y banco en su propia página. Nosotros
+   no los vemos.
+   - Si deja el alta a medias, el panel le dice **Terminar en Stripe**
+     (`cobroListo` es falso: tiene cuenta, pero Stripe aún no le deja recibir).
+   - Con la cuenta lista, el mismo botón se llama **Ver mis pagos en Stripe**
+     y abre su panel Express (`enlaceAlPanelDeCobro`): ahí ve cada pago,
+     cuándo llega a su banco, y cambia de banco. Si Stripe no da ese enlace,
+     se le manda al de alta, que también sirve para revisar sus datos.
 2. Con 50 $ o más disponibles, pulsa **Retirar**.
 3. `reservarParaPagar` apunta el pago y le cuelga las comisiones *antes* de
    transferir: dos clics no pagan dos veces. Si Stripe rechaza la
@@ -138,9 +146,30 @@ transferencia fallan con un mensaje claro y su saldo no se toca.
 
 ## Qué ve y qué no
 
-El afiliado ve su enlace, cuántas empresas trajo (en prueba y pagando), sus
-comisiones en espera, disponibles y cobradas, y sus pagos. **No ve los nombres**
-de esas empresas: son clientes nuestros. Tampoco ve nada de otros afiliados.
+El afiliado ve su enlace, sus comisiones en espera, disponibles y cobradas,
+sus pagos, y **la lista de sus clientes**: cada empresa que llegó por su
+enlace, cuándo llegó, cuánto le ha dado y cuánto se le anuló, y en qué etapa
+está.
+
+| Etapa | Cuándo |
+|---|---|
+| En prueba gratis | Nunca ha pagado y su prueba sigue abierta (con la fecha en que acaba) |
+| Prueba terminada sin pagar | Nunca ha pagado y la prueba ya acabó. Si paga más tarde, sigue siendo suya |
+| Pagando | Paga, y quedan meses de comisión (con la fecha en que acaban) |
+| Pagando, pero va a cancelar | Pidió cancelar al final del periodo |
+| Pago fallido | Su último cobro no pasó |
+| Canceló | Dejó de pagar. Lo ya ganado sigue siendo del afiliado |
+| Comisión completada | Pasaron los 12 meses desde su primer pago |
+| No cuenta | El alta se anuló a mano (`referidos.estado = 'anulado'`) |
+
+La etapa sale de `etapaDelCliente`, que cruza `referidos` (si llegó a pagar
+alguna vez) con la suscripción del negocio (si sigue pagando). Con sólo lo
+primero, quien canceló saldría «pagando» para siempre.
+
+**Del nombre sólo ve las cuatro primeras letras** (`nombreVelado`): «Cons••••».
+Basta para reconocer al amigo que trajo; no basta para que un canal con mil
+altas se lleve la lista de nuestros clientes. Nunca ve correos ni nada de
+otros afiliados.
 
 ---
 
@@ -151,7 +180,7 @@ de esas empresas: son clientes nuestros. Tampoco ve nada de otros afiliados.
 | `GET /api/public/afiliados/programa` | Las cifras del programa |
 | `POST /api/afiliados/alta` | Apuntarse (cuenta ya verificada, sin fila aún) |
 | `GET /api/afiliados/panel` | Su panel |
-| `POST /api/afiliados/cobro/enlace` | Crear/completar su cuenta de cobro en Stripe |
+| `POST /api/afiliados/cobro/enlace` | Crear o terminar su cuenta de cobro en Stripe, o abrir su panel Express si ya está lista |
 | `POST /api/afiliados/retirar` | Retirar lo disponible |
 | `GET /api/settings/afiliados` | Lo esencial, para una empresa que además es afiliada |
 

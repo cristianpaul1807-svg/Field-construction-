@@ -83,7 +83,7 @@ import {
   MINIMO_PARA_RETIRAR_CAD,
   VERSION_DE_LAS_CONDICIONES,
 } from "./afiliados";
-import { baseDelCobroEnCad, facturaDelPago, crearCuentaDeCobro, enlaceDeAltaDeCobro, puedeRecibir, transferir } from "./afiliadosStripe";
+import { baseDelCobroEnCad, facturaDelPago, crearCuentaDeCobro, enlaceDeAltaDeCobro, enlaceAlPanelDeCobro, puedeRecibir, transferir } from "./afiliadosStripe";
 import { clientesOAuth, clientIdDeClaude, conexionesVivas } from "./mcpClientes";
 import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, monedaDeCobro, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIOS, type MonedaDeCobro, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
@@ -4083,12 +4083,24 @@ apiRouter.get(
   "/afiliados/panel",
   requireAffiliateAuth(),
   route(async (req, res) => {
-    const panel = await panelDeAfiliado(getSupabaseAdmin(), req.afiliadoId!);
+    const admin = getSupabaseAdmin();
+    const panel = await panelDeAfiliado(admin, req.afiliadoId!);
     if (!panel) {
       res.status(404).json({ error: "No es afiliado", code: "no_es_afiliado" });
       return;
     }
-    res.json(panel);
+    // Tener cuenta no es poder cobrar: quien dejó el alta de Stripe a medias
+    // tiene que ver «termina en Stripe», no «abre tu cuenta».
+    let cobroListo = false;
+    if (panel.stripeConectado) {
+      const { data } = await admin.from("afiliados").select("stripe_account_id").eq("id", req.afiliadoId!).single();
+      try {
+        cobroListo = data?.stripe_account_id ? await puedeRecibir(getStripe(), data.stripe_account_id) : false;
+      } catch {
+        cobroListo = false;
+      }
+    }
+    res.json({ ...panel, cobroListo });
   })
 );
 
@@ -4128,6 +4140,13 @@ apiRouter.post(
         return;
       }
       await admin.from("afiliados").update({ stripe_account_id: cuenta, pais }).eq("id", afiliado.id);
+    } else if (await puedeRecibir(stripe, cuenta)) {
+      // Ya cobra: lo que busca es su panel de Stripe, no volver a rellenar el alta.
+      const panel = await enlaceAlPanelDeCobro(stripe, cuenta);
+      if (panel) {
+        res.json({ url: panel });
+        return;
+      }
     }
     const url = await enlaceDeAltaDeCobro(stripe, cuenta, `${req.protocol}://${req.get("host")}`);
     res.json({ url });

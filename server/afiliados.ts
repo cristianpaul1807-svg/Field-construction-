@@ -329,11 +329,88 @@ export async function anularComisionDelCobro(admin: Admin, stripeInvoice: string
 
 interface FilaDeComision {
   id: string;
+  referido_id: string;
   importe_cad: number | string;
   estado: string;
   disponible_en: string;
   pago_id: string | null;
   periodo: string;
+}
+
+interface FilaDeReferido {
+  id: string;
+  business_id: string;
+  estado: string;
+  atribuido_en: string;
+  primera_paga_en: string | null;
+}
+
+interface NegocioReferido {
+  id: string;
+  name: string | null;
+  subscription_status: string | null;
+  trial_ends_at: string | null;
+  subscription_cancel_at_period_end: boolean | null;
+}
+
+/**
+ * Dónde está cada cliente que trajo, en las palabras que le importan a quien
+ * lo trajo: si todavía puede ganar con él, si ya está ganando, o si ya no.
+ *
+ * Se lee de dos sitios a la vez. `referidos.estado` sólo sabe si llegó a
+ * pagar alguna vez; la suscripción del negocio sabe si sigue pagando. Con
+ * uno solo, un cliente que canceló seguiría saliendo como «pagando» para
+ * siempre, y una prueba abandonada como «en prueba».
+ */
+export type EtapaDelCliente =
+  | "prueba"
+  | "prueba_vencida"
+  | "pagando"
+  | "se_va"
+  | "impago"
+  | "cancelada"
+  | "comision_terminada"
+  | "anulado";
+
+function etapaDelCliente(
+  referido: FilaDeReferido,
+  negocio: NegocioReferido | undefined,
+  meses: number,
+  ahora = Date.now()
+): { etapa: EtapaDelCliente; hasta: string | null } {
+  if (referido.estado === "anulado") return { etapa: "anulado", hasta: null };
+  const estado = negocio?.subscription_status ?? null;
+  const cancelada = estado === "cancelled" || estado === "canceled";
+
+  if (!referido.primera_paga_en) {
+    const finDePrueba = negocio?.trial_ends_at ?? null;
+    if (estado === "trialing" && finDePrueba && new Date(finDePrueba).getTime() > ahora) return { etapa: "prueba", hasta: finDePrueba };
+    // Pagó, pero su primera comisión no llegó a apuntarse (el afiliado aún no
+    // había firmado, por ejemplo): no es una prueba olvidada.
+    if (estado === "active") return { etapa: "pagando", hasta: null };
+    return { etapa: "prueba_vencida", hasta: finDePrueba };
+  }
+
+  const fin = new Date(referido.primera_paga_en);
+  fin.setMonth(fin.getMonth() + meses);
+  if (fin.getTime() <= ahora) return { etapa: "comision_terminada", hasta: fin.toISOString() };
+  if (cancelada) return { etapa: "cancelada", hasta: null };
+  if (estado === "payment_failed" || estado === "past_due" || estado === "unpaid") return { etapa: "impago", hasta: null };
+  if (negocio?.subscription_cancel_at_period_end) return { etapa: "se_va", hasta: fin.toISOString() };
+  return { etapa: "pagando", hasta: fin.toISOString() };
+}
+
+/**
+ * «Cons••••», no «Construction Tremblay inc.».
+ *
+ * El afiliado tiene que poder reconocer al amigo que trajo, pero un canal de
+ * YouTube con mil altas no tiene por qué llevarse la lista de nuestros
+ * clientes: las primeras letras bastan para lo primero y no dan lo segundo.
+ */
+function nombreVelado(nombre: string | null | undefined): string | null {
+  const limpio = (nombre ?? "").trim();
+  if (!limpio) return null;
+  return `${Array.from(limpio).slice(0, 4).join("")}••••`;
 }
 
 /** Las cuentas de un afiliado, a partir de sus comisiones. */
@@ -350,22 +427,52 @@ function cuentas(comisiones: FilaDeComision[], ahora = Date.now()) {
 
 /** Las comisiones de todos los clientes de un afiliado. */
 async function comisionesDe(admin: Admin, afiliadoId: string) {
-  const { data: referidos } = await admin.from("referidos").select("id, estado, atribuido_en").eq("afiliado_id", afiliadoId);
-  const ids = (referidos ?? []).map((r) => r.id);
+  const { data } = await admin
+    .from("referidos")
+    .select("id, business_id, estado, atribuido_en, primera_paga_en")
+    .eq("afiliado_id", afiliadoId)
+    .order("atribuido_en", { ascending: false });
+  const referidos = (data ?? []) as FilaDeReferido[];
+  const ids = referidos.map((r) => r.id);
   const { data: comisiones } = ids.length
     ? await admin
         .from("comisiones")
-        .select("id, importe_cad, estado, disponible_en, pago_id, periodo")
+        .select("id, referido_id, importe_cad, estado, disponible_en, pago_id, periodo")
         .in("referido_id", ids)
         .order("periodo", { ascending: false })
     : { data: [] as FilaDeComision[] };
-  return { referidos: referidos ?? [], comisiones: (comisiones ?? []) as FilaDeComision[] };
+  return { referidos, comisiones: (comisiones ?? []) as FilaDeComision[] };
+}
+
+/** Cada cliente del afiliado, en qué etapa está y cuánto le ha dado. */
+async function clientesDe(admin: Admin, referidos: FilaDeReferido[], comisiones: FilaDeComision[], meses: number) {
+  const negocios = new Map<string, NegocioReferido>();
+  const ids = Array.from(new Set(referidos.map((r) => r.business_id)));
+  if (ids.length) {
+    const { data } = await admin
+      .from("businesses")
+      .select("id, name, subscription_status, trial_ends_at, subscription_cancel_at_period_end")
+      .in("id", ids);
+    for (const n of (data ?? []) as NegocioReferido[]) negocios.set(n.id, n);
+  }
+  return referidos.map((r) => {
+    const suyas = comisiones.filter((c) => c.referido_id === r.id);
+    const { etapa, hasta } = etapaDelCliente(r, negocios.get(r.business_id), meses);
+    return {
+      nombre: nombreVelado(negocios.get(r.business_id)?.name),
+      llegoEn: r.atribuido_en,
+      etapa,
+      hasta,
+      ganadoCad: centimos(suyas.filter((c) => c.estado !== "anulada").reduce((t, c) => t + Number(c.importe_cad), 0)),
+      anuladoCad: centimos(suyas.filter((c) => c.estado === "anulada").reduce((t, c) => t + Number(c.importe_cad), 0)),
+    };
+  });
 }
 
 /**
- * Lo que ve un afiliado en su panel. Nunca datos de otros afiliados, ni de
- * quiénes son sus clientes más allá de cuántos y en qué estado: el nombre de
- * un negocio que paga es de ese negocio.
+ * Lo que ve un afiliado en su panel. Nunca datos de otros afiliados. De sus
+ * clientes, la etapa de cada uno y lo que le ha dado, pero del nombre sólo el
+ * principio (ver `nombreVelado`): el nombre de un negocio es de ese negocio.
  */
 export async function panelDeAfiliado(admin: Admin, afiliadoId: string) {
   const { data: afiliado } = await admin
@@ -376,6 +483,7 @@ export async function panelDeAfiliado(admin: Admin, afiliadoId: string) {
   if (!afiliado) return null;
 
   const { referidos, comisiones } = await comisionesDe(admin, afiliado.id);
+  const lista = await clientesDe(admin, referidos, comisiones, Number(afiliado.meses_comision));
   const { data: pagos } = await admin
     .from("pagos_afiliados")
     .select("id, importe_cad, estado, creado_en")
@@ -398,11 +506,14 @@ export async function panelDeAfiliado(admin: Admin, afiliadoId: string) {
       ? { fecha: afiliado.contrato_en, nombre: afiliado.firma_nombre, version: afiliado.condiciones_version }
       : null,
     stripeConectado: Boolean(afiliado.stripe_account_id),
+    // Contados por etapa y no por `referidos.estado`, para que el resumen y
+    // la lista de debajo digan lo mismo.
     clientes: {
-      total: referidos.length,
-      enPrueba: referidos.filter((r) => r.estado === "prueba").length,
-      pagando: referidos.filter((r) => r.estado === "pagando").length,
+      total: lista.length,
+      enPrueba: lista.filter((c) => c.etapa === "prueba").length,
+      pagando: lista.filter((c) => c.etapa === "pagando" || c.etapa === "se_va" || c.etapa === "impago").length,
     },
+    listaDeClientes: lista.slice(0, 200),
     ...cuentas(comisiones),
     ultimasComisiones: comisiones.slice(0, 12).map((c) => ({
       periodo: c.periodo,
