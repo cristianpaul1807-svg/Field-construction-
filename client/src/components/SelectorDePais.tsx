@@ -29,8 +29,23 @@ export function nombreDelPais(codigo: string, idioma: string, t: (k: string) => 
  * obras desde el primer día—, pero se le dice en el momento que su país
  * todavía no tiene la configuración fiscal y a quién escribir, en vez de que
  * lo descubra al intentar su primera factura.
+ *
+ * `avisoFiscal={false}` donde el país no es el de un negocio: a un afiliado
+ * que vive en España no le importa que no sepamos facturar con IVA español,
+ * porque no va a facturar nada; lo que le importa es otra cosa (ver
+ * MercadosDelPrograma).
  */
-export function SelectorDePais({ valor, onCambio, id }: { valor: string; onCambio: (codigo: string) => void; id?: string }) {
+export function SelectorDePais({
+  valor,
+  onCambio,
+  id,
+  avisoFiscal = true,
+}: {
+  valor: string;
+  onCambio: (codigo: string) => void;
+  id?: string;
+  avisoFiscal?: boolean;
+}) {
   const { t, i18n } = useTranslation();
   const idioma = i18n.language.slice(0, 2);
   const [soporte, setSoporte] = useState<string | null>(null);
@@ -51,7 +66,7 @@ export function SelectorDePais({ valor, onCambio, id }: { valor: string; onCambi
     [idioma, t]
   );
 
-  const aviso = avisoDelPais(valor);
+  const aviso = avisoFiscal ? avisoDelPais(valor) : null;
 
   return (
     <div className="space-y-2">

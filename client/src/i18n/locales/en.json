@@ -3400,7 +3400,11 @@
       "comision_terminada": "Your {{meses}} months with this company ended on {{fecha}}.",
       "anulado": "This signup isn't part of the program. If you think that's a mistake, write to us.",
       "pagandoSinFecha": "You earn {{pct}}% of what they pay for {{meses}} months."
-    }
+    },
+    "mercadosTitulo": "Where you can earn",
+    "mercadosTexto": "You can live anywhere, but today the program works with companies in {{paises}}: refer us to companies there. When we open another country, you'll see it in your dashboard.",
+    "mercadosTextoPanel": "Today the program works with companies in {{paises}}: those are the ones worth referring. When we open another country, it will show up here.",
+    "sinStripe": "Stripe doesn't pay out in {{pais}} yet. You can join, but you couldn't collect your commissions until it does."
   },
   "anuncioAfiliados": {
     "titulo": "Earn money by recommending us",

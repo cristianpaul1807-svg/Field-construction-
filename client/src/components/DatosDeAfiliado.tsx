@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectorDePais } from "@/components/SelectorDePais";
+import { MercadosDelPrograma } from "@/components/MercadosDelPrograma";
 
 export interface Datos {
   nombre: string;
@@ -134,8 +135,9 @@ export function DatosDeAfiliado({ datos, onCambio }: { datos: Datos; onCambio: (
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="afiliado-pais">{t("afiliados.pais")}</Label>
-        <SelectorDePais id="afiliado-pais" valor={datos.pais} onCambio={(pais) => poner({ pais })} />
+        <SelectorDePais id="afiliado-pais" valor={datos.pais} onCambio={(pais) => poner({ pais })} avisoFiscal={false} />
       </div>
+      <MercadosDelPrograma paisDelAfiliado={datos.pais} />
 
       <div className="space-y-3 rounded-lg border border-border bg-secondary/40 p-4">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">

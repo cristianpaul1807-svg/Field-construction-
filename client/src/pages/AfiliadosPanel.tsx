@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { SelectorDePais } from "@/components/SelectorDePais";
+import { MercadosDelPrograma } from "@/components/MercadosDelPrograma";
 import { apiFetch, readJson, serverMessage } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { PAIS_POR_DEFECTO } from "@shared/paises";
@@ -224,6 +225,7 @@ export default function AfiliadosPanel() {
               <Label>{t("afiliados.tuEnlace")}</Label>
               <Copiable texto={enlace} />
               <p className="text-xs text-muted-foreground">{t("afiliados.enlacePista", { pct: panel.comisionPct, meses: panel.meses })}</p>
+              <MercadosDelPrograma paisDelAfiliado={panel.stripeConectado ? null : paisCobro} enPanel />
             </Card>
 
             <div className="grid grid-cols-2 gap-3">
@@ -279,7 +281,7 @@ export default function AfiliadosPanel() {
                   <p className="text-sm text-muted-foreground">{t("afiliados.cobroSinCuenta")}</p>
                   <div className="space-y-1.5">
                     <Label htmlFor="pais-cobro">{t("afiliados.cobroPais")}</Label>
-                    <SelectorDePais id="pais-cobro" valor={paisCobro} onCambio={setPaisCobro} />
+                    <SelectorDePais id="pais-cobro" valor={paisCobro} onCambio={setPaisCobro} avisoFiscal={false} />
                   </div>
                   <Button onClick={conectar} disabled={busy} className="h-auto gap-1.5 whitespace-normal py-2">
                     <ExternalLink size={14} /> {t("afiliados.conectar")}

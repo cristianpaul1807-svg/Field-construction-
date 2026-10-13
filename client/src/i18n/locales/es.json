@@ -3400,7 +3400,11 @@
       "comision_terminada": "Se cumplieron tus {{meses}} meses con esta empresa el {{fecha}}.",
       "anulado": "Esta alta no entra en el programa. Si crees que es un error, escríbenos.",
       "pagandoSinFecha": "Ganas el {{pct}} % de lo que paga durante {{meses}} meses."
-    }
+    },
+    "mercadosTitulo": "Dónde puedes ganar",
+    "mercadosTexto": "Tú puedes vivir en cualquier país, pero hoy el programa funciona con empresas de {{paises}}: recomiéndanos a empresas de ahí. Cuando abramos otro país, lo verás en tu panel.",
+    "mercadosTextoPanel": "Hoy el programa funciona con empresas de {{paises}}: son a las que te conviene recomendarnos. Cuando abramos otro país, aparecerá aquí.",
+    "sinStripe": "Stripe todavía no paga en {{pais}}. Puedes apuntarte, pero no podrías cobrar tus comisiones hasta que lo haga."
   },
   "anuncioAfiliados": {
     "titulo": "Gana dinero recomendándonos",

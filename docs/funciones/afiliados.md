@@ -36,7 +36,12 @@ su contenido, no con un descuento.
 
 1. Abre `/afiliados`. Ve el 30 %, los 12 meses y los tres pasos.
 2. Correo, contraseña, su nombre o el de su canal, **dónde lo va a
-   compartir** y su país.
+   compartir** y su país. El país es el **suyo**, no el de un negocio: el
+   selector no le enseña el aviso de impuestos de las empresas
+   (`avisoFiscal={false}`). En su lugar, `MercadosDelPrograma` le dice con
+   empresas de qué países gana hoy (los de `PAISES` ya terminados: cuando se
+   abre uno, aparece solo, también en su panel) y, si vive donde Stripe no
+   paga, que podrá apuntarse pero no cobrar.
 3. **Firma el contrato.** En el mismo formulario está resumido en cinco
    puntos (cuánto, qué cuenta como suyo, la espera, el cobro, lo prohibido),
    con el texto entero a un clic. Firma escribiendo su nombre completo —y

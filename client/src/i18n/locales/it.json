@@ -3400,7 +3400,11 @@
       "comision_terminada": "I tuoi {{meses}} mesi con questa impresa sono finiti il {{fecha}}.",
       "anulado": "Questa iscrizione non rientra nel programma. Se pensi sia un errore, scrivici.",
       "pagandoSinFecha": "Guadagni il {{pct}}% di quello che paga per {{meses}} mesi."
-    }
+    },
+    "mercadosTitulo": "Dove puoi guadagnare",
+    "mercadosTexto": "Puoi vivere in qualsiasi paese, ma oggi il programma funziona con imprese di questi paesi: {{paises}}. Consigliaci a imprese di lì. Quando apriremo un altro paese, lo vedrai nel tuo pannello.",
+    "mercadosTextoPanel": "Oggi il programma funziona con imprese di questi paesi: {{paises}}. Sono quelle a cui conviene consigliarci. Quando apriremo un altro paese, comparirà qui.",
+    "sinStripe": "Stripe non effettua ancora pagamenti in questo paese: {{pais}}. Puoi iscriverti, ma non potresti incassare le commissioni finché non lo farà."
   },
   "anuncioAfiliados": {
     "titulo": "Guadagna consigliandoci",
