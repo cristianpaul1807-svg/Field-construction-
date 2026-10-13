@@ -818,6 +818,13 @@ body {
   :root:not([data-theme="light"]) .cabecera { background: rgba(8,15,28,.74); }
   :root:not([data-theme="light"]) .portada { background: radial-gradient(ellipse 50% 38% at 50% 0%, rgba(74,132,245,.16), transparent 74%), linear-gradient(180deg, rgba(8,15,28,.72), rgba(13,23,38,.14)); }
   :root:not([data-theme="light"]) .flotante { background: linear-gradient(145deg, rgba(24,39,61,.94), rgba(17,29,46,.86)); border-color: rgba(190,211,240,.16); }
+  /* Estos dos fondos están escritos en claro más arriba, no con las variables:
+     en un móvil en modo oscuro la letra se volvía clara y el fondo no, y las
+     preguntas frecuentes salían blanco sobre blanco. */
+  :root:not([data-theme="light"]) .seccion-clara { background: linear-gradient(180deg, #0d1726, #0a1322); border-block-color: var(--linea-suave); }
+  :root:not([data-theme="light"]) .razon:hover { background: var(--superficie-2); }
+  :root:not([data-theme="light"]) .preguntas,
+  :root:not([data-theme="light"]) .pregunta { border-color: var(--linea); }
 }
 
 
@@ -850,21 +857,25 @@ body {
 
 
 /* Contraste explícito para botones sobre la landing oscura en dispositivos que
-   siguen la preferencia del sistema. Evita texto claro sobre fondo gris claro. */
+   siguen la preferencia del sistema. Evita texto claro sobre fondo gris claro.
+   Para todos los secundarios y no sólo los de arriba: el fondo claro de
+   `.boton-secundario` está escrito a mano, y en tarifas, soporte y la portada
+   más abajo salían igual de ilegibles. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .cabecera .boton-secundario,
-  :root:not([data-theme="light"]) .portada .boton-secundario {
+  :root:not([data-theme="light"]) .boton-secundario {
     background: #17263b;
     color: #f4f8ff;
     border-color: rgba(190, 211, 240, .26);
     box-shadow: 0 5px 14px -8px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
   }
-  :root:not([data-theme="light"]) .cabecera .boton-secundario:hover,
-  :root:not([data-theme="light"]) .portada .boton-secundario:hover {
+  :root:not([data-theme="light"]) .boton-secundario:hover {
     background: #203552;
     color: #fff;
     border-color: rgba(145, 184, 255, .5);
   }
+  /* El del cierre va translúcido sobre su azul, como en claro. */
+  :root:not([data-theme="light"]) .cierre .boton-secundario { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.28); box-shadow: none; }
+  :root:not([data-theme="light"]) .cierre .boton-secundario:hover { background: rgba(255,255,255,.2); }
   :root:not([data-theme="light"]) .idiomas > summary {
     background: #111f33;
     color: #e9f1ff;
