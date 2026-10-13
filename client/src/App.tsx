@@ -26,6 +26,8 @@ const WorkerAccess = perezosa(() => import("@/pages/WorkerAccess"));
 const PublicBusinessChat = perezosa(() => import("@/pages/PublicBusinessChat"));
 const ClientPortalMe = perezosa(() => import("@/pages/ClientPortalMe"));
 const PaginaLegal = perezosa(() => import("@/pages/PaginaLegal"));
+const AfiliadosAcceso = perezosa(() => import("@/pages/AfiliadosAcceso"));
+const AfiliadosPanel = perezosa(() => import("@/pages/AfiliadosPanel"));
 const Suscripcion = perezosa(() => import("@/pages/Suscripcion"));
 const Dashboard = perezosa(() => import("@/pages/Dashboard"));
 const Crm = perezosa(() => import("@/pages/Crm"));
@@ -174,6 +176,7 @@ function RootRoute() {
   // finishes provisioning with the existing session — no new email/code
   // needed. Deliberately leaving via "Volver" is what signs the user out.
   if (persona === "none") return <Redirect to="/negocio/acceso" />;
+  if (persona === "affiliate") return <Redirect to="/afiliados/panel" />;
   if (persona === "client") return <ClientPortalRoute />;
   return <BusinessPanel />;
 }
@@ -195,6 +198,11 @@ function Router() {
           con sus datos sin tener que entrar en ninguna parte. */}
       <Route path={"/privacy"}>{() => <PaginaLegal cual="privacy" />}</Route>
       <Route path={"/terms"}>{() => <PaginaLegal cual="terms" />}</Route>
+      {/* El programa de afiliados: su puerta pública, su panel (con su propia
+          sesión, no la del negocio) y sus condiciones. */}
+      <Route path={"/afiliados"} component={AfiliadosAcceso} />
+      <Route path={"/afiliados/panel"} component={AfiliadosPanel} />
+      <Route path={"/afiliados/condiciones"}>{() => <PaginaLegal cual="affiliates" />}</Route>
       {/* Adónde vuelve quien paga con el QR de la oficina. Sin sesión: es el
           móvil del cliente, no el del negocio. */}
       <Route path={"/pago-recibido"} component={PagoRecibido} />

@@ -98,7 +98,8 @@
     "timeOff": "Congés et absences",
     "quickbooks": "QuickBooks",
     "subscription": "Abonnement",
-    "cobrar": "Encaisser"
+    "cobrar": "Encaisser",
+    "afiliados": "Gagnez en recommandant"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1697,7 +1698,17 @@
     "no_disponible_en_el_pais": "Cette fonction n'est pas offerte dans le pays de votre entreprise.",
     "prezzario_sin_fonte": "Donnez un nom au prezzario.",
     "prezzario_troppe_voci": "Trop de postes dans un seul envoi.",
-    "prezzario_vuoto": "Aucun poste n'a de code et de description. Vérifiez les colonnes."
+    "prezzario_vuoto": "Aucun poste n'a de code et de description. Vérifiez les colonnes.",
+    "no_es_afiliado": "Ce compte ne fait pas encore partie du programme d'affiliation.",
+    "afiliado_sin_nombre": "Écrivez votre nom ou celui de votre chaîne.",
+    "afiliado_sin_canal": "Dites-nous où vous allez le partager : votre chaîne, votre site ou votre réseau social.",
+    "afiliado_sin_condiciones": "Pour vous inscrire, vous devez accepter les conditions du programme.",
+    "afiliado_sin_pais": "Choisissez le pays de votre compte bancaire.",
+    "afiliado_cobro_no_disponible": "Stripe n'a pas pu ouvrir votre compte de paiement dans ce pays. Écrivez-nous et nous réglerons ça.",
+    "afiliado_cobro_sin_cuenta": "Votre compte de paiement Stripe n'est pas encore prêt. Terminez l'inscription sur Stripe et réessayez.",
+    "afiliado_suspendido": "Vos paiements sont suspendus. Écrivez-nous pour savoir pourquoi.",
+    "afiliado_bajo_minimo": "Vous n'avez pas encore atteint le minimum pour retirer.",
+    "afiliado_transferencia_fallida": "Stripe n'a pas accepté le virement. Votre solde reste disponible ; réessayez ou écrivez-nous."
   },
   "workLog": {
     "title": "Suivi des travaux",
@@ -2727,7 +2738,81 @@
           "Pour ce qui est facturé et déclaré au Québec, c'est évidemment le droit québécois qui régit — et le logiciel est fait pour le respecter."
         ]
       }
-    ]
+    ],
+    "affiliatesTitle": "Conditions du programme d'affiliation",
+    "affiliatesLead": "Ce que vous acceptez en vous inscrivant : combien vous gagnez, quand, et ce qui est interdit. Elles sont courtes exprès ; lisez-les en entier.",
+    "affiliates": [
+      {
+        "id": "que",
+        "title": "De quoi il s'agit",
+        "body": [
+          "Vous recommandez Logiciel Construction avec votre lien personnel et vous touchez une commission sur les entreprises qui s'abonnent grâce à vous.",
+          "Le programme est offert par **Christhian Paul Rodriguez Almarales**, le même titulaire que Logiciel Construction (voir les conditions d'utilisation). Vous devez être majeur pour vous inscrire."
+        ]
+      },
+      {
+        "id": "cuanto",
+        "title": "Combien vous gagnez",
+        "body": [
+          "**30 % de ce que paie chaque entreprise que vous amenez, hors taxes**, pendant ses **12 premiers mois** à partir de son premier paiement. Après ces 12 mois, cette entreprise ne génère plus de commission ; les autres continuent.",
+          "Les jours d'essai gratuit ne génèrent rien : seul compte ce qui est réellement encaissé. Les commissions sont calculées en **dollars canadiens** ; un abonnement payé dans une autre devise compte pour ce qui est réellement arrivé après la conversion de Stripe."
+        ]
+      },
+      {
+        "id": "cuando",
+        "title": "Quand une entreprise est la vôtre",
+        "body": [
+          "Elle compte comme la vôtre si elle s'inscrit dans les **90 jours** suivant l'ouverture de votre lien, depuis le même navigateur. Si elle avait d'abord ouvert le lien de quelqu'un d'autre, elle revient à cette personne : le premier la garde.",
+          "**Vous ne pouvez pas utiliser votre propre lien** pour votre propre entreprise ni pour des comptes que vous contrôlez."
+        ]
+      },
+      {
+        "id": "espera",
+        "title": "Attente et annulations",
+        "body": [
+          "Chaque commission attend **30 jours** avant de pouvoir être retirée. Si pendant ce délai le paiement est remboursé ou contesté, la commission est annulée.",
+          "Si une commission déjà payée provient d'un paiement remboursé ou frauduleux, nous pouvons la déduire de vos commissions suivantes."
+        ]
+      },
+      {
+        "id": "cobrar",
+        "title": "Comment vous êtes payé",
+        "body": [
+          "Vous êtes payé sur un **compte Stripe à votre nom**, que vous connectez depuis votre tableau de bord. Stripe vous demandera votre identité et votre compte bancaire ; nous ne les voyons pas.",
+          "Vous pouvez retirer dès **50 $ disponibles**. Les frais de votre banque ou de conversion de devise sont à votre charge. **Déclarer ce que vous gagnez vous revient** : nous ne sommes pas votre employeur et nous ne retenons pas d'impôts."
+        ]
+      },
+      {
+        "id": "prohibido",
+        "title": "Ce qui est interdit",
+        "body": [
+          "Envoyer du **pourriel** (messages de masse non sollicités), **promettre ce qui n'existe pas** (rabais, prix ou fonctions que nous n'offrons pas), **miser sur la marque** « Logiciel Construction » dans les annonces des moteurs de recherche, vous faire passer pour nous, créer de faux comptes ou forcer des clics et des témoins.",
+          "Si cela arrive, nous suspendons votre lien et ne payons pas les commissions obtenues ainsi."
+        ]
+      },
+      {
+        "id": "marca",
+        "title": "Notre contenu et notre marque",
+        "body": [
+          "Vous pouvez utiliser nos vidéos, textes et logos pour promouvoir Logiciel Construction, tels quels ou raccourcis, tant que leur sens ne change pas. Vous ne pouvez pas enregistrer de domaines, comptes ou noms portant notre marque."
+        ]
+      },
+      {
+        "id": "cambios",
+        "title": "Changements et départ",
+        "body": [
+          "Nous pouvons modifier ces conditions en vous avertissant par courriel **30 jours** à l'avance ; ce que vous avez déjà généré est respecté. Vous pouvez quitter le programme quand vous voulez. Si nous fermons le programme, nous vous avertissons 30 jours à l'avance et payons ce qui a été généré jusque-là."
+        ]
+      },
+      {
+        "id": "relacion",
+        "title": "Notre relation",
+        "body": [
+          "Vous êtes indépendant : vous n'êtes ni employé, ni associé, ni mandataire de Logiciel Construction, et vous ne pouvez rien signer en notre nom. Ce qui n'est pas prévu ici est régi par les conditions d'utilisation de Logiciel Construction."
+        ]
+      }
+    ],
+    "affiliatesUpdatedOn": "2026-10-13"
   },
   "security": {
     "title": "Deuxième étape à la connexion",
@@ -2926,27 +3011,20 @@
     "puedeEmitir": "Prépare et émet sur confirmation"
   },
   "afiliado": {
-    "titulo": "Votre lien de recommandation",
-    "entradilla": "Recommandez Logiciel Construction et touchez une commission tant que l'entreprise que vous avez amenée reste abonnée.",
+    "titulo": "Programme d'affiliation",
+    "entradilla": "Recommandez Logiciel Construction et touchez 30 % de ce que paie chaque entreprise que vous amenez, pendant 12 mois.",
     "sinEnlaceTitulo": "Vous n'avez pas encore de lien",
-    "sinEnlaceCuerpo": "Les liens sont attribués un par un. Si vous souhaitez recommander Logiciel Construction, écrivez-nous depuis l'Aide et nous préparerons le vôtre avec son contrat.",
+    "sinEnlaceCuerpo": "Inscrivez-vous avec ce même compte et recevez votre lien immédiatement. Vous aurez votre propre tableau de bord avec vos commissions, vos paiements et du contenu prêt à partager.",
     "tuEnlace": "Votre lien",
     "copiar": "Copier",
     "copiado": "Copié",
-    "comision": "{{pct}} % de ce que paie chaque entreprise que vous amenez, tant qu'elle continue de payer.",
-    "sinFirmarTitulo": "Le contrat n'est pas encore signé",
-    "sinFirmarCuerpo": "Votre lien fonctionne déjà et enregistre les personnes que vous amenez, mais aucune commission n'est accumulée tant que le contrat n'est pas signé. Écrivez-nous depuis l'Aide et nous le finaliserons.",
-    "suspendidoTitulo": "Lien suspendu",
-    "suspendidoCuerpo": "Votre lien enregistre toujours les personnes que vous amenez, mais les commissions sont suspendues. Écrivez-nous depuis l'Aide pour en connaître la raison.",
+    "comision": "{{pct}} % de ce que paie chaque entreprise que vous amenez, pendant ses 12 premiers mois.",
     "referidos": "Entreprises amenées",
     "pagando": "Dont abonnées payantes",
-    "devengado": "Gagné, pas encore versé",
+    "devengado": "Généré, pas encore payé",
     "pagado": "Déjà versé",
-    "comoFunciona": "Comment ça marche",
-    "regla1": "L'attribution va au premier lien cliqué par la personne, si elle s'inscrit dans les 90 jours.",
-    "regla2": "La commission est calculée sur ce que l'entreprise paie réellement, hors taxes.",
-    "regla3": "Si cette entreprise annule, la commission s'arrête ; si elle revient, elle reprend.",
-    "regla4": "Vous ne pouvez pas utiliser votre propre lien pour votre propre entreprise."
+    "unirme": "Rejoindre le programme",
+    "abrirPanel": "Ouvrir mon tableau de bord d'affilié : paiements, commissions et contenu"
   },
   "buscador": {
     "escribeParaFiltrar": "Écris pour filtrer…",
@@ -3214,5 +3292,67 @@
     "buscarPista": "intonaco calce, E04.001…",
     "noBusca": "La recherche a échoué. Réessayez.",
     "nadaEncontrado": "Aucun poste avec ces mots. Si vous n'avez pas encore chargé le prezzario, faites-le dans {{menu}}."
+  },
+  "afiliados": {
+    "titulo": "Programme d'affiliation",
+    "lema": "Gagnez {{pct}} % pendant {{meses}} mois sur chaque entreprise que vous amenez.",
+    "explicacion": "Vous recommandez Logiciel Construction avec votre lien. Quand une entreprise arrivée par vous paie son abonnement, vous touchez {{pct}} % de ce qu'elle paie pendant ses {{meses}} premiers mois.",
+    "paso1": "Inscrivez-vous et recevez votre lien immédiatement.",
+    "paso2": "Partagez-le là où on vous suit déjà : YouTube, TikTok, Instagram, votre site ou vos groupes.",
+    "paso3": "Vous êtes payé sur votre compte Stripe dès {{minimo}} $ disponibles.",
+    "crearCuenta": "Créer mon compte d'affilié",
+    "entrar": "Se connecter",
+    "yaSoy": "Déjà affilié ?",
+    "todaviaNo": "Pas encore affilié ?",
+    "apuntarme": "M'inscrire",
+    "nombre": "Votre nom ou celui de votre chaîne",
+    "dondeComparte": "Où allez-vous le partager ?",
+    "dondeCompartePista": "Votre chaîne, votre site ou votre réseau social. Par exemple : youtube.com/@machaine",
+    "pais": "Pays de résidence",
+    "acepto": "J'ai lu et j'accepte les conditions du programme",
+    "verCondiciones": "Conditions du programme",
+    "unirmeTitulo": "Rejoignez le programme",
+    "unirmeTexto": "Vous avez déjà un compte : il ne manque que ces informations pour vous donner votre lien.",
+    "panelTitulo": "Votre tableau de bord d'affilié",
+    "salir": "Se déconnecter",
+    "tuEnlace": "Votre lien",
+    "copiar": "Copier",
+    "copiado": "Copié",
+    "enlacePista": "Toute personne qui s'inscrit dans les 90 jours suivant l'ouverture compte comme la vôtre : {{pct}} % de ce qu'elle paie, pendant {{meses}} mois.",
+    "clientes": "Entreprises amenées",
+    "clientesDetalle": "{{prueba}} en essai · {{pagando}} payantes",
+    "enEspera": "En attente",
+    "enEsperaPista": "Paiements des {{dias}} derniers jours. Ils sont libérés s'il n'y a pas de remboursement.",
+    "disponible": "Disponible",
+    "pagado": "Déjà payé",
+    "cobroTitulo": "Comment vous êtes payé",
+    "cobroSinCuenta": "Connectez un compte Stripe à votre nom pour recevoir vos commissions. Stripe vous demandera votre identité et votre compte bancaire ; nous ne les voyons pas.",
+    "cobroPais": "Pays de votre compte bancaire",
+    "conectar": "Connecter mon compte de paiement",
+    "cobroConectado": "Votre compte de paiement est connecté. Si Stripe vous demande autre chose, complétez-le d'ici.",
+    "completarStripe": "Vérifier mon compte Stripe",
+    "retirar": "Retirer {{importe}}",
+    "minimo": "Vous pouvez retirer dès {{minimo}} $ disponibles.",
+    "retirado": "Envoyé : {{importe}} sur votre compte Stripe.",
+    "comisiones": "Dernières commissions",
+    "sinComisiones": "Pas encore de commissions. Elles arrivent quand une entreprise que vous avez amenée paie son abonnement.",
+    "estado": {
+      "en_espera": "En attente jusqu'au {{fecha}}",
+      "disponible": "Disponible",
+      "pagada": "Payée",
+      "anulada": "Annulée (remboursement)"
+    },
+    "pagos": "Paiements reçus",
+    "pagoEstado": {
+      "enviado": "Envoyé",
+      "enviando": "En cours",
+      "fallido": "Échoué"
+    },
+    "contenido": "Contenu à partager",
+    "contenidoTexto": "Nos vidéos expliquent le produit mieux que personne. Partagez-les avec votre lien dans la description.",
+    "verCanal": "Voir les vidéos sur YouTube",
+    "suspendido": "Vos paiements sont suspendus. Écrivez à progetmanagement@gmail.com pour savoir pourquoi.",
+    "mensajeListo": "Texte prêt à publier",
+    "mensaje": "Si vous avez une entreprise de construction ou de rénovation, regardez Logiciel Construction : soumissions, pointage GPS, factures et portail client dans une seule app. Essai gratuit de 30 jours : {{enlace}}"
   }
 }

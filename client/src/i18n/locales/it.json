@@ -98,7 +98,8 @@
     "timeOff": "Ferie e assenze",
     "quickbooks": "QuickBooks",
     "subscription": "Abbonamento",
-    "cobrar": "Incassa"
+    "cobrar": "Incassa",
+    "afiliados": "Guadagna consigliando"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1697,7 +1698,17 @@
     "no_disponible_en_el_pais": "Questa funzione non è disponibile nel paese della tua impresa.",
     "prezzario_sin_fonte": "Dai un nome al prezzario.",
     "prezzario_troppe_voci": "Troppe voci in un solo invio.",
-    "prezzario_vuoto": "Nessuna voce ha codice e descrizione. Controlla le colonne."
+    "prezzario_vuoto": "Nessuna voce ha codice e descrizione. Controlla le colonne.",
+    "no_es_afiliado": "Questo account non fa ancora parte del programma di affiliazione.",
+    "afiliado_sin_nombre": "Scrivi il tuo nome o quello del tuo canale.",
+    "afiliado_sin_canal": "Dicci dove lo condividerai: il tuo canale, il tuo sito o il tuo social.",
+    "afiliado_sin_condiciones": "Per iscriverti devi accettare le condizioni del programma.",
+    "afiliado_sin_pais": "Scegli il paese del tuo conto bancario.",
+    "afiliado_cobro_no_disponible": "Stripe non è riuscito ad aprire il tuo conto di incasso in quel paese. Scrivici e lo risolviamo.",
+    "afiliado_cobro_sin_cuenta": "Il tuo conto di incasso Stripe non è ancora pronto. Completa la registrazione su Stripe e riprova.",
+    "afiliado_suspendido": "I tuoi pagamenti sono sospesi. Scrivici per sapere perché.",
+    "afiliado_bajo_minimo": "Non hai ancora raggiunto il minimo per prelevare.",
+    "afiliado_transferencia_fallida": "Stripe non ha accettato il bonifico. Il tuo saldo resta disponibile; riprova o scrivici."
   },
   "workLog": {
     "title": "Controllo lavori",
@@ -2727,7 +2738,81 @@
           "Per quello che si fattura e si dichiara in Québec vale ovviamente la legge del Québec — e il programma è fatto per rispettarla."
         ]
       }
-    ]
+    ],
+    "affiliatesTitle": "Condizioni del programma di affiliazione",
+    "affiliatesLead": "Cosa accetti iscrivendoti: quanto guadagni, quando e cosa non è permesso. Sono brevi apposta; leggile per intero.",
+    "affiliates": [
+      {
+        "id": "que",
+        "title": "Di cosa si tratta",
+        "body": [
+          "Consigli Logiciel Construction con il tuo link personale e ricevi una commissione sulle imprese che si abbonano grazie a te.",
+          "Il programma è offerto da **Christhian Paul Rodriguez Almarales**, lo stesso titolare di Logiciel Construction (vedi le condizioni d'uso). Per iscriverti devi essere maggiorenne."
+        ]
+      },
+      {
+        "id": "cuanto",
+        "title": "Quanto guadagni",
+        "body": [
+          "Il **30% di quello che paga ogni impresa che porti, al netto delle imposte**, per i suoi **primi 12 mesi** dal primo pagamento. Dopo quei 12 mesi quell'impresa smette di generare commissioni; le altre continuano.",
+          "I giorni di prova gratuita non generano nulla: conta solo quanto viene davvero incassato. Le commissioni si calcolano in **dollari canadesi**; un abbonamento pagato in un'altra valuta conta per quanto è davvero arrivato dopo la conversione di Stripe."
+        ]
+      },
+      {
+        "id": "cuando",
+        "title": "Quando un'impresa è tua",
+        "body": [
+          "Conta come tua se si iscrive entro **90 giorni** dall'apertura del tuo link, dallo stesso browser. Se prima aveva aperto il link di un'altra persona, è di quella persona: il primo se la tiene.",
+          "**Non puoi usare il tuo link** per la tua impresa né per account che controlli tu."
+        ]
+      },
+      {
+        "id": "espera",
+        "title": "Attesa e annullamenti",
+        "body": [
+          "Ogni commissione attende **30 giorni** prima di poter essere prelevata. Se in quel periodo il pagamento viene rimborsato o contestato, la commissione si annulla.",
+          "Se una commissione già pagata risulta derivare da un pagamento rimborsato o fraudolento, possiamo scalarla dalle tue commissioni successive."
+        ]
+      },
+      {
+        "id": "cobrar",
+        "title": "Come vieni pagato",
+        "body": [
+          "Ricevi i pagamenti su un **account Stripe a tuo nome**, che colleghi dalla tua dashboard. Stripe ti chiederà identità e conto bancario; noi non li vediamo.",
+          "Puoi prelevare quando hai almeno **50 $ disponibili**. Le commissioni della tua banca o di cambio valuta sono a tuo carico. **Dichiarare quanto guadagni spetta a te**: non siamo il tuo datore di lavoro e non tratteniamo imposte."
+        ]
+      },
+      {
+        "id": "prohibido",
+        "title": "Cosa non è permesso",
+        "body": [
+          "Inviare **spam** (messaggi di massa non richiesti), **promettere cose che non esistono** (sconti, prezzi o funzioni che non offriamo), **fare offerte sul marchio** «Logiciel Construction» negli annunci dei motori di ricerca, spacciarti per noi, creare account falsi o forzare clic e cookie.",
+          "Se succede, sospendiamo il tuo link e non paghiamo le commissioni ottenute così."
+        ]
+      },
+      {
+        "id": "marca",
+        "title": "I nostri contenuti e il nostro marchio",
+        "body": [
+          "Puoi usare i nostri video, testi e loghi per promuovere Logiciel Construction, così come sono o tagliati, purché non ne cambi il significato. Non puoi registrare domini, account o nomi che contengano il nostro marchio."
+        ]
+      },
+      {
+        "id": "cambios",
+        "title": "Modifiche e recesso",
+        "body": [
+          "Possiamo modificare queste condizioni avvisandoti via email con **30 giorni** di anticipo; quanto hai già maturato viene rispettato. Puoi uscire quando vuoi. Se chiudiamo il programma, ti avvisiamo con 30 giorni di anticipo e paghiamo quanto maturato fino ad allora."
+        ]
+      },
+      {
+        "id": "relacion",
+        "title": "Il nostro rapporto",
+        "body": [
+          "Sei indipendente: non sei dipendente, socio né agente di Logiciel Construction e non puoi firmare nulla a nostro nome. Ciò che non è previsto qui è regolato dalle condizioni d'uso di Logiciel Construction."
+        ]
+      }
+    ],
+    "affiliatesUpdatedOn": "2026-10-13"
   },
   "security": {
     "title": "Secondo passo all'accesso",
@@ -2926,27 +3011,20 @@
     "puedeEmitir": "Prepara ed emette su conferma"
   },
   "afiliado": {
-    "titulo": "Il tuo link di raccomandazione",
-    "entradilla": "Consiglia Logiciel Construction e guadagna finché l'azienda che hai portato resta abbonata.",
+    "titulo": "Programma di affiliazione",
+    "entradilla": "Consiglia Logiciel Construction e ricevi il 30% di quello che paga ogni impresa che porti, per 12 mesi.",
     "sinEnlaceTitulo": "Non hai ancora un link",
-    "sinEnlaceCuerpo": "I link si assegnano uno a uno. Se vuoi consigliare Logiciel Construction, scrivici dalla Guida e prepariamo il tuo con il suo contratto.",
+    "sinEnlaceCuerpo": "Iscriviti con questo stesso account e ricevi subito il tuo link. Avrai la tua dashboard con commissioni, pagamenti e contenuti pronti da condividere.",
     "tuEnlace": "Il tuo link",
     "copiar": "Copia",
     "copiado": "Copiato",
-    "comision": "{{pct}} % di quanto paga ogni azienda che porti, finché continua a pagare.",
-    "sinFirmarTitulo": "Manca firmare il contratto",
-    "sinFirmarCuerpo": "Il tuo link funziona già e registra chi porti, ma non matura nessuna commissione finché il contratto non è firmato. Scrivici dalla Guida e lo chiudiamo.",
-    "suspendidoTitulo": "Link sospeso",
-    "suspendidoCuerpo": "Il tuo link continua a registrare chi porti, ma le commissioni sono sospese. Scrivici dalla Guida per sapere perché.",
+    "comision": "Il {{pct}}% di quello che paga ogni impresa che porti, nei suoi primi 12 mesi.",
     "referidos": "Aziende che hai portato",
     "pagando": "Di questi, paganti",
-    "devengado": "Maturato, non ancora pagato",
+    "devengado": "Maturato, non ancora incassato",
     "pagado": "Già pagato",
-    "comoFunciona": "Come funziona",
-    "regla1": "L'attribuzione va al primo link che quella persona ha aperto, se si registra entro 90 giorni.",
-    "regla2": "La commissione si calcola su quanto l'azienda paga davvero, senza imposte.",
-    "regla3": "Se quell'azienda disdice, la commissione si ferma; se torna, riparte.",
-    "regla4": "Non puoi usare il tuo link per la tua stessa azienda."
+    "unirme": "Unisciti al programma",
+    "abrirPanel": "Apri la mia dashboard affiliato: pagamenti, commissioni e contenuti"
   },
   "buscador": {
     "escribeParaFiltrar": "Scrivi per filtrare…",
@@ -3214,5 +3292,67 @@
     "buscarPista": "intonaco calce, E04.001…",
     "noBusca": "La ricerca non è riuscita. Riprova.",
     "nadaEncontrado": "Nessuna voce con queste parole. Se non hai ancora caricato il prezzario, fallo in {{menu}}."
+  },
+  "afiliados": {
+    "titulo": "Programma di affiliazione",
+    "lema": "Guadagna il {{pct}}% per {{meses}} mesi su ogni impresa che porti.",
+    "explicacion": "Consigli Logiciel Construction con il tuo link. Quando un'impresa arrivata tramite te paga l'abbonamento, ricevi il {{pct}}% di quello che paga nei suoi primi {{meses}} mesi.",
+    "paso1": "Ti iscrivi e ricevi subito il tuo link.",
+    "paso2": "Lo condividi dove già ti seguono: YouTube, TikTok, Instagram, il tuo sito o i tuoi gruppi.",
+    "paso3": "Ricevi i pagamenti sul tuo conto Stripe da {{minimo}} $ disponibili.",
+    "crearCuenta": "Crea il mio account affiliato",
+    "entrar": "Accedi",
+    "yaSoy": "Sei già affiliato?",
+    "todaviaNo": "Non sei ancora affiliato?",
+    "apuntarme": "Iscrivermi",
+    "nombre": "Il tuo nome o quello del tuo canale",
+    "dondeComparte": "Dove lo condividerai?",
+    "dondeCompartePista": "Il tuo canale, il tuo sito o il tuo social. Per esempio: youtube.com/@ilmiocanale",
+    "pais": "Paese in cui vivi",
+    "acepto": "Ho letto e accetto le condizioni del programma",
+    "verCondiciones": "Condizioni del programma",
+    "unirmeTitulo": "Unisciti al programma",
+    "unirmeTexto": "Hai già un account: servono solo questi dati per darti il tuo link.",
+    "panelTitulo": "La tua dashboard affiliato",
+    "salir": "Esci",
+    "tuEnlace": "Il tuo link",
+    "copiar": "Copia",
+    "copiado": "Copiato",
+    "enlacePista": "Chi si iscrive entro 90 giorni dall'apertura conta come tuo: il {{pct}}% di quello che paga, per {{meses}} mesi.",
+    "clientes": "Imprese portate",
+    "clientesDetalle": "{{prueba}} in prova · {{pagando}} paganti",
+    "enEspera": "In attesa",
+    "enEsperaPista": "Pagamenti degli ultimi {{dias}} giorni. Si sbloccano se non c'è rimborso.",
+    "disponible": "Disponibile",
+    "pagado": "Già incassato",
+    "cobroTitulo": "Come vieni pagato",
+    "cobroSinCuenta": "Collega un account Stripe a tuo nome per ricevere le commissioni. Stripe ti chiederà identità e conto bancario; noi non li vediamo.",
+    "cobroPais": "Paese del tuo conto bancario",
+    "conectar": "Collega il mio conto di incasso",
+    "cobroConectado": "Il tuo conto di incasso è collegato. Se Stripe ti chiede altro, completalo da qui.",
+    "completarStripe": "Controlla il mio account Stripe",
+    "retirar": "Preleva {{importe}}",
+    "minimo": "Puoi prelevare da {{minimo}} $ disponibili.",
+    "retirado": "Inviato: {{importe}} sul tuo account Stripe.",
+    "comisiones": "Ultime commissioni",
+    "sinComisiones": "Ancora nessuna commissione. Arrivano quando un'impresa che hai portato paga l'abbonamento.",
+    "estado": {
+      "en_espera": "In attesa fino al {{fecha}}",
+      "disponible": "Disponibile",
+      "pagada": "Pagata",
+      "anulada": "Annullata (rimborso)"
+    },
+    "pagos": "Pagamenti ricevuti",
+    "pagoEstado": {
+      "enviado": "Inviato",
+      "enviando": "In corso",
+      "fallido": "Non riuscito"
+    },
+    "contenido": "Contenuti da condividere",
+    "contenidoTexto": "I nostri video spiegano il prodotto meglio di chiunque. Condividili con il tuo link nella descrizione.",
+    "verCanal": "Guarda i video su YouTube",
+    "suspendido": "I tuoi pagamenti sono sospesi. Scrivi a progetmanagement@gmail.com per sapere perché.",
+    "mensajeListo": "Testo pronto da pubblicare",
+    "mensaje": "Se hai un'impresa edile o di ristrutturazioni, guarda Logiciel Construction: preventivi, timbrature GPS, fatture e portale clienti in un'unica app. Prova gratuita di 30 giorni: {{enlace}}"
   }
 }

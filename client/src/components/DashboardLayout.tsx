@@ -38,6 +38,7 @@ import {
   BadgeCheck,
   Settings,
   QrCode,
+  HandCoins,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -177,6 +178,9 @@ const navSections: NavSection[] = [
       // hasta que hace falta. Y va aquí y no junto a Pagos a propósito —
       // Pagos es con qué cobra él, esto es qué nos paga a nosotros.
       { id: "subscription", labelKey: "nav.subscription", Icon: BadgeCheck, path: "/suscripcion" },
+      // El programa de afiliados, ya abierto: una empresa cliente también
+      // puede recomendar y cobrar. Al final, que no es el día a día.
+      { id: "afiliados", labelKey: "nav.afiliados", Icon: HandCoins, path: "/settings/afiliados" },
     ],
   },
 ];

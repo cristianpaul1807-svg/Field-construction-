@@ -14,7 +14,7 @@
  * Escribir en la base es de la ruta, y eso se prueba con Stripe delante.
  */
 
-import { renovacionUnix, planDelPrecio, periodoDelPrecio } from "../../shared/suscripcionStripe.ts";
+import { renovacionUnix, planDelPrecio, periodoDelPrecio, suscripcionDeLaFactura } from "../../shared/suscripcionStripe.ts";
 import { claveDelPrecio, monedaDeCobro, PRECIOS } from "../../shared/planes.ts";
 import { paisDe } from "../../shared/paises.ts";
 
@@ -183,6 +183,33 @@ ok("Italia paga en euros, Canadá en dólares, un país sin precio propio en dó
    ["IT", "CA", "CO"].map((c) => monedaDeCobro(paisDe(c).moneda)), ["EUR", "CAD", "CAD"]);
 ok("La misma cifra en las dos monedas",
    [PRECIOS.EUR.chantier.mes, PRECIOS.EUR.entreprise.mes, PRECIOS.EUR.entreprise.ano], [PRECIOS.CAD.chantier.mes, PRECIOS.CAD.entreprise.mes, PRECIOS.CAD.entreprise.ano]);
+
+/* ---------- De qué suscripción es una factura ----------
+ *
+ * La forma de `parent` es la de la referencia de la API de Stripe para el
+ * objeto Invoice desde 2025 (`parent.type = "subscription_details"`). Con el
+ * campo viejo, que es lo único que miraba el webhook, cada renovación llegaba
+ * y no se apuntaba.
+ */
+const facturaNueva = {
+  id: "in_1T9xYzCoxo1rqCJc0Qe8wR4L",
+  object: "invoice",
+  currency: "cad",
+  subtotal: 7900,
+  total_excluding_tax: 7900,
+  amount_paid: 9083,
+  parent: {
+    type: "subscription_details",
+    quote_details: null,
+    subscription_details: { metadata: {}, subscription: "sub_1T9xYwCoxo1rqCJcKk3r2n5B" },
+  },
+};
+ok("La factura de una renovación dice de qué suscripción es (API 2025+)",
+   suscripcionDeLaFactura(facturaNueva), "sub_1T9xYwCoxo1rqCJcKk3r2n5B");
+ok("Y el campo viejo sigue valiendo si un evento antiguo lo trae",
+   suscripcionDeLaFactura({ subscription: "sub_viejo" }), "sub_viejo");
+ok("Una factura suelta, sin suscripción, no es de ninguna",
+   suscripcionDeLaFactura({ parent: { type: "quote_details", subscription_details: null } }), null);
 
 /* ---------- Quién puede entrar ----------
  *

@@ -98,7 +98,8 @@
     "timeOff": "Vacaciones y ausencias",
     "quickbooks": "QuickBooks",
     "subscription": "Suscripción",
-    "cobrar": "Cobrar"
+    "cobrar": "Cobrar",
+    "afiliados": "Gana recomendando"
   },
   "dashboard": {
     "title": "Panel",
@@ -1697,7 +1698,17 @@
     "no_disponible_en_el_pais": "Esta función no está disponible en el país de tu negocio.",
     "prezzario_sin_fonte": "Ponle un nombre al prezzario.",
     "prezzario_troppe_voci": "Demasiadas partidas en un solo envío.",
-    "prezzario_vuoto": "Ninguna partida tiene código y descripción. Revisa las columnas."
+    "prezzario_vuoto": "Ninguna partida tiene código y descripción. Revisa las columnas.",
+    "no_es_afiliado": "Esta cuenta todavía no está en el programa de afiliados.",
+    "afiliado_sin_nombre": "Escribe tu nombre o el de tu canal.",
+    "afiliado_sin_canal": "Dinos dónde lo vas a compartir: tu canal, tu web o tu red social.",
+    "afiliado_sin_condiciones": "Para apuntarte tienes que aceptar las condiciones del programa.",
+    "afiliado_sin_pais": "Elige el país de tu cuenta bancaria.",
+    "afiliado_cobro_no_disponible": "Stripe no ha podido abrir tu cuenta de cobro en ese país. Escríbenos y lo resolvemos.",
+    "afiliado_cobro_sin_cuenta": "Tu cuenta de cobro en Stripe todavía no está lista. Termina el alta en Stripe y vuelve a intentarlo.",
+    "afiliado_suspendido": "Tus pagos están parados. Escríbenos para saber por qué.",
+    "afiliado_bajo_minimo": "Todavía no llegas al mínimo para retirar.",
+    "afiliado_transferencia_fallida": "Stripe no ha aceptado la transferencia. Tu saldo sigue disponible; vuelve a intentarlo o escríbenos."
   },
   "workLog": {
     "title": "Control de trabajo",
@@ -2727,7 +2738,81 @@
           "Para lo que se factura y se declara en Quebec manda, evidentemente, la ley de Quebec — y el programa está hecho para cumplirla."
         ]
       }
-    ]
+    ],
+    "affiliatesTitle": "Condiciones del programa de afiliados",
+    "affiliatesLead": "Lo que aceptas al apuntarte: cuánto cobras, cuándo y qué no está permitido. Son cortas a propósito; léelas enteras.",
+    "affiliates": [
+      {
+        "id": "que",
+        "title": "Qué es",
+        "body": [
+          "Recomiendas Logiciel Construction con tu enlace personal y cobras una comisión por las empresas que se suscriben gracias a ti.",
+          "Lo ofrece **Christhian Paul Rodriguez Almarales**, el mismo titular de Logiciel Construction (ver las condiciones de uso). Para apuntarte tienes que ser mayor de edad."
+        ]
+      },
+      {
+        "id": "cuanto",
+        "title": "Cuánto cobras",
+        "body": [
+          "El **30 % de lo que pague cada empresa que traigas, sin impuestos**, durante sus **12 primeros meses** desde su primer pago. Pasados esos 12 meses, esa empresa deja de generar comisión; las demás siguen.",
+          "Los días de prueba gratuita no generan nada: solo cuenta lo que se cobra de verdad. Las comisiones se calculan en **dólares canadienses**; una suscripción pagada en otra moneda cuenta por lo que de verdad entró tras la conversión de Stripe."
+        ]
+      },
+      {
+        "id": "cuando",
+        "title": "Cuándo una empresa es tuya",
+        "body": [
+          "Cuenta como tuya si se da de alta en los **90 días** siguientes a abrir tu enlace, desde el mismo navegador. Si antes abrió el enlace de otra persona, es de esa otra persona: el primero se la queda.",
+          "**No puedes usar tu propio enlace** para tu propia empresa ni para cuentas que controles tú."
+        ]
+      },
+      {
+        "id": "espera",
+        "title": "Espera y anulaciones",
+        "body": [
+          "Cada comisión espera **30 días** antes de poder retirarse. Si en ese plazo el cobro se reembolsa o se disputa, la comisión se anula.",
+          "Si una comisión ya pagada resulta venir de un cobro devuelto o fraudulento, podemos descontarla de tus comisiones siguientes."
+        ]
+      },
+      {
+        "id": "cobrar",
+        "title": "Cómo cobras",
+        "body": [
+          "Cobras en una **cuenta de Stripe a tu nombre**, que conectas desde tu panel. Stripe te pedirá tu identidad y tu cuenta bancaria; nosotros no las vemos.",
+          "Puedes retirar cuando tengas **50 $ disponibles** o más. Las comisiones de tu banco o de conversión de moneda corren de tu cuenta. **Declarar lo que cobras es cosa tuya**: no somos tu empleador y no retenemos impuestos."
+        ]
+      },
+      {
+        "id": "prohibido",
+        "title": "Qué no está permitido",
+        "body": [
+          "Mandar **spam** (mensajes masivos no pedidos), **prometer cosas que no existen** (descuentos, precios o funciones que no ofrecemos), **pujar por la marca** «Logiciel Construction» en anuncios de buscadores, hacerte pasar por nosotros, crear cuentas falsas o forzar clics y cookies.",
+          "Si pasa, suspendemos tu enlace y no pagamos las comisiones obtenidas así."
+        ]
+      },
+      {
+        "id": "marca",
+        "title": "Nuestro contenido y nuestra marca",
+        "body": [
+          "Puedes usar nuestros vídeos, textos y logos para promocionar Logiciel Construction, tal cual o recortados, siempre que no cambien lo que dicen. No puedes registrar dominios, cuentas o nombres que lleven nuestra marca."
+        ]
+      },
+      {
+        "id": "cambios",
+        "title": "Cambios y baja",
+        "body": [
+          "Podemos cambiar estas condiciones avisándote por correo con **30 días** de antelación; lo que ya hayas generado se respeta. Puedes darte de baja cuando quieras. Si cerramos el programa, te avisamos con 30 días y pagamos lo generado hasta entonces."
+        ]
+      },
+      {
+        "id": "relacion",
+        "title": "Nuestra relación",
+        "body": [
+          "Eres independiente: no eres empleado, socio ni agente de Logiciel Construction, y no puedes firmar nada en nuestro nombre. Lo que no esté aquí se rige por las condiciones de uso de Logiciel Construction."
+        ]
+      }
+    ],
+    "affiliatesUpdatedOn": "2026-10-13"
   },
   "security": {
     "title": "Segundo paso al entrar",
@@ -2926,27 +3011,20 @@
     "puedeEmitir": "Prepara y emite con confirmación"
   },
   "afiliado": {
-    "titulo": "Tu enlace de recomendación",
-    "entradilla": "Recomienda Logiciel Construction y cobra mientras el negocio que trajiste siga suscrito.",
+    "titulo": "Programa de afiliados",
+    "entradilla": "Recomienda Logiciel Construction y cobra el 30 % de lo que pague cada empresa que traigas, durante 12 meses.",
     "sinEnlaceTitulo": "Todavía no tienes enlace",
-    "sinEnlaceCuerpo": "Los enlaces se dan uno a uno. Si quieres recomendar Logiciel Construction, escríbenos desde Ayuda y te preparamos el tuyo con su contrato.",
+    "sinEnlaceCuerpo": "Apúntate con tu misma cuenta y recibe tu enlace al instante. Tendrás tu propio panel con tus comisiones, tus cobros y contenido listo para compartir.",
     "tuEnlace": "Tu enlace",
     "copiar": "Copiar",
     "copiado": "Copiado",
-    "comision": "{{pct}} % de lo que pague cada negocio que traigas, mientras siga pagando.",
-    "sinFirmarTitulo": "Falta firmar el contrato",
-    "sinFirmarCuerpo": "Tu enlace ya funciona y apunta a quien traigas, pero no se devenga ninguna comisión hasta que el contrato esté firmado. Escríbenos desde Ayuda y lo cerramos.",
-    "suspendidoTitulo": "Enlace suspendido",
-    "suspendidoCuerpo": "Tu enlace sigue apuntando a quien traigas, pero las comisiones están paradas. Escríbenos desde Ayuda para saber por qué.",
+    "comision": "{{pct}} % de lo que pague cada empresa que traigas, durante sus 12 primeros meses.",
     "referidos": "Negocios que trajiste",
     "pagando": "De ésos, pagando",
-    "devengado": "Devengado, sin pagar aún",
+    "devengado": "Generado, sin cobrar aún",
     "pagado": "Ya pagado",
-    "comoFunciona": "Cómo funciona",
-    "regla1": "Se atribuye al primer enlace que tocó esa persona, si se da de alta dentro de 90 días.",
-    "regla2": "La comisión se calcula sobre lo que el negocio paga de verdad, sin impuestos.",
-    "regla3": "Si ese negocio cancela, la comisión se para; si vuelve, vuelve a correr.",
-    "regla4": "No puedes usar tu propio enlace para tu propio negocio."
+    "unirme": "Unirme al programa",
+    "abrirPanel": "Abrir mi panel de afiliado: cobros, comisiones y contenido"
   },
   "buscador": {
     "escribeParaFiltrar": "Escribe para filtrar…",
@@ -3214,5 +3292,67 @@
     "buscarPista": "intonaco calce, E04.001…",
     "noBusca": "No se pudo buscar. Inténtalo de nuevo.",
     "nadaEncontrado": "No hay partidas con esas palabras. Si aún no cargaste el prezzario, hazlo en {{menu}}."
+  },
+  "afiliados": {
+    "titulo": "Programa de afiliados",
+    "lema": "Gana el {{pct}} % durante {{meses}} meses por cada empresa que traigas.",
+    "explicacion": "Recomiendas Logiciel Construction con tu enlace. Cuando una empresa que llegó por ti paga su suscripción, te llevas el {{pct}} % de lo que paga durante sus primeros {{meses}} meses.",
+    "paso1": "Te apuntas y recibes tu enlace al instante.",
+    "paso2": "Lo compartes donde ya te siguen: YouTube, TikTok, Instagram, tu web o tus grupos.",
+    "paso3": "Cobras en tu cuenta de Stripe a partir de {{minimo}} $ disponibles.",
+    "crearCuenta": "Crear mi cuenta de afiliado",
+    "entrar": "Entrar",
+    "yaSoy": "¿Ya eres afiliado?",
+    "todaviaNo": "¿Todavía no eres afiliado?",
+    "apuntarme": "Apuntarme",
+    "nombre": "Tu nombre o el de tu canal",
+    "dondeComparte": "¿Dónde lo vas a compartir?",
+    "dondeCompartePista": "Tu canal, tu web o tu red social. Por ejemplo: youtube.com/@micanal",
+    "pais": "País donde vives",
+    "acepto": "He leído y acepto las condiciones del programa",
+    "verCondiciones": "Condiciones del programa",
+    "unirmeTitulo": "Únete al programa",
+    "unirmeTexto": "Ya tienes cuenta: solo faltan estos datos para darte tu enlace.",
+    "panelTitulo": "Tu panel de afiliado",
+    "salir": "Salir",
+    "tuEnlace": "Tu enlace",
+    "copiar": "Copiar",
+    "copiado": "Copiado",
+    "enlacePista": "Quien se dé de alta en los 90 días siguientes a abrirlo cuenta como tuyo. Así se reparte: {{pct}} % de lo que pague, durante {{meses}} meses.",
+    "clientes": "Empresas que trajiste",
+    "clientesDetalle": "{{prueba}} en prueba · {{pagando}} pagando",
+    "enEspera": "En espera",
+    "enEsperaPista": "Cobros de los últimos {{dias}} días. Se liberan si no hay reembolso.",
+    "disponible": "Disponible",
+    "pagado": "Ya cobrado",
+    "cobroTitulo": "Cómo cobras",
+    "cobroSinCuenta": "Conecta una cuenta de Stripe a tu nombre para recibir tus comisiones. Stripe te pedirá tu identidad y tu cuenta bancaria; nosotros no las vemos.",
+    "cobroPais": "País de tu cuenta bancaria",
+    "conectar": "Conectar mi cuenta de cobro",
+    "cobroConectado": "Tu cuenta de cobro está conectada. Si Stripe te pide algo más, complétalo desde aquí.",
+    "completarStripe": "Revisar mi cuenta en Stripe",
+    "retirar": "Retirar {{importe}}",
+    "minimo": "Puedes retirar a partir de {{minimo}} $ disponibles.",
+    "retirado": "Enviado: {{importe}} a tu cuenta de Stripe.",
+    "comisiones": "Últimas comisiones",
+    "sinComisiones": "Todavía no hay comisiones. Llegan cuando una empresa que trajiste paga su suscripción.",
+    "estado": {
+      "en_espera": "En espera hasta el {{fecha}}",
+      "disponible": "Disponible",
+      "pagada": "Cobrada",
+      "anulada": "Anulada por reembolso"
+    },
+    "pagos": "Pagos recibidos",
+    "pagoEstado": {
+      "enviado": "Enviado",
+      "enviando": "Enviando",
+      "fallido": "No salió"
+    },
+    "contenido": "Contenido para compartir",
+    "contenidoTexto": "Nuestros vídeos explican el producto mejor que nadie. Compártelos con tu enlace en la descripción.",
+    "verCanal": "Ver los vídeos en YouTube",
+    "suspendido": "Tus pagos están parados. Escríbenos a progetmanagement@gmail.com para saber por qué.",
+    "mensajeListo": "Texto listo para publicar",
+    "mensaje": "Si llevas una empresa de construcción o reformas, mira Logiciel Construction: presupuestos, horas con GPS, facturas y portal del cliente en una sola app. Prueba 30 días gratis: {{enlace}}"
   }
 }

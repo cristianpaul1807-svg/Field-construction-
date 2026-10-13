@@ -75,6 +75,10 @@ const EVENTS = [
   // El cobro del lector de tarjetas. No pasa por una sesión de Checkout, así
   // que no hay `checkout.session.completed` que lo avise.
   "payment_intent.succeeded",
+  // Para el programa de afiliados: un cobro devuelto o disputado anula la
+  // comisión que generó, mientras siga en sus 30 días de espera.
+  "charge.refunded",
+  "charge.dispute.created",
 ];
 
 /** Accounts v2 refuses a request with no explicit version. Pinned so a change
@@ -135,7 +139,7 @@ export async function provisionWebhook(db: Db, baseUrl: string): Promise<Provisi
   const existing = (await stripe.v2.core.eventDestinations.list(
     { limit: 100, include: ["webhook_endpoint.url"] } as never,
     { apiVersion: API_VERSION } as never
-  )) as unknown as { data: { id: string; events_from?: string[]; webhook_endpoint?: { url?: string } }[] };
+  )) as unknown as { data: { id: string; events_from?: string[]; enabled_events?: string[]; webhook_endpoint?: { url?: string } }[] };
   const stored = await readStoredWebhookSecrets(db);
 
   const destinations: ProvisionResult["destinations"] = [];
@@ -145,6 +149,17 @@ export async function provisionWebhook(db: Db, baseUrl: string): Promise<Provisi
         destination.webhook_endpoint?.url === url && (destination.events_from ?? []).includes(scope)
     );
     if (match) {
+      // Un destino que ya existía se queda con la lista de eventos con la
+      // que se creó. Cuando aquí se añade uno (los reembolsos, para el
+      // programa de afiliados), sin esto no le llegaría nunca.
+      const faltan = EVENTS.filter((e) => !(match.enabled_events ?? []).includes(e));
+      if (faltan.length && match.enabled_events) {
+        await stripe.v2.core.eventDestinations.update(
+          match.id,
+          { enabled_events: Array.from(new Set(match.enabled_events.concat(EVENTS))) } as never,
+          { apiVersion: API_VERSION } as never
+        );
+      }
       destinations.push({
         scope,
         outcome: stored.length > 0 ? "already_configured" : "exists_without_secret",

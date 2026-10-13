@@ -84,6 +84,9 @@ const PANTALLAS = [
   "/settings/whatsapp",
   "/settings/mcp-connections",
   "/settings/afiliados",
+  // No es del panel de empresas, pero va con sesión, así que se mide aquí: el
+  // panel del afiliado, con su enlace largo y cifras de cinco dígitos.
+  "/afiliados/panel",
 ];
 
 /**
@@ -158,11 +161,34 @@ const FIXTURAS = {
     codigo: "ABCD2345",
     estado: "activo",
     firmado: false,
-    comisionPct: 10,
+    comisionPct: 30,
     referidos: 12,
     pagando: 4,
     devengadoCad: 1234.56,
     pagadoCad: 987.65,
+  },
+  "/api/afiliados/panel": {
+    codigo: "ABCD2345",
+    nombre: LARGO,
+    estado: "activo",
+    comisionPct: 30,
+    meses: 12,
+    diasDeEspera: 30,
+    minimoCad: 50,
+    pais: "CA",
+    stripeConectado: true,
+    firmado: true,
+    clientes: { total: 128, enPrueba: 37, pagando: 91 },
+    enEsperaCad: 12345.67,
+    disponibleCad: 23456.78,
+    pagadoCad: 98765.43,
+    ultimasComisiones: [
+      { periodo: "2026-10-01", importeCad: 12345.67, estado: "en_espera", disponibleEn: "2026-10-31T00:00:00Z" },
+      { periodo: "2026-09-01", importeCad: 23456.78, estado: "disponible", disponibleEn: "2026-10-01T00:00:00Z" },
+      { periodo: "2026-08-01", importeCad: 98765.43, estado: "pagada", disponibleEn: "2026-08-31T00:00:00Z" },
+      { periodo: "2026-07-01", importeCad: 54.32, estado: "anulada", disponibleEn: "2026-07-31T00:00:00Z" },
+    ],
+    pagos: [{ importeCad: 98765.43, estado: "enviado", fecha: "2026-09-02T00:00:00Z" }],
   },
   "/api/settings/mcp-connections": {
     mcpUrl: "https://logiciel-construction.com/mcp",

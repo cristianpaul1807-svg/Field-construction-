@@ -107,3 +107,25 @@ export function periodoDelPrecio(precio: PrecioDeStripe | null | undefined): "me
   const porClave = precio?.lookup_key?.split("_")[1];
   return porClave === "mes" || porClave === "ano" ? porClave : null;
 }
+
+/**
+ * De qué suscripción es una factura.
+ *
+ * Desde la versión de 2025 de la API de Stripe la suscripción ya no está en
+ * `invoice.subscription`, sino en `invoice.parent.subscription_details`. El
+ * webhook miraba sólo el campo viejo, con un tipo escrito a mano que no se
+ * quejó: cada cobro mensual llegaba, no encontraba la suscripción y no hacía
+ * nada — ni la fecha de renovación, ni el «pago fallido», ni la comisión del
+ * afiliado. Se aceptan los dos por si algún día llega un evento antiguo.
+ */
+export function suscripcionDeLaFactura(factura: {
+  subscription?: unknown;
+  parent?: { subscription_details?: { subscription?: unknown } | null } | null;
+}): string | null {
+  const candidata = factura.parent?.subscription_details?.subscription ?? factura.subscription;
+  if (typeof candidata === "string") return candidata || null;
+  if (candidata && typeof candidata === "object" && typeof (candidata as { id?: unknown }).id === "string") {
+    return (candidata as { id: string }).id;
+  }
+  return null;
+}

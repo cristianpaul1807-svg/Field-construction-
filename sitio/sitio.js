@@ -7,6 +7,29 @@
  */
 document.documentElement.classList.add("js");
 
+/* ---------- El código de quien lo trajo ----------
+ *
+ * El enlace de un afiliado es `logiciel-construction.com/?ref=CODIGO`, y esa
+ * dirección abre este sitio, no la aplicación: el código se quedaba aquí y el
+ * alta, días después, no sabía de quién venía. Se guarda con la misma clave y
+ * la misma forma que `client/src/lib/afiliado.ts`, en el mismo dominio, así
+ * que la aplicación lo encuentra al darse de alta. El primero se lo queda,
+ * igual que allí.
+ */
+(function () {
+  try {
+    var codigo = (new URLSearchParams(location.search).get("ref") || "").trim().toUpperCase();
+    if (!/^[A-Z0-9]{4,16}$/.test(codigo)) return;
+    var clave = "logiciel.afiliado";
+    var guardado = JSON.parse(localStorage.getItem(clave) || "null");
+    if (guardado && typeof guardado.visto === "number" && Date.now() - guardado.visto < 90 * 86400000) return;
+    localStorage.setItem(clave, JSON.stringify({ codigo: codigo, visto: Date.now() }));
+  } catch (e) {
+    /* Ventana privada o almacenamiento bloqueado: se pierde la atribución de
+       esta visita y nada más. */
+  }
+})();
+
 /* ---------- Entrada al hacer scroll ---------- */
 (function () {
   var entran = document.querySelectorAll(".aparece");

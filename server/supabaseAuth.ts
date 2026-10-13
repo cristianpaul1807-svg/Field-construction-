@@ -40,6 +40,10 @@ declare global {
       workerId?: string;
       workerKind?: "employee" | "subcontractor";
       workerBusinessId?: string;
+      /** El afiliado que llama, en las rutas de `/afiliados`. */
+      afiliadoId?: string;
+      /** Su correo, tal como lo tiene Supabase Auth. */
+      authEmail?: string | null;
       /**
        * Las áreas que esta persona puede ver, o `null` si las ve todas.
        *
@@ -126,6 +130,54 @@ export const requireAuthenticatedUser = guarded(async (req: Request, res: Respon
   req.supabase = getSupabaseForToken(token);
   next();
 });
+
+/**
+ * Las rutas del panel de afiliados.
+ *
+ * Un afiliado es una cuenta de Supabase Auth con una fila en `afiliados`. No
+ * tiene negocio ni RLS que le valga: esas tablas son nuestras, sin políticas,
+ * así que las rutas leen con la clave de servicio y filtran por
+ * `req.afiliadoId`, igual que hacen las del trabajador.
+ *
+ * `soloCuenta`: para el alta, que corre antes de que exista la fila.
+ */
+export function requireAffiliateAuth({ soloCuenta = false } = {}) {
+  return guarded(async (req: Request, res: Response, next: NextFunction) => {
+    const token = bearerToken(req);
+    if (!token) {
+      res.status(401).json({ error: "Missing bearer token" });
+      return;
+    }
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin.auth.getUser(token);
+    if (error && !isCredentialRejection(error)) {
+      authUnavailable(res, error);
+      return;
+    }
+    if (error || !data.user) {
+      res.status(401).json({ error: "Invalid or expired session" });
+      return;
+    }
+    req.authUserId = data.user.id;
+    req.authEmail = data.user.email ?? null;
+    if (soloCuenta) {
+      next();
+      return;
+    }
+    const { data: afiliado, error: errorAfiliado } = await admin
+      .from("afiliados")
+      .select("id, estado")
+      .eq("auth_user_id", data.user.id)
+      .maybeSingle();
+    if (errorAfiliado) throw errorAfiliado;
+    if (!afiliado || afiliado.estado === "cancelado") {
+      res.status(403).json({ error: "No es afiliado", code: "no_es_afiliado" });
+      return;
+    }
+    req.afiliadoId = afiliado.id;
+    next();
+  });
+}
 
 // Every business-panel route: resolves which business the caller belongs
 // to via their own users row, read through their own RLS-scoped client.

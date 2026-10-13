@@ -1,21 +1,18 @@
 /**
- * El enlace con el que un negocio recomienda Logiciel Construction.
+ * El programa de afiliados, visto desde el panel de una empresa.
  *
- * Está enrutada y **no está en el menú**, a propósito. El programa no se ha
- * encendido: los enlaces se dan uno a uno y no hay alta pública. Poner la
- * entrada en el menú antes de eso sería enseñarle a todo el mundo una pantalla
- * que casi siempre diría «todavía no tienes enlace» — un control que no hace
- * nada, que es lo que esta casa no pone.
- *
- * Cuando se encienda, la línea del menú va en Ajustes junto a las demás: el
- * área ya está puesta en `AREA_DE_PANTALLA`, así que se filtra sola por rol.
+ * Una empresa cliente también puede recomendar: con su misma cuenta se apunta
+ * en `/afiliados` y tiene allí su panel completo (enlace, comisiones, cobro,
+ * contenido). Esta pantalla no lo duplica: enseña lo esencial y lleva allí.
+ * Dos sitios que calculan lo mismo acaban diciendo cosas distintas.
  *
  * Lo que enseña es sólo lo suyo. Ni la lista de afiliados ni lo que gana otro:
  * esas tablas son nuestras y no se asoman por ninguna ruta de un negocio.
  */
 import { useState } from "react";
+import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, Link2, TriangleAlert } from "lucide-react";
+import { ArrowRight, Check, Copy, Link2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,8 +23,6 @@ import { useApi } from "@/lib/api";
 interface Panel {
   tieneEnlace: boolean;
   codigo?: string;
-  estado?: "activo" | "suspendido" | "cancelado";
-  firmado?: boolean;
   comisionPct?: number;
   referidos?: number;
   pagando?: number;
@@ -50,13 +45,16 @@ export default function SettingsAfiliados() {
   const [copiado, setCopiado] = useState(false);
 
   const enlace = data?.codigo ? `${window.location.origin}/?ref=${data.codigo}` : "";
-  const dinero = (valor: number) =>
-    new Intl.NumberFormat(i18n.language, { style: "currency", currency: "CAD" }).format(valor);
+  const dinero = (valor: number) => new Intl.NumberFormat(i18n.language, { style: "currency", currency: "CAD" }).format(valor);
 
   const copiar = async () => {
-    await navigator.clipboard.writeText(enlace);
-    setCopiado(true);
-    window.setTimeout(() => setCopiado(false), 1600);
+    try {
+      await navigator.clipboard.writeText(enlace);
+      setCopiado(true);
+      window.setTimeout(() => setCopiado(false), 1600);
+    } catch {
+      // Sin permiso para el portapapeles: el enlace sigue a la vista.
+    }
   };
 
   if (loading) {
@@ -74,37 +72,19 @@ export default function SettingsAfiliados() {
       {error && <AvisoDeFallo mensaje={error} detalle={detalle} onReintentar={reload} />}
 
       {!error && !data?.tieneEnlace && (
-        <Card className="p-5 space-y-2">
+        <Card className="p-5 space-y-3">
           <h2 className="font-semibold text-foreground">{t("afiliado.sinEnlaceTitulo")}</h2>
           <p className="text-sm text-muted-foreground">{t("afiliado.sinEnlaceCuerpo")}</p>
+          <Button asChild className="h-auto gap-1.5 whitespace-normal py-2 text-left">
+            <Link href="/afiliados">
+              {t("afiliado.unirme")} <ArrowRight size={14} />
+            </Link>
+          </Button>
         </Card>
       )}
 
       {!error && data?.tieneEnlace && (
         <>
-          {data.estado === "suspendido" && (
-            <Card className="p-4 border-status-warning-fg/30 bg-status-warning-bg flex gap-3">
-              <TriangleAlert size={18} className="text-status-warning-fg shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <h2 className="font-semibold text-status-warning-fg">{t("afiliado.suspendidoTitulo")}</h2>
-                <p className="text-sm text-status-warning-fg/90">{t("afiliado.suspendidoCuerpo")}</p>
-              </div>
-            </Card>
-          )}
-
-          {/* Un enlace que apunta pero no paga tiene que decirlo antes de que
-              alguien lo reparta: prometer una comisión que no se devenga es la
-              forma más rápida de perder al afiliado y la confianza a la vez. */}
-          {!data.firmado && (
-            <Card className="p-4 border-status-warning-fg/30 bg-status-warning-bg flex gap-3">
-              <TriangleAlert size={18} className="text-status-warning-fg shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <h2 className="font-semibold text-status-warning-fg">{t("afiliado.sinFirmarTitulo")}</h2>
-                <p className="text-sm text-status-warning-fg/90">{t("afiliado.sinFirmarCuerpo")}</p>
-              </div>
-            </Card>
-          )}
-
           <Card className="p-5 space-y-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
               <Link2 size={13} /> {t("afiliado.tuEnlace")}
@@ -116,9 +96,7 @@ export default function SettingsAfiliados() {
                 {copiado ? t("afiliado.copiado") : t("afiliado.copiar")}
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {t("afiliado.comision", { pct: data.comisionPct ?? 10 })}
-            </p>
+            <p className="text-sm text-muted-foreground">{t("afiliado.comision", { pct: data.comisionPct ?? 30 })}</p>
           </Card>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -128,15 +106,13 @@ export default function SettingsAfiliados() {
             <Cifra que={t("afiliado.pagado")} valor={dinero(data.pagadoCad ?? 0)} />
           </div>
 
-          <Card className="p-5 space-y-2">
-            <h2 className="font-semibold text-foreground">{t("afiliado.comoFunciona")}</h2>
-            <ul className="space-y-1.5 text-sm text-muted-foreground list-disc pl-5">
-              <li>{t("afiliado.regla1")}</li>
-              <li>{t("afiliado.regla2")}</li>
-              <li>{t("afiliado.regla3")}</li>
-              <li>{t("afiliado.regla4")}</li>
-            </ul>
-          </Card>
+          {/* El texto es largo a propósito (dice qué hay allí) y en un móvil
+              tiene que poder bajar de línea: un botón no parte su texto solo. */}
+          <Button asChild variant="outline" className="h-auto gap-1.5 whitespace-normal py-2 text-left">
+            <Link href="/afiliados/panel">
+              {t("afiliado.abrirPanel")} <ArrowRight size={14} />
+            </Link>
+          </Button>
         </>
       )}
     </div>

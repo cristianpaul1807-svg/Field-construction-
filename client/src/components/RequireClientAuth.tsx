@@ -27,6 +27,7 @@ export function RequireClientAuth({ children }: { children: ReactNode }) {
   if (!session) return <Redirect to="/cliente/acceso" />;
   if (persona === "business") return <Redirect to="/" />;
   if (persona === "none") return <Redirect to="/cliente/acceso" />;
+  if (persona === "affiliate") return <Redirect to="/afiliados/panel" />;
 
   return <>{children}</>;
 }

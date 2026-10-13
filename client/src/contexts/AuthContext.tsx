@@ -14,7 +14,7 @@ import { fijarMonedaDelNegocio } from "@/lib/mockData";
 // that didn't answer tells us nothing about who the user is, and treating
 // that as "none" throws people with perfectly good accounts into the signup
 // screen. That case is `personaError` instead.
-type Persona = "business" | "client" | "none";
+type Persona = "business" | "client" | "affiliate" | "none";
 
 interface AuthState {
   session: Session | null;

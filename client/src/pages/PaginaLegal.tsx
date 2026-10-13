@@ -51,7 +51,11 @@ function conFormato(texto: string) {
   });
 }
 
-export default function PaginaLegal({ cual }: { cual: "privacy" | "terms" }) {
+/** Las condiciones del programa de afiliados van aquí también: son un contrato más, con la misma forma. */
+const TITULO = { privacy: "legal.privacyTitle", terms: "legal.termsTitle", affiliates: "legal.affiliatesTitle" } as const;
+const ENTRADILLA = { privacy: "legal.privacyLead", terms: "legal.termsLead", affiliates: "legal.affiliatesLead" } as const;
+
+export default function PaginaLegal({ cual }: { cual: "privacy" | "terms" | "affiliates" }) {
   const { t } = useTranslation();
   const secciones = t(`legal.${cual}`, { returnObjects: true }) as unknown as SeccionLegal[];
 
@@ -60,7 +64,7 @@ export default function PaginaLegal({ cual }: { cual: "privacy" | "terms" }) {
       <div className="mx-auto w-full max-w-2xl">
         <div className="flex items-center justify-between py-2">
           <Link
-            href="/"
+            href={cual === "affiliates" ? "/afiliados" : "/"}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft size={14} />
@@ -72,13 +76,13 @@ export default function PaginaLegal({ cual }: { cual: "privacy" | "terms" }) {
         <header className="space-y-2 border-b border-border pb-6 pt-4">
           <Logo size={40} className="shadow-sm" />
           <h1 className="pt-2 text-2xl font-bold tracking-tight text-foreground">
-            {t(cual === "privacy" ? "legal.privacyTitle" : "legal.termsTitle")}
+            {t(TITULO[cual])}
           </h1>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {t(cual === "privacy" ? "legal.privacyLead" : "legal.termsLead")}
+            {t(ENTRADILLA[cual])}
           </p>
           <p className="text-xs text-muted-foreground">
-            {t("legal.updated", { date: t("legal.updatedOn") })}
+            {t("legal.updated", { date: t(cual === "affiliates" ? "legal.affiliatesUpdatedOn" : "legal.updatedOn") })}
           </p>
         </header>
 

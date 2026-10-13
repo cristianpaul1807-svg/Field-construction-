@@ -2,9 +2,9 @@
 
 An all-in-one management platform for construction businesses, built for the
 Canadian market (Quebec first: GST/QST, RBQ licence numbers, 10% holdback).
-Four audiences share one deployment — the business panel, the client portal,
-the field-worker PWA, and the public button-flow chat — and each authenticates
-differently. That is the single most important thing to understand before
+Five audiences share one deployment — the business panel, the client portal,
+the field-worker PWA, the public button-flow chat, and the affiliate program —
+and each authenticates differently. That is the single most important thing to understand before
 changing anything.
 
 **Read `docs/README.md` first.** It indexes a step-by-step guide for every
@@ -21,7 +21,7 @@ There is no local database and no migration files. The schema lives in the
 live Supabase project and is changed through the Supabase MCP tools
 (`apply_migration` for DDL, `execute_sql` for queries).
 
-## The four ways in
+## The five ways in
 
 | Surface | Route | Credential | Middleware |
 |---|---|---|---|
@@ -29,6 +29,7 @@ live Supabase project and is changed through the Supabase MCP tools
 | Client portal | `/portal` | Supabase session **or** access code | `requireClientAuth` |
 | Field worker PWA | `/campo` | access code only | `requireWorkerAuth` |
 | Public chat | `/c/:slug` | none | none |
+| Affiliates | `/afiliados` | Supabase Auth session + a row in `afiliados` | `requireAffiliateAuth` |
 
 `server/api.ts` mounts `apiRouter.use(requireBusinessAuth)` partway down the
 file. **Every route registered above that line is public or brings its own

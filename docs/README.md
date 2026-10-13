@@ -126,6 +126,7 @@ directamente al paso a paso.
 | *(dentro de Usuarios)* Segundo paso al entrar | [funciones/segundo-paso.md](funciones/segundo-paso.md) |
 | *(dentro de Usuarios)* Quién ve qué: áreas y roles | [funciones/permisos.md](funciones/permisos.md) |
 | *(en todo el panel)* Qué entra en cada plan | [funciones/planes.md](funciones/planes.md) |
+| Gana recomendando — el programa de afiliados (y su puerta `/afiliados`) | [funciones/afiliados.md](funciones/afiliados.md) |
 | Conexión WhatsApp | [funciones/configuracion.md](funciones/configuracion.md#conexión-whatsapp) |
 | Automatizaciones | [funciones/configuracion.md](funciones/configuracion.md#automatizaciones) |
 

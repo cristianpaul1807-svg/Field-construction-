@@ -26,13 +26,13 @@ API = pathlib.Path(__file__).resolve().parent.parent / "server" / "api.ts"
 PUBLIC_BY_DESIGN = {"/health", "/worker-auth/login", "/client-auth/login", "/quickbooks/callback"}
 
 # Prefixes that mean "not the business panel".
-NON_PANEL = ("/public/", "/client-portal/", "/client/", "/worker/", "/c/")
+NON_PANEL = ("/public/", "/client-portal/", "/client/", "/worker/", "/c/", "/afiliados/")
 
 # ...except this one, which is the admin's preview of a client's portal and is
 # scoped by req.businessId. Its prefix lies; the comment above it explains why.
 PANEL_DESPITE_PREFIX = {"/client-portal/:clientId"}
 
-OWN_MIDDLEWARE = ("requireClientAuth", "requireWorkerAuth", "requireAuthenticatedUser")
+OWN_MIDDLEWARE = ("requireClientAuth", "requireWorkerAuth", "requireAuthenticatedUser", "requireAffiliateAuth")
 
 
 def main() -> int:

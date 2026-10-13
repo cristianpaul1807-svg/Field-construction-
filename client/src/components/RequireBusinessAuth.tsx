@@ -44,6 +44,8 @@ export function RequireBusinessAuth({ children }: { children: ReactNode }) {
   if (personaError) return <ServerUnreachable message={personaError} />;
   if (persona === "client") return <Redirect to="/portal" />;
   if (persona === "none") return <Redirect to="/negocio/acceso" />;
+  // Un afiliado no tiene negocio: su sitio es su panel, no el alta de uno.
+  if (persona === "affiliate") return <Redirect to="/afiliados/panel" />;
 
   // Una cuenta suspendida conserva únicamente la puerta de suscripción. Los
   // clientes y trabajadores tienen sus propios accesos y no pasan por aquí.

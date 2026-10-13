@@ -56,6 +56,7 @@ export default function Landing() {
     const res = await apiFetch("/api/auth/me");
     const body = await readJson(res);
     if (body.persona === "client") setLocation("/portal");
+    else if (body.persona === "affiliate") setLocation("/afiliados/panel");
     else setLocation(tomarDestino() ?? "/");
   };
 

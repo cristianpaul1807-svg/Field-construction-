@@ -98,7 +98,8 @@
     "timeOff": "Time off",
     "quickbooks": "QuickBooks",
     "subscription": "Subscription",
-    "cobrar": "Charge"
+    "cobrar": "Charge",
+    "afiliados": "Earn by referring"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1697,7 +1698,17 @@
     "no_disponible_en_el_pais": "This feature isn't available in your business's country.",
     "prezzario_sin_fonte": "Give the price list a name.",
     "prezzario_troppe_voci": "Too many items in one upload.",
-    "prezzario_vuoto": "No item has both a code and a description. Check the columns."
+    "prezzario_vuoto": "No item has both a code and a description. Check the columns.",
+    "no_es_afiliado": "This account isn't in the affiliate program yet.",
+    "afiliado_sin_nombre": "Enter your name or your channel's name.",
+    "afiliado_sin_canal": "Tell us where you'll share it: your channel, website or social account.",
+    "afiliado_sin_condiciones": "You need to accept the program terms to join.",
+    "afiliado_sin_pais": "Choose the country of your bank account.",
+    "afiliado_cobro_no_disponible": "Stripe couldn't open your payout account in that country. Write to us and we'll sort it out.",
+    "afiliado_cobro_sin_cuenta": "Your Stripe payout account isn't ready yet. Finish the setup on Stripe and try again.",
+    "afiliado_suspendido": "Your payouts are on hold. Write to us to find out why.",
+    "afiliado_bajo_minimo": "You haven't reached the minimum payout yet.",
+    "afiliado_transferencia_fallida": "Stripe didn't accept the transfer. Your balance is still available; try again or write to us."
   },
   "workLog": {
     "title": "Work log",
@@ -2727,7 +2738,81 @@
           "For what is invoiced and declared in Quebec, Quebec law obviously governs — and the software is built to comply with it."
         ]
       }
-    ]
+    ],
+    "affiliatesTitle": "Affiliate program terms",
+    "affiliatesLead": "What you accept when you join: how much you earn, when, and what isn't allowed. They're short on purpose; read them in full.",
+    "affiliates": [
+      {
+        "id": "que",
+        "title": "What this is",
+        "body": [
+          "You recommend Logiciel Construction with your personal link and earn a commission on the companies that subscribe thanks to you.",
+          "It's offered by **Christhian Paul Rodriguez Almarales**, the same owner as Logiciel Construction (see the terms of use). You must be of legal age to join."
+        ]
+      },
+      {
+        "id": "cuanto",
+        "title": "How much you earn",
+        "body": [
+          "**30% of what each company you bring pays, excluding taxes**, for its **first 12 months** from its first payment. After those 12 months, that company stops generating commission; the others continue.",
+          "Free-trial days generate nothing: only what is actually charged counts. Commissions are calculated in **Canadian dollars**; a subscription paid in another currency counts for what actually arrived after Stripe's conversion."
+        ]
+      },
+      {
+        "id": "cuando",
+        "title": "When a company is yours",
+        "body": [
+          "It counts as yours if it signs up within **90 days** of opening your link, from the same browser. If it opened someone else's link first, it belongs to that person: the first one keeps it.",
+          "**You can't use your own link** for your own company or for accounts you control."
+        ]
+      },
+      {
+        "id": "espera",
+        "title": "Waiting period and cancellations",
+        "body": [
+          "Each commission waits **30 days** before it can be withdrawn. If the payment is refunded or disputed during that time, the commission is cancelled.",
+          "If a commission already paid turns out to come from a refunded or fraudulent payment, we may deduct it from your next commissions."
+        ]
+      },
+      {
+        "id": "cobrar",
+        "title": "How you get paid",
+        "body": [
+          "You get paid to a **Stripe account in your name**, which you connect from your dashboard. Stripe will ask for your ID and bank account; we never see them.",
+          "You can withdraw once you have **$50 available** or more. Bank or currency-conversion fees are on you. **Declaring what you earn is your responsibility**: we are not your employer and we don't withhold taxes."
+        ]
+      },
+      {
+        "id": "prohibido",
+        "title": "What isn't allowed",
+        "body": [
+          "Sending **spam** (unsolicited mass messages), **promising things that don't exist** (discounts, prices or features we don't offer), **bidding on the brand** \"Logiciel Construction\" in search ads, impersonating us, creating fake accounts, or forcing clicks and cookies.",
+          "If it happens, we suspend your link and don't pay commissions earned that way."
+        ]
+      },
+      {
+        "id": "marca",
+        "title": "Our content and our brand",
+        "body": [
+          "You may use our videos, texts and logos to promote Logiciel Construction, as they are or trimmed, as long as you don't change what they say. You may not register domains, accounts or names that carry our brand."
+        ]
+      },
+      {
+        "id": "cambios",
+        "title": "Changes and leaving",
+        "body": [
+          "We may change these terms by emailing you **30 days** in advance; what you have already earned is respected. You can leave whenever you want. If we close the program, we'll give you 30 days' notice and pay what was earned until then."
+        ]
+      },
+      {
+        "id": "relacion",
+        "title": "Our relationship",
+        "body": [
+          "You are independent: you are not an employee, partner or agent of Logiciel Construction, and you cannot sign anything on our behalf. Anything not covered here is governed by the Logiciel Construction terms of use."
+        ]
+      }
+    ],
+    "affiliatesUpdatedOn": "2026-10-13"
   },
   "security": {
     "title": "Second step when signing in",
@@ -2926,27 +3011,20 @@
     "puedeEmitir": "Prepares and issues on confirmation"
   },
   "afiliado": {
-    "titulo": "Your referral link",
-    "entradilla": "Recommend Logiciel Construction and earn for as long as the business you brought stays subscribed.",
+    "titulo": "Affiliate program",
+    "entradilla": "Recommend Logiciel Construction and earn 30% of what each company you bring pays, for 12 months.",
     "sinEnlaceTitulo": "You don't have a link yet",
-    "sinEnlaceCuerpo": "Links are issued one by one. If you'd like to recommend Logiciel Construction, write to us from Help and we'll set yours up with its agreement.",
+    "sinEnlaceCuerpo": "Join with this same account and get your link instantly. You'll have your own dashboard with your commissions, payouts and content ready to share.",
     "tuEnlace": "Your link",
     "copiar": "Copy",
     "copiado": "Copied",
-    "comision": "{{pct}}% of what each business you bring pays, for as long as they keep paying.",
-    "sinFirmarTitulo": "The agreement isn't signed yet",
-    "sinFirmarCuerpo": "Your link already works and records whoever you bring, but no commission accrues until the agreement is signed. Write to us from Help and we'll close it.",
-    "suspendidoTitulo": "Link suspended",
-    "suspendidoCuerpo": "Your link still records whoever you bring, but commissions are paused. Write to us from Help to find out why.",
+    "comision": "{{pct}}% of what each company you bring pays, for its first 12 months.",
     "referidos": "Businesses you brought",
     "pagando": "Of those, paying",
-    "devengado": "Earned, not yet paid",
+    "devengado": "Earned, not yet paid out",
     "pagado": "Already paid",
-    "comoFunciona": "How it works",
-    "regla1": "Credit goes to the first link that person clicked, if they sign up within 90 days.",
-    "regla2": "Commission is calculated on what the business actually pays, before tax.",
-    "regla3": "If that business cancels, the commission stops; if they come back, it resumes.",
-    "regla4": "You can't use your own link for your own business."
+    "unirme": "Join the program",
+    "abrirPanel": "Open my affiliate dashboard: payouts, commissions and content"
   },
   "buscador": {
     "escribeParaFiltrar": "Type to filter…",
@@ -3214,5 +3292,67 @@
     "buscarPista": "intonaco calce, E04.001…",
     "noBusca": "The search failed. Try again.",
     "nadaEncontrado": "No items with those words. If you haven't loaded the price list yet, do it in {{menu}}."
+  },
+  "afiliados": {
+    "titulo": "Affiliate program",
+    "lema": "Earn {{pct}}% for {{meses}} months on every company you bring in.",
+    "explicacion": "You recommend Logiciel Construction with your link. When a company that came through you pays its subscription, you get {{pct}}% of what it pays for its first {{meses}} months.",
+    "paso1": "Sign up and get your link instantly.",
+    "paso2": "Share it where people already follow you: YouTube, TikTok, Instagram, your website or your groups.",
+    "paso3": "Get paid to your Stripe account once you have ${{minimo}} available.",
+    "crearCuenta": "Create my affiliate account",
+    "entrar": "Sign in",
+    "yaSoy": "Already an affiliate?",
+    "todaviaNo": "Not an affiliate yet?",
+    "apuntarme": "Join",
+    "nombre": "Your name or your channel's name",
+    "dondeComparte": "Where will you share it?",
+    "dondeCompartePista": "Your channel, website or social account. For example: youtube.com/@mychannel",
+    "pais": "Country you live in",
+    "acepto": "I have read and accept the program terms",
+    "verCondiciones": "Program terms",
+    "unirmeTitulo": "Join the program",
+    "unirmeTexto": "You already have an account: we just need these details to give you your link.",
+    "panelTitulo": "Your affiliate dashboard",
+    "salir": "Sign out",
+    "tuEnlace": "Your link",
+    "copiar": "Copy",
+    "copiado": "Copied",
+    "enlacePista": "Anyone who signs up within 90 days of opening it counts as yours: {{pct}}% of what they pay, for {{meses}} months.",
+    "clientes": "Companies you brought",
+    "clientesDetalle": "{{prueba}} on trial · {{pagando}} paying",
+    "enEspera": "Pending",
+    "enEsperaPista": "Payments from the last {{dias}} days. They're released if there's no refund.",
+    "disponible": "Available",
+    "pagado": "Paid out",
+    "cobroTitulo": "How you get paid",
+    "cobroSinCuenta": "Connect a Stripe account in your name to receive your commissions. Stripe will ask for your ID and bank account; we never see them.",
+    "cobroPais": "Country of your bank account",
+    "conectar": "Connect my payout account",
+    "cobroConectado": "Your payout account is connected. If Stripe asks for anything else, complete it from here.",
+    "completarStripe": "Review my Stripe account",
+    "retirar": "Withdraw {{importe}}",
+    "minimo": "You can withdraw once you have ${{minimo}} available.",
+    "retirado": "Sent: {{importe}} to your Stripe account.",
+    "comisiones": "Latest commissions",
+    "sinComisiones": "No commissions yet. They arrive when a company you brought pays its subscription.",
+    "estado": {
+      "en_espera": "Pending until {{fecha}}",
+      "disponible": "Available",
+      "pagada": "Paid",
+      "anulada": "Cancelled (refund)"
+    },
+    "pagos": "Payouts",
+    "pagoEstado": {
+      "enviado": "Sent",
+      "enviando": "Sending",
+      "fallido": "Failed"
+    },
+    "contenido": "Content to share",
+    "contenidoTexto": "Our videos explain the product better than anyone. Share them with your link in the description.",
+    "verCanal": "Watch the videos on YouTube",
+    "suspendido": "Your payouts are on hold. Write to progetmanagement@gmail.com to find out why.",
+    "mensajeListo": "Ready-to-post text",
+    "mensaje": "If you run a construction or renovation company, check out Logiciel Construction: estimates, GPS time tracking, invoices and a client portal in one app. 30-day free trial: {{enlace}}"
   }
 }

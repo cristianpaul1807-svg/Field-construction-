@@ -66,8 +66,24 @@ import { stripeBalance } from "./stripeBalance";
 import { capturarComision, cobrosSinComision } from "./stripeComision";
 import { camposCcq, rangoDelMes, armarLineas, type DatosCcq } from "./ccq";
 import { areaDeLaRuta, esDeTodos, puede, recortar, AREAS } from "../shared/permisos";
-import { planDelPrecio, periodoDelPrecio } from "../shared/suscripcionStripe";
-import { atribuirNegocio, anotarComision, panelDelAfiliado } from "./afiliados";
+import { planDelPrecio, periodoDelPrecio, suscripcionDeLaFactura } from "../shared/suscripcionStripe";
+import {
+  atribuirNegocio,
+  anotarComision,
+  anularComisionDelCobro,
+  apuntarAlPrograma,
+  panelDeAfiliado,
+  panelDelAfiliado,
+  reservarParaPagar,
+  marcarPagado,
+  liberar,
+  COMISION_DEL_PROGRAMA,
+  MESES_DE_COMISION,
+  DIAS_DE_ESPERA,
+  MINIMO_PARA_RETIRAR_CAD,
+  VERSION_DE_LAS_CONDICIONES,
+} from "./afiliados";
+import { baseDelCobroEnCad, facturaDelPago, crearCuentaDeCobro, enlaceDeAltaDeCobro, puedeRecibir, transferir } from "./afiliadosStripe";
 import { clientesOAuth, clientIdDeClaude, conexionesVivas } from "./mcpClientes";
 import { capacidadDeLaRuta, claveDelPrecio, esPlanDePago, monedaDeCobro, planDe, tiene, PERIODOS, PLANES_DE_PAGO, PRECIOS, type MonedaDeCobro, type Periodo, type PlanDePago } from "../shared/planes";
 // Relativo y no por `@shared`: ese alias lo resuelven Vite y TypeScript, pero
@@ -136,6 +152,7 @@ import {
   areasDelRol,
   requireClientAuth,
   requireWorkerAuth,
+  requireAffiliateAuth,
   hashToken,
 } from "./supabaseAuth";
 import { mcpHandler } from "./mcp";
@@ -911,9 +928,10 @@ async function stripeWebhookHandler(req: Request, res: Response) {
   }
 
   if (event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
-    const invoice = event.data.object as { customer?: string | null; subscription?: string | null; status?: string | null };
-    if (typeof invoice.subscription === "string") {
-      const subscription = await getStripe().subscriptions.retrieve(invoice.subscription);
+    const invoice = event.data.object as Stripe.Invoice & { subscription?: string | null };
+    const suscripcionId = suscripcionDeLaFactura(invoice);
+    if (suscripcionId) {
+      const subscription = await getStripe().subscriptions.retrieve(suscripcionId);
       const business = await findBusinessByStripeSubscription(subscription.id);
       if (business) {
         await updateBusinessSubscription(business.id, {
@@ -923,20 +941,33 @@ async function stripeWebhookHandler(req: Request, res: Response) {
         });
 
         // La comisión del afiliado que lo trajo, si lo trajo alguien. Sobre lo
-        // cobrado y sin impuestos: el afiliado se lleva un porcentaje de lo
-        // nuestro, no de lo que le pasamos a Revenu Québec.
-        if (event.type === "invoice.payment_succeeded") {
-          const factura = invoice as { subtotal?: number | null; amount_paid?: number | null; id?: string };
-          const centavos = factura.subtotal ?? factura.amount_paid ?? 0;
-          if (factura.id && centavos > 0) {
+        // cobrado y sin impuestos, en los dólares canadienses que de verdad
+        // entraron (ver baseDelCobroEnCad).
+        if (event.type === "invoice.payment_succeeded" && invoice.id) {
+          const baseCad = await baseDelCobroEnCad(getStripe(), invoice);
+          if (baseCad && baseCad > 0) {
             await anotarComision(getSupabaseAdmin(), business.id, {
-              stripeInvoice: factura.id,
-              baseCad: Math.round(centavos) / 100,
+              stripeInvoice: invoice.id,
+              baseCad,
               periodo: new Date(),
+              monedaDelCobro: invoice.currency ?? null,
             });
           }
         }
       }
+    }
+  }
+
+  // Un cobro devuelto o disputado no genera comisión. Los dos llegan con el
+  // pago, no con la factura; de ahí se busca de qué factura era. Si no era de
+  // una suscripción (una factura de un contratista a su cliente), no hay
+  // comisión que anular y no pasa nada.
+  if (event.type === "charge.refunded" || event.type === "charge.dispute.created") {
+    const objeto = event.data.object as { payment_intent?: string | { id: string } | null };
+    const pi = typeof objeto.payment_intent === "string" ? objeto.payment_intent : objeto.payment_intent?.id;
+    const factura = await facturaDelPago(getStripe(), pi);
+    if (factura) {
+      await anularComisionDelCobro(getSupabaseAdmin(), factura, event.type === "charge.refunded" ? "reembolso" : "contracargo");
     }
   }
 
@@ -1442,7 +1473,7 @@ apiRouter.post(
     // Quién lo trajo, si venía por el enlace de alguien. No puede romper el
     // alta: quedarse fuera del producto porque un código estuviera mal escrito
     // sería cobrárselo al que menos culpa tiene.
-    await atribuirNegocio(admin, business.id, req.body?.ref);
+    await atribuirNegocio(admin, business.id, req.body?.ref, req.authUserId);
 
     const [, roleResult] = await Promise.all([
       admin.from("business_settings").insert({ business_id: business.id }),
@@ -1555,7 +1586,10 @@ apiRouter.get(
     } else if (clientRow.data) {
       res.json({ persona: "client", clientId: clientRow.data.id });
     } else {
-      res.json({ persona: "none" });
+      // Sólo afiliado: ni negocio ni cliente. Sin esto caía en «none», y
+      // «none» manda a terminar el alta de un negocio que no quiere tener.
+      const { data: afiliado } = await admin.from("afiliados").select("id").eq("auth_user_id", req.authUserId!).maybeSingle();
+      res.json({ persona: afiliado ? "affiliate" : "none" });
     }
   })
 );
@@ -3974,6 +4008,163 @@ apiRouter.get(
     } catch (err) {
       console.error("quickbooks callback", err);
       res.redirect("/settings/quickbooks?quickbooks=fallo");
+    }
+  })
+);
+
+// ---------- Programa de afiliados (/afiliados) ----------
+// La quinta puerta. Un afiliado es una cuenta de Supabase Auth con una fila en
+// `afiliados`: no es un negocio ni un cliente, y estas rutas van por encima de
+// la puerta del panel, cada una con requireAffiliateAuth. Las tablas son
+// nuestras y sin políticas, así que todo se lee con la clave de servicio y se
+// filtra por req.afiliadoId. Ver server/afiliados.ts para las reglas.
+
+/** Lo que la página del programa promete, leído de donde se aplica. */
+apiRouter.get(
+  "/public/afiliados/programa",
+  route(async (_req, res) => {
+    res.json({
+      comisionPct: COMISION_DEL_PROGRAMA,
+      meses: MESES_DE_COMISION,
+      diasDeEspera: DIAS_DE_ESPERA,
+      minimoCad: MINIMO_PARA_RETIRAR_CAD,
+      versionCondiciones: VERSION_DE_LAS_CONDICIONES,
+    });
+  })
+);
+
+// Apuntarse. Corre con la cuenta recién verificada y todavía sin fila.
+apiRouter.post(
+  "/afiliados/alta",
+  requireAffiliateAuth({ soloCuenta: true }),
+  route(async (req, res) => {
+    const nombre = String(req.body?.nombre ?? "").trim().slice(0, 120);
+    const dondeComparte = String(req.body?.dondeComparte ?? "").trim().slice(0, 500);
+    if (nombre.length < 2) {
+      res.status(400).json({ error: "El nombre es obligatorio", code: "afiliado_sin_nombre" });
+      return;
+    }
+    if (dondeComparte.length < 3) {
+      res.status(400).json({ error: "Falta dónde lo vas a compartir", code: "afiliado_sin_canal" });
+      return;
+    }
+    // Aceptar las condiciones es lo que firma el contrato: sin ese sí
+    // explícito no hay alta, porque una comisión es una promesa por escrito.
+    if (req.body?.aceptaCondiciones !== true) {
+      res.status(400).json({ error: "Hay que aceptar las condiciones", code: "afiliado_sin_condiciones" });
+      return;
+    }
+    const pais = typeof req.body?.pais === "string" && /^[A-Z]{2}$/.test(req.body.pais) ? req.body.pais : null;
+    const idioma = normalizarLangCorreo(req.body?.idioma ?? req.get("accept-language"));
+    const afiliado = await apuntarAlPrograma(getSupabaseAdmin(), {
+      authUserId: req.authUserId!,
+      email: req.authEmail ?? null,
+      nombre,
+      dondeComparte,
+      pais,
+      idioma,
+    });
+    res.status(201).json({ codigo: afiliado.codigo });
+  })
+);
+
+apiRouter.get(
+  "/afiliados/panel",
+  requireAffiliateAuth(),
+  route(async (req, res) => {
+    const panel = await panelDeAfiliado(getSupabaseAdmin(), req.afiliadoId!);
+    if (!panel) {
+      res.status(404).json({ error: "No es afiliado", code: "no_es_afiliado" });
+      return;
+    }
+    res.json(panel);
+  })
+);
+
+/**
+ * La cuenta de Stripe en la que cobra. La primera vez se crea, en el país
+ * que diga, y siempre devuelve un enlace nuevo: los de Stripe caducan en
+ * minutos y se piden justo antes de mandarle allí.
+ */
+apiRouter.post(
+  "/afiliados/cobro/enlace",
+  requireAffiliateAuth(),
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: afiliado } = await admin
+      .from("afiliados")
+      .select("id, nombre, email, pais, stripe_account_id")
+      .eq("id", req.afiliadoId!)
+      .single();
+    if (!afiliado) {
+      res.status(404).json({ error: "No es afiliado", code: "no_es_afiliado" });
+      return;
+    }
+    const stripe = getStripe();
+    let cuenta = afiliado.stripe_account_id as string | null;
+    if (!cuenta) {
+      const pais = typeof req.body?.pais === "string" && /^[A-Z]{2}$/.test(req.body.pais) ? req.body.pais : afiliado.pais;
+      if (!pais) {
+        res.status(400).json({ error: "Falta el país de la cuenta de cobro", code: "afiliado_sin_pais" });
+        return;
+      }
+      try {
+        cuenta = await crearCuentaDeCobro(stripe, { nombre: afiliado.nombre, email: afiliado.email ?? req.authEmail ?? null, pais });
+      } catch (err) {
+        const mensaje = err instanceof Error ? err.message : String(err);
+        console.error("[afiliados] no se pudo crear la cuenta de cobro", req.afiliadoId, mensaje);
+        res.status(409).json({ error: mensaje, code: "afiliado_cobro_no_disponible" });
+        return;
+      }
+      await admin.from("afiliados").update({ stripe_account_id: cuenta, pais }).eq("id", afiliado.id);
+    }
+    const url = await enlaceDeAltaDeCobro(stripe, cuenta, `${req.protocol}://${req.get("host")}`);
+    res.json({ url });
+  })
+);
+
+/**
+ * Retirar lo disponible. Reserva primero (para que dos clics no paguen dos
+ * veces), transfiere después, y si Stripe dice que no, lo devuelve a
+ * disponible y lo dice.
+ */
+apiRouter.post(
+  "/afiliados/retirar",
+  requireAffiliateAuth(),
+  route(async (req, res) => {
+    const admin = getSupabaseAdmin();
+    const { data: afiliado } = await admin
+      .from("afiliados")
+      .select("id, estado, stripe_account_id")
+      .eq("id", req.afiliadoId!)
+      .single();
+    if (!afiliado) {
+      res.status(404).json({ error: "No es afiliado", code: "no_es_afiliado" });
+      return;
+    }
+    if (afiliado.estado !== "activo") {
+      res.status(409).json({ error: "Los pagos de este afiliado están parados", code: "afiliado_suspendido" });
+      return;
+    }
+    const stripe = getStripe();
+    if (!afiliado.stripe_account_id || !(await puedeRecibir(stripe, afiliado.stripe_account_id))) {
+      res.status(409).json({ error: "La cuenta de cobro no está lista", code: "afiliado_cobro_sin_cuenta" });
+      return;
+    }
+    const { pagoId, totalCad } = await reservarParaPagar(admin, afiliado.id);
+    if (!pagoId) {
+      res.status(409).json({ error: `Mínimo ${MINIMO_PARA_RETIRAR_CAD} $`, code: "afiliado_bajo_minimo", totalCad });
+      return;
+    }
+    try {
+      const transferencia = await transferir(stripe, afiliado.stripe_account_id, totalCad, pagoId);
+      await marcarPagado(admin, pagoId, transferencia);
+      res.json({ ok: true, importeCad: totalCad });
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : String(err);
+      await liberar(admin, pagoId, mensaje);
+      console.error("[afiliados] transferencia fallida", afiliado.id, mensaje);
+      res.status(502).json({ error: mensaje, code: "afiliado_transferencia_fallida" });
     }
   })
 );
